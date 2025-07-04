@@ -1,0 +1,167 @@
+@import '../../styles/variables';
+
+.container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2rem;
+  font-family: $font-body;
+  color: $text-color;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-family: $font-heading;
+  font-size: 1.8rem;
+}
+
+.wrapper {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.form {
+  flex: 1 1 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.95rem;
+
+    input[type="text"],
+    input[type="date"],
+    input[type="url"],
+    input[type="number"],
+    // ← DODAJ TO!
+    select {
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 0.3rem;
+      font-family: $font-body;
+    }
+
+    textarea {
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 0.3rem;
+      font-family: $font-body;
+      resize: vertical;
+      min-height: 7.5rem; // ✅ tylko tutaj
+    }
+
+
+    input[type="file"] {
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-top: 0.3rem;
+      font-family: $font-body;
+      background-color: white;
+      cursor: pointer;
+
+      &::file-selector-button {
+        padding: 0.4rem 1rem;
+        border: none;
+        background: $primary-color;
+        color: white;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+
+        &:hover {
+          background: darken($primary-color, 10%);
+        }
+      }
+    }
+  }
+
+  .checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+
+    input[type="checkbox"] {
+      accent-color: $primary-color;
+    }
+  }
+
+  button {
+    padding: 0.8rem;
+    background: $primary-color;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+
+    &:hover {
+      background: darken($primary-color, 10%);
+    }
+
+    &:disabled {
+      background: gray;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.preview {
+  flex: 1 1 400px;
+  margin-top: 1rem;
+
+  .description,
+  .noDescription {
+    text-align: center;
+  }
+}
+
+.previewTitle {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  font-family: $font-heading;
+  color: $primary-color;
+}
+
+.sectionTitle {
+  margin-top: 2rem;
+  font-size: 1.1rem;
+  color: $primary-color;
+  font-family: $font-heading;
+  border-left: 4px solid $primary-color;
+  padding-left: 0.8rem;
+}
+
+.tagInputWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  input {
+    padding: 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-top: 0.3rem;
+    font-family: $font-body;
+  }
+
+  small {
+    color: red;
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+  }
+}
+
+.error {
+  color: red;
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+  font-weight: 500;
+}

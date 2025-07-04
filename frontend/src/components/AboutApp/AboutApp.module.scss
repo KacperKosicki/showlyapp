@@ -1,0 +1,125 @@
+@import '../../styles/variables';
+
+.about {
+  padding: 4rem 2rem;
+}
+
+.block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 3rem;
+  margin: 5rem auto;
+  max-width: 1200px;
+
+  &.reverse {
+    flex-direction: row-reverse;
+  }
+
+  .text {
+    flex: 1;
+    min-width: 300px;
+
+    h2, h3 {
+      font-size: 2rem;
+      font-family: $font-heading;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1.1rem;
+      font-family: $font-body;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .stats {
+      display: flex;
+      gap: 2rem;
+
+      div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        strong {
+          font-size: 1.8rem;
+          color: $primary-color;
+          font-family: $font-accent;
+        }
+
+        span {
+          font-size: 0.9rem;
+          font-family: $font-accent;
+        }
+      }
+    }
+
+    .buttons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+
+      .primary, .secondary {
+        padding: 0.8rem 1.5rem;
+        border-radius: 50px;
+        font-family: $font-accent;
+        text-decoration: none;
+        font-weight: bold;
+        transition: all 0.3s ease;
+      }
+
+      .primary {
+        background: $primary-color;
+        color: white;
+
+        &:hover {
+          background: darken($primary-color, 10%);
+        }
+      }
+
+      .secondary {
+        background: transparent;
+        border: 2px solid $primary-color;
+        color: $primary-color;
+
+        &:hover {
+          background: $primary-color;
+          color: white;
+        }
+      }
+    }
+
+    .benefits {
+      list-style: none;
+      padding-left: 0;
+
+      li {
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        font-family: $font-body;
+
+        code {
+          background: #eee;
+          padding: 0.2rem 0.4rem;
+          border-radius: 5px;
+          display: inline-block;
+          margin-top: 0.4rem;
+        }
+      }
+    }
+  }
+
+  .image {
+    flex: 1;
+    min-width: 280px;
+
+    img {
+      width: 100%;
+      max-width: 500px;
+      object-fit: contain;
+    }
+  }
+}

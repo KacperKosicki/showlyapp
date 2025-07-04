@@ -1,0 +1,28 @@
+@import '../../styles/variables';
+
+.section {
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 2rem;
+  font-family: $font-heading;
+  margin-bottom: 0.5rem;
+  color: $text-color;
+}
+
+.description {
+  font-size: 1rem;
+  color: gray;
+  max-width: 700px;
+  margin: 0 auto 2rem auto;
+  font-family: $font-body;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+}

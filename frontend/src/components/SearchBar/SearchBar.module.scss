@@ -1,0 +1,69 @@
+@import '../../styles/variables';
+
+.searchContainer {
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  border-radius: 50px;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+  }
+}
+
+.searchInput {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: white;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+  }
+}
+
+.searchButton {
+  background-color: white;
+  color: $primary-color;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background-color: $primary-color;
+    color: white;
+  }
+}
+
+@media (max-width: 768px) {
+  .searchContainer {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .searchInput {
+    font-size: 0.95rem;
+    padding: 0.5rem;
+  }
+
+  .searchButton {
+    padding: 0.5rem;
+    font-size: 0.95rem;
+  }
+}

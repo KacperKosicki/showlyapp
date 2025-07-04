@@ -1,0 +1,118 @@
+@import '../../styles/variables';
+
+.section {
+  position: relative;
+  background: url('../../../public/images/whyus/whyus-bg.png') no-repeat center/cover;
+  padding-block: 10rem;
+  padding-inline: 2rem;
+  text-align: center;
+  color: white;
+  overflow: hidden;
+  z-index: 0;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    z-index: -2;
+  }
+}
+
+.container {
+  padding-inline: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.wave {
+  position: absolute;
+  width: 100vw;
+  left: 0;
+  overflow: hidden;
+  z-index: 1;
+
+  svg {
+    width: 100%;
+    height: 100px;
+    display: block;
+  }
+
+  &.top {
+    top: 0;
+    transform: rotate(180deg);
+  }
+
+  &.bottom {
+    bottom: 0;
+  }
+}
+
+.wave.top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  z-index: 2;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100px;
+    transform: rotate(180deg);
+  }
+}
+
+.title,
+.subtitle,
+.features {
+  position: relative;
+  z-index: 2;
+}
+
+.title {
+  font-size: 2rem;
+  font-family: $font-heading;
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #eee;
+  margin-bottom: 2.5rem;
+  font-family: $font-body;
+  max-width: 700px;
+  margin-inline: auto;
+}
+
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.feature {
+  max-width: 250px;
+  background-color: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  font-family: $font-body;
+  color: black;
+
+  h3 {
+    font-family: $font-accent;
+    color: $primary-color;
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    color: #555;
+    font-size: 0.95rem;
+  }
+}

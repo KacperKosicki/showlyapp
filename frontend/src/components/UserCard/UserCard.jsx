@@ -1,0 +1,155 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import styles from './UserCard.module.scss';
+import { FaStar, FaMapMarkerAlt } from 'react-icons/fa';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
+
+const UserCard = ({ user }) => {
+  const {
+    name,
+    avatar,
+    role,
+    rating,
+    reviews,
+    location,
+    tags,
+    priceFrom,
+    priceTo,
+    availableDates = [],
+    profileType,
+    description,
+    links = []
+  } = user;
+
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+
+  const navigate = useNavigate();
+
+  const slugify = (text) =>
+    text
+      .toLowerCase()
+      .normalize("NFD") // usuwa znaki diakrytyczne
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, '-') // spacje na myślniki
+      .replace(/[^\w\-]+/g, '') // usuwa wszystko poza słowami i myślnikami
+      .replace(/\-\-+/g, '-') // podwójne myślniki
+      .replace(/^-+/, '')
+      .replace(/-+$/, '');
+
+  const slug = `${slugify(name)}-${slugify(role)}`;
+
+  const tileDisabled = ({ date }) => {
+    const formatted = date.toLocaleDateString('sv-SE');
+    return !availableDates.includes(formatted);
+  };
+
+  return (
+    <div className={styles.card}>
+      <div className={styles.topBar}>
+        <div className={styles.location}>
+          <FaMapMarkerAlt />
+          <span>{location}</span>
+        </div>
+        <div className={styles.rating}>
+          <FaStar />
+          <span>{rating} <small>({reviews})</small></span>
+        </div>
+      </div>
+
+      <div className={styles.top}>
+        <img src={avatar} alt={name} className={styles.avatar} />
+        <div className={styles.topInfo}>
+          <span className={`${styles.profileBadge} ${styles[profileType]}`}>
+            {profileType === 'zawodowy' && 'ZAWODOWY'}
+            {profileType === 'hobbystyczny' && 'HOBBY'}
+            {profileType === 'serwis' && 'SERWIS'}
+            {profileType === 'społeczność' && 'SPOŁECZNOŚĆ'}
+          </span>
+
+          <h3 className={styles.name}>{name}</h3>
+          <p className={styles.role}>{role}</p>
+        </div>
+      </div>
+
+      {description?.trim() ? (
+        <>
+          <p className={`${styles.description} ${isExpanded ? styles.expanded : ''}`}>
+            {description}
+          </p>
+          {description.length > 120 && (
+            <button
+              className={styles.toggleButton}
+              onClick={() => setIsExpanded(prev => !prev)}
+            >
+              {isExpanded ? 'Zwiń' : 'Pokaż więcej'}
+            </button>
+          )}
+        </>
+      ) : (
+        <p className={styles.noDescription}>Użytkownik nie dodał jeszcze opisu.</p>
+      )}
+
+      {tags?.length > 0 && (
+        <div className={styles.tags}>
+          {tags.map(tag => (
+            <span key={tag} className={styles.tag}>{tag.toUpperCase()}</span>
+          ))}
+
+        </div>
+      )}
+
+      <div className={styles.separator} />
+
+      <div className={styles.details}>
+        {priceFrom && priceTo ? (
+          <p className={styles.price}>
+            Cennik od <strong>{priceFrom} zł</strong> do <strong>{priceTo} zł</strong>
+          </p>
+        ) : (
+          <p className={styles.price}>Cennik: <em>Brak danych</em></p>
+        )}
+
+        <button
+          className={styles.calendarToggle}
+          onClick={() => setShowCalendar(prev => !prev)}
+        >
+          📅 Zobacz dostępne dni
+        </button>
+
+        {showCalendar && (
+          <Calendar
+            tileDisabled={tileDisabled}
+            locale="pl-PL"
+            className={styles.calendar}
+          />
+        )}
+
+        {links?.length > 0 && (
+          <div className={styles.links}>
+            {links.map((link, i) =>
+              link ? (
+                <a key={i} href={link} target="_blank" rel="noopener noreferrer">
+                  🌐 Link {i + 1}
+                </a>
+              ) : null
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className={styles.buttons}>
+        <button
+          className={styles.buttonPrimary}
+          onClick={() => navigate(`/profil/${slug}`)}
+        >
+          ZOBACZ WIZYTÓWKĘ
+        </button>
+        <button className={styles.buttonSecondary}>ZADAJ PYTANIE</button>
+      </div>
+    </div>
+  );
+};
+
+export default UserCard;
