@@ -25,15 +25,16 @@
   text-align: center;
 
   button {
-    margin-top: 0.5rem;
+    margin-top: 1rem;
     background: #a10000;
     color: white;
-    padding: 0.5rem 1.2rem;
+    padding: 0.8rem 1.8rem;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     font-family: $font-accent;
     transition: background 0.3s ease;
+    font-weight: bold;
 
     &:hover {
       background: #c60000;
@@ -46,28 +47,63 @@
   margin: 0 auto;
   padding: 2rem;
   border-radius: 20px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2.5rem;
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 2rem;
   background-color: $secondary-bg;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 
   @media (max-width: 768px) {
+    display: flex;
     flex-direction: column;
-    text-align: center;
-    align-items: center;
+    text-align: left;
+    padding: 1.5rem;
+
+    .left {
+      justify-content: center;
+      margin-bottom: 1.5rem;
+
+      .avatar {
+        width: 140px;
+        height: 140px;
+      }
+    }
+
+    .right {
+      align-items: flex-start;
+      gap: 1rem;
+
+      h3 {
+        text-align: center;
+        width: 100%;
+      }
+
+      p {
+        font-size: 0.95rem;
+
+        strong {
+          min-width: auto;
+        }
+      }
+
+      .tags {
+        justify-content: flex-start;
+      }
+
+      .links {
+        word-break: break-word;
+      }
+    }
   }
 }
 
 .left {
-  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .right {
-  flex: 2;
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
@@ -98,8 +134,16 @@
     }
   }
 
-  ul {
-    padding-left: 1.2rem;
+  p + p {
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding-top: 0.6rem;
+    margin-top: 0.6rem;
+  }
+
+  p:first-of-type {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
   }
 }
 
@@ -109,7 +153,7 @@
   object-fit: cover;
   border-radius: 50%;
   border: 4px solid $primary-color;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
   transition: transform 0.3s;
 
   &:hover {
@@ -126,47 +170,35 @@
   span {
     background-color: $primary-color;
     color: white;
-    padding: 0.35rem 0.9rem;
+    padding: 0.4rem 1rem;
     border-radius: 999px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-family: $font-accent;
-    letter-spacing: 0.5px;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
+}
+
+.linkSection {
+  margin-top: 1rem;
 }
 
 .links {
-  margin-top: 0.3rem;
+  margin-top: 0.4rem;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.4rem;
 
-  li {
-    list-style: none;
+  a {
+    color: $primary-color;
+    text-decoration: underline;
+    word-break: break-word;
+    font-family: $font-accent;
 
-    a {
-      color: $primary-color;
-      text-decoration: underline;
-      word-break: break-word;
-      font-family: $font-accent;
-
-      &:hover {
-        color: darken($primary-color, 10%);
-      }
+    &:hover {
+      color: darken($primary-color, 10%);
     }
   }
-}
-
-.available {
-  color: green;
-  font-weight: bold;
-  font-family: $font-accent;
-}
-
-.unavailable {
-  color: red;
-  font-weight: bold;
-  font-family: $font-accent;
 }
 
 .noProfile {
@@ -200,4 +232,27 @@
   padding: 3rem;
   font-size: 1.2rem;
   color: $text-color;
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 1rem;
+  }
+
+  .expiredNotice {
+    font-size: 0.95rem;
+
+    button {
+      padding: 0.6rem 1.2rem;
+    }
+  }
+
+  .tags span {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+  }
+
+  .right p {
+    line-height: 1.4;
+  }
 }

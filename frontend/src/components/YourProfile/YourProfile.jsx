@@ -12,7 +12,6 @@ import {
   FaLink,
   FaIdBadge,
   FaInfoCircle,
-  FaCheckCircle,
   FaBriefcase
 } from 'react-icons/fa';
 
@@ -25,21 +24,13 @@ const YourProfile = ({ user }) => {
     try {
       const res = await axios.get(`/api/profiles/by-user/${user.uid}`);
       const profile = res.data;
-
-      // Lokalna walidacja daty ważności
       const now = new Date();
       const until = new Date(profile.visibleUntil);
-      if (until < now) {
-        profile.isVisible = false;
-      }
-
+      if (until < now) profile.isVisible = false;
       setProfile(profile);
     } catch (err) {
-      if (err.response?.status === 404) {
-        setNotFound(true);
-      } else {
-        console.error('Błąd podczas pobierania profilu:', err);
-      }
+      if (err.response?.status === 404) setNotFound(true);
+      else console.error('Błąd podczas pobierania profilu:', err);
     } finally {
       setLoading(false);
     }
@@ -53,7 +44,7 @@ const YourProfile = ({ user }) => {
   const handleExtendVisibility = async () => {
     try {
       await axios.patch(`/api/profiles/extend/${user.uid}`);
-      await fetchProfile(); // odśwież dane po przedłużeniu
+      await fetchProfile();
     } catch (err) {
       console.error('❌ Błąd przedłużania widoczności:', err);
       alert('Nie udało się przedłużyć widoczności.');
@@ -77,8 +68,8 @@ const YourProfile = ({ user }) => {
 
       {!profile.isVisible && (
         <div className={styles.expiredNotice}>
-          <p>🔒 Twoja wizytówka jest obecnie <strong>niewidoczna</strong>.</p>
-          <p>Wygasła dnia: <strong>{new Date(profile.visibleUntil).toLocaleDateString()}</strong></p>
+          <p>🔒 Twoja wizytówka jest <strong>niewidoczna</strong>.</p>
+          <p>Wygasła: <strong>{new Date(profile.visibleUntil).toLocaleDateString()}</strong></p>
           <button onClick={handleExtendVisibility}>Przedłuż widoczność</button>
         </div>
       )}
@@ -98,26 +89,14 @@ const YourProfile = ({ user }) => {
           <p><FaMapMarkerAlt /> <strong>Lokalizacja:</strong> {profile.location}</p>
           <p><FaMoneyBillWave /> <strong>Cennik:</strong>{' '}
             {profile.priceFrom && profile.priceTo ? (
-              <>
-                od <strong>{profile.priceFrom} zł</strong> do <strong>{profile.priceTo} zł</strong>
-              </>
-            ) : (
-              <em> Brak danych</em>
-            )}
-          </p>
-
-          <p><FaCalendarAlt /> <strong>Dostępność:</strong>{' '}
-            <span className={profile.available ? styles.available : styles.unavailable}>
-              {profile.available ? 'Tak' : 'Nie'}
-            </span>
+              <>od <strong>{profile.priceFrom} zł</strong> do <strong>{profile.priceTo} zł</strong></>
+            ) : <em> Brak danych</em>}
           </p>
           <p><FaCalendarAlt /> <strong>Data dostępności:</strong> {profile.availabilityDate}</p>
           <p><FaInfoCircle /> <strong>Opis:</strong><br /> {profile.description || 'Brak opisu.'}</p>
-
           {profile.hasBusiness && (
             <p><FaBriefcase /> <strong>Działalność gospodarcza:</strong> Tak (NIP: {profile.nip || 'brak'})</p>
           )}
-
           <p><FaTags /> <strong>Tagi:</strong>{' '}
             <span className={styles.tags}>
               {profile.tags.map(tag => (
@@ -127,13 +106,14 @@ const YourProfile = ({ user }) => {
           </p>
 
           {profile.links?.length > 0 && (
-            <p><FaLink /> <strong>Linki:</strong>
-              <ul className={styles.links}>
+            <div className={styles.linkSection}>
+              <p><FaLink /> <strong>Linki:</strong></p>
+              <div className={styles.links}>
                 {profile.links.filter(l => l).map((link, i) => (
-                  <li key={i}><a href={link} target="_blank" rel="noopener noreferrer">{link}</a></li>
+                  <a key={i} href={link} target="_blank" rel="noopener noreferrer">{link}</a>
                 ))}
-              </ul>
-            </p>
+              </div>
+            </div>
           )}
 
           <p><FaStar /> <strong>Ocena:</strong> {profile.rating} ⭐ ({profile.reviews} opinii)</p>

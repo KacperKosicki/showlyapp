@@ -87,8 +87,8 @@ const UserDropdown = ({ user, refreshTrigger }) => {
         {hasProfile && (
           <button onClick={() => navigate('/your-profile')}>
             {isVisible
-              ? `Twoja wizytówka – Pozostało ${remainingDays} dni`
-              : 'Twoja wizytówka (wygasła)'}
+              ? `Twoja wizytówka: Pozostało ${remainingDays} dni`
+              : 'Twoja wizytówka: Wygasła'}
           </button>
         )}
         <button onClick={handleLogout}>Wyloguj</button>
