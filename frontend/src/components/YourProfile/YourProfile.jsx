@@ -116,13 +116,12 @@ const YourProfile = ({ user }) => {
         </div>
       )}
 
-      {!isEditing && (
-        <button onClick={() => setIsEditing(true)} className={styles.editButton}>
-          ✏️ Edytuj profil
-        </button>
-      )}
-
       <div className={styles.card}>
+        {!isEditing && (
+          <button onClick={() => setIsEditing(true)} className={styles.editTopRight}>
+            ✏️ Edytuj profil
+          </button>
+        )}
         <div className={styles.avatarTop}>
           <img
             src={profile.avatar || '/images/default-avatar.png'}
@@ -133,94 +132,167 @@ const YourProfile = ({ user }) => {
 
         <div className={styles.right}>
           <h3>{profile.name}</h3>
-          <p><FaUserTie /> <strong>Rola:</strong> {profile.role}</p>
-          <p><FaIdBadge /> <strong>Typ profilu:</strong> {profile.profileType}</p>
-          <p><FaMapMarkerAlt /> <strong>Lokalizacja:</strong>{' '}
-            {isEditing ? (
-              <input type="text" className={styles.formInput} value={editData.location || ''} onChange={(e) => setEditData({ ...editData, location: e.target.value })} />
-            ) : profile.location}
-            {formErrors.location && <small className={styles.error}>{formErrors.location}</small>}
-          </p>
 
+          <h4 className={styles.sectionTitle}>1. Dane podstawowe</h4>
+
+          <div className={styles.inputBlock}>
+            <label><FaUserTie /> <strong>Rola:</strong></label>
+            <p>{profile.role}</p>
+          </div>
+
+          <div className={styles.inputBlock}>
+            <label><FaIdBadge /> <strong>Typ profilu:</strong></label>
+            {isEditing ? (
+              <>
+                <select
+                  className={styles.formInput}
+                  value={editData.profileType || ''}
+                  onChange={(e) => setEditData({ ...editData, profileType: e.target.value })}
+                >
+                  <option value="hobbystyczny">Hobby</option>
+                  <option value="zawodowy">Zawód</option>
+                  <option value="serwis">Serwis</option>
+                  <option value="społeczność">Społeczność</option>
+                </select>
+                {formErrors.profileType && <small className={styles.error}>{formErrors.profileType}</small>}
+              </>
+            ) : (
+              <p>{profile.profileType}</p>
+            )}
+          </div>
+
+          <div className={styles.inputBlock}>
+            <label><FaMapMarkerAlt /> <strong>Lokalizacja:</strong></label>
+            {isEditing ? (
+              <>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={editData.location || ''}
+                  onChange={(e) => setEditData({ ...editData, location: e.target.value })}
+                />
+                {formErrors.location && <small className={styles.error}>{formErrors.location}</small>}
+              </>
+            ) : (
+              <p>{profile.location}</p>
+            )}
+          </div>
+
+          <h4 className={styles.sectionTitle}>2. Wygląd i opis</h4>
+          <div className={styles.descriptionBlock}>
+            <div className={styles.descriptionHeader}>
+              <FaInfoCircle />
+              <strong>Opis:</strong>
+            </div>
+            {isEditing ? (
+              <>
+                <textarea
+                  value={editData.description || ''}
+                  onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                  rows={4}
+                  className={styles.formTextarea}
+                  maxLength={500} // ✅ OGRANICZENIE
+                />
+                <small>{editData.description?.length || 0}/500 znaków</small>
+                {formErrors.description && <small className={styles.error}>{formErrors.description}</small>}
+              </>
+            ) : (
+
+              <p className={styles.descriptionText}>
+                {profile.description || 'Brak opisu.'}
+              </p>
+            )}
+          </div>
+
+          <h4 className={styles.sectionTitle}>3. Dostępność i usługi</h4>
           <div className={styles.pricingBlock}>
             <p><FaMoneyBillWave /> <strong>Cennik:</strong></p>
             {isEditing ? (
               <>
                 <label>
-                  Cennik od:
+                  od:
                   <input type="number" className={styles.formInput} value={editData.priceFrom || ''} onChange={(e) => setEditData({ ...editData, priceFrom: e.target.value })} />
                   {formErrors.priceFrom && <small className={styles.error}>{formErrors.priceFrom}</small>}
                 </label>
                 <label>
-                  Cennik do:
+                  do:
                   <input type="number" className={styles.formInput} value={editData.priceTo || ''} onChange={(e) => setEditData({ ...editData, priceTo: e.target.value })} />
                   {formErrors.priceTo && <small className={styles.error}>{formErrors.priceTo}</small>}
                 </label>
               </>
             ) : (
               <>
-                <p><strong>Cennik od:</strong> {profile.priceFrom} zł</p>
-                <p><strong>Cennik do:</strong> {profile.priceTo} zł</p>
+                <p><strong>od:</strong> {profile.priceFrom} zł</p>
+                <p><strong>do:</strong> {profile.priceTo} zł</p>
               </>
             )}
           </div>
 
-          <p><FaCalendarAlt /> <strong>Data dostępności:</strong>{' '}
+          <div className={styles.inputBlock}>
+            <label><FaCalendarAlt /> <strong>Data dostępności:</strong></label>
             {isEditing ? (
-              <input type="date" className={styles.formInput} value={editData.availabilityDate?.slice(0, 10) || ''} onChange={(e) => setEditData({ ...editData, availabilityDate: e.target.value })} />
-            ) : profile.availabilityDate}
-          </p>
+              <input
+                type="date"
+                className={styles.formInput}
+                value={editData.availabilityDate?.slice(0, 10) || ''}
+                onChange={(e) => setEditData({ ...editData, availabilityDate: e.target.value })}
+              />
+            ) : (
+              <p>{profile.availabilityDate}</p>
+            )}
+          </div>
 
-          <p><FaInfoCircle /> <strong>Opis:</strong><br />
+          <h4 className={styles.sectionTitle}>4. Linki i media</h4>
+
+          <div className={styles.inputBlock}>
+            <label><FaTags /> <strong>Tagi:</strong></label>
             {isEditing ? (
-              <textarea value={editData.description || ''} onChange={(e) => setEditData({ ...editData, description: e.target.value })} rows={4} className={styles.formTextarea} />
-            ) : (profile.description || 'Brak opisu.')}
-          </p>
+              <div className={styles.tagsWrapper}>
+                {[0, 1, 2].map(i => (
+                  <input key={i} type="text" className={styles.formInput} value={editData.tags?.[i] || ''} placeholder={`Tag ${i + 1}`} onChange={(e) => {
+                    const newTags = [...(editData.tags || [])];
+                    newTags[i] = e.target.value;
+                    setEditData({ ...editData, tags: newTags });
+                  }} />
+                ))}
+                {formErrors.tags && <small className={styles.error}>{formErrors.tags}</small>}
+              </div>
+            ) : (
+              <span className={styles.tags}>
+                {profile.tags.map(tag => (
+                  <span key={tag}>{tag.toUpperCase()}</span>
+                ))}
+              </span>
+            )}
+          </div>
 
+          <div className={styles.inputBlock}>
+            <label><FaLink /> <strong>Linki:</strong></label>
+            {isEditing ? (
+              <div className={styles.linksWrapper}>
+                {[0, 1, 2].map(i => (
+                  <input key={i} type="text" className={styles.formInput} value={editData.links?.[i] || ''} placeholder={`Link ${i + 1}`} onChange={(e) => {
+                    const newLinks = [...(editData.links || [])];
+                    newLinks[i] = e.target.value;
+                    setEditData({ ...editData, links: newLinks });
+                  }} />
+                ))}
+              </div>
+            ) : profile.links?.length > 0 && (
+              <div className={styles.linkSection}>
+                <div className={styles.links}>
+                  {profile.links.filter(l => l).map((link, i) => (
+                    <a key={i} href={link} target="_blank" rel="noopener noreferrer">{link}</a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <h4 className={styles.sectionTitle}>5. Informacje dodatkowe</h4>
           {profile.hasBusiness && (
             <p><FaBriefcase /> <strong>Działalność gospodarcza:</strong> Tak (NIP: {profile.nip || 'brak'})</p>
           )}
-
-          <p><FaTags /> <strong>Tagi:</strong></p>
-          {isEditing ? (
-            <div className={styles.tagsWrapper}>
-              {[0, 1, 2].map(i => (
-                <input key={i} type="text" className={styles.formInput} value={editData.tags?.[i] || ''} placeholder={`Tag ${i + 1}`} onChange={(e) => {
-                  const newTags = [...(editData.tags || [])];
-                  newTags[i] = e.target.value;
-                  setEditData({ ...editData, tags: newTags });
-                }} />
-              ))}
-            </div>
-          ) : (
-            <span className={styles.tags}>
-              {profile.tags.map(tag => (
-                <span key={tag}>{tag.toUpperCase()}</span>
-              ))}
-            </span>
-          )}
-
-          <p><FaLink /> <strong>Linki:</strong></p>
-          {isEditing ? (
-            <div className={styles.linksWrapper}>
-              {[0, 1, 2].map(i => (
-                <input key={i} type="text" className={styles.formInput} value={editData.links?.[i] || ''} placeholder={`Link ${i + 1}`} onChange={(e) => {
-                  const newLinks = [...(editData.links || [])];
-                  newLinks[i] = e.target.value;
-                  setEditData({ ...editData, links: newLinks });
-                }} />
-              ))}
-            </div>
-          ) : profile.links?.length > 0 && (
-            <div className={styles.linkSection}>
-              <div className={styles.links}>
-                {profile.links.filter(l => l).map((link, i) => (
-                  <a key={i} href={link} target="_blank" rel="noopener noreferrer">{link}</a>
-                ))}
-              </div>
-            </div>
-          )}
-
           <p><FaStar /> <strong>Ocena:</strong> {profile.rating} ⭐ ({profile.reviews} opinii)</p>
 
           {isEditing && (
@@ -233,6 +305,7 @@ const YourProfile = ({ user }) => {
       </div>
     </div>
   );
+
 };
 
 export default YourProfile;

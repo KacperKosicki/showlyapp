@@ -15,6 +15,7 @@
 }
 
 .card {
+  position: relative;
   max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
@@ -190,23 +191,34 @@
   color: $text-color;
 }
 
-.editButton {
-  margin: 1rem auto;
-  display: block;
-  padding: 0.6rem 1.2rem;
+.editTopRight {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.5rem;
   background: $primary-color;
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
+  padding: 0.4rem 1rem;
   font-family: $font-accent;
-  font-weight: bold;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  transition: background 0.3s ease;
 
   &:hover {
     background: darken($primary-color, 10%);
   }
+
+  @media (max-width: 480px) {
+    top: 0.8rem;
+    right: 1rem;
+    font-size: 0.85rem;
+    padding: 0.3rem 0.8rem;
+  }
 }
+
 
 .editButtons {
   display: flex;
@@ -267,8 +279,6 @@
 }
 
 .pricingBlock {
-  margin-bottom: 1.5rem;
-
   label {
     display: block;
     margin-top: 0.8rem;
@@ -355,3 +365,73 @@
     line-height: 1.4;
   }
 }
+
+.sectionTitle {
+  margin-top: 2rem;
+  font-size: 1.1rem;
+  color: $primary-color;
+  font-family: $font-heading;
+  border-left: 4px solid $primary-color;
+  padding-left: 0.8rem;
+}
+
+.descriptionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.descriptionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: $text-color;
+
+  svg {
+    color: $primary-color;
+    font-size: 1.1rem;
+  }
+}
+
+.descriptionText {
+  font-size: 1rem;
+  color: $text-color;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  font-family: $font-body;
+}
+
+.inputBlock {
+  margin-bottom: 1.2rem;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+
+    svg {
+      color: $primary-color;
+      flex-shrink: 0;
+    }
+
+    strong {
+      font-weight: 600;
+    }
+  }
+
+  p {
+    margin-top: 0.2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: $text-color;
+    font-family: $font-body;
+    line-height: 1.5;
+  }
+}
+
+
