@@ -1,3 +1,4 @@
+// YourProfile.jsx (zmieniony JSX z nowym układem)
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import axios from 'axios';
@@ -21,6 +22,7 @@ const YourProfile = ({ user }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
 
   const fetchProfile = async () => {
     try {
@@ -44,6 +46,22 @@ const YourProfile = ({ user }) => {
     fetchProfile();
   }, [user]);
 
+  const validateEditData = (data) => {
+    const errors = {};
+    if (!data.name?.trim() || data.name.length > 30) errors.name = 'Podaj nazwę (maks. 30 znaków)';
+    if (!data.role?.trim() || data.role.length > 40) errors.role = 'Podaj rolę (maks. 40 znaków)';
+    if (!data.location?.trim() || data.location.length > 30) errors.location = 'Podaj lokalizację (maks. 30 znaków)';
+    const nonEmptyTags = (data.tags || []).filter(tag => tag.trim() !== '');
+    if (nonEmptyTags.length === 0) errors.tags = 'Podaj przynajmniej 1 tag';
+    if (data.description?.length > 500) errors.description = 'Opis nie może przekraczać 500 znaków';
+    if (!data.profileType) errors.profileType = 'Wybierz typ profilu';
+    const priceFrom = Number(data.priceFrom);
+    const priceTo = Number(data.priceTo);
+    if (!priceFrom || priceFrom < 1 || priceFrom > 100000) errors.priceFrom = 'Cena od musi być w zakresie 1–100 000';
+    if (!priceTo || priceTo < priceFrom || priceTo > 1000000) errors.priceTo = 'Cena do musi być większa niż "od" i nie większa niż 1 000 000';
+    return errors;
+  };
+
   const handleExtendVisibility = async () => {
     try {
       await axios.patch(`/api/profiles/extend/${user.uid}`);
@@ -55,11 +73,20 @@ const YourProfile = ({ user }) => {
   };
 
   const handleSaveChanges = async () => {
+    const errors = validateEditData(editData);
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      alert('❌ Uzupełnij poprawnie wszystkie wymagane pola.');
+      return;
+    }
     try {
-      await axios.patch(`/api/profiles/update/${user.uid}`, editData);
+      await axios.patch(`/api/profiles/update/${user.uid}`, {
+        ...editData,
+        tags: (editData.tags || []).filter(tag => tag.trim() !== ''),
+      });
       await fetchProfile();
       setIsEditing(false);
-      alert("✅ Zapisano zmiany");
+      alert('✅ Zapisano zmiany');
     } catch (err) {
       console.error('❌ Błąd zapisu profilu:', err);
       alert('Błąd zapisu.');
@@ -68,7 +95,6 @@ const YourProfile = ({ user }) => {
 
   if (!user) return <Navigate to="/login" replace />;
   if (loading) return <p className={styles.loading}>⏳ Ładowanie profilu...</p>;
-
   if (notFound) {
     return (
       <div className={styles.noProfile}>
@@ -97,74 +123,57 @@ const YourProfile = ({ user }) => {
       )}
 
       <div className={styles.card}>
-        <div className={styles.left}>
+        <div className={styles.avatarTop}>
           <img
             src={profile.avatar || '/images/default-avatar.png'}
             alt="Avatar"
             className={styles.avatar}
           />
         </div>
+
         <div className={styles.right}>
           <h3>{profile.name}</h3>
-
           <p><FaUserTie /> <strong>Rola:</strong> {profile.role}</p>
-
           <p><FaIdBadge /> <strong>Typ profilu:</strong> {profile.profileType}</p>
-
           <p><FaMapMarkerAlt /> <strong>Lokalizacja:</strong>{' '}
             {isEditing ? (
-              <input
-                type="text"
-                className={styles.formInput}
-                value={editData.location || ''}
-                onChange={(e) => setEditData({ ...editData, location: e.target.value })}
-              />
-
+              <input type="text" className={styles.formInput} value={editData.location || ''} onChange={(e) => setEditData({ ...editData, location: e.target.value })} />
             ) : profile.location}
+            {formErrors.location && <small className={styles.error}>{formErrors.location}</small>}
           </p>
 
-          <p><FaMoneyBillWave /> <strong>Cennik:</strong>{' '}
+          <div className={styles.pricingBlock}>
+            <p><FaMoneyBillWave /> <strong>Cennik:</strong></p>
             {isEditing ? (
               <>
-                od <input
-                  type="number"
-                  className={styles.formInput}
-                  value={editData.priceFrom || ''}
-                  onChange={(e) => setEditData({ ...editData, priceFrom: e.target.value })}
-                /> do <input
-                  type="number"
-                  className={styles.formInput}
-                  value={editData.priceTo || ''}
-                  onChange={(e) => setEditData({ ...editData, priceTo: e.target.value })}
-                /> zł
-
+                <label>
+                  Cennik od:
+                  <input type="number" className={styles.formInput} value={editData.priceFrom || ''} onChange={(e) => setEditData({ ...editData, priceFrom: e.target.value })} />
+                  {formErrors.priceFrom && <small className={styles.error}>{formErrors.priceFrom}</small>}
+                </label>
+                <label>
+                  Cennik do:
+                  <input type="number" className={styles.formInput} value={editData.priceTo || ''} onChange={(e) => setEditData({ ...editData, priceTo: e.target.value })} />
+                  {formErrors.priceTo && <small className={styles.error}>{formErrors.priceTo}</small>}
+                </label>
               </>
             ) : (
-              profile.priceFrom && profile.priceTo ? (
-                <>od <strong>{profile.priceFrom} zł</strong> do <strong>{profile.priceTo} zł</strong></>
-              ) : <em> Brak danych</em>
+              <>
+                <p><strong>Cennik od:</strong> {profile.priceFrom} zł</p>
+                <p><strong>Cennik do:</strong> {profile.priceTo} zł</p>
+              </>
             )}
-          </p>
+          </div>
 
           <p><FaCalendarAlt /> <strong>Data dostępności:</strong>{' '}
             {isEditing ? (
-              <input
-                type="date"
-                className={styles.formInput}
-                value={editData.availabilityDate?.slice(0, 10) || ''}
-                onChange={(e) => setEditData({ ...editData, availabilityDate: e.target.value })}
-              />
-
+              <input type="date" className={styles.formInput} value={editData.availabilityDate?.slice(0, 10) || ''} onChange={(e) => setEditData({ ...editData, availabilityDate: e.target.value })} />
             ) : profile.availabilityDate}
           </p>
 
           <p><FaInfoCircle /> <strong>Opis:</strong><br />
             {isEditing ? (
-              <textarea
-                value={editData.description || ''}
-                onChange={(e) => setEditData({ ...editData, description: e.target.value })}
-                rows={4}
-              />
+              <textarea value={editData.description || ''} onChange={(e) => setEditData({ ...editData, description: e.target.value })} rows={4} className={styles.formTextarea} />
             ) : (profile.description || 'Brak opisu.')}
           </p>
 
@@ -176,18 +185,11 @@ const YourProfile = ({ user }) => {
           {isEditing ? (
             <div className={styles.tagsWrapper}>
               {[0, 1, 2].map(i => (
-                <input
-                  key={i}
-                  type="text"
-                  className={styles.formInput}
-                  value={editData.tags?.[i] || ''}
-                  placeholder={`Tag ${i + 1}`}
-                  onChange={(e) => {
-                    const newTags = [...(editData.tags || [])];
-                    newTags[i] = e.target.value;
-                    setEditData({ ...editData, tags: newTags });
-                  }}
-                />
+                <input key={i} type="text" className={styles.formInput} value={editData.tags?.[i] || ''} placeholder={`Tag ${i + 1}`} onChange={(e) => {
+                  const newTags = [...(editData.tags || [])];
+                  newTags[i] = e.target.value;
+                  setEditData({ ...editData, tags: newTags });
+                }} />
               ))}
             </div>
           ) : (
@@ -198,23 +200,15 @@ const YourProfile = ({ user }) => {
             </span>
           )}
 
-
           <p><FaLink /> <strong>Linki:</strong></p>
           {isEditing ? (
             <div className={styles.linksWrapper}>
               {[0, 1, 2].map(i => (
-                <input
-                  key={i}
-                  type="text"
-                  className={styles.formInput}
-                  value={editData.links?.[i] || ''}
-                  placeholder={`Link ${i + 1}`}
-                  onChange={(e) => {
-                    const newLinks = [...(editData.links || [])];
-                    newLinks[i] = e.target.value;
-                    setEditData({ ...editData, links: newLinks });
-                  }}
-                />
+                <input key={i} type="text" className={styles.formInput} value={editData.links?.[i] || ''} placeholder={`Link ${i + 1}`} onChange={(e) => {
+                  const newLinks = [...(editData.links || [])];
+                  newLinks[i] = e.target.value;
+                  setEditData({ ...editData, links: newLinks });
+                }} />
               ))}
             </div>
           ) : profile.links?.length > 0 && (
@@ -226,7 +220,6 @@ const YourProfile = ({ user }) => {
               </div>
             </div>
           )}
-
 
           <p><FaStar /> <strong>Ocena:</strong> {profile.rating} ⭐ ({profile.reviews} opinii)</p>
 
