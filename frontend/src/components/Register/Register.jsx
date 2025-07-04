@@ -6,13 +6,13 @@ import {
   onAuthStateChanged,
   signOut
 } from 'firebase/auth';
-import axios from 'axios'; // dodaj na górze jeśli nie ma
+import axios from 'axios';
 import { auth } from '../../firebase';
 import styles from './Register.module.scss';
 import Hero from '../Hero/Hero';
 import Footer from '../Footer/Footer';
 
-const Register = () => {
+const Register = ({ user, setUser, setRefreshTrigger }) => {
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -59,25 +59,33 @@ const Register = () => {
     setMessage('');
 
     try {
-      // 🔎 Najpierw zapytaj backend, czy email istnieje
+      // 🔎 Sprawdzenie w bazie MongoDB
       const res = await axios.get(`http://localhost:5000/api/users/check-email?email=${form.email}`);
       if (res.data.exists) {
         setError(`Ten e-mail jest już powiązany z kontem (${res.data.provider === 'google' ? 'Google' : 'e-mail + hasło'}). Zaloguj się tą metodą.`);
         return;
       }
 
-      // 🧠 Firebase – dopiero teraz twórz konto
+      // 🔐 Rejestracja w Firebase
       const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
       const firebaseUser = userCredential.user;
 
-      // 💾 Dodaj do MongoDB
+      // 💾 Zapis do MongoDB
       await axios.post('http://localhost:5000/api/users', {
         email: firebaseUser.email,
         name: form.name || '',
         firebaseUid: firebaseUser.uid,
-        provider: 'password' // <--- ważne
+        provider: 'password'
       });
 
+      // ✅ Aktualizacja lokalnego usera
+      setUser({
+        email: firebaseUser.email,
+        uid: firebaseUser.uid
+      });
+      setRefreshTrigger(Date.now());
+
+      // 📧 Weryfikacja
       await sendEmailVerification(firebaseUser);
       setEmailSent(true);
       setMessage('Na Twój adres e-mail został wysłany link aktywacyjny. Kliknij w niego, aby aktywować konto.');
@@ -91,10 +99,9 @@ const Register = () => {
     }
   };
 
-
   return (
     <>
-      <Hero />
+      <Hero user={user} setUser={setUser} refreshTrigger={Date.now()} />
       <div className={styles.registerContainer}>
         <h2>Utwórz konto</h2>
 

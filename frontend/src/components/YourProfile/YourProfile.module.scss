@@ -80,10 +80,6 @@
 
       p {
         font-size: 0.95rem;
-
-        strong {
-          min-width: auto;
-        }
       }
 
       .tags {
@@ -179,6 +175,25 @@
   }
 }
 
+.tagsWrapper,
+.linksWrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+
+  .formInput {
+    flex: 1 1 30%;
+    min-width: 100px;
+  }
+
+  @media (max-width: 480px) {
+    .formInput {
+      flex: 1 1 100%;
+    }
+  }
+}
+
 .linkSection {
   margin-top: 1rem;
 }
@@ -232,6 +247,82 @@
   padding: 3rem;
   font-size: 1.2rem;
   color: $text-color;
+}
+
+.editButton {
+  margin: 1rem auto;
+  display: block;
+  padding: 0.6rem 1.2rem;
+  background: $primary-color;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: $font-accent;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s;
+
+  &:hover {
+    background: darken($primary-color, 10%);
+  }
+}
+
+.editButtons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+
+  button {
+    flex: 1;
+    padding: 0.6rem;
+    border-radius: 8px;
+    font-weight: bold;
+    font-family: $font-accent;
+    cursor: pointer;
+    border: none;
+  }
+
+  button:first-child {
+    background: #4caf50;
+    color: white;
+  }
+
+  button:last-child {
+    background: #ccc;
+  }
+}
+
+.formInput {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  font-family: $font-body;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+  background-color: white;
+  color: $text-color;
+
+  &:focus {
+    border-color: $primary-color;
+    box-shadow: 0 0 0 2px rgba($primary-color, 0.3);
+    outline: none;
+  }
+
+  &::placeholder {
+    color: #999;
+    font-style: italic;
+  }
+
+  &.small {
+    max-width: 120px;
+  }
+}
+
+.formTextarea {
+  @extend .formInput;
+  resize: vertical;
+  min-height: 100px;
 }
 
 @media (max-width: 480px) {

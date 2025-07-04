@@ -138,4 +138,30 @@ router.patch('/extend/:uid', async (req, res) => {
   }
 });
 
+// PATCH /api/profiles/update/:uid – aktualizacja wybranych pól profilu
+router.patch('/update/:uid', async (req, res) => {
+  const allowedFields = [
+    'profileType', 'location', 'priceFrom', 'priceTo',
+    'availabilityDate', 'description', 'tags', 'links'
+  ];
+
+  try {
+    const profile = await Profile.findOne({ userId: req.params.uid });
+    if (!profile) return res.status(404).json({ message: 'Nie znaleziono profilu.' });
+
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        profile[field] = req.body[field];
+      }
+    }
+
+    await profile.save();
+    res.json({ message: 'Profil zaktualizowany', profile });
+
+  } catch (err) {
+    console.error('❌ Błąd aktualizacji profilu:', err);
+    res.status(500).json({ message: 'Błąd podczas aktualizacji profilu.' });
+  }
+});
+
 module.exports = router;
