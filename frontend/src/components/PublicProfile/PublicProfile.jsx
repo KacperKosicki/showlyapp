@@ -64,8 +64,8 @@ const PublicProfile = () => {
     if (hasRated) return alert('Już oceniłeś ten profil.');
     if (!selectedRating) return alert('Wybierz liczbę gwiazdek.');
 
-    if (comment.trim().length < 5)
-      return alert('Komentarz musi mieć min. 5 znaków.');
+    if (comment.trim().length < 10)
+      return alert('Komentarz musi mieć min. 10 znaków.');
 
     if (comment.length > maxChars) {
       alert(`Komentarz może mieć maksymalnie ${maxChars} znaków (obecnie: ${comment.length}).`);
@@ -184,10 +184,9 @@ const PublicProfile = () => {
             <p className={styles.noDescription}>Użytkownik nie dodał jeszcze żadnych linków.</p>
           )}
 
-          <div className={styles.separator} />
-
           {!isOwner && (
             <div className={styles.ratingSection}>
+              <div className={styles.separator} />
               <p>{hasRated ? 'Oceniłeś już ten profil:' : 'Oceń tę wizytówkę:'}</p>
               <div className={styles.stars}>
                 {[1, 2, 3, 4, 5].map(val => (
@@ -237,24 +236,27 @@ const PublicProfile = () => {
         <h3>🗣️ Opinie użytkowników</h3>
         {profile.ratedBy?.length > 0 ? (
           <ul className={styles.reviewsList}>
-            {profile.ratedBy.map((op, i) => (
-              <li key={i} className={styles.reviewItem}>
-                <div className={styles.reviewHeader}>
-                  <strong className={styles.reviewUser}>
-                    {op.userName || 'Użytkownik'}
-                  </strong>
-                  <span className={styles.reviewRating}>
-                    {[...Array(5)].map((_, idx) => (
-                      <FaStar
-                        key={idx}
-                        className={idx < op.rating ? styles.starSelected : styles.star}
-                      />
-                    ))}
-                  </span>
-                </div>
-                <p className={styles.reviewText}>{op.comment}</p>
-              </li>
-            ))}
+            {profile.ratedBy.map((op, i) => {
+              const ratingVal = Number(op.rating); // upewniamy się, że to liczba
+              return (
+                <li key={i} className={styles.reviewItem}>
+                  <div className={styles.reviewHeader}>
+                    <strong className={styles.reviewUser}>
+                      {op.userName || 'Użytkownik'}
+                    </strong>
+                    <span className={styles.reviewRating}>
+                      {[...Array(5)].map((_, idx) => (
+                        <FaStar
+                          key={idx}
+                          className={idx < ratingVal ? styles.starSelected : styles.star}
+                        />
+                      ))}
+                    </span>
+                  </div>
+                  <p className={styles.reviewText}>{op.comment}</p>
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <p className={styles.noReviews}>Brak opinii</p>

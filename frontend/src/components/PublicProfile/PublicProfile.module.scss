@@ -110,11 +110,17 @@
     display: flex;
     gap: 0.2rem;
 
-    svg {
+    .star {
       font-size: 1rem;
-      color: gold;
+      color: #ccc; // szara gwiazdka
+    }
+
+    .starSelected {
+      font-size: 1rem;
+      color: gold; // złota gwiazdka
     }
   }
+
 }
 
 .reviewText {
@@ -125,7 +131,7 @@
   border-left: 3px solid $primary-color;
   margin-top: 0.4rem;
   word-break: break-word; // <--- TO DODAJ
-  white-space: pre-wrap;  // <--- opcjonalnie, zachowuje nowe linie
+  white-space: pre-wrap; // <--- opcjonalnie, zachowuje nowe linie
 }
 
 .topBar {

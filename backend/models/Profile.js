@@ -9,8 +9,8 @@ const profileSchema = new mongoose.Schema({
   reviews: Number,
   ratedBy: [{
     userId: String,
-    rating: Number,
-    comment: String,
+    rating: { type: Number, min: 1, max: 5 },
+    comment: { type: String, minlength: 5, maxlength: 100 },
     userName: String,
   }],
   location: String,

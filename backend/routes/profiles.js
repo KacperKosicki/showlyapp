@@ -167,30 +167,60 @@ router.patch('/update/:uid', async (req, res) => {
 
 router.patch('/rate/:slug', async (req, res) => {
   const { userId, rating, comment } = req.body;
+  const numericRating = Number(rating);
 
-  if (!userId || !rating || rating < 1 || rating > 5 || !comment || comment.trim().length < 5) {
-    return res.status(400).json({ message: 'Nieprawidłowe dane – dodaj sensowny komentarz.' });
+  // 🔒 Walidacja danych
+  if (
+    !userId ||
+    isNaN(numericRating) ||
+    numericRating < 1 ||
+    numericRating > 5 ||
+    !comment ||
+    comment.trim().length < 5 ||
+    comment.trim().length > 100
+  ) {
+    return res.status(400).json({
+      message: 'Ocena musi być liczbą od 1 do 5, a komentarz musi mieć od 5 do 100 znaków.'
+    });
   }
 
   try {
     const profile = await Profile.findOne({ slug: req.params.slug });
-    if (!profile) return res.status(404).json({ message: 'Nie znaleziono profilu.' });
-    if (profile.userId === userId) return res.status(403).json({ message: 'Nie możesz ocenić własnej wizytówki.' });
+    if (!profile) {
+      return res.status(404).json({ message: 'Nie znaleziono profilu.' });
+    }
+
+    if (profile.userId === userId) {
+      return res.status(403).json({ message: 'Nie możesz ocenić własnej wizytówki.' });
+    }
 
     const alreadyRated = profile.ratedBy.find(r => r.userId === userId);
-    if (alreadyRated) return res.status(400).json({ message: 'Już oceniłeś ten profil.' });
+    if (alreadyRated) {
+      return res.status(400).json({ message: 'Już oceniłeś ten profil.' });
+    }
 
     const user = await User.findOne({ firebaseUid: userId });
     const userName = user?.name || 'Użytkownik';
 
-    profile.ratedBy.push({ userId, rating, comment, userName });
+    // ✅ Dodanie oceny
+    profile.ratedBy.push({
+      userId,
+      rating: numericRating,
+      comment,
+      userName
+    });
 
+    // 🔢 Aktualizacja średniej oceny
     const totalRatings = profile.ratedBy.reduce((sum, r) => sum + r.rating, 0);
-    profile.rating = (totalRatings / profile.ratedBy.length).toFixed(2);
+    profile.rating = Number((totalRatings / profile.ratedBy.length).toFixed(2));
     profile.reviews = profile.ratedBy.length;
 
     await profile.save();
-    res.json({ message: 'Ocena dodana.', rating: profile.rating, reviews: profile.reviews });
+    res.json({
+      message: 'Ocena dodana.',
+      rating: profile.rating,
+      reviews: profile.reviews
+    });
 
   } catch (err) {
     console.error('❌ Błąd oceniania:', err);
