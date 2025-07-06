@@ -1,5 +1,5 @@
 // YourProfile.jsx (zmieniony JSX z nowym układem)
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import axios from 'axios';
 import styles from './YourProfile.module.scss';
@@ -23,6 +23,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const fileInputRef = useRef(null);
 
   const fetchProfile = async () => {
     try {
@@ -45,6 +46,17 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     if (!user?.uid) return;
     fetchProfile();
   }, [user]);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditData({ ...editData, avatar: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const validateEditData = (data) => {
     const errors = {};
@@ -125,11 +137,27 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           </button>
         )}
         <div className={styles.avatarTop}>
-          <img
-            src={profile.avatar || '/images/default-avatar.png'}
-            alt="Avatar"
-            className={styles.avatar}
-          />
+          <div
+            className={styles.avatarWrapper}
+            onClick={() => isEditing && fileInputRef.current.click()}
+            style={{ cursor: isEditing ? 'pointer' : 'default' }}
+          >
+            <img
+              src={isEditing ? editData.avatar : profile.avatar || '/images/default-avatar.png'}
+              alt="Avatar"
+              className={styles.avatar}
+            />
+            {isEditing && <div className={styles.avatarOverlay}>Kliknij zdjęcie, aby zmienić</div>}
+          </div>
+          {isEditing && (
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              style={{ display: 'none' }}
+            />
+          )}
         </div>
 
         <div className={styles.right}>

@@ -124,6 +124,9 @@ const PublicProfile = () => {
             </span>
             <h2>{name}</h2>
             <p className={styles.role}>{role}</p>
+
+            <div className={styles.separator} />
+
             {description?.trim() ? (
               <p className={styles.description}>{description}</p>
             ) : (

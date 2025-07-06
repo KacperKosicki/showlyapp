@@ -142,6 +142,7 @@ router.patch('/extend/:uid', async (req, res) => {
 // PATCH /api/profiles/update/:uid – aktualizacja wybranych pól profilu
 router.patch('/update/:uid', async (req, res) => {
   const allowedFields = [
+    'avatar',
     'profileType', 'location', 'priceFrom', 'priceTo',
     'availabilityDate', 'description', 'tags', 'links'
   ];
