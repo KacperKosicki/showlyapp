@@ -61,7 +61,7 @@ const PublicProfile = () => {
   const handleRate = async () => {
     const userId = auth.currentUser?.uid;
     if (!userId) return alert('Musisz być zalogowany, aby ocenić.');
-    if (hasRated) return alert('Już oceniłeś ten profil.');
+    if (hasRated) return alert('Już oceniłeś/aś ten profil.');
     if (!selectedRating) return alert('Wybierz liczbę gwiazdek.');
 
     if (comment.trim().length < 10)
@@ -187,7 +187,7 @@ const PublicProfile = () => {
           {!isOwner && (
             <div className={styles.ratingSection}>
               <div className={styles.separator} />
-              <p>{hasRated ? 'Oceniłeś już ten profil:' : 'Oceń tę wizytówkę:'}</p>
+              <p>{hasRated ? 'Oceniłeś/aś już ten profil:' : 'Oceń tę wizytówkę:'}</p>
               <div className={styles.stars}>
                 {[1, 2, 3, 4, 5].map(val => (
                   <FaStar
