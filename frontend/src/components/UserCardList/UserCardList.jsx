@@ -17,7 +17,7 @@ const UserCardList = () => {
 
   return (
     <section className={styles.section}>
-      <h2 className={styles.title}>Najlepiej oceniani</h2>
+      <h2 className={styles.title}>Najlepiej oceniani 🔥</h2>
       <p className={styles.description}>
         Poznaj ekspertów z najwyższymi ocenami. To liderzy w swoich dziedzinach, którym zaufało najwięcej użytkowników.
       </p>

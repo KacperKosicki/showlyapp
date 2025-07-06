@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Profile = require('../models/Profile');
+const User = require('../models/User'); // 👈 dodaj to
 
 // Pomocnicza funkcja do tworzenia slugów
 const slugify = (text) =>
@@ -161,6 +162,39 @@ router.patch('/update/:uid', async (req, res) => {
   } catch (err) {
     console.error('❌ Błąd aktualizacji profilu:', err);
     res.status(500).json({ message: 'Błąd podczas aktualizacji profilu.' });
+  }
+});
+
+router.patch('/rate/:slug', async (req, res) => {
+  const { userId, rating, comment } = req.body;
+
+  if (!userId || !rating || rating < 1 || rating > 5 || !comment || comment.trim().length < 5) {
+    return res.status(400).json({ message: 'Nieprawidłowe dane – dodaj sensowny komentarz.' });
+  }
+
+  try {
+    const profile = await Profile.findOne({ slug: req.params.slug });
+    if (!profile) return res.status(404).json({ message: 'Nie znaleziono profilu.' });
+    if (profile.userId === userId) return res.status(403).json({ message: 'Nie możesz ocenić własnej wizytówki.' });
+
+    const alreadyRated = profile.ratedBy.find(r => r.userId === userId);
+    if (alreadyRated) return res.status(400).json({ message: 'Już oceniłeś ten profil.' });
+
+    const user = await User.findOne({ firebaseUid: userId });
+    const userName = user?.name || 'Użytkownik';
+
+    profile.ratedBy.push({ userId, rating, comment, userName });
+
+    const totalRatings = profile.ratedBy.reduce((sum, r) => sum + r.rating, 0);
+    profile.rating = (totalRatings / profile.ratedBy.length).toFixed(2);
+    profile.reviews = profile.ratedBy.length;
+
+    await profile.save();
+    res.json({ message: 'Ocena dodana.', rating: profile.rating, reviews: profile.reviews });
+
+  } catch (err) {
+    console.error('❌ Błąd oceniania:', err);
+    res.status(500).json({ message: 'Błąd serwera.' });
   }
 });
 

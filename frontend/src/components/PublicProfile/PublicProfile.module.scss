@@ -1,19 +1,131 @@
 @import '../../styles/variables';
 
-.container {
-  padding: 4rem 2rem;
+.profileWrapper {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: 2rem;
+  padding: 4rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  @media (max-width: 900px) {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .card {
-  width: 100%;
-  max-width: 800px;
-  background-color: white;
+  width: 65%;
+  min-width: 320px;
+  max-width: 700px;
+  border-radius: 1.5rem;
+  padding: 2rem;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  font-family: $font-body;
+}
+
+@media (max-width: 900px) {
+  .card {
+    width: 100%;
+    max-width: 700px;
+  }
+}
+
+.reviewsBox {
+  width: 30%;
+  min-width: 280px;
+  max-width: 440px;
+  border: 1px solid #eaeaea;
   border-radius: 1.5rem;
   padding: 2rem;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
   font-family: $font-body;
+  align-self: flex-start;
+
+  h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    color: $text-color;
+  }
+
+  .noReviews {
+    color: #999;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 900px) {
+  .reviewsBox {
+    width: 100%;
+    max-width: 700px;
+    margin-top: 2rem;
+  }
+}
+
+.reviewsList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.reviewItem {
+  background: linear-gradient(135deg, #ffffff, #f9f9f9);
+  border-radius: 1rem;
+  padding: 1.2rem 1.5rem;
+  border: 1px solid #eaeaea;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.reviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; // 👈 daje równe top-alignment
+  gap: 0.6rem; // 👈 poprawia odstęp między nazwą a gwiazdkami
+  margin-bottom: 0.5rem;
+
+  .reviewUser {
+    font-weight: 600;
+    color: $primary-color;
+    font-size: 1rem;
+    font-family: $font-heading;
+  }
+
+  .reviewRating {
+    display: flex;
+    gap: 0.2rem;
+
+    svg {
+      font-size: 1rem;
+      color: gold;
+    }
+  }
+}
+
+.reviewText {
+  font-size: 0.95rem;
+  color: #444;
+  line-height: 1.4;
+  padding-left: 0.7rem;
+  border-left: 3px solid $primary-color;
+  margin-top: 0.4rem;
+  word-break: break-word; // <--- TO DODAJ
+  white-space: pre-wrap;  // <--- opcjonalnie, zachowuje nowe linie
 }
 
 .topBar {
@@ -66,7 +178,7 @@
   }
 
   .role {
-    font-size: 0.95rem;
+    font-size: 1.2rem;
     color: gray;
     margin: 0.1rem 0;
     font-family: $font-accent;
@@ -102,7 +214,8 @@
 .separator {
   height: 1px;
   background-color: #e0e0e0;
-  margin: 1.5rem 0;
+  margin: 1.5rem auto; // wyśrodkowanie
+  width: 70%;
 }
 
 .details {
@@ -117,10 +230,6 @@
     strong {
       color: $primary-color;
     }
-  }
-
-  .date {
-    margin-bottom: 0.3rem;
   }
 
   .calendarToggle {
@@ -147,6 +256,7 @@
   }
 
   .links {
+    list-style: none;
     margin-top: 1.2rem;
     display: flex;
     flex-direction: column;
@@ -156,12 +266,76 @@
     a {
       color: $primary-color;
       font-size: 0.9rem;
-      text-decoration: underline;
 
       &:hover {
         text-decoration: none;
       }
     }
+  }
+}
+
+.ratingSection {
+  margin-top: 2rem;
+  text-align: center;
+
+  p {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+  }
+}
+
+.stars {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.star {
+  font-size: 2rem;
+  color: #ccc;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.starSelected {
+  color: gold;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.commentInput {
+  margin-top: 1rem;
+  width: 100%;
+  min-height: 80px;
+  padding: 0.8rem;
+  font-size: 0.95rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.wordCounter {
+  display: block;
+  font-size: 0.85rem;
+  color: #777;
+  margin: 0.3rem 0;
+  text-align: right;
+}
+
+.sendButton {
+  margin-top: 1rem;
+  background-color: $primary-color;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: darken($primary-color, 10%);
   }
 }
 
@@ -185,7 +359,6 @@
   color: #333;
 }
 
-// Dodatkowe kolory dla typów profili (jak w UserCard)
 .zawodowy {
   background-color: #e50914;
   color: white;

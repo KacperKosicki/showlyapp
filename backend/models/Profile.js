@@ -7,6 +7,12 @@ const profileSchema = new mongoose.Schema({
   role: String,
   rating: Number,
   reviews: Number,
+  ratedBy: [{
+    userId: String,
+    rating: Number,
+    comment: String,
+    userName: String,
+  }],
   location: String,
   tags: [String],
   priceFrom: Number,

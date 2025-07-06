@@ -120,7 +120,7 @@
 .tagsWrapper,
 .linksWrapper {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.6rem;
   margin-top: 0.4rem;
 
@@ -343,29 +343,6 @@
   font-weight: 500;
 }
 
-@media (max-width: 480px) {
-  .card {
-    padding: 1rem;
-  }
-
-  .expiredNotice {
-    font-size: 0.95rem;
-
-    button {
-      padding: 0.6rem 1.2rem;
-    }
-  }
-
-  .tags span {
-    font-size: 0.8rem;
-    padding: 0.3rem 0.7rem;
-  }
-
-  .right p {
-    line-height: 1.4;
-  }
-}
-
 .sectionTitle {
   margin-top: 2rem;
   font-size: 1.1rem;
@@ -434,4 +411,25 @@
   }
 }
 
+@media (max-width: 480px) {
+  .card {
+    padding: 1rem;
+  }
 
+  .expiredNotice {
+    font-size: 0.95rem;
+
+    button {
+      padding: 0.6rem 1.2rem;
+    }
+  }
+
+  .tags span {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.7rem;
+  }
+
+  .right p {
+    line-height: 1.4;
+  }
+}
