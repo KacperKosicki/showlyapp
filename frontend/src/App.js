@@ -86,7 +86,7 @@ function App() {
           element={
             <>
               <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} />
-              <YourProfile user={user} />
+              <YourProfile user={user} setRefreshTrigger={setRefreshTrigger} />
               <Footer />
             </>
           }

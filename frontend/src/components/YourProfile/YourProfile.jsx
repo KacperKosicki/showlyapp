@@ -16,7 +16,7 @@ import {
   FaBriefcase
 } from 'react-icons/fa';
 
-const YourProfile = ({ user }) => {
+const YourProfile = ({ user, setRefreshTrigger }) => {
   const [profile, setProfile] = useState(null);
   const [editData, setEditData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
@@ -66,11 +66,13 @@ const YourProfile = ({ user }) => {
     try {
       await axios.patch(`/api/profiles/extend/${user.uid}`);
       await fetchProfile();
+      setRefreshTrigger(Date.now()); // 👈 DODAĆ TO
     } catch (err) {
       console.error('❌ Błąd przedłużania widoczności:', err);
       alert('Nie udało się przedłużyć widoczności.');
     }
   };
+
 
   const handleSaveChanges = async () => {
     const errors = validateEditData(editData);
