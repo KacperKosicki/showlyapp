@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
+import { Navigate } from 'react-router-dom';
 
 import Hero from './components/Hero/Hero';
 import UserCardList from './components/UserCardList/UserCardList';
@@ -16,11 +17,14 @@ import AboutApp from './components/AboutApp/AboutApp';
 import CreateProfile from './components/CreateProfile/CreateProfile';
 import YourProfile from './components/YourProfile/YourProfile';
 import PublicProfile from './components/PublicProfile/PublicProfile'; // Upewnij się, że ścieżka jest poprawna
+import MessageForm from './components/MessageForm/MessageForm';
+import Notifications from './components/Notifications/Notifications';
 
 function App() {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(Date.now());
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -49,12 +53,12 @@ function App() {
           path="/"
           element={
             <>
-              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} />
+              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
               <AboutApp />
-              <UserCardList />
+              <UserCardList currentUser={user} />
               <WhyUs />
               <CategoryFilter />
-              <AllUsersList />
+              <AllUsersList currentUser={user} />
               <Footer />
             </>
           }
@@ -75,7 +79,15 @@ function App() {
           path="/create-profile"
           element={
             <>
-              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} />
+              <Hero
+                user={user}
+                setUser={setUser}
+                refreshTrigger={refreshTrigger}
+                setRefreshTrigger={setRefreshTrigger}
+                unreadCount={unreadCount}
+                setUnreadCount={setUnreadCount}
+              />
+
               <CreateProfile user={user} setRefreshTrigger={setRefreshTrigger} />
               <Footer />
             </>
@@ -85,7 +97,15 @@ function App() {
           path="/your-profile"
           element={
             <>
-              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} />
+              <Hero
+                user={user}
+                setUser={setUser}
+                refreshTrigger={refreshTrigger}
+                setRefreshTrigger={setRefreshTrigger}
+                unreadCount={unreadCount}
+                setUnreadCount={setUnreadCount}
+              />
+
               <YourProfile user={user} setRefreshTrigger={setRefreshTrigger} />
               <Footer />
             </>
@@ -95,10 +115,62 @@ function App() {
           path="/profil/:slug"
           element={
             <>
-              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} />
+              <Hero
+                user={user}
+                setUser={setUser}
+                refreshTrigger={refreshTrigger}
+                setRefreshTrigger={setRefreshTrigger}
+                unreadCount={unreadCount}
+                setUnreadCount={setUnreadCount}
+              />
+
               <PublicProfile />
               <Footer />
             </>
+          }
+        />
+        <Route
+          path="/wiadomosc/:recipientId"
+          element={
+            user ? (
+              <>
+                <Hero
+                  user={user}
+                  setUser={setUser}
+                  refreshTrigger={refreshTrigger}
+                  setRefreshTrigger={setRefreshTrigger}
+                  unreadCount={unreadCount}
+                  setUnreadCount={setUnreadCount}
+                />
+
+                <MessageForm user={user} />
+                <Footer />
+              </>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/powiadomienia"
+          element={
+            user ? (
+              <>
+                <Hero
+                  user={user}
+                  setUser={setUser}
+                  refreshTrigger={refreshTrigger}
+                  setRefreshTrigger={setRefreshTrigger}
+                  unreadCount={unreadCount}
+                  setUnreadCount={setUnreadCount}
+                />
+
+                <Notifications user={user} setUnreadCount={setUnreadCount} />
+                <Footer />
+              </>
+            ) : (
+              <Navigate to="/login" replace />
+            )
           }
         />
       </Routes>

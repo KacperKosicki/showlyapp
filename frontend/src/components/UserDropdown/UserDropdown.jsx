@@ -1,19 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import styles from './UserDropdown.module.scss';
 import { FaChevronDown } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase';
 
-const UserDropdown = ({ user, refreshTrigger }) => {
+const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => {
   const [open, setOpen] = useState(false);
   const [remainingDays, setRemainingDays] = useState(null);
   const [hasProfile, setHasProfile] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
+  const location = useLocation(); // 👈 dodane
 
+  // Sprawdzanie widoczności profilu
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.uid) return;
@@ -27,7 +29,6 @@ const UserDropdown = ({ user, refreshTrigger }) => {
           const until = new Date(profile.visibleUntil);
           const diff = Math.ceil((until - now) / (1000 * 60 * 60 * 24));
 
-          // 🔍 Lokalna walidacja daty ważności
           if (until < now) {
             setIsVisible(false);
             setRemainingDays(0);
@@ -50,7 +51,23 @@ const UserDropdown = ({ user, refreshTrigger }) => {
     fetchProfile();
   }, [user, refreshTrigger]);
 
+  // Pobieranie liczby nieprzeczytanych wiadomości
+  useEffect(() => {
+    const fetchUnreadMessages = async () => {
+      if (!user?.uid) return;
 
+      try {
+        const res = await axios.get(`/api/messages/unread/${user.uid}`);
+        setUnreadCount(res.data.count);
+      } catch (err) {
+        console.error('Błąd pobierania liczby wiadomości:', err);
+      }
+    };
+
+    fetchUnreadMessages();
+  }, [user, refreshTrigger, location.pathname]); // 👈 location.pathname jako trigger
+
+  // Zamknięcie dropdownu po kliknięciu poza
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -61,11 +78,12 @@ const UserDropdown = ({ user, refreshTrigger }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Wylogowanie
   const handleLogout = async () => {
     try {
       await signOut(auth);
       localStorage.removeItem('showlyUser');
-      window.location.reload();
+      navigate('/');
     } catch (err) {
       console.error('Błąd wylogowania:', err);
     }
@@ -94,6 +112,9 @@ const UserDropdown = ({ user, refreshTrigger }) => {
             )}
           </button>
         )}
+        <button onClick={() => navigate('/powiadomienia')}>
+          Powiadomienia {unreadCount > 0 && <strong>({unreadCount})</strong>}
+        </button>
         <button onClick={handleLogout}>Wyloguj</button>
       </div>
     </div>

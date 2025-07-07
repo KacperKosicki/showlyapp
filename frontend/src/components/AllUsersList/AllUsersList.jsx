@@ -3,7 +3,7 @@ import styles from './AllUsersList.module.scss';
 import UserCard from '../UserCard/UserCard';
 import axios from 'axios';
 
-const AllUserList = () => {
+const AllUsersList = ({ currentUser }) => {
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState([]);
 
@@ -32,11 +32,11 @@ const AllUserList = () => {
 
       <div className={styles.grid}>
         {filteredUsers.map((user, index) => (
-          <UserCard key={user._id || index} user={user} />
+          <UserCard key={user._id || index} user={user} currentUser={currentUser} />
         ))}
       </div>
     </section>
   );
 };
 
-export default AllUserList;
+export default AllUsersList;

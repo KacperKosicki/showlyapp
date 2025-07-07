@@ -1,0 +1,47 @@
+@import '../../styles/variables';
+
+.wrapper {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  font-family: $font-body;
+
+  h2 {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    color: $text-color;
+  }
+}
+
+.textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 1rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  resize: vertical;
+  margin-bottom: 1rem;
+  font-family: inherit;
+  color: $text-color;
+}
+
+.button {
+  background: $primary-color;
+  color: white;
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: bold;
+  font-family: $font-accent;
+  transition: 0.2s;
+
+  &:hover {
+    background: darken($primary-color, 10%);
+  }
+}

@@ -34,6 +34,10 @@ app.use('/api/profiles', profilesRoutes);
 const usersRoutes = require('./routes/users');
 app.use('/api/users', usersRoutes);
 
+// Wiadomości
+const messagesRoutes = require('./routes/messages');
+app.use('/api/messages', messagesRoutes);
+
 // Uruchomienie serwera
 app.listen(PORT, () => {
   console.log(`🚀 Serwer działa na porcie ${PORT}`);

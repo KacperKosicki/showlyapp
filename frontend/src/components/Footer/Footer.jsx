@@ -12,7 +12,7 @@ const Footer = () => {
         <div className={styles.column}>
           <h4>Nawigacja</h4>
           <ul>
-            <li><a href="#home">Strona Główna</a></li>
+            <li><a href="/">Strona Główna</a></li>
             <li><a href="#features">Dlaczego My?</a></li>
             <li><a href="#specialists">Specjaliści</a></li>
             <li><a href="#contact">Kontakt</a></li>

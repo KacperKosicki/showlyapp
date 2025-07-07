@@ -3,7 +3,7 @@ import styles from './UserCardList.module.scss';
 import UserCard from '../UserCard/UserCard';
 import axios from 'axios';
 
-const UserCardList = () => {
+const UserCardList = ({ currentUser }) => {
   const [topRatedUsers, setTopRatedUsers] = useState([]);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ const UserCardList = () => {
 
       <div className={styles.list}>
         {topRatedUsers.map((user, index) => (
-          <UserCard key={user._id || index} user={user} />
+          <UserCard key={user._id || index} user={user} currentUser={currentUser} />
         ))}
       </div>
     </section>

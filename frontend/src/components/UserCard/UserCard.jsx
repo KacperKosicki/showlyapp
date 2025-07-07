@@ -5,7 +5,7 @@ import { FaStar, FaMapMarkerAlt } from 'react-icons/fa';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 
-const UserCard = ({ user }) => {
+const UserCard = ({ user, currentUser }) => {
   const {
     name,
     avatar,
@@ -126,16 +126,18 @@ const UserCard = ({ user }) => {
           />
         )}
 
-        {links?.length > 0 && (
+        {links?.filter(link => link.trim() !== '').length > 0 ? (
           <div className={styles.links}>
             {links.map((link, i) =>
-              link ? (
+              link.trim() ? (
                 <a key={i} href={link} target="_blank" rel="noopener noreferrer">
                   🌐 Link {i + 1}
                 </a>
               ) : null
             )}
           </div>
+        ) : (
+          <p className={styles.noDescription}>Użytkownik nie dodał jeszcze żadnych linków.</p>
         )}
       </div>
 
@@ -146,7 +148,14 @@ const UserCard = ({ user }) => {
         >
           ZOBACZ WIZYTÓWKĘ
         </button>
-        <button className={styles.buttonSecondary}>ZADAJ PYTANIE</button>
+        {currentUser && currentUser.uid !== user.userId && (
+          <button
+            className={styles.buttonSecondary}
+            onClick={() => navigate(`/wiadomosc/${user.userId}`)}
+          >
+            ZADAJ PYTANIE
+          </button>
+        )}
       </div>
     </div>
   );

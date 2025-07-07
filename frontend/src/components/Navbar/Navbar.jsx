@@ -3,7 +3,7 @@ import styles from './Navbar.module.scss';
 import { Link, useNavigate } from 'react-router-dom';
 import UserDropdown from '../UserDropdown/UserDropdown';
 
-const Navbar = ({ user, refreshTrigger }) => {
+const Navbar = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => {
   const navigate = useNavigate();
 
   return (
@@ -15,7 +15,12 @@ const Navbar = ({ user, refreshTrigger }) => {
       <div className={styles.right}>
         <div className={styles.actionGroup}>
           {user ? (
-            <UserDropdown user={user} refreshTrigger={refreshTrigger} />
+            <UserDropdown
+              user={user}
+              refreshTrigger={refreshTrigger}
+              unreadCount={unreadCount}
+              setUnreadCount={setUnreadCount}
+            />
           ) : (
             <div className={styles.loginPrompt} onClick={() => navigate('/login')}>
               <FaUser className={styles.icon} />

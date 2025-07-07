@@ -236,7 +236,7 @@ const PublicProfile = () => {
       </div>
 
       <div className={styles.reviewsBox}>
-        <h3>🗣️ Opinie użytkowników</h3>
+        <h3>Opinie użytkowników</h3>
         {profile.ratedBy?.length > 0 ? (
           <ul className={styles.reviewsList}>
             {profile.ratedBy.map((op, i) => {

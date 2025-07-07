@@ -3,10 +3,16 @@ import Navbar from '../Navbar/Navbar';
 import { Link } from 'react-router-dom';
 import SearchBar from '../SearchBar/SearchBar';
 
-const Hero = ({ user, setUser, refreshTrigger }) => {
+const Hero = ({ user, setUser, refreshTrigger, unreadCount, setUnreadCount }) => {
   return (
     <section className={styles.hero} id="hero">
-      <Navbar user={user} setUser={setUser} refreshTrigger={refreshTrigger} />
+      <Navbar
+        user={user}
+        setUser={setUser}
+        refreshTrigger={refreshTrigger}
+        unreadCount={unreadCount}
+        setUnreadCount={setUnreadCount}
+      />
       <div className={styles.heroContent}>
         <h1>Promuj się<br />online!</h1>
         <p>Stwórz swój profil i zaprezentuj swoje usługi</p>

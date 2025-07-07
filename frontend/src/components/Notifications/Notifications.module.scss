@@ -1,0 +1,63 @@
+@import '../../styles/variables';
+
+.wrapper {
+  max-width: 800px;
+  margin: 3rem auto;
+  padding: 2rem;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  font-family: $font-body;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1.6rem;
+  color: $text-color;
+}
+
+.empty {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #888;
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0;
+}
+
+.item {
+  padding: 1rem;
+  border: 1px solid #eaeaea;
+  border-radius: 1rem;
+  background: #f9f9f9;
+  transition: background 0.2s;
+
+  &.unread {
+    background: #fff8f1;
+    border-left: 4px solid $primary-color;
+  }
+
+  &.read {
+    opacity: 0.85;
+  }
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.content {
+  font-size: 1rem;
+  color: #333;
+  line-height: 1.4;
+}
