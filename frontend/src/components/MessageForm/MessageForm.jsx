@@ -2,30 +2,34 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styles from './MessageForm.module.scss';
 import axios from 'axios';
-import AlertBox from '../AlertBox/AlertBox'; // Dodaj import do komponentu alertu
+import AlertBox from '../AlertBox/AlertBox';
 
 const MessageForm = ({ user }) => {
   const { recipientId } = useParams();
   const [message, setMessage] = useState('');
-  const [hasThread, setHasThread] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
   const [canSend, setCanSend] = useState(true);
-  const [threadId, setThreadId] = useState(null);
   const [alert, setAlert] = useState(null);
+  const [hasConversation, setHasConversation] = useState(false);
   const navigate = useNavigate();
 
-  const checkThread = useCallback(async () => {
+  const checkConversation = useCallback(async () => {
     try {
-      const res = await axios.get(`/api/messages/check-conversation/${user.uid}/${recipientId}`);
-      setHasThread(res.data.exists);
+      const res = await axios.get(`/api/conversations/check/${user.uid}/${recipientId}`);
+      setHasConversation(res.data.exists);
 
-      if (res.data.threadId) {
-        setThreadId(res.data.threadId);
-        const threadRes = await axios.get(`/api/messages/thread/${res.data.threadId}`);
-        const messages = threadRes.data;
+      if (res.data.exists) {
+        setConversationId(res.data.id);
 
-        const lastMessage = [...messages].reverse().find(Boolean);
-        setCanSend(!lastMessage || lastMessage.from !== user.uid);
+        const threadRes = await axios.get(`/api/conversations/${res.data.id}`, {
+          headers: { uid: user.uid }
+        });
+
+        const messages = threadRes.data.messages;
+        const lastMsg = messages[messages.length - 1];
+        setCanSend(!lastMsg || lastMsg.from !== user.uid);
       } else {
+        setConversationId(null);
         setCanSend(true);
       }
     } catch (err) {
@@ -34,38 +38,37 @@ const MessageForm = ({ user }) => {
   }, [user.uid, recipientId]);
 
   useEffect(() => {
-    checkThread();
-  }, [checkThread]);
+    checkConversation();
+  }, [checkConversation]);
 
   const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim()) return;
 
     try {
-      await axios.post('/api/messages/send', {
+      await axios.post('/api/conversations/send', {
         from: user.uid,
         to: recipientId,
-        content: message.trim(),
+        content: message.trim()
       });
 
       setMessage('');
-      await checkThread(); // odśwież dane
 
       setAlert({ type: 'success', message: 'Wiadomość wysłana!' });
       setTimeout(() => navigate('/powiadomienia'), 2000);
     } catch (err) {
       if (err.response?.status === 403) {
         setCanSend(false);
-        setAlert({ type: 'error', message: 'Nie możesz wysłać kolejnej wiadomości przed odpowiedzią drugiej osoby.' });
+        setAlert({ type: 'error', message: 'Musisz poczekać na odpowiedź drugiej osoby.' });
       } else {
-        setAlert({ type: 'error', message: 'Błąd wysyłania wiadomości.' });
+        setAlert({ type: 'error', message: 'Błąd podczas wysyłania wiadomości.' });
       }
     }
   };
 
   return (
     <div className={styles.wrapper}>
-      <h2>{hasThread ? 'Kontynuuj rozmowę' : 'Napisz wiadomość'}</h2>
+      <h2>{hasConversation ? 'Kontynuuj rozmowę' : 'Napisz wiadomość'}</h2>
 
       {alert && (
         <AlertBox
@@ -75,11 +78,11 @@ const MessageForm = ({ user }) => {
         />
       )}
 
-      {hasThread && (
+      {hasConversation && (
         <p className={styles.info}>
           {canSend
             ? 'Masz już konwersację z tym użytkownikiem. Twoja wiadomość zostanie do niej dodana.'
-            : 'Czekasz na odpowiedź drugiej osoby. Nie możesz wysłać kolejnej wiadomości w tej chwili.'}
+            : 'Czekasz na odpowiedź drugiej osoby. Nie możesz wysłać kolejnej wiadomości.'}
         </p>
       )}
 

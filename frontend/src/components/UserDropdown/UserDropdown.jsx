@@ -11,11 +11,12 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => 
   const [remainingDays, setRemainingDays] = useState(null);
   const [hasProfile, setHasProfile] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
-  const location = useLocation(); // 👈 dodane
+  const location = useLocation(); // ⬅ reaguje na zmiany ścieżki
 
-  // Sprawdzanie widoczności profilu
+  // 🔍 Sprawdzanie statusu wizytówki
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.uid) return;
@@ -29,21 +30,15 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => 
           const until = new Date(profile.visibleUntil);
           const diff = Math.ceil((until - now) / (1000 * 60 * 60 * 24));
 
-          if (until < now) {
-            setIsVisible(false);
-            setRemainingDays(0);
-          } else {
-            setIsVisible(profile.isVisible !== false);
-            setRemainingDays(Math.max(0, diff));
-          }
-
+          setIsVisible(profile.isVisible !== false && until > now);
+          setRemainingDays(diff > 0 ? diff : 0);
           setHasProfile(true);
         }
       } catch (err) {
         if (err.response?.status === 404) {
           setHasProfile(false);
         } else {
-          console.error('Błąd pobierania profilu:', err);
+          console.error('❌ Błąd pobierania profilu:', err);
         }
       }
     };
@@ -51,23 +46,24 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => 
     fetchProfile();
   }, [user, refreshTrigger]);
 
-  // Pobieranie liczby nieprzeczytanych wiadomości
+  // 🔔 Liczba nieprzeczytanych wiadomości
   useEffect(() => {
-    const fetchUnreadMessages = async () => {
+    const fetchUnread = async () => {
       if (!user?.uid) return;
 
       try {
-        const res = await axios.get(`/api/messages/unread/${user.uid}`);
-        setUnreadCount(res.data.count);
+        const res = await axios.get(`/api/conversations/by-uid/${user.uid}`);
+        const totalUnread = res.data.reduce((acc, convo) => acc + convo.unreadCount, 0);
+        setUnreadCount(totalUnread);
       } catch (err) {
-        console.error('Błąd pobierania liczby wiadomości:', err);
+        console.error('❌ Błąd pobierania liczby wiadomości:', err);
       }
     };
 
-    fetchUnreadMessages();
-  }, [user, refreshTrigger, location.pathname]); // 👈 location.pathname jako trigger
+    fetchUnread();
+  }, [user, refreshTrigger, location.pathname]); // aktualizuj przy każdej zmianie strony
 
-  // Zamknięcie dropdownu po kliknięciu poza
+  // 👋 Zamknięcie dropdown po kliknięciu poza
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -78,14 +74,14 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Wylogowanie
+  // 🔐 Wylogowanie
   const handleLogout = async () => {
     try {
       await signOut(auth);
       localStorage.removeItem('showlyUser');
       navigate('/');
     } catch (err) {
-      console.error('Błąd wylogowania:', err);
+      console.error('❌ Błąd wylogowania:', err);
     }
   };
 
@@ -102,6 +98,7 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => 
             Stwórz wizytówkę
           </button>
         )}
+
         {hasProfile && (
           <button onClick={() => navigate('/your-profile')}>
             Twoja wizytówka:{' '}
@@ -112,9 +109,11 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => 
             )}
           </button>
         )}
+
         <button onClick={() => navigate('/powiadomienia')}>
           Powiadomienia {unreadCount > 0 && <strong>({unreadCount})</strong>}
         </button>
+
         <button onClick={handleLogout}>Wyloguj</button>
       </div>
     </div>

@@ -35,8 +35,8 @@ const usersRoutes = require('./routes/users');
 app.use('/api/users', usersRoutes);
 
 // Wiadomości
-const messagesRoutes = require('./routes/messages');
-app.use('/api/messages', messagesRoutes);
+const conversationRoutes = require('./routes/conversations');
+app.use('/api/conversations', conversationRoutes);
 
 // Uruchomienie serwera
 app.listen(PORT, () => {

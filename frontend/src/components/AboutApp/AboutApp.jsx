@@ -33,7 +33,7 @@ const AboutApp = () => {
           <ul className={styles.benefits}>
             <li>Dla korepetytorów, uczniów, studentów – zacznij promować się lokalnie i zdobywaj pierwszych klientów.</li>
             <li>Dla pasjonatów – DJ, fotograf, fryzjer, stylista – nie musisz mieć działalności, by się pokazać.</li>
-            <li>Udostępniaj swój link <code>https://showly.app/twoja-nazwa</code> w CV, bio na TikToku, ogłoszeniach, SMS-ach – wszędzie!</li>
+            <li>Udostępniaj swój link <code>https://showly.app/profil/twoja-nazwa</code> w CV, bio na TikToku, ogłoszeniach, SMS-ach – wszędzie!</li>
           </ul>
         </div>
       </div>

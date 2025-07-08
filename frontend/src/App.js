@@ -1,8 +1,7 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
-import { Navigate } from 'react-router-dom';
 
 import Hero from './components/Hero/Hero';
 import UserCardList from './components/UserCardList/UserCardList';
@@ -16,7 +15,7 @@ import VerifySuccess from './components/VerifySuccess/VerifySuccess';
 import AboutApp from './components/AboutApp/AboutApp';
 import CreateProfile from './components/CreateProfile/CreateProfile';
 import YourProfile from './components/YourProfile/YourProfile';
-import PublicProfile from './components/PublicProfile/PublicProfile'; // Upewnij się, że ścieżka jest poprawna
+import PublicProfile from './components/PublicProfile/PublicProfile';
 import MessageForm from './components/MessageForm/MessageForm';
 import Notifications from './components/Notifications/Notifications';
 import ThreadView from './components/ThreadView/ThreadView';
@@ -26,6 +25,8 @@ function App() {
   const [loadingUser, setLoadingUser] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(Date.now());
   const [unreadCount, setUnreadCount] = useState(0);
+
+  const triggerRefresh = () => setRefreshTrigger(Date.now()); // 🔁
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -42,6 +43,23 @@ function App() {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (!user?.uid) return;
+
+      try {
+        const res = await fetch(`/api/conversations/by-uid/${user.uid}`);
+        const data = await res.json();
+        const totalUnread = data.reduce((acc, convo) => acc + convo.unreadCount, 0);
+        setUnreadCount(totalUnread);
+      } catch (err) {
+        console.error('❌ Błąd globalnego pobierania liczby nieprzeczytanych wiadomości:', err);
+      }
+    };
+
+    fetchUnreadCount();
+  }, [user, refreshTrigger]);
 
   if (loadingUser) {
     return <p style={{ padding: "2rem", textAlign: "center" }}>⏳ Trwa ładowanie aplikacji...</p>;
@@ -64,31 +82,14 @@ function App() {
             </>
           }
         />
-        <Route
-          path="/register"
-          element={
-            <Register
-              user={user}
-              setUser={setUser}
-              setRefreshTrigger={setRefreshTrigger}
-            />
-          }
-        />
+        <Route path="/register" element={<Register user={user} setUser={setUser} setRefreshTrigger={setRefreshTrigger} />} />
         <Route path="/login" element={<Login setUser={setUser} setRefreshTrigger={setRefreshTrigger} />} />
         <Route path="/verify-success" element={<VerifySuccess />} />
         <Route
           path="/create-profile"
           element={
             <>
-              <Hero
-                user={user}
-                setUser={setUser}
-                refreshTrigger={refreshTrigger}
-                setRefreshTrigger={setRefreshTrigger}
-                unreadCount={unreadCount}
-                setUnreadCount={setUnreadCount}
-              />
-
+              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
               <CreateProfile user={user} setRefreshTrigger={setRefreshTrigger} />
               <Footer />
             </>
@@ -98,15 +99,7 @@ function App() {
           path="/your-profile"
           element={
             <>
-              <Hero
-                user={user}
-                setUser={setUser}
-                refreshTrigger={refreshTrigger}
-                setRefreshTrigger={setRefreshTrigger}
-                unreadCount={unreadCount}
-                setUnreadCount={setUnreadCount}
-              />
-
+              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
               <YourProfile user={user} setRefreshTrigger={setRefreshTrigger} />
               <Footer />
             </>
@@ -116,15 +109,7 @@ function App() {
           path="/profil/:slug"
           element={
             <>
-              <Hero
-                user={user}
-                setUser={setUser}
-                refreshTrigger={refreshTrigger}
-                setRefreshTrigger={setRefreshTrigger}
-                unreadCount={unreadCount}
-                setUnreadCount={setUnreadCount}
-              />
-
+              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
               <PublicProfile />
               <Footer />
             </>
@@ -135,15 +120,7 @@ function App() {
           element={
             user ? (
               <>
-                <Hero
-                  user={user}
-                  setUser={setUser}
-                  refreshTrigger={refreshTrigger}
-                  setRefreshTrigger={setRefreshTrigger}
-                  unreadCount={unreadCount}
-                  setUnreadCount={setUnreadCount}
-                />
-
+                <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
                 <MessageForm user={user} />
                 <Footer />
               </>
@@ -157,15 +134,7 @@ function App() {
           element={
             user ? (
               <>
-                <Hero
-                  user={user}
-                  setUser={setUser}
-                  refreshTrigger={refreshTrigger}
-                  setRefreshTrigger={setRefreshTrigger}
-                  unreadCount={unreadCount}
-                  setUnreadCount={setUnreadCount}
-                />
-
+                <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
                 <Notifications user={user} setUnreadCount={setUnreadCount} />
                 <Footer />
               </>
@@ -179,15 +148,8 @@ function App() {
           element={
             user ? (
               <>
-                <Hero
-                  user={user}
-                  setUser={setUser}
-                  refreshTrigger={refreshTrigger}
-                  setRefreshTrigger={setRefreshTrigger}
-                  unreadCount={unreadCount}
-                  setUnreadCount={setUnreadCount}
-                />
-                <ThreadView user={user} />
+                <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
+                <ThreadView user={user} setUnreadCount={setUnreadCount} triggerRefresh={triggerRefresh} /> {/* ✅ przekazanie */}
                 <Footer />
               </>
             ) : (
