@@ -5,6 +5,7 @@ import { FaMapMarkerAlt, FaStar } from 'react-icons/fa';
 import Calendar from 'react-calendar';
 import { auth } from '../../firebase';
 import 'react-calendar/dist/Calendar.css';
+import AlertBox from '../AlertBox/AlertBox';
 
 const PublicProfile = () => {
   const { slug } = useParams();
@@ -16,6 +17,7 @@ const PublicProfile = () => {
   const [hasRated, setHasRated] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [comment, setComment] = useState('');
+  const [alert, setAlert] = useState(null);
   const maxChars = 100;
 
   useEffect(() => {
@@ -27,6 +29,7 @@ const PublicProfile = () => {
         setProfile(data);
       } catch (err) {
         console.error('❌ Błąd:', err);
+        setAlert({ type: 'error', message: 'Nie udało się załadować wizytówki.' });
       } finally {
         setLoading(false);
       }
@@ -60,16 +63,18 @@ const PublicProfile = () => {
 
   const handleRate = async () => {
     const userId = auth.currentUser?.uid;
-    if (!userId) return alert('Musisz być zalogowany, aby ocenić.');
-    if (hasRated) return alert('Już oceniłeś/aś ten profil.');
-    if (!selectedRating) return alert('Wybierz liczbę gwiazdek.');
+    if (!userId) return setAlert({ type: 'error', message: 'Musisz być zalogowany, aby ocenić.' });
+    if (hasRated) return setAlert({ type: 'info', message: 'Już oceniłeś/aś ten profil.' });
+    if (!selectedRating) return setAlert({ type: 'warning', message: 'Wybierz liczbę gwiazdek.' });
 
     if (comment.trim().length < 10)
-      return alert('Komentarz musi mieć min. 10 znaków.');
+      return setAlert({ type: 'warning', message: 'Komentarz musi mieć min. 10 znaków.' });
 
     if (comment.length > maxChars) {
-      alert(`Komentarz może mieć maksymalnie ${maxChars} znaków (obecnie: ${comment.length}).`);
-      return;
+      return setAlert({
+        type: 'error',
+        message: `Komentarz może mieć maksymalnie ${maxChars} znaków (obecnie: ${comment.length}).`,
+      });
     }
 
     try {
@@ -81,12 +86,13 @@ const PublicProfile = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      alert('Dziękujemy za opinię!');
+      setAlert({ type: 'success', message: 'Dziękujemy za opinię!' });
+
       const updated = await fetch(`/api/profiles/slug/${slug}`);
       const updatedData = await updated.json();
       setProfile(updatedData);
     } catch (err) {
-      alert(`❌ ${err.message}`);
+      setAlert({ type: 'error', message: `${err.message}` });
     }
   };
 
@@ -101,6 +107,14 @@ const PublicProfile = () => {
 
   return (
     <div className={styles.profileWrapper}>
+      {alert && (
+        <AlertBox
+          type={alert.type}
+          message={alert.message}
+          onClose={() => setAlert(null)}
+        />
+      )}
+
       <div className={styles.card}>
         <div className={styles.topBar}>
           <div className={styles.location}>
@@ -240,7 +254,7 @@ const PublicProfile = () => {
         {profile.ratedBy?.length > 0 ? (
           <ul className={styles.reviewsList}>
             {profile.ratedBy.map((op, i) => {
-              const ratingVal = Number(op.rating); // upewniamy się, że to liczba
+              const ratingVal = Number(op.rating);
               return (
                 <li key={i} className={styles.reviewItem}>
                   <div className={styles.reviewHeader}>

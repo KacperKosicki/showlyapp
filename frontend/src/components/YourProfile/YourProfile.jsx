@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import axios from 'axios';
 import styles from './YourProfile.module.scss';
+import AlertBox from '../AlertBox/AlertBox'; // ✅ dodaj
 import {
   FaMapMarkerAlt,
   FaTags,
@@ -23,7 +24,13 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const [alert, setAlert] = useState(null); // ✅ nowy stan
   const fileInputRef = useRef(null);
+
+  const showAlert = (message, type = 'info') => {
+    setAlert({ message, type });
+    setTimeout(() => setAlert(null), 4000);
+  };
 
   const fetchProfile = async () => {
     try {
@@ -81,16 +88,15 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       setRefreshTrigger(Date.now()); // 👈 DODAĆ TO
     } catch (err) {
       console.error('❌ Błąd przedłużania widoczności:', err);
-      alert('Nie udało się przedłużyć widoczności.');
+      showAlert('Nie udało się przedłużyć widoczności.', 'error'); // ✅
     }
   };
-
 
   const handleSaveChanges = async () => {
     const errors = validateEditData(editData);
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) {
-      alert('❌ Uzupełnij poprawnie wszystkie wymagane pola.');
+      showAlert('Uzupełnij poprawnie wszystkie wymagane pola.', 'warning'); // ✅
       return;
     }
     try {
@@ -100,10 +106,10 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       });
       await fetchProfile();
       setIsEditing(false);
-      alert('✅ Zapisano zmiany');
+      showAlert('Zapisano zmiany!', 'success'); // ✅
     } catch (err) {
       console.error('❌ Błąd zapisu profilu:', err);
-      alert('Błąd zapisu.');
+      showAlert('Wystąpił błąd podczas zapisywania.', 'error'); // ✅
     }
   };
 
@@ -120,6 +126,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   return (
     <div className={styles.profile}>
+      {alert && <AlertBox message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
       <h2>Twoja wizytówka</h2>
 
       {!profile.isVisible && (
