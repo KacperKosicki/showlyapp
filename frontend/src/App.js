@@ -19,6 +19,7 @@ import YourProfile from './components/YourProfile/YourProfile';
 import PublicProfile from './components/PublicProfile/PublicProfile'; // Upewnij się, że ścieżka jest poprawna
 import MessageForm from './components/MessageForm/MessageForm';
 import Notifications from './components/Notifications/Notifications';
+import ThreadView from './components/ThreadView/ThreadView';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -166,6 +167,27 @@ function App() {
                 />
 
                 <Notifications user={user} setUnreadCount={setUnreadCount} />
+                <Footer />
+              </>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/konwersacja/:threadId"
+          element={
+            user ? (
+              <>
+                <Hero
+                  user={user}
+                  setUser={setUser}
+                  refreshTrigger={refreshTrigger}
+                  setRefreshTrigger={setRefreshTrigger}
+                  unreadCount={unreadCount}
+                  setUnreadCount={setUnreadCount}
+                />
+                <ThreadView user={user} />
                 <Footer />
               </>
             ) : (

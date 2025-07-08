@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
-const messageSchema = new mongoose.Schema({
+const messageSchema = new Schema({
   from: String,
   to: String,
   content: String,
   read: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now }
+  threadId: String, // 🔁 Identyfikator konwersacji
+  createdAt: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model('Message', messageSchema);
