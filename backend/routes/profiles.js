@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Profile = require('../models/Profile');
 const User = require('../models/User'); // 👈 dodaj to
+const Conversation = require('../models/Conversation');
 
 // Pomocnicza funkcja do tworzenia slugów
 const slugify = (text) =>
@@ -60,9 +61,17 @@ router.get('/by-user/:uid', async (req, res) => {
 router.get('/slug/:slug', async (req, res) => {
   try {
     const profile = await Profile.findOne({ slug: req.params.slug });
+
     if (!profile) {
       return res.status(404).json({ message: 'Nie znaleziono profilu.' });
     }
+
+    // ⛔ ZABLOKUJ dostęp jeśli profil nie jest widoczny lub wygasł
+    const now = new Date();
+    if (!profile.isVisible || profile.visibleUntil < now) {
+      return res.status(403).json({ message: 'Profil jest obecnie niewidoczny.' });
+    }
+
     res.json(profile);
   } catch (err) {
     console.error('❌ Błąd w GET /slug/:slug:', err);
@@ -112,6 +121,75 @@ router.post('/', async (req, res) => {
     });
 
     await newProfile.save();
+
+    // 📩 AUTOMATYCZNA WIADOMOŚĆ SYSTEMOWA
+    const user = await User.findOne({ firebaseUid: userId });
+    if (user) {
+      const fromUid = 'SYSTEM';
+      const fromName = 'Showly.app';
+      const toUid = userId;
+      const toName = user.name || user.email;
+
+      const welcomeContent = `
+        🎉 Dziękujemy za utworzenie swojego profilu w Showly!
+
+        Twój profil jest już aktywny i dostępny publicznie. Od teraz możesz:
+        – otrzymywać wiadomości od innych użytkowników,
+        – zbierać opinie i oceny,
+        – promować swoją działalność lub pasję.
+
+        🔧 Co możesz teraz zrobić dalej?
+
+        👉 Dodaj zdjęcia – zaprezentuj swoje realizacje, miejsce pracy lub atmosferę działań  
+        👉 Dodaj usługi i ceny – pokaż, co oferujesz i w jakim zakresie cenowym  
+        👉 Dodaj linki do social mediów – YouTube, Instagram, TikTok, portfolio  
+        👉 Rozbuduj opis – uzupełnij informacje o sobie lub swojej działalności  
+        👉 Zbieraj opinie – poproś znajomych lub klientów o wystawienie oceny
+
+        W przyszłości pojawią się także nowe funkcje: rezerwacje, statystyki, galerie rozszerzone i wiele więcej.
+
+        Aplikacja jest obecnie w fazie testów – korzystasz z niej całkowicie za darmo. Wkrótce poprosimy Cię również o opinię i sugestie.
+
+        Dziękujemy, że pomagasz rozwijać Showly 💙
+
+        — Zespół Showly
+      `;
+
+      const existingConvo = await Conversation.findOne({
+        'participants.uid': { $all: [fromUid, toUid] }
+      });
+
+      if (existingConvo) {
+        existingConvo.messages.push({
+          fromUid,
+          fromName,
+          toUid,
+          toName,
+          content: welcomeContent,
+          isSystem: true
+        });
+        existingConvo.updatedAt = new Date();
+        await existingConvo.save();
+      } else {
+        await Conversation.create({
+          participants: [
+            { uid: fromUid, name: fromName },
+            { uid: toUid, name: toName }
+          ],
+          messages: [
+            {
+              fromUid,
+              fromName,
+              toUid,
+              toName,
+              content: welcomeContent,
+              isSystem: true
+            }
+          ]
+        });
+      }
+    }
+
     res.status(201).json({ message: 'Profil utworzony', profile: newProfile });
 
   } catch (err) {

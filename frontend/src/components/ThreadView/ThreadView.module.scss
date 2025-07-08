@@ -209,14 +209,16 @@
 
 .infoBox {
   display: flex;
-  align-items: center;
-  gap: 1rem;
+  align-self: center;
+  text-align: center;
+  gap: 0.5rem;
   padding: 1rem;
   background-color: #fff8f3;
   border: 1px solid #ffddcc;
   border-radius: 1rem;
   color: #cc6600;
   font-size: 0.95rem;
+  align-items: center;
 
   .icon {
     font-size: 1.5rem;

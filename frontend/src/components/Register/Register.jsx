@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
-  fetchSignInMethodsForEmail,
   onAuthStateChanged,
-  signOut
+  signOut,
+  updateProfile
 } from 'firebase/auth';
-import axios from 'axios';
 import { auth } from '../../firebase';
 import styles from './Register.module.scss';
 import Hero from '../Hero/Hero';
 import Footer from '../Footer/Footer';
+import axios from 'axios';
 
 const Register = ({ user, setUser, setRefreshTrigger }) => {
   const [form, setForm] = useState({
@@ -59,7 +59,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
     setMessage('');
 
     try {
-      // 🔎 Sprawdzenie w bazie MongoDB
+      // 🔎 Sprawdzenie w MongoDB
       const res = await axios.get(`http://localhost:5000/api/users/check-email?email=${form.email}`);
       if (res.data.exists) {
         setError(`Ten e-mail jest już powiązany z kontem (${res.data.provider === 'google' ? 'Google' : 'e-mail + hasło'}). Zaloguj się tą metodą.`);
@@ -70,25 +70,18 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
       const firebaseUser = userCredential.user;
 
-      // 💾 Zapis do MongoDB
-      await axios.post('http://localhost:5000/api/users', {
-        email: firebaseUser.email,
-        name: form.name || '',
-        firebaseUid: firebaseUser.uid,
-        provider: 'password'
+      // 🧾 Ustawienie imienia i nazwiska (displayName)
+      await updateProfile(firebaseUser, {
+        displayName: form.name || ''
       });
 
-      // ✅ Aktualizacja lokalnego usera
-      setUser({
-        email: firebaseUser.email,
-        uid: firebaseUser.uid
-      });
-      setRefreshTrigger(Date.now());
-
-      // 📧 Weryfikacja
+      // 📧 Wysłanie maila weryfikacyjnego
       await sendEmailVerification(firebaseUser);
+
+      // 🔓 Nie zapisujemy do MongoDB – dopiero po kliknięciu linku aktywacyjnego
       setEmailSent(true);
       setMessage('Na Twój adres e-mail został wysłany link aktywacyjny. Kliknij w niego, aby aktywować konto.');
+
     } catch (err) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {

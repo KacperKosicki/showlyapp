@@ -403,3 +403,30 @@
   padding: 0 1rem;
   text-align: center;
 }
+
+.errorBox {
+  display: flex;
+  align-self: center;
+  text-align: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background-color: #ffebee;         // jaśniejsze tło czerwieni
+  border: 1px solid #ffcdd2;         // delikatna czerwona ramka
+  border-radius: 1rem;
+  color: #f44336;                    // intensywna czerwień
+  font-size: 1rem;
+  align-items: center;
+  margin: 2rem auto;
+  max-width: 500px;
+  font-family: $font-body;
+
+  .icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  p {
+    margin: 0;
+  }
+}

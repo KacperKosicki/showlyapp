@@ -24,7 +24,15 @@ const PublicProfile = () => {
     const fetchProfile = async () => {
       try {
         const res = await fetch(`/api/profiles/slug/${slug}`);
+
+        if (res.status === 403) {
+          setAlert({ type: 'error', message: 'Profil jest obecnie niewidoczny lub wygasł.' });
+          setProfile(null); // profil nie będzie renderowany
+          return;
+        }
+
         if (!res.ok) throw new Error('Nie znaleziono wizytówki.');
+
         const data = await res.json();
         setProfile(data);
       } catch (err) {
@@ -37,6 +45,7 @@ const PublicProfile = () => {
 
     fetchProfile();
   }, [slug]);
+
 
   useEffect(() => {
     const currentUserId = auth.currentUser?.uid;
@@ -97,7 +106,25 @@ const PublicProfile = () => {
   };
 
   if (loading) return <div className={styles.loading}>⏳ Wczytywanie wizytówki...</div>;
-  if (!profile) return <div className={styles.error}>❌ Nie znaleziono wizytówki.</div>;
+  if (!profile) {
+    return (
+      <div className={styles.error}>
+        {alert ? (
+          <AlertBox
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert(null)}
+          />
+        ) : (
+          <div className={styles.errorBox}>
+            <span className={styles.icon}>❌</span>
+            <p>Nie znaleziono profilu lub jest obecnie niewidoczony.</p>
+          </div>
+
+        )}
+      </div>
+    );
+  }
 
   const {
     name, avatar, role, rating, reviews, location, tags,

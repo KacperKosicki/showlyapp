@@ -1,3 +1,5 @@
+@import '../../styles/variables';
+
 .registerContainer {
   max-width: 400px;
   margin: 5rem auto;
@@ -54,16 +56,18 @@
 
   .error {
     @extend .messageBox;
-    background-color: #ffecec;
-    color: #cc0000;
-    border: 1px solid #e0a1a1;
+    background-color: #ffebee; 
+    color: #f44336; 
+    border: 1px solid #ffcdd2;
+    font-family: $font-body;
   }
 
   .success {
     @extend .messageBox;
-    background-color: #eaffea;
-    color: #187a3c;
-    border: 1px solid #a4d8a0;
+    background-color: #e8f5e9; // 💚 jasnozielone tło
+    color: #2e7d32;            // 💚 ciemna zieleń do tekstu (czytelność)
+    border: 1px solid #a5d6a7; // 💚 delikatna zielona ramka
+    font-family: $font-body;
   }
 }
 

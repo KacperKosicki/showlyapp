@@ -31,7 +31,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
       }
 
       const last = msgs[msgs.length - 1];
-      setCanReply(last?.fromUid !== user.uid);
+      const isSystem = last?.isSystem;
+      setCanReply(!isSystem && last?.fromUid !== user.uid);
+
 
       const unreadInThread = msgs.filter(m => !m.read && m.toUid === user.uid);
       if (unreadInThread.length > 0) {
@@ -55,7 +57,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
   useEffect(() => {
     const fetchReceiverProfile = async () => {
       try {
-        if (!receiverId) return;
+        if (!receiverId || receiverId === 'SYSTEM') return; // ⛔ pomiń systemowe
         const res = await axios.get(`/api/profiles/by-user/${receiverId}`);
         setReceiverProfile(res.data);
       } catch (err) {
@@ -66,12 +68,14 @@ const ThreadView = ({ user, setUnreadCount }) => {
     fetchReceiverProfile();
   }, [receiverId]);
 
+
   const handleReply = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    if (!canReply) {
-      setErrorMsg('Nie możesz wysłać wiadomości przed odpowiedzią drugiej osoby.');
+    const lastMsg = messages[messages.length - 1];
+    if (!canReply || lastMsg?.isSystem) {
+      setErrorMsg('Nie można odpowiadać na wiadomości systemowe.');
       return;
     }
 
@@ -95,6 +99,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
     }
   };
 
+
   return (
     <div className={styles.pageLayout}>
       <div className={`${styles.mainArea} ${!receiverProfile ? styles.centered : ''}`}>
@@ -111,35 +116,70 @@ const ThreadView = ({ user, setUnreadCount }) => {
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`${styles.message} ${msg.fromUid === user.uid ? styles.own : styles.their}`}
+                className={`${styles.message} 
+      ${msg.fromUid === user.uid ? styles.own : styles.their} 
+      ${msg.isSystem ? styles.system : ''}`}
               >
-                <p className={styles.author}>
-                  {msg.fromUid === user.uid ? user.name || 'Ty' : receiverName}
-                </p>
+                {!msg.isSystem && (
+                  <p className={styles.author}>
+                    {msg.fromUid === user.uid ? user.name || 'Ty' : receiverName}
+                  </p>
+                )}
                 <p className={styles.content}>{msg.content}</p>
                 <p className={styles.time}>{new Date(msg.createdAt).toLocaleString()}</p>
               </div>
             ))}
+
           </div>
 
-          {canReply ? (
-            <form onSubmit={handleReply} className={styles.form}>
-              <textarea
-                placeholder="Napisz odpowiedź..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                required
-              />
-              <button type="submit">Wyślij</button>
-            </form>
-          ) : (
-            <div className={styles.infoBox}>
-              <span className={styles.icon}>⏳</span>
-              <p>
-                Wysłałeś wiadomość. Czekasz teraz na odpowiedź drugiej osoby, zanim napiszesz kolejną.
-              </p>
-            </div>
-          )}
+          {(() => {
+            const last = messages[messages.length - 1];
+            if (!last) return null;
+
+            if (last.isSystem || receiverId === 'SYSTEM') {
+              return (
+                <div className={styles.infoBox}>
+                  <span className={styles.icon}>🔒</span>
+                  <p>Nie możesz odpowiadać na wiadomości systemowe.</p>
+                </div>
+              );
+            }
+
+
+            if (last.fromUid === user.uid) {
+              return (
+                <div className={styles.infoBox}>
+                  <span className={styles.icon}>⏳</span>
+                  <p>
+                    Wysłałeś wiadomość. Czekasz teraz na odpowiedź drugiej osoby, zanim napiszesz kolejną.
+                  </p>
+                </div>
+              );
+            }
+
+            // ✅ tylko jeśli dozwolone jest odpisywanie
+            if (canReply) {
+              return (
+                <form onSubmit={handleReply} className={styles.form}>
+                  <textarea
+                    placeholder="Napisz odpowiedź..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    required
+                  />
+                  <button type="submit">Wyślij</button>
+                </form>
+              );
+            }
+
+            // fallback (teoretycznie niepotrzebny, ale na wszelki wypadek)
+            return (
+              <div className={styles.infoBox}>
+                <span className={styles.icon}>🚫</span>
+                <p>Nie możesz odpowiedzieć na tę wiadomość.</p>
+              </div>
+            );
+          })()}
 
           {errorMsg && <p className={styles.error}>{errorMsg}</p>}
         </div>
