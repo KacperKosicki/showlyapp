@@ -10,6 +10,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [receiverId, setReceiverId] = useState(null);
+  const [receiverProfile, setReceiverProfile] = useState(null);
   const [receiverName, setReceiverName] = useState('');
   const [canReply, setCanReply] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -47,6 +48,24 @@ const ThreadView = ({ user, setUnreadCount }) => {
     }
   }, [threadId, user.uid, navigate, setUnreadCount]);
 
+  useEffect(() => {
+    fetchThread();
+  }, [fetchThread]);
+
+  useEffect(() => {
+    const fetchReceiverProfile = async () => {
+      try {
+        if (!receiverId) return;
+        const res = await axios.get(`/api/profiles/by-user/${receiverId}`);
+        setReceiverProfile(res.data);
+      } catch (err) {
+        console.error('❌ Błąd pobierania profilu odbiorcy:', err);
+      }
+    };
+
+    fetchReceiverProfile();
+  }, [receiverId]);
+
   const handleReply = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -76,50 +95,80 @@ const ThreadView = ({ user, setUnreadCount }) => {
     }
   };
 
-  useEffect(() => {
-    fetchThread();
-  }, [fetchThread]);
-
   return (
-    <div className={styles.threadWrapper}>
-      <button onClick={() => navigate('/powiadomienia')} className={styles.backButton}>
-        ← Wróć do powiadomień
-      </button>
+    <div className={styles.pageLayout}>
+      <div className={`${styles.mainArea} ${!receiverProfile ? styles.centered : ''}`}>
 
-      <h2 className={styles.title}>Rozmowa z: {receiverName}</h2>
+        {/* LEWA kolumna: wiadomości */}
+        <div className={styles.threadWrapper}>
+          <button onClick={() => navigate('/powiadomienia')} className={styles.backButton}>
+            ← Wróć do powiadomień
+          </button>
 
-      <div className={styles.thread}>
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`${styles.message} ${msg.fromUid === user.uid ? styles.own : styles.their}`}
-          >
-            <p className={styles.author}>
-              {msg.fromUid === user.uid ? user.name || 'Ty' : receiverName}
-            </p>
-            <p className={styles.content}>{msg.content}</p>
-            <p className={styles.time}>{new Date(msg.createdAt).toLocaleString()}</p>
+          <h2 className={styles.title}>Rozmowa z: {receiverName}</h2>
+
+          <div className={styles.thread}>
+            {messages.map((msg, i) => (
+              <div
+                key={i}
+                className={`${styles.message} ${msg.fromUid === user.uid ? styles.own : styles.their}`}
+              >
+                <p className={styles.author}>
+                  {msg.fromUid === user.uid ? user.name || 'Ty' : receiverName}
+                </p>
+                <p className={styles.content}>{msg.content}</p>
+                <p className={styles.time}>{new Date(msg.createdAt).toLocaleString()}</p>
+              </div>
+            ))}
           </div>
-        ))}
+
+          {canReply ? (
+            <form onSubmit={handleReply} className={styles.form}>
+              <textarea
+                placeholder="Napisz odpowiedź..."
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                required
+              />
+              <button type="submit">Wyślij</button>
+            </form>
+          ) : (
+            <div className={styles.infoBox}>
+              <span className={styles.icon}>⏳</span>
+              <p>
+                Wysłałeś wiadomość. Czekasz teraz na odpowiedź drugiej osoby, zanim napiszesz kolejną.
+              </p>
+            </div>
+          )}
+
+          {errorMsg && <p className={styles.error}>{errorMsg}</p>}
+        </div>
+
+        {/* PRAWA kolumna: FAQ */}
+        {receiverProfile && (
+          <div className={styles.faqBox}>
+            <div className={styles.quickAnswers}>
+              <h3>Najczęstsze pytania i odpowiedzi:</h3>
+              {receiverProfile.quickAnswers?.length > 0 &&
+                receiverProfile.quickAnswers.some(qa => qa.title.trim() || qa.answer.trim()) ? (
+                <ul>
+                  {receiverProfile.quickAnswers
+                    .filter(qa => qa.title.trim() || qa.answer.trim())
+                    .map((qa, i) => (
+                      <li key={i}>
+                        <strong>{qa.title}</strong>{qa.answer}
+                      </li>
+                    ))}
+                </ul>
+              ) : (
+                <p className={styles.noFaq}>
+                  Użytkownik nie dodał jeszcze żadnych pytań i odpowiedzi.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
-
-      {canReply ? (
-        <form onSubmit={handleReply} className={styles.form}>
-          <textarea
-            placeholder="Napisz odpowiedź..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            required
-          />
-          <button type="submit">Wyślij</button>
-        </form>
-      ) : (
-        <p className={styles.info}>
-          Odpowiedź została już wysłana lub czekasz na odpowiedź drugiej osoby.
-        </p>
-      )}
-
-      {errorMsg && <p className={styles.error}>{errorMsg}</p>}
     </div>
   );
 };

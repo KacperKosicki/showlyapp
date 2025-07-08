@@ -18,6 +18,12 @@ import {
 } from 'react-icons/fa';
 
 const YourProfile = ({ user, setRefreshTrigger }) => {
+  const [qaErrors, setQaErrors] = useState([
+    { title: '', answer: '', touched: false },
+    { title: '', answer: '', touched: false },
+    { title: '', answer: '', touched: false },
+  ]);
+
   const [profile, setProfile] = useState(null);
   const [editData, setEditData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
@@ -78,6 +84,28 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     const priceTo = Number(data.priceTo);
     if (!priceFrom || priceFrom < 1 || priceFrom > 100000) errors.priceFrom = 'Cena od musi być w zakresie 1–100 000';
     if (!priceTo || priceTo < priceFrom || priceTo > 1000000) errors.priceTo = 'Cena do musi być większa niż "od" i nie większa niż 1 000 000';
+    const quickAnswers = editData.quickAnswers || [];
+    const invalidQA = quickAnswers.some(qa => {
+      const titleLength = qa.title?.trim().length || 0;
+      const answerLength = qa.answer?.trim().length || 0;
+
+      const hasTitle = titleLength > 0;
+      const hasAnswer = answerLength > 0;
+
+      return (
+        (hasTitle && !hasAnswer) ||
+        (!hasTitle && hasAnswer) ||
+        (hasTitle && titleLength > 10) ||      // ✅ zmienione z "titleWords"
+        (hasAnswer && answerLength > 64)
+      );
+    });
+
+
+    if (invalidQA) {
+      errors.quickAnswers = 'Każda szybka odpowiedź musi zawierać oba pola. Tytuł max. 10 znaków, odpowiedź max. 64 znaki.';
+    }
+
+
     return errors;
   };
 
@@ -103,6 +131,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       await axios.patch(`/api/profiles/update/${user.uid}`, {
         ...editData,
         tags: (editData.tags || []).filter(tag => tag.trim() !== ''),
+        quickAnswers: (editData.quickAnswers || []).filter(qa => qa.title.trim() || qa.answer.trim()),
       });
       await fetchProfile();
       setIsEditing(false);
@@ -332,6 +361,100 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           )}
           <p><FaStar /> <strong>Ocena:</strong> {profile.rating} ⭐ ({profile.reviews} opinii)</p>
 
+          <h4 className={styles.sectionTitle}>6. Szybkie odpowiedzi (FAQ)</h4>
+          {isEditing ? (
+            <div className={styles.quickAnswers}>
+              {[0, 1, 2].map(i => {
+                const qaArray = editData.quickAnswers?.length === 3
+                  ? [...editData.quickAnswers]
+                  : [{}, {}, {}].map((_, idx) => editData.quickAnswers?.[idx] || { title: '', answer: '' });
+
+                const title = qaArray[i].title || '';
+                const answer = qaArray[i].answer || '';
+
+                return (
+                  <div key={i} className={styles.qaRow}>
+                    <input
+                      type="text"
+                      className={`${styles.formInput} ${qaErrors[i]?.title ? styles.inputError : ''}`}
+                      placeholder={`Tytuł #${i + 1}`}
+                      value={title}
+                      maxLength={80} // zabezpieczenie
+                      onChange={(e) => {
+                        let value = e.target.value;
+
+                        if (value.length > 10) {
+                          value = value.slice(0, 10); // ✅ przycinanie do 10 znaków
+                        }
+
+                        const newQA = [...qaArray];
+                        newQA[i].title = value;
+
+                        const newErrors = [...qaErrors];
+                        newErrors[i].touched = true;
+
+                        if (!value.trim()) newErrors[i].title = 'Tytuł jest wymagany';
+                        else if (value.length > 10) newErrors[i].title = 'Tytuł max. 10 znaków';
+                        else newErrors[i].title = '';
+
+                        setEditData({ ...editData, quickAnswers: newQA });
+                        setQaErrors(newErrors);
+                      }}
+
+
+
+
+                    />
+                    <input
+                      type="text"
+                      className={`${styles.formInput} ${qaErrors[i]?.answer ? styles.inputError : ''}`}
+                      placeholder={`Odpowiedź #${i + 1}`}
+                      value={answer}
+                      maxLength={64}
+                      onChange={(e) => {
+                        let value = e.target.value;
+
+                        if (value.length > 64) {
+                          value = value.slice(0, 64); // utnij do 64 znaków
+                        }
+
+                        const newQA = [...qaArray];
+                        newQA[i].answer = value;
+
+                        const newErrors = [...qaErrors];
+                        newErrors[i].touched = true;
+
+                        if (!value.trim()) newErrors[i].answer = 'Odpowiedź jest wymagana';
+                        else if (value.length > 64) newErrors[i].answer = 'Maks. 64 znaki';
+                        else newErrors[i].answer = '';
+
+                        setEditData({ ...editData, quickAnswers: newQA });
+                        setQaErrors(newErrors);
+                      }}
+
+
+                    />
+                    {qaErrors[i]?.touched && qaErrors[i]?.title && <small className={styles.error}>{qaErrors[i].title}</small>}
+                    {qaErrors[i]?.touched && qaErrors[i]?.answer && (
+                      <small className={styles.error}>{qaErrors[i].answer}</small>
+                    )}
+
+                  </div>
+                );
+              })}
+
+            </div>
+          ) : (
+            profile.quickAnswers?.length > 0 && (
+              <ul className={styles.quickAnswersView}>
+                {profile.quickAnswers.map((qa, i) => (
+                  <li key={i}><strong>{qa.title}:</strong> {qa.answer}</li>
+                ))}
+              </ul>
+            )
+          )}
+          {formErrors.quickAnswers && <small className={styles.error}>{formErrors.quickAnswers}</small>}
+
           {isEditing && (
             <div className={styles.editButtons}>
               <button onClick={handleSaveChanges}>💾 Zapisz</button>
@@ -342,7 +465,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       </div>
     </div>
   );
-
 };
 
 export default YourProfile;

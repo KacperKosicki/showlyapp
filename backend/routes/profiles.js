@@ -144,7 +144,8 @@ router.patch('/update/:uid', async (req, res) => {
   const allowedFields = [
     'avatar',
     'profileType', 'location', 'priceFrom', 'priceTo',
-    'availabilityDate', 'description', 'tags', 'links'
+    'availabilityDate', 'description', 'tags', 'links',
+    'quickAnswers'
   ];
 
   try {

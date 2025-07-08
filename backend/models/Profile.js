@@ -27,6 +27,15 @@ const profileSchema = new mongoose.Schema({
   hasBusiness: Boolean,
   nip: String,
   slug: { type: String, required: true, unique: true },
+  quickAnswers: {
+    type: [
+      {
+        title: String,
+        answer: String
+      }
+    ],
+    default: []
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Profile', profileSchema);
