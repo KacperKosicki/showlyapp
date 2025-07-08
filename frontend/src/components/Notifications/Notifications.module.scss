@@ -75,7 +75,12 @@ h2 {
 .content {
   font-size: 1rem;
   color: #333;
-  line-height: 1.4;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;      // 👈 maks. 2 linie
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .loading {

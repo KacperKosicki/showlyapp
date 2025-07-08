@@ -132,12 +132,12 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
           </form>
         ) : (
           <div className={styles.success}>
-            ✅ Rejestracja zakończona. Sprawdź swoją skrzynkę i kliknij link aktywacyjny, aby aktywować konto. Następnie możesz się zalogować.
+            Rejestracja zakończona. Sprawdź swoją skrzynkę i kliknij link aktywacyjny, aby aktywować konto. Następnie możesz się zalogować.
           </div>
         )}
 
         {error && <div className={styles.error}>{error}</div>}
-        {message && <div className={styles.success}>✅ {message}</div>}
+        {message && <div className={styles.success}>{message}</div>}
       </div>
       <Footer />
     </>
