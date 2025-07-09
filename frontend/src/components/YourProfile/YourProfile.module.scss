@@ -90,7 +90,7 @@
   }
 
   p {
-    font-size: 1rem;
+    font-size: 0.95rem;
     color: $text-color;
     line-height: 1.5;
     display: flex;
@@ -403,8 +403,6 @@
 }
 
 .inputBlock {
-  margin-bottom: 1.2rem;
-
   label {
     display: flex;
     align-items: center;
@@ -424,7 +422,7 @@
 
   p {
     margin-top: 0.2rem;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 500;
     color: $text-color;
     font-family: $font-body;
@@ -490,10 +488,98 @@
   }
 }
 
-.noFaq {
-  margin-top: 0.6rem;
-  font-size: 0.95rem;
-  font-style: italic;
-  color: #999;
+.galleryEditor {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .photoItem {
+    position: relative;
+
+    img {
+      width: 100%;
+      max-width: 400px;
+      height: auto;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+    }
+
+    .photoButtons {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.4rem;
+
+      button,
+      label {
+        background: #eee;
+        border: none;
+        border-radius: 6px;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        font-family: $font-accent;
+        font-size: 0.9rem;
+
+        &:hover {
+          background: #ddd;
+        }
+      }
+
+      input {
+        display: none;
+      }
+    }
+  }
+
+  .addPhotoBtn {
+    background: #4caf50;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 10px;
+    font-weight: bold;
+    font-family: $font-accent;
+    cursor: pointer;
+
+    &:hover {
+      background: darken(#4caf50, 10%);
+    }
+  }
 }
 
+.galleryView {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.6rem;
+
+  img {
+    width: 100%;
+    max-width: 300px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+  }
+}
+
+.noInfo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding: 1rem;
+  background-color: #fff8f3;
+  border: 1px solid #ffddcc;
+  border-radius: 1rem;
+  color: #cc6600 !important;
+  font-size: 0.95rem;
+  text-align: left;
+  max-width: 100%;
+  word-break: break-word;
+  white-space: normal;
+  align-self: flex-start; // NIE CENTER!
+  margin-left: 0;         // nadpisuje auto-centrowanie
+
+    .icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+}

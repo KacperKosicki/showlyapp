@@ -411,10 +411,10 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 1rem 1.5rem;
-  background-color: #ffebee;         // jaśniejsze tło czerwieni
-  border: 1px solid #ffcdd2;         // delikatna czerwona ramka
+  background-color: #ffebee; // jaśniejsze tło czerwieni
+  border: 1px solid #ffcdd2; // delikatna czerwona ramka
   border-radius: 1rem;
-  color: #f44336;                    // intensywna czerwień
+  color: #f44336; // intensywna czerwień
   font-size: 1rem;
   align-items: center;
   margin: 2rem auto;
@@ -428,5 +428,61 @@
 
   p {
     margin: 0;
+  }
+}
+
+.galleryWrapper {
+  width: 100vw; // 🔁 pełna szerokość ekranu
+  margin: 3rem 0 3rem calc(-1 * ((100vw - 100%) / 2)); // 🔄 usuwa marginesy przeglądarki
+  padding: 2rem clamp(1rem, 5vw, 4rem);
+  border-radius: 0;
+  border: 1px solid #eaeaea;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  background: url('../../../public/images/whyus/whyus-bg.png') center center / cover no-repeat;
+  position: relative;
+  z-index: 1;
+
+  .carousel {
+    display: flex;
+    justify-content: center; // ✅ wyśrodkowanie w poziomie
+    flex-wrap: wrap; // ✅ zawijanie jeśli potrzeba
+    scroll-snap-type: x mandatory;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    overflow-x: auto;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .slide {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    width: 45%;
+    max-width: 320px;
+    aspect-ratio: 1 / 1; // 🟩 dzięki temu obraz będzie w kwadracie
+    border-radius: 1rem;
+    border: 2px solid $primary-color;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .slide {
+      width: 80%;
+      max-width: 90%;
+    }
   }
 }

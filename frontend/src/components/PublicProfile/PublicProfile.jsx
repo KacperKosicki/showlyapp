@@ -133,180 +133,193 @@ const PublicProfile = () => {
   } = profile;
 
   return (
-    <div className={styles.profileWrapper}>
-      {alert && (
-        <AlertBox
-          type={alert.type}
-          message={alert.message}
-          onClose={() => setAlert(null)}
-        />
-      )}
+    <>
+      <div className={styles.profileWrapper}>
+        {alert && (
+          <AlertBox
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert(null)}
+          />
+        )}
 
-      <div className={styles.card}>
-        <div className={styles.topBar}>
-          <div className={styles.location}>
-            <FaMapMarkerAlt />
-            <span>{location}</span>
+        <div className={styles.card}>
+          <div className={styles.topBar}>
+            <div className={styles.location}>
+              <FaMapMarkerAlt />
+              <span>{location}</span>
+            </div>
+            <div className={styles.rating}>
+              <FaStar />
+              <span>{rating} <small>({reviews})</small></span>
+            </div>
           </div>
-          <div className={styles.rating}>
-            <FaStar />
-            <span>{rating} <small>({reviews})</small></span>
+
+          <div className={styles.top}>
+            <img src={avatar} alt={name} className={styles.avatar} />
+            <div className={styles.info}>
+              <span className={`${styles.badge} ${styles[profileType]}`}>
+                {profileType === 'zawodowy' && 'Zawód'}
+                {profileType === 'hobbystyczny' && 'Hobby'}
+                {profileType === 'serwis' && 'Serwis'}
+                {profileType === 'społeczność' && 'Społeczność'}
+              </span>
+              <h2>{name}</h2>
+              <p className={styles.role}>{role}</p>
+
+              <div className={styles.separator} />
+
+              {description?.trim() ? (
+                <p className={styles.description}>{description}</p>
+              ) : (
+                <p className={styles.noDescription}>Użytkownik nie dodał jeszcze opisu.</p>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className={styles.top}>
-          <img src={avatar} alt={name} className={styles.avatar} />
-          <div className={styles.info}>
-            <span className={`${styles.badge} ${styles[profileType]}`}>
-              {profileType === 'zawodowy' && 'Zawód'}
-              {profileType === 'hobbystyczny' && 'Hobby'}
-              {profileType === 'serwis' && 'Serwis'}
-              {profileType === 'społeczność' && 'Społeczność'}
-            </span>
-            <h2>{name}</h2>
-            <p className={styles.role}>{role}</p>
+          {tags?.length > 0 && (
+            <div className={styles.tags}>
+              {tags.map(tag => (
+                <span key={tag} className={styles.tag}>{tag.toUpperCase()}</span>
+              ))}
+            </div>
+          )}
 
-            <div className={styles.separator} />
+          <div className={styles.separator} />
 
-            {description?.trim() ? (
-              <p className={styles.description}>{description}</p>
+          <div className={styles.details}>
+            {priceFrom && priceTo ? (
+              <p className={styles.price}>
+                Cennik od <strong>{priceFrom} zł</strong> do <strong>{priceTo} zł</strong>
+              </p>
             ) : (
-              <p className={styles.noDescription}>Użytkownik nie dodał jeszcze opisu.</p>
+              <p className={styles.price}>
+                <em>Cennik: brak danych</em>
+              </p>
+            )}
+
+            <button
+              className={styles.calendarToggle}
+              onClick={() => setShowCalendar(prev => !prev)}
+            >
+              📅 Zobacz dostępne dni
+            </button>
+
+            {showCalendar && (
+              <Calendar
+                tileDisabled={tileDisabled}
+                locale="pl-PL"
+                className={styles.calendar}
+              />
+            )}
+
+            {links?.filter(link => link.trim() !== '').length > 0 ? (
+              <ul className={styles.links}>
+                {links.map((link, i) =>
+                  link.trim() ? (
+                    <li key={i}>
+                      <a href={link} target="_blank" rel="noopener noreferrer">
+                        🌐 Link {i + 1}
+                      </a>
+                    </li>
+                  ) : null
+                )}
+              </ul>
+            ) : (
+              <p className={styles.noDescription}>Użytkownik nie dodał jeszcze żadnych linków.</p>
+            )}
+
+            {!isOwner && (
+              <div className={styles.ratingSection}>
+                <div className={styles.separator} />
+                <p>{hasRated ? 'Oceniłeś/aś już ten profil:' : 'Oceń tę wizytówkę:'}</p>
+                <div className={styles.stars}>
+                  {[1, 2, 3, 4, 5].map(val => (
+                    <FaStar
+                      key={val}
+                      className={
+                        val <= (hoveredRating || selectedRating)
+                          ? styles.starSelected
+                          : styles.star
+                      }
+                      onClick={!hasRated ? () => setSelectedRating(val) : undefined}
+                      onMouseEnter={!hasRated ? () => setHoveredRating(val) : undefined}
+                      onMouseLeave={!hasRated ? () => setHoveredRating(0) : undefined}
+                    />
+                  ))}
+                </div>
+
+                {!hasRated && (
+                  <>
+                    <textarea
+                      className={styles.commentInput}
+                      placeholder="Dlaczego wystawiasz taką ocenę?"
+                      value={comment}
+                      onChange={(e) => {
+                        const text = e.target.value;
+                        if (text.length <= maxChars) {
+                          setComment(text);
+                        }
+                      }}
+                    />
+
+                    <small className={styles.wordCounter}>
+                      {comment.length} / {maxChars} znaków
+                    </small>
+
+                    <button className={styles.sendButton} onClick={handleRate}>
+                      Wyślij opinię
+                    </button>
+                  </>
+                )}
+              </div>
             )}
           </div>
         </div>
 
-        {tags?.length > 0 && (
-          <div className={styles.tags}>
-            {tags.map(tag => (
-              <span key={tag} className={styles.tag}>{tag.toUpperCase()}</span>
-            ))}
-          </div>
-        )}
-
-        <div className={styles.separator} />
-
-        <div className={styles.details}>
-          {priceFrom && priceTo ? (
-            <p className={styles.price}>
-              Cennik od <strong>{priceFrom} zł</strong> do <strong>{priceTo} zł</strong>
-            </p>
-          ) : (
-            <p className={styles.price}>
-              <em>Cennik: brak danych</em>
-            </p>
-          )}
-
-          <button
-            className={styles.calendarToggle}
-            onClick={() => setShowCalendar(prev => !prev)}
-          >
-            📅 Zobacz dostępne dni
-          </button>
-
-          {showCalendar && (
-            <Calendar
-              tileDisabled={tileDisabled}
-              locale="pl-PL"
-              className={styles.calendar}
-            />
-          )}
-
-          {links?.filter(link => link.trim() !== '').length > 0 ? (
-            <ul className={styles.links}>
-              {links.map((link, i) =>
-                link.trim() ? (
-                  <li key={i}>
-                    <a href={link} target="_blank" rel="noopener noreferrer">
-                      🌐 Link {i + 1}
-                    </a>
+        <div className={styles.reviewsBox}>
+          <h3>Opinie użytkowników</h3>
+          {profile.ratedBy?.length > 0 ? (
+            <ul className={styles.reviewsList}>
+              {profile.ratedBy.map((op, i) => {
+                const ratingVal = Number(op.rating);
+                return (
+                  <li key={i} className={styles.reviewItem}>
+                    <div className={styles.reviewHeader}>
+                      <strong className={styles.reviewUser}>
+                        {op.userName || 'Użytkownik'}
+                      </strong>
+                      <span className={styles.reviewRating}>
+                        {[...Array(5)].map((_, idx) => (
+                          <FaStar
+                            key={idx}
+                            className={idx < ratingVal ? styles.starSelected : styles.star}
+                          />
+                        ))}
+                      </span>
+                    </div>
+                    <p className={styles.reviewText}>{op.comment}</p>
                   </li>
-                ) : null
-              )}
+                );
+              })}
             </ul>
           ) : (
-            <p className={styles.noDescription}>Użytkownik nie dodał jeszcze żadnych linków.</p>
-          )}
-
-          {!isOwner && (
-            <div className={styles.ratingSection}>
-              <div className={styles.separator} />
-              <p>{hasRated ? 'Oceniłeś/aś już ten profil:' : 'Oceń tę wizytówkę:'}</p>
-              <div className={styles.stars}>
-                {[1, 2, 3, 4, 5].map(val => (
-                  <FaStar
-                    key={val}
-                    className={
-                      val <= (hoveredRating || selectedRating)
-                        ? styles.starSelected
-                        : styles.star
-                    }
-                    onClick={!hasRated ? () => setSelectedRating(val) : undefined}
-                    onMouseEnter={!hasRated ? () => setHoveredRating(val) : undefined}
-                    onMouseLeave={!hasRated ? () => setHoveredRating(0) : undefined}
-                  />
-                ))}
-              </div>
-
-              {!hasRated && (
-                <>
-                  <textarea
-                    className={styles.commentInput}
-                    placeholder="Dlaczego wystawiasz taką ocenę?"
-                    value={comment}
-                    onChange={(e) => {
-                      const text = e.target.value;
-                      if (text.length <= maxChars) {
-                        setComment(text);
-                      }
-                    }}
-                  />
-
-                  <small className={styles.wordCounter}>
-                    {comment.length} / {maxChars} znaków
-                  </small>
-
-                  <button className={styles.sendButton} onClick={handleRate}>
-                    Wyślij opinię
-                  </button>
-                </>
-              )}
-            </div>
+            <p className={styles.noReviews}>Brak opinii</p>
           )}
         </div>
       </div>
-
-      <div className={styles.reviewsBox}>
-        <h3>Opinie użytkowników</h3>
-        {profile.ratedBy?.length > 0 ? (
-          <ul className={styles.reviewsList}>
-            {profile.ratedBy.map((op, i) => {
-              const ratingVal = Number(op.rating);
-              return (
-                <li key={i} className={styles.reviewItem}>
-                  <div className={styles.reviewHeader}>
-                    <strong className={styles.reviewUser}>
-                      {op.userName || 'Użytkownik'}
-                    </strong>
-                    <span className={styles.reviewRating}>
-                      {[...Array(5)].map((_, idx) => (
-                        <FaStar
-                          key={idx}
-                          className={idx < ratingVal ? styles.starSelected : styles.star}
-                        />
-                      ))}
-                    </span>
-                  </div>
-                  <p className={styles.reviewText}>{op.comment}</p>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <p className={styles.noReviews}>Brak opinii</p>
-        )}
-      </div>
-    </div>
+      {profile.photos?.length > 0 && (
+        <div className={styles.galleryWrapper}>
+          <div className={styles.carousel}>
+            {profile.photos.map((url, i) => (
+              <div key={i} className={styles.slide}>
+                <img src={url} alt={`Zdjęcie ${i + 1}`} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

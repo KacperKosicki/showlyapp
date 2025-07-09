@@ -221,6 +221,7 @@ router.patch('/extend/:uid', async (req, res) => {
 router.patch('/update/:uid', async (req, res) => {
   const allowedFields = [
     'avatar',
+    'photos',
     'profileType', 'location', 'priceFrom', 'priceTo',
     'availabilityDate', 'description', 'tags', 'links',
     'quickAnswers'

@@ -4,6 +4,10 @@ const profileSchema = new mongoose.Schema({
   userId: { type: String, required: true, unique: true },
   name: String,
   avatar: String,
+  photos: {
+    type: [String],
+    default: []
+  },
   role: String,
   rating: Number,
   reviews: Number,

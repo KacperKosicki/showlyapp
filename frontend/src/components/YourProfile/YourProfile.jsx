@@ -71,6 +71,43 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     }
   };
 
+  const handlePhotoChange = (e, index) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showAlert('Nieprawidłowy format pliku. Wybierz obraz.', 'warning');
+      return;
+    }
+
+    if (file.size > 3 * 1024 * 1024) { // 3 MB limit
+      showAlert('Zdjęcie jest za duże (maks. 3MB).', 'warning');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const updatedPhotos = [...(editData.photos || [])];
+      updatedPhotos[index] = reader.result;
+      setEditData({ ...editData, photos: updatedPhotos });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAddPhoto = () => {
+    if ((editData.photos || []).length >= 5) {
+      showAlert('Można dodać maksymalnie 5 zdjęć.', 'warning');
+      return;
+    }
+    setEditData({ ...editData, photos: [...(editData.photos || []), ''] });
+  };
+
+  const handleRemovePhoto = (index) => {
+    const updatedPhotos = [...(editData.photos || [])];
+    updatedPhotos.splice(index, 1);
+    setEditData({ ...editData, photos: updatedPhotos });
+  };
+
   const validateEditData = (data) => {
     const errors = {};
     if (!data.name?.trim() || data.name.length > 30) errors.name = 'Podaj nazwę (maks. 30 znaków)';
@@ -100,12 +137,9 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       );
     });
 
-
     if (invalidQA) {
       errors.quickAnswers = 'Każda szybka odpowiedź musi zawierać oba pola. Tytuł max. 10 znaków, odpowiedź max. 64 znaki.';
     }
-
-
     return errors;
   };
 
@@ -257,17 +291,17 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   onChange={(e) => setEditData({ ...editData, description: e.target.value })}
                   rows={4}
                   className={styles.formTextarea}
-                  maxLength={500} // ✅ OGRANICZENIE
+                  maxLength={500}
                 />
                 <small>{editData.description?.length || 0}/500 znaków</small>
                 {formErrors.description && <small className={styles.error}>{formErrors.description}</small>}
               </>
+            ) : profile.description ? (
+              <p className={styles.descriptionText}>{profile.description}</p>
             ) : (
-
-              <p className={styles.descriptionText}>
-                {profile.description || 'Brak opisu.'}
-              </p>
+              <p className={styles.noInfo}><span className={styles.icon}>❔</span> Nie dodałeś/aś jeszcze opisu.</p>
             )}
+
           </div>
 
           <h4 className={styles.sectionTitle}>3. Dostępność i usługi</h4>
@@ -304,7 +338,13 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 onChange={(e) => setEditData({ ...editData, availabilityDate: e.target.value })}
               />
             ) : (
-              <p>{profile.availabilityDate}</p>
+              <p>
+                {profile.availabilityDate ? (
+                  profile.availabilityDate
+                ) : (
+                  <p className={styles.noInfo}><span className={styles.icon}>❔</span> Nie ustawiłeś/aś jeszcze daty dostępności.</p>
+                )}
+              </p>
             )}
           </div>
 
@@ -337,31 +377,76 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             {isEditing ? (
               <div className={styles.linksWrapper}>
                 {[0, 1, 2].map(i => (
-                  <input key={i} type="text" className={styles.formInput} value={editData.links?.[i] || ''} placeholder={`Link ${i + 1}`} onChange={(e) => {
-                    const newLinks = [...(editData.links || [])];
-                    newLinks[i] = e.target.value;
-                    setEditData({ ...editData, links: newLinks });
-                  }} />
+                  <input
+                    key={i}
+                    type="text"
+                    className={styles.formInput}
+                    value={editData.links?.[i] || ''}
+                    placeholder={`Link ${i + 1}`}
+                    onChange={(e) => {
+                      const newLinks = [...(editData.links || [])];
+                      newLinks[i] = e.target.value;
+                      setEditData({ ...editData, links: newLinks });
+                    }}
+                  />
                 ))}
               </div>
-            ) : profile.links?.length > 0 && (
+            ) : (
               <div className={styles.linkSection}>
                 <div className={styles.links}>
-                  {profile.links.filter(l => l).map((link, i) => (
-                    <a key={i} href={link} target="_blank" rel="noopener noreferrer">{link}</a>
-                  ))}
+                  {profile.links?.filter(l => l)?.length > 0 ? (
+                    profile.links.filter(l => l).map((link, i) => (
+                      <a key={i} href={link} target="_blank" rel="noopener noreferrer">{link}</a>
+                    ))
+                  ) : (
+                    <p className={styles.noInfo}><span className={styles.icon}>❔</span> Nie dodałeś/aś jeszcze linków.</p>
+                  )}
                 </div>
               </div>
             )}
           </div>
 
-          <h4 className={styles.sectionTitle}>5. Informacje dodatkowe</h4>
+
+          <h4 className={styles.sectionTitle}>5. Galeria zdjęć</h4>
+          <div className={styles.galleryEditor}>
+            {isEditing ? (
+              <>
+                {(editData.photos || []).map((photo, index) => (
+                  <div key={index} className={styles.photoItem}>
+                    <img src={photo} alt={`Zdjęcie ${index + 1}`} />
+                    <div className={styles.photoButtons}>
+                      <button onClick={() => handleRemovePhoto(index)}>🗑️ Usuń</button>
+                      <label className={styles.replaceLabel}>
+                        🔄 Zamień
+                        <input type="file" accept="image/*" onChange={(e) => handlePhotoChange(e, index)} />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+                {editData.photos?.length < 5 && (
+                  <button className={styles.addPhotoBtn} onClick={handleAddPhoto}>➕ Dodaj zdjęcie</button>
+                )}
+              </>
+            ) : (
+              <div className={styles.galleryView}>
+                {profile.photos?.length > 0 ? (
+                  profile.photos.map((photo, i) => (
+                    <img key={i} src={photo} alt={`Zdjęcie ${i + 1}`} />
+                  ))
+                ) : (
+                  <p className={styles.noInfo}><span className={styles.icon}>❔</span> Nie dodałeś/aś jeszcze zdjęcia.</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <h4 className={styles.sectionTitle}>6. Informacje dodatkowe</h4>
           {profile.hasBusiness && (
             <p><FaBriefcase /> <strong>Działalność gospodarcza:</strong> Tak (NIP: {profile.nip || 'brak'})</p>
           )}
           <p><FaStar /> <strong>Ocena:</strong> {profile.rating} ⭐ ({profile.reviews} opinii)</p>
 
-          <h4 className={styles.sectionTitle}>6. Szybkie odpowiedzi (FAQ)</h4>
+          <h4 className={styles.sectionTitle}>7. Szybkie odpowiedzi (FAQ)</h4>
           {isEditing ? (
             <div className={styles.quickAnswers}>
               {[0, 1, 2].map(i => {
@@ -400,10 +485,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                         setEditData({ ...editData, quickAnswers: newQA });
                         setQaErrors(newErrors);
                       }}
-
-
-
-
                     />
                     <input
                       type="text"
@@ -445,13 +526,19 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
             </div>
           ) : (
-            profile.quickAnswers?.length > 0 && (
-              <ul className={styles.quickAnswersView}>
-                {profile.quickAnswers.map((qa, i) => (
-                  <li key={i}><strong>{qa.title}:</strong> {qa.answer}</li>
-                ))}
-              </ul>
-            )
+            <>
+              {profile.quickAnswers?.length > 0 ? (
+                <ul className={styles.quickAnswersView}>
+                  {profile.quickAnswers.map((qa, i) => (
+                    <li key={i}>
+                      <strong>{qa.title}:</strong> {qa.answer}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className={styles.noInfo}><span className={styles.icon}>❔</span> Nie dodałeś/aś jeszcze szybkiej odpowiedzi.</p>
+              )}
+            </>
           )}
           {formErrors.quickAnswers && <small className={styles.error}>{formErrors.quickAnswers}</small>}
 
