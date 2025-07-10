@@ -19,6 +19,7 @@ import PublicProfile from './components/PublicProfile/PublicProfile';
 import MessageForm from './components/MessageForm/MessageForm';
 import Notifications from './components/Notifications/Notifications';
 import ThreadView from './components/ThreadView/ThreadView';
+import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -67,6 +68,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         <Route
           path="/"
