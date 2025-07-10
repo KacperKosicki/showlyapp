@@ -6,6 +6,7 @@ import Calendar from 'react-calendar';
 import { auth } from '../../firebase';
 import 'react-calendar/dist/Calendar.css';
 import AlertBox from '../AlertBox/AlertBox';
+import { useLocation } from 'react-router-dom';
 
 const PublicProfile = () => {
   const { slug } = useParams();
@@ -19,6 +20,25 @@ const PublicProfile = () => {
   const [comment, setComment] = useState('');
   const [alert, setAlert] = useState(null);
   const maxChars = 100;
+  const routerLocation = useLocation();
+
+  useEffect(() => {
+    const scrollTo = routerLocation.state?.scrollToId;
+    if (!scrollTo || loading) return;
+
+    const tryScroll = () => {
+      const el = document.getElementById(scrollTo);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.replaceState({}, document.title, routerLocation.pathname);
+      } else {
+        requestAnimationFrame(tryScroll);
+      }
+    };
+
+    requestAnimationFrame(tryScroll);
+  }, [routerLocation.state, loading]);
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -134,7 +154,7 @@ const PublicProfile = () => {
 
   return (
     <>
-      <div className={styles.profileWrapper}>
+      <div id="profileWrapper" className={styles.profileWrapper}>
         {alert && (
           <AlertBox
             type={alert.type}

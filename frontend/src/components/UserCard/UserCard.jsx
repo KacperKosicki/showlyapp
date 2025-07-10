@@ -144,14 +144,18 @@ const UserCard = ({ user, currentUser }) => {
       <div className={styles.buttons}>
         <button
           className={styles.buttonPrimary}
-          onClick={() => navigate(`/profil/${slug}`)}
+          onClick={() => navigate(`/profil/${slug}`, { state: { scrollToId: 'profileWrapper' } })}
         >
           ZOBACZ WIZYTÓWKĘ
         </button>
         {currentUser && currentUser.uid !== user.userId && (
           <button
             className={styles.buttonSecondary}
-            onClick={() => navigate(`/wiadomosc/${user.userId}`)}
+            onClick={() =>
+              navigate(`/wiadomosc/${user.userId}`, {
+                state: { scrollToId: 'messageFormContainer' },
+              })
+            }
           >
             ZADAJ PYTANIE
           </button>

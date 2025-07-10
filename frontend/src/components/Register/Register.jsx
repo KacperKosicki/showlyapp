@@ -11,6 +11,7 @@ import styles from './Register.module.scss';
 import Hero from '../Hero/Hero';
 import Footer from '../Footer/Footer';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 
 const Register = ({ user, setUser, setRefreshTrigger }) => {
   const [form, setForm] = useState({
@@ -23,6 +24,29 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [emailSent, setEmailSent] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    const scrollTo = location.state?.scrollToId;
+    if (!scrollTo) return;
+
+    // Czekamy aż Hero i registerContainer się wyrenderują
+    const timeout = setTimeout(() => {
+      const tryScroll = () => {
+        const el = document.getElementById(scrollTo);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          window.history.replaceState({}, document.title, location.pathname);
+        } else {
+          requestAnimationFrame(tryScroll);
+        }
+      };
+
+      requestAnimationFrame(tryScroll);
+    }, 100); // ⏱️ możesz dać 120–150 ms jeśli nadal za szybko
+
+    return () => clearTimeout(timeout);
+  }, [location.state]);
 
   useEffect(() => {
     if (message || error) {
@@ -95,7 +119,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   return (
     <>
       <Hero user={user} setUser={setUser} refreshTrigger={Date.now()} />
-      <div className={styles.registerContainer}>
+      <div id="registerContainer" className={styles.registerContainer}>
         <h2>Utwórz konto</h2>
 
         {!emailSent ? (

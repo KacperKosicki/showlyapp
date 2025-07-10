@@ -51,7 +51,9 @@ const AboutApp = () => {
           </p>
           <div className={styles.buttons}>
             <Link to="/wizytowki" className={styles.primary}>Zobacz innych</Link>
-            <Link to="/register" className={styles.secondary}>Załóż swoją wizytówkę</Link>
+            <Link to="/register" className={styles.secondary} state={{ scrollToId: 'registerContainer' }}>
+              Załóż swoją wizytówkę
+            </Link>
           </div>
         </div>
       </div>

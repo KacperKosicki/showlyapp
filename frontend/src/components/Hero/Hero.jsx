@@ -21,7 +21,13 @@ const Hero = ({ user, setUser, refreshTrigger, unreadCount, setUnreadCount }) =>
           <div className={styles.searchWrapper}>
             <SearchBar variant="hero" />
           </div>
-          <Link to="/register" className={styles.ctaButton}>Załóż konto</Link>
+          <Link
+            to="/register"
+            state={{ scrollToId: 'registerContainer' }}
+            className={styles.ctaButton}
+          >
+            Załóż konto
+          </Link>
         </div>
       </div>
 

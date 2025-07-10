@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import styles from './MessageForm.module.scss';
 import axios from 'axios';
 import AlertBox from '../AlertBox/AlertBox';
+import { useLocation } from 'react-router-dom';
 
 const MessageForm = ({ user }) => {
   const { recipientId } = useParams();
@@ -12,6 +13,27 @@ const MessageForm = ({ user }) => {
   const [alert, setAlert] = useState(null);
   const [hasConversation, setHasConversation] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const scrollTo = location.state?.scrollToId;
+    if (!scrollTo) return;
+
+    const timeout = setTimeout(() => {
+      const tryScroll = () => {
+        const el = document.getElementById(scrollTo);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          window.history.replaceState({}, document.title, location.pathname);
+        } else {
+          requestAnimationFrame(tryScroll);
+        }
+      };
+      requestAnimationFrame(tryScroll);
+    }, 100);
+
+    return () => clearTimeout(timeout);
+  }, [location.state]);
 
   const checkConversation = useCallback(async () => {
     try {
@@ -67,7 +89,7 @@ const MessageForm = ({ user }) => {
   };
 
   return (
-    <div className={styles.container}>
+    <div id="messageFormContainer" className={styles.container}>
       <div className={styles.wrapper}>
         <h2>{hasConversation ? 'Kontynuuj rozmowę' : 'Napisz wiadomość'}</h2>
 

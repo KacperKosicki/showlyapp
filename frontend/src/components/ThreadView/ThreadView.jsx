@@ -155,7 +155,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
                 <div className={styles.infoBox}>
                   <span className={styles.icon}>⏳</span>
                   <p>
-                    Wysłałeś wiadomość. Czekasz teraz na odpowiedź drugiej osoby, zanim napiszesz kolejną.
+                    Wysłałeś/aś wiadomość. Czekasz teraz na odpowiedź drugiej osoby, zanim napiszesz kolejną.
                   </p>
                 </div>
               );
