@@ -7,7 +7,7 @@ const UserCardList = ({ currentUser }) => {
   const [topRatedUsers, setTopRatedUsers] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/profiles') // lub /api/profiles
+    axios.get(`${process.env.REACT_APP_API_URL}/api/profiles`)
       .then(res => {
         const sorted = res.data.sort((a, b) => b.rating - a.rating).slice(0, 3);
         setTopRatedUsers(sorted);
