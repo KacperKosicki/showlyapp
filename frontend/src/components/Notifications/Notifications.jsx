@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import styles from './Notifications.module.scss';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 const Notifications = ({ user, setUnreadCount }) => {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   const fetchConversations = async () => {
     try {
@@ -25,8 +27,21 @@ const Notifications = ({ user, setUnreadCount }) => {
     if (user?.uid) fetchConversations();
   }, [user]);
 
+  useEffect(() => {
+    const scrollTo = location.state?.scrollToId;
+    if (!scrollTo || loading) return;
+
+    const el = document.getElementById(scrollTo);
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.replaceState({}, document.title, location.pathname); // czyści state
+      }, 100);
+    }
+  }, [location.state, loading]);
+
   return (
-    <div className={styles.section}>
+    <div id="scrollToId" className={styles.section}>
       <div className={styles.wrapper}>
         <h2>Twoje konwersacje</h2>
         {loading ? (

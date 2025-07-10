@@ -16,6 +16,7 @@ import {
   FaInfoCircle,
   FaBriefcase
 } from 'react-icons/fa';
+import { useLocation } from 'react-router-dom'; // ⬅ dodaj to
 
 const YourProfile = ({ user, setRefreshTrigger }) => {
   const [qaErrors, setQaErrors] = useState([
@@ -32,11 +33,25 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const [formErrors, setFormErrors] = useState({});
   const [alert, setAlert] = useState(null); // ✅ nowy stan
   const fileInputRef = useRef(null);
+  const location = useLocation(); // ⬅ dodaj to pod useState
 
   const showAlert = (message, type = 'info') => {
     setAlert({ message, type });
     setTimeout(() => setAlert(null), 4000);
   };
+
+  useEffect(() => {
+    const scrollTo = location.state?.scrollToId;
+    if (!scrollTo || loading) return;
+
+    const el = document.getElementById(scrollTo);
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.replaceState({}, document.title, location.pathname);
+      }, 100);
+    }
+  }, [location.state, loading]); // dodaj też `loading` jako zależność
 
   const fetchProfile = async () => {
     try {
@@ -188,7 +203,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   }
 
   return (
-    <div className={styles.profile}>
+    <div className={styles.profile} id="scrollToId">
       {alert && <AlertBox message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
       <h2>Twoja wizytówka</h2>
 

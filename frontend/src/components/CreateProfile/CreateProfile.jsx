@@ -1,8 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import styles from './CreateProfile.module.scss';
 import axios from 'axios';
 import { useNavigate, Navigate } from 'react-router-dom';
 import UserCard from '../UserCard/UserCard';
+import { useLocation } from 'react-router-dom';
 
 const CreateProfile = ({ user, setRefreshTrigger }) => {
     const [form, setForm] = useState({
@@ -22,10 +23,23 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
         nip: '',
     });
 
+    const location = useLocation();
     const fileInputRef = useRef(null);
     const [formErrors, setFormErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const scrollTo = location.state?.scrollToId;
+        if (!scrollTo) return;
+
+        const el = document.getElementById(scrollTo);
+        if (el) {
+            setTimeout(() => {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+    }, []);
 
     if (!user) return <Navigate to="/login" replace />;
 
@@ -46,13 +60,11 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
             // NIE blokujemy wpisywania mniejszych niż priceFrom!
         }
 
-
         setForm((prev) => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : newValue,
         }));
     };
-
 
     const handleLinkChange = (index, value) => {
         const updatedLinks = [...form.links];
@@ -147,7 +159,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     };
 
     return (
-        <div className={styles.container}>
+        <div id="scrollToId" className={styles.container}>
             <h2>Stwórz swoją wizytówkę</h2>
             <div className={styles.wrapper}>
                 <form onSubmit={handleSubmit} className={styles.form}>

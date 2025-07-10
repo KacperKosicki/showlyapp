@@ -76,6 +76,22 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleNavigate = (path, scrollToId = null) => {
+    setOpen(false);
+
+    if (location.pathname === path && scrollToId) {
+      const el = document.getElementById(scrollToId);
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100); // ⏱ małe opóźnienie by mieć pewność, że element istnieje
+      }
+    } else {
+      navigate(path, { state: { scrollToId } }); // przekaż scrollId do innej strony
+    }
+  };
+
+
   // 🔐 Wylogowanie
   const handleLogout = async () => {
     try {
@@ -96,13 +112,13 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => 
 
       <div className={`${styles.menu} ${open ? styles.visible : ''}`}>
         {!hasProfile && (
-          <button onClick={() => navigate('/create-profile')}>
+          <button onClick={() => handleNavigate('/create-profile', 'scrollToId')}>
             Stwórz wizytówkę
           </button>
         )}
 
         {hasProfile && (
-          <button onClick={() => navigate('/your-profile')}>
+          <button onClick={() => handleNavigate('/your-profile', 'scrollToId')}>
             Twoja wizytówka:{' '}
             {isVisible ? (
               <span className={styles.statusActive}>Pozostało {remainingDays} dni</span>
@@ -112,7 +128,7 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => 
           </button>
         )}
 
-        <button onClick={() => navigate('/powiadomienia')}>
+        <button onClick={() => handleNavigate('/powiadomienia', 'scrollToId')}>
           Powiadomienia {unreadCount > 0 && <strong>({unreadCount})</strong>}
         </button>
 
