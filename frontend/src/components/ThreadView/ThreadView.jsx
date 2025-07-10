@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import styles from './ThreadView.module.scss';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom'; // jeśli jeszcze nie ma
 
 const ThreadView = ({ user, setUnreadCount }) => {
   const { threadId } = useParams();
@@ -14,6 +15,28 @@ const ThreadView = ({ user, setUnreadCount }) => {
   const [receiverName, setReceiverName] = useState('');
   const [canReply, setCanReply] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const location = useLocation(); // umieść u góry komponentu
+
+  useEffect(() => {
+    const scrollTo = location.state?.scrollToId;
+    if (!scrollTo) return;
+
+    let attempts = 0;
+
+    const tryScroll = () => {
+      const el = document.getElementById(scrollTo);
+      if (el && el.offsetHeight > 0) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.replaceState({}, document.title, location.pathname);
+      } else if (attempts < 60) {
+        attempts++;
+        setTimeout(tryScroll, 50); // ⏱️ dodaj małe opóźnienie zamiast `requestAnimationFrame`
+      }
+    };
+
+    tryScroll();
+  }, [location.state, messages]);
 
   const fetchThread = useCallback(async () => {
     try {
@@ -105,12 +128,19 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
 
   return (
-    <div className={styles.pageLayout}>
+    <div id="threadPageLayout" className={styles.pageLayout}>
       <div className={`${styles.mainArea} ${!receiverProfile ? styles.centered : ''}`}>
 
         {/* LEWA kolumna: wiadomości */}
         <div className={styles.threadWrapper}>
-          <button onClick={() => navigate('/powiadomienia')} className={styles.backButton}>
+          <button
+            onClick={() =>
+              navigate('/powiadomienia', {
+                state: { scrollToId: 'scrollToId' } // ⬅️ scrollujemy do id w Notifications
+              })
+            }
+            className={styles.backButton}
+          >
             ← Wróć do powiadomień
           </button>
 

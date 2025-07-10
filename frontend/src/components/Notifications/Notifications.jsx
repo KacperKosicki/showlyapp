@@ -68,7 +68,11 @@ const Notifications = ({ user, setUnreadCount }) => {
                   key={convo._id}
                   className={`${styles.item} ${isUnread ? styles.unread : styles.read}`}
                 >
-                  <Link to={`/konwersacja/${convo._id}`} className={styles.link}>
+                  <Link
+                    to={`/konwersacja/${convo._id}`}
+                    className={styles.link}
+                    state={{ scrollToId: 'threadPageLayout' }}
+                  >
                     <div className={styles.top}>
                       <span className={styles.from}>{messageLabel}</span>
                       <span className={styles.date}>
