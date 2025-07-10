@@ -26,3 +26,64 @@
   gap: 2rem;
   justify-content: center;
 }
+
+// ==========================
+// 📱 MEDIA QUERIES
+// ==========================
+
+@media (max-width: 1024px) {
+  .section {
+    padding: 3rem 2rem;
+  }
+
+  .title {
+    font-size: 1.7rem;
+  }
+
+  .description {
+    font-size: 0.95rem;
+  }
+
+  .list {
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 2.5rem 2rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .description {
+    font-size: 0.9rem;
+  }
+
+  .list {
+    gap: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .section {
+    padding: 2rem 2rem;
+  }
+
+  .title {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .description {
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .list {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

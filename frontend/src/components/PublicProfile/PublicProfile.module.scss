@@ -21,7 +21,7 @@
   max-width: 700px;
   border-radius: 1.5rem;
   padding: 2rem;
-  border: 1px solid #eaeaea;
+  border: 1px solid #ccc;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
   font-family: $font-body;
 }
@@ -37,7 +37,7 @@
   width: 35%;
   min-width: 280px;
   max-width: 440px;
-  border: 1px solid #eaeaea;
+  border: 1px solid #ccc;
   border-radius: 1.5rem;
   padding: 2rem;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
@@ -82,7 +82,7 @@
   background: linear-gradient(135deg, #ffffff, #f9f9f9);
   border-radius: 1rem;
   padding: 1.2rem 1.5rem;
-  border: 1px solid #eaeaea;
+  border: 1px solid #ccc;
   position: relative;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   transition: transform 0.2s ease;
@@ -432,11 +432,10 @@
 }
 
 .galleryWrapper {
-  width: 100vw; // 🔁 pełna szerokość ekranu
-  margin: 3rem 0 3rem calc(-1 * ((100vw - 100%) / 2)); // 🔄 usuwa marginesy przeglądarki
-  padding: 2rem clamp(1rem, 5vw, 4rem);
+  width: 100vw;
+  margin: 3rem 0 3rem calc(-1 * ((100vw - 100%) / 2));
+  padding: 3rem clamp(1.5rem, 6vw, 5rem);
   border-radius: 0;
-  border: 1px solid #eaeaea;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   background: url('../../../public/images/whyus/whyus-bg.png') center center / cover no-repeat;
   position: relative;
@@ -444,11 +443,11 @@
 
   .carousel {
     display: flex;
-    justify-content: center; // ✅ wyśrodkowanie w poziomie
-    flex-wrap: wrap; // ✅ zawijanie jeśli potrzeba
+    justify-content: center;
+    flex-wrap: wrap;
     scroll-snap-type: x mandatory;
-    gap: 1rem;
-    padding: 0.5rem 0;
+    gap: 2rem;
+    padding: 1rem 0;
     overflow-x: auto;
 
     &::-webkit-scrollbar {
@@ -459,13 +458,12 @@
   .slide {
     flex: 0 0 auto;
     scroll-snap-align: start;
-    width: 45%;
-    max-width: 320px;
-    aspect-ratio: 1 / 1; // 🟩 dzięki temu obraz będzie w kwadracie
-    border-radius: 1rem;
-    border: 2px solid $primary-color;
+    width: 60%;
+    max-width: 500px;
+    aspect-ratio: 4 / 3;
+    border-radius: 1.5rem;
     overflow: hidden;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
     background: white;
     display: flex;
     align-items: center;
@@ -481,8 +479,99 @@
 
   @media (max-width: 768px) {
     .slide {
-      width: 80%;
-      max-width: 90%;
+      width: 90%;
+      max-width: 95%;
+      aspect-ratio: 4 / 3;
     }
+  }
+}
+
+.galleryHeader {
+  text-align: center;
+  margin-bottom: 2rem;
+
+  h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    font-family: $font-heading;
+    color: #f0f0f0;
+  }
+
+  p {
+    font-size: 1rem;
+    color: #f0f0f0;
+    font-family: $font-accent;
+  }
+}
+
+@media (max-width: 1024px) {
+  .profileWrapper {
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    gap: 2rem;
+  }
+
+  .card,
+  .reviewsBox {
+    width: 100%;
+    max-width: 100%;
+    padding: 2rem;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .profileWrapper {
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+
+  .card,
+  .reviewsBox {
+    padding: 2rem;
+    margin: 0 auto;
+  }
+
+  .galleryWrapper {
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+
+  .galleryHeader h2,
+  .galleryHeader p {
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .profileWrapper {
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+
+  .card,
+  .reviewsBox {
+    padding: 2rem;
+    margin: 0 auto;
+  }
+
+  .top h2 {
+    font-size: 1.5rem;
+  }
+
+  .avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .galleryWrapper {
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+
+  .slide {
+    width: 95%;
   }
 }

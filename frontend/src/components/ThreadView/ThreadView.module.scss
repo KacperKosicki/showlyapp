@@ -30,7 +30,7 @@
 .threadWrapper {
   flex: 0 0 65%;
   background: $secondary-bg;
-  border: 1px solid #eaeaea;
+  border: 1px solid #ccc;
   border-radius: 1.5rem;
   padding: 2rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
@@ -50,7 +50,7 @@
   max-width: 380px;
 
   .quickAnswers {
-    border: 1px solid #ddd;
+    border: 1px solid #ccc;
     border-radius: 1.2rem;
     padding: 1.5rem 2rem;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
@@ -76,7 +76,7 @@
         padding: 1rem;
         border-radius: 1rem;
         background: #fafafa;
-        border: 1px solid #ddd;
+        border: 1px solid #ccc;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
         transition: transform 0.2s ease;
         cursor: default;
@@ -130,7 +130,9 @@
   word-wrap: break-word;
   position: relative;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #eaeaea;
+  border: 1px solid #ccc;
+  word-break: break-word; // 👈 ważne!
+  overflow-wrap: anywhere;
 
   .author {
     font-weight: 600;
@@ -141,6 +143,8 @@
 
   .content {
     margin-bottom: 0.4rem;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .time {

@@ -87,14 +87,119 @@
       box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15);
     }
   }
+}
 
-  @media (max-width: 768px) {
-    flex-direction: column;
+@media (max-width: 1024px) {
+  .hero {
+    padding: 1rem 2rem 180px;
 
-    .searchWrapper,
-    .ctaButton {
-      width: 100%;
-      max-width: 100%;
+    h1 {
+      font-size: 2.4rem;
+      margin: 1.5rem 0 1rem;
     }
+
+    p {
+      font-size: 1.1rem;
+    }
+
+    .ctaButton {
+      font-size: 0.95rem;
+      padding: 0.8rem 1.8rem;
+    }
+
+    .actions {
+      gap: 1.2rem;
+
+      .searchWrapper {
+        max-width: 350px;
+      }
+
+      .ctaButton {
+        padding: 0.8rem 1.8rem;
+      }
+    }
+  }
+
+  .wave svg {
+    height: 80px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 1rem 2rem 160px;
+
+    h1 {
+      font-size: 2rem;
+      margin: 1.5rem 0 1rem;
+    }
+
+    p {
+      font-size: 1rem;
+    }
+
+    .ctaButton {
+      font-size: 0.9rem;
+      padding: 0.8rem 1.5rem;
+    }
+
+    .actions {
+      flex-direction: column;
+      align-items: stretch;
+
+      .searchWrapper {
+        max-width: 100%;
+        width: 100%;
+      }
+
+      .ctaButton {
+        width: 90%;
+        max-width: 400px;
+        margin: 0 auto; // 🔧 wyśrodkowanie przycisku
+      }
+    }
+  }
+
+  .wave svg {
+    height: 70px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 1rem 2rem 140px;
+
+    h1 {
+      font-size: 1.6rem;
+      margin: 1.2rem 0 0.8rem;
+    }
+
+    p {
+      font-size: 0.95rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .ctaButton {
+      font-size: 0.85rem;
+      padding: 0.7rem 1.4rem;
+    }
+
+    .actions {
+      gap: 1rem;
+
+      .searchWrapper {
+        width: 100%;
+      }
+
+      .ctaButton {
+        width: 90%;
+        max-width: 400px;
+        margin: 0 auto; // 🔧 wyśrodkowanie przycisku
+      }
+    }
+  }
+
+  .wave svg {
+    height: 60px;
   }
 }

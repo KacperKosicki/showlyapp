@@ -310,6 +310,10 @@ const PublicProfile = () => {
       </div>
       {profile.photos?.length > 0 && (
         <div className={styles.galleryWrapper}>
+          <div className={styles.galleryHeader}>
+            <h2>Galeria użytkownika {name}</h2>
+            <p>Rzuć okiem na to, czym się zajmuje ten użytkownik — zdjęcia mówią więcej niż słowa!</p>
+          </div>
           <div className={styles.carousel}>
             {profile.photos.map((url, i) => (
               <div key={i} className={styles.slide}>

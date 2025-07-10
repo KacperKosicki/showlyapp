@@ -1,12 +1,28 @@
 @import '../../styles/variables';
 
+.container {
+  width: 100%;
+  max-width: 1200px; // ✅ dodaj to
+  margin: 0 auto;     // ✅ wyśrodkowanie
+  padding: 0 2rem;
+  display: flex;
+  justify-content: center;
+
+  // boczne odstępy tylko na mobile
+  @media (max-width: 768px) {
+    padding: 0 2rem;
+  }
+}
+
 .wrapper {
-  max-width: 600px;
-  margin: 2rem auto;
+  max-width: 800px; // ✅ zwiększono z 800px
+  width: 100%;       // ✅ żeby działało z paddingiem
+  margin: 2rem 0;
   padding: 2rem;
   background: white;
   border-radius: 1rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   font-family: $font-body;
 
   h2 {
@@ -57,8 +73,6 @@
   background-color: lighten($primary-color, 43%);
   color: darken($primary-color, 20%);
   font-family: $font-main;
-
-  // animacja subtelna
   animation: fadeIn 0.4s ease;
 }
 
@@ -81,5 +95,87 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+// MEDIA QUERIES
+
+@media (max-width: 1024px) {
+  .wrapper {
+    padding: 2rem;
+    margin: 4rem 0;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  .textarea {
+    font-size: 1rem;
+    padding: 1rem;
+  }
+
+  .button {
+    font-size: 1rem;
+    padding: 0.9rem 1.8rem;
+  }
+
+  .info {
+    font-size: 0.95rem;
+    padding: 1rem 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .wrapper {
+    padding: 2rem;
+    margin: 3rem 0;
+  }
+
+  h2 {
+    font-size: 1.4rem;
+  }
+
+  .textarea {
+    font-size: 0.95rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .button {
+    font-size: 0.95rem;
+    padding: 0.9rem 1.6rem;
+  }
+
+  .info {
+    font-size: 0.9rem;
+    padding: 0.9rem 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .wrapper {
+    padding: 2rem;
+    margin: 2rem 0;
+  }
+
+  h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .textarea {
+    font-size: 0.9rem;
+    padding: 0.8rem 1rem;
+    min-height: 100px;
+  }
+
+  .button {
+    font-size: 0.9rem;
+    padding: 0.8rem 1.4rem;
+  }
+
+  .info {
+    font-size: 0.85rem;
+    padding: 0.8rem 1rem;
   }
 }

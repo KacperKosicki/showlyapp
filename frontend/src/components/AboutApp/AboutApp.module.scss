@@ -123,3 +123,113 @@
     }
   }
 }
+
+@media (max-width: 1024px) {
+  .about {
+    padding: 4rem 2rem; // ⬅️ dodany padding boczny
+  }
+
+  .block {
+    gap: 2rem;
+
+    .text {
+      h2, h3 {
+        font-size: 1.6rem;
+      }
+
+      p {
+        font-size: 1rem;
+      }
+
+      .stats {
+        gap: 1.5rem;
+
+        div {
+          strong {
+            font-size: 1.5rem;
+          }
+
+          span {
+            font-size: 0.85rem;
+          }
+        }
+      }
+
+      .buttons {
+        flex-direction: column;
+        align-items: flex-start;
+
+        .primary,
+        .secondary {
+          width: 100%;
+          text-align: center;
+        }
+      }
+    }
+
+    .image {
+      img {
+        max-width: 100%;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .about {
+    padding: 3.5rem 2rem; // ⬅️ boczne paddingi spójne
+  }
+
+  .block {
+    flex-direction: column;
+    text-align: center;
+
+    &.reverse {
+      flex-direction: column; // nie reverse na mobile
+    }
+
+    .text {
+      .stats {
+        justify-content: center;
+      }
+
+      .buttons {
+        align-items: center;
+      }
+    }
+
+    .image {
+      img {
+        margin: 0 auto;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .about {
+    padding: 3rem 2rem; // ⬅️ zachowujemy 2rem bocznie
+  }
+
+  .block {
+    margin: 3rem auto;
+
+    .text {
+      h2, h3 {
+        font-size: 1.4rem;
+      }
+
+      p {
+        font-size: 0.95rem;
+      }
+
+      .stats div strong {
+        font-size: 1.3rem;
+      }
+
+      .buttons {
+        gap: 0.6rem;
+      }
+    }
+  }
+}

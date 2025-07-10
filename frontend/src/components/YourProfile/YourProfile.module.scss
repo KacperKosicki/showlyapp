@@ -20,7 +20,7 @@
   margin: 0 auto;
   padding: 2rem;
   border-radius: 1.5rem;
-  border: 1px solid #eaeaea;
+  border: 1px solid #ccc;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
@@ -477,7 +477,7 @@
     background: #f9f9f9;
     padding: 0.8rem 1rem;
     border-radius: 10px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid #ccc;
     font-family: $font-body;
     font-size: 0.95rem;
     color: $text-color;
@@ -576,10 +576,148 @@
   word-break: break-word;
   white-space: normal;
   align-self: flex-start; // NIE CENTER!
-  margin-left: 0;         // nadpisuje auto-centrowanie
+  margin-left: 0; // nadpisuje auto-centrowanie
 
-    .icon {
+  .icon {
     font-size: 1.5rem;
     line-height: 1;
+  }
+}
+
+@media (max-width: 1024px) {
+  .profile {
+    padding: 2rem;
+  }
+
+  .card {
+    padding: 2rem;
+  }
+
+  .right h3 {
+    font-size: 1.4rem;
+  }
+
+  .right p {
+    font-size: 0.95rem;
+  }
+
+  .descriptionText {
+    font-size: 0.95rem;
+  }
+
+  .galleryView img {
+    max-width: 100%;
+  }
+
+  .tags span {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .editButtons {
+    gap: 0.8rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile {
+    padding: 2rem;
+  }
+
+  .card {
+    padding: 2rem;
+    gap: 1.5rem;
+  }
+
+  .avatarWrapper {
+    width: 130px;
+    height: 130px;
+  }
+
+  .right h3 {
+    font-size: 1.3rem;
+  }
+
+  .right p {
+    font-size: 0.9rem;
+  }
+
+  .formInput,
+  .formTextarea {
+    font-size: 0.95rem;
+    padding: 0.6rem 1rem;
+  }
+
+  .editButtons {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .quickAnswersView li {
+    font-size: 0.9rem;
+  }
+
+  .galleryEditor .photoItem img {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile {
+    padding: 2rem;
+  }
+
+  .card {
+    padding: 2rem;
+    gap: 1.2rem;
+  }
+
+  .avatarWrapper {
+    width: 110px;
+    height: 110px;
+  }
+
+  .right h3 {
+    font-size: 1.2rem;
+  }
+
+  .right p {
+    font-size: 0.85rem;
+    gap: 0.4rem;
+  }
+
+  .formInput,
+  .formTextarea {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.9rem;
+  }
+
+  .tags span {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .editTopRight {
+    top: 0.8rem;
+    right: 1rem;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.8rem;
+  }
+
+  .quickAnswersView li {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .galleryEditor .photoItem img {
+    max-width: 100%;
+  }
+
+  .noInfo {
+    font-size: 0.85rem;
+    padding: 1rem;
   }
 }

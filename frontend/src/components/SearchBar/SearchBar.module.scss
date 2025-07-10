@@ -53,17 +53,24 @@
 
 @media (max-width: 768px) {
   .searchContainer {
-    width: 100%;
-    max-width: 100%;
+    width: 90%;
+    max-width: 400px;
+    justify-content: center;
+    margin: 2rem auto;         // 🔧 wyśrodkowanie horyzontalne
+    padding: 0.5rem 1rem;
+    display: flex;             // upewnij się że jest flex
+    gap: 0.5rem;
   }
 
   .searchInput {
     font-size: 0.95rem;
-    padding: 0.5rem;
+    padding: 0.5rem 1rem;
+    flex: 1;
   }
 
   .searchButton {
-    padding: 0.5rem;
+    padding: 0.5rem 1rem;
     font-size: 0.95rem;
   }
 }
+

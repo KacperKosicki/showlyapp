@@ -67,38 +67,40 @@ const MessageForm = ({ user }) => {
   };
 
   return (
-    <div className={styles.wrapper}>
-      <h2>{hasConversation ? 'Kontynuuj rozmowę' : 'Napisz wiadomość'}</h2>
+    <div className={styles.container}>
+      <div className={styles.wrapper}>
+        <h2>{hasConversation ? 'Kontynuuj rozmowę' : 'Napisz wiadomość'}</h2>
 
-      {alert && (
-        <AlertBox
-          type={alert.type}
-          message={alert.message}
-          onClose={() => setAlert(null)}
-        />
-      )}
+        {alert && (
+          <AlertBox
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert(null)}
+          />
+        )}
 
-      {hasConversation && (
-        <p className={styles.info}>
-          {canSend
-            ? 'Masz już konwersację z tym użytkownikiem. Twoja wiadomość zostanie do niej dodana.'
-            : 'Czekasz na odpowiedź drugiej osoby. Nie możesz wysłać kolejnej wiadomości.'}
-        </p>
-      )}
+        {hasConversation && (
+          <p className={styles.info}>
+            {canSend
+              ? 'Masz już konwersację z tym użytkownikiem. Twoja wiadomość zostanie do niej dodana.'
+              : 'Czekasz na odpowiedź drugiej osoby. Nie możesz wysłać kolejnej wiadomości.'}
+          </p>
+        )}
 
-      <form onSubmit={handleSend}>
-        <textarea
-          className={styles.textarea}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Wpisz swoją wiadomość..."
-          required
-          disabled={!canSend}
-        />
-        <button type="submit" className={styles.button} disabled={!canSend}>
-          Wyślij
-        </button>
-      </form>
+        <form onSubmit={handleSend}>
+          <textarea
+            className={styles.textarea}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Wpisz swoją wiadomość..."
+            required
+            disabled={!canSend}
+          />
+          <button type="submit" className={styles.button} disabled={!canSend}>
+            Wyślij
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

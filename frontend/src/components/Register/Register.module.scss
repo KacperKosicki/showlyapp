@@ -150,3 +150,107 @@
     background: #f5f5f5;
   }
 }
+
+@media (max-width: 1024px) {
+  .registerContainer {
+    padding: 2rem;
+    margin: 4rem auto;
+
+    h2 {
+      font-size: 1.7rem;
+    }
+
+    form input {
+      font-size: 1rem;
+    }
+
+    form button[type='submit'] {
+      font-size: 1rem;
+      padding: 0.9rem 1.8rem;
+    }
+
+    .messageBox {
+      font-size: 0.95rem;
+    }
+  }
+
+  .loginLink,
+  .linkButton,
+  .orSeparator {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .registerContainer {
+    padding: 2rem;
+    margin: 3rem auto;
+
+    h2 {
+      font-size: 1.5rem;
+    }
+
+    form input {
+      font-size: 0.95rem;
+    }
+
+    form button[type='submit'] {
+      font-size: 0.95rem;
+      padding: 0.9rem 1.6rem;
+    }
+
+    .messageBox {
+      font-size: 0.9rem;
+      padding: 1rem;
+    }
+  }
+
+  .loginLink,
+  .linkButton,
+  .orSeparator {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .registerContainer {
+    padding: 2rem;
+    margin: 2rem auto;
+
+    h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    form input {
+      font-size: 0.9rem;
+      padding: 0.75rem 1rem;
+    }
+
+    form button[type='submit'] {
+      font-size: 0.9rem;
+      padding: 0.8rem 1.5rem;
+    }
+
+    .messageBox {
+      font-size: 0.85rem;
+      padding: 0.8rem 1rem;
+    }
+  }
+
+  .loginLink,
+  .linkButton,
+  .orSeparator {
+    font-size: 0.85rem;
+  }
+
+  .googleButton {
+    font-size: 0.9rem;
+    padding: 0.7rem 1.2rem;
+
+    img {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
