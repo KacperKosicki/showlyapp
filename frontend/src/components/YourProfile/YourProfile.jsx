@@ -44,14 +44,19 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo || loading) return;
 
-    const el = document.getElementById(scrollTo);
-    if (el) {
-      setTimeout(() => {
+    const tryScroll = () => {
+      const el = document.getElementById(scrollTo);
+      if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         window.history.replaceState({}, document.title, location.pathname);
-      }, 100);
-    }
-  }, [location.state, loading]); // dodaj też `loading` jako zależność
+      } else {
+        requestAnimationFrame(tryScroll);
+      }
+    };
+
+    requestAnimationFrame(tryScroll);
+  }, [location.state, loading]);
+
 
   const fetchProfile = async () => {
     try {

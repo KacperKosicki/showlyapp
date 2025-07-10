@@ -33,13 +33,19 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
         const scrollTo = location.state?.scrollToId;
         if (!scrollTo) return;
 
-        const el = document.getElementById(scrollTo);
-        if (el) {
-            setTimeout(() => {
+        const tryScroll = () => {
+            const el = document.getElementById(scrollTo);
+            if (el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-        }
-    }, []);
+                window.history.replaceState({}, document.title, location.pathname);
+            } else {
+                requestAnimationFrame(tryScroll);
+            }
+        };
+
+        requestAnimationFrame(tryScroll);
+    }, [location.state]);
+
 
     if (!user) return <Navigate to="/login" replace />;
 
