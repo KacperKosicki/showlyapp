@@ -52,7 +52,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
         return;
       }
 
-      await axios.post('http://localhost:5000/api/users', {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/users`, {
         email,
         name: refreshedUser.displayName || '',
         firebaseUid: uid,
@@ -96,7 +96,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
       }
 
       try {
-        await axios.post('http://localhost:5000/api/users', {
+        await axios.post(`${process.env.REACT_APP_API_URL}/api/users`, {
           email,
           name: user.displayName || '',
           firebaseUid: uid,

@@ -15,13 +15,13 @@ const MessageForm = ({ user }) => {
 
   const checkConversation = useCallback(async () => {
     try {
-      const res = await axios.get(`/api/conversations/check/${user.uid}/${recipientId}`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/conversations/check/${user.uid}/${recipientId}`);
       setHasConversation(res.data.exists);
 
       if (res.data.exists) {
         setConversationId(res.data.id);
 
-        const threadRes = await axios.get(`/api/conversations/${res.data.id}`, {
+        const threadRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/conversations/${res.data.id}`, {
           headers: { uid: user.uid }
         });
 
@@ -46,7 +46,7 @@ const MessageForm = ({ user }) => {
     if (!message.trim()) return;
 
     try {
-      await axios.post('/api/conversations/send', {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/conversations/send`, {
         from: user.uid,
         to: recipientId,
         content: message.trim()

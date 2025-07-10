@@ -8,7 +8,7 @@ const AllUsersList = ({ currentUser }) => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/profiles') // lub /api/profiles jeśli masz proxy
+    axios.get(`${process.env.REACT_APP_API_URL}/api/profiles`)
       .then(res => setUsers(res.data))
       .catch(err => console.error('Błąd pobierania użytkowników:', err));
   }, []);

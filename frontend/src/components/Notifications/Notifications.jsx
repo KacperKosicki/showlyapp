@@ -9,7 +9,7 @@ const Notifications = ({ user, setUnreadCount }) => {
 
   const fetchConversations = async () => {
     try {
-      const res = await axios.get(`/api/conversations/by-uid/${user.uid}`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/conversations/by-uid/${user.uid}`);
       setConversations(res.data);
 
       const unread = res.data.reduce((acc, convo) => acc + convo.unreadCount, 0);

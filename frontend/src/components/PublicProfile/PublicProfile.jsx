@@ -23,7 +23,7 @@ const PublicProfile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`/api/profiles/slug/${slug}`);
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`);
 
         if (res.status === 403) {
           setAlert({ type: 'error', message: 'Profil jest obecnie niewidoczny lub wygasł.' });
@@ -87,7 +87,7 @@ const PublicProfile = () => {
     }
 
     try {
-      const res = await fetch(`/api/profiles/rate/${slug}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/rate/${slug}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, rating: selectedRating, comment }),
@@ -97,7 +97,7 @@ const PublicProfile = () => {
 
       setAlert({ type: 'success', message: 'Dziękujemy za opinię!' });
 
-      const updated = await fetch(`/api/profiles/slug/${slug}`);
+      const updated = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`);
       const updatedData = await updated.json();
       setProfile(updatedData);
     } catch (err) {

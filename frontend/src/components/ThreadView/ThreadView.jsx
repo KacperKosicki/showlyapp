@@ -17,9 +17,10 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
   const fetchThread = useCallback(async () => {
     try {
-      const res = await axios.get(`/api/conversations/${threadId}`, {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/conversations/${threadId}`, {
         headers: { uid: user.uid }
       });
+
 
       const { messages: msgs, participants } = res.data;
       setMessages(msgs);
@@ -37,9 +38,10 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
       const unreadInThread = msgs.filter(m => !m.read && m.toUid === user.uid);
       if (unreadInThread.length > 0) {
-        await axios.patch(`/api/conversations/${threadId}/read`, null, {
+        await axios.patch(`${process.env.REACT_APP_API_URL}/api/conversations/${threadId}/read`, null, {
           headers: { uid: user.uid }
         });
+
         if (setUnreadCount) {
           setUnreadCount(prev => Math.max(prev - unreadInThread.length, 0));
         }
@@ -58,7 +60,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
     const fetchReceiverProfile = async () => {
       try {
         if (!receiverId || receiverId === 'SYSTEM') return; // ⛔ pomiń systemowe
-        const res = await axios.get(`/api/profiles/by-user/${receiverId}`);
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${receiverId}`);
+
         setReceiverProfile(res.data);
       } catch (err) {
         console.error('❌ Błąd pobierania profilu odbiorcy:', err);
@@ -80,11 +83,12 @@ const ThreadView = ({ user, setUnreadCount }) => {
     }
 
     try {
-      await axios.post('/api/conversations/send', {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/conversations/send`, {
         from: user.uid,
         to: receiverId,
         content: newMessage.trim()
       });
+
 
       setNewMessage('');
       setErrorMsg('');

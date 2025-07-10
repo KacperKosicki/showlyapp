@@ -22,7 +22,7 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => 
       if (!user?.uid) return;
 
       try {
-        const res = await axios.get(`/api/profiles/by-user/${user.uid}`);
+        await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`);
         const profile = res.data;
 
         if (profile?.visibleUntil) {
@@ -52,7 +52,7 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => 
       if (!user?.uid) return;
 
       try {
-        const res = await axios.get(`/api/conversations/by-uid/${user.uid}`);
+        await axios.get(`${process.env.REACT_APP_API_URL}/api/conversations/by-uid/${user.uid}`);
         const totalUnread = res.data.reduce((acc, convo) => acc + convo.unreadCount, 0);
         setUnreadCount(totalUnread);
       } catch (err) {

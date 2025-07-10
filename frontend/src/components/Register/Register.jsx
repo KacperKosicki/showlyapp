@@ -60,7 +60,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
     try {
       // 🔎 Sprawdzenie w MongoDB
-      const res = await axios.get(`http://localhost:5000/api/users/check-email?email=${form.email}`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/check-email?email=${form.email}`);
       if (res.data.exists) {
         setError(`Ten e-mail jest już powiązany z kontem (${res.data.provider === 'google' ? 'Google' : 'e-mail + hasło'}). Zaloguj się tą metodą.`);
         return;

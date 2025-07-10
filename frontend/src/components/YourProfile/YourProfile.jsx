@@ -40,7 +40,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const fetchProfile = async () => {
     try {
-      const res = await axios.get(`/api/profiles/by-user/${user.uid}`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`);
       const profile = res.data;
       const now = new Date();
       const until = new Date(profile.visibleUntil);
@@ -145,7 +145,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const handleExtendVisibility = async () => {
     try {
-      await axios.patch(`/api/profiles/extend/${user.uid}`);
+      await axios.patch(`${process.env.REACT_APP_API_URL}/api/profiles/extend/${user.uid}`);
       await fetchProfile();
       setRefreshTrigger(Date.now()); // 👈 DODAĆ TO
     } catch (err) {
@@ -162,7 +162,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       return;
     }
     try {
-      await axios.patch(`/api/profiles/update/${user.uid}`, {
+      await axios.patch(`${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`, {
         ...editData,
         tags: (editData.tags || []).filter(tag => tag.trim() !== ''),
         quickAnswers: (editData.quickAnswers || []).filter(qa => qa.title.trim() || qa.answer.trim()),
