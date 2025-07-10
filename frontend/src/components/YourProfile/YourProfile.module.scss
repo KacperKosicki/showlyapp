@@ -1,7 +1,7 @@
 @import '../../styles/variables';
 
 .profile {
-  padding: 3rem 2rem;
+  padding: 3rem 1rem;
   font-family: $font-body;
   min-height: 100vh;
 
@@ -29,7 +29,7 @@
   text-align: center;
 
   @media (max-width: 768px) {
-    padding: 1.5rem;
+    padding: 1rem;
   }
 }
 
@@ -586,7 +586,7 @@
 
 @media (max-width: 1024px) {
   .profile {
-    padding: 2rem;
+    padding: 1rem;
   }
 
   .card {
@@ -621,7 +621,7 @@
 
 @media (max-width: 768px) {
   .profile {
-    padding: 2rem;
+    padding: 1rem;
   }
 
   .card {
@@ -667,7 +667,7 @@
 
 @media (max-width: 480px) {
   .profile {
-    padding: 2rem;
+    padding: 1rem;
   }
 
   .card {

@@ -2,7 +2,7 @@
 
 .hero {
   text-align: center;
-  padding: 1rem 2rem 200px;
+  padding: 1rem 1rem 200px;
   background:
     url('../../../public/images/hero/hero-bg.png') no-repeat center/cover;
   color: white;
@@ -91,7 +91,7 @@
 
 @media (max-width: 1024px) {
   .hero {
-    padding: 1rem 2rem 180px;
+    padding: 1rem 1rem 180px;
 
     h1 {
       font-size: 2.4rem;
@@ -127,7 +127,7 @@
 
 @media (max-width: 768px) {
   .hero {
-    padding: 1rem 2rem 160px;
+    padding: 1rem 1rem 160px;
 
     h1 {
       font-size: 2rem;
@@ -153,7 +153,7 @@
       }
 
       .ctaButton {
-        width: 90%;
+        width: 50%;
         max-width: 400px;
         margin: 0 auto; // 🔧 wyśrodkowanie przycisku
       }
@@ -167,7 +167,7 @@
 
 @media (max-width: 480px) {
   .hero {
-    padding: 1rem 2rem 140px;
+    padding: 1rem 1rem 140px;
 
     h1 {
       font-size: 1.6rem;
@@ -192,7 +192,7 @@
       }
 
       .ctaButton {
-        width: 90%;
+        width: 50%;
         max-width: 400px;
         margin: 0 auto; // 🔧 wyśrodkowanie przycisku
       }

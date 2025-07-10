@@ -3,7 +3,7 @@
 .container {
   max-width: 1200px;
   margin: 2rem auto;
-  padding: 2rem;
+  padding: 1rem;
   font-family: $font-body;
   color: $text-color;
 }
@@ -167,7 +167,7 @@ h2 {
 }
 @media (max-width: 1024px) {
   .container {
-    padding: 2rem;
+    padding: 1rem;
     margin: 1.5rem auto;
   }
 
@@ -201,7 +201,7 @@ h2 {
 
 @media (max-width: 768px) {
   .container {
-    padding: 2rem;
+    padding: 1rem;
     margin: 1rem auto;
   }
 
@@ -259,7 +259,7 @@ h2 {
 
 @media (max-width: 480px) {
   .container {
-    padding: 2rem;
+    padding: 1rem;
   }
 
   h2 {

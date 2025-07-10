@@ -4,13 +4,13 @@
   width: 100%;
   max-width: 1200px; // ✅ dodaj to
   margin: 0 auto;     // ✅ wyśrodkowanie
-  padding: 0 2rem;
+  padding: 0 1rem;
   display: flex;
   justify-content: center;
 
   // boczne odstępy tylko na mobile
   @media (max-width: 768px) {
-    padding: 0 2rem;
+    padding: 0 1rem;
   }
 }
 
@@ -49,7 +49,8 @@
 .button {
   background: $primary-color;
   color: white;
-  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  padding: 0.9rem 1.8rem;
   border: none;
   border-radius: 999px;
   cursor: pointer;

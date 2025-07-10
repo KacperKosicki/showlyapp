@@ -5,7 +5,7 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 2rem;
-  padding: 4rem 2rem;
+  padding: 4rem 1rem;
   max-width: 1200px;
   margin: 0 auto;
 
@@ -493,7 +493,8 @@
   h2 {
     font-size: 2rem;
     font-weight: bold;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    margin-top: 1rem;
     font-family: $font-heading;
     color: #f0f0f0;
   }
@@ -509,7 +510,7 @@
   .profileWrapper {
     flex-direction: column;
     align-items: center;
-    padding: 2rem;
+    padding: 1rem;
     gap: 2rem;
   }
 
@@ -517,25 +518,25 @@
   .reviewsBox {
     width: 100%;
     max-width: 100%;
-    padding: 2rem;
+    padding: 1rem;
     margin: 0 auto;
   }
 }
 
 @media (max-width: 768px) {
   .profileWrapper {
-    padding: 2rem;
+    padding: 1rem;
     margin: 2rem 0;
   }
 
   .card,
   .reviewsBox {
-    padding: 2rem;
+    padding: 1rem;
     margin: 0 auto;
   }
 
   .galleryWrapper {
-    padding: 2rem;
+    padding: 1rem;
     margin: 2rem 0;
   }
 
@@ -547,13 +548,13 @@
 
 @media (max-width: 480px) {
   .profileWrapper {
-    padding: 2rem;
+    padding: 1rem;
     margin: 2rem 0;
   }
 
   .card,
   .reviewsBox {
-    padding: 2rem;
+    padding: 1rem;
     margin: 0 auto;
   }
 
@@ -567,7 +568,7 @@
   }
 
   .galleryWrapper {
-    padding: 2rem;
+    padding: 1rem;
     margin: 2rem 0;
   }
 

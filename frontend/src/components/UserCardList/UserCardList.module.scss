@@ -1,7 +1,7 @@
 @import '../../styles/variables';
 
 .section {
-  padding: 3rem 2rem;
+  padding: 3rem 1rem;
   text-align: center;
 }
 
@@ -33,7 +33,7 @@
 
 @media (max-width: 1024px) {
   .section {
-    padding: 3rem 2rem;
+    padding: 3rem 1rem;
   }
 
   .title {
@@ -51,7 +51,7 @@
 
 @media (max-width: 768px) {
   .section {
-    padding: 2.5rem 2rem;
+    padding: 2.5rem 1rem;
   }
 
   .title {
@@ -69,7 +69,7 @@
 
 @media (max-width: 480px) {
   .section {
-    padding: 2rem 2rem;
+    padding: 2rem 1rem;
   }
 
   .title {

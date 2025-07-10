@@ -69,12 +69,12 @@
 @media (max-width: 768px) {
   .alert {
     top: 16px;
-    right: 2rem; // ⬅️ boczny padding jak w reszcie layoutu
+    right: 1rem;
     left: auto;
     transform: none;
     font-size: 0.95rem;
     padding: 0.9rem 1.2rem;
-    max-width: calc(100% - 4rem); // ⬅️ 2rem z lewej + 2rem z prawej
+    max-width: calc(100% - 4rem);
   }
 
   .icon {
@@ -90,12 +90,12 @@
   .alert {
     top: auto;
     bottom: 20px;
-    right: 2rem; // ⬅️ spójnie z layoutem
+    right: 1rem;
     left: auto;
     transform: none;
     font-size: 0.9rem;
     padding: 0.8rem 1.2rem;
-    max-width: calc(100% - 4rem); // ⬅️ boczne ograniczenie
+    max-width: calc(100% - 4rem);
   }
 
   .icon {

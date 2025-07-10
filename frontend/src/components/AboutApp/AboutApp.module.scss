@@ -1,7 +1,7 @@
 @import '../../styles/variables';
 
 .about {
-  padding: 4rem 2rem;
+  padding: 4rem 1rem;
 }
 
 .block {
@@ -126,7 +126,7 @@
 
 @media (max-width: 1024px) {
   .about {
-    padding: 4rem 2rem; // ⬅️ dodany padding boczny
+    padding: 4rem 1rem;
   }
 
   .block {
@@ -161,7 +161,7 @@
 
         .primary,
         .secondary {
-          width: 100%;
+          width: 70%;
           text-align: center;
         }
       }
@@ -177,7 +177,7 @@
 
 @media (max-width: 768px) {
   .about {
-    padding: 3.5rem 2rem; // ⬅️ boczne paddingi spójne
+    padding: 3.5rem 1rem;
   }
 
   .block {
@@ -185,7 +185,7 @@
     text-align: center;
 
     &.reverse {
-      flex-direction: column; // nie reverse na mobile
+      flex-direction: column;
     }
 
     .text {
@@ -208,7 +208,7 @@
 
 @media (max-width: 480px) {
   .about {
-    padding: 3rem 2rem; // ⬅️ zachowujemy 2rem bocznie
+    padding: 3rem 1rem;
   }
 
   .block {
