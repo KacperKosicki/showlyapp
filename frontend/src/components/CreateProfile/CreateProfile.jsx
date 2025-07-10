@@ -134,7 +134,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
         };
 
         try {
-            await axios.post('/api/profiles', payload);
+            await axios.post(`${process.env.REACT_APP_API_URL}/api/profiles`, payload);
             setRefreshTrigger(Date.now());
             setTimeout(() => navigate('/your-profile'), 300);
         } catch (err) {
