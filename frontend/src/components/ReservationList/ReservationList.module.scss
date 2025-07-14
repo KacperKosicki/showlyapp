@@ -1,139 +1,139 @@
 @import '../../styles/variables';
 
-.section {
+.reservationList {
   padding: 3rem 1rem;
-}
 
-.wrapper {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 3rem 2rem;
-  background: white;
-  border-radius: 1.5rem;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-  border: 1px solid #ccc;
-  font-family: $font-body;
-}
-
-h2 {
-  text-align: center;
-  margin-bottom: 2.5rem;
-  font-size: 1.8rem;
-  color: $text-color;
-  font-family: $font-heading;
-}
-
-.columns {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2rem;
-  justify-content: space-between;
-}
-
-.column {
-  flex: 1 1 400px;
-}
-
-h3 {
-  text-align: center;
-  margin-bottom: 1rem;
-  color: #444;
-  font-size: 1.2rem;
-}
-
-.empty {
-  text-align: center;
-  font-size: 1rem;
-  color: #888;
-}
-
-.list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-  padding: 0;
-}
-
-.item {
-  background: #f9f9f9;
-  border: 1px solid #ddd;
-  border-radius: 1rem;
-  padding: 1.2rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-  transition: 0.2s;
-
-  &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  .wrapper {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+    border: 1px solid #ccc;
+    font-family: $font-body;
   }
 
-  .row {
-    margin: 0.3rem 0;
-    font-size: 0.95rem;
+  .title {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    font-size: 1.8rem;
+    color: $text-color;
+    font-family: $font-heading;
+  }
 
-    strong {
-      color: #333;
-      display: inline-block;
-      width: 110px;
+  .columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    justify-content: space-between;
+  }
+
+  .column {
+    flex: 1 1 400px;
+  }
+
+  .heading {
+    text-align: center;
+    margin-bottom: 1rem;
+    color: #444;
+    font-size: 1.2rem;
+  }
+
+  .empty {
+    text-align: center;
+    font-size: 1rem;
+    color: #888;
+  }
+
+  .list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    padding: 0;
+  }
+
+  .item {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 1rem;
+    padding: 1.2rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    transition: 0.2s;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .row {
+      margin: 0.3rem 0;
+      font-size: 0.95rem;
+
+      strong {
+        color: #333;
+        display: inline-block;
+        width: 110px;
+      }
     }
   }
-}
 
-.actions {
-  margin-top: 1rem;
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
+  .actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
 
-  button {
-    flex: 1;
-    padding: 0.5rem;
-    font-weight: bold;
+    button {
+      flex: 1;
+      padding: 0.5rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: $font-accent;
+      transition: background 0.2s;
+
+      &:first-child {
+        background: $primary-color;
+        color: white;
+
+        &:hover {
+          background: darken($primary-color, 10%);
+        }
+      }
+
+      &:last-child {
+        background: #eee;
+        color: #444;
+
+        &:hover {
+          background: #ccc;
+        }
+      }
+    }
+  }
+
+  .cancel {
+    background: #fbe9e7;
+    color: #d32f2f;
     border: none;
+    padding: 0.5rem;
     border-radius: 8px;
+    font-weight: bold;
     cursor: pointer;
     font-family: $font-accent;
     transition: background 0.2s;
 
-    &:first-child {
-      background: $primary-color;
-      color: white;
-
-      &:hover {
-        background: darken($primary-color, 10%);
-      }
-    }
-
-    &:last-child {
-      background: #eee;
-      color: #444;
-
-      &:hover {
-        background: #ccc;
-      }
+    &:hover {
+      background: #f5c6c5;
     }
   }
-}
 
-.cancel {
-  background: #fbe9e7;
-  color: #d32f2f;
-  border: none;
-  padding: 0.5rem;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  font-family: $font-accent;
-  transition: background 0.2s;
-
-  &:hover {
-    background: #f5c6c5;
+  .loading {
+    text-align: center;
+    font-size: 1.2rem;
+    padding: 3rem;
+    color: #777;
   }
-}
-
-.loading {
-  text-align: center;
-  font-size: 1.2rem;
-  padding: 3rem;
-  color: #777;
 }

@@ -52,13 +52,12 @@ const ReservationList = ({ user }) => {
   }
 
   return (
-    <section className={styles.section}>
+    <section className={styles.reservationList}>
       <div className={styles.wrapper}>
-        <h2>📋 Panel rezerwacji</h2>
-
+        <h2 className={styles.title}>Panel rezerwacji</h2>
         <div className={styles.columns}>
           <div className={styles.column}>
-            <h3>📤 Wysłane rezerwacje</h3>
+            <h3 className={styles.heading}>Wysłane rezerwacje</h3>
             {clientReservations.length === 0 ? (
               <p className={styles.empty}>Brak wysłanych rezerwacji.</p>
             ) : (
@@ -85,7 +84,7 @@ const ReservationList = ({ user }) => {
           </div>
 
           <div className={styles.column}>
-            <h3>📥 Otrzymane rezerwacje</h3>
+            <h3 className={styles.heading}>Otrzymane rezerwacje</h3>
             {serviceReservations.length === 0 ? (
               <p className={styles.empty}>Brak otrzymanych rezerwacji.</p>
             ) : (

@@ -46,7 +46,6 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
         requestAnimationFrame(tryScroll);
     }, [location.state]);
 
-
     if (!user) return <Navigate to="/login" replace />;
 
     const handleChange = (e) => {
@@ -269,11 +268,6 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                             max={1000000}
                         />
                         {formErrors.priceTo && <small className={styles.error}>{formErrors.priceTo}</small>}
-                    </label>
-
-                    <label>
-                        Data dostępności:
-                        <input type="date" name="availabilityDate" value={form.availabilityDate} onChange={handleChange} />
                     </label>
 
                     <h3 className={styles.sectionTitle}>4. Linki i media</h3>

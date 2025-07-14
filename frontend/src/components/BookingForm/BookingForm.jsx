@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom'; // dodaj useNavigate
 import styles from './BookingForm.module.scss';
 import axios from 'axios';
 
 const BookingForm = ({ user }) => {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [provider, setProvider] = useState(null);
   const [availableDates, setAvailableDates] = useState([]);
   const [reservedSlots, setReservedSlots] = useState([]); // ⬅️ nowość
@@ -43,6 +44,14 @@ const BookingForm = ({ user }) => {
 
     return () => clearInterval(interval);
   }, [slug]);
+
+  // Blokada wejścia na formularz rezerwacji jeśli wyłączone
+  useEffect(() => {
+    if (provider && provider.showAvailableDates === false) {
+      // Możesz wyświetlić krótki komunikat, ale przekieruje od razu
+      navigate('/', { replace: true });
+    }
+  }, [provider, navigate]);
 
   // Pobieranie zaakceptowanych rezerwacji (zajętych slotów)
   useEffect(() => {
@@ -122,9 +131,13 @@ const BookingForm = ({ user }) => {
     }
   };
 
-
   if (!provider) {
     return <div className={styles.loading}>🔄 Trwa ładowanie danych profilu...</div>;
+  }
+
+  // Możesz opcjonalnie wyświetlić komunikat zanim przekieruje
+  if (provider.showAvailableDates === false) {
+    return <div className={styles.error}>Rezerwacje są wyłączone dla tego profilu. Przekierowanie...</div>;
   }
 
   return (

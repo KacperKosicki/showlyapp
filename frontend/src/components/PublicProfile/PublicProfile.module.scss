@@ -233,7 +233,7 @@
 
   .price {
     font-size: 1rem;
-    margin-bottom: 0.4rem;
+    margin-bottom: 1.5rem;
 
     strong {
       color: $primary-color;
@@ -266,6 +266,7 @@
   .links {
     list-style: none;
     margin-top: 1rem;
+    margin-bottom: 1rem;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;

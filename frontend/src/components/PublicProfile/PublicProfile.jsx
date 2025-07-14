@@ -218,21 +218,6 @@ const PublicProfile = () => {
               </p>
             )}
 
-            <button
-              className={styles.calendarToggle}
-              onClick={() => setShowCalendar(prev => !prev)}
-            >
-              📅 Zobacz dostępne dni
-            </button>
-
-            {showCalendar && (
-              <Calendar
-                tileDisabled={tileDisabled}
-                locale="pl-PL"
-                className={styles.calendar}
-              />
-            )}
-
             {links?.filter(link => link.trim() !== '').length > 0 ? (
               <ul className={styles.links}>
                 {links.map((link, i) =>
