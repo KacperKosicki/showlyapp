@@ -38,6 +38,10 @@ app.use('/api/users', usersRoutes);
 const conversationRoutes = require('./routes/conversations');
 app.use('/api/conversations', conversationRoutes);
 
+//Rezerwacje
+const reservationRoutes = require('./routes/reservations');
+app.use('/api/reservations', reservationRoutes);
+
 // Uruchomienie serwera
 app.listen(PORT, () => {
   console.log(`🚀 Serwer działa na porcie ${PORT}`);

@@ -20,6 +20,8 @@ import MessageForm from './components/MessageForm/MessageForm';
 import Notifications from './components/Notifications/Notifications';
 import ThreadView from './components/ThreadView/ThreadView';
 import ScrollToTop from './components/ScrollToTop/ScrollToTop';
+import BookingForm from './components/BookingForm/BookingForm';
+import ReservationList from './components/ReservationList/ReservationList';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -152,6 +154,48 @@ function App() {
               <>
                 <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
                 <ThreadView user={user} setUnreadCount={setUnreadCount} triggerRefresh={triggerRefresh} /> {/* ✅ przekazanie */}
+                <Footer />
+              </>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/rezerwacja/:slug"
+          element={
+            user ? (
+              <>
+                <Hero
+                  user={user}
+                  setUser={setUser}
+                  refreshTrigger={refreshTrigger}
+                  setRefreshTrigger={setRefreshTrigger}
+                  unreadCount={unreadCount}
+                  setUnreadCount={setUnreadCount}
+                />
+                <BookingForm user={user} />
+                <Footer />
+              </>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/rezerwacje"
+          element={
+            user ? (
+              <>
+                <Hero
+                  user={user}
+                  setUser={setUser}
+                  refreshTrigger={refreshTrigger}
+                  setRefreshTrigger={setRefreshTrigger}
+                  unreadCount={unreadCount}
+                  setUnreadCount={setUnreadCount}
+                />
+                <ReservationList user={user} /> {/* ⬅ TUTAJ BYŁO BRAK */}
                 <Footer />
               </>
             ) : (

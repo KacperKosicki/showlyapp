@@ -149,27 +149,36 @@
 }
 
 .calendarToggle {
-  background: none;
-  border: none;
+  background: white;
   color: $primary-color;
-  font-size: 0.9rem;
-  margin-top: 0.5rem;
+  border: 2px solid $primary-color;
+  padding: 0.45rem 1.1rem; // 🔽 zmniejszony padding
+  border-radius: 50px;
+  font-size: 0.8rem; // 🔽 trochę mniejsza czcionka
+  font-weight: 600;
   cursor: pointer;
+  transition: 0.2s ease;
   font-family: $font-accent;
+  text-align: center;
+
+  margin-top: 1.2rem;  // 🔼 większy margines górny
+  margin-bottom: 1.2rem; // 🔼 większy margines dolny
+  width: fit-content;
+  align-self: center; // 🔹 wyśrodkowanie jeśli we flexie
 
   &:hover {
-    text-decoration: none;
+    background: $primary-color;
+    color: white;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.9rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
   }
 }
 
-.calendar {
-  margin-top: 0.8rem;
-  border-radius: 1rem;
-  padding: 0.5rem;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  max-width: 100%;
-}
 
 .buttons {
   display: flex;
@@ -335,3 +344,13 @@
 }
 
 
+@media (max-width: 480px) {
+  .buttons {
+    flex-direction: row; // już default
+    .buttonPrimary,
+    .buttonSecondary {
+      font-size: 0.8rem;
+      padding: 0.5rem 1rem;
+    }
+  }
+}

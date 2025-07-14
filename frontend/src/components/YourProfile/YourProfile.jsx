@@ -28,12 +28,14 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const [profile, setProfile] = useState(null);
   const [editData, setEditData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
+  const [newAvailableDate, setNewAvailableDate] = useState({ date: '', from: '', to: '' });
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [alert, setAlert] = useState(null); // ✅ nowy stan
   const fileInputRef = useRef(null);
   const location = useLocation(); // ⬅ dodaj to pod useState
+
 
   const showAlert = (message, type = 'info') => {
     setAlert({ message, type });
@@ -56,7 +58,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
     requestAnimationFrame(tryScroll);
   }, [location.state, loading]);
-
 
   const fetchProfile = async () => {
     try {
@@ -349,23 +350,120 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           </div>
 
           <div className={styles.inputBlock}>
-            <label><FaCalendarAlt /> <strong>Data dostępności:</strong></label>
+            <label><FaCalendarAlt /> <strong>Terminy dostępności:</strong></label>
+
             {isEditing ? (
-              <input
-                type="date"
-                className={styles.formInput}
-                value={editData.availabilityDate?.slice(0, 10) || ''}
-                onChange={(e) => setEditData({ ...editData, availabilityDate: e.target.value })}
-              />
-            ) : (
-              <p>
-                {profile.availabilityDate ? (
-                  profile.availabilityDate
-                ) : (
-                  <p className={styles.noInfo}><span className={styles.icon}>❔</span> Nie ustawiłeś/aś jeszcze daty dostępności.</p>
+              <>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={!!editData.showAvailableDates}
+                    onChange={e => setEditData({ ...editData, showAvailableDates: e.target.checked })}
+                    style={{ marginRight: 8 }}
+                  />
+                  Pokazuj dostępne dni i terminy w wizytówce
+                </label>
+
+                {!editData.showAvailableDates && (
+                  <div className={styles.infoMuted}>
+                    Twoja wizytówka nie pokazuje dostępnych terminów – klienci mogą tylko napisać wiadomość.
+                  </div>
                 )}
-              </p>
+
+                {editData.showAvailableDates && (
+                  <>
+                    <div className={styles.availableDatesForm}>
+                      <input
+                        type="date"
+                        className={styles.formInput}
+                        value={newAvailableDate.date}
+                        onChange={e =>
+                          setNewAvailableDate({ ...newAvailableDate, date: e.target.value })
+                        }
+                      />
+                      <input
+                        type="time"
+                        className={styles.formInput}
+                        value={newAvailableDate.from}
+                        onChange={e =>
+                          setNewAvailableDate({ ...newAvailableDate, from: e.target.value })
+                        }
+                      />
+                      <input
+                        type="time"
+                        className={styles.formInput}
+                        value={newAvailableDate.to}
+                        onChange={e =>
+                          setNewAvailableDate({ ...newAvailableDate, to: e.target.value })
+                        }
+                      />
+                      <button
+                        type="button"
+                        className={styles.formButton}
+                        onClick={() => {
+                          const { date, from, to } = newAvailableDate;
+                          if (date && from && to) {
+                            setEditData({
+                              ...editData,
+                              availableDates: [
+                                ...(editData.availableDates || []),
+                                { date, fromTime: from, toTime: to }
+                              ]
+                            });
+                            setNewAvailableDate({ date: '', from: '', to: '' });
+                          }
+                        }}
+                      >
+                        ➕ Dodaj termin
+                      </button>
+                    </div>
+
+                    {(editData.availableDates || []).length > 0 && (
+                      <ul className={styles.availableDatesList}>
+                        {editData.availableDates.map((slot, index) => (
+                          <li key={index}>
+                            📅 {slot.date} 🕒 {slot.fromTime} – {slot.toTime}
+                            <button
+                              className={styles.removeButton}
+                              onClick={() => {
+                                const updated = [...editData.availableDates];
+                                updated.splice(index, 1);
+                                setEditData({ ...editData, availableDates: updated });
+                              }}
+                            >
+                              ❌
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                )}
+              </>
+            ) : (
+              profile.showAvailableDates ? (
+                <>
+                  {profile.availableDates?.length > 0 ? (
+                    <ul className={styles.availableDatesList}>
+                      {profile.availableDates.map((slot, i) => (
+                        <li key={i}>
+                          📅 {slot.date} 🕒 {slot.fromTime} – {slot.toTime}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className={styles.noInfo}>
+                      <span className={styles.icon}>❔</span> Nie ustawiono dostępnych terminów.
+                    </p>
+                  )}
+                </>
+              ) : (
+                <div className={styles.infoMuted}>
+                  Twoja wizytówka nie pokazuje dostępnych terminów – klienci mogą tylko napisać wiadomość.
+                </div>
+              )
             )}
+
           </div>
 
           <h4 className={styles.sectionTitle}>4. Linki i media</h4>
@@ -425,7 +523,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
               </div>
             )}
           </div>
-
 
           <h4 className={styles.sectionTitle}>5. Galeria zdjęć</h4>
           <div className={styles.galleryEditor}>

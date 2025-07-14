@@ -223,8 +223,9 @@ router.patch('/update/:uid', async (req, res) => {
     'avatar',
     'photos',
     'profileType', 'location', 'priceFrom', 'priceTo',
-    'availabilityDate', 'description', 'tags', 'links',
-    'quickAnswers'
+    'availableDates', 'description', 'tags', 'links',
+    'quickAnswers',
+    'showAvailableDates'
   ];
 
   try {

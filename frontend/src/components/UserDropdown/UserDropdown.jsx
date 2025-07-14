@@ -132,6 +132,10 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => 
           Powiadomienia {unreadCount > 0 && <strong>({unreadCount})</strong>}
         </button>
 
+        <button onClick={() => handleNavigate('/rezerwacje')}>
+          Rezerwacje
+        </button>
+
         <button onClick={handleLogout}>Wyloguj</button>
       </div>
     </div>
