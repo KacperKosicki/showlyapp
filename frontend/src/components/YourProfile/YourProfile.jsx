@@ -185,6 +185,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     try {
       await axios.patch(`${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`, {
         ...editData,
+        showAvailableDates: !!editData.showAvailableDates, // <-- TO DODAĆ!
         tags: (editData.tags || []).filter(tag => tag.trim() !== ''),
         quickAnswers: (editData.quickAnswers || []).filter(qa => qa.title.trim() || qa.answer.trim()),
       });

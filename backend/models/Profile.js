@@ -21,6 +21,7 @@ const profileSchema = new mongoose.Schema({
   tags: [String],
   priceFrom: Number,
   priceTo: Number,
+  showAvailableDates: { type: Boolean, default: true },
   availableDates: [
     {
       date: String,       // np. "2025-07-15"
@@ -28,7 +29,6 @@ const profileSchema = new mongoose.Schema({
       toTime: String      // np. "16:00"
     }
   ],
-
   isVisible: { type: Boolean, default: true },
   visibleUntil: { type: Date, required: true },
   description: String,

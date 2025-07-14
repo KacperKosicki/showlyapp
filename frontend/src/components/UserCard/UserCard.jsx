@@ -18,7 +18,8 @@ const UserCard = ({ user, currentUser }) => {
     availableDates = [],
     profileType,
     description,
-    links = []
+    links = [],
+    showAvailableDates // <-- WAŻNE: pobierz flagę z usera
   } = user;
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -91,7 +92,6 @@ const UserCard = ({ user, currentUser }) => {
             {tags.map(tag => (
               <span key={tag} className={styles.tag}>{tag.toUpperCase()}</span>
             ))}
-
           </div>
         )}
 
@@ -105,30 +105,6 @@ const UserCard = ({ user, currentUser }) => {
           ) : (
             <p className={styles.price}>Cennik: <em>Brak danych</em></p>
           )}
-
-          <button
-            className={styles.calendarToggle}
-            onClick={() => {
-              if (!currentUser) {
-                setShowAlert(true);
-                setTimeout(() => setShowAlert(false), 4000);
-                return;
-              }
-
-              if (currentUser.uid === user.userId) {
-                setShowAlert(true);
-                setTimeout(() => setShowAlert(false), 4000);
-                return;
-              }
-
-              navigate(`/rezerwacja/${slug}`, {
-                state: { userId: user.userId, availableDates }
-              });
-            }}
-
-          >
-            ZOBACZ DOSTĘPNE DNI LUB ZAREZERWUJ TERMIN
-          </button>
 
           {links?.filter(link => link.trim() !== '').length > 0 ? (
             <div className={styles.links}>
@@ -146,11 +122,38 @@ const UserCard = ({ user, currentUser }) => {
         </div>
 
         <div className={styles.buttons}>
+          {showAvailableDates ? (
+            <button
+              className={styles.calendarToggle}
+              onClick={() => {
+                if (!currentUser) {
+                  setShowAlert(true);
+                  setTimeout(() => setShowAlert(false), 4000);
+                  return;
+                }
+                if (currentUser.uid === user.userId) {
+                  setShowAlert(true);
+                  setTimeout(() => setShowAlert(false), 4000);
+                  return;
+                }
+                navigate(`/rezerwacja/${slug}`, {
+                  state: { userId: user.userId, availableDates }
+                });
+              }}
+            >
+              ZOBACZ DOSTĘPNE DNI LUB ZAREZERWUJ TERMIN
+            </button>
+          ) : (
+            <p className={styles.noDescription}>
+              Ten profil nie udostępnia wolnych terminów – możesz tylko napisać wiadomość do użytkownika.
+            </p>
+          )}
+
           <button
             className={styles.buttonPrimary}
             onClick={() => navigate(`/profil/${slug}`, { state: { scrollToId: 'profileWrapper' } })}
           >
-            ZOBACZ WIZYTÓWKĘ
+            ZOBACZ PROFIL
           </button>
           {currentUser && currentUser.uid !== user.userId && (
             <button
@@ -177,7 +180,6 @@ const UserCard = ({ user, currentUser }) => {
           }
         />
       )}
-
     </>
   );
 };
