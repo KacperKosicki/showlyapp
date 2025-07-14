@@ -3,7 +3,7 @@ import Navbar from '../Navbar/Navbar';
 import { Link } from 'react-router-dom';
 import SearchBar from '../SearchBar/SearchBar';
 
-const Hero = ({ user, setUser, refreshTrigger, unreadCount, setUnreadCount }) => {
+const Hero = ({ user, setUser, refreshTrigger, unreadCount, setUnreadCount, pendingReservationsCount }) => {
   return (
     <section className={styles.hero} id="hero">
       <Navbar
@@ -12,6 +12,7 @@ const Hero = ({ user, setUser, refreshTrigger, unreadCount, setUnreadCount }) =>
         refreshTrigger={refreshTrigger}
         unreadCount={unreadCount}
         setUnreadCount={setUnreadCount}
+        pendingReservationsCount={pendingReservationsCount}
       />
       <div className={styles.heroContent}>
         <h1>Promuj się<br />online!</h1>

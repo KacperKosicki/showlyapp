@@ -6,7 +6,7 @@ import axios from 'axios';
 import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase';
 
-const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => {
+const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount, pendingReservationsCount }) => {
   const [open, setOpen] = useState(false);
   const [remainingDays, setRemainingDays] = useState(null);
   const [hasProfile, setHasProfile] = useState(false);
@@ -133,7 +133,9 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount }) => 
         </button>
 
         <button onClick={() => handleNavigate('/rezerwacje')}>
-          Rezerwacje
+          Rezerwacje {pendingReservationsCount > 0 && (
+            <strong className={styles.badge}>({pendingReservationsCount})</strong>
+          )}
         </button>
 
         <button onClick={handleLogout}>Wyloguj</button>

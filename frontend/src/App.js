@@ -28,6 +28,8 @@ function App() {
   const [loadingUser, setLoadingUser] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(Date.now());
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingReservationsCount, setPendingReservationsCount] = useState(0);
+  const resetPendingReservationsCount = () => setPendingReservationsCount(0);
 
   const triggerRefresh = () => setRefreshTrigger(Date.now()); // 🔁
 
@@ -46,6 +48,23 @@ function App() {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const fetchPendingReservations = async () => {
+      if (!user?.uid) return;
+      try {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/reservations/by-provider/${user.uid}`);
+        const data = await res.json();
+        // filtrujemy tylko te, które są 'oczekująca'
+        const pending = data.filter(r => r.status === 'oczekująca').length;
+        setPendingReservationsCount(pending);
+      } catch (err) {
+        console.error('❌ Błąd pobierania liczby rezerwacji:', err);
+      }
+    };
+
+    fetchPendingReservations();
+  }, [user, refreshTrigger]);
 
   useEffect(() => {
     const fetchUnreadCount = async () => {
@@ -76,7 +95,7 @@ function App() {
           path="/"
           element={
             <>
-              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
+              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
               <AboutApp />
               <UserCardList currentUser={user} />
               <WhyUs />
@@ -93,7 +112,7 @@ function App() {
           path="/create-profile"
           element={
             <>
-              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
+              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
               <CreateProfile user={user} setRefreshTrigger={setRefreshTrigger} />
               <Footer />
             </>
@@ -103,7 +122,7 @@ function App() {
           path="/your-profile"
           element={
             <>
-              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
+              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
               <YourProfile user={user} setRefreshTrigger={setRefreshTrigger} />
               <Footer />
             </>
@@ -113,7 +132,7 @@ function App() {
           path="/profil/:slug"
           element={
             <>
-              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
+              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
               <PublicProfile />
               <Footer />
             </>
@@ -124,7 +143,7 @@ function App() {
           element={
             user ? (
               <>
-                <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
+                <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
                 <MessageForm user={user} />
                 <Footer />
               </>
@@ -138,7 +157,7 @@ function App() {
           element={
             user ? (
               <>
-                <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
+                <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
                 <Notifications user={user} setUnreadCount={setUnreadCount} />
                 <Footer />
               </>
@@ -152,7 +171,7 @@ function App() {
           element={
             user ? (
               <>
-                <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} />
+                <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
                 <ThreadView user={user} setUnreadCount={setUnreadCount} triggerRefresh={triggerRefresh} /> {/* ✅ przekazanie */}
                 <Footer />
               </>
@@ -173,6 +192,7 @@ function App() {
                   setRefreshTrigger={setRefreshTrigger}
                   unreadCount={unreadCount}
                   setUnreadCount={setUnreadCount}
+                  pendingReservationsCount={pendingReservationsCount}
                 />
                 <BookingForm user={user} />
                 <Footer />
@@ -194,8 +214,9 @@ function App() {
                   setRefreshTrigger={setRefreshTrigger}
                   unreadCount={unreadCount}
                   setUnreadCount={setUnreadCount}
+                  pendingReservationsCount={pendingReservationsCount}
                 />
-                <ReservationList user={user} /> {/* ⬅ TUTAJ BYŁO BRAK */}
+                <ReservationList user={user} resetPendingReservationsCount={resetPendingReservationsCount} /> {/* <-- PRZEKAZUJESZ */}
                 <Footer />
               </>
             ) : (

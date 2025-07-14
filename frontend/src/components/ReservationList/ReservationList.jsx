@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import styles from './ReservationList.module.scss';
 import axios from 'axios';
 
-const ReservationList = ({ user }) => {
+const ReservationList = ({ user, resetPendingReservationsCount }) => {
   const [clientReservations, setClientReservations] = useState([]);
   const [serviceReservations, setServiceReservations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +28,13 @@ const ReservationList = ({ user }) => {
 
     fetchReservations();
   }, [user]);
+
+  // ⭐️ ZERUJ badge po wejściu na listę rezerwacji
+  useEffect(() => {
+    if (!loading && resetPendingReservationsCount) {
+      resetPendingReservationsCount();
+    }
+  }, [loading, resetPendingReservationsCount]);
 
   const handleStatusChange = async (reservationId, newStatus) => {
     try {
