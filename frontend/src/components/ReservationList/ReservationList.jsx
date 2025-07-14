@@ -16,7 +16,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
           axios.get(`${process.env.REACT_APP_API_URL}/api/reservations/by-user/${user.uid}`),
           axios.get(`${process.env.REACT_APP_API_URL}/api/reservations/by-provider/${user.uid}`)
         ]);
-
         setClientReservations(resClient.data);
         setServiceReservations(resService.data);
       } catch (err) {
@@ -29,7 +28,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     fetchReservations();
   }, [user]);
 
-  // ⭐️ ZERUJ badge po wejściu na listę rezerwacji
   useEffect(() => {
     if (!loading && resetPendingReservationsCount) {
       resetPendingReservationsCount();
@@ -58,6 +56,47 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     return <div className={styles.loading}>⏳ Ładowanie rezerwacji...</div>;
   }
 
+  // Funkcja, by nie powtarzać JSX dla pól rezerwacji
+  const renderReservationFields = (res, type) => (
+    <>
+      <div className={styles.row}>
+        <span className={styles.label}>{type === 'sent' ? 'Do:' : 'Od:'}</span>
+        <span className={styles.value}>
+          {type === 'sent'
+            ? `${res.providerProfileName} (${res.providerProfileRole})`
+            : res.userName}
+        </span>
+      </div>
+      <div className={styles.row}>
+        <span className={styles.label}>Data:</span>
+        <span className={styles.value}>{res.date}</span>
+      </div>
+      <div className={styles.row}>
+        <span className={styles.label}>Godzina:</span>
+        <span className={styles.value}>{res.fromTime} – {res.toTime}</span>
+      </div>
+      <div className={styles.row}>
+        <span className={styles.label}>Status:</span>
+        <span
+          className={
+            styles.statusBadge + ' ' +
+            (res.status === 'zaakceptowana'
+              ? styles.accepted
+              : res.status === 'odrzucona'
+                ? styles.rejected
+                : styles.pending)
+          }
+        >
+          {res.status}
+        </span>
+      </div>
+      <div className={styles.row}>
+        <span className={styles.label}>Opis:</span>
+        <span className={styles.value}>{res.description}</span>
+      </div>
+    </>
+  );
+
   return (
     <section className={styles.reservationList}>
       <div className={styles.wrapper}>
@@ -70,13 +109,18 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
             ) : (
               <ul className={styles.list}>
                 {clientReservations.map(res => (
-                  <li key={res._id} className={styles.item}>
-                    <div className={styles.row}><strong>Do:</strong> {res.providerProfileName} ({res.providerProfileRole})</div>
-                    <div className={styles.row}><strong>Data:</strong> {res.date}</div>
-                    <div className={styles.row}><strong>Godzina:</strong> {res.fromTime} – {res.toTime}</div>
-                    <div className={styles.row}><strong>Status:</strong> {res.status}</div>
-                    <div className={styles.row}><strong>Opis:</strong> {res.description}</div>
-
+                  <li
+                    key={res._id}
+                    className={
+                      `${styles.item} ` +
+                      (res.status === 'zaakceptowana'
+                        ? styles.accepted
+                        : res.status === 'odrzucona'
+                          ? styles.rejected
+                          : styles.pending)
+                    }
+                  >
+                    {renderReservationFields(res, 'sent')}
                     {res.status === 'oczekująca' && (
                       <div className={styles.actions}>
                         <button onClick={() => handleStatusChange(res._id, 'anulowana')} className={styles.cancel}>
@@ -89,7 +133,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
               </ul>
             )}
           </div>
-
           <div className={styles.column}>
             <h3 className={styles.heading}>Otrzymane rezerwacje</h3>
             {serviceReservations.length === 0 ? (
@@ -97,13 +140,18 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
             ) : (
               <ul className={styles.list}>
                 {serviceReservations.map(res => (
-                  <li key={res._id} className={styles.item}>
-                    <div className={styles.row}><strong>Od:</strong> {res.userName}</div>
-                    <div className={styles.row}><strong>Data:</strong> {res.date}</div>
-                    <div className={styles.row}><strong>Godzina:</strong> {res.fromTime} – {res.toTime}</div>
-                    <div className={styles.row}><strong>Status:</strong> {res.status}</div>
-                    <div className={styles.row}><strong>Opis:</strong> {res.description}</div>
-
+                  <li
+                    key={res._id}
+                    className={
+                      `${styles.item} ` +
+                      (res.status === 'zaakceptowana'
+                        ? styles.accepted
+                        : res.status === 'odrzucona'
+                          ? styles.rejected
+                          : styles.pending)
+                    }
+                  >
+                    {renderReservationFields(res, 'received')}
                     {res.status === 'oczekująca' && (
                       <div className={styles.actions}>
                         <button onClick={() => handleStatusChange(res._id, 'zaakceptowana')}>

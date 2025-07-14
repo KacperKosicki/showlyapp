@@ -1,5 +1,18 @@
 @import '../../styles/variables';
 
+// --- Kolory statusów (do badge) ---
+$status-accepted-bg: #e8f7e2;
+$status-accepted-border: #82d66c;
+$status-accepted-text: #238420;
+
+$status-rejected-bg: #ffeaea;
+$status-rejected-border: #ef9a9a;
+$status-rejected-text: #c0392b;
+
+$status-pending-bg: #fff8f3;
+$status-pending-border: #ffddcc;
+$status-pending-text: #cc6600;
+
 .reservationList {
   padding: 3rem 1rem;
 
@@ -7,8 +20,8 @@
     max-width: 900px;
     margin: 0 auto;
     padding: 3rem 2rem;
-    background: white;
     border-radius: 1.5rem;
+    background: $secondary-bg;
     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
     border: 1px solid #ccc;
     font-family: $font-body;
@@ -20,6 +33,7 @@
     font-size: 1.8rem;
     color: $text-color;
     font-family: $font-heading;
+    letter-spacing: 0.03em;
   }
 
   .columns {
@@ -36,14 +50,18 @@
   .heading {
     text-align: center;
     margin-bottom: 1rem;
-    color: #444;
+    color: $primary-color;
     font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    font-family: $font-heading;
   }
 
   .empty {
     text-align: center;
     font-size: 1rem;
     color: #888;
+    font-family: $font-body;
   }
 
   .list {
@@ -55,31 +73,47 @@
   }
 
   .item {
-    background: #f9f9f9;
-    border: 1px solid #ddd;
+    background: $secondary-bg;
+    border: 1px solid #ccc;
     border-radius: 1rem;
-    padding: 1.2rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-    transition: 0.2s;
+    padding: 1.2rem 1.4rem;
+    box-shadow: 0 2px 8px rgba(111, 78, 242, 0.05);
+    transition: box-shadow 0.18s, border-color 0.18s, background 0.18s;
+  }
 
-    &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  // UKŁAD pionowy label + value:
+  .row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.9rem;
+    font-size: 1.07rem;
+    font-family: $font-body;
+
+    .label {
+      color: $primary-color;
+      font-weight: 600;
+      font-family: $font-heading;
+      letter-spacing: 0.01em;
+      font-size: 0.98em;
+      margin-bottom: 0.10em;
+      text-align: left;
+      text-transform: uppercase;
     }
 
-    .row {
-      margin: 0.3rem 0;
-      font-size: 0.95rem;
-
-      strong {
-        color: #333;
-        display: inline-block;
-        width: 110px;
-      }
+    .value {
+      color: $text-color;
+      font-weight: 400;
+      font-family: $font-body;
+      text-align: left;
+      word-break: break-word;
+      font-size: 1.05em;
+      padding-left: 0.03em;
+      letter-spacing: 0.01em;
     }
   }
 
   .actions {
-    margin-top: 1rem;
+    margin-top: 1.12rem;
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
@@ -99,7 +133,7 @@
         color: white;
 
         &:hover {
-          background: darken($primary-color, 10%);
+          background: darken($primary-color, 8%);
         }
       }
 
@@ -135,5 +169,42 @@
     font-size: 1.2rem;
     padding: 3rem;
     color: #777;
+    font-family: $font-body;
+  }
+}
+
+// BADGE STATUSÓW — tylko badge ma kolor i obramowanie!
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  padding: 0.36rem 1.16rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 1rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-left: 0.1rem;
+  font-family: $font-accent;
+  border: 2px solid #ccc;
+  background: #fafafa;
+  color: $text-color;
+  justify-content: center;
+
+  &.accepted {
+    background: $status-accepted-bg;
+    color: $status-accepted-text;
+    border-color: $status-accepted-border;
+  }
+  &.rejected {
+    background: $status-rejected-bg;
+    color: $status-rejected-text;
+    border-color: $status-rejected-border;
+  }
+  &.pending {
+    background: $status-pending-bg;
+    color: $status-pending-text;
+    border-color: $status-pending-border;
   }
 }
