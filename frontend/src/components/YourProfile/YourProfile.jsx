@@ -14,7 +14,8 @@ import {
   FaLink,
   FaIdBadge,
   FaInfoCircle,
-  FaBriefcase
+  FaBriefcase,
+  FaTools
 } from 'react-icons/fa';
 import { useLocation } from 'react-router-dom'; // ⬅ dodaj to
 
@@ -24,6 +25,12 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     { title: '', answer: '', touched: false },
     { title: '', answer: '', touched: false },
   ]);
+  // stan dla formularza dodawania nowej usługi
+  const [newService, setNewService] = useState({
+    name: '',
+    durationValue: '',
+    durationUnit: 'minutes'
+  });
 
   const [profile, setProfile] = useState(null);
   const [editData, setEditData] = useState({});
@@ -198,6 +205,16 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     }
   };
 
+  const mapUnit = (unit) => {
+    switch (unit) {
+      case 'minutes': return 'min';
+      case 'hours': return 'h';
+      case 'days': return 'dni';
+      default: return '';
+    }
+  };
+
+
   if (!user) return <Navigate to="/login" replace />;
   if (loading) return <p className={styles.loading}>⏳ Ładowanie profilu...</p>;
   if (notFound) {
@@ -350,6 +367,136 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             )}
           </div>
 
+          {/* ===== Usługi ===== */}
+          <div className={styles.inputBlock}>
+            <p>
+              <FaTools /> <strong>Usługi:</strong>
+            </p>
+
+            {isEditing ? (
+              <>
+                {/* edycja istniejących usług */}
+                {editData.services.map((s, i) => (
+                  <div key={i} className={styles.serviceEditRow}>
+                    <input
+                      className={styles.serviceInput}
+                      type="text"
+                      value={s.name}
+                      placeholder="Nazwa usługi"
+                      onChange={e => {
+                        const arr = [...editData.services];
+                        arr[i].name = e.target.value;
+                        setEditData(prev => ({ ...prev, services: arr }));
+                      }}
+                    />
+                    <input
+                      className={styles.serviceInput}
+                      type="number"
+                      min="1"
+                      value={s.duration.value}
+                      placeholder="Czas"
+                      onChange={e => {
+                        const arr = [...editData.services];
+                        arr[i].duration.value = parseInt(e.target.value, 10);
+                        setEditData(prev => ({ ...prev, services: arr }));
+                      }}
+                    />
+                    <select
+                      className={styles.serviceSelect}
+                      value={s.duration.unit}
+                      onChange={e => {
+                        const arr = [...editData.services];
+                        arr[i].duration.unit = e.target.value;
+                        setEditData(prev => ({ ...prev, services: arr }));
+                      }}
+                    >
+                      <option value="minutes">minuty</option>
+                      <option value="hours">godziny</option>
+                      <option value="days">dni</option>
+                    </select>
+                    <button
+                      type="button"
+                      className={styles.deleteServiceBtn}
+                      onClick={() =>
+                        setEditData(prev => ({
+                          ...prev,
+                          services: prev.services.filter((_, idx) => idx !== i)
+                        }))
+                      }
+                    >
+                      ❌
+                    </button>
+                  </div>
+                ))}
+
+                {/* dodawanie nowej usługi */}
+                <div className={styles.serviceEditRow}>
+                  <input
+                    className={styles.serviceInput}
+                    type="text"
+                    placeholder="Nowa nazwa usługi"
+                    value={newService.name}
+                    onChange={e => setNewService(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                  <input
+                    className={styles.serviceInput}
+                    type="number"
+                    min="1"
+                    placeholder="Czas"
+                    value={newService.durationValue}
+                    onChange={e => setNewService(prev => ({ ...prev, durationValue: e.target.value }))}
+                  />
+                  <select
+                    className={styles.serviceSelect}
+                    value={newService.durationUnit}
+                    onChange={e => setNewService(prev => ({ ...prev, durationUnit: e.target.value }))}
+                  >
+                    <option value="minutes">minuty</option>
+                    <option value="hours">godziny</option>
+                    <option value="days">dni</option>
+                  </select>
+                  <button
+                    type="button"
+                    className={styles.addServiceBtn}
+                    onClick={() => {
+                      if (newService.name.trim() && newService.durationValue > 0) {
+                        setEditData(prev => ({
+                          ...prev,
+                          services: [
+                            ...prev.services,
+                            {
+                              name: newService.name.trim(),
+                              duration: {
+                                value: parseInt(newService.durationValue, 10),
+                                unit: newService.durationUnit
+                              }
+                            }
+                          ]
+                        }));
+                        setNewService({ name: '', durationValue: '', durationUnit: 'minutes' });
+                      }
+                    }}
+                  >
+                    ➕
+                  </button>
+                </div>
+              </>
+            ) : profile.services?.length > 0 ? (
+              <ul className={styles.serviceList}>
+                {profile.services.map((s, i) => (
+                  <li key={i}>
+                    <strong>{s.name}</strong> – {s.duration.value} {mapUnit(s.duration.unit)}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.noInfo}>
+                <span className={styles.icon}>❔</span> Nie dodałeś/aś jeszcze żadnych usług.
+              </p>
+            )}
+          </div>
+
+
           <div className={styles.inputBlock}>
             <label><FaCalendarAlt /> <strong>Terminy dostępności:</strong></label>
 
@@ -454,7 +601,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                     </ul>
                   ) : (
                     <p className={styles.noInfo}>
-                      <span className={styles.icon}>❔</span> Nie ustawiono dostępnych terminów.
+                      <span className={styles.icon}>❔</span> Nie dodałeś/aś jeszcze dostępnych terminów.
                     </p>
                   )}
                 </>

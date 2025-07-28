@@ -29,6 +29,18 @@ const profileSchema = new mongoose.Schema({
       toTime: String      // np. "16:00"
     }
   ],
+  services: {
+    type: [
+      {
+        name: { type: String, required: true },
+        duration: {
+          value: { type: Number, required: true },
+          unit: { type: String, enum: ['minutes', 'hours', 'days'], required: true }
+        }
+      }
+    ],
+    default: []
+  },
   isVisible: { type: Boolean, default: true },
   visibleUntil: { type: Date, required: true },
   description: String,

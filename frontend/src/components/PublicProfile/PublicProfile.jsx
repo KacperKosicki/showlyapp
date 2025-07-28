@@ -22,6 +22,15 @@ const PublicProfile = () => {
   const maxChars = 100;
   const routerLocation = useLocation();
 
+  const mapUnit = (unit) => {
+    switch (unit) {
+      case 'minutes': return 'min';
+      case 'hours': return 'h';
+      case 'days': return 'dni';
+      default: return unit;
+    }
+  };
+
   useEffect(() => {
     const scrollTo = routerLocation.state?.scrollToId;
     if (!scrollTo || loading) return;
@@ -326,6 +335,30 @@ const PublicProfile = () => {
               </div>
             ))}
           </div>
+        </div>
+      )}
+      {/* ===== Sekcja usług użytkownika ===== */}
+      {profile.services?.length > 0 && (
+        <div className={styles.servicesWrapper}>           {/* nowy wrapper */}
+          <section className={styles.servicesSection} id="services">
+            <h3>Usługi</h3>
+            {profile.services.length > 0 ? (
+              <ul className={styles.servicesList}>
+                {profile.services.map((s, i) => (
+                  <li key={i}>
+                    <span className={styles.serviceName}>{s.name}</span>
+                    <span className={styles.serviceDuration}>
+                      — {s.duration.value} {mapUnit(s.duration.unit)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.noDescription}>
+                Użytkownik nie dodał jeszcze żadnych usług.
+              </p>
+            )}
+          </section>
         </div>
       )}
     </>

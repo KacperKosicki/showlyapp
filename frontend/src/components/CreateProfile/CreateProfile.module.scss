@@ -325,3 +325,49 @@ h2 {
     font-size: 0.75rem;
   }
 }
+
+.serviceForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+
+  input {
+    flex: 1;
+    padding: 0.5rem;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    background-color: $primary-color;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+
+    &:hover {
+      background-color: darken($primary-color, 10%);
+    }
+  }
+}
+
+.serviceList {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+
+  li {
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    button {
+      background: none;
+      color: red;
+      font-size: 1rem;
+      border: none;
+      cursor: pointer;
+    }
+  }
+}

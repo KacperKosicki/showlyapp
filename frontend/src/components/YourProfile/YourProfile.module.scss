@@ -572,7 +572,6 @@
   color: #cc6600 !important;
   font-size: 0.95rem;
   text-align: left;
-  max-width: 100%;
   word-break: break-word;
   white-space: normal;
   align-self: flex-start; // NIE CENTER!
@@ -720,4 +719,65 @@
     font-size: 0.85rem;
     padding: 1rem;
   }
+}
+
+.serviceEditRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  justify-content: space-around;
+}
+
+.serviceInput,
+.serviceSelect {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.addServiceBtn {
+  background: #4caf50;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: darken(#4caf50, 10%);
+  }
+}
+
+// Usuwanie usługi — czerwony
+.deleteServiceBtn {
+  background: #e53935; // mocna czerwień
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover {
+    background: darken(#e53935, 10%);
+  }
+}
+
+.serviceList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  li {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* na samym dole YourProfile.module.scss */
+.right p.noInfo {
+  display: inline-flex !important;
+  max-width: max-content;
 }

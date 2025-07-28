@@ -14,6 +14,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
         priceFrom: '',
         priceTo: '',
         availabilityDate: '',
+        services: [],
         available: true,
         profileType: 'zawodowy',
         description: '',
@@ -23,6 +24,11 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
         nip: '',
     });
 
+    const [newService, setNewService] = useState({
+        name: '',
+        durationValue: '',
+        durationUnit: 'minutes'
+    });
     const location = useLocation();
     const fileInputRef = useRef(null);
     const [formErrors, setFormErrors] = useState({});
@@ -146,6 +152,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
             reviews: 0,
             tags: nonEmptyTags.map(tag => tag.trim()),
             availableDates: [],
+            services: form.services,
             userId: user.uid || user.localId || user.email,
             visibleUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         };
@@ -162,6 +169,16 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
             setLoading(false);
         }
     };
+
+    const mapUnit = (unit) => {
+        switch (unit) {
+            case 'minutes': return 'min';
+            case 'hours': return 'h';
+            case 'days': return 'dni';
+            default: return '';
+        }
+    };
+
 
     return (
         <div id="scrollToId" className={styles.container}>
@@ -269,6 +286,88 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                         />
                         {formErrors.priceTo && <small className={styles.error}>{formErrors.priceTo}</small>}
                     </label>
+
+                    {form.services.length > 0 && (
+                        <ul className={styles.serviceList}>
+                            {form.services.map((s, i) => (
+                                <li key={i}>
+                                    <strong>{s.name}</strong> – {s.duration.value} {mapUnit(s.duration.unit)}
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                services: prev.services.filter((_, idx) => idx !== i)
+                                            }))
+                                        }
+                                    >
+                                        ❌
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+
+
+                    <label>
+                        Dodaj usługę:
+                        <div className={styles.serviceForm}>
+                            <input
+                                type="text"
+                                placeholder="Nazwa usługi (np. Strzyżenie)"
+                                value={newService.name}
+                                onChange={(e) => setNewService({ ...newService, name: e.target.value })}
+                            />
+                            <input
+                                type="number"
+                                placeholder="Czas"
+                                min="1"
+                                value={newService.durationValue}
+                                onChange={(e) =>
+                                    setNewService({ ...newService, durationValue: e.target.value })
+                                }
+                            />
+                            <select
+                                value={newService.durationUnit}
+                                onChange={(e) =>
+                                    setNewService({ ...newService, durationUnit: e.target.value })
+                                }
+                            >
+                                <option value="minutes">minuty</option>
+                                <option value="hours">godziny</option>
+                                <option value="days">dni</option>
+                            </select>
+
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (
+                                        newService.name.trim() &&
+                                        newService.durationValue > 0 &&
+                                        ['minutes', 'hours', 'days'].includes(newService.durationUnit)
+                                    ) {
+                                        setForm((prev) => ({
+                                            ...prev,
+                                            services: [
+                                                ...prev.services,
+                                                {
+                                                    name: newService.name.trim(),
+                                                    duration: {
+                                                        value: parseInt(newService.durationValue, 10),
+                                                        unit: newService.durationUnit
+                                                    }
+                                                }
+                                            ]
+                                        }));
+                                        setNewService({ name: '', durationValue: '', durationUnit: 'minutes' });
+                                    }
+                                }}
+                            >
+                                ➕ Dodaj
+                            </button>
+                        </div>
+                    </label>
+
 
                     <h3 className={styles.sectionTitle}>4. Linki i media</h3>
                     <label>
