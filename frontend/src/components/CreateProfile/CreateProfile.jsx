@@ -22,6 +22,9 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
         tags: ['', '', ''],
         hasBusiness: false,
         nip: '',
+        bookingMode: 'request-open',
+        workingHours: { from: '08:00', to: '20:00' },
+        workingDays: [1, 2, 3, 4, 5],
     });
 
     const [newService, setNewService] = useState({
@@ -32,6 +35,8 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     const location = useLocation();
     const fileInputRef = useRef(null);
     const [formErrors, setFormErrors] = useState({});
+    const [serviceError, setServiceError] = useState('');
+
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
@@ -140,6 +145,15 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
             errors.priceTo = 'Cena do musi być większa niż "od" i nie większa niż 1 000 000';
         }
 
+        // WALIDACJA USŁUG!
+        if ((form.services || []).some(s =>
+            (s.duration.unit === 'minutes' && s.duration.value < 15) ||
+            (s.duration.unit === 'hours' && s.duration.value < 1) ||
+            (s.duration.unit === 'days' && s.duration.value < 1)
+        )) {
+            errors.services = 'Każda usługa musi mieć minimum 15 minut, 1 godzinę lub 1 dzień!';
+        }
+
         setFormErrors(errors);
 
         if (Object.keys(errors).length > 0) return;
@@ -182,7 +196,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
     return (
         <div id="scrollToId" className={styles.container}>
-            <h2>Stwórz swoją wizytówkę</h2>
+            <h2 className={styles.formMainHeading}>Stwórz swoją wizytówkę</h2>
             <div className={styles.wrapper}>
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <h3 className={styles.sectionTitle}>1. Dane podstawowe</h3>
@@ -343,7 +357,11 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                                 onClick={() => {
                                     if (
                                         newService.name.trim() &&
-                                        newService.durationValue > 0 &&
+                                        (
+                                            (newService.durationUnit === 'minutes' && newService.durationValue >= 15) ||
+                                            (newService.durationUnit === 'hours' && newService.durationValue >= 1) ||
+                                            (newService.durationUnit === 'days' && newService.durationValue >= 1)
+                                        ) &&
                                         ['minutes', 'hours', 'days'].includes(newService.durationUnit)
                                     ) {
                                         setForm((prev) => ({
@@ -360,14 +378,87 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                                             ]
                                         }));
                                         setNewService({ name: '', durationValue: '', durationUnit: 'minutes' });
+                                        setServiceError('');
+                                    } else {
+                                        setServiceError('Podaj nazwę usługi oraz czas: minimum 15 minut, 1 godzinę lub 1 dzień!');
                                     }
                                 }}
                             >
                                 ➕ Dodaj
                             </button>
                         </div>
+                        {serviceError && <small className={styles.error}>{serviceError}</small>}
                     </label>
 
+
+                    <label>
+                        Tryb działania rezerwacji:
+                        <select name="bookingMode" value={form.bookingMode} onChange={handleChange}>
+                            <option value="calendar">Kalendarz godzinowy (np. fryzjer, korepetytor)</option>
+                            <option value="request-blocking">Zablokuj dzień (np. DJ, cukiernik)</option>
+                            <option value="request-open">Zapytanie bez blokowania (np. programista)</option>
+                        </select>
+                    </label>
+
+                    {form.bookingMode === 'calendar' && (
+                        <>
+                            <h4 className={styles.sectionTitle}>Godziny pracy</h4>
+                            <label className={styles.inputBlock}>
+                                Od:
+                                <input
+                                    type="time"
+                                    name="workingHours.from"
+                                    value={form.workingHours.from}
+                                    onChange={e => {
+                                        const from = e.target.value;
+                                        setForm(f => ({
+                                            ...f,
+                                            workingHours: { ...f.workingHours, from }
+                                        }));
+                                    }}
+                                />
+                            </label>
+                            <label className={styles.inputBlock}>
+                                Do:
+                                <input
+                                    type="time"
+                                    name="workingHours.to"
+                                    value={form.workingHours.to}
+                                    onChange={e => {
+                                        const to = e.target.value;
+                                        setForm(f => ({
+                                            ...f,
+                                            workingHours: { ...f.workingHours, to }
+                                        }));
+                                    }}
+                                />
+                            </label>
+
+                            <h4 className={styles.sectionTitle}>Dni pracy</h4>
+                            <fieldset className={styles.fieldset}>
+                                {[1, 2, 3, 4, 5, 6, 0].map(d => (
+                                    <label key={d} className={styles.checkboxLabel}>
+                                        <input
+                                            type="checkbox"
+                                            value={d}
+                                            checked={form.workingDays.includes(d)}
+                                            onChange={e => {
+                                                const day = Number(e.target.value);
+                                                setForm(f => {
+                                                    const days = f.workingDays.includes(day)
+                                                        ? f.workingDays.filter(x => x !== day)
+                                                        : [...f.workingDays, day];
+                                                    return { ...f, workingDays: days };
+                                                });
+                                            }}
+                                        />
+                                        {['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'][d]}
+                                    </label>
+                                ))}
+                            </fieldset>
+                        </>
+                    )}
+                    {formErrors.services && <small className={styles.error}>{formErrors.services}</small>}
 
                     <h3 className={styles.sectionTitle}>4. Linki i media</h3>
                     <label>

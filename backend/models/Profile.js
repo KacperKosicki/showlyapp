@@ -41,6 +41,19 @@ const profileSchema = new mongoose.Schema({
     ],
     default: []
   },
+  workingHours: {
+    from: { type: String, default: '08:00' },   // początek dnia roboczego
+    to: { type: String, default: '20:00' }    // koniec dnia roboczego
+  },
+  workingDays: {
+    type: [Number],                             // 0 = niedziela, …, 6 = sobota
+    default: [1, 2, 3, 4, 5]                        // domyślnie pn–pt
+  },
+  bookingMode: {
+    type: String,
+    enum: ['calendar', 'request-blocking', 'request-open'],
+    default: 'request-open' // najbezpieczniejsza wartość
+  },
   isVisible: { type: Boolean, default: true },
   visibleUntil: { type: Date, required: true },
   description: String,

@@ -226,7 +226,10 @@ router.patch('/update/:uid', async (req, res) => {
     'availableDates', 'description', 'tags', 'links',
     'quickAnswers',
     'showAvailableDates',
-    'services'
+    'services',
+    'bookingMode',
+    'workingHours',
+    'workingDays',
   ];
 
   try {

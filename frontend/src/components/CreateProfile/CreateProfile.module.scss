@@ -8,7 +8,7 @@
   color: $text-color;
 }
 
-h2 {
+.formMainHeading {
   text-align: center;
   margin-bottom: 2rem;
   font-family: $font-heading;
@@ -37,6 +37,7 @@ h2 {
     input[type="date"],
     input[type="url"],
     input[type="number"],
+    input[type="time"],
     // ← DODAJ TO!
     select {
       padding: 0.6rem;
@@ -171,7 +172,7 @@ h2 {
     margin: 1.5rem auto;
   }
 
-  h2 {
+  .formMainHeading {
     font-size: 1.6rem;
     margin-bottom: 1.5rem;
     text-align: center;
@@ -205,7 +206,7 @@ h2 {
     margin: 1rem auto;
   }
 
-  h2 {
+  .formMainHeading {
     font-size: 1.4rem;
     text-align: center;
   }
@@ -262,7 +263,7 @@ h2 {
     padding: 1rem;
   }
 
-  h2 {
+  .formMainHeading {
     font-size: 1.3rem;
     margin-bottom: 1rem;
     text-align: center;
@@ -369,5 +370,27 @@ h2 {
       border: none;
       cursor: pointer;
     }
+  }
+}
+
+.fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.5rem 0 1rem;
+  padding: 0;
+  border: none;
+}
+
+// pojedyncza etykieta checkboxa z dniem
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    accent-color: $primary-color;
   }
 }

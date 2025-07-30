@@ -74,7 +74,12 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       const until = new Date(profile.visibleUntil);
       if (until < now) profile.isVisible = false;
       setProfile(profile);
-      setEditData(profile);
+      setEditData({
+        ...profile,
+        bookingMode: profile.bookingMode || 'request-open',
+        workingHours: profile.workingHours || { from: '08:00', to: '20:00' },
+        workingDays: profile.workingDays || [1, 2, 3, 4, 5],
+      });
     } catch (err) {
       if (err.response?.status === 404) setNotFound(true);
       else console.error('Błąd podczas pobierania profilu:', err);
@@ -184,6 +189,15 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const handleSaveChanges = async () => {
     const errors = validateEditData(editData);
+
+    if ((editData.services || []).some(s =>
+      (s.duration.unit === 'minutes' && s.duration.value < 15) ||
+      (s.duration.unit === 'hours' && s.duration.value < 1) ||
+      (s.duration.unit === 'days' && s.duration.value < 1)
+    )) {
+      errors.services = 'Każda usługa musi mieć minimum 15 minut, 1 godzinę lub 1 dzień!';
+    }
+
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) {
       showAlert('Uzupełnij poprawnie wszystkie wymagane pola.', 'warning'); // ✅
@@ -496,6 +510,99 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             )}
           </div>
 
+          <div className={styles.inputBlock}>
+            <label><FaCalendarAlt /> <strong>Tryb rezerwacji:</strong></label>
+            {isEditing ? (
+              <select
+                className={styles.formInput}
+                value={editData.bookingMode}
+                onChange={e => setEditData({ ...editData, bookingMode: e.target.value })}
+              >
+                <option value="calendar">Kalendarz godzinowy (np. fryzjer)</option>
+                <option value="request-blocking">Rezerwacja dnia (np. DJ, cukiernik)</option>
+                <option value="request-open">Zapytanie bez blokowania (np. programista)</option>
+              </select>
+            ) : (
+              <p>
+                {profile.bookingMode === 'calendar' && 'Kalendarz godzinowy'}
+                {profile.bookingMode === 'request-blocking' && 'Rezerwacja dnia'}
+                {profile.bookingMode === 'request-open' && 'Zapytanie bez blokowania'}
+              </p>
+            )}
+          </div>
+
+          {/* … poniżej sekcji Tryb rezerwacji … */}
+          {profile.bookingMode === 'calendar' && (
+            <>
+              <div className={styles.inputBlock}>
+                <label><FaCalendarAlt /> <strong>Godziny pracy:</strong></label>
+                {isEditing ? (
+                  <>
+                    <input
+                      type="time"
+                      className={styles.formInput}
+                      value={editData.workingHours?.from ?? ''}
+                      onChange={e => setEditData(d => ({
+                        ...d,
+                        workingHours: {
+                          ...d.workingHours,
+                          from: e.target.value
+                        }
+                      }))}
+                    />
+                    <input
+                      type="time"
+                      className={styles.formInput}
+                      value={editData.workingHours?.to ?? ''}
+                      onChange={e => setEditData(d => ({
+                        ...d,
+                        workingHours: {
+                          ...d.workingHours,
+                          to: e.target.value
+                        }
+                      }))}
+                    />
+                  </>
+                ) : (
+                  <p>
+                    {profile.workingHours?.from ?? '--'} – {profile.workingHours?.to ?? '--'}
+                  </p>
+                )}
+              </div>
+
+              <div className={styles.inputBlock}>
+                <label><FaCalendarAlt /> <strong>Dni pracy:</strong></label>
+                {isEditing ? (
+                  <fieldset className={styles.fieldset}>
+                    {[1, 2, 3, 4, 5, 6, 0].map(d => (
+                      <label key={d} className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={editData.workingDays?.includes(d) ?? false}
+                          onChange={() => setEditData(prev => {
+                            const days = prev.workingDays?.includes(d)
+                              ? prev.workingDays.filter(x => x !== d)
+                              : [...(prev.workingDays || []), d];
+                            return { ...prev, workingDays: days };
+                          })}
+                        />
+                        {['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'][d]}
+                      </label>
+                    ))}
+                  </fieldset>
+                ) : (
+                  <p>
+                    {profile.workingDays
+                      ?.sort()
+                      .map(d => ['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'][d])
+                      .join(', ')
+                      ?? '—'}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+          {formErrors.services && <small className={styles.error}>{formErrors.services}</small>}
 
           <div className={styles.inputBlock}>
             <label><FaCalendarAlt /> <strong>Terminy dostępności:</strong></label>

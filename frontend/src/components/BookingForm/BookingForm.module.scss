@@ -1,112 +1,382 @@
 @import '../../styles/variables';
 
-.section {
-  padding: 3rem 1rem;
-}
-
 .wrapper {
-  max-width: 600px;
-  margin: 0 auto;
-  background: white;
-  padding: 3rem 2rem;
+  padding: 0;
+
+  @media (max-width: 900px) {
+    padding: 0 1rem;  // poziomy padding 1rem
+    box-sizing: border-box;
+  }
+  @media (max-width: 420px) {
+    padding: 0 0.3rem;
+  }
+}
+
+.section {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 2.2rem 1.5rem;
+  background: #fff;
   border-radius: 1.5rem;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
   border: 1px solid #ccc;
-  font-family: $font-body;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+
+  .formMainHeading {
+    text-align: center;
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: $primary-color;
+    letter-spacing: -1px;
+  }
 }
 
-h2 {
-  text-align: center;
-  margin-bottom: 2rem;
-  font-size: 1.8rem;
-  color: $text-color;
-  font-family: $font-heading;
-}
-
-.form {
+// Pola formularza (label + input/select/textarea)
+.field {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 0.44rem;
+  margin-bottom: 1.4rem;
+  font-size: 1.07rem;
+  font-family: $font-body;
 
-  label {
-    font-size: 0.9rem;
-    color: $text-color;
-    font-weight: bold;
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
+  .fieldTitle {
+    margin-top: 2rem;
+    font-size: 1.1rem;
+    color: $primary-color;
+    font-family: $font-heading;
+    border-left: 4px solid $primary-color;
+    padding-left: 0.8rem;
   }
 
-  input,
+  label,
+  & > span {
+    font-weight: 600;
+    color: $primary-color;
+    font-family: $font-heading;
+    margin-bottom: 0.2rem;
+    letter-spacing: -0.2px;
+    font-size: 1.05em;
+    transition: color .18s;
+  }
+
   textarea,
+  input[type="date"],
   select {
-    padding: 0.6rem;
-    border-radius: 0.6rem;
+    margin-top: 0.04rem;
+    padding: 0.72rem 1.06rem;
     border: 1px solid #ccc;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, #ffffff, #f9f9f9);
+    font-size: 1.09rem;
     font-family: $font-body;
-    font-size: 1rem;
+    color: $text-color;
+    transition: border .2s, box-shadow .16s;
+    resize: vertical;
+    min-height: 45px;
+    outline: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    width: 100%;  // <<< DODAJ
+    box-sizing: border-box;  // <<< DODAJ
+
+    &:focus {
+      border-color: $primary-color;
+      background: #fff;
+      box-shadow: 0 0 0 2px rgba(111, 78, 242, 0.12);
+    }
+
+    &::placeholder {
+      color: #a7a7b6;
+      opacity: 1;
+      font-family: $font-body;
+    }
+  }
+
+  select {
+    appearance: none;
+    background: linear-gradient(135deg, #ffffff, #f9f9f9);
+    padding-right: 2.3rem;
+    cursor: pointer;
+    font-weight: 500;
+    letter-spacing: -0.1px;
   }
 
   textarea {
-    resize: vertical;
+    min-height: 54px;
+    max-height: 150px;
+    font-size: 1.04rem;
   }
 }
 
-.modeToggle {
+// Dla input[type="date"] osobno (datepickery mają dziwny default look)
+input[type="date"] {
+  font-family: $font-body;
+  font-size: 1.08rem;
+  color: $primary-color;
+  background: #f7f9fb;
+  border-radius: 8px;
+  border: 1.6px solid #e6e7ed;
+  padding: 0.68rem 1.04rem;
+  transition: border .19s;
+  cursor: pointer;
+
+  &:focus {
+    border-color: $primary-color;
+    background: #fff;
+    color: $primary-color;
+  }
+}
+
+@media (max-width: 700px) {
+  .field {
+    font-size: 0.98rem;
+    margin-bottom: 1rem;
+  }
+  textarea,
+  input[type="date"],
+  select {
+    padding: 0.58rem 0.7rem;
+    font-size: 1.01rem;
+    min-height: 41px;
+  }
+}
+
+
+// Nawigacja miesięcy
+.monthNav {
   display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+  margin-top: 2rem;
+  font-size: 1.1rem;
+  color: $primary-color;
+  font-family: $font-heading;
+
+  span {
+    font-weight: 600;
+  }
 
   button {
-    padding: 0.5rem 1rem;
-    background: #eee;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    font-weight: bold;
+    background: none;
+    border: none;
+    font-size: 1.45rem;
     cursor: pointer;
-    font-family: $font-accent;
-    transition: 0.2s;
-
-    &.active {
-      background: $primary-color;
-      color: white;
-      border-color: $primary-color;
-    }
+    color: $primary-color;
+    font-weight: 600;
+    padding: 0.1rem 0.8rem;
+    border-radius: 50%;
+    transition: background 0.2s;
+    &:hover { background: #f1f1f1; }
   }
 }
 
-.success {
-  color: green;
-  font-size: 0.95rem;
-  text-align: center;
+// Kalendarz
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7,1fr);
+  gap: 0.28rem;
+  margin-bottom: 1rem;
 }
-
-.error {
-  color: red;
-  font-size: 0.95rem;
+.weekday {
   text-align: center;
-}
-
-.submitButton {
-  background: $primary-color;
-  color: white;
-  padding: 0.8rem;
-  border: none;
-  border-radius: 50px;
-  font-weight: bold;
-  cursor: pointer;
+  font-weight: 700;
+  color: $secondary-color;
   font-family: $font-accent;
+  padding: 0.5rem 0;
+  font-size: 1.01rem;
+}
+.day {
+  padding: 0.6rem 0;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 500;
+  background: #f7f9fb;
+  transition: background 0.18s, color 0.18s;
+  &:hover:not(.disabledDay) {
+    background: $primary-color;
+    color: #fff;
+  }
+}
+.disabledDay {
+  background: #f4f4f4;
+  color: #b6b6b6;
+  cursor: not-allowed;
+}
+.selectedDay {
+  background: $primary-color;
+  color: #fff;
+}
+
+// Sloty godzin
+.slotsForm {
+  margin-bottom: 1.5rem;
+}
+
+.slotsTitle {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+  color: $primary-color;
+  font-family: $font-heading;
+  border-left: 4px solid $primary-color;
+  padding-left: 0.8rem;
+}
+
+.slotsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px,1fr));
+  gap: 0.5rem;
+}
+.slot {
+  padding: 0.54rem 0.1rem;
+  border: 1.5px solid #ececec;
+  border-radius: 6px;
+  background: #fafbfc;
+  cursor: pointer;
+  //font-weight: 600;
   font-size: 1rem;
-  transition: 0.2s;
+  text-align: center;
+  transition: background 0.2s, border 0.2s, color 0.18s;
+  color: #313131;
+
+  &:hover:not(.slotDisabled):not(.slotReserved):not(.slotPending) {
+    background: #eceffe;
+    border: 1.5px solid $primary-color;
+    color: $primary-color;
+  }
+}
+.slotDisabled {
+  background: #f5f5f5 !important;
+  color: #bdbdbd !important;
+  border: 1.5px solid #f0f0f0;
+  cursor: not-allowed;
+}
+.slotReserved {
+  background: #ffe5e5 !important;   // jasny czerwony
+  color: #d0293b !important;
+  border: 1.5px solid #ffd4d4;
+}
+.slotPending {
+  background: #fffbe5 !important;  // jasny żółty
+  color: #bfa400 !important;
+  border: 1.5px solid #faefb1;
+}
+.slotSelected {
+  box-shadow: 0 0 0 2px #dde8ff;
+  background: #e5edfa !important;
+  color: $primary-color !important;
+}
+
+// Przycisk
+.submit {
+  display: block;
+  width: 100%;
+  padding: 0.85rem 0;
+  background: $primary-color;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.14rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  box-shadow: 0 2px 10px 0 rgba(40,40,40,0.05);
+  transition: background 0.2s, box-shadow 0.15s;
 
   &:hover {
-    background: darken($primary-color, 10%);
+    background: darken($primary-color, 8%);
+    box-shadow: 0 4px 20px 0 rgba(40,40,40,0.09);
   }
 }
 
+// Loading
 .loading {
-  padding: 2rem;
   text-align: center;
-  color: #999;
+  color: $primary-color;
+  padding: 2rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem 1.1rem;
+  margin: 1.1rem 0 0;
+  font-size: 0.97rem;
+  color: #5b5b5b;
+  font-family: $font-body;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 0.36em;
+    font-size: 0.97em;
+    font-family: $font-body;
+    font-weight: 500;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.legendBox {
+  width: 0.95em;
+  height: 0.95em;
+  border-radius: 3px;
+  border: 1.5px solid #dedede;
+  margin-right: 0.13em;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.legendReserved { background: #ffe5e5; border-color: #ffd4d4; }
+.legendPending  { background: #fffbe5; border-color: #faefb1; }
+.legendDisabled { background: #f5f5f5; border-color: #e0e0e0; }
+.legendFree     { background: #fafbfc; border-color: #ececec; }
+
+.legendInfo {
+  font-family: $font-accent;
+  font-size: 0.93em;
+  margin-left: 0.3em;
+  flex-basis: 100%;
+  margin-top: 0.11em;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .legend {
+    font-size: 0.92rem;
+    gap: 0.42rem 0.7rem;
+    margin: 0.7rem 0 0;
+  }
+  .legendInfo {
+    font-size: 0.89em;
+  }
+  .legendBox {
+    width: 0.8em;
+    height: 0.8em;
+  }
+}
+
+// Responsywność
+@media (max-width: 700px) {
+  .section {
+    padding: 1.2rem 1rem;
+    border-radius: 10px;
+  }
+  .slotsGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .section {
+    padding: 0.4rem 0.1rem;
+  }
+  .slotsGrid {
+    grid-template-columns: 1fr;
+  }
 }

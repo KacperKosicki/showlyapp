@@ -45,15 +45,11 @@
   align-self: flex-start;
 
   h3 {
-    font-size: 1.2rem;
+    font-family: "Poppins", sans-serif;
+    font-size: 1.5rem;
+    color: #6f4ef2;
     margin-bottom: 1.5rem;
     text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.6rem;
-    font-weight: 700;
-    color: $text-color;
   }
 
   .noReviews {
@@ -534,7 +530,7 @@
 
   h3 {
     font-family: $font-heading;
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     color: $primary-color;
     margin-bottom: 1.5rem;
     text-align: center;
@@ -543,7 +539,7 @@
   @media (max-width: 900px) {
     width: 100%;
     max-width: 700px;
-    padding: 2rem 1.5rem;
+    padding: 2rem 1rem;
   }
 }
 

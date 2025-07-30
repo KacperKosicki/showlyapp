@@ -318,7 +318,7 @@ const PublicProfile = () => {
               })}
             </ul>
           ) : (
-            <p className={styles.noReviews}>Brak opinii</p>
+            <p className={styles.noReviews}>Brak opinii użytkowników</p>
           )}
         </div>
       </div>
