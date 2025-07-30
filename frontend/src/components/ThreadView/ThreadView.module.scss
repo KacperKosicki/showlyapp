@@ -31,7 +31,7 @@
   flex: 0 0 65%;
   background: $secondary-bg;
   border: 1px solid #ccc;
-  border-radius: 1.5rem;
+  border-radius: 1rem;
   padding: 1rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
   font-family: $font-body;
@@ -51,7 +51,7 @@
 
   .quickAnswers {
     border: 1px solid #ccc;
-    border-radius: 1.2rem;
+    border-radius: 1rem;
     padding: 1.5rem 1rem;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
     font-size: 0.95rem;
@@ -124,7 +124,7 @@
 .message {
   max-width: 70%;
   padding: 1rem 1.2rem;
-  border-radius: 1.2rem;
+  border-radius: 1rem;
   font-size: 0.95rem;
   line-height: 1.5;
   word-wrap: break-word;
@@ -200,7 +200,7 @@
     background-color: $primary-color;
     color: white;
     border: none;
-    border-radius: 0.8rem;
+    border-radius: 1.5rem;
     cursor: pointer;
     transition: background 0.3s;
 
@@ -248,7 +248,7 @@
   color: $primary-color;
   font-weight: bold;
   border: 2px solid $primary-color;
-  border-radius: 0.8rem;
+  border-radius: 1.5rem;
   cursor: pointer;
   font-size: 0.9rem;
   transition: background 0.2s, color 0.2s;

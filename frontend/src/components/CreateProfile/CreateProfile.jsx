@@ -315,7 +315,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                                             }))
                                         }
                                     >
-                                        ❌
+                                        Usuń
                                     </button>
                                 </li>
                             ))}
@@ -384,7 +384,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                                     }
                                 }}
                             >
-                                ➕ Dodaj
+                                Dodaj
                             </button>
                         </div>
                         {serviceError && <small className={styles.error}>{serviceError}</small>}

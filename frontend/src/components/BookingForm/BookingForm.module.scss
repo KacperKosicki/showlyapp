@@ -17,7 +17,7 @@
   margin: 2rem auto;
   padding: 2.2rem 1.5rem;
   background: #fff;
-  border-radius: 1.5rem;
+  border-radius: 1rem;
   border: 1px solid #ccc;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
 
@@ -113,7 +113,7 @@ input[type="date"] {
   font-size: 1.08rem;
   color: $primary-color;
   background: #f7f9fb;
-  border-radius: 8px;
+  border-radius: 1rem;
   border: 1.6px solid #e6e7ed;
   padding: 0.68rem 1.04rem;
   transition: border .19s;
@@ -164,7 +164,7 @@ input[type="date"] {
     color: $primary-color;
     font-weight: 600;
     padding: 0.1rem 0.8rem;
-    border-radius: 50%;
+    border-radius: 1.5rem;
     transition: background 0.2s;
     &:hover { background: #f1f1f1; }
   }
@@ -188,7 +188,7 @@ input[type="date"] {
 .day {
   padding: 0.6rem 0;
   border: none;
-  border-radius: 7px;
+  border-radius: 1rem;
   cursor: pointer;
   text-align: center;
   font-weight: 500;
@@ -232,7 +232,7 @@ input[type="date"] {
 .slot {
   padding: 0.54rem 0.1rem;
   border: 1.5px solid #ececec;
-  border-radius: 6px;
+  border-radius: 1rem;
   background: #fafbfc;
   cursor: pointer;
   //font-weight: 600;
@@ -277,7 +277,7 @@ input[type="date"] {
   background: $primary-color;
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 1.5rem;
   font-size: 1.14rem;
   font-weight: 700;
   cursor: pointer;
@@ -324,7 +324,7 @@ input[type="date"] {
 .legendBox {
   width: 0.95em;
   height: 0.95em;
-  border-radius: 3px;
+  border-radius: 5px;
   border: 1.5px solid #dedede;
   margin-right: 0.13em;
   display: inline-block;
@@ -364,7 +364,6 @@ input[type="date"] {
 @media (max-width: 700px) {
   .section {
     padding: 1.2rem 1rem;
-    border-radius: 10px;
   }
   .slotsGrid {
     grid-template-columns: 1fr 1fr;

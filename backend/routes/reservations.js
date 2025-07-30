@@ -74,29 +74,37 @@ router.get('/by-provider/:uid', async (req, res) => {
   }
 });
 
-// PATCH /api/reservations/:id/status – aktualizacja statusu
+// PATCH /api/reservations/:id/status
 router.patch('/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
   try {
-    const { status } = req.body;
-    const allowed = ['oczekująca', 'zaakceptowana', 'odrzucona', 'anulowana'];
-    if (!allowed.includes(status)) {
-      return res.status(400).json({ message: 'Nieprawidłowy status' });
+    const reservation = await Reservation.findById(id);
+    if (!reservation) return res.status(404).send('Reservation not found');
+
+    reservation.status = status;
+    await reservation.save();
+
+    // Jeśli zaakceptowano → usuń termin z profilu usługodawcy
+    if (status === 'zaakceptowana') {
+      const profile = await Profile.findById(reservation.providerProfileId);
+      if (profile) {
+        profile.availableDates = profile.availableDates.filter(slot =>
+          !(slot.date === reservation.date &&
+            slot.fromTime === reservation.fromTime &&
+            slot.toTime === reservation.toTime)
+        );
+        await profile.save();
+      }
     }
 
-    const reservation = await Reservation.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
-
-    if (!reservation) return res.status(404).json({ message: 'Nie znaleziono rezerwacji' });
-
-    res.json({ message: 'Status zaktualizowany', reservation });
-
+    res.send('Status updated');
   } catch (err) {
-    console.error('❌ Błąd zmiany statusu:', err);
-    res.status(500).json({ message: 'Błąd serwera' });
+    console.error(err);
+    res.status(500).send('Błąd serwera');
   }
 });
+
 
 module.exports = router;

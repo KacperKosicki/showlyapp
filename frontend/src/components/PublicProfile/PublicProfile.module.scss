@@ -19,7 +19,7 @@
   width: 65%;
   min-width: 320px;
   max-width: 700px;
-  border-radius: 1.5rem;
+  border-radius: 1rem;
   padding: 2rem;
   border: 1px solid #ccc;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
@@ -38,7 +38,7 @@
   min-width: 280px;
   max-width: 440px;
   border: 1px solid #ccc;
-  border-radius: 1.5rem;
+  border-radius: 1rem;
   padding: 2rem;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
   font-family: $font-body;
@@ -203,13 +203,12 @@
   margin: 1rem 0;
 
   .tag {
-    background-color: rgba(245, 245, 245, 0.5);
     border: 1px solid $primary-color;
     color: $primary-color;
     font-family: $font-accent;
     font-size: 0.75rem;
     padding: 0.3rem 0.8rem;
-    border-radius: 999px;
+    border-radius: 1rem;
     transition: all 0.2s ease;
     cursor: default;
   }
@@ -250,15 +249,6 @@
     }
   }
 
-  .calendar {
-    margin: 1rem auto;
-    border-radius: 1rem;
-    padding: 0.5rem;
-    background: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    max-width: 100%;
-  }
-
   .links {
     list-style: none;
     margin-top: 1rem;
@@ -273,7 +263,7 @@
       a {
         background-color: rgba(0, 0, 0, 0.03);
         padding: 0.4rem 0.8rem;
-        border-radius: 999px;
+        border-radius: 1.5rem;
         color: $primary-color;
         font-size: 0.85rem;
         text-decoration: none;
@@ -325,7 +315,7 @@
   padding: 0.8rem;
   font-size: 0.95rem;
   border: 1px solid #ccc;
-  border-radius: 8px;
+  border-radius: 1rem;
   resize: vertical;
   font-family: inherit;
 }
@@ -345,7 +335,7 @@
   border: none;
   padding: 0.6rem 1.2rem;
   font-size: 1rem;
-  border-radius: 8px;
+  border-radius: 1.5rem;
   cursor: pointer;
 
   &:hover {
@@ -367,7 +357,7 @@
   font-weight: bold;
   text-transform: uppercase;
   padding: 0.3rem 0.8rem;
-  border-radius: 50px;
+  border-radius: 1rem;
   margin-bottom: 0.4rem;
   background-color: #eee;
   color: #333;
@@ -401,33 +391,6 @@
   text-align: center;
 }
 
-.errorBox {
-  display: flex;
-  align-self: center;
-  text-align: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 1rem 1.5rem;
-  background-color: #ffebee; // jaśniejsze tło czerwieni
-  border: 1px solid #ffcdd2; // delikatna czerwona ramka
-  border-radius: 1rem;
-  color: #f44336; // intensywna czerwień
-  font-size: 1rem;
-  align-items: center;
-  margin: 2rem auto;
-  max-width: 500px;
-  font-family: $font-body;
-
-  .icon {
-    font-size: 1.5rem;
-    line-height: 1;
-  }
-
-  p {
-    margin: 0;
-  }
-}
-
 .galleryWrapper {
   position: relative;
   width: 100%;
@@ -459,7 +422,7 @@
     width: 60%;
     max-width: 500px;
     aspect-ratio: 4 / 3;
-    border-radius: 1.5rem;
+    border-radius: 1rem;
     overflow: hidden;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
     background: white;
@@ -519,7 +482,7 @@
 .servicesSection {
   background: $secondary-bg; // dopasowany do .card i .reviewsBox
   border: 1px solid #ccc;
-  border-radius: 1.5rem;
+  border-radius: 1rem;
   padding: 2.5rem 2rem;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
   font-family: $font-body;
@@ -553,7 +516,7 @@
 
   li {
     background: linear-gradient(135deg, #ffffff, #f9f9f9);
-    border: 1px solid #ddd;
+    border: 1px solid #ccc;
     border-radius: 1rem;
     padding: 0.8rem 1.2rem;
     font-size: 0.95rem;

@@ -19,7 +19,7 @@
   max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
-  border-radius: 1.5rem;
+  border-radius: 1rem;
   border: 1px solid #ccc;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   display: flex;
@@ -130,7 +130,7 @@
     background-color: $primary-color;
     color: white;
     padding: 0.4rem 1rem;
-    border-radius: 999px;
+    border-radius: 1rem;
     font-size: 0.85rem;
     font-family: $font-accent;
     text-transform: uppercase;
@@ -194,7 +194,7 @@
     background: $primary-color;
     color: white;
     padding: 0.8rem 1.6rem;
-    border-radius: 12px;
+    border-radius: 1.5rem;
     text-decoration: none;
     font-family: $font-accent;
     transition: background 0.3s;
@@ -219,7 +219,7 @@
   background: $primary-color;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 1rem;
   padding: 0.4rem 1rem;
   font-family: $font-accent;
   font-size: 0.9rem;
@@ -249,7 +249,7 @@
   button {
     flex: 1;
     padding: 0.6rem;
-    border-radius: 8px;
+    border-radius: 1.5rem;
     font-weight: bold;
     font-family: $font-accent;
     cursor: pointer;
@@ -269,7 +269,7 @@
 .formInput {
   width: 100%;
   padding: 0.6rem 1rem;
-  border-radius: 10px;
+  border-radius: 1rem;
   border: 1px solid #ccc;
   font-size: 1rem;
   font-family: $font-body;
@@ -334,7 +334,7 @@
   border: 1px solid #ff9999;
   padding: 1rem;
   margin-bottom: 1.5rem;
-  border-radius: 8px;
+  border-radius: 1rem;
   font-weight: bold;
   color: #a10000;
   text-align: center;
@@ -345,7 +345,7 @@
     color: white;
     padding: 0.8rem 1.8rem;
     border: none;
-    border-radius: 8px;
+    border-radius: 1.5rem;
     cursor: pointer;
     font-family: $font-accent;
     transition: background 0.3s ease;
@@ -406,7 +406,7 @@
   label {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
     font-weight: 600;
     margin-bottom: 0.3rem;
 
@@ -476,7 +476,7 @@
   li {
     background: #f9f9f9;
     padding: 0.8rem 1rem;
-    border-radius: 10px;
+    border-radius: 1rem;
     border: 1px solid #ccc;
     font-family: $font-body;
     font-size: 0.95rem;
@@ -500,7 +500,7 @@
       width: 100%;
       max-width: 400px;
       height: auto;
-      border-radius: 10px;
+      border-radius: 1rem;
       border: 1px solid #ccc;
     }
 
@@ -513,7 +513,7 @@
       label {
         background: #eee;
         border: none;
-        border-radius: 6px;
+        border-radius: 1.5rem;
         padding: 0.5rem 1rem;
         cursor: pointer;
         font-family: $font-accent;
@@ -535,7 +535,7 @@
     color: white;
     border: none;
     padding: 0.6rem 1.2rem;
-    border-radius: 10px;
+    border-radius: 1.5rem;
     font-weight: bold;
     font-family: $font-accent;
     cursor: pointer;
@@ -555,7 +555,7 @@
   img {
     width: 100%;
     max-width: 300px;
-    border-radius: 10px;
+    border-radius: 1rem;
     border: 1px solid #ccc;
   }
 }
@@ -734,7 +734,7 @@
 .serviceSelect {
   padding: 0.4rem 0.6rem;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 1rem;
   font-size: 0.95rem;
 }
 
@@ -743,7 +743,7 @@
   color: white;
   padding: 0.4rem 0.8rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 1.5rem;
   cursor: pointer;
   transition: background 0.2s;
 
@@ -758,7 +758,7 @@
   color: white;
   padding: 0.4rem 0.8rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 1.5rem;
   cursor: pointer;
   transition: background 0.2s;
 

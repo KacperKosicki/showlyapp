@@ -104,8 +104,8 @@ const MessageForm = ({ user }) => {
         {hasConversation && (
           <p className={styles.info}>
             {canSend
-              ? 'Masz już konwersację z tym użytkownikiem. Twoja wiadomość zostanie do niej dodana.'
-              : 'Czekasz na odpowiedź drugiej osoby. Nie możesz wysłać kolejnej wiadomości.'}
+              ? '📖 Masz już konwersację z tym użytkownikiem. Twoja wiadomość zostanie do niej dodana.'
+              : '⌛️ Czekasz na odpowiedź drugiej osoby. Nie możesz wysłać kolejnej wiadomości.'}
           </p>
         )}
 
@@ -119,7 +119,7 @@ const MessageForm = ({ user }) => {
             disabled={!canSend}
           />
           <button type="submit" className={styles.button} disabled={!canSend}>
-            Wyślij
+            Wyślij wiadomość
           </button>
         </form>
       </div>

@@ -42,7 +42,7 @@
     select {
       padding: 0.6rem;
       border: 1px solid #ccc;
-      border-radius: 8px;
+      border-radius: 1rem;
       margin-top: 0.3rem;
       font-family: $font-body;
     }
@@ -50,7 +50,7 @@
     textarea {
       padding: 0.6rem;
       border: 1px solid #ccc;
-      border-radius: 8px;
+      border-radius: 1rem;
       margin-top: 0.3rem;
       font-family: $font-body;
       resize: vertical;
@@ -61,7 +61,7 @@
     input[type="file"] {
       padding: 0.6rem;
       border: 1px solid #ccc;
-      border-radius: 8px;
+      border-radius: 1rem;
       margin-top: 0.3rem;
       font-family: $font-body;
       background-color: white;
@@ -72,7 +72,7 @@
         border: none;
         background: $primary-color;
         color: white;
-        border-radius: 50px;
+        border-radius: 1.5rem;
         cursor: pointer;
         transition: background 0.3s ease;
 
@@ -98,14 +98,10 @@
     background: $primary-color;
     color: white;
     border: none;
-    border-radius: 50px;
+    border-radius: 1.5rem;
     font-size: 1rem;
     cursor: pointer;
     transition: background 0.3s ease;
-
-    &:hover {
-      background: darken($primary-color, 10%);
-    }
 
     &:disabled {
       background: gray;
@@ -148,7 +144,7 @@
   input {
     padding: 0.6rem;
     border: 1px solid #ccc;
-    border-radius: 8px;
+    border-radius: 1rem;
     margin-top: 0.3rem;
     font-family: $font-body;
   }
@@ -331,7 +327,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0.3rem;
 
   input {
     flex: 1;
@@ -344,7 +340,7 @@
     color: white;
     border: none;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 1.5rem;
 
     &:hover {
       background-color: darken($primary-color, 10%);
