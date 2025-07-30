@@ -144,7 +144,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
             ← Wróć do powiadomień
           </button>
 
-          <h2 className={styles.title}>Rozmowa z: {receiverName}</h2>
+          <h2 className={styles.title}>Rozmowa z: <span>{receiverName}</span></h2>
 
           <div className={styles.thread}>
             {messages.map((msg, i) => (
