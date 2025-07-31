@@ -131,6 +131,7 @@
 }
 
 .details {
+  margin: 1rem 0;
   font-size: 0.85rem;
   color: #444;
   text-align: center;
@@ -255,7 +256,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem; // malutki odstęp
-  margin-top: 0.8rem;
+  margin-top: 1rem;
   align-items: center; // środek!
   justify-content: center;
 
@@ -315,7 +316,6 @@
   border-radius: 1rem;
   text-align: center;
   font-size: 0.95rem;
-  margin: 0.7rem 0 0;
   padding: 0.6rem 1rem;
   border: 1px solid #ffd9b2;
 }
