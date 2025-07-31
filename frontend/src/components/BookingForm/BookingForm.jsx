@@ -336,7 +336,7 @@ export default function BookingForm({ user }) {
 
               {selectedDate && (
                 <form onSubmit={handleSubmit} className={styles.slotsForm}>
-                  <h3 className={styles.slotsTitle}>Godziny {format(selectedDate, 'dd.MM.yyyy')}</h3>
+                  <h3 className={styles.slotsTitle}>Wolne terminy na dzień: {format(selectedDate, 'dd.MM.yyyy')}</h3>
                   <div className={styles.slotsGrid}>
                     {timeSlots.map((s, i) => (
                       <button
@@ -366,7 +366,7 @@ export default function BookingForm({ user }) {
 
                   {error && <p className={styles.error}>{error}</p>}
                   {message && <p className={styles.success}>{message}</p>}
-                  <button type="submit" className={styles.submit}>Rezerwuj</button>
+                  <button type="submit" className={styles.submit}>Rezerwuj termin</button>
                 </form>
               )}
             </>

@@ -16,7 +16,7 @@
 .section {
   max-width: 700px;
   margin: 2rem auto;
-  padding: 2.2rem 1.5rem;
+  padding: 2.2rem 2rem;
   background: #fff;
   border-radius: 1rem;
   border: 1px solid #ccc;
@@ -24,9 +24,9 @@
 
   .formMainHeading {
     text-align: center;
-    font-size: 1.9rem;
+    font-size: 1.8rem;
     font-weight: 800;
-    color: $primary-color;
+    color: $text-color;
     margin-top: 2rem;
     margin-bottom: 1rem;
   }
@@ -37,14 +37,13 @@
   display: flex;
   flex-direction: column;
   gap: 0.44rem;
-  padding: 0 1rem;
   margin-bottom: 1.4rem;
   font-size: 1.07rem;
   font-family: $font-body;
 
   .fieldTitle {
     margin-top: 1rem;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     color: $primary-color;
     font-family: $font-heading;
     border-left: 4px solid $primary-color;
@@ -184,7 +183,6 @@ input[type="date"] {
   grid-template-columns: repeat(7, 1fr);
   gap: 0.28rem;
   margin-bottom: 1rem;
-  padding: 0 1rem;
 }
 
 .weekday {
@@ -226,13 +224,12 @@ input[type="date"] {
 // Sloty godzin
 .slotsForm {
   margin-bottom: 1.5rem;
-  padding: 0 1rem;
 }
 
 .slotsTitle {
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: $primary-color;
   font-family: $font-heading;
   border-left: 4px solid $primary-color;
@@ -314,10 +311,8 @@ input[type="date"] {
 // Loading
 .loading {
   text-align: center;
-  color: $primary-color;
   padding: 2rem;
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: 1rem;
 }
 
 .legend {
@@ -401,7 +396,11 @@ input[type="date"] {
 // Responsywność
 @media (max-width: 700px) {
   .section {
-    padding: 1.2rem 1rem;
+    padding: 1.2rem 2rem;
+
+    .formMainHeading {
+      font-size: 1.4rem;
+    }
   }
 
   .slotsGrid {
@@ -409,9 +408,9 @@ input[type="date"] {
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
   .section {
-    padding: 0.4rem 0.1rem;
+    padding: 1.2rem 2rem;
 
     .formMainHeading {
       font-size: 1.4rem;

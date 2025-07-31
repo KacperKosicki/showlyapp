@@ -19,7 +19,7 @@ const UserCard = ({ user, currentUser }) => {
     profileType,
     description,
     links = [],
-    showAvailableDates // <-- WAŻNE: pobierz flagę z usera
+    showAvailableDates
   } = user;
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -30,9 +30,9 @@ const UserCard = ({ user, currentUser }) => {
   const slugify = (text) =>
     text
       .toLowerCase()
-      .normalize("NFD") // usuwa znaki diakrytyczne
+      .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
-      .replace(/\s+/g, '-') // spacje na myślniki
+      .replace(/\s+/g, '-')
       .replace(/[^\w-]+/g, '')
       .replace(/--+/g, '-')
       .replace(/^-+/, '')
@@ -63,7 +63,6 @@ const UserCard = ({ user, currentUser }) => {
               {profileType === 'serwis' && 'SERWIS'}
               {profileType === 'społeczność' && 'SPOŁECZNOŚĆ'}
             </span>
-
             <h3 className={styles.name}>{name}</h3>
             <p className={styles.role}>{role}</p>
           </div>
@@ -121,8 +120,15 @@ const UserCard = ({ user, currentUser }) => {
           )}
         </div>
 
+        {/* INFO O BRAKU REZERWACJI */}
+        {!showAvailableDates && (
+          <p className={styles.noReservationInfo}>
+            Ten profil nie udostępnia wolnych terminów – możesz tylko napisać wiadomość do użytkownika.
+          </p>
+        )}
+
         <div className={styles.buttons}>
-          {showAvailableDates ? (
+          {showAvailableDates && (
             <button
               className={styles.calendarToggle}
               onClick={() => {
@@ -141,16 +147,12 @@ const UserCard = ({ user, currentUser }) => {
                 });
               }}
             >
-              ZOBACZ DOSTĘPNE DNI LUB ZAREZERWUJ TERMIN
+              ZAREZERWUJ TERMIN
             </button>
-          ) : (
-            <p className={styles.noDescription}>
-              Ten profil nie udostępnia wolnych terminów – możesz tylko napisać wiadomość do użytkownika.
-            </p>
           )}
 
           <button
-            className={styles.buttonPrimary}
+            className={styles.buttonSecondary}
             onClick={() => navigate(`/profil/${slug}`, { state: { scrollToId: 'profileWrapper' } })}
           >
             ZOBACZ PROFIL
