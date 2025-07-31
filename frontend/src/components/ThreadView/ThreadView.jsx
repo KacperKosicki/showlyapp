@@ -144,7 +144,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
             ← Wróć do powiadomień
           </button>
 
-          <h2 className={styles.title}>Rozmowa z: <span>{receiverName}</span></h2>
+          <h2 className={styles.title}>Rozmowa z: {receiverName}</h2>
 
           <div className={styles.thread}>
             {messages.map((msg, i) => (
@@ -179,7 +179,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
               );
             }
 
-
             if (last.fromUid === user.uid) {
               return (
                 <div className={styles.infoBox}>
@@ -201,7 +200,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
                     onChange={(e) => setNewMessage(e.target.value)}
                     required
                   />
-                  <button type="submit">Wyślij</button>
+                  <button type="submit">Wyślij wiadomość</button>
                 </form>
               );
             }
@@ -220,25 +219,27 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
         {/* PRAWA kolumna: FAQ */}
         {receiverProfile && (
-          <div className={styles.faqBox}>
-            <div className={styles.quickAnswers}>
-              <h3>Najczęstsze pytania i odpowiedzi:</h3>
-              {receiverProfile.quickAnswers?.length > 0 &&
-                receiverProfile.quickAnswers.some(qa => qa.title.trim() || qa.answer.trim()) ? (
-                <ul>
-                  {receiverProfile.quickAnswers
-                    .filter(qa => qa.title.trim() || qa.answer.trim())
-                    .map((qa, i) => (
-                      <li key={i}>
-                        <strong>{qa.title}</strong>{qa.answer}
-                      </li>
-                    ))}
-                </ul>
-              ) : (
-                <p className={styles.noFaq}>
-                  Użytkownik nie dodał jeszcze żadnych pytań i odpowiedzi.
-                </p>
-              )}
+          <div className={styles.faqBoxWrapper}>
+            <div className={styles.faqBox}>
+              <div className={styles.quickAnswers}>
+                <h3>Najczęstsze pytania i odpowiedzi:</h3>
+                {receiverProfile.quickAnswers?.length > 0 &&
+                  receiverProfile.quickAnswers.some(qa => qa.title.trim() || qa.answer.trim()) ? (
+                  <ul>
+                    {receiverProfile.quickAnswers
+                      .filter(qa => qa.title.trim() || qa.answer.trim())
+                      .map((qa, i) => (
+                        <li key={i}>
+                          <strong>{qa.title}</strong>{qa.answer}
+                        </li>
+                      ))}
+                  </ul>
+                ) : (
+                  <p className={styles.noFaq}>
+                    Użytkownik nie dodał jeszcze żadnych pytań i odpowiedzi.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -60,9 +60,16 @@ const Notifications = ({ user, setUnreadCount }) => {
               const isUnread = convo.unreadCount > 0;
               const isSender = lastMsg.fromUid === user.uid;
 
-              const messageLabel = isSender
-                ? `Wysłałeś/aś wiadomość do ${convo.withName}`
-                : `Otrzymałeś/aś wiadomość od ${convo.withName}`;
+              const messageLabel = isSender ? (
+                <>
+                  Wysłałeś/aś wiadomość do <span className={styles.name}>{convo.withName}</span>
+                </>
+              ) : (
+                <>
+                  Otrzymałeś/aś wiadomość od <span className={styles.name}>{convo.withName}</span>
+                </>
+              );
+
               return (
                 <li
                   key={convo._id}

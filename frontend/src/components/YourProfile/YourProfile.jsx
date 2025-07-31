@@ -243,7 +243,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   return (
     <div className={styles.profile} id="scrollToId">
       {alert && <AlertBox message={alert.message} type={alert.type} onClose={() => setAlert(null)} />}
-      <h2>Twoja wizytówka</h2>
+      <h2 className={styles.profileTitle}>Twoja wizytówka</h2>
 
       {!profile.isVisible && (
         <div className={styles.expiredNotice}>

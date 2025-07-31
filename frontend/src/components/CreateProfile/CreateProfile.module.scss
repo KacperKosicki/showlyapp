@@ -390,3 +390,22 @@
     accent-color: $primary-color;
   }
 }
+
+@media (max-width: 600px) {
+  .wrapper {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+  }
+  .preview {
+    margin: 1.5rem auto 0 auto !important; // centrowanie w kolumnie
+    float: none;
+    width: 100%;
+    max-width: 400px;
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
