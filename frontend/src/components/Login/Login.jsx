@@ -130,7 +130,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
     <>
       <Hero />
       <div className={styles.container}>
-        <h2>Zaloguj się</h2>
+        <h2 className={styles.loginTitle}>Zaloguj się</h2>
         <form onSubmit={handleSubmit}>
           <input name="email" type="email" placeholder="Email" required onChange={handleChange} />
           <input name="password" type="password" placeholder="Hasło" required onChange={handleChange} />

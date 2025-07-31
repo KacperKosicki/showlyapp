@@ -4,11 +4,12 @@
   padding: 0;
 
   @media (max-width: 900px) {
-    padding: 0 1rem;  // poziomy padding 1rem
+    padding: 0 1rem; // poziomy padding 1rem
     box-sizing: border-box;
   }
+
   @media (max-width: 420px) {
-    padding: 0 0.3rem;
+    padding: 0 1rem;
   }
 }
 
@@ -26,7 +27,8 @@
     font-size: 1.9rem;
     font-weight: 800;
     color: $primary-color;
-    letter-spacing: -1px;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
   }
 }
 
@@ -35,12 +37,13 @@
   display: flex;
   flex-direction: column;
   gap: 0.44rem;
+  padding: 0 1rem;
   margin-bottom: 1.4rem;
   font-size: 1.07rem;
   font-family: $font-body;
 
   .fieldTitle {
-    margin-top: 2rem;
+    margin-top: 1rem;
     font-size: 1.1rem;
     color: $primary-color;
     font-family: $font-heading;
@@ -49,7 +52,7 @@
   }
 
   label,
-  & > span {
+  &>span {
     font-weight: 600;
     color: $primary-color;
     font-family: $font-heading;
@@ -75,8 +78,8 @@
     min-height: 45px;
     outline: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-    width: 100%;  // <<< DODAJ
-    box-sizing: border-box;  // <<< DODAJ
+    width: 100%; // <<< DODAJ
+    box-sizing: border-box; // <<< DODAJ
 
     &:focus {
       border-color: $primary-color;
@@ -131,6 +134,7 @@ input[type="date"] {
     font-size: 0.98rem;
     margin-bottom: 1rem;
   }
+
   textarea,
   input[type="date"],
   select {
@@ -144,6 +148,7 @@ input[type="date"] {
 // Nawigacja miesięcy
 .monthNav {
   display: flex;
+  padding: 0 1rem;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.8rem;
@@ -166,17 +171,22 @@ input[type="date"] {
     padding: 0.1rem 0.8rem;
     border-radius: 1.5rem;
     transition: background 0.2s;
-    &:hover { background: #f1f1f1; }
+
+    &:hover {
+      background: #f1f1f1;
+    }
   }
 }
 
 // Kalendarz
 .calendarGrid {
   display: grid;
-  grid-template-columns: repeat(7,1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 0.28rem;
   margin-bottom: 1rem;
+  padding: 0 1rem;
 }
+
 .weekday {
   text-align: center;
   font-weight: 700;
@@ -185,6 +195,7 @@ input[type="date"] {
   padding: 0.5rem 0;
   font-size: 1.01rem;
 }
+
 .day {
   padding: 0.6rem 0;
   border: none;
@@ -194,16 +205,19 @@ input[type="date"] {
   font-weight: 500;
   background: #f7f9fb;
   transition: background 0.18s, color 0.18s;
+
   &:hover:not(.disabledDay) {
     background: $primary-color;
     color: #fff;
   }
 }
+
 .disabledDay {
   background: #f4f4f4;
   color: #b6b6b6;
   cursor: not-allowed;
 }
+
 .selectedDay {
   background: $primary-color;
   color: #fff;
@@ -212,6 +226,7 @@ input[type="date"] {
 // Sloty godzin
 .slotsForm {
   margin-bottom: 1.5rem;
+  padding: 0 1rem;
 }
 
 .slotsTitle {
@@ -226,9 +241,10 @@ input[type="date"] {
 
 .slotsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(112px,1fr));
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
   gap: 0.5rem;
 }
+
 .slot {
   padding: 0.54rem 0.1rem;
   border: 1.5px solid #ececec;
@@ -247,22 +263,26 @@ input[type="date"] {
     color: $primary-color;
   }
 }
+
 .slotDisabled {
   background: #f5f5f5 !important;
   color: #bdbdbd !important;
   border: 1.5px solid #f0f0f0;
   cursor: not-allowed;
 }
+
 .slotReserved {
-  background: #ffe5e5 !important;   // jasny czerwony
+  background: #ffe5e5 !important; // jasny czerwony
   color: #d0293b !important;
   border: 1.5px solid #ffd4d4;
 }
+
 .slotPending {
-  background: #fffbe5 !important;  // jasny żółty
+  background: #fffbe5 !important; // jasny żółty
   color: #bfa400 !important;
   border: 1.5px solid #faefb1;
 }
+
 .slotSelected {
   box-shadow: 0 0 0 2px #dde8ff;
   background: #e5edfa !important;
@@ -282,12 +302,12 @@ input[type="date"] {
   font-weight: 700;
   cursor: pointer;
   margin-top: 1.5rem;
-  box-shadow: 0 2px 10px 0 rgba(40,40,40,0.05);
+  box-shadow: 0 2px 10px 0 rgba(40, 40, 40, 0.05);
   transition: background 0.2s, box-shadow 0.15s;
 
   &:hover {
     background: darken($primary-color, 8%);
-    box-shadow: 0 4px 20px 0 rgba(40,40,40,0.09);
+    box-shadow: 0 4px 20px 0 rgba(40, 40, 40, 0.09);
   }
 }
 
@@ -299,6 +319,7 @@ input[type="date"] {
   font-size: 1.2rem;
   font-weight: 600;
 }
+
 .legend {
   display: flex;
   flex-wrap: wrap;
@@ -331,10 +352,25 @@ input[type="date"] {
   vertical-align: middle;
 }
 
-.legendReserved { background: #ffe5e5; border-color: #ffd4d4; }
-.legendPending  { background: #fffbe5; border-color: #faefb1; }
-.legendDisabled { background: #f5f5f5; border-color: #e0e0e0; }
-.legendFree     { background: #fafbfc; border-color: #ececec; }
+.legendReserved {
+  background: #ffe5e5;
+  border-color: #ffd4d4;
+}
+
+.legendPending {
+  background: #fffbe5;
+  border-color: #faefb1;
+}
+
+.legendDisabled {
+  background: #f5f5f5;
+  border-color: #e0e0e0;
+}
+
+.legendFree {
+  background: #fafbfc;
+  border-color: #ececec;
+}
 
 .legendInfo {
   font-family: $font-accent;
@@ -351,9 +387,11 @@ input[type="date"] {
     gap: 0.42rem 0.7rem;
     margin: 0.7rem 0 0;
   }
+
   .legendInfo {
     font-size: 0.89em;
   }
+
   .legendBox {
     width: 0.8em;
     height: 0.8em;
@@ -365,8 +403,8 @@ input[type="date"] {
   .section {
     padding: 1.2rem 1rem;
   }
+
   .slotsGrid {
-    grid-template-columns: 1fr 1fr;
     gap: 0.4rem;
   }
 }
@@ -374,8 +412,9 @@ input[type="date"] {
 @media (max-width: 420px) {
   .section {
     padding: 0.4rem 0.1rem;
-  }
-  .slotsGrid {
-    grid-template-columns: 1fr;
+
+    .formMainHeading {
+      font-size: 1.4rem;
+    }
   }
 }

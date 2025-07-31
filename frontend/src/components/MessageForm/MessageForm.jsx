@@ -91,7 +91,7 @@ const MessageForm = ({ user }) => {
   return (
     <div id="messageFormContainer" className={styles.container}>
       <div className={styles.wrapper}>
-        <h2>{hasConversation ? 'Kontynuuj rozmowę' : 'Napisz wiadomość'}</h2>
+        <h2 className={styles.conversationTitle}>{hasConversation ? 'Kontynuuj rozmowę' : 'Napisz wiadomość'}</h2>
 
         {alert && (
           <AlertBox

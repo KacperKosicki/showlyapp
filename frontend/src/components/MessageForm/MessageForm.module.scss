@@ -25,7 +25,7 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   font-family: $font-body;
 
-  h2 {
+  .conversationTitle {
     font-size: 1.4rem;
     margin-bottom: 1rem;
     text-align: center;
@@ -103,7 +103,7 @@
     margin: 4rem 0;
   }
 
-  h2 {
+  .conversationTitle {
     font-size: 1.5rem;
   }
 
@@ -129,7 +129,7 @@
     margin: 3rem 0;
   }
 
-  h2 {
+  .conversationTitle {
     font-size: 1.4rem;
   }
 
@@ -155,7 +155,7 @@
     margin: 2rem 0;
   }
 
-  h2 {
+  .conversationTitle {
     font-size: 1.3rem;
     margin-bottom: 1rem;
   }
