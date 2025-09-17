@@ -57,6 +57,10 @@
   color: $text-color;
   margin-top: 2rem;
   margin-bottom: 1rem;
+
+  .receiverName {
+    color: $secondary-color;
+  }
 }
 
 // --- WRAPPER FAQ ---
@@ -110,6 +114,10 @@
     color: $text-color;
     font-size: 1.1rem;
     font-weight: bold;
+  }
+
+  .receiverName {
+    color: $secondary-color;
   }
 
   ul {

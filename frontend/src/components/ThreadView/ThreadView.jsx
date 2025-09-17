@@ -168,7 +168,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
             ← Wróć do powiadomień
           </button>
 
-          <h2 className={styles.title}>Rozmowa z: {receiverName}</h2>
+          <h2 className={styles.title}>Rozmowa z użytkownikiem <span className={styles.receiverName}>{receiverName}</span></h2>
 
           <div className={styles.thread}>
             {messages.map((msg, i) => (
@@ -246,7 +246,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
           <div className={styles.faqBoxWrapper}>
             <div className={styles.faqBox}>
               <div className={styles.quickAnswers}>
-                <h3>Najczęstsze pytania i odpowiedzi:</h3>
+                <h3>Najczęstsze pytania i odpowiedzi użytkownika <span className={styles.receiverName}>{receiverName}</span></h3>
 
                 {profileStatus === 'loading' && (
                   <p className={styles.noFaq}>Ładowanie profilu…</p>

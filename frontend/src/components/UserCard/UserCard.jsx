@@ -63,7 +63,7 @@ const UserCard = ({ user, currentUser }) => {
               {profileType === 'serwis' && 'SERWIS'}
               {profileType === 'społeczność' && 'SPOŁECZNOŚĆ'}
             </span>
-            <h3 className={styles.name}>{name}</h3>
+            <h3 className={styles.name}><span className={styles.receiverName}>{name}</span></h3>
             <p className={styles.role}>{role}</p>
           </div>
         </div>

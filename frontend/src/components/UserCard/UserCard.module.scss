@@ -63,6 +63,10 @@
 
 .topInfo {
   text-align: left;
+
+  .receiverName {
+    color: $primary-color;
+  }
 }
 
 .avatar {
@@ -138,7 +142,7 @@
 
   .price {
     strong {
-      color: $primary-color;
+      color: $secondary-color;
     }
   }
 
