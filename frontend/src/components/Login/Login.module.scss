@@ -62,6 +62,15 @@
   font-family: $font-body;
 }
 
+/* ✅ nowa klasa – identyczna estetyka jak w Register */
+.success {
+  @extend .messageBox;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+  font-family: $font-body;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

@@ -16,6 +16,7 @@ import axios from 'axios';
 const Login = ({ setUser, setRefreshTrigger }) => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [message, setMessage] = useState(''); // 👈 komunikat sukcesu
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -25,6 +26,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setMessage('');
 
     try {
       const methods = await fetchSignInMethodsForEmail(auth, form.email);
@@ -46,7 +48,6 @@ const Login = ({ setUser, setRefreshTrigger }) => {
 
       const email = refreshedUser.email;
       const uid = refreshedUser.uid;
-
       if (!email || !uid) {
         setError('Nie udało się pobrać danych logowania (e-mail lub UID).');
         return;
@@ -62,7 +63,10 @@ const Login = ({ setUser, setRefreshTrigger }) => {
       localStorage.setItem('showlyUser', JSON.stringify({ email, uid }));
       setUser({ email, uid });
       setRefreshTrigger(Date.now());
-      navigate('/');
+
+      // ✅ komunikat + opóźnione przekierowanie jak w Register
+      setMessage('Pomyślnie zalogowano. Przekierowuję…');
+      setTimeout(() => navigate('/'), 1500);
     } catch (err) {
       console.error(err);
       if (err.code === 'auth/user-not-found') {
@@ -77,6 +81,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
 
   const handleGoogleLogin = async () => {
     setError('');
+    setMessage('');
 
     try {
       const provider = googleProvider;
@@ -89,7 +94,6 @@ const Login = ({ setUser, setRefreshTrigger }) => {
 
       const email = user.email ?? user.providerData?.[0]?.email ?? null;
       const uid = user.uid;
-
       if (!email || !uid) {
         setError('Nie udało się pobrać danych użytkownika (brak e-maila lub UID).');
         return;
@@ -113,10 +117,12 @@ const Login = ({ setUser, setRefreshTrigger }) => {
       localStorage.setItem('showlyUser', JSON.stringify({ email, uid }));
       setUser({ email, uid });
       setRefreshTrigger(Date.now());
-      navigate('/');
+
+      // ✅ komunikat + opóźnione przekierowanie jak w Register
+      setMessage('Pomyślnie zalogowano przez Google. Przekierowuję…');
+      setTimeout(() => navigate('/'), 1500);
     } catch (err) {
       console.error('❌ Błąd podczas logowania przez Google:', err);
-
       if (err.code === 'auth/account-exists-with-different-credential') {
         const email = err.customData?.email;
         setError(`Konto o adresie ${email} zostało już utworzone inną metodą. Zaloguj się tą metodą.`);
@@ -136,12 +142,16 @@ const Login = ({ setUser, setRefreshTrigger }) => {
           <input name="password" type="password" placeholder="Hasło" required onChange={handleChange} />
           <button type="submit">Zaloguj</button>
         </form>
+
         {error && <div className={styles.error}>{error}</div>}
+        {message && <div className={styles.success}>{message}</div>}
+
         <div className={styles.orSeparator}>lub</div>
         <button onClick={handleGoogleLogin} className={styles.googleButton}>
           <img src="/images/icons/google.png" alt="Google" />
           Kontynuuj przez Google
         </button>
+
         <p className={styles.registerLink}>
           Nie masz konta? <Link to="/register" className={styles.linkButton}>Załóż je tutaj</Link>
         </p>

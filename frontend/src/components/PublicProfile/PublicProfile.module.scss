@@ -39,15 +39,16 @@
   max-width: 440px;
   border: 1px solid #ccc;
   border-radius: 1rem;
-  padding: 2rem;
+  padding: 2rem 1rem;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
   font-family: $font-body;
   align-self: flex-start;
 
   h3 {
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     margin-bottom: 1.5rem;
     text-align: center;
+    color: $color-gray;
   }
 
   .noReviews {
@@ -175,20 +176,20 @@
   h2 {
     font-size: 1.8rem;
     font-family: $font-heading;
-    color: $text-color;
     margin: 0.2rem 0;
+    color: $secondary-color;
   }
 
   .role {
     font-size: 1.2rem;
-    color: gray;
+    color: $color-gray;
     margin: 0.1rem 0;
     font-family: $font-accent;
   }
 
   .description {
     font-size: 0.95rem;
-    color: $text-color;
+    color: $color-gray;
     margin-top: 0.5rem;
   }
 }
@@ -220,8 +221,7 @@
 }
 
 .details {
-  font-size: 0.85rem;
-  color: #444;
+  color: $color-gray;
   text-align: center;
 
   .price {
@@ -450,7 +450,7 @@
   margin-bottom: 2rem;
 
   h2 {
-    font-size: 2rem;
+    font-size: 1.3rem;
     font-weight: bold;
     margin-bottom: 1rem;
     margin-top: 1rem;
@@ -481,7 +481,7 @@
   background: $secondary-bg; // dopasowany do .card i .reviewsBox
   border: 1px solid #ccc;
   border-radius: 1rem;
-  padding: 2.5rem 2rem;
+  padding: 2rem 1rem;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
   font-family: $font-body;
   width: 65%;
@@ -491,10 +491,14 @@
 
   h3 {
     font-family: $font-heading;
-    font-size: 1.5rem;
-    color: $primary-color;
+    font-size: 1.3rem;
     margin-bottom: 1.5rem;
     text-align: center;
+    color: $color-gray;
+
+    .spanName {
+      color: $secondary-color;
+  }
   }
 
   @media (max-width: 900px) {
@@ -543,7 +547,6 @@
   }
 }
 
-
 @media (max-width: 1024px) {
   .profileWrapper {
     flex-direction: column;
@@ -556,7 +559,7 @@
   .reviewsBox {
     width: 100%;
     max-width: 100%;
-    padding: 1rem;
+    padding: 1rem 1rem 2rem;
     margin: 0 auto;
   }
 }
@@ -567,9 +570,8 @@
     margin: 2rem 0;
   }
 
-  .card,
   .reviewsBox {
-    padding: 1rem;
+    padding: 2rem 1rem;
     margin: 0 auto;
   }
 
@@ -590,9 +592,8 @@
     margin: 2rem 0;
   }
 
-  .card,
   .reviewsBox {
-    padding: 1rem;
+    padding: 2rem 1rem;
     margin: 0 auto;
   }
 

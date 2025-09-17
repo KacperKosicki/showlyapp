@@ -54,9 +54,10 @@
 
 .title {
   text-align: center;
-  color: $text-color;
+  color: $color-gray;
   margin-top: 2rem;
   margin-bottom: 1rem;
+  font-size: 1.3rem;
 
   .receiverName {
     color: $secondary-color;
@@ -102,16 +103,14 @@
 .quickAnswers {
   border: 1px solid #ccc;
   border-radius: 1rem;
-  padding: 1.5rem 2rem;
+  padding: 2rem 2rem;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  font-size: 0.95rem;
-  line-height: 1.6;
   background: #fff;
 
   h3 {
     margin-bottom: 1rem;
     text-align: center;
-    color: $text-color;
+    color: $color-gray;
     font-size: 1.1rem;
     font-weight: bold;
   }
@@ -143,7 +142,7 @@
       }
 
       strong {
-        color: $secondary-color;
+        color: $primary-color;
         display: block;
         font-family: $font-heading;
         font-size: 1.05rem;
@@ -159,6 +158,7 @@
     margin-top: 1rem;
     text-align: center;
     font-family: $font-body;
+    font-size: 0.95rem;
   }
 
     @media (max-width: 1024px) {

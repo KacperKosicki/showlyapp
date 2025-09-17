@@ -24,11 +24,15 @@
 
   .formMainHeading {
     text-align: center;
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: 800;
-    color: $text-color;
+    color: $color-gray;
     margin-top: 2rem;
     margin-bottom: 1rem;
+
+    .providerName {
+      color: $secondary-color;
+    }
   }
 }
 
@@ -321,8 +325,8 @@ input[type="date"] {
   align-items: center;
   gap: 0.7rem 1.1rem;
   margin: 1.1rem 0 0;
-  font-size: 0.97rem;
-  color: #5b5b5b;
+  font-size: 0.95rem;
+  color: $color-gray;
   font-family: $font-body;
 
   span {

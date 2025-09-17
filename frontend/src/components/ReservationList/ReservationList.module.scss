@@ -30,11 +30,9 @@ $status-pending-text: #cc6600;
   .title {
     text-align: center;
     margin-bottom: 2.5rem;
-    font-size: 1.8rem;
-    color: $text-color;
+    font-size: 1.6rem;
+    color: $color-gray;
     font-family: $font-heading;
-    letter-spacing: 0.03em;
-    color: $text-color;
   }
 
   .columns {
@@ -51,7 +49,7 @@ $status-pending-text: #cc6600;
   .heading {
     text-align: center;
     margin-bottom: 1rem;
-    color: $secondary-color;
+    color: $primary-color;
     font-size: 1.2rem;
     font-weight: 600;
     letter-spacing: 0.05em;

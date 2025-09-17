@@ -4,14 +4,15 @@ import {
   sendEmailVerification,
   onAuthStateChanged,
   signOut,
-  updateProfile
+  updateProfile,
+  signInWithPopup,
 } from 'firebase/auth';
-import { auth } from '../../firebase';
+import { auth, googleProvider } from '../../firebase';
 import styles from './Register.module.scss';
 import Hero from '../Hero/Hero';
 import Footer from '../Footer/Footer';
 import axios from 'axios';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom'; // 👈 dodano useNavigate
 
 const Register = ({ user, setUser, setRefreshTrigger }) => {
   const [form, setForm] = useState({
@@ -25,12 +26,12 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   const [error, setError] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate(); // 👈 init
 
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo) return;
 
-    // Czekamy aż Hero i registerContainer się wyrenderują
     const timeout = setTimeout(() => {
       const tryScroll = () => {
         const el = document.getElementById(scrollTo);
@@ -41,12 +42,11 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
           requestAnimationFrame(tryScroll);
         }
       };
-
       requestAnimationFrame(tryScroll);
-    }, 100); // ⏱️ możesz dać 120–150 ms jeśli nadal za szybko
+    }, 100);
 
     return () => clearTimeout(timeout);
-  }, [location.state]);
+  }, [location.state, location.pathname]);
 
   useEffect(() => {
     if (message || error) {
@@ -59,8 +59,8 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   }, [message, error]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user && !user.emailVerified) {
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
+      if (u && !u.emailVerified) {
         await signOut(auth);
       }
     });
@@ -83,35 +83,81 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
     setMessage('');
 
     try {
-      // 🔎 Sprawdzenie w MongoDB
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/check-email?email=${form.email}`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/check-email?email=${encodeURIComponent(form.email)}`);
       if (res.data.exists) {
         setError(`Ten e-mail jest już powiązany z kontem (${res.data.provider === 'google' ? 'Google' : 'e-mail + hasło'}). Zaloguj się tą metodą.`);
         return;
       }
 
-      // 🔐 Rejestracja w Firebase
       const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
       const firebaseUser = userCredential.user;
 
-      // 🧾 Ustawienie imienia i nazwiska (displayName)
-      await updateProfile(firebaseUser, {
-        displayName: form.name || ''
-      });
-
-      // 📧 Wysłanie maila weryfikacyjnego
+      await updateProfile(firebaseUser, { displayName: form.name || '' });
       await sendEmailVerification(firebaseUser);
 
-      // 🔓 Nie zapisujemy do MongoDB – dopiero po kliknięciu linku aktywacyjnego
       setEmailSent(true);
       setMessage('Na Twój adres e-mail został wysłany link aktywacyjny. Kliknij w niego, aby aktywować konto.');
-
+      // (opcjonalnie) przekierowanie na stronę główną po np. 3 s:
+      // setTimeout(() => navigate('/'), 3000);
     } catch (err) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {
         setError('Ten e-mail jest już używany w Firebase.');
       } else {
         setError('Błąd podczas rejestracji.');
+      }
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError('');
+    setMessage('');
+
+    try {
+      const provider = googleProvider;
+      provider.addScope('email');
+      provider.addScope('profile');
+      provider.setCustomParameters({ prompt: 'consent' });
+
+      const result = await signInWithPopup(auth, provider);
+      const gUser = result.user;
+
+      const email = gUser.email ?? gUser.providerData?.[0]?.email ?? null;
+      const uid = gUser.uid;
+
+      if (!email || !uid) {
+        setError('Nie udało się pobrać danych użytkownika (brak e-maila lub UID).');
+        return;
+      }
+
+      try {
+        await axios.post(`${process.env.REACT_APP_API_URL}/api/users`, {
+          email,
+          name: gUser.displayName || '',
+          firebaseUid: uid,
+          provider: 'google'
+        });
+      } catch (err) {
+        if (err.response?.status === 409) {
+          setError('Ten e-mail jest już przypisany do innego konta. Zaloguj się metodą, którą wcześniej użyłeś.');
+          return;
+        }
+        throw err;
+      }
+
+      localStorage.setItem('showlyUser', JSON.stringify({ email, uid }));
+      setUser({ email, uid });
+      setRefreshTrigger(Date.now());
+
+      setMessage('Pomyślnie zalogowano przez Google. Przekierowuję…');
+      setTimeout(() => navigate('/'), 1500); // 👈 opóźnione przekierowanie jak chciałeś
+    } catch (err) {
+      console.error('❌ Błąd podczas logowania przez Google:', err);
+      if (err.code === 'auth/account-exists-with-different-credential') {
+        const email = err.customData?.email;
+        setError(`Konto o adresie ${email} zostało już utworzone inną metodą. Zaloguj się tą metodą.`);
+      } else {
+        setError('Błąd podczas logowania przez Google.');
       }
     }
   };
@@ -123,37 +169,45 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
         <h2>Utwórz konto</h2>
 
         {!emailSent ? (
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              name="name"
-              placeholder="Imię i nazwisko"
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Adres email"
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="password"
-              name="password"
-              placeholder="Hasło"
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="password"
-              name="confirmPassword"
-              placeholder="Powtórz hasło"
-              onChange={handleChange}
-              required
-            />
-            <button type="submit">Zarejestruj się</button>
-          </form>
+          <>
+            <form onSubmit={handleSubmit}>
+              <input
+                type="text"
+                name="name"
+                placeholder="Imię i nazwisko"
+                onChange={handleChange}
+                required
+              />
+              <input
+                type="email"
+                name="email"
+                placeholder="Adres email"
+                onChange={handleChange}
+                required
+              />
+              <input
+                type="password"
+                name="password"
+                placeholder="Hasło"
+                onChange={handleChange}
+                required
+              />
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Powtórz hasło"
+                onChange={handleChange}
+                required
+              />
+              <button type="submit">Zarejestruj się</button>
+            </form>
+
+            <div className={styles.orSeparator}>lub</div>
+            <button onClick={handleGoogleLogin} className={styles.googleButton}>
+              <img src="/images/icons/google.png" alt="Google" />
+              Kontynuuj przez Google
+            </button>
+          </>
         ) : (
           <div className={styles.success}>
             Rejestracja zakończona. Sprawdź swoją skrzynkę i kliknij link aktywacyjny, aby aktywować konto. Następnie możesz się zalogować.

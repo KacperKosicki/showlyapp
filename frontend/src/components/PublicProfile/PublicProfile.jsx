@@ -341,7 +341,7 @@ const PublicProfile = () => {
       {profile.services?.length > 0 && (
         <div className={styles.servicesWrapper}>           {/* nowy wrapper */}
           <section className={styles.servicesSection} id="services">
-            <h3>Usługi</h3>
+            <h3>Usługi użytkownika <span className={styles.spanName}>{name}</span></h3>
             {profile.services.length > 0 ? (
               <ul className={styles.servicesList}>
                 {profile.services.map((s, i) => (

@@ -18,7 +18,7 @@
   max-width: 800px; // ✅ zwiększono z 800px
   width: 100%;       // ✅ żeby działało z paddingiem
   margin: 2rem 0;
-  padding: 2rem;
+  padding: 4rem 2rem;
   background: white;
   border-radius: 1rem;
   border: 1px solid #ccc;
@@ -26,10 +26,15 @@
   font-family: $font-body;
 
   .conversationTitle {
-    font-size: 1.4rem;
-    margin-bottom: 1rem;
+    font-size: 1.6rem;
+    margin-bottom: 2rem;
     text-align: center;
-    color: $text-color;
+    color: $color-gray;
+
+    .receiverName {
+      color: $secondary-color; // np. #e50914 albo Twoja główna zmienna
+      font-weight: 600;
+    }
   }
 }
 

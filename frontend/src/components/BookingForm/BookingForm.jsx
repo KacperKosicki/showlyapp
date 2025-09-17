@@ -291,7 +291,7 @@ export default function BookingForm({ user }) {
       )}
       <div className={styles.wrapper}>
         <section className={styles.section}>
-          <h2 className={styles.formMainHeading}>Zarezerwuj u {provider.name}</h2>
+          <h2 className={styles.formMainHeading}>Zarezerwuj u <span className={styles.providerName}>{provider.name}</span></h2>
 
           {provider.bookingMode === 'calendar' && (
             <>
