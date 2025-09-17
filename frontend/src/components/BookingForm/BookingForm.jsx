@@ -117,7 +117,6 @@ export default function BookingForm({ user }) {
   };
 
   // 7️⃣ Generowanie slotów
-  // 7️⃣ Generowanie slotów
   useEffect(() => {
     if (!selectedDate || !selectedService) {
       setTimeSlots([]);
@@ -140,16 +139,28 @@ export default function BookingForm({ user }) {
     const buffer = 15;
     const durMin = durationToMinutes(selectedService);
 
-    // Na dany dzień: sortujemy rezerwacje (zaakceptowane + oczekujące) wg czasu od najwcześniejszego
+    // Na dany dzień: sortujemy rezerwacje
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
     const allBusy = [...reservedSlots, ...pendingSlots]
       .filter(s => s.date === dateStr)
       .map(s => ({
         from: new Date(`${s.date}T${s.from}`).getTime(),
         to: addMinutes(new Date(`${s.date}T${s.to}`), buffer).getTime(),
-        status: reservedSlots.find(r => r.date === s.date && r.from === s.from) ? 'reserved' : 'pending'
+        status: reservedSlots.find(r => r.date === s.date && r.from === s.from)
+          ? 'reserved'
+          : 'pending'
       }))
       .sort((a, b) => a.from - b.from);
+
+    // 👉 NOWE: wyliczamy "teraz" zaokrąglone w górę
+    const isToday = isSameDay(selectedDate, new Date());
+    let nowRoundedUp = null;
+    if (isToday) {
+      const now = new Date();
+      nowRoundedUp = startOfMinute(now);
+      const remNow = nowRoundedUp.getMinutes() % step;
+      if (remNow) nowRoundedUp = addMinutes(nowRoundedUp, step - remNow);
+    }
 
     while (cursor < dayEnd) {
       const start = new Date(cursor);
@@ -177,14 +188,17 @@ export default function BookingForm({ user }) {
         }
       }
 
+      // 👉 NOWE: dla dzisiejszej daty wyłącz sloty przed "teraz"
+      if (isToday && nowRoundedUp && start < nowRoundedUp && status === 'free') {
+        status = 'disabled';
+      }
+
       slots.push({ label: format(start, 'HH:mm'), status });
       cursor = addMinutes(cursor, step);
     }
 
     setTimeSlots(slots);
   }, [selectedDate, selectedService, provider, reservedSlots, pendingSlots]);
-
-
 
   // 8️⃣ Wyślij
   const handleSubmit = async e => {
@@ -196,6 +210,26 @@ export default function BookingForm({ user }) {
       if (!selectedDate || !selectedService || !selectedSlot) {
         return setAlert({ show: true, type: 'error', message: 'Wybierz dzień, usługę i godzinę.' });
       }
+
+      // ⬇️ DODAJ TEN BLOK TU — re-walidacja przeterminowanego slotu
+      const [h, m] = selectedSlot.split(':').map(Number);
+      const startDateTime = new Date(selectedDate);
+      startDateTime.setHours(h, m, 0, 0);
+
+      // "teraz" zaokrąglone w górę do 15 min
+      const step = 15;
+      let nowRoundedUp = startOfMinute(new Date());
+      const remNow = nowRoundedUp.getMinutes() % step;
+      if (remNow) nowRoundedUp = addMinutes(nowRoundedUp, step - remNow);
+
+      if (isSameDay(selectedDate, new Date()) && startDateTime < nowRoundedUp) {
+        return setAlert({
+          show: true,
+          type: 'error',
+          message: 'Wybrany slot już minął. Wybierz nowszą godzinę.'
+        });
+      }
+      // ⬆️ KONIEC DODANEGO BLOKU
     }
 
     if (provider.bookingMode === 'request-blocking' && !selectedDate) {
@@ -229,11 +263,8 @@ export default function BookingForm({ user }) {
 
     try {
       await axios.post(`${process.env.REACT_APP_API_URL}/api/reservations`, payload);
-
-      // Odśwież sloty z bazy!
       await fetchReservations(provider.userId);
 
-      // 👇 TUTAJ DODAJ RESET
       setTimeout(() => {
         setDate(null);
         setService(null);
@@ -245,8 +276,6 @@ export default function BookingForm({ user }) {
     } catch {
       setAlert({ show: true, type: 'error', message: 'Błąd przy wysyłaniu.' });
     }
-
-
   };
 
   if (!provider) return <div className={styles.loading}>🔄 Ładowanie…</div>;

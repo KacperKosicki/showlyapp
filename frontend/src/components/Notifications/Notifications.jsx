@@ -48,7 +48,7 @@ const Notifications = ({ user, setUnreadCount }) => {
   return (
     <div id="scrollToId" className={styles.section}>
       <div className={styles.wrapper}>
-        <h2 className={styles.sectionTitle}>Twoje konwersacje</h2>
+        <h2 className={styles.sectionTitle}>Twoje powiadomienia</h2>
         {loading ? (
           <p className={styles.loading}>⏳ Ładowanie wiadomości...</p>
         ) : conversations.length === 0 ? (

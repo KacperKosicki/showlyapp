@@ -15,6 +15,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
   const [receiverName, setReceiverName] = useState('');
   const [canReply, setCanReply] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [profileStatus, setProfileStatus] = useState('loading');
 
   const location = useLocation(); // umieść u góry komponentu
 
@@ -82,18 +83,41 @@ const ThreadView = ({ user, setUnreadCount }) => {
   useEffect(() => {
     const fetchReceiverProfile = async () => {
       try {
-        if (!receiverId || receiverId === 'SYSTEM') return; // ⛔ pomiń systemowe
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${receiverId}`);
+        if (!receiverId || receiverId === 'SYSTEM') {
+          setProfileStatus('missing');
+          setReceiverProfile(null);
+          return;
+        }
 
-        setReceiverProfile(res.data);
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${receiverId}`);
+        const prof = res.data;
+        setReceiverProfile(prof);
+
+        // 👇 Opcjonalnie: jeśli backend zwraca visibleUntil albo isActive
+        let expired = false;
+        if (prof?.visibleUntil) {
+          expired = new Date(prof.visibleUntil) < new Date();
+        }
+        if (prof?.isActive === false) {
+          expired = true;
+        }
+
+        setProfileStatus(expired ? 'expired' : 'exists');
       } catch (err) {
-        console.error('❌ Błąd pobierania profilu odbiorcy:', err);
+        // 404 = brak profilu
+        if (err.response?.status === 404) {
+          setProfileStatus('missing');
+          setReceiverProfile(null);
+        } else {
+          console.error('❌ Błąd pobierania profilu odbiorcy:', err);
+          setProfileStatus('error');
+          setReceiverProfile(null);
+        }
       }
     };
 
     fetchReceiverProfile();
   }, [receiverId]);
-
 
   const handleReply = async (e) => {
     e.preventDefault();
@@ -217,27 +241,56 @@ const ThreadView = ({ user, setUnreadCount }) => {
           {errorMsg && <p className={styles.error}>{errorMsg}</p>}
         </div>
 
-        {/* PRAWA kolumna: FAQ */}
-        {receiverProfile && (
+        {/* PRAWA kolumna: FAQ / informacja o profilu */}
+        {receiverId !== 'SYSTEM' && (
           <div className={styles.faqBoxWrapper}>
             <div className={styles.faqBox}>
               <div className={styles.quickAnswers}>
                 <h3>Najczęstsze pytania i odpowiedzi:</h3>
-                {receiverProfile.quickAnswers?.length > 0 &&
-                  receiverProfile.quickAnswers.some(qa => qa.title.trim() || qa.answer.trim()) ? (
-                  <ul>
-                    {receiverProfile.quickAnswers
-                      .filter(qa => qa.title.trim() || qa.answer.trim())
-                      .map((qa, i) => (
-                        <li key={i}>
-                          <strong>{qa.title}</strong>{qa.answer}
-                        </li>
-                      ))}
-                  </ul>
-                ) : (
+
+                {profileStatus === 'loading' && (
+                  <p className={styles.noFaq}>Ładowanie profilu…</p>
+                )}
+
+                {profileStatus === 'missing' && (
                   <p className={styles.noFaq}>
-                    Użytkownik nie dodał jeszcze żadnych pytań i odpowiedzi.
+                    Użytkownik nie posiada jeszcze profilu.
                   </p>
+                )}
+
+                {profileStatus === 'expired' && (
+                  <p className={styles.noFaq}>
+                    Profil użytkownika jest nieważny (wygasł).
+                  </p>
+                )}
+
+                {profileStatus === 'error' && (
+                  <p className={styles.noFaq}>
+                    Nie udało się pobrać informacji o profilu.
+                  </p>
+                )}
+
+                {profileStatus === 'exists' && (
+                  <>
+                    {receiverProfile?.quickAnswers?.length > 0 &&
+                      receiverProfile.quickAnswers.some(
+                        qa => (qa.title || '').trim() || (qa.answer || '').trim()
+                      ) ? (
+                      <ul>
+                        {receiverProfile.quickAnswers
+                          .filter(qa => (qa.title || '').trim() || (qa.answer || '').trim())
+                          .map((qa, i) => (
+                            <li key={i}>
+                              <strong>{qa.title}</strong>{qa.answer}
+                            </li>
+                          ))}
+                      </ul>
+                    ) : (
+                      <p className={styles.noFaq}>
+                        Użytkownik nie dodał jeszcze żadnych pytań i odpowiedzi.
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             </div>
