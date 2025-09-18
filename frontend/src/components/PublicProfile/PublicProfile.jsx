@@ -205,6 +205,8 @@ const PublicProfile = () => {
             </div>
           </div>
 
+          <div className={styles.separator} />
+
           {tags?.length > 0 && (
             <div className={styles.tags}>
               {tags.map(tag => (
@@ -212,8 +214,6 @@ const PublicProfile = () => {
               ))}
             </div>
           )}
-
-          <div className={styles.separator} />
 
           <div className={styles.details}>
             {priceFrom && priceTo ? (
@@ -289,11 +289,11 @@ const PublicProfile = () => {
             )}
           </div>
           <div className={styles.visits}>
-  <FaRegEye />
-  <span>
-    Ten profil odwiedzono <strong>{profile?.visits ?? 0}</strong> razy
-  </span>
-</div>
+            <FaRegEye />
+            <span>
+              Ten profil odwiedzono <strong>{profile?.visits ?? 0}</strong> razy
+            </span>
+          </div>
 
         </div>
 

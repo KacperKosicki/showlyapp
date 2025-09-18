@@ -245,7 +245,7 @@
   height: 1px;
   background-color: #e0e0e0;
   margin: 1.5rem auto; // wyśrodkowanie
-  width: 70%;
+  width: 65%;
 }
 
 .details {
@@ -254,6 +254,7 @@
 
   .price {
     font-size: 1rem;
+    margin-top: 1.5rem;
     margin-bottom: 1.5rem;
 
     strong {
@@ -336,8 +337,9 @@
 }
 
 .commentInput {
-  margin-top: 1rem;
-  width: 100%;
+  margin: 1rem auto 0;
+  width: 90%;           // np. 90% szerokości
+  max-width: 500px;     // ograniczenie
   min-height: 80px;
   padding: 0.8rem;
   font-size: 0.95rem;
@@ -351,8 +353,10 @@
   display: block;
   font-size: 0.85rem;
   color: #777;
-  margin: 0.3rem 0;
-  text-align: right;
+  margin: 0.3rem auto 0;   // auto = wyśrodkowanie
+  width: 90%;              // taka sama szerokość jak .commentInput
+  max-width: 500px;        // takie samo ograniczenie
+  text-align: right;       // licznik wyrównany do prawej wewnątrz
 }
 
 .sendButton {
