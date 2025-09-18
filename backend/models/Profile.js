@@ -21,6 +21,7 @@ const profileSchema = new mongoose.Schema({
   tags: [String],
   priceFrom: Number,
   priceTo: Number,
+  visits: { type: Number, default: 0 },
   showAvailableDates: { type: Boolean, default: true },
   availableDates: [
     {

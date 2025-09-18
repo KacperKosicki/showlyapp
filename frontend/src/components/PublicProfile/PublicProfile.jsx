@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styles from './PublicProfile.module.scss';
-import { FaMapMarkerAlt, FaStar } from 'react-icons/fa';
-import Calendar from 'react-calendar';
+import { FaMapMarkerAlt, FaStar, FaRegEye } from 'react-icons/fa';
 import { auth } from '../../firebase';
 import 'react-calendar/dist/Calendar.css';
 import AlertBox from '../AlertBox/AlertBox';
@@ -289,6 +288,13 @@ const PublicProfile = () => {
               </div>
             )}
           </div>
+          <div className={styles.visits}>
+  <FaRegEye />
+  <span>
+    Ten profil odwiedzono <strong>{profile?.visits ?? 0}</strong> razy
+  </span>
+</div>
+
         </div>
 
         <div className={styles.reviewsBox}>

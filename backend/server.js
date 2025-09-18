@@ -8,6 +8,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// 🔐 jeżeli app stoi za proxy (Nginx/Cloudflare), to req.ip będzie poprawne
+app.set('trust proxy', true);
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '20mb' }));
@@ -18,19 +21,40 @@ mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('✅ Połączono z MongoDB (SHOWLY)'))
+.then(async () => {
+  console.log('✅ Połączono z MongoDB (SHOWLY)');
+
+  // ⛳️ Upewnij się, że indeksy dla VisitLock (TTL + unique) są założone
+  try {
+    const VisitLock = require('./models/VisitLock');
+    await VisitLock.syncIndexes();
+    console.log('✅ Indeksy VisitLock zsynchronizowane');
+  } catch (e) {
+    console.error('❌ Błąd synchronizacji indeksów VisitLock:', e);
+  }
+
+  // (opcjonalnie) zadbaj też o unikalne indeksy w Profile (slug, userId)
+  // Uwaga: na dużych kolekcjach może to potrwać przy pierwszym uruchomieniu.
+  try {
+    const Profile = require('./models/Profile');
+    await Profile.syncIndexes();
+    console.log('✅ Indeksy Profile zsynchronizowane');
+  } catch (e) {
+    console.error('❌ Błąd synchronizacji indeksów Profile:', e);
+  }
+})
 .catch(err => console.error('❌ Błąd połączenia z MongoDB:', err));
 
-// Przykładowa trasa testowa
+// Healthcheck
 app.get('/', (req, res) => {
   res.send('API Showly działa!');
 });
 
-//Profile
+// Profile
 const profilesRoutes = require('./routes/profiles');
 app.use('/api/profiles', profilesRoutes);
 
-//Uzytkownicy
+// Użytkownicy
 const usersRoutes = require('./routes/users');
 app.use('/api/users', usersRoutes);
 
@@ -38,7 +62,7 @@ app.use('/api/users', usersRoutes);
 const conversationRoutes = require('./routes/conversations');
 app.use('/api/conversations', conversationRoutes);
 
-//Rezerwacje
+// Rezerwacje
 const reservationRoutes = require('./routes/reservations');
 app.use('/api/reservations', reservationRoutes);
 

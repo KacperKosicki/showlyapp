@@ -15,29 +15,44 @@ const slugify = (text) =>
     .replace(/[^\w\-]+/g, '')
     .replace(/\-\-+/g, '-');
 
+const VisitLock = require('../models/VisitLock'); // 👈 NOWE
+
+function getViewerKey(req) {
+  const uid = req.headers.uid && String(req.headers.uid);
+  if (uid) return `uid:${uid}`;
+  const ip = req.ip || req.connection?.remoteAddress || '0.0.0.0';
+  const ua = (req.get('user-agent') || '').slice(0, 100);
+  return `ipua:${ip}:${ua}`;
+}
+
+async function canCountVisit(ownerUid, viewerKey) {
+  try {
+    const res = await VisitLock.updateOne(
+      { ownerUid, viewerKey },
+      { $setOnInsert: { createdAt: new Date() } },
+      { upsert: true }
+    );
+    return res.upsertedCount === 1 || !!res.upsertedId;
+  } catch (e) {
+    return false; // np. E11000 → duplikat → nie liczymy
+  }
+}
+
 // GET /api/profiles – tylko aktywne i ważne (wg visibleUntil)
 router.get('/', async (req, res) => {
   try {
-    const allProfiles = await Profile.find();
     const now = new Date();
-    const visibleProfiles = [];
-
-    for (const profile of allProfiles) {
-      if (profile.visibleUntil && profile.visibleUntil < now && profile.isVisible) {
-        profile.isVisible = false;
-        await profile.save();
-      }
-
-      if (profile.visibleUntil && profile.visibleUntil >= now && profile.isVisible) {
-        visibleProfiles.push(profile);
-      }
-    }
-
-    res.json(visibleProfiles);
-
-  } catch (error) {
-    console.error('❌ Błąd w GET /api/profiles:', error);
-    res.status(500).json({ message: 'Błąd pobierania profili', error });
+    await Profile.updateMany(
+      { isVisible: true, visibleUntil: { $lt: now } },
+      { $set: { isVisible: false } }
+    );
+    const visible = await Profile.find({
+      isVisible: true,
+      visibleUntil: { $gte: now }
+    });
+    res.json(visible);
+  } catch (e) {
+    res.status(500).json({ message: 'Błąd pobierania profili' });
   }
 });
 
@@ -76,6 +91,81 @@ router.get('/slug/:slug', async (req, res) => {
   } catch (err) {
     console.error('❌ Błąd w GET /slug/:slug:', err);
     res.status(500).json({ message: 'Błąd serwera.' });
+  }
+});
+
+// PATCH /api/profiles/:uid/visit — zlicz odwiedziny (anty-spam włączony)
+router.patch('/:uid/visit', async (req, res) => {
+  try {
+    const ownerUid = req.params.uid;
+    const viewerUid = req.headers.uid || null;
+
+    const profile = await Profile.findOne({ userId: ownerUid }).select('visits isVisible visibleUntil userId');
+    if (!profile) return res.status(404).json({ message: 'Nie znaleziono profilu.' });
+
+    const now = new Date();
+    if (!profile.isVisible || (profile.visibleUntil && profile.visibleUntil < now)) {
+      return res.status(403).json({ message: 'Profil niewidoczny/nieaktywny.' });
+    }
+
+    // nie licz własnych wejść
+    if (viewerUid && viewerUid === ownerUid) {
+      return res.json({ visits: profile.visits, skipped: true });
+    }
+
+    const viewerKey = getViewerKey(req);
+    const ok = await canCountVisit(ownerUid, viewerKey);
+    if (!ok) {
+      return res.json({ visits: profile.visits, throttled: true });
+    }
+
+    const updated = await Profile.findOneAndUpdate(
+      { userId: ownerUid },
+      { $inc: { visits: 1 } },
+      { new: true, select: 'visits' }
+    );
+
+    return res.json({ visits: updated.visits });
+  } catch (e) {
+    console.error('❌ Błąd /:uid/visit:', e);
+    return res.status(500).json({ message: 'Błąd serwera.' });
+  }
+});
+
+// PATCH /api/profiles/slug/:slug/visit — zlicz po slugu (anty-spam włączony)
+router.patch('/slug/:slug/visit', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const viewerUid = req.headers.uid || null;
+
+    const profile = await Profile.findOne({ slug }).select('userId visits isVisible visibleUntil');
+    if (!profile) return res.status(404).json({ message: 'Nie znaleziono profilu.' });
+
+    const now = new Date();
+    if (!profile.isVisible || (profile.visibleUntil && profile.visibleUntil < now)) {
+      return res.status(403).json({ message: 'Profil niewidoczny/nieaktywny.' });
+    }
+
+    if (viewerUid && viewerUid === profile.userId) {
+      return res.json({ visits: profile.visits, skipped: true });
+    }
+
+    const viewerKey = getViewerKey(req);
+    const ok = await canCountVisit(profile.userId, viewerKey);
+    if (!ok) {
+      return res.json({ visits: profile.visits, throttled: true });
+    }
+
+    const updated = await Profile.findOneAndUpdate(
+      { slug },
+      { $inc: { visits: 1 } },
+      { new: true, select: 'visits' }
+    );
+
+    return res.json({ visits: updated.visits });
+  } catch (e) {
+    console.error('❌ Błąd /slug/:slug/visit:', e);
+    return res.status(500).json({ message: 'Błąd serwera.' });
   }
 });
 

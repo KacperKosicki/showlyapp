@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './UserCard.module.scss';
-import { FaStar, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaStar, FaMapMarkerAlt, FaRegEye } from 'react-icons/fa';
 import AlertBox from '../AlertBox/AlertBox';
+import axios from 'axios';
 
 const UserCard = ({ user, currentUser }) => {
   const {
@@ -24,14 +25,17 @@ const UserCard = ({ user, currentUser }) => {
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [visits, setVisits] = useState(
+    typeof user.visits === 'number' ? user.visits : 0
+  );
 
   const navigate = useNavigate();
 
   const slugify = (text) =>
     text
       .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .replace(/\s+/g, '-')
       .replace(/[^\w-]+/g, '')
       .replace(/--+/g, '-')
@@ -39,6 +43,26 @@ const UserCard = ({ user, currentUser }) => {
       .replace(/-+$/, '');
 
   const slug = `${slugify(name)}-${slugify(role)}`;
+
+  // klik "ZOBACZ PROFIL" — nabij wizytę i przejdź
+  const handleViewProfile = async () => {
+    try {
+      if (user?.userId) {
+        const { data } = await axios.patch(
+          `${process.env.REACT_APP_API_URL}/api/profiles/${user.userId}/visit`,
+          null,
+          {
+            headers: currentUser?.uid ? { uid: currentUser.uid } : {},
+          }
+        );
+        if (typeof data?.visits === 'number') setVisits(data.visits);
+      }
+    } catch (_) {
+      // throttled/skipped → ignorujemy
+    } finally {
+      navigate(`/profil/${slug}`, { state: { scrollToId: 'profileWrapper' } });
+    }
+  };
 
   return (
     <>
@@ -50,7 +74,9 @@ const UserCard = ({ user, currentUser }) => {
           </div>
           <div className={styles.rating}>
             <FaStar />
-            <span>{rating} <small>({reviews})</small></span>
+            <span>
+              {rating} <small>({reviews})</small>
+            </span>
           </div>
         </div>
 
@@ -63,7 +89,9 @@ const UserCard = ({ user, currentUser }) => {
               {profileType === 'serwis' && 'SERWIS'}
               {profileType === 'społeczność' && 'SPOŁECZNOŚĆ'}
             </span>
-            <h3 className={styles.name}><span className={styles.receiverName}>{name}</span></h3>
+            <h3 className={styles.name}>
+              <span className={styles.receiverName}>{name}</span>
+            </h3>
             <p className={styles.role}>{role}</p>
           </div>
         </div>
@@ -76,7 +104,7 @@ const UserCard = ({ user, currentUser }) => {
             {description.length > 120 && (
               <button
                 className={styles.toggleButton}
-                onClick={() => setIsExpanded(prev => !prev)}
+                onClick={() => setIsExpanded((prev) => !prev)}
               >
                 {isExpanded ? 'Zwiń' : 'Pokaż więcej'}
               </button>
@@ -86,15 +114,17 @@ const UserCard = ({ user, currentUser }) => {
           <p className={styles.noDescription}>Użytkownik nie dodał jeszcze opisu.</p>
         )}
 
+        <div className={styles.separator} />
+
         {tags?.length > 0 && (
           <div className={styles.tags}>
-            {tags.map(tag => (
-              <span key={tag} className={styles.tag}>{tag.toUpperCase()}</span>
+            {tags.map((tag) => (
+              <span key={tag} className={styles.tag}>
+                {tag.toUpperCase()}
+              </span>
             ))}
           </div>
         )}
-
-        <div className={styles.separator} />
 
         <div className={styles.details}>
           {priceFrom && priceTo ? (
@@ -102,10 +132,12 @@ const UserCard = ({ user, currentUser }) => {
               Cennik od <strong>{priceFrom} zł</strong> do <strong>{priceTo} zł</strong>
             </p>
           ) : (
-            <p className={styles.price}>Cennik: <em>Brak danych</em></p>
+            <p className={styles.price}>
+              Cennik: <em>Brak danych</em>
+            </p>
           )}
 
-          {links?.filter(link => link.trim() !== '').length > 0 ? (
+          {links?.filter((link) => link.trim() !== '').length > 0 ? (
             <div className={styles.links}>
               {links.map((link, i) =>
                 link.trim() ? (
@@ -120,7 +152,8 @@ const UserCard = ({ user, currentUser }) => {
           )}
         </div>
 
-        {/* INFO O BRAKU REZERWACJI */}
+        <div className={styles.separator} />
+
         {!showAvailableDates && (
           <p className={styles.noReservationInfo}>
             Ten profil nie udostępnia wolnych terminów – możesz tylko napisać wiadomość do użytkownika.
@@ -143,7 +176,7 @@ const UserCard = ({ user, currentUser }) => {
                   return;
                 }
                 navigate(`/rezerwacja/${slug}`, {
-                  state: { userId: user.userId, availableDates }
+                  state: { userId: user.userId, availableDates },
                 });
               }}
             >
@@ -151,12 +184,10 @@ const UserCard = ({ user, currentUser }) => {
             </button>
           )}
 
-          <button
-            className={styles.buttonSecondary}
-            onClick={() => navigate(`/profil/${slug}`, { state: { scrollToId: 'profileWrapper' } })}
-          >
+          <button className={styles.buttonSecondary} onClick={handleViewProfile}>
             ZOBACZ PROFIL
           </button>
+
           {currentUser && currentUser.uid !== user.userId && (
             <button
               className={styles.buttonSecondary}
@@ -170,6 +201,15 @@ const UserCard = ({ user, currentUser }) => {
             </button>
           )}
         </div>
+
+        {/* licznik odwiedzin, żeby nie nachodził na przyciski */}
+        <div className={styles.visits}>
+          <FaRegEye />
+          <span>
+            Ten profil odwiedzono <strong>{visits}</strong> razy
+          </span>
+        </div>
+
       </div>
 
       {showAlert && (
@@ -177,8 +217,8 @@ const UserCard = ({ user, currentUser }) => {
           type="error"
           message={
             !currentUser
-              ? "Aby zarezerwować termin, musisz być zalogowany."
-              : "Nie możesz zarezerwować terminu u samego siebie."
+              ? 'Aby zarezerwować termin, musisz być zalogowany.'
+              : 'Nie możesz zarezerwować terminu u samego siebie.'
           }
         />
       )}
