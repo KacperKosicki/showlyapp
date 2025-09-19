@@ -31,6 +31,16 @@
   }
 }
 
+.miniAvatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid #ddd;
+  display: block;
+}
+
 .menu {
   position: absolute;
   top: 100%;
@@ -48,13 +58,17 @@
   pointer-events: none;
   transition: opacity 0.3s ease, transform 0.3s ease;
 
+  /* Stała (niewielka) szerokość – menu się nie „rozpycha” */
+  min-width: 240px;
+  max-width: 260px;
+
   &.visible {
     opacity: 1;
     transform: translateY(0);
     pointer-events: auto;
   }
 
-  // Trójkąt strzałki
+  /* Strzałka */
   &::before {
     content: '';
     position: absolute;
@@ -79,15 +93,33 @@
     font-family: $font-accent;
     color: $text-color;
     width: 100%;
+
+    /* Każdy przycisk jako kolumna (dla tytuł + podtytuł) */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    white-space: normal; /* pozwól łamać wiersze */
+  }
+
+  button:hover {
+    background: rgba(0, 0, 0, 0.04);
   }
 }
 
-.statusActive {
-  color: green;
-  font-weight: 600;
+/* Dwuliniowa pozycja – opcjonalny delikatny luz */
+.menuItemTwoLine {
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
 }
 
-.statusExpired {
-  color: red;
-  font-weight: 600;
+.itemTitle {
+  color: $text-color;
 }
+
+.itemSub {
+  color: $color-gray;
+}
+
+.statusActive { color: green; font-weight: 600; }
+.statusExpired { color: red;   font-weight: 600; }

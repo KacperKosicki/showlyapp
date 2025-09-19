@@ -1,30 +1,32 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import styles from './ThreadView.module.scss';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useLocation } from 'react-router-dom'; // jeśli jeszcze nie ma
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
 const ThreadView = ({ user, setUnreadCount }) => {
   const { threadId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+
   const [receiverId, setReceiverId] = useState(null);
   const [receiverProfile, setReceiverProfile] = useState(null);
   const [receiverName, setReceiverName] = useState('');
+
   const [canReply, setCanReply] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [profileStatus, setProfileStatus] = useState('loading');
 
-  const location = useLocation(); // umieść u góry komponentu
+  const [myProfileName, setMyProfileName] = useState('');
 
+  // scroll „po wejściu” z powiadomień
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo) return;
 
     let attempts = 0;
-
     const tryScroll = () => {
       const el = document.getElementById(scrollTo);
       if (el && el.offsetHeight > 0) {
@@ -32,19 +34,40 @@ const ThreadView = ({ user, setUnreadCount }) => {
         window.history.replaceState({}, document.title, location.pathname);
       } else if (attempts < 60) {
         attempts++;
-        setTimeout(tryScroll, 50); // ⏱️ dodaj małe opóźnienie zamiast `requestAnimationFrame`
+        setTimeout(tryScroll, 50);
       }
     };
-
     tryScroll();
-  }, [location.state, messages]);
+  }, [location.state, messages, location.pathname]);
+
+  // pobierz nazwę profilu po uid
+  const fetchProfileName = useCallback(async (uid) => {
+    try {
+      const r = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${uid}`);
+      const name = r?.data?.name?.trim();
+      return name || null;
+    } catch {
+      return null; // brak profilu
+    }
+  }, []);
+
+  // pobierz moją nazwę profilu
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!user?.uid) return;
+      const name = await fetchProfileName(user.uid);
+      if (mounted) setMyProfileName(name || '');
+    })();
+    return () => (mounted = false);
+  }, [user?.uid, fetchProfileName]);
 
   const fetchThread = useCallback(async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/conversations/${threadId}`, {
-        headers: { uid: user.uid }
-      });
-
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/conversations/${threadId}`,
+        { headers: { uid: user.uid } }
+      );
 
       const { messages: msgs, participants } = res.data;
       setMessages(msgs);
@@ -52,20 +75,22 @@ const ThreadView = ({ user, setUnreadCount }) => {
       const other = participants.find(p => p.uid !== user.uid);
       if (other) {
         setReceiverId(other.uid);
-        setReceiverName(other.name || 'Użytkownik');
+        const profileName = await fetchProfileName(other.uid);
+        setReceiverName(profileName || other.displayName || 'Użytkownik');
       }
 
       const last = msgs[msgs.length - 1];
       const isSystem = last?.isSystem;
       setCanReply(!isSystem && last?.fromUid !== user.uid);
 
-
+      // oznacz jako przeczytane
       const unreadInThread = msgs.filter(m => !m.read && m.toUid === user.uid);
       if (unreadInThread.length > 0) {
-        await axios.patch(`${process.env.REACT_APP_API_URL}/api/conversations/${threadId}/read`, null, {
-          headers: { uid: user.uid }
-        });
-
+        await axios.patch(
+          `${process.env.REACT_APP_API_URL}/api/conversations/${threadId}/read`,
+          null,
+          { headers: { uid: user.uid } }
+        );
         if (setUnreadCount) {
           setUnreadCount(prev => Math.max(prev - unreadInThread.length, 0));
         }
@@ -74,12 +99,13 @@ const ThreadView = ({ user, setUnreadCount }) => {
       console.error('❌ Błąd pobierania konwersacji:', err);
       if ([401, 403].includes(err.response?.status)) navigate('/');
     }
-  }, [threadId, user.uid, navigate, setUnreadCount]);
+  }, [threadId, user.uid, navigate, setUnreadCount, fetchProfileName]);
 
   useEffect(() => {
     fetchThread();
   }, [fetchThread]);
 
+  // pobierz pełny profil odbiorcy (FAQ)
   useEffect(() => {
     const fetchReceiverProfile = async () => {
       try {
@@ -88,23 +114,19 @@ const ThreadView = ({ user, setUnreadCount }) => {
           setReceiverProfile(null);
           return;
         }
-
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${receiverId}`);
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/profiles/by-user/${receiverId}`
+        );
         const prof = res.data;
         setReceiverProfile(prof);
 
-        // 👇 Opcjonalnie: jeśli backend zwraca visibleUntil albo isActive
         let expired = false;
-        if (prof?.visibleUntil) {
-          expired = new Date(prof.visibleUntil) < new Date();
-        }
-        if (prof?.isActive === false) {
-          expired = true;
-        }
-
+        if (prof?.visibleUntil) expired = new Date(prof.visibleUntil) < new Date();
+        if (prof?.isActive === false) expired = true;
         setProfileStatus(expired ? 'expired' : 'exists');
+
+        if (prof?.name?.trim()) setReceiverName(prof.name.trim());
       } catch (err) {
-        // 404 = brak profilu
         if (err.response?.status === 404) {
           setProfileStatus('missing');
           setReceiverProfile(null);
@@ -115,7 +137,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
         }
       }
     };
-
     fetchReceiverProfile();
   }, [receiverId]);
 
@@ -136,7 +157,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
         content: newMessage.trim()
       });
 
-
       setNewMessage('');
       setErrorMsg('');
       fetchThread();
@@ -150,44 +170,43 @@ const ThreadView = ({ user, setUnreadCount }) => {
     }
   };
 
+  const mySenderLabel = useMemo(() => {
+    if (myProfileName) return `Wyślesz wiadomość jako: ${myProfileName}`;
+    return 'Wyślesz wiadomość jako: Twoje konto';
+  }, [myProfileName]);
 
   return (
     <div id="threadPageLayout" className={styles.pageLayout}>
       <div className={`${styles.mainArea} ${!receiverProfile ? styles.centered : ''}`}>
-
-        {/* LEWA kolumna: wiadomości */}
         <div className={styles.threadWrapper}>
           <button
             onClick={() =>
-              navigate('/powiadomienia', {
-                state: { scrollToId: 'scrollToId' } // ⬅️ scrollujemy do id w Notifications
-              })
+              navigate('/powiadomienia', { state: { scrollToId: 'scrollToId' } })
             }
             className={styles.backButton}
           >
             ← Wróć do powiadomień
           </button>
 
-          <h2 className={styles.title}>Rozmowa z użytkownikiem <span className={styles.receiverName}>{receiverName}</span></h2>
+          <h2 className={styles.title}>
+            Rozmowa z&nbsp;<span className={styles.receiverName}>{receiverName}</span>
+          </h2>
 
           <div className={styles.thread}>
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`${styles.message} 
-      ${msg.fromUid === user.uid ? styles.own : styles.their} 
-      ${msg.isSystem ? styles.system : ''}`}
+                className={`${styles.message} ${msg.fromUid === user.uid ? styles.own : styles.their} ${msg.isSystem ? styles.system : ''}`}
               >
                 {!msg.isSystem && (
                   <p className={styles.author}>
-                    {msg.fromUid === user.uid ? user.name || 'Ty' : receiverName}
+                    {msg.fromUid === user.uid ? 'Ty' : receiverName}
                   </p>
                 )}
                 <p className={styles.content}>{msg.content}</p>
                 <p className={styles.time}>{new Date(msg.createdAt).toLocaleString()}</p>
               </div>
             ))}
-
           </div>
 
           {(() => {
@@ -207,17 +226,15 @@ const ThreadView = ({ user, setUnreadCount }) => {
               return (
                 <div className={styles.infoBox}>
                   <span className={styles.icon}>⏳</span>
-                  <p>
-                    Wysłałeś/aś wiadomość. Czekasz teraz na odpowiedź drugiej osoby, zanim napiszesz kolejną.
-                  </p>
+                  <p>Wysłałeś/aś wiadomość. Czekasz teraz na odpowiedź drugiej osoby.</p>
                 </div>
               );
             }
 
-            // ✅ tylko jeśli dozwolone jest odpisywanie
             if (canReply) {
               return (
                 <form onSubmit={handleReply} className={styles.form}>
+                  <div className={styles.senderHint}>{mySenderLabel}</div>
                   <textarea
                     placeholder="Napisz odpowiedź..."
                     value={newMessage}
@@ -229,7 +246,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
               );
             }
 
-            // fallback (teoretycznie niepotrzebny, ale na wszelki wypadek)
             return (
               <div className={styles.infoBox}>
                 <span className={styles.icon}>🚫</span>
@@ -241,41 +257,24 @@ const ThreadView = ({ user, setUnreadCount }) => {
           {errorMsg && <p className={styles.error}>{errorMsg}</p>}
         </div>
 
-        {/* PRAWA kolumna: FAQ / informacja o profilu */}
         {receiverId !== 'SYSTEM' && (
           <div className={styles.faqBoxWrapper}>
             <div className={styles.faqBox}>
               <div className={styles.quickAnswers}>
-                <h3>Najczęstsze pytania i odpowiedzi użytkownika <span className={styles.receiverName}>{receiverName}</span></h3>
-
-                {profileStatus === 'loading' && (
-                  <p className={styles.noFaq}>Ładowanie profilu…</p>
-                )}
-
-                {profileStatus === 'missing' && (
-                  <p className={styles.noFaq}>
-                    Użytkownik nie posiada jeszcze profilu.
-                  </p>
-                )}
-
-                {profileStatus === 'expired' && (
-                  <p className={styles.noFaq}>
-                    Profil użytkownika jest nieważny (wygasł).
-                  </p>
-                )}
-
-                {profileStatus === 'error' && (
-                  <p className={styles.noFaq}>
-                    Nie udało się pobrać informacji o profilu.
-                  </p>
-                )}
-
+                <h3>
+                  Najczęstsze pytania i odpowiedzi &nbsp;
+                  <span className={styles.receiverName}>{receiverName}</span>
+                </h3>
+                {profileStatus === 'loading' && <p className={styles.noFaq}>Ładowanie profilu…</p>}
+                {profileStatus === 'missing' && <p className={styles.noFaq}>Użytkownik nie posiada jeszcze profilu.</p>}
+                {profileStatus === 'expired' && <p className={styles.noFaq}>Profil użytkownika jest nieważny (wygasł).</p>}
+                {profileStatus === 'error' && <p className={styles.noFaq}>Nie udało się pobrać informacji o profilu.</p>}
                 {profileStatus === 'exists' && (
                   <>
                     {receiverProfile?.quickAnswers?.length > 0 &&
-                      receiverProfile.quickAnswers.some(
-                        qa => (qa.title || '').trim() || (qa.answer || '').trim()
-                      ) ? (
+                    receiverProfile.quickAnswers.some(
+                      qa => (qa.title || '').trim() || (qa.answer || '').trim()
+                    ) ? (
                       <ul>
                         {receiverProfile.quickAnswers
                           .filter(qa => (qa.title || '').trim() || (qa.answer || '').trim())
@@ -286,9 +285,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
                           ))}
                       </ul>
                     ) : (
-                      <p className={styles.noFaq}>
-                        Użytkownik nie dodał jeszcze żadnych pytań i odpowiedzi.
-                      </p>
+                      <p className={styles.noFaq}>Użytkownik nie dodał jeszcze żadnych pytań i odpowiedzi.</p>
                     )}
                   </>
                 )}

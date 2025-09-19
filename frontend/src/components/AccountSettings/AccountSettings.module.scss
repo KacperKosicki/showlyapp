@@ -1,0 +1,137 @@
+@import '../../styles/variables';
+
+.wrapper {
+  max-width: 760px;
+  margin: 2rem auto;
+  padding: 1rem;
+  font-family: $font-body;
+}
+
+h2 {
+  font-family: $font-heading;
+  margin: 0 0 .25rem;
+}
+
+.sub {
+  color: $color-gray;
+  margin: 0 0 1.25rem;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 1rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,.06);
+  padding: 1.25rem 1.25rem 1rem;
+  margin-bottom: 1rem;
+
+  h3 {
+    margin: 0 0 .75rem;
+    font-family: $font-heading;
+    color: $text-color;
+  }
+}
+
+.avatarRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.avatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #eee;
+  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  background: #fafafa;
+  flex: 0 0 84px;
+}
+
+.controls { display: flex; flex-direction: column; gap: .6rem; }
+
+.fileBtn {
+  display: inline-block;
+  padding: .5rem .9rem;
+  border-radius: 1rem;
+  border: 1px dashed #ccc;
+  cursor: pointer;
+  font-family: $font-accent;
+  color: $text-color;
+  input { display: none; }
+}
+
+.row { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+.inline {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.input {
+  flex: 1 1 260px;
+  min-width: 220px;
+  padding: .55rem .8rem;
+  border-radius: .75rem;
+  border: 1px solid #ccc;
+  font-size: .95rem;
+}
+
+.primary {
+  background: $primary-color;
+  color: #fff;
+  border: none;
+  padding: .55rem 1rem;
+  border-radius: 1.25rem;
+  cursor: pointer;
+  font-family: $font-accent;
+  &:disabled { opacity: .6; cursor: not-allowed; }
+}
+
+.secondary {
+  background: #fff;
+  color: $primary-color;
+  border: 2px solid $primary-color;
+  padding: .55rem 1rem;
+  border-radius: 1.25rem;
+  cursor: pointer;
+  font-family: $font-accent;
+}
+
+.ghost {
+  background: #fff;
+  color: #666;
+  border: 1px solid #ddd;
+  padding: .55rem 1rem;
+  border-radius: 1.25rem;
+  cursor: pointer;
+  font-family: $font-accent;
+}
+
+.hint {
+  color: #888;
+  font-size: 0.85rem;
+
+}
+
+.text {
+  color: $color-gray;
+  margin-bottom: .6rem;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.85);
+  color: #fff;
+  padding: .55rem .9rem;
+  border-radius: .75rem;
+  font-size: .9rem;
+  z-index: 9999;
+}

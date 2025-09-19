@@ -3,10 +3,16 @@ import styles from './UserDropdown.module.scss';
 import { FaChevronDown } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { signOut } from 'firebase/auth';
+import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../firebase';
 
-const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount, pendingReservationsCount }) => {
+const UserDropdown = ({
+  user,
+  refreshTrigger,
+  unreadCount,
+  setUnreadCount,
+  pendingReservationsCount
+}) => {
   const [open, setOpen] = useState(false);
   const [remainingDays, setRemainingDays] = useState(null);
   const [hasProfile, setHasProfile] = useState(false);
@@ -14,7 +20,19 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount, pendi
 
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
-  const location = useLocation(); // ⬅ reaguje na zmiany ścieżki
+  const location = useLocation();
+
+  // 👤 Upewnij się, że photoURL jest aktualne (szczególnie po Google SSO)
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      try {
+        if (u && !u.photoURL) {
+          await u.reload(); // często po Google photoURL wpada po reloadzie
+        }
+      } catch (_) {}
+    });
+    return () => unsub();
+  }, []);
 
   // 🔍 Sprawdzanie statusu wizytówki
   useEffect(() => {
@@ -22,7 +40,9 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount, pendi
       if (!user?.uid) return;
 
       try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`);
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`
+        );
         const profile = res.data;
 
         if (profile?.visibleUntil) {
@@ -33,6 +53,8 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount, pendi
           setIsVisible(profile.isVisible !== false && until > now);
           setRemainingDays(diff > 0 ? diff : 0);
           setHasProfile(true);
+        } else {
+          setHasProfile(!!profile);
         }
       } catch (err) {
         if (err.response?.status === 404) {
@@ -41,7 +63,6 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount, pendi
           console.error('❌ Błąd pobierania profilu:', err);
         }
       }
-
     };
 
     fetchProfile();
@@ -50,20 +71,24 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount, pendi
   // 🔔 Liczba nieprzeczytanych wiadomości
   useEffect(() => {
     const fetchUnread = async () => {
-      if (!user?.uid) return;
+      if (!user?.uid || !setUnreadCount) return;
 
       try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/conversations/by-uid/${user.uid}`);
-        const totalUnread = res.data.reduce((acc, convo) => acc + convo.unreadCount, 0);
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/conversations/by-uid/${user.uid}`
+        );
+        const totalUnread = res.data.reduce(
+          (acc, convo) => acc + (convo.unreadCount || 0),
+          0
+        );
         setUnreadCount(totalUnread);
       } catch (err) {
         console.error('❌ Błąd pobierania liczby wiadomości:', err);
       }
-
     };
 
     fetchUnread();
-  }, [user, refreshTrigger, location.pathname]); // aktualizuj przy każdej zmianie strony
+  }, [user, refreshTrigger, location.pathname, setUnreadCount]);
 
   // 👋 Zamknięcie dropdown po kliknięciu poza
   useEffect(() => {
@@ -84,13 +109,12 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount, pendi
       if (el) {
         setTimeout(() => {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100); // ⏱ małe opóźnienie by mieć pewność, że element istnieje
+        }, 100);
       }
     } else {
-      navigate(path, { state: { scrollToId } }); // przekaż scrollId do innej strony
+      navigate(path, { state: { scrollToId } });
     }
   };
-
 
   // 🔐 Wylogowanie
   const handleLogout = async () => {
@@ -103,14 +127,34 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount, pendi
     }
   };
 
+  const currentUser = auth.currentUser;
+  const displayEmail = user?.email || currentUser?.email || 'Konto';
+  const photoURL =
+    currentUser?.photoURL || user?.photoURL || user?.avatar || null;
+
   return (
     <div className={styles.dropdown} ref={dropdownRef}>
-      <div className={styles.trigger} onClick={() => setOpen(prev => !prev)}>
-        <span>{user.email}</span>
+      <div className={styles.trigger} onClick={() => setOpen((prev) => !prev)}>
+        {photoURL && (
+          <img
+            src={photoURL}
+            alt=""
+            className={styles.miniAvatar}
+            decoding="async"
+            referrerPolicy="no-referrer"
+          />
+        )}
+        <span>{displayEmail}</span>
         <FaChevronDown className={styles.icon} />
       </div>
 
       <div className={`${styles.menu} ${open ? styles.visible : ''}`}>
+        {/* Twoje konto */}
+        <button onClick={() => handleNavigate('/konto')}>
+          Twoje konto
+        </button>
+
+        {/* Wizytówka (dwuliniowo) */}
         {!hasProfile && (
           <button onClick={() => handleNavigate('/create-profile', 'scrollToId')}>
             Stwórz wizytówkę
@@ -118,26 +162,37 @@ const UserDropdown = ({ user, refreshTrigger, unreadCount, setUnreadCount, pendi
         )}
 
         {hasProfile && (
-          <button onClick={() => handleNavigate('/your-profile', 'scrollToId')}>
-            Twoja wizytówka:{' '}
+          <button
+            onClick={() => handleNavigate('/your-profile', 'scrollToId')}
+            className={styles.menuItemTwoLine}
+          >
+            <span className={styles.itemTitle}>Twoja wizytówka</span>
             {isVisible ? (
-              <span className={styles.statusActive}>Pozostało {remainingDays} dni</span>
+              <span className={`${styles.itemSub} ${styles.statusActive}`}>
+                Pozostało {remainingDays} dni
+              </span>
             ) : (
-              <span className={styles.statusExpired}>Wygasła</span>
+              <span className={`${styles.itemSub} ${styles.statusExpired}`}>
+                Wygasła
+              </span>
             )}
           </button>
         )}
 
+        {/* Powiadomienia */}
         <button onClick={() => handleNavigate('/powiadomienia', 'scrollToId')}>
           Powiadomienia {unreadCount > 0 && <strong>({unreadCount})</strong>}
         </button>
 
+        {/* Rezerwacje */}
         <button onClick={() => handleNavigate('/rezerwacje')}>
-          Rezerwacje {pendingReservationsCount > 0 && (
+          Rezerwacje{' '}
+          {Number(pendingReservationsCount) > 0 && (
             <strong className={styles.badge}>({pendingReservationsCount})</strong>
           )}
         </button>
 
+        {/* Wylogowanie */}
         <button onClick={handleLogout}>Wyloguj</button>
       </div>
     </div>

@@ -60,6 +60,20 @@
   font-size: 1.3rem;
 }
 
+.senderHint {
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: $color-gray;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.senderHint strong {
+  color: var(--primary-color, #e50914);
+}
+
 // --- WRAPPER FAQ ---
 .faqBoxWrapper {
   width: 100%;

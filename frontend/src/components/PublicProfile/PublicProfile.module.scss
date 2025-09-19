@@ -422,6 +422,15 @@
   text-align: center;
 }
 
+.noLinks {
+  color: var(--text-muted, #888);
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+  padding: 0 1rem;
+  text-align: center;
+}
+
 .galleryWrapper {
   position: relative;
   width: 100%;

@@ -5,7 +5,7 @@ import axios from 'axios';
 import AlertBox from '../AlertBox/AlertBox';
 
 const MessageForm = ({ user }) => {
-  const { recipientId } = useParams();
+  const { recipientId } = useParams(); // firebaseUid właściciela profilu
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -14,13 +14,12 @@ const MessageForm = ({ user }) => {
   const [canSend, setCanSend] = useState(true);
   const [alert, setAlert] = useState(null);
   const [hasConversation, setHasConversation] = useState(false);
-  const [receiverName, setReceiverName] = useState(''); // nazwa UŻYTKOWNIKA
+  const [receiverName, setReceiverName] = useState(''); // <- NAZWA PROFILU (fallback: konto)
 
-  // płynny scroll po powrocie ze state.scrollToId
+  // płynny scroll po powrocie
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo) return;
-
     const timeout = setTimeout(() => {
       const tryScroll = () => {
         const el = document.getElementById(scrollTo);
@@ -33,49 +32,47 @@ const MessageForm = ({ user }) => {
       };
       requestAnimationFrame(tryScroll);
     }, 100);
-
     return () => clearTimeout(timeout);
   }, [location.state, location.pathname]);
 
-  // 👉 pobierz nazwę UŻYTKOWNIKA (nie profilu)
-  const fetchUserNameByUid = useCallback(async (uid) => {
-    if (!uid || uid === 'SYSTEM') {
-      setReceiverName('Nieznany użytkownik');
-      return;
-    }
+  // 1) spróbuj pobrać NAZWĘ PROFILU użytkownika (wizytówkę)
+  const fetchProfileNameByUid = useCallback(async (uid) => {
     try {
-      // spróbuj typowego endpointu użytkownika:
-      // dopasuj do swojego backendu (np. /api/users/by-uid/:uid lub /api/users/:uid)
-      const endpoints = [
-        `${process.env.REACT_APP_API_URL}/api/users/by-uid/${uid}`,
-        `${process.env.REACT_APP_API_URL}/api/users/${uid}`,
-      ];
-
-      let userObj = null;
-      for (const url of endpoints) {
-        try {
-          const res = await axios.get(url);
-          if (res?.data) { userObj = res.data; break; }
-        } catch (_) { /* próbujemy kolejny endpoint */ }
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${uid}`);
+      const prof = res.data;
+      if (prof?.name && prof.name.trim()) {
+        setReceiverName(prof.name.trim());
+        return true;
       }
-
-      const candidate =
-        userObj?.name ||
-        userObj?.displayName ||
-        userObj?.username ||
-        userObj?.fullName ||
-        userObj?.user?.name ||
-        userObj?.user?.displayName ||
-        '';
-
-      setReceiverName(candidate || 'Nieznany użytkownik');
-    } catch (err) {
-      console.error('❌ Błąd pobierania nazwy użytkownika:', err);
-      setReceiverName('Nieznany użytkownik');
+      return false;
+    } catch (e) {
+      // 404 => brak profilu, lecimy fallbackiem
+      return false;
     }
   }, []);
 
-  // sprawdź konwersację; jeśli istnieje – ustaw nazwę z participants
+  // 2) fallback do nazwy konta (displayName/name/email)
+  const fetchAccountLabelByUid = useCallback(async (uid) => {
+    try {
+      // jeśli masz endpoint identity – użyj jego:
+      // const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/identity/${uid}`);
+      // setReceiverName(res.data?.label || 'Użytkownik');
+
+      // jeśli nie – prosto po użytkowniku:
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/by-uid/${uid}`);
+      const u = res.data;
+      const label =
+        u?.displayName?.trim() ||
+        u?.name?.trim() ||
+        u?.email ||
+        'Użytkownik';
+      setReceiverName(label);
+    } catch {
+      setReceiverName('Użytkownik');
+    }
+  }, []);
+
+  // sprawdź konwersację i ustaw tytuł odbiorcy (profil > konto)
   const checkConversation = useCallback(async () => {
     try {
       const res = await axios.get(
@@ -83,40 +80,35 @@ const MessageForm = ({ user }) => {
       );
       setHasConversation(res.data.exists);
 
+      // NAZWA ODBIORCY: najpierw profil, jeśli brak – konto
+      const gotProfile = await fetchProfileNameByUid(recipientId);
+      if (!gotProfile) {
+        await fetchAccountLabelByUid(recipientId);
+      }
+
       if (res.data.exists) {
         setConversationId(res.data.id);
-
         const threadRes = await axios.get(
           `${process.env.REACT_APP_API_URL}/api/conversations/${res.data.id}`,
           { headers: { uid: user.uid } }
         );
-
-        const messages = threadRes.data?.messages || [];
-        const lastMsg = messages[messages.length - 1];
-        // Uwaga: w Twoim ThreadView jest fromUid — trzymamy spójnie
-        setCanSend(!lastMsg || lastMsg.fromUid !== user.uid);
-
-        // weź nazwę DRUGIEGO uczestnika z participants (user-level name)
-        const { participants = [] } = threadRes.data || {};
-        const other = participants.find(p => p.uid !== user.uid);
-        if (other?.name) {
-          setReceiverName(other.name);
-        } else {
-          // gdyby participants nie miało name — dobij do users
-          await fetchUserNameByUid(recipientId);
-        }
+        const msgs = threadRes.data?.messages || [];
+        const last = msgs[msgs.length - 1];
+        setCanSend(!last || last.fromUid !== user.uid);
       } else {
         setConversationId(null);
         setCanSend(true);
-        // brak konwersacji → pobierz nazwę użytkownika po uid
-        await fetchUserNameByUid(recipientId);
       }
     } catch (err) {
-      console.error('❌ Błąd sprawdzania konwersacji:', err);
-      // w razie błędu spróbuj chociaż pobrać nazwę użytkownika
-      await fetchUserNameByUid(recipientId);
+      // nawet przy błędzie spróbujmy ustawić etykietę odbiorcy
+      const gotProfile = await fetchProfileNameByUid(recipientId);
+      if (!gotProfile) {
+        await fetchAccountLabelByUid(recipientId);
+      }
+      setConversationId(null);
+      setCanSend(true);
     }
-  }, [user.uid, recipientId, fetchUserNameByUid]);
+  }, [user.uid, recipientId, fetchProfileNameByUid, fetchAccountLabelByUid]);
 
   useEffect(() => {
     checkConversation();
@@ -128,14 +120,14 @@ const MessageForm = ({ user }) => {
 
     try {
       await axios.post(`${process.env.REACT_APP_API_URL}/api/conversations/send`, {
-        from: user.uid,
-        to: recipientId,
+        from: user.uid,           // piszesz jako UŻYTKOWNIK (nazwa konta)
+        to: recipientId,          // do WŁAŚCICIELA PROFILU (nazwa profilu w UI)
         content: message.trim(),
       });
 
       setMessage('');
       setAlert({ type: 'success', message: 'Wiadomość wysłana!' });
-      setTimeout(() => navigate('/powiadomienia'), 2000);
+      setTimeout(() => navigate('/powiadomienia'), 1500);
     } catch (err) {
       if (err.response?.status === 403) {
         setCanSend(false);
@@ -180,8 +172,8 @@ const MessageForm = ({ user }) => {
         {hasConversation && (
           <p className={styles.info}>
             {canSend
-              ? '📖 Masz już konwersację z tym użytkownikiem. Twoja wiadomość zostanie do niej dodana.'
-              : '⌛️ Czekasz na odpowiedź drugiej osoby. Nie możesz wysłać kolejnej wiadomości.'}
+              ? '📖 Masz już konwersację z tym profilem. Twoja wiadomość zostanie do niej dodana.'
+              : '⌛️ Czekasz na odpowiedź drugiej strony. Nie możesz wysłać kolejnej wiadomości.'}
           </p>
         )}
 

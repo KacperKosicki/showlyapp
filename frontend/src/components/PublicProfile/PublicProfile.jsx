@@ -239,7 +239,7 @@ const PublicProfile = () => {
                 )}
               </ul>
             ) : (
-              <p className={styles.noDescription}>Użytkownik nie dodał jeszcze żadnych linków.</p>
+              <p className={styles.noLinks}>Użytkownik nie dodał jeszcze żadnych linków.</p>
             )}
 
             {!isOwner && (
@@ -294,7 +294,6 @@ const PublicProfile = () => {
               Ten profil odwiedzono <strong>{profile?.visits ?? 0}</strong> razy
             </span>
           </div>
-
         </div>
 
         <div className={styles.reviewsBox}>
@@ -347,7 +346,7 @@ const PublicProfile = () => {
       {profile.services?.length > 0 && (
         <div className={styles.servicesWrapper}>           {/* nowy wrapper */}
           <section className={styles.servicesSection} id="services">
-            <h3>Usługi użytkownika <span className={styles.spanName}>{name}</span></h3>
+            <h3>Usługi <span className={styles.spanName}>{name}</span></h3>
             {profile.services.length > 0 ? (
               <ul className={styles.servicesList}>
                 {profile.services.map((s, i) => (

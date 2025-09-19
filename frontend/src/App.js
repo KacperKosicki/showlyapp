@@ -22,6 +22,7 @@ import ThreadView from './components/ThreadView/ThreadView';
 import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 import BookingForm from './components/BookingForm/BookingForm';
 import ReservationList from './components/ReservationList/ReservationList';
+import AccountSettings from './components/AccountSettings/AccountSettings';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -195,6 +196,28 @@ function App() {
                   pendingReservationsCount={pendingReservationsCount}
                 />
                 <BookingForm user={user} />
+                <Footer />
+              </>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+        <Route
+          path="/konto"
+          element={
+            user ? (
+              <>
+                <Hero
+                  user={user}
+                  setUser={setUser}
+                  refreshTrigger={refreshTrigger}
+                  setRefreshTrigger={setRefreshTrigger}
+                  unreadCount={unreadCount}
+                  setUnreadCount={setUnreadCount}
+                  pendingReservationsCount={pendingReservationsCount}
+                />
+                <AccountSettings />
                 <Footer />
               </>
             ) : (

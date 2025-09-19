@@ -202,7 +202,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     <h3 className={styles.sectionTitle}>1. Dane podstawowe</h3>
 
                     <label>
-                        Imię i nazwisko / Nazwa:
+                        Nazwa Twojego profilu:
                         <input type="text" name="name" value={form.name} onChange={handleChange} maxLength={30} />
                         {formErrors.name && <small className={styles.error}>{formErrors.name}</small>}
                     </label>
