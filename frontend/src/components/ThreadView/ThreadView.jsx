@@ -20,12 +20,12 @@ const ThreadView = ({ user, setUnreadCount }) => {
   const [profileStatus, setProfileStatus] = useState('loading');
 
   const [myProfileName, setMyProfileName] = useState('');
+  const [channel, setChannel] = useState(null);
+  const [firstFromUid, setFirstFromUid] = useState(null);
 
-  // scroll „po wejściu” z powiadomień
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo) return;
-
     let attempts = 0;
     const tryScroll = () => {
       const el = document.getElementById(scrollTo);
@@ -40,18 +40,16 @@ const ThreadView = ({ user, setUnreadCount }) => {
     tryScroll();
   }, [location.state, messages, location.pathname]);
 
-  // pobierz nazwę profilu po uid
   const fetchProfileName = useCallback(async (uid) => {
     try {
       const r = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${uid}`);
       const name = r?.data?.name?.trim();
       return name || null;
     } catch {
-      return null; // brak profilu
+      return null;
     }
   }, []);
 
-  // pobierz moją nazwę profilu
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -69,8 +67,10 @@ const ThreadView = ({ user, setUnreadCount }) => {
         { headers: { uid: user.uid } }
       );
 
-      const { messages: msgs, participants } = res.data;
+      const { messages: msgs, participants, channel: ch, firstFromUid: ff } = res.data;
       setMessages(msgs);
+      setChannel(ch);
+      setFirstFromUid(ff || (msgs[0]?.fromUid ?? null));
 
       const other = participants.find(p => p.uid !== user.uid);
       if (other) {
@@ -80,10 +80,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
       }
 
       const last = msgs[msgs.length - 1];
-      const isSystem = last?.isSystem;
-      setCanReply(!isSystem && last?.fromUid !== user.uid);
+      setCanReply(!!last && !last.isSystem && last.fromUid !== user.uid);
 
-      // oznacz jako przeczytane
       const unreadInThread = msgs.filter(m => !m.read && m.toUid === user.uid);
       if (unreadInThread.length > 0) {
         await axios.patch(
@@ -91,9 +89,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
           null,
           { headers: { uid: user.uid } }
         );
-        if (setUnreadCount) {
-          setUnreadCount(prev => Math.max(prev - unreadInThread.length, 0));
-        }
+        if (setUnreadCount) setUnreadCount(prev => Math.max(prev - unreadInThread.length, 0));
       }
     } catch (err) {
       console.error('❌ Błąd pobierania konwersacji:', err);
@@ -101,11 +97,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
     }
   }, [threadId, user.uid, navigate, setUnreadCount, fetchProfileName]);
 
-  useEffect(() => {
-    fetchThread();
-  }, [fetchThread]);
+  useEffect(() => { fetchThread(); }, [fetchThread]);
 
-  // pobierz pełny profil odbiorcy (FAQ)
   useEffect(() => {
     const fetchReceiverProfile = async () => {
       try {
@@ -114,9 +107,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
           setReceiverProfile(null);
           return;
         }
-        const res = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/profiles/by-user/${receiverId}`
-        );
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${receiverId}`);
         const prof = res.data;
         setReceiverProfile(prof);
 
@@ -140,12 +131,25 @@ const ThreadView = ({ user, setUnreadCount }) => {
     fetchReceiverProfile();
   }, [receiverId]);
 
+  const amProfileSide = useMemo(() => {
+    if (!channel || !firstFromUid || !user?.uid) return false;
+    if (channel === 'account_to_profile') return user.uid !== firstFromUid;
+    if (channel === 'profile_to_account') return user.uid === firstFromUid;
+    return false;
+  }, [channel, firstFromUid, user?.uid]);
+
+  const mySenderLabel = useMemo(() => {
+    return amProfileSide
+      ? (myProfileName ? `Wyślesz wiadomość jako: ${myProfileName}` : 'Wyślesz wiadomość jako: Twoja wizytówka')
+      : 'Wyślesz wiadomość jako: Twoje konto';
+  }, [amProfileSide, myProfileName]);
+
   const handleReply = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
 
-    const lastMsg = messages[messages.length - 1];
-    if (!canReply || lastMsg?.isSystem) {
+    const last = messages[messages.length - 1];
+    if (!canReply || last?.isSystem) {
       setErrorMsg('Nie można odpowiadać na wiadomości systemowe.');
       return;
     }
@@ -154,7 +158,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
       await axios.post(`${process.env.REACT_APP_API_URL}/api/conversations/send`, {
         from: user.uid,
         to: receiverId,
-        content: newMessage.trim()
+        content: newMessage.trim(),
+        channel,                 // kanał wątku
+        conversationId: threadId // 👈 KLUCZOWE: dopinamy do TEGO wątku
       });
 
       setNewMessage('');
@@ -163,26 +169,21 @@ const ThreadView = ({ user, setUnreadCount }) => {
     } catch (err) {
       console.error('❌ Błąd wysyłania odpowiedzi:', err);
       if (err.response?.status === 403) {
-        setErrorMsg('Musisz poczekać na odpowiedź drugiej osoby.');
+        setErrorMsg(err.response.data?.message || 'Musisz poczekać na odpowiedź drugiej osoby.');
+      } else if (err.response?.data?.message) {
+        setErrorMsg(err.response.data.message);
       } else {
         setErrorMsg('Wystąpił błąd podczas wysyłania wiadomości.');
       }
     }
   };
 
-  const mySenderLabel = useMemo(() => {
-    if (myProfileName) return `Wyślesz wiadomość jako: ${myProfileName}`;
-    return 'Wyślesz wiadomość jako: Twoje konto';
-  }, [myProfileName]);
-
   return (
     <div id="threadPageLayout" className={styles.pageLayout}>
       <div className={`${styles.mainArea} ${!receiverProfile ? styles.centered : ''}`}>
         <div className={styles.threadWrapper}>
           <button
-            onClick={() =>
-              navigate('/powiadomienia', { state: { scrollToId: 'scrollToId' } })
-            }
+            onClick={() => navigate('/powiadomienia', { state: { scrollToId: 'scrollToId' } })}
             className={styles.backButton}
           >
             ← Wróć do powiadomień
@@ -272,15 +273,13 @@ const ThreadView = ({ user, setUnreadCount }) => {
                 {profileStatus === 'exists' && (
                   <>
                     {receiverProfile?.quickAnswers?.length > 0 &&
-                    receiverProfile.quickAnswers.some(
-                      qa => (qa.title || '').trim() || (qa.answer || '').trim()
-                    ) ? (
+                    receiverProfile.quickAnswers.some(qa => (qa.title || '').trim() || (qa.answer || '').trim()) ? (
                       <ul>
                         {receiverProfile.quickAnswers
                           .filter(qa => (qa.title || '').trim() || (qa.answer || '').trim())
                           .map((qa, i) => (
                             <li key={i}>
-                              <strong>{qa.title}</strong>{qa.answer}
+                              <strong>{qa.title}</strong> {qa.answer}
                             </li>
                           ))}
                       </ul>

@@ -4,23 +4,23 @@ import styles from './MessageForm.module.scss';
 import axios from 'axios';
 import AlertBox from '../AlertBox/AlertBox';
 
+const CHANNEL = 'account_to_profile'; // zawsze KONTO ➜ WIZYTÓWKA
+
 const MessageForm = ({ user }) => {
   const { recipientId } = useParams(); // firebaseUid właściciela profilu
   const navigate = useNavigate();
   const location = useLocation();
 
   const [message, setMessage] = useState('');
-  const [conversationId, setConversationId] = useState(null);
-  const [canSend, setCanSend] = useState(true);
   const [alert, setAlert] = useState(null);
-  const [hasConversation, setHasConversation] = useState(false);
-  const [receiverName, setReceiverName] = useState(''); // <- NAZWA PROFILU (fallback: konto)
+  const [receiverName, setReceiverName] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  // płynny scroll po powrocie
+  // płynny scroll
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo) return;
-    const timeout = setTimeout(() => {
+    const t = setTimeout(() => {
       const tryScroll = () => {
         const el = document.getElementById(scrollTo);
         if (el) {
@@ -32,10 +32,9 @@ const MessageForm = ({ user }) => {
       };
       requestAnimationFrame(tryScroll);
     }, 100);
-    return () => clearTimeout(timeout);
+    return () => clearTimeout(t);
   }, [location.state, location.pathname]);
 
-  // 1) spróbuj pobrać NAZWĘ PROFILU użytkownika (wizytówkę)
   const fetchProfileNameByUid = useCallback(async (uid) => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${uid}`);
@@ -45,20 +44,13 @@ const MessageForm = ({ user }) => {
         return true;
       }
       return false;
-    } catch (e) {
-      // 404 => brak profilu, lecimy fallbackiem
+    } catch {
       return false;
     }
   }, []);
 
-  // 2) fallback do nazwy konta (displayName/name/email)
   const fetchAccountLabelByUid = useCallback(async (uid) => {
     try {
-      // jeśli masz endpoint identity – użyj jego:
-      // const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/identity/${uid}`);
-      // setReceiverName(res.data?.label || 'Użytkownik');
-
-      // jeśli nie – prosto po użytkowniku:
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/by-uid/${uid}`);
       const u = res.data;
       const label =
@@ -72,43 +64,29 @@ const MessageForm = ({ user }) => {
     }
   }, []);
 
-  // sprawdź konwersację i ustaw tytuł odbiorcy (profil > konto)
+  // jeśli istnieje MÓJ wątek KONTO➜WIZYTÓWKA (starter = user.uid) → przekieruj
   const checkConversation = useCallback(async () => {
+    if (!user?.uid || !recipientId) return;
+
     try {
       const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/conversations/check/${user.uid}/${recipientId}`
+        `${process.env.REACT_APP_API_URL}/api/conversations/check/${user.uid}/${recipientId}?channel=${CHANNEL}&starter=${user.uid}`
       );
-      setHasConversation(res.data.exists);
 
-      // NAZWA ODBIORCY: najpierw profil, jeśli brak – konto
+      // nazwa adresata (profil -> fallback konto)
       const gotProfile = await fetchProfileNameByUid(recipientId);
-      if (!gotProfile) {
-        await fetchAccountLabelByUid(recipientId);
-      }
+      if (!gotProfile) await fetchAccountLabelByUid(recipientId);
 
-      if (res.data.exists) {
-        setConversationId(res.data.id);
-        const threadRes = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/conversations/${res.data.id}`,
-          { headers: { uid: user.uid } }
-        );
-        const msgs = threadRes.data?.messages || [];
-        const last = msgs[msgs.length - 1];
-        setCanSend(!last || last.fromUid !== user.uid);
-      } else {
-        setConversationId(null);
-        setCanSend(true);
+      if (res.data.exists && res.data.id) {
+        navigate(`/konwersacja/${res.data.id}`, { state: { scrollToId: 'threadPageLayout' } });
+        return; // nie pokazuj formularza
       }
-    } catch (err) {
-      // nawet przy błędzie spróbujmy ustawić etykietę odbiorcy
-      const gotProfile = await fetchProfileNameByUid(recipientId);
-      if (!gotProfile) {
-        await fetchAccountLabelByUid(recipientId);
-      }
-      setConversationId(null);
-      setCanSend(true);
+    } catch (_) {
+      // brak wątku lub błąd – pokaż formularz
+    } finally {
+      setLoading(false);
     }
-  }, [user.uid, recipientId, fetchProfileNameByUid, fetchAccountLabelByUid]);
+  }, [user?.uid, recipientId, navigate, fetchProfileNameByUid, fetchAccountLabelByUid]);
 
   useEffect(() => {
     checkConversation();
@@ -116,49 +94,52 @@ const MessageForm = ({ user }) => {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!message.trim() || !canSend) return;
+    if (!message.trim()) return;
 
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/conversations/send`, {
-        from: user.uid,           // piszesz jako UŻYTKOWNIK (nazwa konta)
-        to: recipientId,          // do WŁAŚCICIELA PROFILU (nazwa profilu w UI)
+      const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/conversations/send`, {
+        from: user.uid,         // piszesz jako KONTO
+        to: recipientId,        // do WŁAŚCICIELA PROFILU
         content: message.trim(),
+        channel: CHANNEL,       // KONTO ➜ WIZYTÓWKA
       });
 
       setMessage('');
       setAlert({ type: 'success', message: 'Wiadomość wysłana!' });
-      setTimeout(() => navigate('/powiadomienia'), 1500);
+
+      // po wysłaniu wejdź w świeży/odświeżony wątek
+      if (data?.id) {
+        setTimeout(() => {
+          navigate(`/konwersacja/${data.id}`, { state: { scrollToId: 'threadPageLayout' } });
+        }, 600);
+      } else {
+        setTimeout(() => navigate('/powiadomienia'), 800);
+      }
     } catch (err) {
       if (err.response?.status === 403) {
-        setCanSend(false);
-        setAlert({
-          type: 'error',
-          message: 'Musisz poczekać na odpowiedź drugiej osoby.',
-        });
+        setAlert({ type: 'error', message: 'Musisz poczekać na odpowiedź w tym wątku.' });
+      } else if (err.response?.data?.message) {
+        setAlert({ type: 'error', message: err.response.data.message });
       } else {
-        setAlert({
-          type: 'error',
-          message: 'Błąd podczas wysyłania wiadomości.',
-        });
+        setAlert({ type: 'error', message: 'Błąd podczas wysyłania wiadomości.' });
       }
     }
   };
+
+  if (loading) {
+    return (
+      <div id="messageFormContainer" className={styles.container}>
+        <div className={styles.wrapper}><p>Ładowanie…</p></div>
+      </div>
+    );
+  }
 
   return (
     <div id="messageFormContainer" className={styles.container}>
       <div className={styles.wrapper}>
         <h2 className={styles.conversationTitle}>
-          {hasConversation ? (
-            <>
-              Kontynuuj rozmowę z{' '}
-              <span className={styles.receiverName}>{receiverName}</span>
-            </>
-          ) : (
-            <>
-              Napisz wiadomość do{' '}
-              <span className={styles.receiverName}>{receiverName}</span>
-            </>
-          )}
+          Konto ➜ Wizytówka: napisz do{' '}
+          <span className={styles.receiverName}>{receiverName}</span>
         </h2>
 
         {alert && (
@@ -169,14 +150,6 @@ const MessageForm = ({ user }) => {
           />
         )}
 
-        {hasConversation && (
-          <p className={styles.info}>
-            {canSend
-              ? '📖 Masz już konwersację z tym profilem. Twoja wiadomość zostanie do niej dodana.'
-              : '⌛️ Czekasz na odpowiedź drugiej strony. Nie możesz wysłać kolejnej wiadomości.'}
-          </p>
-        )}
-
         <form onSubmit={handleSend}>
           <textarea
             className={styles.textarea}
@@ -184,11 +157,8 @@ const MessageForm = ({ user }) => {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Wpisz swoją wiadomość..."
             required
-            disabled={!canSend}
           />
-          <button type="submit" className={styles.button} disabled={!canSend}>
-            Wyślij wiadomość
-          </button>
+          <button type="submit" className={styles.button}>Wyślij wiadomość</button>
         </form>
       </div>
     </div>
