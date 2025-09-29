@@ -169,14 +169,18 @@ const Notifications = ({ user, setUnreadCount }) => {
               {variant === 'inbox' ? (
                 <>
                   <FiInbox className={styles.icon} />
-                  Otrzymałeś/aś wiadomość do Twojej <b>wizytówki</b> od{' '}
-                  <span className={styles.name}>{otherName}</span>
+                  <span className={styles.metaText}>
+                    Otrzymałeś/aś wiadomość do Twojej <b>wizytówki</b> od{' '}
+                    <span className={styles.name}>{otherName}</span>
+                  </span>
                 </>
               ) : (
                 <>
                   <FiSend className={styles.icon} />
-                  Rozmowa Twojego <b>konta</b> z wizytówką{' '}
-                  <span className={styles.name}>{otherName}</span>
+                  <span className={styles.metaText}>
+                    Rozmowa Twojego <b>konta</b> z wizytówką{' '}
+                    <span className={styles.name}>{otherName}</span>
+                  </span>
                 </>
               )}
             </span>
@@ -186,6 +190,7 @@ const Notifications = ({ user, setUnreadCount }) => {
               {isUnread && <span className={styles.dot} aria-hidden="true" />}
             </span>
           </div>
+
 
           <p className={styles.content}>{lastMsg.content}</p>
         </Link>

@@ -13,7 +13,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
   const [receiverId, setReceiverId] = useState(null);
   const [receiverProfile, setReceiverProfile] = useState(null);
-  const [receiverName, setReceiverName] = useState('');
+
+  const [accountName, setAccountName] = useState('');
+  const [profileName, setProfileName] = useState('');
 
   const [canReply, setCanReply] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -40,15 +42,19 @@ const ThreadView = ({ user, setUnreadCount }) => {
     tryScroll();
   }, [location.state, messages, location.pathname]);
 
-  const fetchProfileName = useCallback(async (uid) => {
-    try {
-      const r = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${uid}`);
-      const name = r?.data?.name?.trim();
-      return name || null;
-    } catch {
-      return null;
+const fetchProfileName = useCallback(async (uid) => {
+  try {
+    const r = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${uid}`);
+    const name = r?.data?.name?.trim();
+    return name || null;
+  } catch (err) {
+    if (err.response?.status === 404) {
+      return null; // brak profilu to normalny przypadek
     }
-  }, []);
+    console.error("❌ Błąd pobierania nazwy profilu:", err);
+    return null;
+  }
+}, []);
 
   useEffect(() => {
     let mounted = true;
@@ -73,11 +79,10 @@ const ThreadView = ({ user, setUnreadCount }) => {
       setFirstFromUid(ff || (msgs[0]?.fromUid ?? null));
 
       const other = participants.find(p => p.uid !== user.uid);
-      if (other) {
-        setReceiverId(other.uid);
-        const profileName = await fetchProfileName(other.uid);
-        setReceiverName(profileName || other.displayName || 'Użytkownik');
-      }
+if (other) {
+  setReceiverId(other.uid);
+  setAccountName(other.displayName || 'Użytkownik');
+}
 
       const last = msgs[msgs.length - 1];
       setCanReply(!!last && !last.isSystem && last.fromUid !== user.uid);
@@ -99,37 +104,56 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
   useEffect(() => { fetchThread(); }, [fetchThread]);
 
-  useEffect(() => {
-    const fetchReceiverProfile = async () => {
-      try {
-        if (!receiverId || receiverId === 'SYSTEM') {
-          setProfileStatus('missing');
-          setReceiverProfile(null);
-          return;
-        }
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${receiverId}`);
-        const prof = res.data;
-        setReceiverProfile(prof);
-
-        let expired = false;
-        if (prof?.visibleUntil) expired = new Date(prof.visibleUntil) < new Date();
-        if (prof?.isActive === false) expired = true;
-        setProfileStatus(expired ? 'expired' : 'exists');
-
-        if (prof?.name?.trim()) setReceiverName(prof.name.trim());
-      } catch (err) {
-        if (err.response?.status === 404) {
-          setProfileStatus('missing');
-          setReceiverProfile(null);
-        } else {
-          console.error('❌ Błąd pobierania profilu odbiorcy:', err);
-          setProfileStatus('error');
-          setReceiverProfile(null);
-        }
+useEffect(() => {
+  const fetchReceiverProfile = async () => {
+    try {
+      if (!receiverId || receiverId === 'SYSTEM') {
+        setProfileStatus('missing');
+        setReceiverProfile(null);
+        return;
       }
-    };
-    fetchReceiverProfile();
-  }, [receiverId]);
+
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${receiverId}`);
+      const prof = res.data;
+      setReceiverProfile(prof);
+
+      if (prof?.name?.trim()) {
+        setProfileName(prof.name.trim());
+      }
+
+      let expired = false;
+      if (prof?.visibleUntil) expired = new Date(prof.visibleUntil) < new Date();
+      if (prof?.isActive === false) expired = true;
+      setProfileStatus(expired ? 'expired' : 'exists');
+
+    } catch (err) {
+      if (err.response?.status === 404) {
+        setProfileStatus('missing'); // 👈 poprawnie oznaczamy brak profilu
+        setReceiverProfile(null);
+      } else {
+        console.error('❌ Błąd pobierania profilu odbiorcy:', err);
+        setProfileStatus('error');
+        setReceiverProfile(null);
+      }
+    }
+  };
+  fetchReceiverProfile();
+}, [receiverId, channel, firstFromUid]);
+
+  const receiverName = useMemo(() => {
+  if (channel === 'account_to_profile') {
+    // Jeśli Ty zacząłeś -> patrzysz na profil odbiorcy
+    if (firstFromUid === user.uid) return profileName || accountName;
+    // Jeśli ktoś pisał do Ciebie -> patrzysz na jego konto
+    return accountName || profileName;
+  }
+  if (channel === 'profile_to_account') {
+    // Możesz dopasować podobną logikę dla innych typów
+    return profileName || accountName;
+  }
+  return accountName || profileName || 'Użytkownik';
+}, [channel, firstFromUid, user.uid, profileName, accountName]);
+
 
   const amProfileSide = useMemo(() => {
     if (!channel || !firstFromUid || !user?.uid) return false;
@@ -143,6 +167,10 @@ const ThreadView = ({ user, setUnreadCount }) => {
       ? (myProfileName ? `Wyślesz wiadomość jako: ${myProfileName}` : 'Wyślesz wiadomość jako: Twoja wizytówka')
       : 'Wyślesz wiadomość jako: Twoje konto';
   }, [amProfileSide, myProfileName]);
+
+  const showFaq = receiverId !== 'SYSTEM' 
+  && channel === 'account_to_profile' 
+  && !amProfileSide;
 
   const handleReply = async (e) => {
     e.preventDefault();
@@ -180,7 +208,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
   return (
     <div id="threadPageLayout" className={styles.pageLayout}>
-      <div className={`${styles.mainArea} ${!receiverProfile ? styles.centered : ''}`}>
+      <div className={`${styles.mainArea} ${!showFaq ? styles.centered : ''}`}>
         <div className={styles.threadWrapper}>
           <button
             onClick={() => navigate('/powiadomienia', { state: { scrollToId: 'scrollToId' } })}
@@ -258,12 +286,13 @@ const ThreadView = ({ user, setUnreadCount }) => {
           {errorMsg && <p className={styles.error}>{errorMsg}</p>}
         </div>
 
-        {receiverId !== 'SYSTEM' && (
+        {/* ✅ używamy showFaq */}
+        {showFaq && (
           <div className={styles.faqBoxWrapper}>
             <div className={styles.faqBox}>
               <div className={styles.quickAnswers}>
                 <h3>
-                  Najczęstsze pytania i odpowiedzi &nbsp;
+                  Najczęstsze pytania i odpowiedzi&nbsp;
                   <span className={styles.receiverName}>{receiverName}</span>
                 </h3>
                 {profileStatus === 'loading' && <p className={styles.noFaq}>Ładowanie profilu…</p>}
@@ -273,7 +302,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
                 {profileStatus === 'exists' && (
                   <>
                     {receiverProfile?.quickAnswers?.length > 0 &&
-                    receiverProfile.quickAnswers.some(qa => (qa.title || '').trim() || (qa.answer || '').trim()) ? (
+                      receiverProfile.quickAnswers.some(qa => (qa.title || '').trim() || (qa.answer || '').trim()) ? (
                       <ul>
                         {receiverProfile.quickAnswers
                           .filter(qa => (qa.title || '').trim() || (qa.answer || '').trim())

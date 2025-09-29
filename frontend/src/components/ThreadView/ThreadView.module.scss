@@ -315,6 +315,40 @@
   }
 }
 
+.threadWrapper {
+  flex: 0 0 65%;
+  background: $secondary-bg;
+  border: 1px solid #ccc;
+  border-radius: 1rem;
+  padding: 2rem 1rem;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.06);
+  font-family: $font-body;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  min-height: 100%;
+
+  @media (max-width: 1024px) {
+    width: 100%;
+    margin-bottom: 2rem; // ✅ margines dolny na mobile
+    padding: 2rem 1rem;
+    height: unset;
+  }
+}
+
+.mainArea.centered {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  .threadWrapper {
+    flex: 0 1 auto !important;
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto 2rem auto;
+  }
+}
+
 // --- MOBILE ---
 @media (max-width: 800px) {
   .pageLayout {
