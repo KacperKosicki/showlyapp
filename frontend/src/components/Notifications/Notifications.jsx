@@ -234,8 +234,8 @@ const Notifications = ({ user, setUnreadCount }) => {
           <div>
             <h2 className={styles.sectionTitle}>Twoje powiadomienia</h2>
             <p className={styles.subTitle}>
-              <FiMail /> Zebraliśmy wiadomości do Twojego profilu
-              {myProfile?.name ? ` „${myProfile.name}”` : ''} oraz wątki wysłane z Twojego konta.
+              Zebraliśmy wiadomości do Twojego profilu
+              <span>{myProfile?.name ? `${myProfile.name}` : ''}</span> oraz wątki wysłane z <span>Twojego konta</span>
             </p>
           </div>
         </div>

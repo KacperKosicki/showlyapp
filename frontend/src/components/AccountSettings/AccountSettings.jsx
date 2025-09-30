@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import styles from './AccountSettings.module.scss';
 import { auth } from '../../firebase';
+import AlertBox from '../AlertBox/AlertBox';
 import {
   updateProfile,
   sendPasswordResetEmail,
@@ -15,15 +16,13 @@ export default function AccountSettings() {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(''); // ustawimy po onAuthStateChanged
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fallbackImg = '/images/other/no-image.png';
+  // ✅ AlertBox (typ + treść)
+  const [alert, setAlert] = useState(null); // { type: 'success'|'error'|'info'|'warning', message: string }
+  const showAlert = (type, message) => setAlert({ type, message });
 
-  const showMsg = (text) => {
-    setMsg(text);
-    setTimeout(() => setMsg(null), 3500);
-  };
+  const fallbackImg = '/images/other/no-image.png';
 
   // 🔄 wczytaj świeżego usera + dane z backendu
   useEffect(() => {
@@ -70,8 +69,8 @@ export default function AccountSettings() {
   const onFileChange = (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (!/^image\//.test(f.type)) return showMsg('Wybierz plik graficzny.');
-    if (f.size > 2 * 1024 * 1024) return showMsg('Maksymalny rozmiar to 2 MB.');
+    if (!/^image\//.test(f.type)) return showAlert('warning', 'Wybierz plik graficzny.');
+    if (f.size > 2 * 1024 * 1024) return showAlert('warning', 'Maksymalny rozmiar to 2 MB.');
     setFile(f);
     // natychmiastowy podgląd
     setPreview(URL.createObjectURL(f));
@@ -107,10 +106,10 @@ export default function AccountSettings() {
       // (opcjonalnie) możesz też PATCHnąć inne dane, ale avatar już jest zapisany przez POST
       setPreview(url);
       setFile(null);
-      showMsg('Zapisano nowy awatar ✅');
+      showAlert('success', 'Zapisano nowy awatar.');
     } catch (e) {
       console.error(e);
-      showMsg('Nie udało się zapisać awataru ❌');
+      showAlert('error', 'Nie udało się zapisać awataru.');
     } finally {
       setSaving(false);
     }
@@ -138,10 +137,10 @@ export default function AccountSettings() {
 
       setPreview(fallbackImg);
       setFile(null);
-      showMsg('Usunięto awatar ✅');
+      showAlert('success', 'Usunięto awatar.');
     } catch (e) {
       console.error(e);
-      showMsg('Nie udało się usunąć awataru ❌');
+      showAlert('error', 'Nie udało się usunąć awataru.');
     } finally {
       setSaving(false);
     }
@@ -164,23 +163,23 @@ export default function AccountSettings() {
         body: JSON.stringify({ displayName: clean }),
       }).catch(() => {});
 
-      showMsg('Zaktualizowano nazwę wyświetlaną ✅');
+      showAlert('success', 'Zaktualizowano nazwę wyświetlaną.');
     } catch (e) {
       console.error(e);
-      showMsg('Nie udało się zapisać nazwy ❌');
+      showAlert('error', 'Nie udało się zapisać nazwy.');
     } finally {
       setSaving(false);
     }
   };
 
   const handlePasswordReset = async () => {
-    if (!user?.email) return showMsg('Brak adresu e-mail.');
+    if (!user?.email) return showAlert('warning', 'Brak adresu e-mail.');
     try {
       await sendPasswordResetEmail(auth, user.email);
-      showMsg('Wysłaliśmy link do zmiany hasła 📧');
+      showAlert('info', 'Wysłaliśmy link do zmiany hasła.');
     } catch (e) {
       console.error(e);
-      showMsg('Nie udało się wysłać linku do resetu ❌');
+      showAlert('error', 'Nie udało się wysłać linku do resetu.');
     }
   };
 
@@ -190,9 +189,18 @@ export default function AccountSettings() {
 
   return (
     <div className={styles.wrapper}>
+      {/* ✅ Globalny AlertBox dla tego widoku */}
+      {alert && (
+        <AlertBox
+          type={alert.type}
+          message={alert.message}
+          onClose={() => setAlert(null)}
+        />
+      )}
+
       <h2>Twoje konto</h2>
       <p className={styles.sub}>
-        Zalogowany jako: <strong>{user?.email || '—'}</strong>
+        Pomyślnie zalogowano jako: <strong>{user?.email || '—'}</strong>
       </p>
 
       {/* AVATAR */}
@@ -268,8 +276,6 @@ export default function AccountSettings() {
           Wyślij link do zmiany hasła
         </button>
       </section>
-
-      {msg && <div className={styles.toast}>{msg}</div>}
     </div>
   );
 }

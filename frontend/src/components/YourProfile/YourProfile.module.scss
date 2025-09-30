@@ -39,7 +39,7 @@
   align-items: center;
   justify-content: space-between;
   gap: .75rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .headerText {
@@ -50,12 +50,6 @@
   h2 {
     margin: 0;
   }
-
-  .sub {
-    margin: 0;
-  }
-
-  /* nadpisuje .wrapper .sub tylko w headerze */
 }
 
 .headerActions {
