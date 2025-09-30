@@ -23,6 +23,13 @@
   }
 }
 
+.separator {
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 1.5rem auto; // wyśrodkowanie
+  width: 100%;
+}
+
 /* Opcjonalny alternatywny tytuł */
 .profileTitle {
   font-family: $font-heading;
@@ -739,6 +746,9 @@
   line-height: 38px;
   white-space: nowrap;
   flex: 0 0 auto;
+  background: #fff;
+  color: #c0392b;
+  border: 1px solid #c0392b;
 }
 
 /* --- Mobile: pozwól się łamać i wyglądać schludnie --- */

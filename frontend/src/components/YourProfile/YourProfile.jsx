@@ -356,7 +356,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
               )}
             </div>
 
-
             <div className={styles.inputBlock}>
               <label><FaIdBadge /> Typ profilu:</label>
               {isEditing ? (
@@ -379,7 +378,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 <p>{profile.profileType}</p>
               )}
             </div>
-
 
             <div className={styles.inputBlock}>
               <label><FaMapMarkerAlt /> Lokalizacja:</label>
@@ -406,7 +404,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
       <section className={styles.card}>
         <h3>Opis</h3>
-
         <div className={styles.descriptionBlock}>
           {isEditing ? (
             <>
@@ -442,10 +439,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         </div>
       </section>
 
-
       <section className={styles.card}>
         <h3>Dostępność i usługi</h3>
-
         {/* CENNIK */}
         <div className={styles.inputBlock}>
           <div className={styles.groupTitle}>
@@ -569,6 +564,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   </div>
                 </div>
               ))}
+
+              <div className={styles.separator} />
 
               {/* Nowa usługa */}
               <div className={styles.serviceEditRow}>
