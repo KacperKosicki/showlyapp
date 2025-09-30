@@ -99,7 +99,8 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
-    white-space: normal; /* pozwól łamać wiersze */
+    white-space: normal;
+    /* pozwól łamać wiersze */
   }
 
   button:hover {
@@ -121,5 +122,12 @@
   color: $color-gray;
 }
 
-.statusActive { color: green; font-weight: 600; }
-.statusExpired { color: red;   font-weight: 600; }
+.statusActive {
+  color: green;
+  font-weight: 600;
+}
+
+.statusExpired {
+  color: red;
+  font-weight: 600;
+}

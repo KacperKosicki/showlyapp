@@ -58,6 +58,7 @@ const Notifications = ({ user, setUnreadCount }) => {
       conversations
         .map((c) => c.withUid)
         .filter(Boolean)
+        .filter((uid) => uid !== 'SYSTEM')
         .filter((v, i, arr) => arr.indexOf(v) === i),
     [conversations]
   );
@@ -137,6 +138,13 @@ const Notifications = ({ user, setUnreadCount }) => {
     [accountToProfile, user.uid]
   );
 
+  // 5b) System
+  const systemConversations = useMemo(
+    () => conversations.filter((c) => c.channel === 'system'),
+    [conversations]
+  );
+  const systemUnread = systemConversations.reduce((a, c) => a + (c.unreadCount || 0), 0);
+
   const inboxUnread = inboxToMyProfile.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
   const outboxUnread = myAccountToOtherProfiles.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
 
@@ -147,17 +155,46 @@ const Notifications = ({ user, setUnreadCount }) => {
     const isUnread = (convo.unreadCount || 0) > 0;
     const otherUid = convo.withUid;
 
-    // INBOX → pokaż nazwę KONTA nadawcy
-    // OUTBOX → pokaż nazwę WIZYTÓWKI adresata
-    const otherName =
-      variant === 'inbox'
-        ? getName(otherUid, convo.withDisplayName, 'account')
-        : getName(otherUid, convo.withDisplayName, 'profile');
+    let header;
+    if (variant === 'inbox') {
+      const otherName = getName(otherUid, convo.withDisplayName, 'account');
+      header = (
+        <>
+          <FiInbox className={styles.icon} />
+          <span className={styles.metaText}>
+            Otrzymałeś/aś wiadomość do Twojego <b>profilu</b> od{' '}
+            <span className={styles.name}>{otherName}</span>
+          </span>
+        </>
+      );
+    } else if (variant === 'outbox') {
+      const otherName = getName(otherUid, convo.withDisplayName, 'profile');
+      header = (
+        <>
+          <FiSend className={styles.icon} />
+          <span className={styles.metaText}>
+            Rozmowa Twojego <b>konta</b> z wizytówką{' '}
+            <span className={styles.name}>{otherName}</span>
+          </span>
+        </>
+      );
+    } else {
+      // system
+      const sysName = (convo.withDisplayName || 'Showly.app').trim();
+      header = (
+        <>
+          <FiMail className={styles.icon} />
+          <span className={styles.metaText}>
+            Wiadomość systemowa od <span className={styles.name}>{sysName}</span>
+          </span>
+        </>
+      );
+    }
 
     return (
       <li
         key={convo._id}
-        className={`${styles.item} ${isUnread ? styles.unread : styles.read}`}
+        className={`${styles.item} ${isUnread ? styles.unread : styles.read} ${variant === 'system' ? styles.itemSystem : ''}`}
       >
         <Link
           to={`/konwersacja/${convo._id}`}
@@ -165,38 +202,18 @@ const Notifications = ({ user, setUnreadCount }) => {
           state={{ scrollToId: 'threadPageLayout' }}
         >
           <div className={styles.top}>
-            <span className={styles.meta}>
-              {variant === 'inbox' ? (
-                <>
-                  <FiInbox className={styles.icon} />
-                  <span className={styles.metaText}>
-                    Otrzymałeś/aś wiadomość do Twojej <b>wizytówki</b> od{' '}
-                    <span className={styles.name}>{otherName}</span>
-                  </span>
-                </>
-              ) : (
-                <>
-                  <FiSend className={styles.icon} />
-                  <span className={styles.metaText}>
-                    Rozmowa Twojego <b>konta</b> z wizytówką{' '}
-                    <span className={styles.name}>{otherName}</span>
-                  </span>
-                </>
-              )}
-            </span>
-
+            <span className={styles.meta}>{header}</span>
             <span className={styles.date}>
               {new Date(lastMsg.createdAt).toLocaleString()}
               {isUnread && <span className={styles.dot} aria-hidden="true" />}
             </span>
           </div>
-
-
           <p className={styles.content}>{lastMsg.content}</p>
         </Link>
       </li>
     );
   };
+
 
   const SkeletonItem = () => (
     <li className={`${styles.item} ${styles.skeletonItem}`}>
@@ -217,7 +234,7 @@ const Notifications = ({ user, setUnreadCount }) => {
           <div>
             <h2 className={styles.sectionTitle}>Twoje powiadomienia</h2>
             <p className={styles.subTitle}>
-              <FiMail /> Zebraliśmy wiadomości do Twojej wizytówki
+              <FiMail /> Zebraliśmy wiadomości do Twojego profilu
               {myProfile?.name ? ` „${myProfile.name}”` : ''} oraz wątki wysłane z Twojego konta.
             </p>
           </div>
@@ -235,7 +252,7 @@ const Notifications = ({ user, setUnreadCount }) => {
             <div className={styles.sectionGroup}>
               <div className={styles.groupHeader}>
                 <h3 className={styles.groupTitle}>
-                  Odebrane do Twojej wizytówki
+                  Otrzymane wiadomości do Twojego profilu
                   {myProfile?.name ? ` „${myProfile.name}”` : ''}
                 </h3>
                 <span className={styles.badge}>
@@ -244,7 +261,7 @@ const Notifications = ({ user, setUnreadCount }) => {
               </div>
 
               {inboxToMyProfile.length === 0 ? (
-                <p className={styles.emptyGroup}>Brak wiadomości do Twojej wizytówki.</p>
+                <p className={styles.emptyGroup}>Brak wiadomości do Twojego profilu.</p>
               ) : (
                 <ul className={styles.list}>
                   {inboxToMyProfile.map((c) => renderItem(c, 'inbox'))}
@@ -256,7 +273,7 @@ const Notifications = ({ user, setUnreadCount }) => {
             <div className={styles.sectionGroup}>
               <div className={styles.groupHeader}>
                 <h3 className={styles.groupTitle}>
-                  Rozmowy z innymi wizytówkami (Twoje konto)
+                  Rozmowy z innymi profilami (Twoje konto)
                 </h3>
                 <span className={styles.badge}>
                   {outboxUnread > 0 ? `${outboxUnread} nieprzeczyt.` : `${myAccountToOtherProfiles.length}`}
@@ -264,13 +281,31 @@ const Notifications = ({ user, setUnreadCount }) => {
               </div>
 
               {myAccountToOtherProfiles.length === 0 ? (
-                <p className={styles.emptyGroup}>Brak rozmów z innymi wizytówkami.</p>
+                <p className={styles.emptyGroup}>Brak rozmów z innymi profilami.</p>
               ) : (
                 <ul className={styles.list}>
                   {myAccountToOtherProfiles.map((c) => renderItem(c, 'outbox'))}
                 </ul>
               )}
             </div>
+            {/* SEGMENT 3: Wiadomości systemowe */}
+            <div className={styles.sectionGroup}>
+              <div className={styles.groupHeader}>
+                <h3 className={styles.groupTitle}>Wiadomości systemowe</h3>
+                <span className={styles.badge}>
+                  {systemUnread > 0 ? `${systemUnread} nieprzeczyt.` : `${systemConversations.length}`}
+                </span>
+              </div>
+
+              {systemConversations.length === 0 ? (
+                <p className={styles.emptyGroup}>Brak wiadomości systemowych.</p>
+              ) : (
+                <ul className={`${styles.list} ${styles.systemList}`}>
+                  {systemConversations.map((c) => renderItem(c, 'system'))}
+                </ul>
+              )}
+            </div>
+
           </>
         )}
       </div>

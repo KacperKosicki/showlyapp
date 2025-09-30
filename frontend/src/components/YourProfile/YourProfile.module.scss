@@ -1,271 +1,180 @@
 @import '../../styles/variables';
 
-.profile {
-  padding: 3rem 1rem;
+/* =========================
+   Layout (spójny z AccountSettings)
+   ========================= */
+.wrapper {
+  max-width: 820px;
+  margin: 2rem auto;
+  padding: 1rem;
   font-family: $font-body;
-  min-height: 100vh;
 
-  .profileTitle {
-    font-size: 1.6rem;
-    color: $text-color;
-    margin: 2rem 0;
+  h2 {
     font-family: $font-heading;
-    text-align: center;
+    margin: 0 0 .25rem;
+    text-align: left;
+    color: $text-color;
+    letter-spacing: .2px;
+  }
+
+  .sub {
+    color: $color-gray;
+    margin: 0 0 1.25rem;
   }
 }
 
-.card {
-  position: relative;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem;
-  border-radius: 1rem;
-  border: 1px solid #ccc;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2rem;
+/* Opcjonalny alternatywny tytuł */
+.profileTitle {
+  font-family: $font-heading;
+  margin: 0 0 1.25rem;
   text-align: center;
-
-  @media (max-width: 768px) {
-    padding: 1rem;
-  }
+  color: $text-color;
+  font-size: 1.6rem;
+  letter-spacing: .2px;
 }
 
-.avatarTop {
+/* Pasek nagłówka strony profilu */
+.headerBar {
   display: flex;
-  justify-content: center;
-  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: 1rem;
 }
 
-.avatarWrapper {
-  position: relative;
-  width: 160px;
-  height: 160px;
-
-  .avatar {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 4px solid $primary-color;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-    transition: transform 0.3s;
-
-    &:hover {
-      transform: scale(1.05);
-    }
-  }
-
-  .avatarOverlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 0.4rem 0;
-    background: rgba(0, 0, 0, 0.5);
-    color: white;
-    font-size: 0.75rem;
-    font-family: $font-accent;
-    text-align: center;
-    border-radius: 0 0 50% 50%;
-    pointer-events: none;
-  }
-}
-
-.right {
-  width: 100%;
-  max-width: 600px;
+.headerText {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  text-align: left;
+  gap: .2rem;
+
+  h2 {
+    margin: 0;
+  }
+
+  .sub {
+    margin: 0;
+  }
+
+  /* nadpisuje .wrapper .sub tylko w headerze */
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+
+  button {
+    white-space: nowrap;
+  }
+}
+
+/* Mobile – układ w kolumnie, przycisk do prawej krawędzi */
+@media (max-width: 560px) {
+  .headerBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .headerActions {
+    justify-content: flex-end;
+  }
+}
+
+/* =========================
+   Karty
+   ========================= */
+.card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 1rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .06);
+  padding: 1.25rem 1.25rem 1rem;
+  margin-bottom: 1rem;
 
   h3 {
-    font-size: 1.5rem;
-    color: $text-color;
+    margin: 0 0 .75rem;
     font-family: $font-heading;
-    text-align: center;
+    color: $text-color;
+    text-align: left;
+    font-size: 1.25rem;
   }
+}
+
+/* Komunikat o niewidoczności wizytówki */
+.expiredNotice {
+  border-color: #ffb3b3;
+  background: #fff5f5;
 
   p {
-    font-size: 0.95rem;
-    color: $text-color;
-    line-height: 1.5;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    word-break: break-word;
-
-    svg {
-      color: $primary-color;
-      flex-shrink: 0;
-    }
-
-    strong {
-      font-weight: 600;
-      color: $text-color;
-    }
-
-    small {
-      color: red;
-      font-size: 0.8rem;
-      margin-left: 2rem;
-    }
+    margin: .25rem 0;
   }
 
-  textarea {
-    @extend .formTextarea;
+  .secondary {
+    margin-top: .5rem;
   }
 }
 
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.3rem;
-
-  span {
-    background-color: $primary-color;
-    color: white;
-    padding: 0.4rem 1rem;
-    border-radius: 1rem;
-    font-size: 0.85rem;
-    font-family: $font-accent;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-}
-
-.tagsWrapper,
-.linksWrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  margin-top: 0.4rem;
-
-  .formInput {
-    flex: 1 1 30%;
-    min-width: 100px;
-  }
-
-  @media (max-width: 480px) {
-    .formInput {
-      flex: 1 1 100%;
-    }
-  }
-}
-
-.linkSection {
-  margin-top: 1rem;
-}
-
-.links {
-  margin-top: 0.4rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-
-  a {
-    color: $primary-color;
-    text-decoration: underline;
-    word-break: break-word;
-    font-family: $font-accent;
-
-    &:hover {
-      color: darken($primary-color, 10%);
-    }
-  }
-}
-
-.noProfile {
-  text-align: center;
-  padding: 3rem;
-
-  p {
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
-    color: $text-color;
-  }
-
-  .createLink {
-    display: inline-block;
-    background: $primary-color;
-    color: white;
-    padding: 0.8rem 1.6rem;
-    border-radius: 1.5rem;
-    text-decoration: none;
-    font-family: $font-accent;
-    transition: background 0.3s;
-
-    &:hover {
-      background: darken($primary-color, 10%);
-    }
-  }
-}
-
-.loading {
-  text-align: center;
-  padding: 3rem;
-  font-size: 1.2rem;
-  color: $text-color;
-}
-
-.editTopRight {
-  position: absolute;
-  top: 1.2rem;
-  right: 1.5rem;
+/* =========================
+   Przyciski (spójne z AccountSettings)
+   ========================= */
+.primary {
   background: $primary-color;
-  color: white;
+  color: #fff;
   border: none;
-  border-radius: 1rem;
-  padding: 0.4rem 1rem;
-  font-family: $font-accent;
-  font-size: 0.9rem;
-  font-weight: 600;
+  padding: .55rem 1rem;
+  border-radius: 1.25rem;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-  transition: background 0.3s ease;
+  font-family: $font-accent;
+  font-weight: 600;
+  transition: background .2s ease, transform .15s ease;
 
   &:hover {
     background: darken($primary-color, 10%);
+    transform: translateY(-1px);
   }
 
-  @media (max-width: 480px) {
-    top: 0.8rem;
-    right: 1rem;
-    font-size: 0.85rem;
-    padding: 0.3rem 0.8rem;
-  }
-}
-
-
-.editButtons {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-
-  button {
-    flex: 1;
-    padding: 0.6rem;
-    border-radius: 1.5rem;
-    font-weight: bold;
-    font-family: $font-accent;
-    cursor: pointer;
-    border: none;
-  }
-
-  button:first-child {
-    background: #4caf50;
-    color: white;
-  }
-
-  button:last-child {
-    background: #ccc;
+  &:disabled {
+    opacity: .6;
+    cursor: not-allowed;
   }
 }
 
+.secondary {
+  background: #fff;
+  color: $primary-color;
+  border: 2px solid $primary-color;
+  padding: .55rem 1rem;
+  border-radius: 1.25rem;
+  cursor: pointer;
+  font-family: $font-accent;
+  font-weight: 600;
+  transition: background .2s ease, color .2s ease;
+
+  &:hover {
+    background: $primary-color;
+    color: #fff;
+  }
+}
+
+.ghost {
+  background: #fff;
+  color: #666;
+  border: 1px solid #ddd;
+  padding: .55rem 1rem;
+  border-radius: 1.25rem;
+  cursor: pointer;
+  font-family: $font-accent;
+  transition: background .2s ease, transform .15s ease;
+
+  &:hover {
+    background: #f3f3f3;
+    transform: translateY(-1px);
+  }
+}
+
+/* =========================
+   Pola formularza
+   ========================= */
 .formInput {
   width: 100%;
   padding: 0.6rem 1rem;
@@ -273,7 +182,7 @@
   border: 1px solid #ccc;
   font-size: 1rem;
   font-family: $font-body;
-  transition: border 0.3s ease, box-shadow 0.3s ease;
+  transition: border 0.25s ease, box-shadow 0.25s ease, background .2s ease;
   background-color: white;
   color: $text-color;
 
@@ -287,10 +196,6 @@
     color: #999;
     font-style: italic;
   }
-
-  &.small {
-    max-width: 120px;
-  }
 }
 
 .formTextarea {
@@ -299,99 +204,260 @@
   min-height: 100px;
 }
 
-.pricingBlock {
+.hint {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+/* =========================
+   Avatar + sekcja obok
+   ========================= */
+.avatarRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #eee;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+  background: #fafafa;
+  flex: 0 0 110px;
+  transition: transform .25s ease;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+
+.inline {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.fileBtn {
+  display: inline-block;
+  padding: .5rem .9rem;
+  border-radius: 1rem;
+  border: 1px dashed #ccc;
+  cursor: pointer;
+  font-family: $font-accent;
+  color: $text-color;
+  background: #fff;
+  transition: background .2s ease, border-color .2s ease;
+
+  &:hover {
+    background: #fafafa;
+    border-color: #bbb;
+  }
+
+  input {
+    display: none;
+  }
+}
+
+/* =========================
+   DANE PODSTAWOWE — wyśrodkowane
+   ========================= */
+.basicInfoRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.basicInfoRow .avatarRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .75rem;
+}
+
+.basicInfoRow .avatar {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #eee;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
+  background: #fafafa;
+  flex: 0 0 84px;
+}
+
+.basicInfoRow .controls {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  align-items: center;
+  text-align: center;
+}
+
+/* Przycisk wyboru pliku */
+.fileBtn {
+  display: inline-block;
+  padding: .5rem .9rem;
+  border-radius: 1rem;
+  border: 1px dashed #ccc;
+  cursor: pointer;
+  font-family: $font-accent;
+  color: $text-color;
+  background: #fff;
+
+  input {
+    display: none;
+  }
+}
+
+.hint {
+  color: #888;
+  font-size: .85rem;
+}
+
+/* Grid z trzema kapsułkami (rola / typ / lokalizacja) */
+.basicInfoCol {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  text-align: center;
+  justify-items: center;
+}
+
+/* Breakpointy */
+@media (min-width: 640px) {
+  .basicInfoCol {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 860px) {
+  .basicInfoCol {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Kapsułka */
+.basicInfoCol .inputBlock {
+  max-width: 340px;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 1rem;
+  padding: .9rem 1rem;
+  background: linear-gradient(180deg, #fafbfd 0%, #f6f7f9 100%);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .05);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .15s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: #d3d3d3;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
+  }
+
   label {
-    display: block;
-    margin-top: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    margin: 0 0 .35rem;
+    font-weight: 700;
+    color: $text-color;
 
-    input {
-      display: block;
-      margin-top: 0.3rem;
-      width: 100%;
-    }
-
-    small {
-      color: red;
-      font-size: 0.8rem;
-      margin-top: 0.3rem;
-      display: block;
+    svg {
+      color: $primary-color;
+      flex-shrink: 0;
     }
   }
 
   p {
-    margin-top: 0.4rem;
-    font-size: 1rem;
+    margin: 0;
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: $text-color;
+    line-height: 1.45;
+    word-break: break-word;
+    text-align: center;
+  }
 
-    strong {
-      font-weight: 600;
-      color: $text-color;
+  .formInput {
+    margin-top: .15rem;
+    padding: .55rem .8rem;
+    border-radius: .75rem;
+    border: 1px solid #ccc;
+    font-size: .95rem;
+    background: #fcfcfc;
+    text-align: center;
+
+    &:focus {
+      background: #fff;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba($primary-color, .25);
+      outline: none;
     }
   }
 }
 
-.expiredNotice {
-  background: #fff3f3;
-  border: 1px solid #ff9999;
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-  border-radius: 1rem;
-  font-weight: bold;
-  color: #a10000;
-  text-align: center;
-
-  button {
-    margin-top: 1rem;
-    background: #a10000;
-    color: white;
-    padding: 0.8rem 1.8rem;
-    border: none;
-    border-radius: 1.5rem;
-    cursor: pointer;
-    font-family: $font-accent;
-    transition: background 0.3s ease;
-    font-weight: bold;
-
-    &:hover {
-      background: #c60000;
-    }
+/* Responsywność */
+@media (max-width: 768px) {
+  .basicInfoRow .avatar {
+    width: 90px;
+    height: 90px;
   }
 }
 
-.error {
-  color: red;
-  font-size: 0.8rem;
-  margin-top: 0.3rem;
-  font-weight: 500;
+@media (max-width: 480px) {
+  .basicInfoRow {
+    gap: 1rem;
+  }
+
+  .basicInfoRow .avatar {
+    width: 84px;
+    height: 84px;
+  }
+
+  .basicInfoCol .inputBlock {
+    max-width: 100%;
+  }
+
+  .basicInfoCol .inputBlock p {
+    font-size: .98rem;
+  }
 }
 
-.sectionTitle {
-  margin-top: 2rem;
-  font-size: 1.1rem;
-  color: $primary-color;
-  font-family: $font-heading;
-  border-left: 4px solid $primary-color;
-  padding-left: 0.8rem;
-}
-
+/* =========================
+   OPIS
+   ========================= */
 .descriptionBlock {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
-  margin-top: 0.5rem;
+  align-items: stretch;
+  gap: .6rem;
+  text-align: left;
 }
 
-.descriptionHeader {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: $text-color;
-
-  svg {
-    color: $primary-color;
-    font-size: 1.1rem;
-  }
+/* TYLKO pigułka w sekcji Opis ma nie rozciągać się na full width */
+.descriptionBlock .noInfo {
+  align-self: flex-start;
+  /* nadpisuje stretch dla tego jednego dziecka */
+  display: inline-flex;
+  /* zostawiamy pigułkę jako kompaktową */
+  width: auto;
+  max-width: 100%;
+  margin-top: .2rem;
+  /* delikatny odstęp jak w innych miejscach */
 }
 
 .descriptionText {
@@ -399,10 +465,67 @@
   color: $text-color;
   line-height: 1.6;
   white-space: pre-wrap;
-  font-family: $font-body;
+  text-align: left;
+  margin: 0;
+}
+
+.formTextarea {
+  width: 100%;
+  text-align: left;
+}
+
+.descMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-top: .2rem;
+}
+
+.descLeft,
+.descRight {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+.descRight .hint {
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .descMeta {
+    flex-wrap: wrap;
+  }
+
+  .descLeft {
+    order: 1;
+    width: 100%;
+  }
+
+  .descRight {
+    order: 2;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* =========================
+   Bloki treści
+   ========================= */
+.sectionTitle {
+  margin-top: 1.5rem;
+  font-size: 1.05rem;
+  font-family: $font-heading;
+  color: $text-color;
+  border-left: 4px solid $primary-color;
+  padding-left: .6rem;
+  letter-spacing: .2px;
 }
 
 .inputBlock {
+  margin-top: .6rem;
+
   label {
     display: flex;
     align-items: center;
@@ -423,361 +546,900 @@
   p {
     margin-top: 0.2rem;
     font-size: 0.95rem;
-    font-weight: 500;
-    color: $text-color;
-    font-family: $font-body;
+    color: #cc6600;
     line-height: 1.5;
+    word-break: break-word;
+  }
+}
+
+@import '../../styles/variables';
+
+/* =========================
+   Dostępność i usługi — spójny look & feel
+   ========================= */
+.groupTitle {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin: .35rem 0 .85rem;
+  font-family: $font-heading;
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: $text-color;
+
+  svg {
+    color: $primary-color;
+  }
+}
+
+.subsection {
+  margin-top: 1.1rem;
+  padding-top: .85rem;
+  border-top: 1px dashed rgba(0, 0, 0, .07);
+}
+
+/* =========================
+   Cennik
+   ========================= */
+.priceFields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .9rem 1rem;
+  align-items: start;
+  margin-top: .35rem;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.priceField {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+
+  .priceLabel {
+    font-weight: 600;
+    font-size: .92rem;
+    color: $text-color;
+  }
+
+  .formInput {
+    background: #fcfcfc;
+    transition: border .2s ease, box-shadow .2s ease, background .2s ease;
+
+    &:focus {
+      background: #fff;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba($primary-color, .18);
+      outline: none;
+    }
+  }
+
+  .error {
+    margin-top: .1rem;
+  }
+}
+
+.priceView {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .75rem 1rem;
+  list-style: none;
+  padding: 0;
+  margin: .35rem 0 0;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.priceItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .65rem .9rem;
+  background: linear-gradient(180deg, #fafbfd 0%, #f6f7f9 100%);
+  border: 1px solid #e9ecf1;
+  border-radius: .9rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .04);
+}
+
+.priceLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: $text-color;
+
+  &::before {
+    content: "";
+    width: .5rem;
+    height: .5rem;
+    border-radius: 999px;
+    background: $primary-color;
+    opacity: .85;
+  }
+}
+
+.priceAmount {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .3rem;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: .2px;
+  color: $text-color;
+  white-space: nowrap;
+}
+
+.priceCurrency {
+  font-weight: 600;
+  font-size: .9rem;
+  color: rgba($text-color, .65);
+}
+
+.priceNote {
+  margin-top: .5rem;
+  font-size: .9rem;
+  color: #6b7280;
+}
+
+/* =========================
+   Usługi (edycja + podgląd)
+   ========================= */
+.serviceEditRow {
+  display: flex !important;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: nowrap;
+  /* trzymaj jedną linię */
+  margin-bottom: .6rem;
+}
+
+/* Nazwa usługi: elastyczna kolumna, nie 100% szerokości */
+.serviceEditRow>.formInput[type="text"] {
+  flex: 1 1 360px;
+  min-width: 260px;
+  width: auto;
+  background: #fcfcfc;
+  /* nadpisuje globalne width:100% */
+}
+
+/* Prawy blok (czas + jednostka + usuń) */
+.serviceEditRow .inline {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+}
+
+/* Zbij szerokości inputów/selectów w prawej części */
+.serviceEditRow .inline .formInput {
+  width: auto;
+  /* kluczowe – wyłącza 100% */
+  flex: 0 0 auto;
+  text-align: left;
+}
+
+.serviceEditRow .inline input[type="number"].formInput {
+  width: 110px;
+  background: #fcfcfc;
+  text-align: center;
+}
+
+.serviceEditRow .inline select.formInput {
+  width: 150px;
+  /* stała, kompaktowa szerokość */
+  background: #fcfcfc;
+  min-width: 150px;
+}
+
+/* Przycisk Usuń: nie łamie się i wyrównany do środka linii */
+.serviceEditRow .inline .ghost {
+  height: 38px;
+  padding: 0 .9rem;
+  line-height: 38px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+/* --- Mobile: pozwól się łamać i wyglądać schludnie --- */
+@media (max-width: 640px) {
+  .serviceEditRow {
+    flex-wrap: wrap;
+  }
+
+  .serviceEditRow>.formInput[type="text"] {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+
+  .serviceEditRow .inline {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    row-gap: .5rem;
+  }
+
+  .serviceEditRow .inline input[type="number"].formInput {
+    width: 120px;
+  }
+
+  .serviceEditRow .inline select.formInput {
+    width: 160px;
+  }
+
+  .serviceEditRow .inline .ghost {
+    margin-left: auto;
+  }
+}
+
+/* Podgląd jako kapsuły */
+.serviceList {
+  list-style: none;
+  padding: 0;
+  margin: .35rem 0 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .6rem;
+    padding: .5rem .75rem;
+    background: #f8f9fb;
+    border: 1px solid #e9ecf1;
+    border-radius: .7rem;
+    margin-bottom: .55rem;
+
+    strong {
+      color: $text-color;
+    }
+
+    .durationBadge {
+      font-size: .82rem;
+      font-weight: 700;
+      color: $primary-color;
+      background: rgba($primary-color, .08);
+      border: 1px solid rgba($primary-color, .15);
+      padding: .15rem .55rem;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+  }
+}
+
+/* =========================
+   Tryb rezerwacji
+   ========================= */
+.inputBlock>label {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  font-weight: 700;
+  color: $text-color;
+
+  svg {
+    color: $primary-color;
+  }
+}
+
+.inputBlock select.formInput {
+  max-width: 100%;
+}
+
+/* =========================
+   Godziny pracy
+   ========================= */
+.inputBlock .inline {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+
+  input[type="time"].formInput {
+    min-width: 140px;
+    text-align: center;
+  }
+}
+
+/* =========================
+   Dni pracy (podgląd)
+   ========================= */
+.daysView {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  list-style: none;
+  padding: 0;
+  margin: .35rem 0 0;
+}
+
+.dayItem {
+  padding: .4rem .8rem;
+  background: linear-gradient(180deg, #fafbfd 0%, #f6f7f9 100%);
+  border: 1px solid #e9ecf1;
+  border-radius: .8rem;
+  font-weight: 600;
+  font-size: .9rem;
+  color: $text-color;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .05);
+  transition: transform .15s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.dayItemEmpty {
+  padding: .4rem .8rem;
+  border: 1px solid #eee;
+  border-radius: .8rem;
+  font-size: .9rem;
+  color: #888;
+  background: #f9f9f9;
+}
+
+.hoursRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .9rem 1rem;
+  align-items: start;
+  margin-top: .35rem;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hoursField {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.hoursLabel {
+  /* jak .priceField .priceLabel */
+  font-weight: 600;
+  font-size: .92rem;
+  color: $text-color;
+  letter-spacing: .2px;
+}
+
+.hoursInput {
+  width: auto;
+  /* wyłącza globalne width:100% */
+  min-width: 140px;
+  text-align: center;
+  background: #fcfcfc;
+  transition: border .2s ease, box-shadow .2s ease, background .2s ease;
+
+  &:focus {
+    background: #fff;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba($primary-color, .18);
+    outline: none;
+  }
+}
+
+.fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+  border: none;
+  padding: 0;
+  margin: .4rem 0 0;
+}
+
+.checkboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .42rem .75rem;
+  border: 1px solid #ddd;
+  border-radius: .8rem;
+  background: #fff;
+  font-size: .95rem;
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .1s ease;
+
+  &:hover {
+    background: #fafafa;
+    transform: translateY(-1px);
+  }
+
+  input {
+    accent-color: $primary-color;
+    cursor: pointer;
+  }
+
+  /* podkreśl zaznaczone */
+  input:checked+*,
+  input:checked~* {
+    color: $text-color;
+    font-weight: 600;
+  }
+
+  /* obrys przy zaznaczeniu */
+  &:has(input:checked) {
+    border-color: rgba($primary-color, .4);
+    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  }
+}
+
+/* =========================
+   Terminy dostępności – edycja
+   ========================= */
+.availableDatesForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+  margin-top: .6rem;
+
+  .formInput[type="date"],
+  .formInput[type="time"] {
+    flex: 1 1 160px;
+    min-width: 140px;
+    background: #fcfcfc;
+    text-align: center;
+  }
+
+  .primary {
+    height: 40px;
+    white-space: nowrap;
+    align-self: center;
+  }
+}
+
+/* =========================
+   Terminy dostępności – podgląd
+   ========================= */
+.slotList {
+  list-style: none;
+  margin: .65rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .65rem;
+}
+
+.slotItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+  padding: .7rem 1rem;
+  background: linear-gradient(180deg, #fafbfd 0%, #f6f7f9 100%);
+  border: 1px solid #e9ecf1;
+  border-radius: 1rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .05);
+  transition: transform .15s ease, box-shadow .15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .08);
+  }
+}
+
+.slotLeft {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+
+  &::after {
+    content: "";
+    display: block;
+    width: 1px;
+    height: 22px;
+    background: #e0e0e0;
+    margin-left: .75rem;
+  }
+}
+
+.slotDate {
+  font-weight: 700;
+  font-size: .95rem;
+  color: $text-color;
+}
+
+.slotRight {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: .25rem .65rem;
+  font-size: .82rem;
+  font-weight: 700;
+  border-radius: 999px;
+  background: rgba($primary-color, .08);
+  border: 1px solid rgba($primary-color, .15);
+  color: $primary-color;
+  white-space: nowrap;
+}
+
+.removeGhost {
+  height: 34px;
+  padding: 0 .9rem;
+  margin-left: .2rem;
+  font-size: .82rem;
+}
+
+/* Mobile tweaks */
+@media (max-width: 560px) {
+  .slotItem {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .slotLeft::after {
+    display: none;
+  }
+
+  .slotRight {
+    justify-content: flex-start;
+  }
+}
+
+/* =========================
+   Info / brak danych / błędy
+   ========================= */
+.noInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .7rem 1rem;
+  background-color: #fff8f3;
+  border: 1px solid #ffddcc;
+  border-radius: 1rem;
+  color: #cc6600;
+  font-size: .95rem;
+
+  span {
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+}
+
+.infoMuted {
+  background: #f6f7f9;
+  border: 1px solid #e9ecf1;
+  color: #5f6b7a;
+  padding: .7rem .95rem;
+  border-radius: .8rem;
+  font-size: .92rem;
+  margin-top: .45rem;
+}
+
+.error {
+  color: #e53935;
+  font-size: .8rem;
+  margin-top: .25rem;
+  font-weight: 500;
+}
+
+/* =========================
+   Drobne dostrojenia responsywne
+   ========================= */
+@media (max-width: 768px) {
+  .priceAmount {
+    font-size: 1.08rem;
   }
 }
 
 @media (max-width: 480px) {
-  .card {
-    padding: 1rem;
+  .groupTitle {
+    margin-bottom: .75rem;
   }
 
-  .expiredNotice {
-    font-size: 0.95rem;
-
-    button {
-      padding: 0.6rem 1.2rem;
-    }
+  .priceItem {
+    padding: .6rem .75rem;
   }
 
-  .tags span {
-    font-size: 0.8rem;
-    padding: 0.3rem 0.7rem;
-  }
-
-  .right p {
-    line-height: 1.4;
+  .serviceList li {
+    padding: .45rem .7rem;
   }
 }
 
-.quickAnswers {
+/* =========================
+   Linki i media — karta sekcji
+   ========================= */
+.mediaCard {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  border: 1px solid #e9ecf1;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .05);
+
+  .sectionTitle {
+    margin-bottom: .6rem;
+  }
+}
+
+/* =========================
+   TAGI — kapsuły i edycja
+   ========================= */
+.tags {
+  width: 100%;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 0.5rem;
+  font-weight: bold;
+  margin: 0.35rem 0 0;
+  /* spójnie z innymi listami */
+  justify-content: flex-start;
+  /* pełna szerokość, wyrównanie do lewej */
+}
 
-  .qaRow {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
+.tag {
+  border: 1px solid $primary-color;
+  color: $primary-color;
+  font-family: $font-accent;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 1rem;
+  transition: all 0.2s ease;
+  cursor: default;
+  /* nie musi być klikane */
+  background: #fff;
+
+  &:hover {
+    background-color: $primary-color;
+    color: #fff;
   }
 }
 
-.quickAnswersView {
-  margin-top: 0.6rem;
-  list-style: none;
-  padding-left: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
+.tagDot {
+  width: .46rem;
+  height: .46rem;
+  border-radius: 999px;
+  background: rgba(#fff, .95);
+  flex-shrink: 0;
+}
 
-  li {
-    background: #f9f9f9;
-    padding: 0.8rem 1rem;
-    border-radius: 1rem;
-    border: 1px solid #ccc;
-    font-family: $font-body;
-    font-size: 0.95rem;
-    color: $text-color;
+/* Edycja */
+.tagsWrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: .6rem;
 
-    strong {
-      color: $primary-color;
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+
+  .formInput {
+    text-align: center;
+    text-transform: uppercase;
+    /* tylko wygląd, wartości w JS zostają jak wpiszesz */
+    letter-spacing: .35px;
+    background: #fcfcff;
+    border-color: #e3e6ff;
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba($primary-color, .18);
+      background: #fff;
     }
   }
 }
 
+/* =========================
+   LINKI — karty
+   ========================= */
+.linksList {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: .35rem;
+}
+
+.linkPill {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  border: 1px solid $primary-color;
+  color: $primary-color;
+  font-family: $font-accent;
+  font-size: .82rem;
+  font-weight: 700;
+  padding: .38rem .8rem;
+  border-radius: 1rem;
+  text-decoration: none;
+  transition: all .2s ease;
+  background: #fff;
+
+  &:hover {
+    background: $primary-color;
+    color: #fff;
+  }
+}
+
+.extArrow {
+  opacity: .75;
+}
+
+/* Edycja linków – grid jak w innych sekcjach */
+.linksWrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: .6rem;
+  margin-top: .4rem;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.linkIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba($primary-color, .12);
+  border: 1px solid rgba($primary-color, .2);
+  font-size: .9rem;
+  flex-shrink: 0;
+}
+
+.linkText {
+  font-weight: 700;
+  letter-spacing: .2px;
+  word-break: break-word;
+  position: relative;
+
+  /* strzałka „zewnętrzny” */
+  &::after {
+    content: '↗';
+    margin-left: .35rem;
+    font-size: .85rem;
+    opacity: .55;
+  }
+}
+
+/* =========================
+   Galeria
+   ========================= */
 .galleryEditor {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
 
-  .photoItem {
-    position: relative;
+.photoItem {
+  position: relative;
+}
 
-    img {
-      width: 100%;
-      max-width: 400px;
-      height: auto;
-      border-radius: 1rem;
-      border: 1px solid #ccc;
-    }
+.photoItem img {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  border-radius: 1rem;
+  border: 1px solid #ccc;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .05);
+}
 
-    .photoButtons {
-      display: flex;
-      gap: 1rem;
-      margin-top: 0.4rem;
-
-      button,
-      label {
-        background: #eee;
-        border: none;
-        border-radius: 1.5rem;
-        padding: 0.5rem 1rem;
-        cursor: pointer;
-        font-family: $font-accent;
-        font-size: 0.9rem;
-
-        &:hover {
-          background: #ddd;
-        }
-      }
-
-      input {
-        display: none;
-      }
-    }
-  }
-
-  .addPhotoBtn {
-    background: #4caf50;
-    color: white;
-    border: none;
-    padding: 0.6rem 1.2rem;
-    border-radius: 1.5rem;
-    font-weight: bold;
-    font-family: $font-accent;
-    cursor: pointer;
-
-    &:hover {
-      background: darken(#4caf50, 10%);
-    }
-  }
+.photoButtons {
+  display: flex;
+  gap: .6rem;
+  margin-top: .5rem;
 }
 
 .galleryView {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 0.6rem;
+  gap: .8rem;
+  margin-top: .6rem;
 
   img {
     width: 100%;
     max-width: 300px;
     border-radius: 1rem;
-    border: 1px solid #ccc;
+    border: 1px solid #ddd;
   }
 }
 
-.noInfo {
+/* =========================
+   Edycja – przyciski zapisu/anulowania
+   ========================= */
+.editButtons {
   display: flex;
+  gap: .6rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+
+  .primary,
+  .ghost {
+    flex: 0 0 auto;
+  }
+}
+
+/* =========================
+   Info i błędy
+   ========================= */
+.noInfo {
+  display: inline-flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 0.5rem;
-  padding: 1rem;
+  gap: .5rem;
+  padding: .7rem 1rem;
   background-color: #fff8f3;
   border: 1px solid #ffddcc;
   border-radius: 1rem;
-  color: #cc6600 !important;
-  font-size: 0.95rem;
-  text-align: left;
-  word-break: break-word;
-  white-space: normal;
-  align-self: flex-start; // NIE CENTER!
-  margin-left: 0; // nadpisuje auto-centrowanie
-
-  .icon {
-    font-size: 1.5rem;
-    line-height: 1;
-  }
+  color: #cc6600;
+  font-size: .95rem;
 }
 
-@media (max-width: 1024px) {
-  .profile {
-    padding: 1rem;
-  }
-
-  .card {
-    padding: 2rem;
-  }
-
-  .right h3 {
-    font-size: 1.4rem;
-  }
-
-  .right p {
-    font-size: 0.95rem;
-  }
-
-  .descriptionText {
-    font-size: 0.95rem;
-  }
-
-  .galleryView img {
-    max-width: 100%;
-  }
-
-  .tags span {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem;
-  }
-
-  .editButtons {
-    gap: 0.8rem;
-  }
+.infoMuted {
+  background: #f6f7f9;
+  border: 1px solid #e9ecf1;
+  color: #5f6b7a;
+  padding: .65rem .9rem;
+  border-radius: .75rem;
+  font-size: .92rem;
 }
 
+.inputError {
+  border-color: #e53935 !important;
+}
+
+.error {
+  color: #e53935;
+  font-size: .8rem;
+  margin-top: .3rem;
+  font-weight: 500;
+}
+
+/* =========================
+   Toast
+   ========================= */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, .85);
+  color: #fff;
+  padding: .55rem .9rem;
+  border-radius: .75rem;
+  font-size: .9rem;
+  z-index: 9999;
+}
+
+/* =========================
+   Responsive
+   ========================= */
 @media (max-width: 768px) {
-  .profile {
-    padding: 1rem;
-  }
-
-  .card {
-    padding: 2rem;
-    gap: 1.5rem;
-  }
-
-  .avatarWrapper {
-    width: 130px;
-    height: 130px;
-  }
-
-  .right h3 {
-    font-size: 1.3rem;
-  }
-
-  .right p {
-    font-size: 0.9rem;
+  .avatar {
+    width: 90px;
+    height: 90px;
   }
 
   .formInput,
   .formTextarea {
-    font-size: 0.95rem;
-    padding: 0.6rem 1rem;
-  }
-
-  .editButtons {
-    flex-direction: column;
-
-    button {
-      width: 100%;
-    }
-  }
-
-  .quickAnswersView li {
-    font-size: 0.9rem;
-  }
-
-  .galleryEditor .photoItem img {
-    max-width: 100%;
+    font-size: .95rem;
+    padding: .55rem .9rem;
   }
 }
 
 @media (max-width: 480px) {
-  .profile {
-    padding: 1rem;
-  }
-
-  .card {
-    padding: 2rem;
-    gap: 1.2rem;
-  }
-
-  .avatarWrapper {
-    width: 110px;
-    height: 110px;
-  }
-
-  .right h3 {
-    font-size: 1.2rem;
-  }
-
-  .right p {
-    font-size: 0.85rem;
-    gap: 0.4rem;
-  }
 
   .formInput,
   .formTextarea {
-    font-size: 0.9rem;
-    padding: 0.5rem 0.9rem;
+    font-size: .9rem;
+    padding: .5rem .85rem;
   }
 
   .tags span {
-    font-size: 0.75rem;
-    padding: 0.3rem 0.6rem;
+    font-size: .75rem;
+    padding: .3rem .6rem;
   }
 
-  .editTopRight {
-    top: 0.8rem;
-    right: 1rem;
-    font-size: 0.8rem;
-    padding: 0.3rem 0.8rem;
+  .profileTitle {
+    font-size: 1.45rem;
   }
-
-  .quickAnswersView li {
-    font-size: 0.85rem;
-    padding: 0.6rem 0.8rem;
-  }
-
-  .galleryEditor .photoItem img {
-    max-width: 100%;
-  }
-
-  .noInfo {
-    font-size: 0.85rem;
-    padding: 1rem;
-  }
-}
-
-.serviceEditRow {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-  justify-content: space-around;
-}
-
-.serviceInput,
-.serviceSelect {
-  padding: 0.4rem 0.6rem;
-  border: 1px solid #ccc;
-  border-radius: 1rem;
-  font-size: 0.95rem;
-}
-
-.addServiceBtn {
-  background: #4caf50;
-  color: white;
-  padding: 0.4rem 0.8rem;
-  border: none;
-  border-radius: 1.5rem;
-  cursor: pointer;
-  transition: background 0.2s;
-
-  &:hover {
-    background: darken(#4caf50, 10%);
-  }
-}
-
-// Usuwanie usługi — czerwony
-.deleteServiceBtn {
-  background: #e53935; // mocna czerwień
-  color: white;
-  padding: 0.4rem 0.8rem;
-  border: none;
-  border-radius: 1.5rem;
-  cursor: pointer;
-  transition: background 0.2s;
-
-  &:hover {
-    background: darken(#e53935, 10%);
-  }
-}
-
-.serviceList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  li {
-    margin-bottom: 0.5rem;
-  }
-}
-
-/* na samym dole YourProfile.module.scss */
-.right p.noInfo {
-  display: inline-flex !important;
-  max-width: max-content;
 }

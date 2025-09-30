@@ -169,11 +169,14 @@ router.patch('/slug/:slug/visit', async (req, res) => {
   }
 });
 
-// POST /api/profiles – utwórz nowy profil z widocznością na 30 dni
 router.post('/', async (req, res) => {
   console.log('📦 Żądanie do /api/profiles:', req.body);
 
-  const { userId, name, role, location } = req.body;
+  // bezpieczne Stringi – żeby .trim() nie wywaliło przy undefined
+  const userId = String(req.body.userId || '');
+  const name = String(req.body.name || '');
+  const role = String(req.body.role || '');
+  const location = String(req.body.location || '');
 
   if (!userId || !name) {
     return res.status(400).json({ message: 'Brakuje userId lub name w danych profilu' });
@@ -185,7 +188,6 @@ router.post('/', async (req, res) => {
       role: role.trim(),
       location: location.trim()
     });
-
     if (existing) {
       return res.status(409).json({ message: 'Taka wizytówka już istnieje (imię + rola + lokalizacja).' });
     }
@@ -195,98 +197,91 @@ router.post('/', async (req, res) => {
       return res.status(409).json({ message: 'Ten użytkownik już posiada wizytówkę.' });
     }
 
-    // Generowanie unikalnego sluga
+    // slug
     const baseSlug = slugify(`${name}-${role}`);
-    let uniqueSlug = baseSlug;
-    let counter = 1;
-    while (await Profile.findOne({ slug: uniqueSlug })) {
-      uniqueSlug = `${baseSlug}-${counter++}`;
-    }
+    let uniqueSlug = baseSlug, i = 1;
+    while (await Profile.findOne({ slug: uniqueSlug })) uniqueSlug = `${baseSlug}-${i++}`;
 
     const newProfile = new Profile({
       ...req.body,
+      name: name.trim(),
+      role: role.trim(),
+      location: location.trim(),
       slug: uniqueSlug,
       isVisible: true,
-      visibleUntil: new Date(Date.now() + 1 * 60 * 1000) // 1 minuta do testów
+      visibleUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // ⚠️ już 30 dni, nie 1 min
     });
 
     await newProfile.save();
 
-    // 📩 AUTOMATYCZNA WIADOMOŚĆ SYSTEMOWA
-    const user = await User.findOne({ firebaseUid: userId });
-    if (user) {
-      const fromUid = 'SYSTEM';
-      const fromName = 'Showly.app';
-      const toUid = userId;
-      const toName = user.name || user.email;
-
-      const welcomeContent = `
-        🎉 Dziękujemy za utworzenie swojego profilu w Showly!
-
-        Twój profil jest już aktywny i dostępny publicznie. Od teraz możesz:
-        – otrzymywać wiadomości od innych użytkowników,
-        – zbierać opinie i oceny,
-        – promować swoją działalność lub pasję.
-
-        🔧 Co możesz teraz zrobić dalej?
-
-        👉 Dodaj zdjęcia – zaprezentuj swoje realizacje, miejsce pracy lub atmosferę działań  
-        👉 Dodaj usługi i ceny – pokaż, co oferujesz i w jakim zakresie cenowym  
-        👉 Dodaj linki do social mediów – YouTube, Instagram, TikTok, portfolio  
-        👉 Rozbuduj opis – uzupełnij informacje o sobie lub swojej działalności  
-        👉 Zbieraj opinie – poproś znajomych lub klientów o wystawienie oceny
-
-        W przyszłości pojawią się także nowe funkcje: rezerwacje, statystyki, galerie rozszerzone i wiele więcej.
-
-        Aplikacja jest obecnie w fazie testów – korzystasz z niej całkowicie za darmo. Wkrótce poprosimy Cię również o opinię i sugestie.
-
-        Dziękujemy, że pomagasz rozwijać Showly 💙
-
-        — Zespół Showly
-      `;
-
-      const existingConvo = await Conversation.findOne({
-        'participants.uid': { $all: [fromUid, toUid] }
-      });
-
-      if (existingConvo) {
-        existingConvo.messages.push({
-          fromUid,
-          fromName,
-          toUid,
-          toName,
-          content: welcomeContent,
-          isSystem: true
-        });
-        existingConvo.updatedAt = new Date();
-        await existingConvo.save();
-      } else {
-        await Conversation.create({
-          participants: [
-            { uid: fromUid, name: fromName },
-            { uid: toUid, name: toName }
-          ],
-          messages: [
-            {
-              fromUid,
-              fromName,
-              toUid,
-              toName,
-              content: welcomeContent,
-              isSystem: true
-            }
-          ]
-        });
-      }
-    }
-
+    // ✅ najpierw odpowiedź do frontu
     res.status(201).json({ message: 'Profil utworzony', profile: newProfile });
+
+    // 🔔 „fire-and-forget” – NIE czekamy, nie psujemy 201
+    queueMicrotask(async () => {
+      try {
+        const fromUid = 'SYSTEM';
+        const toUid = userId;                              // ← właściciel nowego profilu
+        const pairKey = [fromUid, toUid].sort().join('|');
+
+        const welcomeContent = [
+          '🎉 Dziękujemy za utworzenie profilu w Showly!',
+          '',
+          'Co dalej?',
+          '• Uzupełnij sekcję „Wygląd i opis” oraz dodaj usługi/cennik.',
+          '• Włącz wybrany tryb rezerwacji w ustawieniach profilu.',
+          '• Udostępnij link do swojej wizytówki znajomym lub klientom.',
+          '',
+          'Powodzenia! 👊'
+        ].join('\n');
+
+        // 1) Szukamy istniejącej konwersacji systemowej
+        let convo = await Conversation.findOne({ channel: 'system', pairKey }).exec();
+
+        if (!convo) {
+          // 2) Nie ma? Tworzymy NOWĄ konwersację z 1. wiadomością
+          convo = await Conversation.create({
+            channel: 'system',
+            pairKey,
+            participants: [{ uid: fromUid }, { uid: toUid }],
+            firstFromUid: fromUid,
+            messages: [{
+              fromUid: fromUid,
+              toUid: toUid,
+              content: welcomeContent,
+              isSystem: true,
+              createdAt: new Date()
+            }],
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            isClosed: false
+          });
+          console.log('✅ Utworzono wątek systemowy:', convo._id);
+        } else {
+          // 3) Jest? Dopinamy kolejną wiadomość
+          convo.messages.push({
+            fromUid: fromUid,
+            toUid: toUid,
+            content: welcomeContent,
+            isSystem: true,
+            createdAt: new Date()
+          });
+          convo.updatedAt = new Date();
+          await convo.save();
+          console.log('✅ Dopięto systemową wiadomość do wątku:', convo._id);
+        }
+      } catch (e) {
+        console.error('⚠️ Błąd tworzenia/dopinania wątku systemowego:', e);
+      }
+    });
+
 
   } catch (err) {
     console.error('❌ Błąd w POST /api/profiles:', err);
-    res.status(500).json({ message: 'Błąd tworzenia profilu', error: err });
+    return res.status(500).json({ message: 'Błąd tworzenia profilu' });
   }
 });
+
 
 // PATCH /api/profiles/extend/:uid – przedłuż widoczność profilu o 30 dni
 router.patch('/extend/:uid', async (req, res) => {
@@ -313,7 +308,7 @@ router.patch('/update/:uid', async (req, res) => {
     'avatar',
     'photos',
     'profileType', 'location', 'priceFrom', 'priceTo',
-    'availableDates', 'description', 'tags', 'links',
+    'role', 'availableDates', 'description', 'tags', 'links',
     'quickAnswers',
     'showAvailableDates',
     'services',

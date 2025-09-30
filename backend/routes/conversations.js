@@ -3,7 +3,7 @@ const router = express.Router();
 const Conversation = require('../models/Conversation');
 const User = require('../models/User');
 
-const CHANNELS = ['account_to_profile', 'profile_to_account'];
+const CHANNELS = ['account_to_profile', 'profile_to_account', 'system'];
 
 function makePairKey(a, b) {
   return [a, b].sort().join('|');
@@ -172,7 +172,7 @@ router.get('/by-uid/:uid', async (req, res) => {
     const result = conversations.map(c => {
       const other = c.participants.find(p => p.uid !== uid);
       const otherInfo = usersMap.get(other?.uid) || {
-        displayName: 'Użytkownik',
+        displayName: c.channel === 'system' ? 'Showly.app' : 'Użytkownik',
         avatar: '',
         email: ''
       };

@@ -34,7 +34,9 @@
   color: $color-gray;
   font-size: .95rem;
 
-  svg { opacity: .7; }
+  svg {
+    opacity: .7;
+  }
 }
 
 .list {
@@ -143,7 +145,9 @@
 }
 
 /* ▼ Skeleton */
-.skeletonItem { pointer-events: none; }
+.skeletonItem {
+  pointer-events: none;
+}
 
 .skeleton {
   position: relative;
@@ -160,60 +164,70 @@
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.55), rgba(255,255,255,0));
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .55), rgba(255, 255, 255, 0));
     animation: shimmer 1.2s infinite;
   }
 }
 
 @keyframes shimmer {
-  100% { transform: translateX(100%); }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* --- Jedna linia u góry, data pod spodem --- */
 /* 🔄 Pełny tekst nagłówka – bez ucinania, może się zawijać */
 .top {
   display: flex;
-  flex-direction: column;   /* meta u góry, data pod spodem */
+  flex-direction: column;
+  /* meta u góry, data pod spodem */
   align-items: flex-start;
   gap: .35rem;
 }
 
 .meta {
   display: flex;
-  align-items: flex-start;  /* ikona wyrównana do góry tekstu */
+  align-items: flex-start;
+  /* ikona wyrównana do góry tekstu */
   gap: .45rem;
   width: 100%;
 }
 
-.icon { 
-  flex-shrink: 0; 
-  font-size: 1.05rem; 
-  opacity: .8; 
-  margin-top: .1rem;        /* drobne wyrównanie pionu */
+.icon {
+  flex-shrink: 0;
+  font-size: 1.05rem;
+  opacity: .8;
+  margin-top: .1rem;
+  /* drobne wyrównanie pionu */
 }
 
 /* ⛔️ wyłączamy jedną linię i ellipsis */
 .metaText {
   display: block;
-  white-space: normal;      /* może się zawijać */
+  white-space: normal;
+  /* może się zawijać */
   overflow: visible;
   color: $color-gray;
   text-overflow: clip;
-  word-break: break-word;   /* długie ciągi ładnie się łamią */
+  word-break: break-word;
+  /* długie ciągi ładnie się łamią */
 }
 
 .name {
   color: $secondary-color;
   font-weight: 600;
   letter-spacing: -0.2px;
-  max-width: none;          /* bez limitu znaków */
-  white-space: normal;      /* zawijanie do nowej linii, jeśli potrzeba */
+  max-width: none;
+  /* bez limitu znaków */
+  white-space: normal;
+  /* zawijanie do nowej linii, jeśli potrzeba */
   overflow: visible;
   text-overflow: clip;
 }
 
 .date {
-  order: 2;                 /* pod meta */
+  order: 2;
+  /* pod meta */
   color: #777;
   font-size: .86rem;
 }
@@ -234,11 +248,18 @@
 
 /* 💻 Desktop: trochę ciaśniejszy układ jednej linii */
 @media (min-width: 769px) {
-  .name { max-width: 24ch; }
+  .name {
+    max-width: 24ch;
+  }
 }
 
 /* 📱 Mobile: drobne dostrojenie rozmiarów */
 @media (max-width: 480px) {
-  .metaText { font-size: .9rem; }
-  .date     { font-size: .82rem; }
+  .metaText {
+    font-size: .9rem;
+  }
+
+  .date {
+    font-size: .82rem;
+  }
 }

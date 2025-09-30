@@ -29,7 +29,7 @@ const UserDropdown = ({
         if (u && !u.photoURL) {
           await u.reload(); // często po Google photoURL wpada po reloadzie
         }
-      } catch (_) {}
+      } catch (_) { }
     });
     return () => unsub();
   }, []);
@@ -157,7 +157,7 @@ const UserDropdown = ({
         {/* Wizytówka (dwuliniowo) */}
         {!hasProfile && (
           <button onClick={() => handleNavigate('/create-profile', 'scrollToId')}>
-            Stwórz wizytówkę
+            Stwórz profil
           </button>
         )}
 
@@ -166,7 +166,7 @@ const UserDropdown = ({
             onClick={() => handleNavigate('/your-profile', 'scrollToId')}
             className={styles.menuItemTwoLine}
           >
-            <span className={styles.itemTitle}>Twoja wizytówka</span>
+            <span className={styles.itemTitle}>Twój profil</span>
             {isVisible ? (
               <span className={`${styles.itemSub} ${styles.statusActive}`}>
                 Pozostało {remainingDays} dni

@@ -2,17 +2,18 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const messageSchema = new Schema({
-  fromUid:   { type: String, ref: 'User', required: true },
-  toUid:     { type: String, ref: 'User', required: true },
-  content:   { type: String, required: true },
-  read:      { type: Boolean, default: false },
+  fromUid: { type: String, ref: 'User', required: true },
+  toUid: { type: String, ref: 'User', required: true },
+  content: { type: String, required: true },
+  isSystem: { type: Boolean, default: false },
+  read: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 
 const conversationSchema = new Schema({
   channel: {
     type: String,
-    enum: ['account_to_profile', 'profile_to_account'],
+    enum: ['account_to_profile', 'profile_to_account', 'system'],
     required: true,
   },
   pairKey: { type: String, required: true }, // np. "A|B"
@@ -21,11 +22,11 @@ const conversationSchema = new Schema({
 
   firstFromUid: { type: String, required: true },
 
-  messages:   [messageSchema],
-  createdAt:  { type: Date, default: Date.now },
-  updatedAt:  { type: Date, default: Date.now },
+  messages: [messageSchema],
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 
-  isClosed:   { type: Boolean, default: false }
+  isClosed: { type: Boolean, default: false }
 });
 
 // Indeksy (bez unikalności)

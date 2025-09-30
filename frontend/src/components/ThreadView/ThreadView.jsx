@@ -42,19 +42,19 @@ const ThreadView = ({ user, setUnreadCount }) => {
     tryScroll();
   }, [location.state, messages, location.pathname]);
 
-const fetchProfileName = useCallback(async (uid) => {
-  try {
-    const r = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${uid}`);
-    const name = r?.data?.name?.trim();
-    return name || null;
-  } catch (err) {
-    if (err.response?.status === 404) {
-      return null; // brak profilu to normalny przypadek
+  const fetchProfileName = useCallback(async (uid) => {
+    try {
+      const r = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${uid}`);
+      const name = r?.data?.name?.trim();
+      return name || null;
+    } catch (err) {
+      if (err.response?.status === 404) {
+        return null; // brak profilu to normalny przypadek
+      }
+      console.error("❌ Błąd pobierania nazwy profilu:", err);
+      return null;
     }
-    console.error("❌ Błąd pobierania nazwy profilu:", err);
-    return null;
-  }
-}, []);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -79,10 +79,10 @@ const fetchProfileName = useCallback(async (uid) => {
       setFirstFromUid(ff || (msgs[0]?.fromUid ?? null));
 
       const other = participants.find(p => p.uid !== user.uid);
-if (other) {
-  setReceiverId(other.uid);
-  setAccountName(other.displayName || 'Użytkownik');
-}
+      if (other) {
+        setReceiverId(other.uid);
+        setAccountName(other.displayName || 'Użytkownik');
+      }
 
       const last = msgs[msgs.length - 1];
       setCanReply(!!last && !last.isSystem && last.fromUid !== user.uid);
@@ -104,55 +104,58 @@ if (other) {
 
   useEffect(() => { fetchThread(); }, [fetchThread]);
 
-useEffect(() => {
-  const fetchReceiverProfile = async () => {
-    try {
-      if (!receiverId || receiverId === 'SYSTEM') {
-        setProfileStatus('missing');
-        setReceiverProfile(null);
-        return;
+  useEffect(() => {
+    const fetchReceiverProfile = async () => {
+      try {
+        if (!receiverId || receiverId === 'SYSTEM') {
+          setProfileStatus('missing');
+          setReceiverProfile(null);
+          return;
+        }
+
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${receiverId}`);
+        const prof = res.data;
+        setReceiverProfile(prof);
+
+        if (prof?.name?.trim()) {
+          setProfileName(prof.name.trim());
+        }
+
+        let expired = false;
+        if (prof?.visibleUntil) expired = new Date(prof.visibleUntil) < new Date();
+        if (prof?.isActive === false) expired = true;
+        setProfileStatus(expired ? 'expired' : 'exists');
+
+      } catch (err) {
+        if (err.response?.status === 404) {
+          setProfileStatus('missing'); // 👈 poprawnie oznaczamy brak profilu
+          setReceiverProfile(null);
+        } else {
+          console.error('❌ Błąd pobierania profilu odbiorcy:', err);
+          setProfileStatus('error');
+          setReceiverProfile(null);
+        }
       }
-
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${receiverId}`);
-      const prof = res.data;
-      setReceiverProfile(prof);
-
-      if (prof?.name?.trim()) {
-        setProfileName(prof.name.trim());
-      }
-
-      let expired = false;
-      if (prof?.visibleUntil) expired = new Date(prof.visibleUntil) < new Date();
-      if (prof?.isActive === false) expired = true;
-      setProfileStatus(expired ? 'expired' : 'exists');
-
-    } catch (err) {
-      if (err.response?.status === 404) {
-        setProfileStatus('missing'); // 👈 poprawnie oznaczamy brak profilu
-        setReceiverProfile(null);
-      } else {
-        console.error('❌ Błąd pobierania profilu odbiorcy:', err);
-        setProfileStatus('error');
-        setReceiverProfile(null);
-      }
-    }
-  };
-  fetchReceiverProfile();
-}, [receiverId, channel, firstFromUid]);
+    };
+    fetchReceiverProfile();
+  }, [receiverId, channel, firstFromUid]);
 
   const receiverName = useMemo(() => {
-  if (channel === 'account_to_profile') {
-    // Jeśli Ty zacząłeś -> patrzysz na profil odbiorcy
-    if (firstFromUid === user.uid) return profileName || accountName;
-    // Jeśli ktoś pisał do Ciebie -> patrzysz na jego konto
-    return accountName || profileName;
-  }
-  if (channel === 'profile_to_account') {
-    // Możesz dopasować podobną logikę dla innych typów
-    return profileName || accountName;
-  }
-  return accountName || profileName || 'Użytkownik';
-}, [channel, firstFromUid, user.uid, profileName, accountName]);
+    if (receiverId === 'SYSTEM' || channel === 'system') {
+      return 'Showly.app';
+    }
+    if (channel === 'account_to_profile') {
+      // Jeśli Ty zacząłeś -> patrzysz na profil odbiorcy
+      if (firstFromUid === user.uid) return profileName || accountName;
+      // Jeśli ktoś pisał do Ciebie -> patrzysz na jego konto
+      return accountName || profileName;
+    }
+    if (channel === 'profile_to_account') {
+      // Możesz dopasować podobną logikę dla innych typów
+      return profileName || accountName;
+    }
+    return accountName || profileName || 'Użytkownik';
+  }, [channel, firstFromUid, user.uid, profileName, accountName]);
 
 
   const amProfileSide = useMemo(() => {
@@ -168,9 +171,9 @@ useEffect(() => {
       : 'Wyślesz wiadomość jako: Twoje konto';
   }, [amProfileSide, myProfileName]);
 
-  const showFaq = receiverId !== 'SYSTEM' 
-  && channel === 'account_to_profile' 
-  && !amProfileSide;
+  const showFaq = receiverId !== 'SYSTEM'
+    && channel === 'account_to_profile'
+    && !amProfileSide;
 
   const handleReply = async (e) => {
     e.preventDefault();
