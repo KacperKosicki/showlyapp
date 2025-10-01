@@ -23,6 +23,80 @@
   }
 }
 
+/* Gdy belka edycji jest widoczna, zostaw na dole miejsce na nią */
+.hasEditBar {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Dokowana belka akcji */
+.editBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  background: color-mix(in oklab, #ffffff 86%, transparent);
+  border-top: 1px solid #e7e7e7;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, .06);
+  /* małe wjechanie z dołu */
+  transform: translateY(0);
+  animation: slideUp .18s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: .0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Wewnętrzny kontener – szerokość jak wrapper */
+.editBarInner {
+  max-width: 820px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: .75rem;
+  padding: .6rem 1rem calc(.6rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Tekst po lewej */
+.editHint {
+  color: #475569;
+  font-size: .95rem;
+  font-weight: 600;
+  display: none;
+  /* na małych znika, żeby było miejsce na przyciski */
+}
+
+/* Przyciski po prawej */
+.editBarBtns {
+  display: flex;
+  gap: .6rem;
+
+  .ghost,
+  .primary {
+    height: 42px;
+    padding: 0 1.1rem;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+}
+
+@media (min-width: 560px) {
+  .editHint {
+    display: inline;
+  }
+}
+
+
 .separator {
   height: 1px;
   background-color: #e0e0e0;
@@ -159,8 +233,8 @@
 
 .ghost {
   background: #fff;
-  color: #666;
-  border: 1px solid #ddd;
+  color: #c0392b;
+  border: 1px solid #c0392b;
   padding: .55rem 1rem;
   border-radius: 1.25rem;
   cursor: pointer;
@@ -1463,6 +1537,15 @@
     }
   }
 }
+
+/* Galeria – komunikat „brak zdjęć” jako pełny wiersz siatki */
+.galleryView > .noInfo,
+.galleryEditor > .noInfo {
+  grid-column: 1 / -1;   /* span przez wszystkie kolumny */
+  justify-self: start;   /* wyrównanie do lewej */
+  width: auto;           /* kompaktowa pigułka, nie 100% */
+}
+
 
 /* Drobne dopieszczenie responsywności */
 @media (max-width: 480px) {

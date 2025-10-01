@@ -445,7 +445,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
               className={styles.primary}
               aria-label="Edytuj profil"
             >
-              ✏️ Edytuj profil
+              Edytuj profil
             </button>
           </div>
         )}
@@ -1011,7 +1011,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                       {editData.availableDates.map((slot, index) => (
                         <li key={index} className={styles.slotItem}>
                           <div className={styles.slotLeft}>
-                            <span className={styles.slotDate}>📅 {formatPLDate(slot.date)}</span>
+                            <span className={styles.slotDate}>{formatPLDate(slot.date)}</span>
                           </div>
                           <div className={styles.slotRight}>
                             <span className={styles.badge}>od {slot.fromTime}</span>
@@ -1043,7 +1043,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                     {profile.availableDates.map((slot, i) => (
                       <li key={i} className={styles.slotItem}>
                         <div className={styles.slotLeft}>
-                          <span className={styles.slotDate}>📅 {formatPLDate(slot.date)}</span>
+                          <span className={styles.slotDate}>{formatPLDate(slot.date)}</span>
                         </div>
                         <div className={styles.slotRight}>
                           <span className={styles.badge}>od {slot.fromTime}</span>
@@ -1360,11 +1360,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             </div>
 
             {formErrors.quickAnswers && <small className={styles.error}>{formErrors.quickAnswers}</small>}
-
-            <div className={styles.editButtons}>
-              <button className={styles.primary} onClick={handleSaveChanges}>Zapisz</button>
-              <button className={styles.ghost} onClick={() => setIsEditing(false)}>Anuluj</button>
-            </div>
           </div>
         ) : (
           <>
@@ -1383,6 +1378,35 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           </>
         )}
       </section>
+      {isEditing && (
+        <div className={styles.editBar} role="region" aria-label="Akcje edycji profilu">
+          <div className={styles.editBarInner}>
+            <span className={styles.editHint}>Masz niezapisane zmiany</span>
+            <div className={styles.editBarBtns}>
+              {/* ZAPISZ jako pierwszy */}
+              <button
+                type="button"
+                className={styles.primary}
+                onClick={handleSaveChanges}
+              >
+                Zapisz zmiany profilu
+              </button>
+
+              <button
+                type="button"
+                className={styles.ghost}
+                onClick={() => {
+                  setEditData(profile);
+                  setFormErrors({});
+                  setIsEditing(false);
+                }}
+              >
+                Anuluj
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

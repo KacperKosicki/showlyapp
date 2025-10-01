@@ -235,7 +235,8 @@ const Notifications = ({ user, setUnreadCount }) => {
             <h2 className={styles.sectionTitle}>Twoje powiadomienia</h2>
             <p className={styles.subTitle}>
               Zebraliśmy wiadomości do Twojego profilu
-              <span>{myProfile?.name ? `${myProfile.name}` : ''}</span> oraz wątki wysłane z <span>Twojego konta</span>
+              {myProfile?.name ? <> <strong className={styles.subStrong}>{myProfile.name}</strong></> : ''}{' '}
+              oraz wątki wysłane z <strong className={styles.subStrong}>Twojego konta</strong>.
             </p>
           </div>
         </div>

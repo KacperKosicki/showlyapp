@@ -27,18 +27,15 @@
 }
 
 .subTitle {
-  display: flex;
-  align-items: center;
-  gap: .2rem;
+  display: block;
   margin: 0 0 1.25rem;
   color: $color-gray;
+  line-height: 1.5;
+  font-size: .95rem;
 
-  span {
-    font-weight: bold;
-  }
-
-  svg {
-    opacity: .7;
+  .subStrong {
+    font-weight: 700;
+    color: $text-color;
   }
 }
 
