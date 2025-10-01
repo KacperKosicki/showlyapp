@@ -5,6 +5,8 @@ import { FaStar, FaMapMarkerAlt, FaRegEye } from 'react-icons/fa';
 import AlertBox from '../AlertBox/AlertBox';
 import axios from 'axios';
 
+const DEFAULT_AVATAR = '/images/other/no-image.png'; // ta sama ścieżka co w YourProfile
+
 const UserCard = ({ user, currentUser }) => {
   const {
     name, avatar, role, rating, reviews, location, tags,
@@ -12,6 +14,7 @@ const UserCard = ({ user, currentUser }) => {
     description, links = [], showAvailableDates
   } = user;
 
+  const avatarSrc = (typeof avatar === 'string' && avatar.trim()) ? avatar : DEFAULT_AVATAR;
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [visits, setVisits] = useState(typeof user.visits === 'number' ? user.visits : 0);
@@ -68,7 +71,18 @@ const UserCard = ({ user, currentUser }) => {
         </div>
 
         <div className={styles.top}>
-          <img src={avatar} alt={name} className={styles.avatar} />
+          <img
+            src={avatarSrc}
+            alt={name}
+            className={styles.avatar}
+            onError={(e) => {
+              // gdy URL uszkodzony – podmień na domyślny, bez pętli
+              if (!e.currentTarget.dataset.fallback) {
+                e.currentTarget.dataset.fallback = '1';
+                e.currentTarget.src = DEFAULT_AVATAR;
+              }
+            }}
+          />
           <div className={styles.topInfo}>
             <span className={`${styles.profileBadge} ${styles[profileType]}`}>
               {profileType === 'zawodowy' && 'ZAWODOWY'}
@@ -83,13 +97,13 @@ const UserCard = ({ user, currentUser }) => {
 
         {description?.trim()
           ? <>
-              <p className={`${styles.description} ${isExpanded ? styles.expanded : ''}`}>{description}</p>
-              {description.length > 120 && (
-                <button className={styles.toggleButton} onClick={() => setIsExpanded(p => !p)}>
-                  {isExpanded ? 'Zwiń' : 'Pokaż więcej'}
-                </button>
-              )}
-            </>
+            <p className={`${styles.description} ${isExpanded ? styles.expanded : ''}`}>{description}</p>
+            {description.length > 120 && (
+              <button className={styles.toggleButton} onClick={() => setIsExpanded(p => !p)}>
+                {isExpanded ? 'Zwiń' : 'Pokaż więcej'}
+              </button>
+            )}
+          </>
           : <p className={styles.noDescription}>Użytkownik nie dodał jeszcze opisu.</p>
         }
 
@@ -109,11 +123,11 @@ const UserCard = ({ user, currentUser }) => {
 
           {links?.filter(l => l.trim()).length > 0
             ? <div className={styles.links}>
-                {links.map((link, i) => link.trim()
-                  ? <a key={i} href={link} target="_blank" rel="noopener noreferrer">🌐 Link {i + 1}</a>
-                  : null
-                )}
-              </div>
+              {links.map((link, i) => link.trim()
+                ? <a key={i} href={link} target="_blank" rel="noopener noreferrer">🌐 Link {i + 1}</a>
+                : null
+              )}
+            </div>
             : <p className={styles.noDescription}>Użytkownik nie dodał jeszcze żadnych linków.</p>
           }
         </div>

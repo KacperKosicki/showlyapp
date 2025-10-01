@@ -236,6 +236,27 @@
   }
 }
 
+.danger {
+  background: #fff;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+  padding: .55rem 1rem;
+  border-radius: 1.25rem;
+  cursor: pointer;
+  font-family: $font-accent;
+  transition: background .2s ease, transform .15s ease;
+
+  &:hover {
+    background: #fff1f0;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+  }
+}
+
 .controls {
   display: flex;
   flex-direction: column;
@@ -271,7 +292,7 @@
 }
 
 /* =========================
-   DANE PODSTAWOWE — wyśrodkowane
+   DANE PODSTAWOWE — wygląd jak „Informacje dodatkowe”
    ========================= */
 .basicInfoRow {
   display: flex;
@@ -288,14 +309,14 @@
 }
 
 .basicInfoRow .avatar {
-  width: 84px;
-  height: 84px;
+  width: 124px;
+  height: 124px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #eee;
   box-shadow: 0 2px 8px rgba(0, 0, 0, .05);
   background: #fafafa;
-  flex: 0 0 84px;
+  flex: 0 0 124px;
 }
 
 .basicInfoRow .controls {
@@ -306,33 +327,13 @@
   text-align: center;
 }
 
-/* Przycisk wyboru pliku */
-.fileBtn {
-  display: inline-block;
-  padding: .5rem .9rem;
-  border-radius: 1rem;
-  border: 1px dashed #ccc;
-  cursor: pointer;
-  font-family: $font-accent;
-  color: $text-color;
-  background: #fff;
-
-  input {
-    display: none;
-  }
-}
-
-.hint {
-  color: #888;
-  font-size: .85rem;
-}
-
 /* Grid z trzema kapsułkami (rola / typ / lokalizacja) */
 .basicInfoCol {
   width: 100%;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1rem;
+  gap: .9rem;
+  /* jak .statGrid */
   text-align: center;
   justify-items: center;
 }
@@ -350,65 +351,85 @@
   }
 }
 
-/* Kapsułka */
+/* Kapsuła — 1:1 jak .statCard */
 .basicInfoCol .inputBlock {
   max-width: 340px;
   width: 100%;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 1rem;
-  padding: .9rem 1rem;
   background: linear-gradient(180deg, #fafbfd 0%, #f6f7f9 100%);
+  border: 1px solid #e9ecf1;
+  border-radius: 1rem;
   box-shadow: 0 6px 18px rgba(0, 0, 0, .05);
-  transition: border-color .2s ease, box-shadow .2s ease, transform .15s ease;
+  padding: .9rem 1rem;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
 
   &:hover {
-    transform: translateY(-1px);
-    border-color: #d3d3d3;
+    transform: translateY(-2px);
     box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
+    border-color: #dfe6ee;
   }
 
+  /* Nagłówek jak .statHead/.statLabel (tu używamy <label>) */
   label {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: .5rem;
-    margin: 0 0 .35rem;
-    font-weight: 700;
+    gap: .55rem;
+    margin: 0 0 .5rem;
+    font-family: $font-heading;
+    font-weight: 800;
+    letter-spacing: .2px;
     color: $text-color;
 
+    /* Ikona stylizowana jak .statIcon (bez potrzeby zmiany JSX) */
     svg {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      padding: .35rem;
+      border-radius: .6rem;
+      background: rgba($primary-color, .10);
+      border: 1px solid rgba($primary-color, .18);
       color: $primary-color;
       flex-shrink: 0;
     }
   }
 
+  /* Wartość / podgląd — jak treść w .statBody */
   p {
     margin: 0;
     font-size: 1.02rem;
     font-weight: 700;
-    color: $text-color;
+    color: rgba($text-color, .95);
     line-height: 1.45;
     word-break: break-word;
     text-align: center;
   }
 
+  /* Input/select w edycji — delikatny wygląd jak w kartach */
   .formInput {
     margin-top: .15rem;
     padding: .55rem .8rem;
     border-radius: .75rem;
-    border: 1px solid #ccc;
+    border: 1px solid #e9ecf1;
     font-size: .95rem;
     background: #fcfcfc;
     text-align: center;
+    transition: border .2s ease, box-shadow .2s ease, background .2s ease;
 
     &:focus {
       background: #fff;
       border-color: $primary-color;
-      box-shadow: 0 0 0 3px rgba($primary-color, .25);
+      box-shadow: 0 0 0 3px rgba($primary-color, .18);
       outline: none;
     }
   }
+}
+
+/* Podkreśl błąd na całej kapsule (spójnie z projektem) */
+.basicInfoCol .inputBlock:has(.inputError) {
+  border-color: #e9b0ae;
+  box-shadow: 0 0 0 3px rgba(#e53935, .12);
 }
 
 /* Responsywność */
@@ -425,8 +446,8 @@
   }
 
   .basicInfoRow .avatar {
-    width: 84px;
-    height: 84px;
+    width: 124px;
+    height: 124px;
   }
 
   .basicInfoCol .inputBlock {
@@ -1263,10 +1284,6 @@
   }
 }
 
-.extArrow {
-  opacity: .75;
-}
-
 /* Edycja linków – grid jak w innych sekcjach */
 .linksWrapper {
   display: grid;
@@ -1307,45 +1324,451 @@
 }
 
 /* =========================
-   Galeria
+   Galeria (spójna z resztą kart)
    ========================= */
+
+/* Kontener w trybie edycji: responsywna siatka dla .photoItem;
+   przycisk "Dodaj zdjęcie" sam spadnie pod siatkę. */
 .galleryEditor {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: .9rem;
+  align-items: start;
+
+  /* gdy w środku pojawią się elementy inne niż .photoItem (np. przycisk),
+     niech zajmą pełną szerokość pod siatką */
+  > :not(.photoItem) {
+    grid-column: 1 / -1;
+  }
 }
 
+/* Kafelek zdjęcia */
 .photoItem {
   position: relative;
-}
-
-.photoItem img {
-  width: 100%;
-  max-width: 420px;
-  height: auto;
+  background: #fff;
+  border: 1px solid #e9ecf1;
   border-radius: 1rem;
-  border: 1px solid #ccc;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, .05);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .05);
+  overflow: hidden;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
+    border-color: #dfe6ee;
+  }
+
+  /* stały proporcjonalny podgląd */
+  img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    /* ładny prostokąt; zachowa spójność */
+    object-fit: cover;
+    background: #f7f8fb;
+  }
 }
 
+/* Pasek akcji jako półprzezroczysta belka na dole obrazka */
 .photoButtons {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
   display: flex;
   gap: .6rem;
-  margin-top: .5rem;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: .4rem .5rem;
+  border-radius: .75rem;
+  backdrop-filter: blur(6px);
+  background: rgba(255, 255, 255, .85);
+  border: 1px solid rgba(0, 0, 0, .06);
+
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .18s ease, transform .18s ease;
+
+  /* podnieś dostępność na dotyku/małych ekranach */
+  @media (hover: none),
+  (max-width: 560px) {
+    opacity: 1;
+    transform: none;
+  }
 }
 
+/* pokaż belkę na hoverze kafelka */
+.photoItem:hover .photoButtons {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Ujednolicenie wyglądu przycisków w belce */
+.photoButtons .ghost {
+  height: 36px;
+  padding: 0 .9rem;
+  line-height: 36px;
+  white-space: nowrap;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+}
+
+.photoButtons .fileBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  height: 36px;
+  padding: 0 .9rem;
+  line-height: 36px;
+  border-radius: .9rem;
+  border: 1px dashed #cfd8e3;
+  background: #fff;
+  font-family: $font-accent;
+  cursor: pointer;
+  transition: background .2s ease, border-color .2s ease, transform .1s ease;
+
+  &:hover {
+    background: #fafcff;
+    border-color: #b9c6d8;
+    transform: translateY(-1px);
+  }
+
+  input {
+    display: none;
+  }
+}
+
+/* Widok publiczny galerii (bez edycji) */
 .galleryView {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: .8rem;
   margin-top: .6rem;
 
   img {
     width: 100%;
-    max-width: 300px;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
     border-radius: 1rem;
-    border: 1px solid #ddd;
+    border: 1px solid #e9ecf1;
+    background: #f7f8fb;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, .04);
+    transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      border-color: #dfe6ee;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, .07);
+    }
   }
+}
+
+/* Drobne dopieszczenie responsywności */
+@media (max-width: 480px) {
+
+  .galleryEditor,
+  .galleryView {
+    gap: .65rem;
+  }
+}
+
+/* Spójny styl komunikatu „brak danych” w galerii */
+.galleryView+.noInfo,
+.galleryEditor+.noInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .6rem .9rem;
+  background-color: #fff8f3;
+  border: 1px solid #ffddcc;
+  border-radius: 1rem;
+  color: #cc6600;
+  font-size: .92rem;
+}
+
+/* =========================
+   Informacje dodatkowe – „kapsuły” statystyk
+   ========================= */
+.extraInfo {
+  margin-top: .35rem;
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .9rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.statCard {
+  background: linear-gradient(180deg, #fafbfd 0%, #f6f7f9 100%);
+  border: 1px solid #e9ecf1;
+  border-radius: 1rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .05);
+  padding: .9rem 1rem;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
+    border-color: #dfe6ee;
+  }
+}
+
+.statHead {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  margin-bottom: .5rem;
+
+  .statIcon {
+    display: inline-grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: .6rem;
+    background: rgba($primary-color, .10);
+    border: 1px solid rgba($primary-color, .18);
+
+    svg {
+      color: $primary-color;
+      font-size: 1rem;
+    }
+  }
+
+  .statLabel {
+    font-family: $font-heading;
+    font-weight: 800;
+    letter-spacing: .2px;
+    color: $text-color;
+  }
+}
+
+.statBody {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+
+.subRow {
+  display: flex;
+  align-items: baseline;
+  gap: .4rem;
+
+  .subKey {
+    font-weight: 700;
+    color: $text-color;
+    letter-spacing: .2px;
+  }
+
+  .subVal {
+    font-weight: 700;
+    color: rgba($text-color, .9);
+    word-break: break-word;
+  }
+}
+
+.subRowMuted {
+  font-size: .92rem;
+  color: #6b7280;
+}
+
+/* badge – spójny z innymi odznakami w projekcie */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: .25rem .65rem;
+  font-size: .82rem;
+  font-weight: 800;
+  border-radius: 999px;
+  border: 1px solid rgba($primary-color, .15);
+  background: rgba($primary-color, .08);
+  color: $primary-color;
+  width: fit-content;
+}
+
+.badgeSuccess {
+  border-color: rgba(58, 181, 74, .18);
+  background: rgba(58, 181, 74, .10);
+  color: #2e7d32;
+}
+
+.badgeMuted {
+  border-color: #e0e0e0;
+  background: #f2f4f7;
+  color: #6b7280;
+}
+
+/* rating */
+.ratingRow {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+.ratingValue {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: $text-color;
+  letter-spacing: .2px;
+}
+
+.ratingStar {
+  font-size: 1.15rem;
+  line-height: 1;
+  transform: translateY(1px);
+}
+
+/* =========================
+   FAQ / Szybkie odpowiedzi
+   ========================= */
+.faqWrapper {
+  margin-top: .4rem;
+}
+
+.qaGrid {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.qaRow {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: .75rem;
+  align-items: start;
+  padding: .7rem .9rem;
+  background: linear-gradient(180deg, #fafbfd 0%, #f6f7f9 100%);
+  border: 1px solid #e9ecf1;
+  border-radius: 1rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .04);
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.qaLabel {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+
+  .qaBadge {
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: .6rem;
+    background: rgba($primary-color, .10);
+    border: 1px solid rgba($primary-color, .18);
+    font-weight: 800;
+    color: $primary-color;
+    font-size: .9rem;
+  }
+
+  .qaLabelText {
+    font-family: $font-heading;
+    font-weight: 800;
+    letter-spacing: .2px;
+    color: $text-color;
+  }
+}
+
+.qaInputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .6rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.qaField {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+
+  .formInput {
+    background: #fcfcfc;
+
+    &:focus {
+      background: #fff;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba($primary-color, .18);
+      outline: none;
+    }
+  }
+}
+
+.qaTitleInput {
+  text-align: left;
+}
+
+.qaAnswerInput {
+  text-align: left;
+}
+
+.qaMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .5rem;
+
+  .counter {
+    font-size: .82rem;
+    color: #6b7280;
+    white-space: nowrap;
+  }
+}
+
+/* Widok publiczny FAQ */
+.faqList {
+  list-style: none;
+  margin: .4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+}
+
+.faqItem {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .55rem .8rem;
+  background: #f8f9fb;
+  border: 1px solid #e9ecf1;
+  border-radius: .8rem;
+
+  @media (max-width: 560px) {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: .4rem;
+  }
+}
+
+.faqQBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: .2rem .55rem;
+  font-size: .82rem;
+  font-weight: 800;
+  border-radius: 999px;
+  border: 1px solid rgba($primary-color, .15);
+  background: rgba($primary-color, .08);
+  color: $primary-color;
+  white-space: nowrap;
+}
+
+.faqAnswer {
+  font-weight: 700;
+  color: $text-color;
+  word-break: break-word;
 }
 
 /* =========================

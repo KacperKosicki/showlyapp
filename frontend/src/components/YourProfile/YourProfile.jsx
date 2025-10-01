@@ -42,6 +42,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const fileInputRef = useRef(null);
   const location = useLocation();
+  const addPhotoInputRef = useRef(null);
+  const DEFAULT_AVATAR = '/images/other/no-image.png';
 
   const showAlert = (message, type = 'info') => {
     setAlert({ message, type });
@@ -63,6 +65,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     requestAnimationFrame(tryScroll);
   }, [location.state, loading, location.pathname]);
 
+  // fetchProfile – policz hashe istniejących zdjęć
   const fetchProfile = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`);
@@ -70,9 +73,21 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       const now = new Date();
       const until = new Date(profile.visibleUntil);
       if (until < now) profile.isVisible = false;
+
       setProfile(profile);
+
+      const photos = profile.photos || [];
+      // hashujemy istniejące zdjęcia po ich dataURL/URL tekście (bez pobierania binarek)
+      const photoHashes = await Promise.all(photos.map(p => hashString(p)));
+
       setEditData({
         ...profile,
+        services: profile.services || [],
+        photos,
+        photoHashes, // ← już wypełnione
+        quickAnswers: profile.quickAnswers || [
+          { title: '', answer: '' }, { title: '', answer: '' }, { title: '', answer: '' }
+        ],
         bookingMode: profile.bookingMode || 'request-open',
         workingHours: profile.workingHours || { from: '08:00', to: '20:00' },
         workingDays: profile.workingDays || [1, 2, 3, 4, 5],
@@ -91,52 +106,99 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEditData({ ...editData, avatar: reader.result });
-      };
-      reader.readAsDataURL(file);
-    }
+  // helpers (na górze pliku obok fileToDataUrlAndHash)
+  const hashString = async (str) => {
+    const enc = new TextEncoder();
+    const buf = await crypto.subtle.digest('SHA-256', enc.encode(str));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
-  const handlePhotoChange = (e, index) => {
-    const file = e.target.files[0];
+  const fileToDataUrlAndHash = async (file) => {
+    // 1) hash z binarki
+    const buf = await file.arrayBuffer();
+    const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+    const hashHex = Array.from(new Uint8Array(hashBuf))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    // 2) dataURL do podglądu
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    return { dataUrl, hash: hashHex };
+  };
+
+
+  // 👇 PODMIEŃ handleImageChange, żeby używać bezpiecznej wersji setState
+  const handleImageChange = async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      showAlert('Nieprawidłowy format pliku. Wybierz obraz.', 'warning');
+      showAlert('Nieprawidłowy format. Wybierz obraz.', 'warning');
+      e.target.value = '';
       return;
     }
     if (file.size > 3 * 1024 * 1024) {
       showAlert('Zdjęcie jest za duże (maks. 3MB).', 'warning');
+      e.target.value = '';
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const updatedPhotos = [...(editData.photos || [])];
-      updatedPhotos[index] = reader.result;
-      setEditData({ ...editData, photos: updatedPhotos });
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleAddPhoto = () => {
-    if ((editData.photos || []).length >= 5) {
-      showAlert('Można dodać maksymalnie 5 zdjęć.', 'warning');
-      return;
+    try {
+      const { dataUrl } = await fileToDataUrlAndHash(file);
+      setEditData(prev => ({ ...prev, avatar: dataUrl }));
+    } finally {
+      e.target.value = ''; // pozwala wybrać ten sam plik ponownie
     }
-    setEditData({ ...editData, photos: [...(editData.photos || []), ''] });
   };
 
-  const handleRemovePhoto = (index) => {
-    const updatedPhotos = [...(editData.photos || [])];
-    updatedPhotos.splice(index, 1);
-    setEditData({ ...editData, photos: updatedPhotos });
+  const handleRemoveAvatar = () => {
+    setEditData(prev => ({ ...prev, avatar: null })); // wyczyść; backend dostanie null
+    fileInputRef.current && (fileInputRef.current.value = '');
+    showAlert('Usunięto zdjęcie profilowe. Utrwal zmianę przyciskiem „Zapisz”.', 'info');
   };
+
+
+
+  // 👇 PODMIEŃ handlePhotoChange, dorzuć reset inputa na końcu
+  const handlePhotoChange = async (e, index) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) { showAlert('Nieprawidłowy format pliku. Wybierz obraz.', 'warning'); e.target.value = ''; return; }
+    if (file.size > 3 * 1024 * 1024) { showAlert('Zdjęcie jest za duże (maks. 3MB).', 'warning'); e.target.value = ''; return; }
+
+    try {
+      const { dataUrl, hash } = await fileToDataUrlAndHash(file);
+
+      setEditData(prev => {
+        const hashes = prev.photoHashes || [];
+        const photos = [...(prev.photos || [])];
+
+        // jeśli hash już istnieje w innym slocie — zablokuj
+        const alreadyIdx = hashes.indexOf(hash);
+        if (alreadyIdx !== -1 && alreadyIdx !== index) {
+          showAlert('To zdjęcie już jest w galerii.', 'info');
+          return prev;
+        }
+
+        // podstaw w slocie i zaktualizuj hash
+        photos[index] = dataUrl;
+        const nextHashes = [...hashes];
+        nextHashes[index] = hash;
+
+        return { ...prev, photos, photoHashes: nextHashes };
+      });
+    } finally {
+      e.target.value = '';
+    }
+  };
+
 
   const validateEditData = (data) => {
     const errors = {};
@@ -185,9 +247,85 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     if (invalidQA) {
       errors.quickAnswers = 'Każda szybka odpowiedź musi zawierać oba pola. Tytuł max. 10 znaków, odpowiedź max. 64 znaki.';
     }
-
     return errors;
   };
+
+  const openAddPhotoPicker = () => {
+    const current = (editData.photos || []).length;
+    if (current >= 5) {
+      showAlert('Można dodać maksymalnie 5 zdjęć.', 'warning');
+      return;
+    }
+    addPhotoInputRef.current?.click();
+  };
+
+  const handleAddPhotosSelect = async (e) => {
+    const filesAll = Array.from(e.target.files || []);
+    if (!filesAll.length) return;
+
+    const existing = (editData.photos || []).length;
+    const slotsLeft = Math.max(0, 5 - existing);
+    const files = filesAll.slice(0, slotsLeft);
+
+    const toDataURL = (file) =>
+      new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+
+    const accepted = [];
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) { showAlert('Pominięto plik: nie jest obrazem.', 'warning'); continue; }
+      if (file.size > 3 * 1024 * 1024) { showAlert('Pominięto plik > 3MB.', 'warning'); continue; }
+
+      try {
+        const { dataUrl, hash } = await fileToDataUrlAndHash(file);
+        accepted.push({ dataUrl, hash });
+      } catch {
+        showAlert('Nie udało się wczytać jednego z plików.', 'error');
+      }
+    }
+
+    if (!accepted.length) { e.target.value = ''; return; }
+
+    // handleAddPhotosSelect – dodatkowy fallback po dataURL
+    setEditData(prev => {
+      const existingPhotos = prev.photos || [];
+      const existingHashes = prev.photoHashes || [];
+
+      // odfiltruj duplikaty po hashach
+      let fresh = accepted.filter(x => !existingHashes.includes(x.hash));
+
+      // fallback: odfiltruj po samym dataURL (gdyby jakiś hash był pusty)
+      fresh = fresh.filter(x => !existingPhotos.includes(x.dataUrl));
+
+      if (fresh.length < accepted.length) {
+        showAlert('Pominięto duplikaty zdjęć.', 'info');
+      }
+
+      const nextPhotos = [...existingPhotos, ...fresh.map(x => x.dataUrl)].slice(0, 5);
+      const nextHashes = [...existingHashes, ...fresh.map(x => x.hash)].slice(0, 5);
+
+      return { ...prev, photos: nextPhotos, photoHashes: nextHashes };
+    });
+
+
+    e.target.value = '';
+
+  };
+
+  const handleRemovePhoto = (index) => {
+    setEditData(prev => {
+      const p = [...(prev.photos || [])];
+      const h = [...(prev.photoHashes || [])];
+      p.splice(index, 1);
+      h.splice(index, 1);
+      return { ...prev, photos: p, photoHashes: h };
+    });
+  };
+
 
 
   const handleExtendVisibility = async () => {
@@ -204,6 +342,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const handleSaveChanges = async () => {
     const errors = validateEditData(editData);
 
+    // Walidacja czasu usług
     if ((editData.services || []).some(s =>
       (s.duration.unit === 'minutes' && s.duration.value < 15) ||
       (s.duration.unit === 'hours' && s.duration.value < 1) ||
@@ -217,13 +356,19 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       showAlert('Uzupełnij poprawnie wszystkie wymagane pola.', 'warning');
       return;
     }
+
     try {
+      // ⬇️ nie wysyłamy pomocniczego pola photoHashes
+      const { photoHashes, ...payload } = editData;
+
       await axios.patch(`${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`, {
-        ...editData,
-        showAvailableDates: !!editData.showAvailableDates,
-        tags: (editData.tags || []).filter(tag => tag.trim() !== ''),
-        quickAnswers: (editData.quickAnswers || []).filter(qa => qa.title.trim() || qa.answer.trim()),
+        ...payload,
+        showAvailableDates: !!payload.showAvailableDates,
+        tags: (payload.tags || []).filter(tag => tag.trim() !== ''),
+        quickAnswers: (payload.quickAnswers || [])
+          .filter(qa => qa.title?.trim() || qa.answer?.trim()),
       });
+
       await fetchProfile();
       setIsEditing(false);
       setFormErrors({});
@@ -233,6 +378,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       showAlert('Wystąpił błąd podczas zapisywania.', 'error');
     }
   };
+
 
   const mapUnit = (unit) => {
     switch (unit) {
@@ -266,6 +412,11 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       </div>
     );
   }
+
+  const hasAvatarNow =
+    Object.prototype.hasOwnProperty.call(editData, 'avatar')
+      ? Boolean(editData.avatar)        // w edycji patrzymy WYŁĄCZNIE na editData.avatar
+      : Boolean(profile.avatar);        // gdy nie dotykaliśmy avatara, bierzemy profil
 
   const formatPLDate = (d) =>
     d ? new Date(d).toLocaleDateString('pl-PL', {
@@ -315,30 +466,43 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           {/* Avatar */}
           <div className={styles.avatarRow}>
             <img
-              src={isEditing ? editData.avatar : profile.avatar || '/images/default-avatar.png'}
+              src={(isEditing ? editData.avatar : profile.avatar) || DEFAULT_AVATAR}
               alt="Avatar"
               className={styles.avatar}
             />
+
             {isEditing && (
               <div className={styles.controls}>
                 <label className={styles.fileBtn}>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/*,.heic,.heif"
                     ref={fileInputRef}
                     onChange={handleImageChange}
                   />
                   Wybierz zdjęcie
                 </label>
+
+                {hasAvatarNow && (
+                  <button
+                    type="button"
+                    className={styles.danger}
+                    onClick={handleRemoveAvatar}
+                  >
+                    Usuń zdjęcie
+                  </button>
+                )}
+
                 <small className={styles.hint}>Kwadratowe najlepiej wygląda. Max ok. 2–3 MB.</small>
               </div>
             )}
+
           </div>
 
           {/* Kolumna z danymi */}
           <div className={styles.basicInfoCol}>
             <div className={styles.inputBlock}>
-              <label><FaUserTie /> Rola:</label>
+              <label><FaUserTie /> Rola</label>
               {isEditing ? (
                 <>
                   <input
@@ -357,7 +521,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             </div>
 
             <div className={styles.inputBlock}>
-              <label><FaIdBadge /> Typ profilu:</label>
+              <label><FaIdBadge /> Typ profilu</label>
               {isEditing ? (
                 <>
                   <select
@@ -380,7 +544,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             </div>
 
             <div className={styles.inputBlock}>
-              <label><FaMapMarkerAlt /> Lokalizacja:</label>
+              <label><FaMapMarkerAlt /> Lokalizacja</label>
               {isEditing ? (
                 <>
                   <input
@@ -669,7 +833,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
               </li>
             </ul>
           )}
-
         </div>
 
         <div className={styles.subsection}></div>
@@ -983,7 +1146,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                       rel="noopener noreferrer"
                       className={styles.linkPill}
                     >
-                      {prettyUrl(link)} <span className={styles.extArrow}>↗</span>
+                      {prettyUrl(link)}
                     </a>
                   ))}
                 </div>
@@ -995,11 +1158,9 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         </div>
       </section>
 
-
       <section className={styles.card}>
         {/* 5. Galeria zdjęć */}
-        <h4 className={styles.sectionTitle}>5. Galeria zdjęć</h4>
-
+        <h3>Galeria zdjęć</h3>
         <div className={styles.galleryEditor}>
           {isEditing ? (
             <>
@@ -1010,14 +1171,32 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                     <button className={styles.ghost} onClick={() => handleRemovePhoto(index)}>Usuń</button>
                     <label className={styles.fileBtn}>
                       Zamień
-                      <input type="file" accept="image/*" onChange={(e) => handlePhotoChange(e, index)} />
+                      <input type="file" accept="image/*,.heic,.heif" onChange={(e) => handlePhotoChange(e, index)} />
                     </label>
                   </div>
                 </div>
               ))}
               {editData.photos?.length < 5 && (
-                <button className={styles.primary} onClick={handleAddPhoto}>Dodaj zdjęcie</button>
+                <>
+                  <button
+                    type="button"
+                    className={styles.primary}
+                    onClick={openAddPhotoPicker}
+                  >
+                    Dodaj zdjęcie
+                  </button>
+                  {/* ukryty input, otwierany powyższym przyciskiem */}
+                  <input
+                    ref={addPhotoInputRef}
+                    type="file"
+                    accept="image/*,.heic,.heif"
+                    multiple
+                    onChange={handleAddPhotosSelect}
+                    style={{ display: 'none' }}
+                  />
+                </>
               )}
+
             </>
           ) : (
             <div className={styles.galleryView}>
@@ -1026,7 +1205,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   <img key={i} src={photo} alt={`Zdjęcie ${i + 1}`} />
                 ))
               ) : (
-                <p className={styles.noInfo}><span>❔</span> Nie dodałeś/aś jeszcze zdjęcia.</p>
+                <p className={styles.noInfo}><span>❔</span> Nie dodałeś/aś jeszcze zdjęć.</p>
               )}
             </div>
           )}
@@ -1035,103 +1214,176 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
       <section className={styles.card}>
         {/* 6. Informacje dodatkowe */}
-        <h4 className={styles.sectionTitle}>6. Informacje dodatkowe</h4>
-        {profile.hasBusiness && (
-          <p><FaBriefcase /> <strong>Działalność gospodarcza:</strong> Tak (NIP: {profile.nip || 'brak'})</p>
-        )}
-        <p><FaStar /> <strong>Ocena:</strong> {profile.rating} ⭐ ({profile.reviews} opinii)</p>
+        <h3>Informacje dodatkowe</h3>
+
+        <div className={styles.extraInfo}>
+          <div className={styles.statGrid}>
+            {/* Działalność gospodarcza */}
+            <div className={styles.statCard}>
+              <div className={styles.statHead}>
+                <span className={styles.statIcon} aria-hidden="true"><FaBriefcase /></span>
+                <span className={styles.statLabel}>Działalność gospodarcza</span>
+              </div>
+
+              {profile.hasBusiness ? (
+                <div className={styles.statBody}>
+                  <span className={`${styles.badge} ${styles.badgeSuccess}`}>TAK</span>
+                  <div className={styles.subRow}>
+                    <span className={styles.subKey}>NIP:</span>
+                    <span className={styles.subVal}>{profile.nip || 'brak'}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.statBody}>
+                  <span className={`${styles.badge} ${styles.badgeMuted}`}>NIE</span>
+                  <div className={styles.subRowMuted}>Brak zarejestrowanej działalności</div>
+                </div>
+              )}
+            </div>
+
+            {/* Ocena i opinie */}
+            <div className={styles.statCard}>
+              <div className={styles.statHead}>
+                <span className={styles.statIcon} aria-hidden="true"><FaStar /></span>
+                <span className={styles.statLabel}>Ocena i opinie</span>
+              </div>
+
+              <div className={styles.statBody}>
+                <div className={styles.ratingRow}>
+                  <span className={styles.ratingValue}>{Number(profile.rating || 0).toFixed(1)}</span>
+                  <span className={styles.ratingStar} aria-hidden="true">⭐</span>
+                </div>
+                <div className={styles.subRow}>
+                  <span className={styles.subKey}>Opinie:</span>
+                  <span className={styles.subVal}>{profile.reviews || 0}</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
       </section>
 
+
       <section className={styles.card}>
-        {/* 7. Szybkie odpowiedzi (FAQ) */}
-        <h4 className={styles.sectionTitle}>7. Szybkie odpowiedzi (FAQ)</h4>
+        <h3>Szybkie odpowiedzi (FAQ)</h3>
 
         {isEditing ? (
-          <div className={styles.quickAnswers}>
-            {[0, 1, 2].map(i => {
-              const qaArray = editData.quickAnswers?.length === 3
-                ? [...editData.quickAnswers]
-                : [{}, {}, {}].map((_, idx) => editData.quickAnswers?.[idx] || { title: '', answer: '' });
+          <div className={styles.faqWrapper}>
+            <div className={styles.qaGrid}>
+              {[0, 1, 2].map((i) => {
+                const qaArray =
+                  editData.quickAnswers?.length === 3
+                    ? [...editData.quickAnswers]
+                    : [{}, {}, {}].map((_, idx) => editData.quickAnswers?.[idx] || { title: '', answer: '' });
 
-              const title = qaArray[i].title || '';
-              const answer = qaArray[i].answer || '';
+                const title = qaArray[i].title || '';
+                const answer = qaArray[i].answer || '';
 
-              return (
-                <div key={i} className={styles.qaRow}>
-                  <input
-                    type="text"
-                    className={`${styles.formInput} ${qaErrors[i]?.title ? styles.inputError : ''}`}
-                    placeholder={`Tytuł #${i + 1}`}
-                    value={title}
-                    maxLength={80}
-                    onChange={(e) => {
-                      let value = e.target.value;
-                      if (value.length > 10) value = value.slice(0, 10);
-                      const newQA = [...qaArray];
-                      newQA[i].title = value;
+                const onTitleChange = (e) => {
+                  let value = e.target.value.slice(0, 10);
+                  const newQA = [...qaArray];
+                  newQA[i].title = value;
 
-                      const newErrors = [...qaErrors];
-                      newErrors[i].touched = true;
-                      if (!value.trim()) newErrors[i].title = 'Tytuł jest wymagany';
-                      else if (value.length > 10) newErrors[i].title = 'Tytuł max. 10 znaków';
-                      else newErrors[i].title = '';
+                  const newErrors = [...qaErrors];
+                  newErrors[i].touched = true;
+                  if (!value.trim()) newErrors[i].title = 'Tytuł jest wymagany';
+                  else if (value.length > 10) newErrors[i].title = 'Tytuł max. 10 znaków';
+                  else newErrors[i].title = '';
 
-                      setEditData({ ...editData, quickAnswers: newQA });
-                      setQaErrors(newErrors);
-                    }}
-                  />
-                  <input
-                    type="text"
-                    className={`${styles.formInput} ${qaErrors[i]?.answer ? styles.inputError : ''}`}
-                    placeholder={`Odpowiedź #${i + 1}`}
-                    value={answer}
-                    maxLength={64}
-                    onChange={(e) => {
-                      let value = e.target.value;
-                      if (value.length > 64) value = value.slice(0, 64);
-                      const newQA = [...qaArray];
-                      newQA[i].answer = value;
+                  setEditData({ ...editData, quickAnswers: newQA });
+                  setQaErrors(newErrors);
+                };
 
-                      const newErrors = [...qaErrors];
-                      newErrors[i].touched = true;
-                      if (!value.trim()) newErrors[i].answer = 'Odpowiedź jest wymagana';
-                      else if (value.length > 64) newErrors[i].answer = 'Maks. 64 znaki';
-                      else newErrors[i].answer = '';
+                const onAnswerChange = (e) => {
+                  let value = e.target.value.slice(0, 64);
+                  const newQA = [...qaArray];
+                  newQA[i].answer = value;
 
-                      setEditData({ ...editData, quickAnswers: newQA });
-                      setQaErrors(newErrors);
-                    }}
-                  />
-                  {qaErrors[i]?.touched && qaErrors[i]?.title && <small className={styles.error}>{qaErrors[i].title}</small>}
-                  {qaErrors[i]?.touched && qaErrors[i]?.answer && <small className={styles.error}>{qaErrors[i].answer}</small>}
-                </div>
-              );
-            })}
+                  const newErrors = [...qaErrors];
+                  newErrors[i].touched = true;
+                  if (!value.trim()) newErrors[i].answer = 'Odpowiedź jest wymagana';
+                  else if (value.length > 64) newErrors[i].answer = 'Maks. 64 znaki';
+                  else newErrors[i].answer = '';
+
+                  setEditData({ ...editData, quickAnswers: newQA });
+                  setQaErrors(newErrors);
+                };
+
+                return (
+                  <div key={i} className={styles.qaRow}>
+                    <div className={styles.qaLabel}>
+                      <span className={styles.qaBadge}>#{i + 1}</span>
+                      <span className={styles.qaLabelText}>Pozycja FAQ</span>
+                    </div>
+
+                    <div className={styles.qaInputs}>
+                      <div className={styles.qaField}>
+                        <input
+                          type="text"
+                          className={`${styles.formInput} ${qaErrors[i]?.title ? styles.inputError : ''} ${styles.qaTitleInput}`}
+                          placeholder={`Tytuł #${i + 1}`}
+                          value={title}
+                          maxLength={10}
+                          onChange={onTitleChange}
+                          aria-invalid={!!qaErrors[i]?.title}
+                        />
+                        <div className={styles.qaMeta}>
+                          {qaErrors[i]?.touched && qaErrors[i]?.title && (
+                            <small className={styles.error}>{qaErrors[i].title}</small>
+                          )}
+                          <small className={styles.counter}>{title.length}/10</small>
+                        </div>
+                      </div>
+
+                      <div className={styles.qaField}>
+                        <input
+                          type="text"
+                          className={`${styles.formInput} ${qaErrors[i]?.answer ? styles.inputError : ''} ${styles.qaAnswerInput}`}
+                          placeholder={`Odpowiedź #${i + 1}`}
+                          value={answer}
+                          maxLength={64}
+                          onChange={onAnswerChange}
+                          aria-invalid={!!qaErrors[i]?.answer}
+                        />
+                        <div className={styles.qaMeta}>
+                          {qaErrors[i]?.touched && qaErrors[i]?.answer && (
+                            <small className={styles.error}>{qaErrors[i].answer}</small>
+                          )}
+                          <small className={styles.counter}>{answer.length}/64</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {formErrors.quickAnswers && <small className={styles.error}>{formErrors.quickAnswers}</small>}
+
+            <div className={styles.editButtons}>
+              <button className={styles.primary} onClick={handleSaveChanges}>Zapisz</button>
+              <button className={styles.ghost} onClick={() => setIsEditing(false)}>Anuluj</button>
+            </div>
           </div>
         ) : (
           <>
             {profile.quickAnswers?.length > 0 ? (
-              <ul className={styles.quickAnswersView}>
+              <ul className={styles.faqList}>
                 {profile.quickAnswers.map((qa, i) => (
-                  <li key={i}>
-                    <strong>{qa.title}:</strong> {qa.answer}
+                  <li key={i} className={styles.faqItem}>
+                    <span className={styles.faqQBadge}>{qa.title}</span>
+                    <span className={styles.faqAnswer}>{qa.answer}</span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className={styles.noInfo}><span>❔</span> Nie dodałeś/aś jeszcze szybkiej odpowiedzi.</p>
+              <p className={styles.noInfo}><span>❔</span> Nie dodałeś/aś jeszcze szybkich odpowiedzi.</p>
             )}
           </>
         )}
-        {formErrors.quickAnswers && <small className={styles.error}>{formErrors.quickAnswers}</small>}
-
-        {isEditing && (
-          <div className={styles.editButtons}>
-            <button className={styles.primary} onClick={handleSaveChanges}>Zapisz</button>
-            <button className={styles.ghost} onClick={() => setIsEditing(false)}>Anuluj</button>
-          </div>
-        )}
       </section>
+
     </div>
   );
 };
