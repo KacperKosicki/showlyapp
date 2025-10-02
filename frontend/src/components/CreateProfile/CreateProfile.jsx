@@ -174,7 +174,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
         try {
             await axios.post(`${process.env.REACT_APP_API_URL}/api/profiles`, payload);
             setRefreshTrigger(Date.now());
-            setTimeout(() => navigate('/your-profile'), 300);
+            setTimeout(() => navigate('/profil'), 300);
         } catch (err) {
             setFormErrors({
                 general: err.response?.data?.message || 'Wystąpił błąd podczas tworzenia wizytówki',
