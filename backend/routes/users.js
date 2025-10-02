@@ -9,6 +9,31 @@ const mime = require('mime-types');
 const User = require('../models/User');
 
 /* =========================
+   URL helpers (https za proxy + pełne URL-e)
+   ========================= */
+function getProto(req) {
+  const xf = req.headers['x-forwarded-proto'];
+  if (xf) return String(xf).split(',')[0].trim(); // "https" na Render
+  return req.protocol || 'https';
+}
+
+function absoluteUrl(req, relative) {
+  const proto = getProto(req);
+  const host = req.get('host');
+  return `${proto}://${host}${relative.startsWith('/') ? '' : '/'}${relative}`;
+}
+
+// Zamień publiczny URL (https://.../uploads/avatars/plik.jpg) na ścieżkę pliku na dysku
+function filePathFromPublicUrl(publicUrl) {
+  try {
+    const pathname = new URL(publicUrl).pathname; // "/uploads/avatars/xxx.jpg"
+    return path.join(__dirname, '..', pathname.replace(/^\//, ''));
+  } catch {
+    return null;
+  }
+}
+
+/* =========================
    Multer – upload avatara
    ========================= */
 const AVATAR_DIR = path.join(__dirname, '..', 'uploads', 'avatars');
@@ -31,13 +56,8 @@ const upload = multer({
   },
 });
 
-function absoluteUrl(req, relative) {
-  // składa absolutny URL: http(s)://host/relative
-  return `${req.protocol}://${req.get('host')}${relative.startsWith('/') ? '' : '/'}${relative}`;
-}
-
 /* =========================
-   Twoje dotychczasowe endpointy
+   Endpointy użytkownika
    ========================= */
 
 // POST /api/users – dodaje użytkownika do bazy (jeśli nie istnieje)
@@ -85,10 +105,6 @@ router.get('/check-email', async (req, res) => {
   }
 });
 
-/* =========================
-   Nowe endpointy – profil użytkownika
-   ========================= */
-
 // GET /api/users/:uid – pobierz usera po firebaseUid
 router.get('/:uid', async (req, res) => {
   try {
@@ -128,8 +144,8 @@ router.post('/:uid/avatar', upload.single('file'), async (req, res) => {
 
     // Jeśli poprzedni avatar był w /uploads/avatars/, usuń z dysku
     if (user.avatar && user.avatar.includes('/uploads/avatars/')) {
-      const oldPath = path.join(__dirname, '..', user.avatar.replace(/^\//, ''));
-      fs.unlink(oldPath, () => {});
+      const oldDiskPath = filePathFromPublicUrl(user.avatar);
+      if (oldDiskPath) fs.unlink(oldDiskPath, () => {});
     }
 
     const publicPath = `/uploads/avatars/${req.file.filename}`;
@@ -152,8 +168,8 @@ router.delete('/:uid/avatar', async (req, res) => {
     if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
 
     if (user.avatar && user.avatar.includes('/uploads/avatars/')) {
-      const diskPath = path.join(__dirname, '..', user.avatar.replace(/^\//, ''));
-      fs.unlink(diskPath, () => {});
+      const diskPath = filePathFromPublicUrl(user.avatar);
+      if (diskPath) fs.unlink(diskPath, () => {});
     }
 
     user.avatar = '';

@@ -1,25 +1,30 @@
 const mongoose = require('mongoose');
 
+// models/Reservation.js
 const reservationSchema = new mongoose.Schema({
-  userId: { type: String, required: true },              // UID klienta (Firebase)
-  userName: { type: String },                            // Nazwa klienta
+  userId: { type: String, required: true },
+  userName: { type: String },
 
-  providerUserId: { type: String, required: true },      // UID usługodawcy
-  providerName: { type: String },                        // Nazwa użytkownika usługodawcy
+  providerUserId: { type: String, required: true },
+  providerName: { type: String },
 
-  providerProfileId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Profile',
-    required: true
+  providerProfileId: { type: mongoose.Schema.Types.ObjectId, ref: 'Profile', required: true },
+  providerProfileName: { type: String },
+  providerProfileRole: { type: String },
+
+  date: { type: String, required: true },       // "YYYY-MM-DD"
+  dateOnly: { type: Boolean, default: false },  // ⬅️ NOWE
+
+  fromTime: {
+    type: String,
+    required: function () { return !this.dateOnly; } // ⬅️ wymagane tylko gdy nie-day
   },
-  providerProfileName: { type: String },                 // Nazwa profilu (np. "Anna Nowak")
-  providerProfileRole: { type: String },                 // Rola (np. "Fryzjer")
+  toTime: {
+    type: String,
+    required: function () { return !this.dateOnly; } // ⬅️ jw.
+  },
 
-  date: { type: String, required: true },                // np. "2025-07-13"
-  fromTime: { type: String, required: true },            // "18:00"
-  toTime: { type: String, required: true },              // "20:00"
-  duration: { type: Number },                            // np. 120 (minuty)
-
+  duration: { type: Number },
   description: { type: String },
 
   status: {
@@ -28,5 +33,11 @@ const reservationSchema = new mongoose.Schema({
     default: 'oczekująca'
   }
 }, { timestamps: true });
+
+// (opcjonalnie) unikalność zaakceptowanego dnia u usługodawcy
+reservationSchema.index(
+  { providerUserId: 1, date: 1 },
+  { unique: true, partialFilterExpression: { dateOnly: true, status: 'zaakceptowana' } }
+);
 
 module.exports = mongoose.model('Reservation', reservationSchema);

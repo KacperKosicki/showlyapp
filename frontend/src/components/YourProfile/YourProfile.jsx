@@ -932,13 +932,10 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   )}
                 </ul>
               )}
-
+              <div className={styles.subsection}></div>
             </div>
           </>
         )}
-
-        {/* separator */}
-        <div className={styles.subsection}></div>
 
         {/* TERMINY DOSTĘPNOŚCI */}
         <div className={styles.inputBlock}>

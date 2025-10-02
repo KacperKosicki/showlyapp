@@ -376,6 +376,41 @@ input[type="date"] {
   font-weight: 600;
 }
 
+.infoBox {
+  margin: 0.5rem 0 1rem;
+  padding: 0.8rem 1rem;
+  border-left: 4px solid $primary-color;
+  background: #f7f7f7;
+  border-radius: 0.8rem;
+  color: #444;
+  font-family: $font-body;
+}
+
+.warnBox {
+  margin-top: 0.6rem;
+  padding: 0.7rem 1rem;
+  border-left: 4px solid #cc6600;
+  background: #fff8f3;
+  border-radius: 0.8rem;
+  color: #8a4d00;
+  font-family: $font-body;
+}
+
+.toggleRow {
+  margin: 0.4rem 0 0.6rem;
+}
+
+.toggleLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  font-size: .98rem;
+  color: $color-gray;
+  user-select: none;
+
+  input { transform: translateY(1px); }
+}
+
 @media (max-width: 600px) {
   .legend {
     font-size: 0.92rem;

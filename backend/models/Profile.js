@@ -30,6 +30,7 @@ const profileSchema = new mongoose.Schema({
       toTime: String      // np. "16:00"
     }
   ],
+  blockedDays: { type: [String], default: [] }, // ⬅️ np. ["2025-10-12"]
   services: {
     type: [
       {
