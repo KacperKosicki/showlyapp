@@ -110,7 +110,7 @@ function App() {
         <Route path="/login" element={<Login setUser={setUser} setRefreshTrigger={setRefreshTrigger} />} />
         <Route path="/verify-success" element={<VerifySuccess />} />
         <Route
-          path="/create-profile"
+          path="/stworz-profil"
           element={
             <>
               <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
@@ -120,7 +120,7 @@ function App() {
           }
         />
         <Route
-          path="/your-profile"
+          path="/profil"
           element={
             <>
               <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />

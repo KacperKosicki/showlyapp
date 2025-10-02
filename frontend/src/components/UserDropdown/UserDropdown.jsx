@@ -41,8 +41,10 @@ const UserDropdown = ({
 
       try {
         const res = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`
+          `${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`,
+          { headers: { Accept: 'application/json' } }
         );
+
         const profile = res.data;
 
         if (profile?.visibleUntil) {
@@ -55,10 +57,15 @@ const UserDropdown = ({
           setHasProfile(true);
         } else {
           setHasProfile(!!profile);
+          setIsVisible(!!profile);
+          setRemainingDays(!!profile ? 0 : null);
         }
       } catch (err) {
         if (err.response?.status === 404) {
+          // ✅ brak profilu to nie błąd – wyczyść stan, pokaż "Stwórz profil"
           setHasProfile(false);
+          setIsVisible(false);
+          setRemainingDays(null);
         } else {
           console.error('❌ Błąd pobierania profilu:', err);
         }
@@ -156,14 +163,14 @@ const UserDropdown = ({
 
         {/* Wizytówka (dwuliniowo) */}
         {!hasProfile && (
-          <button onClick={() => handleNavigate('/create-profile', 'scrollToId')}>
+          <button onClick={() => handleNavigate('/stworz-profil', 'scrollToId')}>
             Stwórz profil
           </button>
         )}
 
         {hasProfile && (
           <button
-            onClick={() => handleNavigate('/your-profile', 'scrollToId')}
+            onClick={() => handleNavigate('/profil', 'scrollToId')}
             className={styles.menuItemTwoLine}
           >
             <span className={styles.itemTitle}>Twój profil</span>
