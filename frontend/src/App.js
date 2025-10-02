@@ -72,7 +72,7 @@ function App() {
       if (!user?.uid) return;
 
       try {
-        const res = await fetch(`/api/conversations/by-uid/${user.uid}`);
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/conversations/by-uid/${user.uid}`)
         const data = await res.json();
         const totalUnread = data.reduce((acc, convo) => acc + convo.unreadCount, 0);
         setUnreadCount(totalUnread);
