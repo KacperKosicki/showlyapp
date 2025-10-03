@@ -1,31 +1,76 @@
-// ReservationList.jsx
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import styles from './ReservationList.module.scss';
 import axios from 'axios';
+import AlertBox from '../AlertBox/AlertBox';
 
-const ReservationList = ({ user, resetPendingReservationsCount }) => {
-  const [clientReservations, setClientReservations]   = useState([]);
-  const [serviceReservations, setServiceReservations] = useState([]);
-  const [loading, setLoading]                         = useState(true);
+// --- Countdown z onExpire (po wybiciu 0 wywoła onExpire) ---
+function Countdown({ until, onExpire }) {
+  const [txt, setTxt] = useState('');
 
   useEffect(() => {
-    const fetchReservations = async () => {
-      if (!user?.uid) return;
+    let fired = false;
+
+    const toLabel = (ms) => {
+      if (ms <= 0) return '00:00';
+      const s = Math.floor(ms / 1000);
+      const mm = String(Math.floor(s / 60)).padStart(2, '0');
+      const ss = String(s % 60).padStart(2, '0');
+      return `${mm}:${ss}`;
+    };
+
+    const tick = () => {
+      const ms = new Date(until).getTime() - Date.now();
+      setTxt(toLabel(ms));
+      if (ms <= 0 && !fired) {
+        fired = true;
+        onExpire?.();
+      }
+    };
+
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [until, onExpire]);
+
+  return (
+    <div className={styles.countdown}>
+      Wygasa za: <strong>{txt}</strong>
+    </div>
+  );
+}
+
+const ReservationList = ({ user, resetPendingReservationsCount }) => {
+  const [clientReservations, setClientReservations] = useState([]);
+  const [serviceReservations, setServiceReservations] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // toast (AlertBox)
+  const [alert, setAlert] = useState({ show: false, type: 'info', message: '', onClose: null });
+
+  // blokada podwójnych kliknięć
+  const [disabledIds, setDisabledIds] = useState(new Set());
+
+  const refetch = useCallback(async () => {
+    if (!user?.uid) return;
+    const [resClient, resService] = await Promise.all([
+      axios.get(`${process.env.REACT_APP_API_URL}/api/reservations/by-user/${user.uid}`),
+      axios.get(`${process.env.REACT_APP_API_URL}/api/reservations/by-provider/${user.uid}`)
+    ]);
+    setClientReservations(resClient.data);
+    setServiceReservations(resService.data);
+  }, [user]);
+
+  useEffect(() => {
+    (async () => {
       try {
-        const [resClient, resService] = await Promise.all([
-          axios.get(`${process.env.REACT_APP_API_URL}/api/reservations/by-user/${user.uid}`),
-          axios.get(`${process.env.REACT_APP_API_URL}/api/reservations/by-provider/${user.uid}`)
-        ]);
-        setClientReservations(resClient.data);
-        setServiceReservations(resService.data);
+        await refetch();
       } catch (err) {
         console.error('❌ Błąd pobierania rezerwacji:', err);
       } finally {
         setLoading(false);
       }
-    };
-    fetchReservations();
-  }, [user]);
+    })();
+  }, [refetch]);
 
   useEffect(() => {
     if (!loading && resetPendingReservationsCount) {
@@ -33,27 +78,123 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     }
   }, [loading, resetPendingReservationsCount]);
 
+  // delikatny polling co 30s, kiedy są oczekujące
+  useEffect(() => {
+    const hasPendings =
+      clientReservations.some(r => r.status === 'oczekująca') ||
+      serviceReservations.some(r => r.status === 'oczekująca');
+
+    if (!hasPendings) return;
+    const id = setInterval(() => { refetch(); }, 30000);
+    return () => clearInterval(id);
+  }, [clientReservations, serviceReservations, refetch]);
+
+  const withToastAndRefresh = (type, message, unlockId) => {
+    const onClose = async () => {
+      setAlert(a => ({ ...a, show: false }));
+      await refetch();
+      if (unlockId) {
+        setDisabledIds(prev => {
+          const next = new Set(prev);
+          next.delete(unlockId);
+          return next;
+        });
+      }
+    };
+    setAlert({ show: true, type, message, onClose });
+  };
+
   const handleStatusChange = async (reservationId, newStatus) => {
     try {
+      setDisabledIds(prev => new Set(prev).add(reservationId));
+
       await axios.patch(
         `${process.env.REACT_APP_API_URL}/api/reservations/${reservationId}/status`,
         { status: newStatus }
       );
-      // odśwież dane
-      const [resClient, resService] = await Promise.all([
-        axios.get(`${process.env.REACT_APP_API_URL}/api/reservations/by-user/${user.uid}`),
-        axios.get(`${process.env.REACT_APP_API_URL}/api/reservations/by-provider/${user.uid}`)
-      ]);
-      setClientReservations(resClient.data);
-      setServiceReservations(resService.data);
+
+      if (newStatus === 'anulowana') {
+        withToastAndRefresh('warning', 'Rezerwacja anulowana – slot zwolniony.', reservationId);
+        return;
+      }
+      if (newStatus === 'odrzucona') {
+        withToastAndRefresh('warning', 'Rezerwacja odrzucona – slot zwolniony.', reservationId);
+        return;
+      }
+      if (newStatus === 'zaakceptowana') {
+        setAlert({ show: true, type: 'success', message: 'Pomyślnie potwierdzono rezerwację.', onClose: null });
+        await refetch();
+        setDisabledIds(prev => {
+          const next = new Set(prev);
+          next.delete(reservationId);
+          return next;
+        });
+        return;
+      }
+
+      withToastAndRefresh('info', 'Status zaktualizowany.', reservationId);
     } catch (err) {
       console.error('❌ Błąd zmiany statusu rezerwacji:', err);
+      setAlert({ show: true, type: 'error', message: 'Nie udało się zmienić statusu.', onClose: null });
+      setDisabledIds(prev => {
+        const next = new Set(prev);
+        next.delete(reservationId);
+        return next;
+      });
     }
+  };
+
+  // oznacz „przeczytane” i optymistycznie schowaj z listy
+  const markSeen = async (id, who) => {
+    try {
+      await axios.patch(`${process.env.REACT_APP_API_URL}/api/reservations/${id}/seen`, { who });
+      if (who === 'client') {
+        setClientReservations(prev => prev.filter(r => r._id !== id));
+      } else {
+        setServiceReservations(prev => prev.filter(r => r._id !== id));
+      }
+    } catch (e) {
+      console.error('❌ markSeen error', e);
+    }
+  };
+
+  // auto odśwież po wybiciu timera (serwer sam zamknie „oczekującą” jako expired)
+  const handleExpire = () => {
+    refetch();
   };
 
   if (loading) {
     return <div className={styles.loading}>⏳ Ładowanie rezerwacji...</div>;
   }
+
+  // boks informacyjny dla zamkniętych (anulowana/odrzucona/wygasła)
+  const renderClosedInfo = (res, viewer) => {
+    // viewer: 'sent' (klient patrzy na wysłane) | 'received' (usługodawca patrzy na otrzymane)
+    if (!['anulowana', 'odrzucona'].includes(res.status)) return null;
+
+    const who = viewer === 'sent' ? 'client' : 'provider';
+    const unseen = viewer === 'sent' ? !res.clientSeen : !res.providerSeen;
+    if (!unseen) return null;
+
+    const label =
+      res.closedReason === 'expired'
+        ? 'Rezerwacja wygasła (brak potwierdzenia w czasie).'
+        : res.status === 'anulowana'
+          ? 'Klient anulował rezerwację.'
+          : 'Usługodawca odrzucił rezerwację.';
+
+    return (
+      <div className={styles.closedInfo}>
+        <span>{label}</span>
+        <button
+          className={styles.seenBtn}
+          onClick={() => markSeen(res._id, who)}
+        >
+          OK, widzę
+        </button>
+      </div>
+    );
+  };
 
   // Funkcja pomocnicza do wyświetlania pól rezerwacji
   const renderFields = (res, type) => (
@@ -74,13 +215,20 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         <span className={styles.label}>Godzina:</span>
         <span className={styles.value}>{res.fromTime} – {res.toTime}</span>
       </div>
+      {res.serviceName && (
+        <div className={styles.row}>
+          <span className={styles.label}>Usługa:</span>
+          <span className={styles.value}>{res.serviceName}</span>
+        </div>
+      )}
+
       <div className={styles.row}>
         <span className={styles.label}>Status:</span>
-        <span className={`${styles.statusBadge} ${
-          res.status === 'zaakceptowana' ? styles.accepted
-            : res.status === 'odrzucona'   ? styles.rejected
-            : styles.pending
-        }`}>
+        <span className={`${styles.statusBadge} ${res.status === 'zaakceptowana' ? styles.accepted
+            : res.status === 'odrzucona' ? styles.rejected
+              : res.status === 'anulowana' ? styles.rejected
+                : styles.pending
+          }`}>
           {res.status}
         </span>
       </div>
@@ -88,15 +236,32 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         <span className={styles.label}>Opis:</span>
         <span className={styles.value}>{res.description}</span>
       </div>
+
+      {/* licznik tylko dla „żyjących” oczekujących */}
+      {res.status === 'oczekująca' && res.pendingExpiresAt && (
+        <Countdown until={res.pendingExpiresAt} onExpire={handleExpire} />
+      )}
+
+      {/* komunikat o zamknięciu (widoczny dopóki dana strona nie kliknie „OK, widzę”) */}
+      {renderClosedInfo(res, type === 'sent' ? 'sent' : 'received')}
     </>
   );
 
   return (
     <section className={styles.reservationList}>
+      {/* TOAST */}
+      {alert.show && (
+        <AlertBox
+          type={alert.type}
+          message={alert.message}
+          onClose={alert.onClose || (() => setAlert(a => ({ ...a, show: false })))}
+        />
+      )}
+
       <div className={styles.wrapper}>
         <h2 className={styles.title}>Panel rezerwacji</h2>
         <div className={styles.columns}>
-          {/* Wysłane rezerwacje */}
+          {/* Wysłane rezerwacje (klient) */}
           <div className={styles.column}>
             <h3 className={styles.heading}>Wysłane rezerwacje</h3>
             {clientReservations.length === 0 ? (
@@ -106,11 +271,11 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                 {clientReservations.map(res => (
                   <li
                     key={res._id}
-                    className={`${styles.item} ${
-                      res.status === 'zaakceptowana' ? styles.accepted
-                        : res.status === 'odrzucona'   ? styles.rejected
-                        : styles.pending
-                    }`}
+                    className={`${styles.item} ${res.status === 'zaakceptowana' ? styles.accepted
+                        : res.status === 'odrzucona' ? styles.rejected
+                          : res.status === 'anulowana' ? styles.rejected
+                            : styles.pending
+                      }`}
                   >
                     {renderFields(res, 'sent')}
                     {res.status === 'oczekująca' && (
@@ -118,6 +283,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                         <button
                           onClick={() => handleStatusChange(res._id, 'anulowana')}
                           className={styles.cancel}
+                          disabled={disabledIds.has(res._id)}
                         >
                           ❌ Anuluj
                         </button>
@@ -129,7 +295,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
             )}
           </div>
 
-          {/* Otrzymane rezerwacje */}
+          {/* Otrzymane rezerwacje (usługodawca) */}
           <div className={styles.column}>
             <h3 className={styles.heading}>Otrzymane rezerwacje</h3>
             {serviceReservations.length === 0 ? (
@@ -139,19 +305,25 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                 {serviceReservations.map(res => (
                   <li
                     key={res._id}
-                    className={`${styles.item} ${
-                      res.status === 'zaakceptowana' ? styles.accepted
-                        : res.status === 'odrzucona'   ? styles.rejected
-                        : styles.pending
-                    }`}
+                    className={`${styles.item} ${res.status === 'zaakceptowana' ? styles.accepted
+                        : res.status === 'odrzucona' ? styles.rejected
+                          : res.status === 'anulowana' ? styles.rejected
+                            : styles.pending
+                      }`}
                   >
                     {renderFields(res, 'received')}
                     {res.status === 'oczekująca' && (
                       <div className={styles.actions}>
-                        <button onClick={() => handleStatusChange(res._id, 'zaakceptowana')}>
+                        <button
+                          onClick={() => handleStatusChange(res._id, 'zaakceptowana')}
+                          disabled={disabledIds.has(res._id)}
+                        >
                           ✅ Potwierdź
                         </button>
-                        <button onClick={() => handleStatusChange(res._id, 'odrzucona')}>
+                        <button
+                          onClick={() => handleStatusChange(res._id, 'odrzucona')}
+                          disabled={disabledIds.has(res._id)}
+                        >
                           ❌ Odrzuć
                         </button>
                       </div>

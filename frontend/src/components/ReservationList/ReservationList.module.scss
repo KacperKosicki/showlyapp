@@ -111,6 +111,41 @@ $status-pending-text: #cc6600;
     }
   }
 
+  .countdown {
+    margin-top: .25rem;
+    font-size: 0.9rem;
+    opacity: 0.9;
+
+    strong {
+      font-variant-numeric: tabular-nums;
+      color: #d9534f; // czerwony dla kontrastu
+    }
+  }
+
+  .closedInfo {
+    margin-top: .5rem;
+    padding: .6rem .8rem;
+    border-radius: .75rem;
+    background: #fff3cd;
+    border: 1px solid #ffe69c;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    font-size: .95rem;
+  }
+
+  .seenBtn {
+    margin-left: auto;
+    background: #111827;
+    color: #fff;
+    border: 0;
+    border-radius: .6rem;
+    padding: .4rem .7rem;
+    cursor: pointer;
+  }
+
+
+
   .actions {
     margin-top: 1.12rem;
     display: flex;
@@ -196,11 +231,13 @@ $status-pending-text: #cc6600;
     color: $status-accepted-text;
     border-color: $status-accepted-border;
   }
+
   &.rejected {
     background: $status-rejected-bg;
     color: $status-rejected-text;
     border-color: $status-rejected-border;
   }
+
   &.pending {
     background: $status-pending-bg;
     color: $status-pending-text;

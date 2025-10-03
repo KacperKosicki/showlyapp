@@ -118,9 +118,9 @@ export default function BookingForm({ user }) {
     if (!value || !unit) return 0;
     switch (unit) {
       case 'minutes': return value;
-      case 'hours':   return value * 60;
-      case 'days':    return value * 60 * 24;
-      default:        return value;
+      case 'hours': return value * 60;
+      case 'days': return value * 60 * 24;
+      default: return value;
     }
   };
 
@@ -239,7 +239,8 @@ export default function BookingForm({ user }) {
         date: format(selectedDate, 'yyyy-MM-dd'),
         fromTime,
         toTime,
-        description
+        description,
+        serviceId: selectedService._id, // ⬅️ DODANE
       };
 
       try {
@@ -391,8 +392,8 @@ export default function BookingForm({ user }) {
                     <option key={s._id} value={s._id}>
                       {s.name} {s.duration.value} {
                         s.duration.unit === 'minutes' ? 'min' :
-                        s.duration.unit === 'hours' ? 'godzin' :
-                        s.duration.unit === 'days' ? 'dni' : s.duration.unit
+                          s.duration.unit === 'hours' ? 'godzin' :
+                            s.duration.unit === 'days' ? 'dni' : s.duration.unit
                       }
                     </option>
                   ))}
@@ -445,7 +446,7 @@ export default function BookingForm({ user }) {
                               ${styles.slot}
                               ${s.status === 'disabled' ? styles.slotDisabled : ''}
                               ${s.status === 'reserved' ? styles.slotReserved : ''}
-                              ${s.status === 'pending'  ? styles.slotPending  : ''}
+                              ${s.status === 'pending' ? styles.slotPending : ''}
                               ${selectedSlot === s.label ? styles.slotSelected : ''}
                             `}
                             disabled={s.status !== 'free'}
