@@ -7,6 +7,19 @@ import axios from 'axios';
 
 const DEFAULT_AVATAR = '/images/other/no-image.png'; // ta sama ścieżka co w YourProfile
 
+// ✅ Ten sam helper co w YourProfile – ładna etykieta linku
+const prettyUrl = (url) => {
+  try {
+    const u = new URL(url);
+    const host = u.hostname.replace(/^www\./, '');
+    const path = u.pathname === '/' ? '' : u.pathname;
+    return `${host}${path}`;
+  } catch {
+    // jeśli ktoś wkleił np. "facebook.com/xyz" bez protokołu – pokaż surowo
+    return url;
+  }
+};
+
 const UserCard = ({ user, currentUser }) => {
   const {
     name, avatar, role, rating, reviews, location, tags,
@@ -58,9 +71,12 @@ const UserCard = ({ user, currentUser }) => {
       return;
     }
     navigate(`/wiadomosc/${user.userId}`, {
-      state: { scrollToId: 'messageFormContainer' } // kanał narzucimy w MessageForm
+      state: { scrollToId: 'messageFormContainer' }
     });
   };
+
+  // 🔗 linki – odfiltruj puste/spacje
+  const cleanLinks = (links || []).map(l => (l || '').trim()).filter(Boolean);
 
   return (
     <>
@@ -97,13 +113,13 @@ const UserCard = ({ user, currentUser }) => {
 
         {description?.trim()
           ? <>
-            <p className={`${styles.description} ${isExpanded ? styles.expanded : ''}`}>{description}</p>
-            {description.length > 120 && (
-              <button className={styles.toggleButton} onClick={() => setIsExpanded(p => !p)}>
-                {isExpanded ? 'Zwiń' : 'Pokaż więcej'}
-              </button>
-            )}
-          </>
+              <p className={`${styles.description} ${isExpanded ? styles.expanded : ''}`}>{description}</p>
+              {description.length > 120 && (
+                <button className={styles.toggleButton} onClick={() => setIsExpanded(p => !p)}>
+                  {isExpanded ? 'Zwiń' : 'Pokaż więcej'}
+                </button>
+              )}
+            </>
           : <p className={styles.noDescription}>Użytkownik nie dodał jeszcze opisu.</p>
         }
 
@@ -121,13 +137,23 @@ const UserCard = ({ user, currentUser }) => {
             : <p className={styles.price}>Cennik: <em>Brak danych</em></p>
           }
 
-          {links?.filter(l => l.trim()).length > 0
-            ? <div className={styles.links}>
-              {links.map((link, i) => link.trim()
-                ? <a key={i} href={link} target="_blank" rel="noopener noreferrer">🌐 Link {i + 1}</a>
-                : null
-              )}
-            </div>
+          {cleanLinks.length > 0
+            ? (
+              <div className={styles.links}>
+                {cleanLinks.map((link, i) => (
+                  <a
+                    key={`${link}-${i}`}
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Otwórz link: ${prettyUrl(link)}`}
+                    title={link}
+                  >
+                    {prettyUrl(link)}
+                  </a>
+                ))}
+              </div>
+            )
             : <p className={styles.noDescription}>Użytkownik nie dodał jeszcze żadnych linków.</p>
           }
         </div>
@@ -136,7 +162,7 @@ const UserCard = ({ user, currentUser }) => {
 
         {!showAvailableDates && (
           <p className={styles.noReservationInfo}>
-            Ten profil nie udostępnia wolnych terminów – możesz tylko napisać wiadomość do użytkownika.
+            Ten profil nie udostępnia wolnych terminów – możesz tylko napisać wiadomość.
           </p>
         )}
 
