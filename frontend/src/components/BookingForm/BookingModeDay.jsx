@@ -35,6 +35,7 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
 
   const isUnavailable = (yyyyMmDd) => unavailableDays.includes(yyyyMmDd);
 
+  // Siatka miesięcy
   const daysInMonth = useMemo(() => (
     eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) })
   ), [currentMonth]);
@@ -78,13 +79,12 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
           content
         });
 
-        // Nie pokazujemy pushAlert lokalnie (by nie zgasł przy przejściu).
-        // Zamiast tego zapisz flash/draft/optimistic do sessionStorage:
+        // przenosimy feedback do wątku
         if (data?.id) {
           sessionStorage.setItem('flash', JSON.stringify({
             type: 'success',
             message: 'Twoje zapytanie zostało wysłane.',
-            ttl: 6000, // ile ma wisieć po przejściu
+            ttl: 6000,
             ts: Date.now(),
           }));
           sessionStorage.setItem('optimisticMessage', JSON.stringify({
@@ -96,26 +96,22 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
             createdAt: new Date().toISOString(),
             pending: true,
           }));
-          // (opcjonalnie) draft, gdy chcesz też wkleić w input na wypadek błędów:
-          // sessionStorage.setItem('draft', content);
-
-          navigate(`/konwersacja/${data.id}`, {
-            state: { scrollToId: 'threadPageLayout' }
-          });
+          navigate(`/konwersacja/${data.id}`, { state: { scrollToId: 'threadPageLayout' } });
         }
       } catch (err) {
         if (err?.response?.status === 403) {
           const existingId = err?.response?.data?.conversationId || null;
-
-          // też przenieś flash/draft do sessionStorage, aby nie znikł w trakcie nawigacji
           sessionStorage.setItem('flash', JSON.stringify({
             type: 'info',
             message: 'Masz już otwartą rozmowę z tym użytkownikiem. Kontynuuj w istniejącym wątku.',
             ttl: 6000,
             ts: Date.now(),
           }));
-          sessionStorage.setItem('draft', content);
-
+          sessionStorage.setItem('draft', [
+            `Zapytanie o dostępność dnia ${dateStr}`,
+            selectedService ? `Usługa: ${selectedService.name}` : null,
+            description?.trim() ? `Opis:\n${description.trim()}` : null
+          ].filter(Boolean).join('\n\n'));
           navigate(
             existingId ? `/konwersacja/${existingId}` : `/wiadomosc/${provider.userId}`,
             { state: { scrollToId: 'threadPageLayout' } }
@@ -127,7 +123,7 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
       return;
     }
 
-    // B) Rezerwacja całego dnia
+    // B) Rezerwacja całego dnia → po sukcesie przekierowanie do /rezerwacje (z flashem)
     try {
       const payload = {
         userId: user.uid,
@@ -146,8 +142,15 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
       }
 
       await axios.post(`${process.env.REACT_APP_API_URL}/api/reservations/day`, payload);
-      pushAlert({ show: true, type: 'success', message: 'Wysłano prośbę o rezerwację dnia.' });
-      setDescription('');
+
+      // zamiast lokalnego pushAlert — flash na /rezerwacje
+      sessionStorage.setItem('flash', JSON.stringify({
+        type: 'success',
+        message: 'Wysłano prośbę o rezerwację dnia – oczekuje na potwierdzenie.',
+        ttl: 6000,
+        ts: Date.now(),
+      }));
+      navigate('/rezerwacje');
     } catch (err) {
       const msg = err?.response?.data?.message || 'Nie udało się utworzyć rezerwacji dnia.';
       pushAlert({ show: true, type: 'error', message: msg });

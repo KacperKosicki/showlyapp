@@ -236,12 +236,26 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     );
   };
 
-  // ✅ Preferuj nazwę profilu nad mailem w „Od:”
+  // ✅ NAZWA KONTA zamiast maila (z fallbackami)
   const senderLabel = (res) => {
-    return res.userProfileName?.trim()
-      ? res.userProfileName
-      : (res.userName || 'Użytkownik');
+    // kolejność priorytetów:
+    // 1) nazwa konta (displayName z Firebase / Users)
+    // 2) nazwa profilu (jeśli klient wysyłał jako profil)
+    // 3) zwykłe pole userName
+    // 4) prefix maila przed "@"
+    // 5) "Użytkownik"
+    const account =
+      res.userAccountDisplayName ||
+      res.userDisplayName ||
+      res.accountDisplayName;
+
+    if (account?.trim()) return account.trim();
+    if (res.userProfileName?.trim()) return res.userProfileName.trim();
+    if (res.userName?.trim()) return res.userName.trim();
+    if (res.userEmail) return res.userEmail.split('@')[0];
+    return 'Użytkownik';
   };
+
 
   // Funkcja pomocnicza do wyświetlania pól rezerwacji
   const renderFields = (res, type) => (
@@ -276,13 +290,12 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       <div className={styles.row}>
         <span className={styles.label}>Status:</span>
         <span
-          className={`${styles.statusBadge} ${
-            res.status === 'zaakceptowana'
+          className={`${styles.statusBadge} ${res.status === 'zaakceptowana'
               ? styles.accepted
               : res.status === 'odrzucona' || res.status === 'anulowana'
-              ? styles.rejected
-              : styles.pending
-          }`}
+                ? styles.rejected
+                : styles.pending
+            }`}
         >
           {res.status}
         </span>
@@ -319,7 +332,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         <div className={styles.columns}>
           {/* Wysłane rezerwacje (klient) */}
           <div className={styles.column}>
-            <h3 className={styles.heading}>Wysłane rezerwacje/zapytania</h3>
+            <h3 className={styles.heading}>Wysłane rezerwacje</h3>
             {clientReservations.length === 0 ? (
               <p className={styles.empty}>Brak wysłanych rezerwacji.</p>
             ) : (
@@ -327,12 +340,11 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                 {clientReservations.map(res => (
                   <li
                     key={res._id}
-                    className={`${styles.item} ${
-                      res.status === 'zaakceptowana' ? styles.accepted
+                    className={`${styles.item} ${res.status === 'zaakceptowana' ? styles.accepted
                         : res.status === 'odrzucona' ? styles.rejected
-                        : res.status === 'anulowana' ? styles.rejected
-                        : styles.pending
-                    }`}
+                          : res.status === 'anulowana' ? styles.rejected
+                            : styles.pending
+                      }`}
                   >
                     {renderFields(res, 'sent')}
                     {res.status === 'oczekująca' && (
@@ -354,7 +366,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
           {/* Otrzymane rezerwacje (usługodawca) */}
           <div className={styles.column}>
-            <h3 className={styles.heading}>Otrzymane rezerwacje/zapytania</h3>
+            <h3 className={styles.heading}>Otrzymane rezerwacje</h3>
             {serviceReservations.length === 0 ? (
               <p className={styles.empty}>Brak otrzymanych rezerwacji.</p>
             ) : (
@@ -362,12 +374,11 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                 {serviceReservations.map(res => (
                   <li
                     key={res._id}
-                    className={`${styles.item} ${
-                      res.status === 'zaakceptowana' ? styles.accepted
+                    className={`${styles.item} ${res.status === 'zaakceptowana' ? styles.accepted
                         : res.status === 'odrzucona' ? styles.rejected
-                        : res.status === 'anulowana' ? styles.rejected
-                        : styles.pending
-                    }`}
+                          : res.status === 'anulowana' ? styles.rejected
+                            : styles.pending
+                      }`}
                   >
                     {renderFields(res, 'received')}
                     {res.status === 'oczekująca' && (
