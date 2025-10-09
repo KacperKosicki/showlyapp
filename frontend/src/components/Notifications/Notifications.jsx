@@ -173,7 +173,7 @@ const Notifications = ({ user, setUnreadCount }) => {
         <>
           <FiSend className={styles.icon} />
           <span className={styles.metaText}>
-            Rozmowa Twojego <b>konta</b> z wizytówką{' '}
+            Rozmowa Twojego <b>konta</b> z profilem{' '}
             <span className={styles.name}>{otherName}</span>
           </span>
         </>

@@ -206,23 +206,26 @@ router.post('/day', async (req, res) => {
       userId, userName,
       providerUserId, providerName,
       providerProfileId, providerProfileName, providerProfileRole,
-      date, description
+      date, description,
+      serviceId,        // <--- NOWE
+      serviceName: svcNameFromClient // <--- (opcjonalne)
     } = req.body;
 
     if (!userId || !providerUserId || !providerProfileId || !date) {
       return res.status(400).json({ message: 'Brak wymaganych pól.' });
     }
 
-    const profile = await Profile.findOne({ userId: providerUserId }, { blockedDays: 1 }).lean();
+    const profile = await Profile.findOne(
+      { userId: providerUserId },
+      { blockedDays: 1, services: 1 }
+    ).lean();
+
     if (profile?.blockedDays?.includes(date)) {
       return res.status(409).json({ message: 'Ten dzień jest zablokowany przez usługodawcę.' });
     }
 
     const existsAccepted = await Reservation.findOne({
-      providerUserId,
-      date,
-      dateOnly: true,
-      status: 'zaakceptowana'
+      providerUserId, date, dateOnly: true, status: 'zaakceptowana'
     }).lean();
     if (existsAccepted) {
       return res.status(409).json({ message: 'Ten dzień jest już zajęty.' });
@@ -230,15 +233,18 @@ router.post('/day', async (req, res) => {
 
     const now = new Date();
     const dupPending = await Reservation.findOne({
-      userId,
-      providerUserId,
-      date,
-      dateOnly: true,
-      status: 'oczekująca',
-      pendingExpiresAt: { $gt: now }
+      userId, providerUserId, date, dateOnly: true,
+      status: 'oczekująca', pendingExpiresAt: { $gt: now }
     }).lean();
     if (dupPending) {
       return res.status(409).json({ message: 'Masz już oczekującą prośbę na ten dzień.' });
+    }
+
+    // --- Ustal serviceName ---
+    let serviceName = svcNameFromClient || null;
+    if (!serviceName && serviceId && Array.isArray(profile?.services)) {
+      const svc = profile.services.find(s => String(s._id) === String(serviceId));
+      if (svc) serviceName = svc.name;
     }
 
     const pendingExpiresAt = new Date(Date.now() + PENDING_MINUTES * 60 * 1000);
@@ -251,9 +257,11 @@ router.post('/day', async (req, res) => {
       dateOnly: true,
       fromTime: '00:00',
       toTime: '23:59',
-      description,
+      description: (description || '').trim(),
       status: 'oczekująca',
-      pendingExpiresAt
+      pendingExpiresAt,
+      serviceId: serviceId || null,      // <--- NOWE
+      serviceName: serviceName || null,  // <--- NOWE
     });
 
     res.json(created);

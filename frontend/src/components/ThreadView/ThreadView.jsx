@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import styles from './ThreadView.module.scss';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import AlertBox from '../AlertBox/AlertBox';
 
 const ThreadView = ({ user, setUnreadCount }) => {
   const { threadId } = useParams();
@@ -25,6 +26,10 @@ const ThreadView = ({ user, setUnreadCount }) => {
   const [channel, setChannel] = useState(null);
   const [firstFromUid, setFirstFromUid] = useState(null);
 
+  // FLASH (alert przenoszony między ekranami)
+  const [flash, setFlash] = useState(null);
+
+  // scroll to anchor (np. 'threadPageLayout')
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo) return;
@@ -66,6 +71,63 @@ const ThreadView = ({ user, setUnreadCount }) => {
     return () => (mounted = false);
   }, [user?.uid, fetchProfileName]);
 
+  // Odczyt FLASH z location.state lub z sessionStorage (backup)
+  useEffect(() => {
+    if (location.state?.flash) {
+      setFlash(location.state.flash);
+      // usuń flash ze state, by nie dublował się po F5/back
+      const clean = { ...(location.state || {}) };
+      delete clean.flash;
+      window.history.replaceState({ ...window.history.state, usr: clean }, '');
+    } else {
+      const raw = sessionStorage.getItem('flash');
+      if (raw) {
+        try {
+          const f = JSON.parse(raw);
+          setFlash(f);
+        } catch {/* ignore */}
+      }
+    }
+  }, [location.key, location.state]);
+
+  // Auto-zamknięcie FLASH po TTL
+  useEffect(() => {
+    if (!flash) return;
+    const ttl = Number(flash.ttl || 4000);
+    const id = setTimeout(() => {
+      setFlash(null);
+      sessionStorage.removeItem('flash');
+    }, ttl);
+    return () => clearTimeout(id);
+  }, [flash]);
+
+  const closeFlash = () => {
+    setFlash(null);
+    sessionStorage.removeItem('flash');
+  };
+
+  // Dorysowanie optimisticMessage + wklejenie draft (z state albo sessionStorage)
+  useEffect(() => {
+    // optimistic
+    const rawOpt = location.state?.optimisticMessage || sessionStorage.getItem('optimisticMessage');
+    if (rawOpt) {
+      try {
+        const optimistic = typeof rawOpt === 'string' ? JSON.parse(rawOpt) : rawOpt;
+        if (optimistic && optimistic.content) {
+          setMessages(prev => [...prev, optimistic]);
+        }
+      } catch {/* ignore */}
+    }
+    // draft
+    const rawDraft = location.state?.draft || sessionStorage.getItem('draft');
+    if (rawDraft) {
+      try {
+        const draft = typeof rawDraft === 'string' ? rawDraft : String(rawDraft);
+        setNewMessage(draft);
+      } catch {/* ignore */}
+    }
+  }, [location.state]);
+
   const fetchThread = useCallback(async () => {
     try {
       const res = await axios.get(
@@ -74,7 +136,13 @@ const ThreadView = ({ user, setUnreadCount }) => {
       );
 
       const { messages: msgs, participants, channel: ch, firstFromUid: ff } = res.data;
-      setMessages(msgs);
+
+      // scal z ewentualnymi „pending” (optimistic)
+      setMessages(prev => {
+        const withoutPending = prev.filter(m => !m?.pending);
+        return msgs && msgs.length ? msgs : withoutPending;
+      });
+
       setChannel(ch);
       setFirstFromUid(ff || (msgs[0]?.fromUid ?? null));
 
@@ -84,10 +152,10 @@ const ThreadView = ({ user, setUnreadCount }) => {
         setAccountName(other.displayName || 'Użytkownik');
       }
 
-      const last = msgs[msgs.length - 1];
+      const last = (msgs && msgs.length ? msgs : []).slice(-1)[0];
       setCanReply(!!last && !last.isSystem && last.fromUid !== user.uid);
 
-      const unreadInThread = msgs.filter(m => !m.read && m.toUid === user.uid);
+      const unreadInThread = (msgs || []).filter(m => !m.read && m.toUid === user.uid);
       if (unreadInThread.length > 0) {
         await axios.patch(
           `${process.env.REACT_APP_API_URL}/api/conversations/${threadId}/read`,
@@ -96,11 +164,15 @@ const ThreadView = ({ user, setUnreadCount }) => {
         );
         if (setUnreadCount) setUnreadCount(prev => Math.max(prev - unreadInThread.length, 0));
       }
+
+      // po sukcesie czyścimy optimistic/draft
+      sessionStorage.removeItem('optimisticMessage');
+      sessionStorage.removeItem('draft');
     } catch (err) {
       console.error('❌ Błąd pobierania konwersacji:', err);
       if ([401, 403].includes(err.response?.status)) navigate('/');
     }
-  }, [threadId, user.uid, navigate, setUnreadCount, fetchProfileName]);
+  }, [threadId, user.uid, navigate, setUnreadCount]);
 
   useEffect(() => { fetchThread(); }, [fetchThread]);
 
@@ -128,7 +200,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
       } catch (err) {
         if (err.response?.status === 404) {
-          setProfileStatus('missing'); // 👈 poprawnie oznaczamy brak profilu
+          setProfileStatus('missing'); // brak profilu to ok
           setReceiverProfile(null);
         } else {
           console.error('❌ Błąd pobierania profilu odbiorcy:', err);
@@ -145,18 +217,14 @@ const ThreadView = ({ user, setUnreadCount }) => {
       return 'Showly.app';
     }
     if (channel === 'account_to_profile') {
-      // Jeśli Ty zacząłeś -> patrzysz na profil odbiorcy
       if (firstFromUid === user.uid) return profileName || accountName;
-      // Jeśli ktoś pisał do Ciebie -> patrzysz na jego konto
       return accountName || profileName;
     }
     if (channel === 'profile_to_account') {
-      // Możesz dopasować podobną logikę dla innych typów
       return profileName || accountName;
     }
     return accountName || profileName || 'Użytkownik';
   }, [channel, firstFromUid, user.uid, profileName, accountName]);
-
 
   const amProfileSide = useMemo(() => {
     if (!channel || !firstFromUid || !user?.uid) return false;
@@ -191,7 +259,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
         to: receiverId,
         content: newMessage.trim(),
         channel,                 // kanał wątku
-        conversationId: threadId // 👈 KLUCZOWE: dopinamy do TEGO wątku
+        conversationId: threadId // dopinamy do TEGO wątku
       });
 
       setNewMessage('');
@@ -211,6 +279,14 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
   return (
     <div id="threadPageLayout" className={styles.pageLayout}>
+      {flash && (
+        <AlertBox
+          type={flash.type}
+          message={flash.message}
+          onClose={closeFlash}
+        />
+      )}
+
       <div className={`${styles.mainArea} ${!showFaq ? styles.centered : ''}`}>
         <div className={styles.threadWrapper}>
           <button
@@ -235,7 +311,10 @@ const ThreadView = ({ user, setUnreadCount }) => {
                     {msg.fromUid === user.uid ? 'Ty' : receiverName}
                   </p>
                 )}
-                <p className={styles.content}>{msg.content}</p>
+                <p className={styles.content}>
+                  {msg.content}
+                  {msg.pending && <em className={styles.pending}> (wysyłanie…)</em>}
+                </p>
                 <p className={styles.time}>{new Date(msg.createdAt).toLocaleString()}</p>
               </div>
             ))}
@@ -289,7 +368,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
           {errorMsg && <p className={styles.error}>{errorMsg}</p>}
         </div>
 
-        {/* ✅ używamy showFaq */}
         {showFaq && (
           <div className={styles.faqBoxWrapper}>
             <div className={styles.faqBox}>

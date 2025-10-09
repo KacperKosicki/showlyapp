@@ -50,6 +50,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   // blokada podwójnych kliknięć
   const [disabledIds, setDisabledIds] = useState(new Set());
 
+  const safeParse = (str) => {
+    try { return JSON.parse(str); } catch { return null; }
+  };
+
   const refetch = useCallback(async () => {
     if (!user?.uid) return;
     const [resClient, resService] = await Promise.all([
@@ -77,6 +81,36 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       resetPendingReservationsCount();
     }
   }, [loading, resetPendingReservationsCount]);
+
+  // 🔔 Pokaż flash po wejściu (np. po przekierowaniu z formularza rezerwacji)
+  useEffect(() => {
+    if (loading) return;
+    const raw = sessionStorage.getItem('flash');
+    const flash = safeParse(raw);
+    if (!flash) return;
+
+    const age = Date.now() - (flash.ts || 0);
+    const ttl = flash.ttl ?? 6000;
+    if (age < ttl) {
+      const remaining = ttl - age;
+      setAlert({
+        show: true,
+        type: flash.type || 'info',
+        message: flash.message || '',
+        onClose: () => {
+          setAlert(a => ({ ...a, show: false }));
+          sessionStorage.removeItem('flash');
+        }
+      });
+      const tid = setTimeout(() => {
+        setAlert(a => ({ ...a, show: false }));
+        sessionStorage.removeItem('flash');
+      }, remaining);
+      return () => clearTimeout(tid);
+    } else {
+      sessionStorage.removeItem('flash');
+    }
+  }, [loading]);
 
   // delikatny polling co 30s, kiedy są oczekujące
   useEffect(() => {
@@ -163,6 +197,12 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     refetch();
   };
 
+  // 1) helper nad renderFields
+  const timeLabel = (res) => {
+    const whole = res.dateOnly || (res.fromTime === '00:00' && res.toTime === '23:59');
+    return whole ? 'cały dzień' : `${res.fromTime} – ${res.toTime}`;
+  };
+
   if (loading) {
     return <div className={styles.loading}>⏳ Ładowanie rezerwacji...</div>;
   }
@@ -196,6 +236,13 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     );
   };
 
+  // ✅ Preferuj nazwę profilu nad mailem w „Od:”
+  const senderLabel = (res) => {
+    return res.userProfileName?.trim()
+      ? res.userProfileName
+      : (res.userName || 'Użytkownik');
+  };
+
   // Funkcja pomocnicza do wyświetlania pól rezerwacji
   const renderFields = (res, type) => (
     <>
@@ -204,17 +251,21 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         <span className={styles.value}>
           {type === 'sent'
             ? `${res.providerProfileName} (${res.providerProfileRole})`
-            : res.userName}
+            : senderLabel(res)}
         </span>
       </div>
+
       <div className={styles.row}>
         <span className={styles.label}>Data:</span>
         <span className={styles.value}>{res.date}</span>
       </div>
+
+      {/* JEDEN wiersz „Godzina” z ładną etykietą */}
       <div className={styles.row}>
         <span className={styles.label}>Godzina:</span>
-        <span className={styles.value}>{res.fromTime} – {res.toTime}</span>
+        <span className={styles.value}>{timeLabel(res)}</span>
       </div>
+
       {res.serviceName && (
         <div className={styles.row}>
           <span className={styles.label}>Usługa:</span>
@@ -224,25 +275,30 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
       <div className={styles.row}>
         <span className={styles.label}>Status:</span>
-        <span className={`${styles.statusBadge} ${res.status === 'zaakceptowana' ? styles.accepted
-            : res.status === 'odrzucona' ? styles.rejected
-              : res.status === 'anulowana' ? styles.rejected
-                : styles.pending
-          }`}>
+        <span
+          className={`${styles.statusBadge} ${
+            res.status === 'zaakceptowana'
+              ? styles.accepted
+              : res.status === 'odrzucona' || res.status === 'anulowana'
+              ? styles.rejected
+              : styles.pending
+          }`}
+        >
           {res.status}
         </span>
       </div>
+
       <div className={styles.row}>
         <span className={styles.label}>Opis:</span>
-        <span className={styles.value}>{res.description}</span>
+        <span className={`${styles.value} ${styles.pre}`}>
+          {res.description?.trim() ? res.description : '—'}
+        </span>
       </div>
 
-      {/* licznik tylko dla „żyjących” oczekujących */}
       {res.status === 'oczekująca' && res.pendingExpiresAt && (
         <Countdown until={res.pendingExpiresAt} onExpire={handleExpire} />
       )}
 
-      {/* komunikat o zamknięciu (widoczny dopóki dana strona nie kliknie „OK, widzę”) */}
       {renderClosedInfo(res, type === 'sent' ? 'sent' : 'received')}
     </>
   );
@@ -263,7 +319,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         <div className={styles.columns}>
           {/* Wysłane rezerwacje (klient) */}
           <div className={styles.column}>
-            <h3 className={styles.heading}>Wysłane rezerwacje</h3>
+            <h3 className={styles.heading}>Wysłane rezerwacje/zapytania</h3>
             {clientReservations.length === 0 ? (
               <p className={styles.empty}>Brak wysłanych rezerwacji.</p>
             ) : (
@@ -271,11 +327,12 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                 {clientReservations.map(res => (
                   <li
                     key={res._id}
-                    className={`${styles.item} ${res.status === 'zaakceptowana' ? styles.accepted
+                    className={`${styles.item} ${
+                      res.status === 'zaakceptowana' ? styles.accepted
                         : res.status === 'odrzucona' ? styles.rejected
-                          : res.status === 'anulowana' ? styles.rejected
-                            : styles.pending
-                      }`}
+                        : res.status === 'anulowana' ? styles.rejected
+                        : styles.pending
+                    }`}
                   >
                     {renderFields(res, 'sent')}
                     {res.status === 'oczekująca' && (
@@ -297,7 +354,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
           {/* Otrzymane rezerwacje (usługodawca) */}
           <div className={styles.column}>
-            <h3 className={styles.heading}>Otrzymane rezerwacje</h3>
+            <h3 className={styles.heading}>Otrzymane rezerwacje/zapytania</h3>
             {serviceReservations.length === 0 ? (
               <p className={styles.empty}>Brak otrzymanych rezerwacji.</p>
             ) : (
@@ -305,11 +362,12 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                 {serviceReservations.map(res => (
                   <li
                     key={res._id}
-                    className={`${styles.item} ${res.status === 'zaakceptowana' ? styles.accepted
+                    className={`${styles.item} ${
+                      res.status === 'zaakceptowana' ? styles.accepted
                         : res.status === 'odrzucona' ? styles.rejected
-                          : res.status === 'anulowana' ? styles.rejected
-                            : styles.pending
-                      }`}
+                        : res.status === 'anulowana' ? styles.rejected
+                        : styles.pending
+                    }`}
                   >
                     {renderFields(res, 'received')}
                     {res.status === 'oczekująca' && (

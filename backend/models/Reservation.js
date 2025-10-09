@@ -32,7 +32,8 @@ const reservationSchema = new mongoose.Schema({
 
   duration: { type: Number },   // w minutach (opcjonalne)
   description: { type: String },
-  serviceName: { type: String, default: null }, // snapshot nazwy usługi (tylko calendar)
+  serviceId: { type: String, default: null },
+  serviceName: { type: String, default: null }, // snapshot nazwy usługi (tylko calendar/day)
 
   // STATUS
   status: {
