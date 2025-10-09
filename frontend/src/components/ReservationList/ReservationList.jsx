@@ -1,15 +1,14 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import styles from './ReservationList.module.scss';
 import axios from 'axios';
 import AlertBox from '../AlertBox/AlertBox';
+import { FiInbox, FiSend } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiTag, FiCheckCircle, FiXCircle, FiAlertCircle } from 'react-icons/fi';
 
-// --- Countdown z onExpire (po wybiciu 0 wywoła onExpire) ---
 function Countdown({ until, onExpire }) {
   const [txt, setTxt] = useState('');
-
   useEffect(() => {
     let fired = false;
-
     const toLabel = (ms) => {
       if (ms <= 0) return '00:00';
       const s = Math.floor(ms / 1000);
@@ -17,7 +16,6 @@ function Countdown({ until, onExpire }) {
       const ss = String(s % 60).padStart(2, '0');
       return `${mm}:${ss}`;
     };
-
     const tick = () => {
       const ms = new Date(until).getTime() - Date.now();
       setTxt(toLabel(ms));
@@ -26,7 +24,6 @@ function Countdown({ until, onExpire }) {
         onExpire?.();
       }
     };
-
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
@@ -44,15 +41,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   const [serviceReservations, setServiceReservations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // toast (AlertBox)
   const [alert, setAlert] = useState({ show: false, type: 'info', message: '', onClose: null });
-
-  // blokada podwójnych kliknięć
   const [disabledIds, setDisabledIds] = useState(new Set());
 
-  const safeParse = (str) => {
-    try { return JSON.parse(str); } catch { return null; }
-  };
+  const safeParse = (str) => { try { return JSON.parse(str); } catch { return null; } };
 
   const refetch = useCallback(async () => {
     if (!user?.uid) return;
@@ -60,35 +52,26 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       axios.get(`${process.env.REACT_APP_API_URL}/api/reservations/by-user/${user.uid}`),
       axios.get(`${process.env.REACT_APP_API_URL}/api/reservations/by-provider/${user.uid}`)
     ]);
-    setClientReservations(resClient.data);
-    setServiceReservations(resService.data);
+    setClientReservations(resClient.data || []);
+    setServiceReservations(resService.data || []);
   }, [user]);
 
   useEffect(() => {
     (async () => {
-      try {
-        await refetch();
-      } catch (err) {
-        console.error('❌ Błąd pobierania rezerwacji:', err);
-      } finally {
-        setLoading(false);
-      }
+      try { await refetch(); } catch (e) { console.error('❌ Błąd pobierania rezerwacji:', e); }
+      finally { setLoading(false); }
     })();
   }, [refetch]);
 
   useEffect(() => {
-    if (!loading && resetPendingReservationsCount) {
-      resetPendingReservationsCount();
-    }
+    if (!loading && resetPendingReservationsCount) resetPendingReservationsCount();
   }, [loading, resetPendingReservationsCount]);
 
-  // 🔔 Pokaż flash po wejściu (np. po przekierowaniu z formularza rezerwacji)
   useEffect(() => {
     if (loading) return;
     const raw = sessionStorage.getItem('flash');
     const flash = safeParse(raw);
     if (!flash) return;
-
     const age = Date.now() - (flash.ts || 0);
     const ttl = flash.ttl ?? 6000;
     if (age < ttl) {
@@ -112,12 +95,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     }
   }, [loading]);
 
-  // delikatny polling co 30s, kiedy są oczekujące
   useEffect(() => {
     const hasPendings =
       clientReservations.some(r => r.status === 'oczekująca') ||
       serviceReservations.some(r => r.status === 'oczekująca');
-
     if (!hasPendings) return;
     const id = setInterval(() => { refetch(); }, 30000);
     return () => clearInterval(id);
@@ -141,77 +122,157 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   const handleStatusChange = async (reservationId, newStatus) => {
     try {
       setDisabledIds(prev => new Set(prev).add(reservationId));
-
       await axios.patch(
         `${process.env.REACT_APP_API_URL}/api/reservations/${reservationId}/status`,
         { status: newStatus }
       );
-
-      if (newStatus === 'anulowana') {
-        withToastAndRefresh('warning', 'Rezerwacja anulowana – slot zwolniony.', reservationId);
-        return;
-      }
-      if (newStatus === 'odrzucona') {
-        withToastAndRefresh('warning', 'Rezerwacja odrzucona – slot zwolniony.', reservationId);
-        return;
-      }
+      if (newStatus === 'anulowana')
+        return withToastAndRefresh('warning', 'Rezerwacja anulowana – slot zwolniony.', reservationId);
+      if (newStatus === 'odrzucona')
+        return withToastAndRefresh('warning', 'Rezerwacja odrzucona – slot zwolniony.', reservationId);
       if (newStatus === 'zaakceptowana') {
         setAlert({ show: true, type: 'success', message: 'Pomyślnie potwierdzono rezerwację.', onClose: null });
         await refetch();
-        setDisabledIds(prev => {
-          const next = new Set(prev);
-          next.delete(reservationId);
-          return next;
-        });
+        setDisabledIds(prev => { const n = new Set(prev); n.delete(reservationId); return n; });
         return;
       }
-
       withToastAndRefresh('info', 'Status zaktualizowany.', reservationId);
     } catch (err) {
       console.error('❌ Błąd zmiany statusu rezerwacji:', err);
       setAlert({ show: true, type: 'error', message: 'Nie udało się zmienić statusu.', onClose: null });
-      setDisabledIds(prev => {
-        const next = new Set(prev);
-        next.delete(reservationId);
-        return next;
-      });
+      setDisabledIds(prev => { const n = new Set(prev); n.delete(reservationId); return n; });
     }
   };
 
-  // oznacz „przeczytane” i optymistycznie schowaj z listy
   const markSeen = async (id, who) => {
     try {
       await axios.patch(`${process.env.REACT_APP_API_URL}/api/reservations/${id}/seen`, { who });
-      if (who === 'client') {
-        setClientReservations(prev => prev.filter(r => r._id !== id));
-      } else {
-        setServiceReservations(prev => prev.filter(r => r._id !== id));
-      }
-    } catch (e) {
-      console.error('❌ markSeen error', e);
-    }
+      if (who === 'client') setClientReservations(prev => prev.filter(r => r._id !== id));
+      else setServiceReservations(prev => prev.filter(r => r._id !== id));
+    } catch (e) { console.error('❌ markSeen error', e); }
   };
 
-  // auto odśwież po wybiciu timera (serwer sam zamknie „oczekującą” jako expired)
-  const handleExpire = () => {
-    refetch();
-  };
+  const handleExpire = () => { refetch(); };
 
-  // 1) helper nad renderFields
   const timeLabel = (res) => {
     const whole = res.dateOnly || (res.fromTime === '00:00' && res.toTime === '23:59');
     return whole ? 'cały dzień' : `${res.fromTime} – ${res.toTime}`;
   };
 
-  if (loading) {
-    return <div className={styles.loading}>⏳ Ładowanie rezerwacji...</div>;
-  }
+  const senderLabel = (res) => {
+    const account =
+      res.userAccountDisplayName ||
+      res.userDisplayName ||
+      res.accountDisplayName;
+    if (account?.trim()) return account.trim();
+    if (res.userProfileName?.trim()) return res.userProfileName.trim();
+    if (res.userName?.trim()) return res.userName.trim();
+    if (res.userEmail) return res.userEmail.split('@')[0];
+    return 'Użytkownik';
+  };
 
-  // boks informacyjny dla zamkniętych (anulowana/odrzucona/wygasła)
+  const formatDatePL = (iso) => {
+    // obsłuży "2025-10-09" i ewentualnie ISO z czasem
+    const d = new Date(iso);
+    if (isNaN(d)) return iso;
+    return d.toLocaleDateString('pl-PL', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const statusIcon = (status) => {
+    if (status === 'zaakceptowana') return <FiCheckCircle className={styles.chipIcon} aria-hidden="true" />;
+    if (status === 'odrzucona' || status === 'anulowana') return <FiXCircle className={styles.chipIcon} aria-hidden="true" />;
+    return <FiAlertCircle className={styles.chipIcon} aria-hidden="true" />;
+  };
+
+  // ZAMIANA dotychczasowego renderBodyLine na ładne „czipsy”
+  const renderInfo = (res) => (
+    <div className={styles.info}>
+      <span className={styles.chip}>
+        <FiCalendar className={styles.chipIcon} aria-hidden="true" />
+        {formatDatePL(res.date)}
+      </span>
+
+      <span className={styles.chip}>
+        <FiClock className={styles.chipIcon} aria-hidden="true" />
+        {timeLabel(res)}
+      </span>
+
+      {res.serviceName && (
+        <span className={styles.chip}>
+          <FiTag className={styles.chipIcon} aria-hidden="true" />
+          {res.serviceName}
+        </span>
+      )}
+
+      <span className={`${styles.chip} ${res.status === 'zaakceptowana'
+        ? styles.chipAccepted
+        : (res.status === 'odrzucona' || res.status === 'anulowana')
+          ? styles.chipRejected
+          : styles.chipPending
+        }`}>
+        {statusIcon(res.status)}
+        {res.status}
+      </span>
+    </div>
+  );
+
+  // ► Liczniki do badge (tak jak w Notifications)
+  const sentCount = clientReservations.length;
+  const receivedCount = serviceReservations.length;
+  const pendingSent = clientReservations.filter(r => r.status === 'oczekująca').length;
+  const pendingReceived = serviceReservations.filter(r => r.status === 'oczekująca').length;
+
+  // ► Item header & content — identyczna logika layoutu jak w Notifications
+  const renderHeader = (res, variant) => {
+    if (variant === 'sent') {
+      return (
+        <>
+          <FiSend className={styles.icon} />
+          <span className={styles.metaText}>
+            Rezerwacja z <b>Twojego konta</b> do profilu{' '}
+            <span className={styles.name}>
+              {res.providerProfileName || 'Profil'}
+            </span>
+          </span>
+        </>
+      );
+    }
+    return (
+      <>
+        <FiInbox className={styles.icon} />
+        <span className={styles.metaText}>
+          Otrzymana rezerwacja do <b>Twojego profilu</b> od{' '}
+          <span className={styles.name}>{senderLabel(res)}</span>
+        </span>
+      </>
+    );
+  };
+
+  const renderStatusBadge = (res) => (
+    <span
+      className={`${styles.statusBadge} ${res.status === 'zaakceptowana'
+          ? styles.accepted
+          : res.status === 'odrzucona' || res.status === 'anulowana'
+            ? styles.rejected
+            : styles.pending
+        }`}
+    >
+      {res.status}
+    </span>
+  );
+
+  const renderBodyLine = (res) => {
+    const parts = [
+      res.date,
+      timeLabel(res),
+      res.serviceName ? `Usługa: ${res.serviceName}` : null,
+      `Status: ${res.status}`,
+    ].filter(Boolean);
+    return parts.join(' • ');
+  };
+
   const renderClosedInfo = (res, viewer) => {
-    // viewer: 'sent' (klient patrzy na wysłane) | 'received' (usługodawca patrzy na otrzymane)
     if (!['anulowana', 'odrzucona'].includes(res.status)) return null;
-
     const who = viewer === 'sent' ? 'client' : 'provider';
     const unseen = viewer === 'sent' ? !res.clientSeen : !res.providerSeen;
     if (!unseen) return null;
@@ -226,99 +287,76 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     return (
       <div className={styles.closedInfo}>
         <span>{label}</span>
-        <button
-          className={styles.seenBtn}
-          onClick={() => markSeen(res._id, who)}
-        >
+        <button className={styles.seenBtn} onClick={() => markSeen(res._id, who)}>
           OK, widzę
         </button>
       </div>
     );
   };
 
-  // ✅ NAZWA KONTA zamiast maila (z fallbackami)
-  const senderLabel = (res) => {
-    // kolejność priorytetów:
-    // 1) nazwa konta (displayName z Firebase / Users)
-    // 2) nazwa profilu (jeśli klient wysyłał jako profil)
-    // 3) zwykłe pole userName
-    // 4) prefix maila przed "@"
-    // 5) "Użytkownik"
-    const account =
-      res.userAccountDisplayName ||
-      res.userDisplayName ||
-      res.accountDisplayName;
+  const renderItem = (res, variant) => {
+    const isPending = res.status === 'oczekująca';
+    return (
+      <li
+        key={res._id}
+        className={`${styles.item} ${isPending ? styles.unread : styles.read}`}
+      >
+        <div className={styles.link}>
+          <div className={styles.top}>
+            <span className={styles.meta}>
+              {renderHeader(res, variant)}
+            </span>
+            <span className={styles.date}>
+              {new Date(res.createdAt || res.updatedAt || Date.now()).toLocaleString()}
+              {isPending && <span className={styles.dot} aria-hidden="true" />}
+            </span>
+          </div>
 
-    if (account?.trim()) return account.trim();
-    if (res.userProfileName?.trim()) return res.userProfileName.trim();
-    if (res.userName?.trim()) return res.userName.trim();
-    if (res.userEmail) return res.userEmail.split('@')[0];
-    return 'Użytkownik';
+          {renderInfo(res)}
+
+          {/* Dodatki (timer, info, akcje) */}
+          {res.status === 'oczekująca' && res.pendingExpiresAt && (
+            <Countdown until={res.pendingExpiresAt} onExpire={handleExpire} />
+          )}
+          {renderClosedInfo(res, variant)}
+          {variant === 'sent' && res.status === 'oczekująca' && (
+            <div className={styles.actions}>
+              <button
+                onClick={() => handleStatusChange(res._id, 'anulowana')}
+                className={styles.cancel}
+                disabled={disabledIds.has(res._id)}
+              >
+                ❌ Anuluj
+              </button>
+            </div>
+          )}
+          {variant === 'received' && res.status === 'oczekująca' && (
+            <div className={styles.actions}>
+              <button
+                onClick={() => handleStatusChange(res._id, 'zaakceptowana')}
+                disabled={disabledIds.has(res._id)}
+              >
+                ✅ Potwierdź
+              </button>
+              <button
+                onClick={() => handleStatusChange(res._id, 'odrzucona')}
+                disabled={disabledIds.has(res._id)}
+              >
+                ❌ Odrzuć
+              </button>
+            </div>
+          )}
+        </div>
+      </li>
+    );
   };
 
-
-  // Funkcja pomocnicza do wyświetlania pól rezerwacji
-  const renderFields = (res, type) => (
-    <>
-      <div className={styles.row}>
-        <span className={styles.label}>{type === 'sent' ? 'Do:' : 'Od:'}</span>
-        <span className={styles.value}>
-          {type === 'sent'
-            ? `${res.providerProfileName} (${res.providerProfileRole})`
-            : senderLabel(res)}
-        </span>
-      </div>
-
-      <div className={styles.row}>
-        <span className={styles.label}>Data:</span>
-        <span className={styles.value}>{res.date}</span>
-      </div>
-
-      {/* JEDEN wiersz „Godzina” z ładną etykietą */}
-      <div className={styles.row}>
-        <span className={styles.label}>Godzina:</span>
-        <span className={styles.value}>{timeLabel(res)}</span>
-      </div>
-
-      {res.serviceName && (
-        <div className={styles.row}>
-          <span className={styles.label}>Usługa:</span>
-          <span className={styles.value}>{res.serviceName}</span>
-        </div>
-      )}
-
-      <div className={styles.row}>
-        <span className={styles.label}>Status:</span>
-        <span
-          className={`${styles.statusBadge} ${res.status === 'zaakceptowana'
-              ? styles.accepted
-              : res.status === 'odrzucona' || res.status === 'anulowana'
-                ? styles.rejected
-                : styles.pending
-            }`}
-        >
-          {res.status}
-        </span>
-      </div>
-
-      <div className={styles.row}>
-        <span className={styles.label}>Opis:</span>
-        <span className={`${styles.value} ${styles.pre}`}>
-          {res.description?.trim() ? res.description : '—'}
-        </span>
-      </div>
-
-      {res.status === 'oczekująca' && res.pendingExpiresAt && (
-        <Countdown until={res.pendingExpiresAt} onExpire={handleExpire} />
-      )}
-
-      {renderClosedInfo(res, type === 'sent' ? 'sent' : 'received')}
-    </>
-  );
+  if (loading) {
+    return <div className={styles.loading}>⏳ Ładowanie rezerwacji...</div>;
+  }
 
   return (
-    <section className={styles.reservationList}>
-      {/* TOAST */}
+    <section className={styles.section}>
       {alert.show && (
         <AlertBox
           type={alert.type}
@@ -328,80 +366,52 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       )}
 
       <div className={styles.wrapper}>
-        <h2 className={styles.title}>Panel rezerwacji</h2>
-        <div className={styles.columns}>
-          {/* Wysłane rezerwacje (klient) */}
-          <div className={styles.column}>
-            <h3 className={styles.heading}>Wysłane rezerwacje</h3>
-            {clientReservations.length === 0 ? (
-              <p className={styles.empty}>Brak wysłanych rezerwacji.</p>
-            ) : (
-              <ul className={styles.list}>
-                {clientReservations.map(res => (
-                  <li
-                    key={res._id}
-                    className={`${styles.item} ${res.status === 'zaakceptowana' ? styles.accepted
-                        : res.status === 'odrzucona' ? styles.rejected
-                          : res.status === 'anulowana' ? styles.rejected
-                            : styles.pending
-                      }`}
-                  >
-                    {renderFields(res, 'sent')}
-                    {res.status === 'oczekująca' && (
-                      <div className={styles.actions}>
-                        <button
-                          onClick={() => handleStatusChange(res._id, 'anulowana')}
-                          className={styles.cancel}
-                          disabled={disabledIds.has(res._id)}
-                        >
-                          ❌ Anuluj
-                        </button>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+        <div className={styles.headerRow}>
+          <div>
+            <h2 className={styles.sectionTitle}>Panel rezerwacji</h2>
+            <p className={styles.subTitle}>
+              Tutaj znajdziesz{' '}
+              <strong className={styles.subStrong}>wysłane</strong> i{' '}
+              <strong className={styles.subStrong}>otrzymane</strong> rezerwacje —
+              w jednolitym, czytelnym układzie.
+            </p>
+          </div>
+        </div>
+
+        {/* SEGMENT: OTRZYMANE */}
+        <div className={styles.sectionGroup}>
+          <div className={styles.groupHeader}>
+            <h3 className={styles.groupTitle}>Otrzymane rezerwacje (do Twojego profilu)</h3>
+            <span className={styles.badge}>
+              {pendingReceived > 0 ? `${pendingReceived} oczek.` : `${receivedCount}`}
+            </span>
           </div>
 
-          {/* Otrzymane rezerwacje (usługodawca) */}
-          <div className={styles.column}>
-            <h3 className={styles.heading}>Otrzymane rezerwacje</h3>
-            {serviceReservations.length === 0 ? (
-              <p className={styles.empty}>Brak otrzymanych rezerwacji.</p>
-            ) : (
-              <ul className={styles.list}>
-                {serviceReservations.map(res => (
-                  <li
-                    key={res._id}
-                    className={`${styles.item} ${res.status === 'zaakceptowana' ? styles.accepted
-                        : res.status === 'odrzucona' ? styles.rejected
-                          : res.status === 'anulowana' ? styles.rejected
-                            : styles.pending
-                      }`}
-                  >
-                    {renderFields(res, 'received')}
-                    {res.status === 'oczekująca' && (
-                      <div className={styles.actions}>
-                        <button
-                          onClick={() => handleStatusChange(res._id, 'zaakceptowana')}
-                          disabled={disabledIds.has(res._id)}
-                        >
-                          ✅ Potwierdź
-                        </button>
-                        <button
-                          onClick={() => handleStatusChange(res._id, 'odrzucona')}
-                          disabled={disabledIds.has(res._id)}
-                        >
-                          ❌ Odrzuć
-                        </button>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+          {serviceReservations.length === 0 ? (
+            <p className={styles.emptyGroup}>Brak otrzymanych rezerwacji.</p>
+          ) : (
+            <ul className={styles.list}>
+              {serviceReservations.map((r) => renderItem(r, 'received'))}
+            </ul>
+          )}
+        </div>
+
+        {/* SEGMENT: WYSŁANE */}
+        <div className={styles.sectionGroup}>
+          <div className={styles.groupHeader}>
+            <h3 className={styles.groupTitle}>Wysłane rezerwacje (Twoje konto → inne profile)</h3>
+            <span className={styles.badge}>
+              {pendingSent > 0 ? `${pendingSent} oczek.` : `${sentCount}`}
+            </span>
           </div>
+
+          {clientReservations.length === 0 ? (
+            <p className={styles.emptyGroup}>Brak wysłanych rezerwacji.</p>
+          ) : (
+            <ul className={styles.list}>
+              {clientReservations.map((r) => renderItem(r, 'sent'))}
+            </ul>
+          )}
         </div>
       </div>
     </section>

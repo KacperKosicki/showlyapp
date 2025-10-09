@@ -1,6 +1,249 @@
 @import '../../styles/variables';
 
-// --- Kolory statusów (do badge) ---
+/* ====== Sekcja & wrapper – jak w Notifications ====== */
+.section {
+  padding: 3rem 1rem;
+}
+
+.wrapper {
+  max-width: 800px;
+  margin: 3rem auto;
+  background: #fff;
+  border-radius: 1rem;
+  font-family: $font-body;
+}
+
+/* Header sekcji */
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.sectionTitle {
+  margin: 0 0 .25rem;
+  font-size: 1.6rem;
+  color: $text-color;
+  font-family: $font-heading;
+}
+
+.subTitle {
+  display: block;
+  margin: 0 0 1.25rem;
+  color: $color-gray;
+  line-height: 1.5;
+  font-size: .95rem;
+
+  .subStrong {
+    font-weight: 700;
+    color: $text-color;
+  }
+}
+
+/* Grupy (jak Notifications) */
+.sectionGroup {
+  margin-bottom: 2rem;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 1.25rem 0 .75rem;
+}
+
+.groupTitle {
+  font-size: 1.06rem;
+  font-weight: 700;
+  color: $text-color;
+  font-family: $font-heading;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.2rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: #f4f4f4;
+  color: #333;
+  border: 1px solid #e2e2e2;
+}
+
+.emptyGroup {
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: #fafafa;
+  border: 1px dashed #ddd;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+/* Lista i itemy – identyczne UI kart jak w Notifications */
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0;
+  margin: 0;
+}
+
+.item {
+  border-radius: 1rem;
+  overflow: hidden;
+  transition: box-shadow .2s, transform .2s, border-color .2s;
+  border: 1px solid #eaeaea;
+  background: linear-gradient(135deg, #ffffff, #fafafa);
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .08);
+    transform: translateY(-2px);
+  }
+
+  &.unread {
+    background: #fff7ed;
+    border-color: #f0d7b9;
+  }
+
+  /* pending */
+  &.read {
+    opacity: 0.98;
+  }
+}
+
+/* Klikalny obszar w obrębie karty (tu bez <Link>, ale trzymamy klasę) */
+.link {
+  display: block;
+  padding: 1rem 1.2rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Top: meta nad datą (jak w Notifications — „jedna linia u góry, data pod spodem”) */
+.top {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .35rem;
+}
+
+.meta {
+  display: flex;
+  align-items: flex-start;
+  gap: .45rem;
+  width: 100%;
+}
+
+.icon {
+  flex-shrink: 0;
+  font-size: 1.05rem;
+  opacity: .8;
+  margin-top: .1rem;
+}
+
+.metaText {
+  display: block;
+  white-space: normal;
+  overflow: visible;
+  color: $color-gray;
+  text-overflow: clip;
+  word-break: break-word;
+}
+
+.name {
+  color: $secondary-color;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.date {
+  order: 2;
+  color: #777;
+  font-size: .86rem;
+}
+
+.dot {
+  display: inline-block;
+  width: .5rem;
+  height: .5rem;
+  margin-left: .5rem;
+  border-radius: 999px;
+  background: $primary-color;
+  box-shadow: 0 0 0 3px rgba($primary-color, .12);
+}
+
+/* Content – skrót informacji o rezerwacji */
+.content {
+  font-size: 1rem;
+  color: #333;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Rząd ładnych „czipsów” z ikonami */
+.info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem .6rem;
+  margin-top: .25rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .38rem .6rem;
+  border-radius: .75rem;
+  font-size: .92rem;
+  line-height: 1;
+  background: #f7f7f7;
+  border: 1px solid #e8e8e8;
+  color: #333;
+  white-space: nowrap;
+}
+
+.chipIcon {
+  font-size: 1rem;
+  opacity: .9;
+}
+
+/* Kolory statusu jako warianty chipów (spójne z Twoimi badge’ami) */
+.chipAccepted {
+  background: #e8f7e2;
+  border-color: #82d66c;
+  color: #238420;
+}
+
+.chipRejected {
+  background: #ffeaea;
+  border-color: #ef9a9a;
+  color: #c0392b;
+}
+
+.chipPending {
+  background: #fff8f3;
+  border-color: #ffddcc;
+  color: #cc6600;
+}
+
+/* Mobile – niech czipsy ładnie się łamią */
+@media (max-width: 480px) {
+  .chip {
+    font-size: .9rem;
+  }
+}
+
+/* Badge statusu (kolory jak w Twojej wersji) */
 $status-accepted-bg: #e8f7e2;
 $status-accepted-border: #82d66c;
 $status-accepted-text: #238420;
@@ -13,218 +256,22 @@ $status-pending-bg: #fff8f3;
 $status-pending-border: #ffddcc;
 $status-pending-text: #cc6600;
 
-.reservationList {
-  padding: 3rem 1rem;
-
-  .wrapper {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 3rem 2rem;
-    border-radius: 1rem;
-    background: $secondary-bg;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
-    border: 1px solid #ccc;
-    font-family: $font-body;
-  }
-
-  .title {
-    text-align: center;
-    margin-bottom: 2.5rem;
-    font-size: 1.6rem;
-    color: $color-gray;
-    font-family: $font-heading;
-  }
-
-  .columns {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-    justify-content: space-between;
-  }
-
-  .column {
-    flex: 1 1 400px;
-  }
-
-  .heading {
-    text-align: center;
-    margin-bottom: 1rem;
-    color: $primary-color;
-    font-size: 1.2rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    font-family: $font-heading;
-  }
-
-  .empty {
-    text-align: center;
-    font-size: 1rem;
-    color: #888;
-    font-family: $font-body;
-  }
-
-  .list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 1.2rem;
-    padding: 0;
-  }
-
-  .item {
-    background: $secondary-bg;
-    border: 1px solid #ccc;
-    border-radius: 1rem;
-    padding: 1.2rem 1.4rem;
-    box-shadow: 0 2px 8px rgba(111, 78, 242, 0.05);
-    transition: box-shadow 0.18s, border-color 0.18s, background 0.18s;
-  }
-
-  // UKŁAD pionowy label + value:
-  .row {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 0.9rem;
-    font-size: 1.07rem;
-    font-family: $font-body;
-
-    .label {
-      color: $primary-color;
-      font-weight: 600;
-      font-family: $font-heading;
-      letter-spacing: 0.01em;
-      font-size: 0.98em;
-      margin-bottom: 0.10em;
-      text-align: left;
-      text-transform: uppercase;
-    }
-
-    .value {
-      color: $text-color;
-      font-weight: 400;
-      font-family: $font-body;
-      text-align: left;
-      word-break: break-word;
-      font-size: 1.05em;
-      padding-left: 0.03em;
-      letter-spacing: 0.01em;
-    }
-  }
-
-  .countdown {
-    margin-top: .25rem;
-    font-size: 0.9rem;
-    opacity: 0.9;
-
-    strong {
-      font-variant-numeric: tabular-nums;
-      color: #d9534f; // czerwony dla kontrastu
-    }
-  }
-
-  .closedInfo {
-    margin-top: .5rem;
-    padding: .6rem .8rem;
-    border-radius: .75rem;
-    background: #fff3cd;
-    border: 1px solid #ffe69c;
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-    font-size: .95rem;
-  }
-
-  .seenBtn {
-    margin-left: auto;
-    background: #111827;
-    color: #fff;
-    border: 0;
-    border-radius: .6rem;
-    padding: .4rem .7rem;
-    cursor: pointer;
-  }
-
-
-
-  .actions {
-    margin-top: 1.12rem;
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-
-    button {
-      flex: 1;
-      padding: 0.5rem;
-      font-weight: bold;
-      border: none;
-      border-radius: 1.5rem;
-      cursor: pointer;
-      font-family: $font-accent;
-      transition: background 0.2s;
-
-      &:first-child {
-        background: $primary-color;
-        color: white;
-
-        &:hover {
-          background: darken($primary-color, 8%);
-        }
-      }
-
-      &:last-child {
-        background: #eee;
-        color: #444;
-
-        &:hover {
-          background: #ccc;
-        }
-      }
-    }
-  }
-
-  .cancel {
-    background: #fbe9e7;
-    color: #d32f2f;
-    border: none;
-    padding: 0.5rem;
-    border-radius: 1.5rem;
-    font-weight: bold;
-    cursor: pointer;
-    font-family: $font-accent;
-    transition: background 0.2s;
-
-    &:hover {
-      background: #f5c6c5;
-    }
-  }
-
-  .loading {
-    text-align: center;
-    font-size: 1.2rem;
-    padding: 3rem;
-    color: #777;
-    font-family: $font-body;
-  }
-}
-
-// BADGE STATUSÓW — tylko badge ma kolor i obramowanie!
 .statusBadge {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 0.4rem;
-  padding: 0.36rem 1.16rem;
-  font-size: 1rem;
-  font-weight: bold;
-  border-radius: 1rem;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-left: 0.1rem;
-  font-family: $font-accent;
-  border: 2px solid #ccc;
+  justify-content: center;
+  gap: .4rem;
+  padding: .2rem .6rem;
+  margin-left: .5rem;
+  font-size: .85rem;
+  font-weight: 700;
+  border-radius: .8rem;
+  letter-spacing: .02em;
+  text-transform: none;
+  line-height: 1;
+  border: 1px solid #ccc;
   background: #fafafa;
   color: $text-color;
-  justify-content: center;
 
   &.accepted {
     background: $status-accepted-bg;
@@ -242,5 +289,115 @@ $status-pending-text: #cc6600;
     background: $status-pending-bg;
     color: $status-pending-text;
     border-color: $status-pending-border;
+  }
+}
+
+/* Timer + info o zamknięciu */
+.countdown {
+  margin-top: .4rem;
+  font-size: .9rem;
+  opacity: .9;
+
+  strong {
+    font-variant-numeric: tabular-nums;
+    color: #d9534f;
+  }
+}
+
+.closedInfo {
+  margin-top: .6rem;
+  padding: .6rem .8rem;
+  border-radius: .75rem;
+  background: #fff3cd;
+  border: 1px solid #ffe69c;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  font-size: .95rem;
+}
+
+.seenBtn {
+  margin-left: auto;
+  background: #111827;
+  color: #fff;
+  border: 0;
+  border-radius: .6rem;
+  padding: .4rem .7rem;
+  cursor: pointer;
+}
+
+/* Akcje (potwierdź/odrzuć/anuluj) – miękko jak w Notifications */
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: .6rem;
+  justify-content: flex-end;
+
+  button {
+    padding: .5rem .9rem;
+    font-weight: 700;
+    border: none;
+    border-radius: .9rem;
+    cursor: pointer;
+    font-family: $font-accent;
+    transition: background .2s, transform .02s;
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
+}
+
+.cancel {
+  background: #fbe9e7;
+  color: #d32f2f;
+  border: 1px solid #f5c6c5;
+
+  &:hover {
+    background: #f5c6c5;
+  }
+}
+
+.actions>button:first-child:not(.cancel) {
+  background: $primary-color;
+  color: #fff;
+
+  &:hover {
+    background: darken($primary-color, 8%);
+  }
+}
+
+.actions>button:last-child {
+  background: #eee;
+  color: #444;
+
+  &:hover {
+    background: #ddd;
+  }
+}
+
+/* Loader */
+.loading {
+  text-align: center;
+  font-size: 1.2rem;
+  padding: 3rem;
+  color: #777;
+  font-family: $font-body;
+}
+
+/* Responsywność – delikatne dostrojenie, jak w Notifications */
+@media (min-width: 769px) {
+  .name {
+    max-width: 24ch;
+  }
+}
+
+@media (max-width: 480px) {
+  .metaText {
+    font-size: .9rem;
+  }
+
+  .date {
+    font-size: .82rem;
   }
 }
