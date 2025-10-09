@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import styles from './ReservationList.module.scss';
 import axios from 'axios';
 import AlertBox from '../AlertBox/AlertBox';
+import { useLocation } from 'react-router-dom';
 import { FiInbox, FiSend } from 'react-icons/fi';
 import { FiCalendar, FiClock, FiTag, FiCheckCircle, FiXCircle, FiAlertCircle } from 'react-icons/fi';
 
@@ -40,6 +41,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   const [clientReservations, setClientReservations] = useState([]);
   const [serviceReservations, setServiceReservations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   const [alert, setAlert] = useState({ show: false, type: 'info', message: '', onClose: null });
   const [disabledIds, setDisabledIds] = useState(new Set());
@@ -66,6 +68,25 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   useEffect(() => {
     if (!loading && resetPendingReservationsCount) resetPendingReservationsCount();
   }, [loading, resetPendingReservationsCount]);
+
+  // 〰️ scroll po wejściu / powrocie
+useEffect(() => {
+  const scrollTo = location.state?.scrollToId;
+  if (!scrollTo || loading) return;
+
+  const tryScroll = () => {
+    const el = document.getElementById(scrollTo);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // wyczyść state w URL, żeby nie przewijało ponownie
+      window.history.replaceState({}, document.title, location.pathname);
+    } else {
+      requestAnimationFrame(tryScroll);
+    }
+  };
+  requestAnimationFrame(tryScroll);
+}, [location.state, loading, location.pathname]);
+
 
   useEffect(() => {
     if (loading) return;
@@ -356,7 +377,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   }
 
   return (
-    <section className={styles.section}>
+    <section id="scrollToId" className={styles.section}>
       {alert.show && (
         <AlertBox
           type={alert.type}
@@ -368,7 +389,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       <div className={styles.wrapper}>
         <div className={styles.headerRow}>
           <div>
-            <h2 className={styles.sectionTitle}>Panel rezerwacji</h2>
+            <h2 className={styles.sectionTitle}>Twoje rezerwacje</h2>
             <p className={styles.subTitle}>
               Tutaj znajdziesz{' '}
               <strong className={styles.subStrong}>wysłane</strong> i{' '}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import styles from './AccountSettings.module.scss';
 import { auth } from '../../firebase';
 import AlertBox from '../AlertBox/AlertBox';
@@ -11,20 +12,20 @@ import {
 const API = process.env.REACT_APP_API_URL;
 
 export default function AccountSettings() {
+  const location = useLocation();
+
   const [user, setUser] = useState(() => auth.currentUser || null);
   const [displayName, setDisplayName] = useState(auth.currentUser?.displayName || '');
   const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(''); // ustawimy po onAuthStateChanged
+  const [preview, setPreview] = useState(''); 
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [alert, setAlert] = useState(null);
 
-  // ✅ AlertBox (typ + treść)
-  const [alert, setAlert] = useState(null); // { type: 'success'|'error'|'info'|'warning', message: string }
   const showAlert = (type, message) => setAlert({ type, message });
-
   const fallbackImg = '/images/other/no-image.png';
 
-  // 🔄 wczytaj świeżego usera + dane z backendu
+  // 🔄 Wczytaj świeżego usera + dane z backendu
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       try {
@@ -35,14 +36,10 @@ export default function AccountSettings() {
           setPreview(fallbackImg);
           return;
         }
-
-        // odśwież auth user (żeby mieć aktualne photoURL z Google, jeśli jest)
         try { await u.reload(); } catch {}
-
         setUser(auth.currentUser);
         setDisplayName(auth.currentUser?.displayName || '');
 
-        // spróbuj pobrać usera z backendu (po firebaseUid)
         try {
           const res = await fetch(`${API}/api/users/${u.uid}`);
           if (res.ok) {
@@ -53,7 +50,6 @@ export default function AccountSettings() {
               fallbackImg;
             setPreview(avatarUrl);
           } else {
-            // jak nie ma w DB – fallback do Google albo no-image
             setPreview(auth.currentUser?.photoURL || fallbackImg);
           }
         } catch {
@@ -66,44 +62,59 @@ export default function AccountSettings() {
     return () => unsub();
   }, []);
 
+  // 🧭 Scrollowanie po wejściu na stronę (z route state lub #hash)
+  useEffect(() => {
+    if (loading) return;
+    let targetId = location.state?.scrollToId;
+
+    if (!targetId && typeof window !== 'undefined' && window.location.hash) {
+      targetId = window.location.hash.replace('#', '').trim();
+    }
+
+    if (!targetId) return;
+
+    const tryScroll = () => {
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (location.state?.scrollToId) {
+          window.history.replaceState({}, document.title, location.pathname + window.location.hash);
+        }
+      } else {
+        requestAnimationFrame(tryScroll);
+      }
+    };
+    requestAnimationFrame(tryScroll);
+  }, [location.state, loading, location.pathname]);
+
   const onFileChange = (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
     if (!/^image\//.test(f.type)) return showAlert('warning', 'Wybierz plik graficzny.');
     if (f.size > 2 * 1024 * 1024) return showAlert('warning', 'Maksymalny rozmiar to 2 MB.');
     setFile(f);
-    // natychmiastowy podgląd
     setPreview(URL.createObjectURL(f));
   };
 
-  // ⬆️ Upload przez backend (Multer)
   const handleSaveAvatar = async () => {
     if (!user || !file) return;
     try {
       setSaving(true);
-
       const form = new FormData();
       form.append('file', file);
-
       const res = await fetch(`${API}/api/users/${user.uid}/avatar`, {
         method: 'POST',
         body: form,
       });
-
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err?.message || 'Błąd uploadu');
       }
-
       const { url } = await res.json();
-
-      // (opcjonalnie) zaktualizuj photoURL w Firebase Auth
       try {
         await updateProfile(user, { photoURL: url });
         await user.reload();
       } catch {}
-
-      // (opcjonalnie) możesz też PATCHnąć inne dane, ale avatar już jest zapisany przez POST
       setPreview(url);
       setFile(null);
       showAlert('success', 'Zapisano nowy awatar.');
@@ -119,22 +130,17 @@ export default function AccountSettings() {
     if (!user) return;
     try {
       setSaving(true);
-
       const res = await fetch(`${API}/api/users/${user.uid}/avatar`, {
         method: 'DELETE',
       });
-
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err?.message || 'Błąd usuwania');
       }
-
-      // (opcjonalnie) wyczyść też w Firebase Auth
       try {
         await updateProfile(user, { photoURL: '' });
         await user.reload();
       } catch {}
-
       setPreview(fallbackImg);
       setFile(null);
       showAlert('success', 'Usunięto awatar.');
@@ -150,19 +156,14 @@ export default function AccountSettings() {
     if (!user) return;
     try {
       setSaving(true);
-
       const clean = displayName.trim();
-      // 1) Firebase Auth (żeby np. komentarze/opinie mogły brać z auth)
       await updateProfile(user, { displayName: clean });
       await user.reload();
-
-      // 2) Twoje API – trzymaj to samo w Mongo
       await fetch(`${API}/api/users/${user.uid}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ displayName: clean }),
       }).catch(() => {});
-
       showAlert('success', 'Zaktualizowano nazwę wyświetlaną.');
     } catch (e) {
       console.error(e);
@@ -188,8 +189,7 @@ export default function AccountSettings() {
   }
 
   return (
-    <div className={styles.wrapper}>
-      {/* ✅ Globalny AlertBox dla tego widoku */}
+    <div id="scrollToId" className={styles.wrapper}>
       {alert && (
         <AlertBox
           type={alert.type}
@@ -204,7 +204,7 @@ export default function AccountSettings() {
       </p>
 
       {/* AVATAR */}
-      <section className={styles.card}>
+      <section id="avatarSection" className={styles.card}>
         <h3>Awatar</h3>
         <div className={styles.avatarRow}>
           <img
@@ -244,7 +244,7 @@ export default function AccountSettings() {
       </section>
 
       {/* DISPLAY NAME */}
-      <section className={styles.card}>
+      <section id="nameSection" className={styles.card}>
         <h3>Nazwa wyświetlana</h3>
         <div className={styles.inline}>
           <input
@@ -263,11 +263,13 @@ export default function AccountSettings() {
             Zapisz
           </button>
         </div>
-        <small className={styles.hint}>Ta nazwa może pojawiać się przy opiniach, konwersacjach oraz rezerwacjach.</small>
+        <small className={styles.hint}>
+          Ta nazwa może pojawiać się przy opiniach, konwersacjach oraz rezerwacjach.
+        </small>
       </section>
 
       {/* PASSWORD */}
-      <section className={styles.card}>
+      <section id="passwordSection" className={styles.card}>
         <h3>Hasło</h3>
         <p className={styles.text}>
           Jeśli logujesz się hasłem, wyślemy Ci e-mail z linkiem do zmiany hasła.

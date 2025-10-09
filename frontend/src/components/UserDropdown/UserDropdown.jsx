@@ -157,7 +157,7 @@ const UserDropdown = ({
 
       <div className={`${styles.menu} ${open ? styles.visible : ''}`}>
         {/* Twoje konto */}
-        <button onClick={() => handleNavigate('/konto')}>
+        <button onClick={() => handleNavigate('/konto', 'scrollToId')}>
           Twoje konto
         </button>
 
@@ -192,7 +192,7 @@ const UserDropdown = ({
         </button>
 
         {/* Rezerwacje */}
-        <button onClick={() => handleNavigate('/rezerwacje')}>
+        <button onClick={() => handleNavigate('/rezerwacje', 'scrollToId')}>
           Rezerwacje{' '}
           {Number(pendingReservationsCount) > 0 && (
             <strong className={styles.badge}>({pendingReservationsCount})</strong>
