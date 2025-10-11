@@ -411,6 +411,8 @@ input[type="date"] {
   input { transform: translateY(1px); }
 }
 
+
+
 @media (max-width: 600px) {
   .legend {
     font-size: 0.92rem;
@@ -426,6 +428,71 @@ input[type="date"] {
     width: 0.8em;
     height: 0.8em;
   }
+}
+
+/* Nagłówek sekcji – spójny z ReservationList */
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.sectionTitle {
+  margin: 0 0 .25rem;
+  font-size: 1.6rem;
+  color: $text-color;
+  font-family: $font-heading;
+}
+
+/* ✨ Najważniejsze: obejmij zwykłe inputy */
+.field {
+  // (...masz już resztę)
+  input[type="text"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="number"],
+  input[type="url"],
+  textarea,
+  input[type="date"],
+  select {
+    margin-top: 0.04rem;
+    padding: 0.72rem 1.06rem;
+    border: 1px solid #ccc;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, #ffffff, #f9f9f9);
+    font-size: 1.09rem;
+    font-family: $font-body;
+    color: $text-color;
+    transition: border .2s, box-shadow .16s;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,.03);
+
+    &:focus {
+      border-color: $primary-color;
+      background: #fff;
+      box-shadow: 0 0 0 2px rgba(111,78,242,.12);
+    }
+
+    &::placeholder { color: #a7a7b6; opacity: 1; }
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 54px;
+    max-height: 180px;
+    font-size: 1.04rem;
+  }
+}
+
+/* Disabled przycisku podczas wysyłki */
+.submit[disabled],
+.submit[aria-busy="true"] {
+  opacity: .7;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 // Responsywność

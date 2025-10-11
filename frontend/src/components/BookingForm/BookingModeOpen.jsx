@@ -39,7 +39,6 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
         content,
       });
 
-      // ➜ Trwałe powiadomienie po przejściu (flash) + „optimisticMessage”
       if (data?.id) {
         sessionStorage.setItem('flash', JSON.stringify({
           type: 'success',
@@ -56,23 +55,14 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
           createdAt: new Date().toISOString(),
           pending: true,
         }));
-        // (opcjonalnie) jeśli chcesz też wypełnić input w wątku:
-        // sessionStorage.setItem('draft', content);
-
-        navigate(`/konwersacja/${data.id}`, {
-          state: { scrollToId: 'threadPageLayout' }
-        });
-
-        // nie czyścimy pól przed nawigacją (po prostu komponent się odmontuje)
+        navigate(`/konwersacja/${data.id}`, { state: { scrollToId: 'threadPageLayout' } });
         return;
       }
 
-      // fallback — jeśli API nie zwróci id (nie powinno się zdarzyć)
       pushAlert?.({ show: true, type: 'success', message: 'Zapytanie wysłane.' });
       setMessage('');
       setPhone('');
     } catch (err) {
-      // 403 = istnieje już rozmowa → przenosimy się do niej i pokazujemy flash
       if (err?.response?.status === 403) {
         const existingId = err?.response?.data?.conversationId || null;
 
@@ -82,7 +72,6 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
           ttl: 6000,
           ts: Date.now(),
         }));
-        // aby treść nie „zniknęła”, przekażemy ją do inputa jako draft:
         sessionStorage.setItem('draft', content);
 
         navigate(
@@ -91,14 +80,13 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
         );
         return;
       }
-
-      // inny błąd
       pushAlert?.({ show: true, type: 'error', message: 'Nie udało się wysłać zapytania.' });
     } finally {
       setSending(false);
     }
   };
 
+  // ⤵️ tylko zawartość (bez własnego <section>/<div className="wrapper">)
   return (
     <>
       <label className={styles.field}>
@@ -131,7 +119,12 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
         />
       </label>
 
-      <button onClick={handleSubmit} className={styles.submit} disabled={sending}>
+      <button
+        onClick={handleSubmit}
+        className={styles.submit}
+        disabled={sending}
+        aria-busy={sending}
+      >
         {sending ? 'Wysyłanie…' : 'Wyślij zapytanie'}
       </button>
     </>

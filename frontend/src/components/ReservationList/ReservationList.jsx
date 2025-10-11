@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import styles from './ReservationList.module.scss';
 import axios from 'axios';
 import AlertBox from '../AlertBox/AlertBox';
@@ -87,7 +87,6 @@ useEffect(() => {
   };
   requestAnimationFrame(tryScroll);
 }, [location.state, loading, location.pathname]);
-
 
   useEffect(() => {
     if (loading) return;
@@ -268,29 +267,6 @@ useEffect(() => {
         </span>
       </>
     );
-  };
-
-  const renderStatusBadge = (res) => (
-    <span
-      className={`${styles.statusBadge} ${res.status === 'zaakceptowana'
-          ? styles.accepted
-          : res.status === 'odrzucona' || res.status === 'anulowana'
-            ? styles.rejected
-            : styles.pending
-        }`}
-    >
-      {res.status}
-    </span>
-  );
-
-  const renderBodyLine = (res) => {
-    const parts = [
-      res.date,
-      timeLabel(res),
-      res.serviceName ? `Usługa: ${res.serviceName}` : null,
-      `Status: ${res.status}`,
-    ].filter(Boolean);
-    return parts.join(' • ');
   };
 
   const renderClosedInfo = (res, viewer) => {

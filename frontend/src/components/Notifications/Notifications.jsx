@@ -274,7 +274,7 @@ const Notifications = ({ user, setUnreadCount }) => {
             <div className={styles.sectionGroup}>
               <div className={styles.groupHeader}>
                 <h3 className={styles.groupTitle}>
-                  Rozmowy z innymi profilami (Twoje konto)
+                  Rozmowy z innymi profilami (Twoje konto → inne profile)
                 </h3>
                 <span className={styles.badge}>
                   {outboxUnread > 0 ? `${outboxUnread} nieprzeczyt.` : `${myAccountToOtherProfiles.length}`}
