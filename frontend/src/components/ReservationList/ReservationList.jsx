@@ -5,6 +5,7 @@ import AlertBox from '../AlertBox/AlertBox';
 import { useLocation } from 'react-router-dom';
 import { FiInbox, FiSend } from 'react-icons/fi';
 import { FiCalendar, FiClock, FiTag, FiCheckCircle, FiXCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiFileText } from 'react-icons/fi';
 
 function Countdown({ until, onExpire }) {
   const [txt, setTxt] = useState('');
@@ -334,6 +335,7 @@ useEffect(() => {
           </div>
 
           {renderInfo(res)}
+          {renderDescription(res, variant)}
 
           {/* Dodatki (timer, info, akcje) */}
           {res.status === 'oczekująca' && res.pendingExpiresAt && (
@@ -371,6 +373,25 @@ useEffect(() => {
       </li>
     );
   };
+
+  const renderDescription = (res, viewer) => {
+  const text = (res.description || '').trim();
+  if (!text) return null;
+
+  const title = viewer === 'received' ? 'Opis od klienta' : 'Twój opis do rezerwacji';
+
+  return (
+    <div className={styles.note}>
+      <div className={styles.noteHeader}>
+        <FiFileText className={styles.noteIcon} aria-hidden="true" />
+        <span>{title}</span>
+      </div>
+      <div className={styles.noteBody}>
+        {text}
+      </div>
+    </div>
+  );
+};
 
   if (loading) {
     return <div className={styles.loading}>⏳ Ładowanie rezerwacji...</div>;
