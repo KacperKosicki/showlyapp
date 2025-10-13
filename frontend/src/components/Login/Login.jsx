@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -19,6 +19,11 @@ const Login = ({ setUser, setRefreshTrigger }) => {
   const [message, setMessage] = useState(''); // 👈 komunikat sukcesu
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // safety: wyczyść authFlow, gdyby został po jakimś craszu/nawigacji
+    return () => sessionStorage.removeItem('authFlow');
+  }, []);
+
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -28,10 +33,14 @@ const Login = ({ setUser, setRefreshTrigger }) => {
     setError('');
     setMessage('');
 
+    // ⬇️ sygnalizujemy, że trwa logowanie (żeby guard w App.jsx nie zablokował /login)
+    sessionStorage.setItem('authFlow', '1');
+
     try {
       const methods = await fetchSignInMethodsForEmail(auth, form.email);
       if (methods.includes('google.com')) {
         setError('Ten e-mail jest powiązany z kontem Google. Zaloguj się przez Google.');
+        sessionStorage.removeItem('authFlow');
         return;
       }
 
@@ -43,6 +52,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
         await sendEmailVerification(refreshedUser);
         await signOut(auth);
         setError('Zweryfikuj swój adres e-mail. Wysłaliśmy ponownie link aktywacyjny.');
+        sessionStorage.removeItem('authFlow');
         return;
       }
 
@@ -50,6 +60,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
       const uid = refreshedUser.uid;
       if (!email || !uid) {
         setError('Nie udało się pobrać danych logowania (e-mail lub UID).');
+        sessionStorage.removeItem('authFlow');
         return;
       }
 
@@ -64,9 +75,12 @@ const Login = ({ setUser, setRefreshTrigger }) => {
       setUser({ email, uid });
       setRefreshTrigger(Date.now());
 
-      // ✅ komunikat + opóźnione przekierowanie jak w Register
+      // ✅ komunikat + opóźnione przekierowanie na stronę główną
       setMessage('Pomyślnie zalogowano. Przekierowuję…');
-      setTimeout(() => navigate('/'), 1500);
+      setTimeout(() => {
+        sessionStorage.removeItem('authFlow'); // ⬅️ stop
+        navigate('/', { replace: true });
+      }, 1500);
     } catch (err) {
       console.error(err);
       if (err.code === 'auth/user-not-found') {
@@ -76,12 +90,14 @@ const Login = ({ setUser, setRefreshTrigger }) => {
       } else {
         setError('Błąd logowania.');
       }
+      sessionStorage.removeItem('authFlow'); // ⬅️ stop przy błędzie
     }
   };
 
   const handleGoogleLogin = async () => {
     setError('');
     setMessage('');
+    sessionStorage.setItem('authFlow', '1'); // ⬅️ start
 
     try {
       const provider = googleProvider;
@@ -96,6 +112,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
       const uid = user.uid;
       if (!email || !uid) {
         setError('Nie udało się pobrać danych użytkownika (brak e-maila lub UID).');
+        sessionStorage.removeItem('authFlow');
         return;
       }
 
@@ -109,6 +126,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
       } catch (err) {
         if (err.response?.status === 409) {
           setError('Ten e-mail jest już przypisany do innego konta. Zaloguj się metodą, którą wcześniej użyłeś.');
+          sessionStorage.removeItem('authFlow');
           return;
         }
         throw err;
@@ -118,9 +136,11 @@ const Login = ({ setUser, setRefreshTrigger }) => {
       setUser({ email, uid });
       setRefreshTrigger(Date.now());
 
-      // ✅ komunikat + opóźnione przekierowanie jak w Register
       setMessage('Pomyślnie zalogowano przez Google. Przekierowuję…');
-      setTimeout(() => navigate('/'), 1500);
+      setTimeout(() => {
+        sessionStorage.removeItem('authFlow'); // ⬅️ stop
+        navigate('/', { replace: true });
+      }, 1500);
     } catch (err) {
       console.error('❌ Błąd podczas logowania przez Google:', err);
       if (err.code === 'auth/account-exists-with-different-credential') {
@@ -129,6 +149,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
       } else {
         setError('Błąd podczas logowania przez Google.');
       }
+      sessionStorage.removeItem('authFlow'); // ⬅️ stop przy błędzie
     }
   };
 

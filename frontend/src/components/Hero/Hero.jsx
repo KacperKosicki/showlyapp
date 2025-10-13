@@ -22,14 +22,23 @@ const Hero = ({ user, setUser, refreshTrigger, unreadCount, setUnreadCount, pend
           <div className={styles.searchWrapper}>
             <SearchBar variant="hero" />
           </div>
-          <Link
-            to="/register"
-            state={{ scrollToId: 'registerContainer' }}
-            className={styles.ctaButton}
-          >
-            Załóż konto
-          </Link>
+
+          {user ? (
+            <Link to="/profil" className={styles.ctaButton} aria-label="Przejdź do profilu">
+              Przejdź do profilu
+            </Link>
+          ) : (
+            <Link
+              to="/register"
+              state={{ scrollToId: 'registerContainer' }}
+              className={styles.ctaButton}
+              aria-label="Załóż konto"
+            >
+              Załóż konto
+            </Link>
+          )}
         </div>
+
       </div>
 
       <div className={styles.wave}>

@@ -56,7 +56,6 @@ function App() {
       try {
         const res = await fetch(`${process.env.REACT_APP_API_URL}/api/reservations/by-provider/${user.uid}`);
         const data = await res.json();
-        // filtrujemy tylko te, które są 'oczekująca'
         const pending = data.filter(r => r.status === 'oczekująca').length;
         setPendingReservationsCount(pending);
       } catch (err) {
@@ -88,6 +87,10 @@ function App() {
     return <p style={{ padding: "2rem", textAlign: "center" }}>⏳ Trwa ładowanie aplikacji...</p>;
   }
 
+  // ✅ Flaga pozwala „ominąć” guard TYLKO podczas trwającego logowania,
+  // żeby komunikat na /login mógł się wyświetlić i zrobić swój navigate.
+  const isAuthFlow = sessionStorage.getItem('authFlow') === '1';
+
   return (
     <Router>
       <ScrollToTop />
@@ -97,7 +100,7 @@ function App() {
           element={
             <>
               <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
-              <AboutApp />
+              <AboutApp user={user} />
               <UserCardList currentUser={user} />
               <WhyUs />
               <CategoryFilter />
@@ -106,9 +109,29 @@ function App() {
             </>
           }
         />
-        <Route path="/register" element={<Register user={user} setUser={setUser} setRefreshTrigger={setRefreshTrigger} />} />
-        <Route path="/login" element={<Login setUser={setUser} setRefreshTrigger={setRefreshTrigger} />} />
+
+        {/* ✅ Blokada /login dla zalogowanych, ALE nie w trakcie authFlow */}
+        <Route
+          path="/login"
+          element={
+            user && !isAuthFlow
+              ? <Navigate to="/" replace />
+              : <Login setUser={setUser} setRefreshTrigger={setRefreshTrigger} />
+          }
+        />
+
+        {/* ✅ Blokada /register dla zalogowanych, ALE nie w trakcie authFlow */}
+        <Route
+          path="/register"
+          element={
+            user && !isAuthFlow
+              ? <Navigate to="/" replace />
+              : <Register user={user} setUser={setUser} setRefreshTrigger={setRefreshTrigger} />
+          }
+        />
+
         <Route path="/verify-success" element={<VerifySuccess />} />
+
         <Route
           path="/stworz-profil"
           element={
@@ -119,6 +142,7 @@ function App() {
             </>
           }
         />
+
         <Route
           path="/profil"
           element={
@@ -129,6 +153,7 @@ function App() {
             </>
           }
         />
+
         <Route
           path="/profil/:slug"
           element={
@@ -139,6 +164,7 @@ function App() {
             </>
           }
         />
+
         <Route
           path="/wiadomosc/:recipientId"
           element={
@@ -153,6 +179,7 @@ function App() {
             )
           }
         />
+
         <Route
           path="/powiadomienia"
           element={
@@ -167,13 +194,14 @@ function App() {
             )
           }
         />
+
         <Route
           path="/konwersacja/:threadId"
           element={
             user ? (
               <>
                 <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
-                <ThreadView user={user} setUnreadCount={setUnreadCount} triggerRefresh={triggerRefresh} /> {/* ✅ przekazanie */}
+                <ThreadView user={user} setUnreadCount={setUnreadCount} triggerRefresh={triggerRefresh} />
                 <Footer />
               </>
             ) : (
@@ -181,6 +209,7 @@ function App() {
             )
           }
         />
+
         <Route
           path="/rezerwacja/:slug"
           element={
@@ -203,6 +232,7 @@ function App() {
             )
           }
         />
+
         <Route
           path="/konto"
           element={
@@ -225,6 +255,7 @@ function App() {
             )
           }
         />
+
         <Route
           path="/rezerwacje"
           element={
@@ -239,7 +270,7 @@ function App() {
                   setUnreadCount={setUnreadCount}
                   pendingReservationsCount={pendingReservationsCount}
                 />
-                <ReservationList user={user} resetPendingReservationsCount={resetPendingReservationsCount} /> {/* <-- PRZEKAZUJESZ */}
+                <ReservationList user={user} resetPendingReservationsCount={resetPendingReservationsCount} />
                 <Footer />
               </>
             ) : (

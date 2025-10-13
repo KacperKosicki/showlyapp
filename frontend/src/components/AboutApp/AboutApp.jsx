@@ -2,7 +2,7 @@ import React from 'react';
 import styles from './AboutApp.module.scss';
 import { Link } from 'react-router-dom';
 
-const AboutApp = () => {
+const AboutApp = ({ user }) => {
   return (
     <section className={styles.about}>
       {/* BLOK 1: obrazek po lewej */}
@@ -51,16 +51,24 @@ const AboutApp = () => {
           </p>
           <div className={styles.buttons}>
             <Link to="/wizytowki" className={styles.primary}>Zobacz innych</Link>
-            <Link to="/register" className={styles.secondary} state={{ scrollToId: 'registerContainer' }}>
-              Załóż swoją wizytówkę
-            </Link>
+
+            {user ? (
+              <Link to="/profil" className={styles.secondary}>
+                Przejdź do profilu
+              </Link>
+            ) : (
+              <Link
+                to="/register"
+                className={styles.secondary}
+                state={{ scrollToId: 'registerContainer' }}
+              >
+                Załóż swoją wizytówkę
+              </Link>
+            )}
           </div>
         </div>
       </div>
-
-
     </section>
-
   );
 };
 

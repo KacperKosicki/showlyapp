@@ -12,7 +12,7 @@ import styles from './Register.module.scss';
 import Hero from '../Hero/Hero';
 import Footer from '../Footer/Footer';
 import axios from 'axios';
-import { useLocation, useNavigate } from 'react-router-dom'; // 👈 dodano useNavigate
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const Register = ({ user, setUser, setRefreshTrigger }) => {
   const [form, setForm] = useState({
@@ -26,7 +26,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   const [error, setError] = useState('');
   const [emailSent, setEmailSent] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate(); // 👈 init
+  const navigate = useNavigate();
 
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
@@ -97,7 +97,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
       setEmailSent(true);
       setMessage('Na Twój adres e-mail został wysłany link aktywacyjny. Kliknij w niego, aby aktywować konto.');
-      // (opcjonalnie) przekierowanie na stronę główną po np. 3 s:
+      // opcjonalny redirect po czasie:
       // setTimeout(() => navigate('/'), 3000);
     } catch (err) {
       console.error(err);
@@ -112,6 +112,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   const handleGoogleLogin = async () => {
     setError('');
     setMessage('');
+    sessionStorage.setItem('authFlow', '1'); // ⬅️ start (bo za chwilę będziesz zalogowany i guard nie może przerwać /register)
 
     try {
       const provider = googleProvider;
@@ -127,6 +128,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
       if (!email || !uid) {
         setError('Nie udało się pobrać danych użytkownika (brak e-maila lub UID).');
+        sessionStorage.removeItem('authFlow');
         return;
       }
 
@@ -140,6 +142,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
       } catch (err) {
         if (err.response?.status === 409) {
           setError('Ten e-mail jest już przypisany do innego konta. Zaloguj się metodą, którą wcześniej użyłeś.');
+          sessionStorage.removeItem('authFlow');
           return;
         }
         throw err;
@@ -150,7 +153,10 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
       setRefreshTrigger(Date.now());
 
       setMessage('Pomyślnie zalogowano przez Google. Przekierowuję…');
-      setTimeout(() => navigate('/'), 1500); // 👈 opóźnione przekierowanie jak chciałeś
+      setTimeout(() => {
+        sessionStorage.removeItem('authFlow'); // ⬅️ stop
+        navigate('/', { replace: true });
+      }, 1500);
     } catch (err) {
       console.error('❌ Błąd podczas logowania przez Google:', err);
       if (err.code === 'auth/account-exists-with-different-credential') {
@@ -159,6 +165,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
       } else {
         setError('Błąd podczas logowania przez Google.');
       }
+      sessionStorage.removeItem('authFlow'); // ⬅️ stop przy błędzie
     }
   };
 
