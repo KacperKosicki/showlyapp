@@ -189,6 +189,170 @@
   }
 }
 
+/* ============ EMPTY STATE: brak profilu ============ */
+
+.emptyWrap {
+  display: grid;
+  place-items: center;
+  min-height: 58vh;
+}
+
+.emptyCard {
+  position: relative;
+  width: 100%;
+  max-width: 860px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  border: 1px solid #e9ecf1;
+  border-radius: 1.25rem;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .06);
+  padding: clamp(1.1rem, 1.8vw + .7rem, 2rem);
+  overflow: hidden;
+  text-align: center;
+  animation: cardIn .22s ease-out both;
+}
+
+@keyframes cardIn {
+  from {
+    transform: translateY(6px);
+    opacity: .0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.emptyBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .35rem .7rem;
+  border-radius: 999px;
+  border: 1px solid rgba($primary-color, .22);
+  background: rgba($primary-color, .06);
+  color: $primary-color;
+  font-weight: 800;
+  font-size: .8rem;
+  margin-bottom: .6rem;
+}
+
+.emptyTitle {
+  margin: 0 0 .35rem;
+  font-family: $font-heading;
+  font-weight: 900;
+  letter-spacing: .2px;
+  color: $text-color;
+  font-size: clamp(1.2rem, 2.2vw + .6rem, 1.7rem);
+}
+
+.emptyDesc {
+  margin: 0 auto .9rem;
+  max-width: 48ch;
+  color: #5f6b7a;
+  line-height: 1.6;
+}
+
+.emptyList {
+  list-style: none;
+  padding: 0;
+  margin: .6rem auto 1rem;
+  max-width: 620px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .45rem .8rem;
+  text-align: left;
+
+  @media (min-width: 680px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .45rem .65rem;
+    border: 1px dashed #e7ebf2;
+    border-radius: .8rem;
+    background: #fff;
+    color: $text-color;
+  }
+}
+
+.dot {
+  width: .55rem;
+  height: .55rem;
+  border-radius: 999px;
+  background: $primary-color;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 4px rgba($primary-color, .12);
+}
+
+.emptyCtas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  margin-top: .6rem;
+  flex-wrap: wrap;
+
+  .ctaPrimary {
+    letter-spacing: .2px;
+    font-size: 1rem;
+  }
+
+}
+
+.ghostLight {
+  background: #fff;
+  color: $text-color;
+  border: 1px solid #dfe6ee;
+  padding: .55rem 1rem;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background .2s ease, transform .15s ease, border-color .2s ease;
+
+  &:hover {
+    background: #fafbff;
+    transform: translateY(-1px);
+    border-color: #cfd8e3;
+  }
+}
+
+/* dekor – miękkie bąbelki w tle (opcjonalne) */
+.emptyArt {
+  pointer-events: none;
+}
+
+.bubble {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(120px 120px at 40% 40%, rgba($primary-color, .18), transparent 60%);
+  right: -60px;
+  top: -60px;
+  filter: blur(2px);
+}
+
+.bubble.two {
+  width: 180px;
+  height: 180px;
+  right: auto;
+  left: -50px;
+  top: 40%;
+  background: radial-gradient(100px 100px at 50% 50%, rgba(#ff6ea8, .14), transparent 60%);
+}
+
+.bubble.three {
+  width: 140px;
+  height: 140px;
+  right: 10%;
+  bottom: -40px;
+  background: radial-gradient(90px 90px at 60% 40%, rgba(#7c9dff, .12), transparent 60%);
+}
+
 /* =========================
    Przyciski (spójne z AccountSettings)
    ========================= */
@@ -202,6 +366,7 @@
   font-family: $font-accent;
   font-weight: 600;
   transition: background .2s ease, transform .15s ease;
+  text-decoration: none;
 
   &:hover {
     background: darken($primary-color, 10%);
@@ -1539,13 +1704,15 @@
 }
 
 /* Galeria – komunikat „brak zdjęć” jako pełny wiersz siatki */
-.galleryView > .noInfo,
-.galleryEditor > .noInfo {
-  grid-column: 1 / -1;   /* span przez wszystkie kolumny */
-  justify-self: start;   /* wyrównanie do lewej */
-  width: auto;           /* kompaktowa pigułka, nie 100% */
+.galleryView>.noInfo,
+.galleryEditor>.noInfo {
+  grid-column: 1 / -1;
+  /* span przez wszystkie kolumny */
+  justify-self: start;
+  /* wyrównanie do lewej */
+  width: auto;
+  /* kompaktowa pigułka, nie 100% */
 }
-
 
 /* Drobne dopieszczenie responsywności */
 @media (max-width: 480px) {

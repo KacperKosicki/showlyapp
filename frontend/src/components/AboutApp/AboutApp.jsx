@@ -53,7 +53,11 @@ const AboutApp = ({ user }) => {
             <Link to="/wizytowki" className={styles.primary}>Zobacz innych</Link>
 
             {user ? (
-              <Link to="/profil" className={styles.secondary}>
+              <Link
+                to="/profil"
+                state={{ scrollToId: 'scrollToId' }}
+                className={styles.secondary}
+              >
                 Przejdź do profilu
               </Link>
             ) : (
@@ -65,6 +69,7 @@ const AboutApp = ({ user }) => {
                 Załóż swoją wizytówkę
               </Link>
             )}
+
           </div>
         </div>
       </div>

@@ -24,7 +24,12 @@ const Hero = ({ user, setUser, refreshTrigger, unreadCount, setUnreadCount, pend
           </div>
 
           {user ? (
-            <Link to="/profil" className={styles.ctaButton} aria-label="Przejdź do profilu">
+            <Link
+              to="/profil"
+              state={{ scrollToId: 'scrollToId' }}  // ← ID elementu w YourProfile
+              className={styles.ctaButton}
+              aria-label="Przejdź do profilu"
+            >
               Przejdź do profilu
             </Link>
           ) : (
@@ -38,7 +43,6 @@ const Hero = ({ user, setUser, refreshTrigger, unreadCount, setUnreadCount, pend
             </Link>
           )}
         </div>
-
       </div>
 
       <div className={styles.wave}>
