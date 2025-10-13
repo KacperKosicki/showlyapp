@@ -13,6 +13,14 @@
   font-family: $font-body;
 }
 
+.nameSkeleton {
+  display: inline-block;
+  width: 140px;
+  height: 1em;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
 /* Header sekcji */
 .headerRow {
   display: flex;

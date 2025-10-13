@@ -103,6 +103,14 @@
   text-overflow: ellipsis;
 }
 
+.nameSkeleton {
+  display: inline-block;
+  width: 140px;   // dostosuj do swoich potrzeb
+  height: 1em;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
 /* ▼ Grupy */
 .sectionGroup {
   margin-bottom: 2rem;

@@ -1,11 +1,12 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import styles from './ReservationList.module.scss';
 import axios from 'axios';
 import AlertBox from '../AlertBox/AlertBox';
 import { useLocation } from 'react-router-dom';
 import { FiInbox, FiSend } from 'react-icons/fi';
-import { FiCalendar, FiClock, FiTag, FiCheckCircle, FiXCircle, FiAlertCircle } from 'react-icons/fi';
-import { FiFileText } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiTag, FiCheckCircle, FiXCircle, FiAlertCircle, FiFileText } from 'react-icons/fi';
+
+const API = process.env.REACT_APP_API_URL;
 
 function Countdown({ until, onExpire }) {
   const [txt, setTxt] = useState('');
@@ -47,13 +48,16 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   const [alert, setAlert] = useState({ show: false, type: 'info', message: '', onClose: null });
   const [disabledIds, setDisabledIds] = useState(new Set());
 
+  // Mapa nazw kont po userId (undefined=pending, null=brak, string=nazwa)
+  const [accountNameMap, setAccountNameMap] = useState({});
+
   const safeParse = (str) => { try { return JSON.parse(str); } catch { return null; } };
 
   const refetch = useCallback(async () => {
     if (!user?.uid) return;
     const [resClient, resService] = await Promise.all([
-      axios.get(`${process.env.REACT_APP_API_URL}/api/reservations/by-user/${user.uid}`),
-      axios.get(`${process.env.REACT_APP_API_URL}/api/reservations/by-provider/${user.uid}`)
+      axios.get(`${API}/api/reservations/by-user/${user.uid}`),
+      axios.get(`${API}/api/reservations/by-provider/${user.uid}`)
     ]);
     setClientReservations(resClient.data || []);
     setServiceReservations(resService.data || []);
@@ -71,22 +75,21 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   }, [loading, resetPendingReservationsCount]);
 
   // 〰️ scroll po wejściu / powrocie
-useEffect(() => {
-  const scrollTo = location.state?.scrollToId;
-  if (!scrollTo || loading) return;
+  useEffect(() => {
+    const scrollTo = location.state?.scrollToId;
+    if (!scrollTo || loading) return;
 
-  const tryScroll = () => {
-    const el = document.getElementById(scrollTo);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // wyczyść state w URL, żeby nie przewijało ponownie
-      window.history.replaceState({}, document.title, location.pathname);
-    } else {
-      requestAnimationFrame(tryScroll);
-    }
-  };
-  requestAnimationFrame(tryScroll);
-}, [location.state, loading, location.pathname]);
+    const tryScroll = () => {
+      const el = document.getElementById(scrollTo);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.replaceState({}, document.title, location.pathname);
+      } else {
+        requestAnimationFrame(tryScroll);
+      }
+    };
+    requestAnimationFrame(tryScroll);
+  }, [location.state, loading, location.pathname]);
 
   useEffect(() => {
     if (loading) return;
@@ -144,7 +147,7 @@ useEffect(() => {
     try {
       setDisabledIds(prev => new Set(prev).add(reservationId));
       await axios.patch(
-        `${process.env.REACT_APP_API_URL}/api/reservations/${reservationId}/status`,
+        `${API}/api/reservations/${reservationId}/status`,
         { status: newStatus }
       );
       if (newStatus === 'anulowana')
@@ -167,7 +170,7 @@ useEffect(() => {
 
   const markSeen = async (id, who) => {
     try {
-      await axios.patch(`${process.env.REACT_APP_API_URL}/api/reservations/${id}/seen`, { who });
+      await axios.patch(`${API}/api/reservations/${id}/seen`, { who });
       if (who === 'client') setClientReservations(prev => prev.filter(r => r._id !== id));
       else setServiceReservations(prev => prev.filter(r => r._id !== id));
     } catch (e) { console.error('❌ markSeen error', e); }
@@ -180,20 +183,59 @@ useEffect(() => {
     return whole ? 'cały dzień' : `${res.fromTime} – ${res.toTime}`;
   };
 
-  const senderLabel = (res) => {
-    const account =
-      res.userAccountDisplayName ||
-      res.userDisplayName ||
-      res.accountDisplayName;
-    if (account?.trim()) return account.trim();
-    if (res.userProfileName?.trim()) return res.userProfileName.trim();
-    if (res.userName?.trim()) return res.userName.trim();
-    if (res.userEmail) return res.userEmail.split('@')[0];
-    return 'Użytkownik';
+  // Unikalne UID-y nadawców (klientów) z otrzymanych rezerwacji
+  const senderUids = useMemo(() => {
+    const arr = serviceReservations.map(r => r.userId).filter(Boolean);
+    return Array.from(new Set(arr));
+  }, [serviceReservations]);
+
+  // Nazwa konta po userId; fallback do snapshotu userName
+  const getAccountName = (uid, fallbackName) => {
+    if (!uid) return (fallbackName?.trim()) || 'Użytkownik';
+    const name = accountNameMap[uid]; // undefined=pending | null=brak | string=nazwa
+    if (name === undefined) return ''; // pending -> skeleton
+    if (typeof name === 'string' && name.trim()) return name.trim();
+    return (fallbackName?.trim()) || 'Użytkownik';
   };
 
+  // Dociąganie displayName kont po userId
+  useEffect(() => {
+    if (senderUids.length === 0) return;
+
+    // oznacz pending
+    setAccountNameMap(prev => {
+      const next = { ...prev };
+      senderUids.forEach(uid => {
+        if (!Object.prototype.hasOwnProperty.call(next, uid)) next[uid] = undefined;
+      });
+      return next;
+    });
+
+    const fetchOne = async (uid) => {
+      try {
+        const r = await axios.get(`${API}/api/users/${uid}`);
+        const data = r?.data;
+        const dn =
+          (data?.displayName && String(data.displayName).trim()) ||
+          (data?.name && String(data.name).trim()) ||
+          null;
+        return dn;
+      } catch {
+        return null;
+      }
+    };
+
+    (async () => {
+      const entries = await Promise.all(senderUids.map(async (uid) => [uid, await fetchOne(uid)]));
+      setAccountNameMap(prev => {
+        const next = { ...prev };
+        entries.forEach(([uid, name]) => { next[uid] = name; });
+        return next;
+      });
+    })();
+  }, [senderUids]);
+
   const formatDatePL = (iso) => {
-    // obsłuży "2025-10-09" i ewentualnie ISO z czasem
     const d = new Date(iso);
     if (isNaN(d)) return iso;
     return d.toLocaleDateString('pl-PL', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -205,7 +247,6 @@ useEffect(() => {
     return <FiAlertCircle className={styles.chipIcon} aria-hidden="true" />;
   };
 
-  // ZAMIANA dotychczasowego renderBodyLine na ładne „czipsy”
   const renderInfo = (res) => (
     <div className={styles.info}>
       <span className={styles.chip}>
@@ -225,25 +266,35 @@ useEffect(() => {
         </span>
       )}
 
-      <span className={`${styles.chip} ${res.status === 'zaakceptowana'
-        ? styles.chipAccepted
-        : (res.status === 'odrzucona' || res.status === 'anulowana')
-          ? styles.chipRejected
-          : styles.chipPending
-        }`}>
+      <span
+        className={`${styles.chip} ${
+          res.status === 'zaakceptowana'
+            ? styles.chipAccepted
+            : (res.status === 'odrzucona' || res.status === 'anulowana')
+            ? styles.chipRejected
+            : styles.chipPending
+        }`}
+      >
         {statusIcon(res.status)}
         {res.status}
       </span>
     </div>
   );
 
-  // ► Liczniki do badge (tak jak w Notifications)
+  // ► Liczniki do badge
   const sentCount = clientReservations.length;
   const receivedCount = serviceReservations.length;
   const pendingSent = clientReservations.filter(r => r.status === 'oczekująca').length;
   const pendingReceived = serviceReservations.filter(r => r.status === 'oczekująca').length;
 
-  // ► Item header & content — identyczna logika layoutu jak w Notifications
+  // ► Pomocnicze: skeleton dla nazw
+  const renderNameNode = (rawName) =>
+    rawName ? (
+      <span className={styles.name}>{rawName}</span>
+    ) : (
+      <span className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`} />
+    );
+
   const renderHeader = (res, variant) => {
     if (variant === 'sent') {
       return (
@@ -258,12 +309,15 @@ useEffect(() => {
         </>
       );
     }
+
+    // received -> nazwa NADAWCY: po userId (fallback: snapshot userName)
+    const rawAccountName = getAccountName(res.userId, res.userName);
     return (
       <>
         <FiInbox className={styles.icon} />
         <span className={styles.metaText}>
           Otrzymana rezerwacja do <b>Twojego profilu</b> od{' '}
-          <span className={styles.name}>{senderLabel(res)}</span>
+          {renderNameNode(rawAccountName)}
         </span>
       </>
     );
@@ -279,8 +333,8 @@ useEffect(() => {
       res.closedReason === 'expired'
         ? 'Rezerwacja wygasła (brak potwierdzenia w czasie).'
         : res.status === 'anulowana'
-          ? 'Klient anulował rezerwację.'
-          : 'Usługodawca odrzucił rezerwację.';
+        ? 'Klient anulował rezerwację.'
+        : 'Usługodawca odrzucił rezerwację.';
 
     return (
       <div className={styles.closedInfo}>
@@ -292,18 +346,30 @@ useEffect(() => {
     );
   };
 
+  const renderDescription = (res, viewer) => {
+    const text = (res.description || '').trim();
+    if (!text) return null;
+
+    const title = viewer === 'received' ? 'Opis od klienta' : 'Twój opis do rezerwacji';
+
+    return (
+      <div className={styles.note}>
+        <div className={styles.noteHeader}>
+          <FiFileText className={styles.noteIcon} aria-hidden="true" />
+          <span>{title}</span>
+        </div>
+        <div className={styles.noteBody}>{text}</div>
+      </div>
+    );
+  };
+
   const renderItem = (res, variant) => {
     const isPending = res.status === 'oczekująca';
     return (
-      <li
-        key={res._id}
-        className={`${styles.item} ${isPending ? styles.unread : styles.read}`}
-      >
+      <li key={res._id} className={`${styles.item} ${isPending ? styles.unread : styles.read}`}>
         <div className={styles.link}>
           <div className={styles.top}>
-            <span className={styles.meta}>
-              {renderHeader(res, variant)}
-            </span>
+            <span className={styles.meta}>{renderHeader(res, variant)}</span>
             <span className={styles.date}>
               {new Date(res.createdAt || res.updatedAt || Date.now()).toLocaleString()}
               {isPending && <span className={styles.dot} aria-hidden="true" />}
@@ -313,11 +379,11 @@ useEffect(() => {
           {renderInfo(res)}
           {renderDescription(res, variant)}
 
-          {/* Dodatki (timer, info, akcje) */}
           {res.status === 'oczekująca' && res.pendingExpiresAt && (
             <Countdown until={res.pendingExpiresAt} onExpire={handleExpire} />
           )}
           {renderClosedInfo(res, variant)}
+
           {variant === 'sent' && res.status === 'oczekująca' && (
             <div className={styles.actions}>
               <button
@@ -329,6 +395,7 @@ useEffect(() => {
               </button>
             </div>
           )}
+
           {variant === 'received' && res.status === 'oczekująca' && (
             <div className={styles.actions}>
               <button
@@ -350,25 +417,6 @@ useEffect(() => {
     );
   };
 
-  const renderDescription = (res, viewer) => {
-  const text = (res.description || '').trim();
-  if (!text) return null;
-
-  const title = viewer === 'received' ? 'Opis od klienta' : 'Twój opis do rezerwacji';
-
-  return (
-    <div className={styles.note}>
-      <div className={styles.noteHeader}>
-        <FiFileText className={styles.noteIcon} aria-hidden="true" />
-        <span>{title}</span>
-      </div>
-      <div className={styles.noteBody}>
-        {text}
-      </div>
-    </div>
-  );
-};
-
   if (loading) {
     return <div className={styles.loading}>⏳ Ładowanie rezerwacji...</div>;
   }
@@ -388,10 +436,8 @@ useEffect(() => {
           <div>
             <h2 className={styles.sectionTitle}>Twoje rezerwacje</h2>
             <p className={styles.subTitle}>
-              Tutaj znajdziesz{' '}
-              <strong className={styles.subStrong}>wysłane</strong> i{' '}
-              <strong className={styles.subStrong}>otrzymane</strong> rezerwacje —
-              w jednolitym, czytelnym układzie.
+              Tutaj znajdziesz <strong className={styles.subStrong}>wysłane</strong> i{' '}
+              <strong className={styles.subStrong}>otrzymane</strong> rezerwacje — w jednolitym, czytelnym układzie.
             </p>
           </div>
         </div>
@@ -401,7 +447,7 @@ useEffect(() => {
           <div className={styles.groupHeader}>
             <h3 className={styles.groupTitle}>Otrzymane rezerwacje (do Twojego profilu)</h3>
             <span className={styles.badge}>
-              {pendingReceived > 0 ? `${pendingReceived} oczek.` : `${receivedCount}`}
+              {pendingReceived > 0 ? `${pendingReceived} oczek.` : `${serviceReservations.length}`}
             </span>
           </div>
 
@@ -419,7 +465,7 @@ useEffect(() => {
           <div className={styles.groupHeader}>
             <h3 className={styles.groupTitle}>Wysłane rezerwacje (Twoje konto → inne profile)</h3>
             <span className={styles.badge}>
-              {pendingSent > 0 ? `${pendingSent} oczek.` : `${sentCount}`}
+              {pendingSent > 0 ? `${pendingSent} oczek.` : `${clientReservations.length}`}
             </span>
           </div>
 

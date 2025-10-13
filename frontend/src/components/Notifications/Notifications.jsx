@@ -63,10 +63,25 @@ const Notifications = ({ user, setUnreadCount }) => {
     [conversations]
   );
 
-  // 3) Nazwy PROFILI drugiej strony (do labeli)
+  // helper: czy mamy ROZSTRZYGNIĘCIE (string|null) — pending to undefined
+  const isProfileResolved = (uid) => profileNameMap[uid] !== undefined;
+
+  // 3) Nazwy PROFILI drugiej strony (pending -> skeleton, potem string|null)
   useEffect(() => {
     const fetchProfiles = async () => {
       if (otherUids.length === 0) return;
+
+      // 3a) Oznacz nowe UID-y jako pending
+      setProfileNameMap((prev) => {
+        const draft = { ...prev };
+        otherUids.forEach((uid) => {
+          if (!Object.prototype.hasOwnProperty.call(draft, uid)) {
+            draft[uid] = undefined; // pending
+          }
+        });
+        return draft;
+      });
+
       try {
         const entries = await Promise.all(
           otherUids.map(async (uid) => {
@@ -75,14 +90,21 @@ const Notifications = ({ user, setUnreadCount }) => {
                 `${process.env.REACT_APP_API_URL}/api/profiles/by-user/${uid}`
               );
               const name = r?.data?.name?.trim();
-              return [uid, name || null];
+              return [uid, name || null]; // string lub null (brak profilu)
             } catch {
               return [uid, null];
             }
           })
         );
-        const map = Object.fromEntries(entries);
-        setProfileNameMap(map);
+
+        // 3b) Zapisz rozstrzygnięcia
+        setProfileNameMap((prev) => {
+          const next = { ...prev };
+          entries.forEach(([uid, name]) => {
+            next[uid] = name; // string | null
+          });
+          return next;
+        });
       } catch (e) {
         console.error('❌ Błąd pobierania nazw profili:', e);
       }
@@ -91,33 +113,25 @@ const Notifications = ({ user, setUnreadCount }) => {
     fetchProfiles();
   }, [otherUids]);
 
-  // 4) Scroll po powrocie
-  useEffect(() => {
-    const scrollTo = location.state?.scrollToId;
-    if (!scrollTo || loading) return;
-
-    const tryScroll = () => {
-      const el = document.getElementById(scrollTo);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        window.history.replaceState({}, document.title, location.pathname);
-      } else {
-        requestAnimationFrame(tryScroll);
-      }
-    };
-    requestAnimationFrame(tryScroll);
-  }, [location.state, loading, location.pathname]);
-
   // Helper do etykiet:
-  // prefer="profile"  -> najpierw nazwa wizytówki, potem fallback do konta
-  // prefer="account"  -> najpierw nazwa konta, potem fallback do wizytówki
+  // prefer="profile"  -> najpierw nazwa profilu; dopóki pending, nie pokazuj konta (skeleton)
+  // prefer="account"  -> najpierw nazwa konta; profil tylko gdy konto puste
   const getName = (otherUid, fallback, prefer = 'profile') => {
-    const profile = (profileNameMap[otherUid] || '').trim();
     const account = (fallback || '').trim();
+    const profile = profileNameMap[otherUid]; // undefined (pending) | null | string
+
     if (prefer === 'account') {
-      return account || profile || 'Użytkownik';
+      return account || (typeof profile === 'string' ? profile.trim() : '') || 'Użytkownik';
     }
-    return profile || account || 'Użytkownik';
+
+    if (!isProfileResolved(otherUid)) {
+      return ''; // pending -> skeleton
+    }
+    if (typeof profile === 'string' && profile.trim()) {
+      return profile.trim();
+    }
+    // rozstrzygnięte, że brak profilu
+    return account || 'Użytkownik';
   };
 
   // 5) Podział na segmenty — tylko kanał account_to_profile
@@ -128,14 +142,14 @@ const Notifications = ({ user, setUnreadCount }) => {
 
   // Konto innych -> Twoja wizytówka (kto zaczął? nie Ty)
   const inboxToMyProfile = useMemo(
-    () => accountToProfile.filter((c) => c.firstFromUid && c.firstFromUid !== user.uid),
-    [accountToProfile, user.uid]
+    () => accountToProfile.filter((c) => c.firstFromUid && c.firstFromUid !== user?.uid),
+    [accountToProfile, user?.uid]
   );
 
   // Twoje konto -> cudze wizytówki (kto zaczął? Ty)
   const myAccountToOtherProfiles = useMemo(
-    () => accountToProfile.filter((c) => c.firstFromUid && c.firstFromUid === user.uid),
-    [accountToProfile, user.uid]
+    () => accountToProfile.filter((c) => c.firstFromUid && c.firstFromUid === user?.uid),
+    [accountToProfile, user?.uid]
   );
 
   // 5b) System
@@ -148,6 +162,14 @@ const Notifications = ({ user, setUnreadCount }) => {
   const inboxUnread = inboxToMyProfile.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
   const outboxUnread = myAccountToOtherProfiles.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
 
+  // render nazwy z ewentualnym skeletonem
+  const renderNameNode = (rawName) =>
+    rawName ? (
+      <span className={styles.name}>{rawName}</span>
+    ) : (
+      <span className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`} />
+    );
+
   const renderItem = (convo, variant) => {
     const lastMsg = convo.lastMessage;
     if (!lastMsg) return null;
@@ -157,24 +179,22 @@ const Notifications = ({ user, setUnreadCount }) => {
 
     let header;
     if (variant === 'inbox') {
-      const otherName = getName(otherUid, convo.withDisplayName, 'account');
+      const rawName = getName(otherUid, convo.withDisplayName, 'account');
       header = (
         <>
           <FiInbox className={styles.icon} />
           <span className={styles.metaText}>
-            Otrzymałeś/aś wiadomość do Twojego <b>profilu</b> od{' '}
-            <span className={styles.name}>{otherName}</span>
+            Otrzymałeś/aś wiadomość do Twojego <b>profilu</b> od {renderNameNode(rawName)}
           </span>
         </>
       );
     } else if (variant === 'outbox') {
-      const otherName = getName(otherUid, convo.withDisplayName, 'profile');
+      const rawName = getName(otherUid, convo.withDisplayName, 'profile');
       header = (
         <>
           <FiSend className={styles.icon} />
           <span className={styles.metaText}>
-            Rozmowa Twojego <b>konta</b> z profilem{' '}
-            <span className={styles.name}>{otherName}</span>
+            Rozmowa Twojego <b>konta</b> z profilem {renderNameNode(rawName)}
           </span>
         </>
       );
@@ -194,7 +214,9 @@ const Notifications = ({ user, setUnreadCount }) => {
     return (
       <li
         key={convo._id}
-        className={`${styles.item} ${isUnread ? styles.unread : styles.read} ${variant === 'system' ? styles.itemSystem : ''}`}
+        className={`${styles.item} ${isUnread ? styles.unread : styles.read} ${
+          variant === 'system' ? styles.itemSystem : ''
+        }`}
       >
         <Link
           to={`/konwersacja/${convo._id}`}
@@ -214,7 +236,6 @@ const Notifications = ({ user, setUnreadCount }) => {
     );
   };
 
-
   const SkeletonItem = () => (
     <li className={`${styles.item} ${styles.skeletonItem}`}>
       <div className={styles.link}>
@@ -227,6 +248,23 @@ const Notifications = ({ user, setUnreadCount }) => {
     </li>
   );
 
+  // 4) Scroll po powrocie
+  useEffect(() => {
+    const scrollTo = location.state?.scrollToId;
+    if (!scrollTo || loading) return;
+
+    const tryScroll = () => {
+      const el = document.getElementById(scrollTo);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.replaceState({}, document.title, location.pathname);
+      } else {
+        requestAnimationFrame(tryScroll);
+      }
+    };
+    requestAnimationFrame(tryScroll);
+  }, [location.state, loading, location.pathname]);
+
   return (
     <div id="scrollToId" className={styles.section}>
       <div className={styles.wrapper}>
@@ -235,7 +273,14 @@ const Notifications = ({ user, setUnreadCount }) => {
             <h2 className={styles.sectionTitle}>Twoje powiadomienia</h2>
             <p className={styles.subTitle}>
               Zebraliśmy wiadomości do Twojego profilu
-              {myProfile?.name ? <> <strong className={styles.subStrong}>{myProfile.name}</strong></> : ''}{' '}
+              {myProfile?.name ? (
+                <>
+                  {' '}
+                  <strong className={styles.subStrong}>{myProfile.name}</strong>
+                </>
+              ) : (
+                ''
+              )}{' '}
               oraz wątki wysłane z <strong className={styles.subStrong}>Twojego konta</strong>.
             </p>
           </div>
@@ -264,9 +309,7 @@ const Notifications = ({ user, setUnreadCount }) => {
               {inboxToMyProfile.length === 0 ? (
                 <p className={styles.emptyGroup}>Brak wiadomości do Twojego profilu.</p>
               ) : (
-                <ul className={styles.list}>
-                  {inboxToMyProfile.map((c) => renderItem(c, 'inbox'))}
-                </ul>
+                <ul className={styles.list}>{inboxToMyProfile.map((c) => renderItem(c, 'inbox'))}</ul>
               )}
             </div>
 
@@ -277,7 +320,9 @@ const Notifications = ({ user, setUnreadCount }) => {
                   Rozmowy z innymi profilami (Twoje konto → inne profile)
                 </h3>
                 <span className={styles.badge}>
-                  {outboxUnread > 0 ? `${outboxUnread} nieprzeczyt.` : `${myAccountToOtherProfiles.length}`}
+                  {outboxUnread > 0
+                    ? `${outboxUnread} nieprzeczyt.`
+                    : `${myAccountToOtherProfiles.length}`}
                 </span>
               </div>
 
@@ -289,6 +334,7 @@ const Notifications = ({ user, setUnreadCount }) => {
                 </ul>
               )}
             </div>
+
             {/* SEGMENT 3: Wiadomości systemowe */}
             <div className={styles.sectionGroup}>
               <div className={styles.groupHeader}>
@@ -306,7 +352,6 @@ const Notifications = ({ user, setUnreadCount }) => {
                 </ul>
               )}
             </div>
-
           </>
         )}
       </div>
