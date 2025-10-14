@@ -3,6 +3,7 @@ const router = express.Router();
 const Reservation = require('../models/Reservation');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
+const Staff = require('../models/Staff'); // ⬅️ DODAJ TO
 
 // === USTAWIENIA ===
 const PENDING_MINUTES = Number(process.env.PENDING_MINUTES ?? 1);  // np. 60 w produkcji
@@ -14,6 +15,36 @@ const toMin = (hhmm) => {
   return (h || 0) * 60 + (m || 0);
 };
 const overlap = (aStart, aEnd, bStart, bEnd) => aStart < bEnd && aEnd > bStart;
+
+// ISO z 'YYYY-MM-DD' + 'HH:mm' (jeśli masz strefę czasową, skonwertuj tutaj)
+const toDateTime = (dateStr, hhmm) => new Date(`${dateStr}T${hhmm}:00.000Z`);
+
+// żywe statusy, które blokują slot
+const ALIVE_STATUSES = ['zaakceptowana', 'oczekująca', 'tymczasowa'];
+
+// auto-assign: wybierz pierwszą osobę, która wykonuje usługę i nie ma konfliktu (z uwzględnieniem capacity)
+async function pickAvailableStaffForProfile({ providerProfileId, serviceId, startAt, endAt }) {
+  // bierz tylko aktywny personel z tego profilu
+  const all = await Staff.find({ profileId: providerProfileId, active: true }).lean();
+
+  // filtr: czy osoba w ogóle wykonuje tę usługę
+  const candidates = all.filter(s => (s.serviceIds || []).some(id => String(id) === String(serviceId)));
+
+  for (const s of candidates) {
+    const overlaps = await Reservation.countDocuments({
+      providerProfileId,
+      staffId: s._id,
+      dateOnly: false,
+      status: { $in: ALIVE_STATUSES },
+      startAt: { $lt: endAt },
+      endAt: { $gt: startAt }
+    });
+    if (overlaps < (s.capacity ?? 1)) {
+      return s; // zwróć cały dokument staff (przyda się name)
+    }
+  }
+  return null;
+}
 
 // Zamień przeterminowane „oczekujące” na zamknięte („wygasłe”), widoczne TYLKO u klienta
 async function closeExpiredPending() {
@@ -34,7 +65,7 @@ async function closeExpiredPending() {
 }
 
 // =====================
-// POST /api/reservations  – rezerwacja godzinowa
+// POST /api/reservations  – rezerwacja godzinowa (calendar)
 // =====================
 router.post('/', async (req, res) => {
   try {
@@ -48,66 +79,178 @@ router.post('/', async (req, res) => {
       duration,
       description,
       serviceId,
+      // ⬇️ opcjonalnie przy user-pick
+      staffId: staffIdFromClient
     } = req.body;
 
     if (!userId || !providerUserId || !providerProfileId || !date || !fromTime || !toTime) {
       return res.status(400).json({ message: 'Brakuje wymaganych pól' });
     }
 
-    // kolizje na żywych/twardych wpisach
-    const now = new Date();
-    const existing = await Reservation.find({
-      providerUserId,
-      date,
-      status: { $in: ['zaakceptowana', 'oczekująca', 'tymczasowa'] },
-      $or: [
-        { status: 'zaakceptowana' },
-        { status: 'oczekująca', pendingExpiresAt: { $gt: now } },
-        { status: 'tymczasowa',  holdExpiresAt:    { $gt: now } },
-      ],
-    }).lean();
+    // wylicz znormalizowane czasy (ułatwią konflikty)
+    const startAt = toDateTime(date, fromTime);
+    const endAt = toDateTime(date, toTime);
 
-    const reqStart = toMin(fromTime);
-    const reqEnd   = toMin(toTime) + SLOT_BUFFER_MIN;
-
-    const hasCollision = existing.some(d => {
-      const s = toMin(d.fromTime);
-      const e = toMin(d.toTime) + SLOT_BUFFER_MIN;
-      return overlap(reqStart, reqEnd, s, e);
-    });
-    if (hasCollision) {
-      return res.status(409).json({ message: 'Wybrany slot jest zajęty lub niedostępny.' });
-    }
-
-    // ładne nazwy
+    // pobierz ładne nazwy i profil
     const [user, provider, profile] = await Promise.all([
       User.findOne({ firebaseUid: userId }),
       User.findOne({ firebaseUid: providerUserId }),
-      Profile.findById(providerProfileId),
+      Profile.findById(providerProfileId)
     ]);
+
+    if (!profile) {
+      return res.status(404).json({ message: 'Profil usługodawcy nie istnieje' });
+    }
 
     const serviceName =
       profile?.services?.find(s => String(s._id) === String(serviceId))?.name || null;
 
+    // wykryj, czy działa tryb zespołu
+    const isCalendarTeam =
+      profile.bookingMode === 'calendar' && profile.team?.enabled === true;
+
+    let staffId = null;
+    let staffName = null;
+    let staffAutoAssigned = false;
+
+    if (isCalendarTeam) {
+      const mode = profile.team.assignmentMode; // 'user-pick' | 'auto-assign'
+
+      if (mode === 'user-pick') {
+        if (!staffIdFromClient) {
+          return res.status(400).json({ message: 'Wybierz pracownika' });
+        }
+        // weryfikacja, że pracownik należy do profilu i wykonuje tę usługę
+        const staffDoc = await Staff.findOne({
+          _id: staffIdFromClient,
+          profileId: providerProfileId,
+          active: true
+        }).lean();
+
+        if (!staffDoc) {
+          return res.status(400).json({ message: 'Nieprawidłowy pracownik' });
+        }
+        const canDoService = (staffDoc.serviceIds || []).some(id => String(id) === String(serviceId));
+        if (!canDoService) {
+          return res.status(400).json({ message: 'Wybrana osoba nie wykonuje tej usługi' });
+        }
+
+        staffId = staffDoc._id;
+        staffName = staffDoc.name || null;
+      }
+
+      if (mode === 'auto-assign' && !staffIdFromClient) {
+        const picked = await pickAvailableStaffForProfile({
+          providerProfileId,
+          serviceId,
+          startAt,
+          endAt
+        });
+        if (!picked) {
+          return res.status(409).json({ message: 'Brak dostępnego pracownika' });
+        }
+        staffId = picked._id;
+        staffName = picked.name || null;
+        staffAutoAssigned = true;
+      }
+
+      // jeśli ktoś mimo auto-assign przysłał staffId, możesz zaakceptować po weryfikacji jak wyżej
+      if (mode === 'auto-assign' && staffIdFromClient && !staffId) {
+        const staffDoc = await Staff.findOne({
+          _id: staffIdFromClient,
+          profileId: providerProfileId,
+          active: true
+        }).lean();
+        if (!staffDoc) return res.status(400).json({ message: 'Nieprawidłowy pracownik' });
+        const canDoService = (staffDoc.serviceIds || []).some(id => String(id) === String(serviceId));
+        if (!canDoService) return res.status(400).json({ message: 'Wybrana osoba nie wykonuje tej usługi' });
+        staffId = staffDoc._id;
+        staffName = staffDoc.name || null;
+      }
+    }
+
+    // 🔒 KOLIZJE
+    // 1) Tryb z zespołem: konflikt liczymy per staffId (i tylko dla godzinowych)
+    if (isCalendarTeam && staffId) {
+      const overlaps = await Reservation.countDocuments({
+        providerProfileId,
+        staffId,
+        dateOnly: false,
+        status: { $in: ALIVE_STATUSES },
+        startAt: { $lt: endAt },
+        endAt: { $gt: startAt }
+      });
+      if (overlaps) {
+        return res.status(409).json({ message: 'Wybrany slot dla tej osoby jest zajęty.' });
+      }
+    } else {
+      // 2) Dotychczasowa logika bez zespołu (zgodna z Twoim kodem)
+      const now = new Date();
+      const existing = await Reservation.find({
+        providerUserId,
+        date,
+        status: { $in: ALIVE_STATUSES },
+        $or: [
+          { status: 'zaakceptowana' },
+          { status: 'oczekująca', pendingExpiresAt: { $gt: now } },
+          { status: 'tymczasowa', holdExpiresAt: { $gt: now } }
+        ]
+      }).lean();
+
+      const reqStart = toMin(fromTime);
+      const reqEnd = toMin(toTime) + SLOT_BUFFER_MIN;
+
+      const hasCollision = existing.some(d => {
+        const s = toMin(d.fromTime);
+        const e = toMin(d.toTime) + SLOT_BUFFER_MIN;
+        return overlap(reqStart, reqEnd, s, e);
+      });
+      if (hasCollision) {
+        return res.status(409).json({ message: 'Wybrany slot jest zajęty lub niedostępny.' });
+      }
+    }
+
+    // ustawienie terminów wygasania „oczekującej”
     const pendingExpiresAt = new Date(Date.now() + PENDING_MINUTES * 60 * 1000);
 
+    // UTWÓRZ REZERWACJĘ
     const newReservation = await Reservation.create({
+      // KLIENT
       userId,
       userName: user?.name || 'Klient',
+
+      // USŁUGODAWCA
       providerUserId,
       providerName: provider?.name || 'Usługodawca',
+
+      // PROFIL
       providerProfileId,
       providerProfileName: profile?.name || 'Profil',
       providerProfileRole: profile?.role || 'Brak roli',
+
+      // PERSONEL (jeśli dotyczy)
+      staffId: staffId || null,
+      staffName: staffName || null,
+      staffAutoAssigned,
+
+      // DATA/CZAS
       date,
+      dateOnly: false,
       fromTime,
       toTime,
+      startAt,
+      endAt,
       duration,
+
+      // USŁUGA (snapshot)
+      serviceId: serviceId || null,
+      serviceName: serviceName || null,
+
+      // INNE
       description,
       status: 'oczekująca',
       pendingExpiresAt,
-      holdExpiresAt: null,
-      serviceName,
+      holdExpiresAt: null
     });
 
     res.status(201).json({ message: 'Rezerwacja utworzona', reservation: newReservation });
@@ -132,7 +275,7 @@ router.get('/by-user/:uid', async (req, res) => {
       $or: [
         { status: 'zaakceptowana' },
         { status: 'oczekująca', pendingExpiresAt: { $gt: now } },
-        { status: { $in: ['anulowana','odrzucona'] }, clientSeen: false },
+        { status: { $in: ['anulowana', 'odrzucona'] }, clientSeen: false },
       ],
     }).sort({ createdAt: -1 });
 
@@ -158,7 +301,7 @@ router.get('/by-provider/:uid', async (req, res) => {
       $or: [
         { status: 'zaakceptowana' },
         { status: 'oczekująca', pendingExpiresAt: { $gt: now } },
-        { status: { $in: ['anulowana','odrzucona'] }, providerSeen: false },
+        { status: { $in: ['anulowana', 'odrzucona'] }, providerSeen: false },
       ],
     }).sort({ createdAt: -1 });
 

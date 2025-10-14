@@ -56,6 +56,14 @@ const profileSchema = new mongoose.Schema({
     enum: ['calendar', 'request-blocking', 'request-open'],
     default: 'request-open' // najbezpieczniejsza wartość
   },
+  team: {
+    enabled: { type: Boolean, default: false }, // włącz/wyłącz zespół dla kalendarza
+    assignmentMode: {                           // sposób przypisania osoby
+      type: String,
+      enum: ['user-pick', 'auto-assign'],
+      default: 'user-pick'
+    }
+  },
   isVisible: { type: Boolean, default: true },
   visibleUntil: { type: Date, required: true },
   description: String,

@@ -1412,6 +1412,56 @@
   }
 }
 
+/* =============== STATUS PRACOWNIKA =============== */
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .28rem .7rem;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: .82rem;
+  letter-spacing: .2px;
+  border: 1px solid #e3e8ef;
+  background: #fff;
+  color: #475569;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .05);
+  transition: transform .12s ease, box-shadow .12s ease, border-color .2s ease, background .2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .08);
+  }
+}
+
+.statusDot {
+  width: .46rem;
+  height: .46rem;
+  border-radius: 999px;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.03) inset;
+}
+
+/* Warianty */
+.statusActive {
+  border-color: rgba(58, 181, 74, .28);
+  background: linear-gradient(180deg, rgba(58, 181, 74, .08) 0%, #fff 100%);
+  color: #2e7d32;
+
+  .statusDot {
+    background: #2e7d32;
+  }
+}
+
+.statusInactive {
+  border-color: #e4e7ec;
+  background: linear-gradient(180deg, #f3f4f6 0%, #fff 100%);
+  color: #6b7280;
+
+  .statusDot {
+    background: #9aa3af;
+  }
+}
+
 /* =========================
    Linki i media — karta sekcji
    ========================= */

@@ -13,12 +13,19 @@ import {
   FaUserTie,
   FaLink,
   FaIdBadge,
-  FaInfoCircle,
   FaBriefcase,
-  FaTools
+  FaTools,
+  FaUsers,
+  FaTrash,
+  FaPlus,
+  FaSave,
+  FaTimes
 } from 'react-icons/fa';
 
 const YourProfile = ({ user, setRefreshTrigger }) => {
+  // =========================
+  // Lokalne stany
+  // =========================
   const [qaErrors, setQaErrors] = useState([
     { title: '', answer: '', touched: false },
     { title: '', answer: '', touched: false },
@@ -40,11 +47,25 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const [formErrors, setFormErrors] = useState({});
   const [alert, setAlert] = useState(null);
 
+  // --- PRACOWNICY ---
+  const [staff, setStaff] = useState([]); // [{_id, name, active, capacity, serviceIds: []}]
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [newStaff, setNewStaff] = useState({
+    name: '',
+    capacity: 1,
+    active: true,
+    serviceIds: []
+  });
+  const [staffEdits, setStaffEdits] = useState({}); // {staffId: {name, capacity, active, serviceIds}}
+
   const fileInputRef = useRef(null);
   const location = useLocation();
   const addPhotoInputRef = useRef(null);
   const DEFAULT_AVATAR = '/images/other/no-image.png';
 
+  // =========================
+  // Utils
+  // =========================
   const showAlert = (message, type = 'info') => {
     setAlert({ message, type });
     setTimeout(() => setAlert(null), 4000);
@@ -65,33 +86,38 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     requestAnimationFrame(tryScroll);
   }, [location.state, loading, location.pathname]);
 
-  // fetchProfile – policz hashe istniejących zdjęć
+  // =========================
+  // Pobieranie profilu
+  // =========================
   const fetchProfile = async () => {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`);
-      const profile = res.data;
+      const p = res.data;
       const now = new Date();
-      const until = new Date(profile.visibleUntil);
-      if (until < now) profile.isVisible = false;
+      const until = new Date(p.visibleUntil);
+      if (until < now) p.isVisible = false;
 
-      setProfile(profile);
+      setProfile(p);
 
-      const photos = profile.photos || [];
-      // hashujemy istniejące zdjęcia po ich dataURL/URL tekście (bez pobierania binarek)
-      const photoHashes = await Promise.all(photos.map(p => hashString(p)));
+      const photos = p.photos || [];
+      const photoHashes = await Promise.all(photos.map(ph => hashString(ph)));
 
       setEditData({
-        ...profile,
-        services: profile.services || [],
+        ...p,
+        services: p.services || [],
         photos,
-        photoHashes, // ← już wypełnione
-        quickAnswers: profile.quickAnswers || [
+        photoHashes,
+        quickAnswers: p.quickAnswers || [
           { title: '', answer: '' }, { title: '', answer: '' }, { title: '', answer: '' }
         ],
-        bookingMode: profile.bookingMode || 'request-open',
-        workingHours: profile.workingHours || { from: '08:00', to: '20:00' },
-        workingDays: profile.workingDays || [1, 2, 3, 4, 5],
+        bookingMode: p.bookingMode || 'request-open',
+        workingHours: p.workingHours || { from: '08:00', to: '20:00' },
+        workingDays: p.workingDays || [1, 2, 3, 4, 5],
+        team: p.team || { enabled: false, assignmentMode: 'user-pick' }, // ⬅️ DODAJ
       });
+
+      // Po profilu dociągnij pracowników
+      await fetchStaff(p._id);
     } catch (err) {
       if (err.response?.status === 404) setNotFound(true);
       else console.error('Błąd podczas pobierania profilu:', err);
@@ -106,7 +132,82 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
 
-  // helpers (na górze pliku obok fileToDataUrlAndHash)
+  // =========================
+  // Staff: API
+  // =========================
+  const fetchStaff = async (profileId) => {
+    if (!profileId) return;
+    try {
+      setStaffLoading(true);
+      // API: GET /api/staff?profileId=...
+      const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/staff`, {
+        params: { profileId }
+      });
+      setStaff(data || []);
+    } catch (e) {
+      console.error('Nie udało się pobrać pracowników', e);
+      showAlert('Nie udało się pobrać pracowników.', 'error');
+    } finally {
+      setStaffLoading(false);
+    }
+  };
+
+  const createStaff = async () => {
+    if (!profile?._id) return;
+    if (!newStaff.name.trim()) {
+      showAlert('Podaj imię pracownika.', 'warning');
+      return;
+    }
+    try {
+      // API: POST /api/staff
+      const payload = {
+        profileId: profile._id,
+        name: newStaff.name.trim(),
+        capacity: Number(newStaff.capacity) || 1,
+        active: !!newStaff.active,
+        serviceIds: newStaff.serviceIds || []
+      };
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/staff`, payload);
+      setNewStaff({ name: '', capacity: 1, active: true, serviceIds: [] });
+      await fetchStaff(profile._id);
+      showAlert('Dodano pracownika.', 'success');
+    } catch (e) {
+      console.error('Błąd dodawania pracownika', e);
+      showAlert('Błąd dodawania pracownika.', 'error');
+    }
+  };
+
+  const patchStaff = async (id, changes) => {
+    try {
+      // API: PATCH /api/staff/:id
+      await axios.patch(`${process.env.REACT_APP_API_URL}/api/staff/${id}`, changes);
+      await fetchStaff(profile._id);
+      showAlert('Zapisano pracownika.', 'success');
+    } catch (e) {
+      console.error('Błąd zapisu pracownika', e);
+      showAlert('Błąd zapisu pracownika.', 'error');
+    }
+  };
+
+  const deleteStaff = async (id) => {
+    // optymistycznie usuń z listy od razu
+    setStaff(prev => prev.filter(s => s._id !== id));
+
+    try {
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/staff/${id}`);
+      showAlert('Usunięto pracownika.', 'success');
+    } catch (e) {
+      console.error('Błąd usuwania pracownika', e);
+      // przy błędzie przywróć listę z serwera
+      await fetchStaff(profile._id);
+      showAlert('Błąd usuwania pracownika.', 'error');
+    }
+  };
+
+
+  // =========================
+  // Helpers: obrazy, hash
+  // =========================
   const hashString = async (str) => {
     const enc = new TextEncoder();
     const buf = await crypto.subtle.digest('SHA-256', enc.encode(str));
@@ -114,14 +215,12 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   };
 
   const fileToDataUrlAndHash = async (file) => {
-    // 1) hash z binarki
     const buf = await file.arrayBuffer();
     const hashBuf = await crypto.subtle.digest('SHA-256', buf);
     const hashHex = Array.from(new Uint8Array(hashBuf))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
-    // 2) dataURL do podglądu
     const dataUrl = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result);
@@ -132,8 +231,9 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     return { dataUrl, hash: hashHex };
   };
 
-
-  // 👇 PODMIEŃ handleImageChange, żeby używać bezpiecznej wersji setState
+  // =========================
+  // Handlery obrazów
+  // =========================
   const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -153,19 +253,16 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       const { dataUrl } = await fileToDataUrlAndHash(file);
       setEditData(prev => ({ ...prev, avatar: dataUrl }));
     } finally {
-      e.target.value = ''; // pozwala wybrać ten sam plik ponownie
+      e.target.value = '';
     }
   };
 
   const handleRemoveAvatar = () => {
-    setEditData(prev => ({ ...prev, avatar: null })); // wyczyść; backend dostanie null
+    setEditData(prev => ({ ...prev, avatar: null }));
     fileInputRef.current && (fileInputRef.current.value = '');
     showAlert('Usunięto zdjęcie profilowe. Utrwal zmianę przyciskiem „Zapisz”.', 'info');
   };
 
-
-
-  // 👇 PODMIEŃ handlePhotoChange, dorzuć reset inputa na końcu
   const handlePhotoChange = async (e, index) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -180,14 +277,12 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         const hashes = prev.photoHashes || [];
         const photos = [...(prev.photos || [])];
 
-        // jeśli hash już istnieje w innym slocie — zablokuj
         const alreadyIdx = hashes.indexOf(hash);
         if (alreadyIdx !== -1 && alreadyIdx !== index) {
           showAlert('To zdjęcie już jest w galerii.', 'info');
           return prev;
         }
 
-        // podstaw w slocie i zaktualizuj hash
         photos[index] = dataUrl;
         const nextHashes = [...hashes];
         nextHashes[index] = hash;
@@ -199,38 +294,30 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     }
   };
 
-
+  // =========================
+  // Walidacje / zapis profilu
+  // =========================
   const validateEditData = (data) => {
     const errors = {};
 
-    // NIE sprawdzamy name w edycji (nazwa nieedytowalna)
-    // if (!data.name?.trim() || data.name.length > 30) errors.name = ...
-
-    // Rola
     if (!data.role?.trim()) errors.role = 'Podaj rolę (maks. 40 znaków)';
     else if (data.role.length > 40) errors.role = 'Rola maks. 40 znaków';
 
-    // Lokalizacja
     if (!data.location?.trim()) errors.location = 'Podaj lokalizację (maks. 30 znaków)';
     else if (data.location.length > 30) errors.location = 'Lokalizacja maks. 30 znaków';
 
-    // Typ profilu
     if (!data.profileType) errors.profileType = 'Wybierz typ profilu';
 
-    // Tagi
     const nonEmptyTags = (data.tags || []).filter(tag => tag.trim() !== '');
     if (nonEmptyTags.length === 0) errors.tags = 'Podaj przynajmniej 1 tag';
 
-    // Opis
     if (data.description?.length > 500) errors.description = 'Opis nie może przekraczać 500 znaków';
 
-    // Ceny
     const priceFrom = Number(data.priceFrom);
     const priceTo = Number(data.priceTo);
     if (!priceFrom || priceFrom < 1 || priceFrom > 100000) errors.priceFrom = 'Cena od musi być w zakresie 1–100 000';
     if (!priceTo || priceTo < priceFrom || priceTo > 1000000) errors.priceTo = 'Cena do musi być większa niż "od" i nie większa niż 1 000 000';
 
-    // Szybkie odpowiedzi (zostawiasz jak masz)
     const quickAnswers = data.quickAnswers || [];
     const invalidQA = quickAnswers.some(qa => {
       const titleLength = qa.title?.trim().length || 0;
@@ -267,14 +354,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     const slotsLeft = Math.max(0, 5 - existing);
     const files = filesAll.slice(0, slotsLeft);
 
-    const toDataURL = (file) =>
-      new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-
     const accepted = [];
     for (const file of files) {
       if (!file.type.startsWith('image/')) { showAlert('Pominięto plik: nie jest obrazem.', 'warning'); continue; }
@@ -290,15 +369,11 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
     if (!accepted.length) { e.target.value = ''; return; }
 
-    // handleAddPhotosSelect – dodatkowy fallback po dataURL
     setEditData(prev => {
       const existingPhotos = prev.photos || [];
       const existingHashes = prev.photoHashes || [];
 
-      // odfiltruj duplikaty po hashach
       let fresh = accepted.filter(x => !existingHashes.includes(x.hash));
-
-      // fallback: odfiltruj po samym dataURL (gdyby jakiś hash był pusty)
       fresh = fresh.filter(x => !existingPhotos.includes(x.dataUrl));
 
       if (fresh.length < accepted.length) {
@@ -311,9 +386,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       return { ...prev, photos: nextPhotos, photoHashes: nextHashes };
     });
 
-
     e.target.value = '';
-
   };
 
   const handleRemovePhoto = (index) => {
@@ -325,8 +398,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       return { ...prev, photos: p, photoHashes: h };
     });
   };
-
-
 
   const handleExtendVisibility = async () => {
     try {
@@ -358,28 +429,42 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     }
 
     try {
-      // ⬇️ nie wysyłamy pomocniczego pola photoHashes
       const { photoHashes, ...payload } = editData;
 
+      // 1) Zapis profilu
       await axios.patch(`${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`, {
         ...payload,
         showAvailableDates: !!payload.showAvailableDates,
         tags: (payload.tags || []).filter(tag => tag.trim() !== ''),
-        quickAnswers: (payload.quickAnswers || [])
-          .filter(qa => qa.title?.trim() || qa.answer?.trim()),
+        quickAnswers: (payload.quickAnswers || []).filter(qa => qa.title?.trim() || qa.answer?.trim()),
+        team: payload.team || { enabled: false, assignmentMode: 'user-pick' },
       });
 
+      // 2) Zbiorczy zapis zmian pracowników (tylko te, które zmieniono)
+      const staffUpdateEntries = Object.entries(staffEdits); // [[id, changes], ...]
+      if (staffUpdateEntries.length) {
+        await Promise.all(
+          staffUpdateEntries.map(([id, changes]) =>
+            axios.patch(`${process.env.REACT_APP_API_URL}/api/staff/${id}`, changes)
+          )
+        );
+      }
+
+      // 3) Odśwież dane i posprzątaj lokalny stan edycji
       await fetchProfile();
+      setStaffEdits({});          // wyczyść „brudne” zmiany pracowników
       setIsEditing(false);
       setFormErrors({});
       showAlert('Zapisano zmiany!', 'success');
     } catch (err) {
-      console.error('❌ Błąd zapisu profilu:', err);
+      console.error('❌ Błąd zapisu profilu/pracowników:', err);
       showAlert('Wystąpił błąd podczas zapisywania.', 'error');
     }
   };
 
-
+  // =========================
+  // Misc helpers
+  // =========================
   const mapUnit = (unit) => {
     switch (unit) {
       case 'minutes': return 'min';
@@ -451,18 +536,20 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const hasAvatarNow =
     Object.prototype.hasOwnProperty.call(editData, 'avatar')
-      ? Boolean(editData.avatar)        // w edycji patrzymy WYŁĄCZNIE na editData.avatar
-      : Boolean(profile.avatar);        // gdy nie dotykaliśmy avatara, bierzemy profil
+      ? Boolean(editData.avatar)
+      : Boolean(profile.avatar);
 
   const formatPLDate = (d) =>
     d ? new Date(d).toLocaleDateString('pl-PL', {
       weekday: 'short', day: '2-digit', month: 'short', year: 'numeric'
     }) : '--';
 
+  // =========================
+  // Render
+  // =========================
   return (
     <div className={styles.wrapper} id="scrollToId">
       {alert && <div className={styles.toast}>{alert.message}</div>}
-      {/* Możesz zostawić AlertBox jeśli chcesz: <AlertBox message={alert.message} type={alert.type} onClose={() => setAlert(null)} /> */}
 
       <div className={styles.headerBar}>
         <div className={styles.headerText}>
@@ -495,6 +582,9 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         </div>
       )}
 
+      {/* =========================
+          Dane podstawowe
+      ========================= */}
       <section className={styles.card}>
         <h3>Dane podstawowe</h3>
 
@@ -532,7 +622,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 <small className={styles.hint}>Kwadratowe najlepiej wygląda. Max ok. 2–3 MB.</small>
               </div>
             )}
-
           </div>
 
           {/* Kolumna z danymi */}
@@ -597,11 +686,13 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 <p>{profile.location}</p>
               )}
             </div>
-
           </div>
         </div>
       </section>
 
+      {/* =========================
+          Opis
+      ========================= */}
       <section className={styles.card}>
         <h3>Opis</h3>
         <div className={styles.descriptionBlock}>
@@ -614,8 +705,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 className={styles.formTextarea}
                 maxLength={500}
               />
-
-              {/* meta: błąd po lewej, licznik po prawej */}
               <div className={styles.descMeta}>
                 <div className={styles.descLeft}>
                   {formErrors.description && (
@@ -639,8 +728,12 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         </div>
       </section>
 
+      {/* =========================
+          Dostępność i usługi
+      ========================= */}
       <section className={styles.card}>
         <h3>Dostępność i usługi</h3>
+
         {/* CENNIK */}
         <div className={styles.inputBlock}>
           <div className={styles.groupTitle}>
@@ -699,7 +792,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           )}
         </div>
 
-        {/* separator */}
         <div className={styles.subsection}></div>
 
         {/* USŁUGI */}
@@ -839,7 +931,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           )}
         </div>
 
-        {/* separator */}
         <div className={styles.subsection}></div>
 
         {/* TRYB REZERWACJI */}
@@ -867,6 +958,77 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   {profile.bookingMode === 'request-open' && 'Zapytanie bez blokowania'}
                 </span>
               </li>
+            </ul>
+          )}
+        </div>
+
+        <div className={styles.subsection}></div>
+
+        {/* ZESPÓŁ – ustawienia (spójne z resztą sekcji) */}
+        <div className={styles.inputBlock}>
+          <div className={styles.groupTitle}>
+            <FaUsers /> Zespół — ustawienia rezerwacji
+          </div>
+
+          {isEditing ? (
+            <>
+              <label className={styles.checkboxLabel} style={{ marginBottom: 10 }}>
+                <input
+                  type="checkbox"
+                  checked={!!editData.team?.enabled}
+                  onChange={(e) =>
+                    setEditData(prev => ({
+                      ...prev,
+                      team: { ...(prev.team || {}), enabled: e.target.checked }
+                    }))
+                  }
+                />
+                Włącz obsługę zespołu (pracowników)
+              </label>
+
+              <div className={styles.inline}>
+                <span style={{ fontWeight: 600 }}>Tryb przydziału:</span>
+                <select
+                  className={styles.formInput}
+                  disabled={!editData.team?.enabled}
+                  value={editData.team?.assignmentMode || 'user-pick'}
+                  onChange={(e) =>
+                    setEditData(prev => ({
+                      ...prev,
+                      team: { ...(prev.team || {}), assignmentMode: e.target.value }
+                    }))
+                  }
+                  style={{ maxWidth: 320 }}
+                >
+                  <option value="user-pick">Klient wybiera pracownika</option>
+                  <option value="auto-assign">Automatyczny przydział</option>
+                </select>
+              </div>
+
+              {!editData.team?.enabled && (
+                <div className={styles.infoMuted} style={{ marginTop: 8 }}>
+                  Wyłączone — wybór pracownika nie będzie pokazywany w rezerwacji.
+                </div>
+              )}
+            </>
+          ) : (
+            <ul className={styles.priceView}>
+              <li className={styles.priceItem}>
+                <span className={styles.priceLabel}>Zespół</span>
+                <span className={styles.priceAmount}>
+                  {profile.team?.enabled ? 'Włączony' : 'Wyłączony'}
+                </span>
+              </li>
+              {profile.team?.enabled && (
+                <li className={styles.priceItem}>
+                  <span className={styles.priceLabel}>Tryb przydziału</span>
+                  <span className={styles.priceAmount}>
+                    {profile.team?.assignmentMode === 'user-pick'
+                      ? 'Klient wybiera'
+                      : 'Automatyczny przydział'}
+                  </span>
+                </li>
+              )}
             </ul>
           )}
         </div>
@@ -973,7 +1135,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           </>
         )}
 
-        {/* TERMINY DOSTĘPNOŚCI */}
+        {/* TERMINY DOSTĘPNOŚCI (ręczne) */}
         <div className={styles.inputBlock}>
           <div className={styles.groupTitle}>
             <FaCalendarAlt /> Terminy dostępności
@@ -1064,7 +1226,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                       ))}
                     </ul>
                   )}
-
                 </>
               )}
             </>
@@ -1088,7 +1249,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 ) : (
                   <p className={styles.noInfo}><span>❔</span> Nie dodałeś/aś jeszcze dostępnych terminów.</p>
                 )}
-
               </>
             ) : (
               <div className={styles.infoMuted}>
@@ -1099,7 +1259,253 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         </div>
       </section>
 
-      {/* 4. Linki i media */}
+      {/* =========================
+          PRACOWNICY
+      ========================= */}
+      <section className={styles.card} id="staffSection">
+        <h3>Pracownicy</h3>
+
+        {/* Lista pracowników */}
+        {staffLoading ? (
+          <div>Ładowanie pracowników…</div>
+        ) : staff.length ? (
+          <ul className={styles.slotList}>
+            {staff.map((st) => {
+              const edit = staffEdits[st._id] || st;
+              const services = editData.services || [];
+              const selected = new Set(edit?.serviceIds?.map(String));
+
+              return (
+                <li key={st._id} className={styles.slotItem}>
+                  {/* LEWA STRONA: nazwa */}
+                  <div className={styles.slotLeft} style={{ gap: '.35rem' }}>
+                    <span className={styles.badge}>#{st._id.slice(-5)}</span>
+
+                    {isEditing ? (
+                      <input
+                        className={styles.formInput}
+                        style={{ minWidth: 180 }}
+                        value={edit.name ?? ''}
+                        onChange={(e) =>
+                          setStaffEdits(prev => ({
+                            ...prev,
+                            [st._id]: { ...edit, name: e.target.value }
+                          }))
+                        }
+                        placeholder="Imię i nazwisko"
+                      />
+                    ) : (
+                      <strong>{st.name}</strong>
+                    )}
+                  </div>
+
+                  {/* PRAWA STRONA */}
+                  <div className={styles.slotRight}>
+                    {/* Aktywny */}
+                    {isEditing ? (
+                      <label className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={!!(edit.active ?? true)}
+                          onChange={(e) =>
+                            setStaffEdits(prev => ({
+                              ...prev,
+                              [st._id]: { ...edit, active: e.target.checked }
+                            }))
+                          }
+                        />
+                        Aktywny
+                      </label>
+                    ) : (
+                      <span
+                        className={`${styles.statusPill} ${st.active ? styles.statusActive : styles.statusInactive}`}
+                        title={st.active ? 'Aktywny' : 'Nieaktywny'}
+                      >
+                        <span className={styles.statusDot} aria-hidden="true" />
+                        {st.active ? 'Aktywny' : 'Nieaktywny'}
+                      </span>
+
+                    )}
+
+                    {/* Pojemność */}
+                    <span className={styles.badge}>pojemność</span>
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        min={1}
+                        className={styles.formInput}
+                        style={{ width: 90, textAlign: 'center' }}
+                        value={edit.capacity ?? 1}
+                        onChange={(e) =>
+                          setStaffEdits(prev => ({
+                            ...prev,
+                            [st._id]: {
+                              ...edit,
+                              capacity: Math.max(1, parseInt(e.target.value || '1', 10))
+                            }
+                          }))
+                        }
+                      />
+                    ) : (
+                      <span className={styles.badge}>{st.capacity}</span>
+                    )}
+
+                    {/* Usługi */}
+                    {isEditing ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.4rem' }}>
+                        {services.map(s => (
+                          <label key={s._id} className={styles.checkboxLabel}>
+                            <input
+                              type="checkbox"
+                              checked={selected.has(String(s._id))}
+                              onChange={(e) => {
+                                const next = new Set(selected);
+                                if (e.target.checked) next.add(String(s._id));
+                                else next.delete(String(s._id));
+                                setStaffEdits(prev => ({
+                                  ...prev,
+                                  [st._id]: { ...edit, serviceIds: Array.from(next) }
+                                }));
+                              }}
+                            />
+                            {s.name}
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className={styles.tags} style={{ gap: '.3rem' }}>
+                        {(st.serviceIds || []).map(id => {
+                          const svc = services.find(s => String(s._id) === String(id));
+                          return svc ? (
+                            <span key={id} className={styles.tag}>{svc.name}</span>
+                          ) : null;
+                        })}
+                      </div>
+                    )}
+
+                    {/* Akcje – tylko w trybie edycji */}
+                    {isEditing && (
+                      <>
+                        <button
+                          type="button"
+                          className={styles.ghost}
+                          onClick={() => deleteStaff(st._id)}
+                          title="Usuń"
+                        >
+                          <FaTrash style={{ transform: 'translateY(1px)' }} /> Usuń
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.ghost}
+                          onClick={() =>
+                            setStaffEdits(prev => {
+                              const copy = { ...prev };
+                              delete copy[st._id];
+                              return copy;
+                            })
+                          }
+                          title="Anuluj zmiany"
+                        >
+                          <FaTimes style={{ transform: 'translateY(1px)' }} /> Anuluj
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+
+          </ul>
+        ) : (
+          <p className={styles.noInfo}>
+            <span>❔</span> Nie dodałeś/aś jeszcze żadnych pracowników.
+          </p>
+        )}
+
+        <div className={styles.subsection}></div>
+
+        {/* Dodawanie pracownika */}
+        {/* Dodawanie pracownika — tylko w trybie edycji */}
+        {isEditing ? (
+          <div className={styles.inputBlock}>
+            <div className={styles.groupTitle}><FaPlus /> Dodaj pracownika</div>
+
+            <div className={styles.availableDatesForm}>
+              <input
+                type="text"
+                className={styles.formInput}
+                placeholder="Imię i nazwisko"
+                value={newStaff.name}
+                onChange={(e) => setNewStaff(s => ({ ...s, name: e.target.value }))}
+              />
+              <input
+                type="number"
+                className={styles.formInput}
+                min={1}
+                placeholder="Pojemność (ile równolegle)"
+                value={newStaff.capacity}
+                onChange={(e) =>
+                  setNewStaff(s => ({
+                    ...s,
+                    capacity: Math.max(1, parseInt(e.target.value || '1', 10))
+                  }))
+                }
+              />
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={newStaff.active}
+                  onChange={(e) => setNewStaff(s => ({ ...s, active: e.target.checked }))}
+                />
+                Aktywny
+              </label>
+            </div>
+
+            {/* Wybór usług dla nowego pracownika */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.45rem', marginTop: '.5rem' }}>
+              {(editData.services || []).length ? (
+                editData.services.map(s => {
+                  const checked = newStaff.serviceIds.includes(String(s._id));
+                  return (
+                    <label key={s._id} className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          setNewStaff(prev => {
+                            const set = new Set(prev.serviceIds.map(String));
+                            if (e.target.checked) set.add(String(s._id));
+                            else set.delete(String(s._id));
+                            return { ...prev, serviceIds: Array.from(set) };
+                          });
+                        }}
+                      />
+                      {s.name}
+                    </label>
+                  );
+                })
+              ) : (
+                <span className={styles.infoMuted}>Najpierw dodaj usługi w sekcji wyżej.</span>
+              )}
+            </div>
+
+            <div style={{ marginTop: '.6rem' }}>
+              <button type="button" className={styles.primary} onClick={createStaff}>
+                <FaPlus style={{ transform: 'translateY(1px)' }} /> Dodaj pracownika
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.infoMuted}>
+            Aby dodać pracownika, kliknij <strong>Edytuj profil</strong>.
+          </div>
+        )}
+
+      </section>
+
+      {/* =========================
+          Linki i media
+      ========================= */}
       <section className={styles.card}>
         <h3>Linki i media</h3>
 
@@ -1191,8 +1597,10 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         </div>
       </section>
 
+      {/* =========================
+          Galeria zdjęć
+      ========================= */}
       <section className={styles.card}>
-        {/* 5. Galeria zdjęć */}
         <h3>Galeria zdjęć</h3>
         <div className={styles.galleryEditor}>
           {isEditing ? (
@@ -1218,7 +1626,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   >
                     Dodaj zdjęcie
                   </button>
-                  {/* ukryty input, otwierany powyższym przyciskiem */}
                   <input
                     ref={addPhotoInputRef}
                     type="file"
@@ -1229,7 +1636,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   />
                 </>
               )}
-
             </>
           ) : (
             <div className={styles.galleryView}>
@@ -1245,8 +1651,10 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         </div>
       </section>
 
+      {/* =========================
+          Informacje dodatkowe
+      ========================= */}
       <section className={styles.card}>
-        {/* 6. Informacje dodatkowe */}
         <h3>Informacje dodatkowe</h3>
 
         <div className={styles.extraInfo}>
@@ -1291,13 +1699,14 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   <span className={styles.subVal}>{profile.reviews || 0}</span>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
       </section>
 
-
+      {/* =========================
+          FAQ
+      ========================= */}
       <section className={styles.card}>
         <h3>Szybkie odpowiedzi (FAQ)</h3>
 
@@ -1411,12 +1820,13 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           </>
         )}
       </section>
+
+      {/* Pasek zapisu edycji */}
       {isEditing && (
         <div className={styles.editBar} role="region" aria-label="Akcje edycji profilu">
           <div className={styles.editBarInner}>
             <span className={styles.editHint}>Masz niezapisane zmiany</span>
             <div className={styles.editBarBtns}>
-              {/* ZAPISZ jako pierwszy */}
               <button
                 type="button"
                 className={styles.primary}

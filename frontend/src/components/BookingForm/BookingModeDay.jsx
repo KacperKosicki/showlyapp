@@ -185,11 +185,10 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
             {provider.services.map(s => (
               <option key={s._id} value={s._id}>
                 {s.name}
-                {s.duration?.value ? ` • ${s.duration.value} ${
-                  s.duration.unit === 'minutes' ? 'min' :
+                {s.duration?.value ? ` • ${s.duration.value} ${s.duration.unit === 'minutes' ? 'min' :
                   s.duration.unit === 'hours' ? 'godz.' :
-                  s.duration.unit === 'days' ? 'dni' : s.duration.unit
-                }` : ''}
+                    s.duration.unit === 'days' ? 'dni' : s.duration.unit
+                  }` : ''}
               </option>
             ))}
           </select>

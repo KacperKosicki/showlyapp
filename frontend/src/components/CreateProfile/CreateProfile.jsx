@@ -196,7 +196,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
     return (
         <div id="scrollToId" className={styles.container}>
-            <h2 className={styles.formMainHeading}>Stwórz swoją wizytówkę</h2>
+            <h2 className={styles.formMainHeading}>Stwórz swój profil</h2>
             <div className={styles.wrapper}>
                 <form onSubmit={handleSubmit} className={styles.form}>
                     <h3 className={styles.sectionTitle}>1. Dane podstawowe</h3>
@@ -489,13 +489,13 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     )}
 
                     <button type="submit" disabled={loading}>
-                        {loading ? 'Tworzenie...' : 'Utwórz wizytówkę'}
+                        {loading ? 'Tworzenie...' : 'Utwórz profil'}
                     </button>
                     {formErrors.general && <p className={styles.error}>{formErrors.general}</p>}
                 </form>
 
                 <div className={styles.preview}>
-                    <h3 className={styles.previewTitle}>Podgląd wizytówki</h3>
+                    <h3 className={styles.previewTitle}>Podgląd tworzonego profilu</h3>
                     <UserCard
                         user={{
                             ...form,

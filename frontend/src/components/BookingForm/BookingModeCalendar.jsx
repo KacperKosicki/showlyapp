@@ -27,6 +27,11 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
   const [timeSlots, setTimeSlots] = useState([]);
   const [selectedSlot, setSlot] = useState(''); // "HH:mm"
   const [description, setDescription] = useState('');
+
+  // ✨ Zespół
+  const [staffList, setStaffList] = useState([]);
+  const [selectedStaffId, setSelectedStaffId] = useState('');
+
   const navigate = useNavigate();
 
   const daysInMonth = useMemo(() => (
@@ -36,16 +41,37 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
   const startDayIndex = useMemo(() => getDay(startOfMonth(currentMonth)), [currentMonth]);
   const isDayActive = (day) => Array.isArray(provider.workingDays) && provider.workingDays.includes(getDay(day));
 
+  const isTeamEnabled = provider?.bookingMode === 'calendar' && provider?.team?.enabled === true;
+  const isUserPick = isTeamEnabled && provider?.team?.assignmentMode === 'user-pick';
+  const isAutoAssign = isTeamEnabled && provider?.team?.assignmentMode === 'auto-assign';
+
+  // Załaduj personel (gdy team.enabled)
+  useEffect(() => {
+    if (!isTeamEnabled) return;
+    axios
+      .get(`${process.env.REACT_APP_API_URL}/api/staff`, { params: { profileId: provider._id } })
+      .then(({ data }) => setStaffList(Array.isArray(data) ? data : []))
+      .catch(() => setStaffList([]));
+  }, [isTeamEnabled, provider?._id]);
+
+  // Pobierz rezerwacje (z opcjonalnym filtrem po staffId dla user-pick)
   const fetchReservations = async () => {
     const { data } = await axios.get(
       `${process.env.REACT_APP_API_URL}/api/reservations/by-provider/${provider.userId}`
     );
-    const booked = data
+
+    const filtered = (isUserPick && selectedStaffId)
+      ? data.filter(r => r.staffId && String(r.staffId) === String(selectedStaffId))
+      : data;
+
+    const booked = filtered
       .filter(r => r.status === 'zaakceptowana')
       .map(r => ({ date: r.date, from: r.fromTime, to: r.toTime }));
-    const pending = data
+
+    const pending = filtered
       .filter(r => r.status === 'oczekująca')
       .map(r => ({ date: r.date, from: r.fromTime, to: r.toTime }));
+
     setReserved(booked);
     setPending(pending);
   };
@@ -53,7 +79,12 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
   // Ładuj rezerwacje po wejściu
   useEffect(() => { fetchReservations(); }, []); // eslint-disable-line
 
-  // Generowanie slotów na podstawie wybranej daty/usługi i rezerwacji
+  // Przeładuj przy zmianie pracownika w trybie user-pick
+  useEffect(() => {
+    if (isUserPick) fetchReservations(); // eslint-disable-line
+  }, [selectedStaffId]); // eslint-disable-line
+
+  // Generowanie slotów
   useEffect(() => {
     if (!selectedDate || !selectedService) {
       setTimeSlots([]);
@@ -132,6 +163,9 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     if (!selectedDate || !selectedService || !selectedSlot) {
       return pushAlert?.({ show: true, type: 'error', message: 'Wybierz dzień, usługę i godzinę.' });
     }
+    if (isUserPick && !selectedStaffId) {
+      return pushAlert?.({ show: true, type: 'error', message: 'Wybierz pracownika.' });
+    }
 
     // anty-przeterminowanie
     const step = 15;
@@ -157,15 +191,16 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
       toTime,
       description,
       serviceId: selectedService._id,
+      ...(isUserPick && selectedStaffId ? { staffId: selectedStaffId } : {})
     };
 
     try {
       await axios.post(`${process.env.REACT_APP_API_URL}/api/reservations`, payload);
 
-      // (opcjonalnie) odśwież lokalne rezerwacje:
+      // odśwież lokalne rezerwacje (żeby slot zmienił kolor)
       await fetchReservations();
 
-      // 👉 Zamiast lokalnego pushAlert — zapisz flash, by komunikat był widoczny po przejściu:
+      // flash po przejściu
       sessionStorage.setItem('flash', JSON.stringify({
         type: 'success',
         message: 'Rezerwacja wysłana – oczekuje na potwierdzenie.',
@@ -173,7 +208,6 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
         ts: Date.now(),
       }));
 
-      // (opcjonalnie) przekaż info do podświetlenia w /rezerwacje
       sessionStorage.setItem('reservationHighlight', JSON.stringify({
         date: payload.date,
         fromTime,
@@ -181,14 +215,11 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
         serviceId: selectedService._id,
       }));
 
-      // ➜ przekierowanie do systemu rezerwacji
       navigate('/rezerwacje', { state: { scrollToId: 'reservationsTop' } });
 
-      // lokalne czyszczenie nie jest konieczne (komponent i tak się odmontuje),
-      // ale można zachować:
       setSlot('');
       setDescription('');
-      setTimeout(() => { setDate(null); setService(null); }, 100);
+      setTimeout(() => { setDate(null); setService(null); setSelectedStaffId(''); }, 100);
     } catch {
       pushAlert?.({ show: true, type: 'error', message: 'Błąd przy wysyłaniu.' });
     }
@@ -217,6 +248,7 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
             setService(svc || null);
             setSlot('');
             setDate(null);
+            setSelectedStaffId(''); // reset pracownika przy zmianie usługi
           }}
         >
           <option value="">– wybierz –</option>
@@ -224,12 +256,43 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
             <option key={s._id} value={s._id}>
               {s.name} {s.duration.value}{' '}
               {s.duration.unit === 'minutes' ? 'min' :
-               s.duration.unit === 'hours' ? 'godzin' :
-               s.duration.unit === 'days' ? 'dni' : s.duration.unit}
+                s.duration.unit === 'hours' ? 'godzin' :
+                  s.duration.unit === 'days' ? 'dni' : s.duration.unit}
             </option>
           ))}
         </select>
       </label>
+
+      {/* ✨ Wybór pracownika (tylko calendar + team.enabled + user-pick) */}
+      {isUserPick && selectedService && (
+        <label className={styles.field}>
+          <h3 className={styles.fieldTitle}>Wybierz osobę (pracownika):</h3>
+          <select
+            value={selectedStaffId}
+            onChange={e => {
+              setSelectedStaffId(e.target.value);
+              setSlot('');
+              setDate(null);
+            }}
+          >
+            <option value="">– wybierz –</option>
+            {staffList
+              .filter(s => (s.serviceIds || []).some(id => String(id) === String(selectedService?._id)))
+              .map(s => (
+                <option key={s._id} value={s._id}>
+                  {s.name}{s.role ? ` — ${s.role}` : ''}
+                </option>
+              ))}
+          </select>
+        </label>
+      )}
+
+      {/* Info dla auto-assign */}
+      {isAutoAssign && selectedService && (
+        <div className={styles.infoBox}>
+          Pracownik zostanie przydzielony automatycznie do wybranego terminu.
+        </div>
+      )}
 
       {/* Kalendarz + sloty */}
       {selectedService && (

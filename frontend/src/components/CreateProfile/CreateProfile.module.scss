@@ -162,6 +162,7 @@
   margin-top: 0.3rem;
   font-weight: 500;
 }
+
 @media (max-width: 1024px) {
   .container {
     padding: 1rem;
@@ -398,6 +399,7 @@
     justify-content: center;
     gap: 2rem;
   }
+
   .preview {
     margin: 1.5rem auto 0 auto !important; // centrowanie w kolumnie
     float: none;
@@ -408,4 +410,3 @@
     padding-right: 0;
   }
 }
-

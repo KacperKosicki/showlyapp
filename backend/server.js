@@ -17,6 +17,8 @@ app.use(cors());
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/api/staff', require('./routes/staff'));
+app.use('/api/slots', require('./routes/slots'));
 
 // Połączenie z MongoDB
 mongoose.connect(process.env.MONGO_URI, {

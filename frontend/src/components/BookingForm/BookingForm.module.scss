@@ -408,7 +408,9 @@ input[type="date"] {
   color: $color-gray;
   user-select: none;
 
-  input { transform: translateY(1px); }
+  input {
+    transform: translateY(1px);
+  }
 }
 
 
@@ -447,6 +449,7 @@ input[type="date"] {
 
 /* ✨ Najważniejsze: obejmij zwykłe inputy */
 .field {
+
   // (...masz już resztę)
   input[type="text"],
   input[type="tel"],
@@ -468,15 +471,18 @@ input[type="date"] {
     width: 100%;
     box-sizing: border-box;
     outline: none;
-    box-shadow: 0 4px 12px rgba(0,0,0,.03);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .03);
 
     &:focus {
       border-color: $primary-color;
       background: #fff;
-      box-shadow: 0 0 0 2px rgba(111,78,242,.12);
+      box-shadow: 0 0 0 2px rgba(111, 78, 242, .12);
     }
 
-    &::placeholder { color: #a7a7b6; opacity: 1; }
+    &::placeholder {
+      color: #a7a7b6;
+      opacity: 1;
+    }
   }
 
   textarea {

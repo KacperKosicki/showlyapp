@@ -331,33 +331,41 @@ router.patch('/extend/:uid', async (req, res) => {
 });
 
 // PATCH /api/profiles/update/:uid – aktualizacja wybranych pól profilu
-router.patch('/update/:uid', async (req, res) => {
-  const allowedFields = [
-    'avatar',
-    'photos',
-    'profileType', 'location', 'priceFrom', 'priceTo',
-    'role', 'availableDates', 'description', 'tags', 'links',
-    'quickAnswers',
-    'showAvailableDates',
-    'services',
-    'bookingMode',
-    'workingHours',
-    'workingDays',
-  ];
+// + dodaj 'team' do listy:
+const allowedFields = [
+  'avatar', 'photos', 'profileType', 'location', 'priceFrom', 'priceTo',
+  'role', 'availableDates', 'description', 'tags', 'links', 'quickAnswers',
+  'showAvailableDates', 'services', 'bookingMode', 'workingHours', 'workingDays',
+  'team' // ⬅️ DODANE
+];
 
+router.patch('/update/:uid', async (req, res) => {
   try {
     const profile = await Profile.findOne({ userId: req.params.uid });
     if (!profile) return res.status(404).json({ message: 'Nie znaleziono profilu.' });
 
+    // zwykłe pola
     for (const field of allowedFields) {
-      if (req.body[field] !== undefined) {
+      if (field !== 'team' && req.body[field] !== undefined) {
         profile[field] = req.body[field];
+      }
+    }
+
+    // team ustaw kropkowo lub jako merge obiektu
+    if (req.body.team) {
+      if (typeof req.body.team.enabled !== 'undefined') {
+        profile.set('team.enabled', !!req.body.team.enabled);
+      }
+      if (req.body.team.assignmentMode) {
+        profile.set(
+          'team.assignmentMode',
+          req.body.team.assignmentMode === 'auto-assign' ? 'auto-assign' : 'user-pick'
+        );
       }
     }
 
     await profile.save();
     res.json({ message: 'Profil zaktualizowany', profile });
-
   } catch (err) {
     console.error('❌ Błąd aktualizacji profilu:', err);
     res.status(500).json({ message: 'Błąd podczas aktualizacji profilu.' });

@@ -4,7 +4,7 @@ import axios from 'axios';
 import AlertBox from '../AlertBox/AlertBox';
 import { useLocation } from 'react-router-dom';
 import { FiInbox, FiSend } from 'react-icons/fi';
-import { FiCalendar, FiClock, FiTag, FiCheckCircle, FiXCircle, FiAlertCircle, FiFileText } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiTag, FiCheckCircle, FiXCircle, FiAlertCircle, FiFileText, FiUser } from 'react-icons/fi';
 
 const API = process.env.REACT_APP_API_URL;
 
@@ -247,39 +247,51 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     return <FiAlertCircle className={styles.chipIcon} aria-hidden="true" />;
   };
 
-  const renderInfo = (res) => (
-    <div className={styles.info}>
+const renderInfo = (res) => (
+  <div className={styles.info}>
+    <span className={styles.chip}>
+      <FiCalendar className={styles.chipIcon} aria-hidden="true" />
+      {formatDatePL(res.date)}
+    </span>
+
+    <span className={styles.chip}>
+      <FiClock className={styles.chipIcon} aria-hidden="true" />
+      {timeLabel(res)}
+    </span>
+
+    {res.serviceName && (
       <span className={styles.chip}>
-        <FiCalendar className={styles.chipIcon} aria-hidden="true" />
-        {formatDatePL(res.date)}
+        <FiTag className={styles.chipIcon} aria-hidden="true" />
+        {res.serviceName}
       </span>
+    )}
 
-      <span className={styles.chip}>
-        <FiClock className={styles.chipIcon} aria-hidden="true" />
-        {timeLabel(res)}
-      </span>
-
-      {res.serviceName && (
-        <span className={styles.chip}>
-          <FiTag className={styles.chipIcon} aria-hidden="true" />
-          {res.serviceName}
-        </span>
-      )}
-
+    {/* ⇩ NOWE: pracownik, jeśli tryb team i coś zapisaliśmy */}
+    {(res.staffName || res.staffId) && (
       <span
-        className={`${styles.chip} ${
-          res.status === 'zaakceptowana'
-            ? styles.chipAccepted
-            : (res.status === 'odrzucona' || res.status === 'anulowana')
-            ? styles.chipRejected
-            : styles.chipPending
-        }`}
+        className={styles.chip}
+        title={res.staffAutoAssigned ? 'Przypisano automatycznie' : 'Wybrany przez klienta'}
       >
-        {statusIcon(res.status)}
-        {res.status}
+        <FiUser className={styles.chipIcon} aria-hidden="true" />
+        {res.staffName || `#${String(res.staffId).slice(-5)}`}
+        {res.staffAutoAssigned ? ' (auto)' : ''}
       </span>
-    </div>
-  );
+    )}
+
+    <span
+      className={`${styles.chip} ${
+        res.status === 'zaakceptowana'
+          ? styles.chipAccepted
+          : (res.status === 'odrzucona' || res.status === 'anulowana')
+          ? styles.chipRejected
+          : styles.chipPending
+      }`}
+    >
+      {statusIcon(res.status)}
+      {res.status}
+    </span>
+  </div>
+);
 
   // ► Liczniki do badge
   const sentCount = clientReservations.length;
