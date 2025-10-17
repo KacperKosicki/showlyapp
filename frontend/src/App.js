@@ -23,6 +23,7 @@ import ScrollToTop from './components/ScrollToTop/ScrollToTop';
 import BookingForm from './components/BookingForm/BookingForm';
 import ReservationList from './components/ReservationList/ReservationList';
 import AccountSettings from './components/AccountSettings/AccountSettings';
+import Favorites from './components/Favorites/Favorites';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -187,6 +188,29 @@ function App() {
               <>
                 <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
                 <Notifications user={user} setUnreadCount={setUnreadCount} />
+                <Footer />
+              </>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/ulubione"
+          element={
+            user ? (
+              <>
+                <Hero
+                  user={user}
+                  setUser={setUser}
+                  refreshTrigger={refreshTrigger}
+                  setRefreshTrigger={setRefreshTrigger}
+                  unreadCount={unreadCount}
+                  setUnreadCount={setUnreadCount}
+                  pendingReservationsCount={pendingReservationsCount}
+                />
+                <Favorites currentUser={user} />
                 <Footer />
               </>
             ) : (

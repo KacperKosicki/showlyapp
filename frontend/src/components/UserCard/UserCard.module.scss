@@ -10,9 +10,8 @@
   padding: 1.5rem;
   --pad: 1.5rem;
 
-  /* ⬇⬇ kluczowe */
-  position: relative;           /* kotwica dla absolute */
-  padding-bottom: 48px;         /* miejsce na badge (dopasuj 40–56px) */
+  position: relative;
+  padding-bottom: 48px;
 
   border: 1px solid #ccc;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
@@ -22,33 +21,75 @@
   &:hover { transform: translateY(-3px); }
 }
 
-.visits {
+/* pasek na dole */
+.bottomMeta {
   position: absolute;
-  bottom: 1rem;
-  left: var(--pad);      // 👈 równo z treścią (jak .location)  
+  left: var(--pad);
+  right: var(--pad);
+  bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
 
+.visits {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-
   font-size: 0.85rem;
-  color: $text-color;
 
-  svg {
-    color: $primary-color;
-    font-size: 1rem;
-  }
-
-  span {
-    color: #777;
-  }
-
-  strong {
-    color: $secondary-color; // albo $primary-color, jeśli wolisz
-    font-weight: 700;
-  }
+  svg { color: $primary-color; font-size: 1rem; }
+  span { color: #777; }
+  strong { color: $secondary-color; font-weight: 700; }
 }
 
+/* przycisk ulubionych */
+.favoritesBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fff;
+  border: 1px solid $primary-color;
+  color: $primary-color;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  font-family: $font-accent;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.15s ease;
+
+  &:hover,
+  &:focus {
+    background: $primary-color;
+    color: #fff;
+
+    .heart,
+    .heartFilled { color: #fff; }
+  }
+
+  &.active {
+    background: $primary-color;
+    color: #fff;
+    border-color: $primary-color;
+
+    .heartFilled { color: #fff; }
+
+    &:hover {
+      background: darken($primary-color, 8%);
+      transform: scale(1.05);
+    }
+  }
+
+  .favLabel { white-space: nowrap; }
+
+  .heart,
+  .heartFilled {
+    font-size: 1rem;
+    color: $primary-color;
+    transition: color 0.18s;
+  }
+}
 
 .topBar {
   display: flex;
@@ -65,10 +106,7 @@
   gap: 0.3rem;
   font-size: 0.85rem;
   color: #777;
-
-  svg {
-    color: $primary-color;
-  }
+  svg { color: $primary-color; }
 }
 
 .rating {
@@ -76,279 +114,95 @@
   align-items: center;
   gap: 0.4rem;
   font-size: 0.85rem;
-
-  svg {
-    color: gold;
-  }
-
-  span {
-    color: $text-color;
-  }
+  svg { color: gold; }
+  span { color: $text-color; }
 }
 
-.top {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: 1rem 0;
-}
-
-.topInfo {
-  text-align: left;
-}
+.top { display: flex; align-items: center; gap: 1rem; margin: 1rem 0; }
+.topInfo { text-align: left; }
 
 .avatar {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-  object-position: center;
-  aspect-ratio: 1 / 1;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 100px; height: 100px; border-radius: 50%;
+  object-fit: cover; object-position: center; aspect-ratio: 1 / 1;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 .status {
   display: inline-block;
-  font-size: 0.6rem;
-  font-weight: 600;
-  padding: 0.2rem 0.6rem;
-  border-radius: 1rem;
-  font-family: $font-accent;
-  text-transform: uppercase;
-  margin-bottom: 0.3rem;
+  font-size: 0.6rem; font-weight: 600;
+  padding: 0.2rem 0.6rem; border-radius: 1rem;
+  font-family: $font-accent; text-transform: uppercase; margin-bottom: 0.3rem;
 }
 
-.name {
-  font-size: 1.2rem;
-  font-family: $font-heading;
-  color: $text-color;
-  margin: 0;
-}
-
-.role {
-  font-size: 0.9rem;
-  color: $color-gray;
-  font-family: $font-accent;
-  margin: 0.1rem 0;
-}
+.name { font-size: 1.2rem; font-family: $font-heading; color: $text-color; margin: 0; }
+.role { font-size: 0.9rem; color: $color-gray; font-family: $font-accent; margin: 0.1rem 0; }
 
 .tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  font-weight: bold;
-  margin: 1rem 0 0.6rem;
-  justify-content: center;
+  display: flex; flex-wrap: wrap; gap: 0.5rem; font-weight: bold;
+  margin: 1rem 0 0.6rem; justify-content: center;
 }
 
 .tag {
-  border: 1px solid $primary-color;
-  color: $primary-color;
-  font-family: $font-accent;
-  font-size: 0.75rem;
-  padding: 0.35rem 0.8rem;
-  border-radius: 1rem;
-  transition: all 0.2s ease;
-  cursor: pointer;
-
-  &:hover {
-    background-color: $primary-color;
-    color: white;
-  }
+  border: 1px solid $primary-color; color: $primary-color;
+  font-family: $font-accent; font-size: 0.75rem;
+  padding: 0.35rem 0.8rem; border-radius: 1rem; transition: all 0.2s ease; cursor: pointer;
+  &:hover { background-color: $primary-color; color: white; }
 }
 
-.separator {
-  height: 1px;
-  background-color: #e0e0e0;
-  margin: 0.6rem auto;   // auto = wyśrodkowanie
-  width: 85%;            // 👈 trochę węższy (np. 90% szerokości karty)
-  border-radius: 2px;    // zaokrąglone końce
-}
+.separator { height: 1px; background-color: #e0e0e0; margin: 0.6rem auto; width: 85%; border-radius: 2px; }
 
 .details {
-  margin: 1rem 0 0.5rem;
-  font-size: 0.85rem;
-  color: #444;
-  text-align: center;
-
-  .price {
-    strong {
-      color: $secondary-color;
-    }
-  }
-
-  .date {
-    margin-bottom: 0.3rem;
-  }
+  margin: 1rem 0 0.5rem; font-size: 0.85rem; color: #444; text-align: center;
+  .price { strong { color: $secondary-color; } }
+  .date { margin-bottom: 0.3rem; }
 }
 
 .links {
-  margin-top: 0.8rem;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-
+  margin-top: 0.8rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem;
   a {
-    background-color: rgba(0, 0, 0, 0.03);
-    padding: 0.4rem 0.8rem;
-    border-radius: 1rem;
-    color: $primary-color;
-    font-size: 0.85rem;
-    text-decoration: none;
-    transition: background 0.2s;
-
-    &:hover {
-      background-color: $primary-color;
-      color: white;
-    }
+    background-color: rgba(0,0,0,0.03); padding: 0.4rem 0.8rem; border-radius: 1rem;
+    color: $primary-color; font-size: 0.85rem; text-decoration: none; transition: background 0.2s;
+    &:hover { background-color: $primary-color; color: white; }
   }
 }
 
-.profileBadge {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  padding: 0.3rem 0.8rem;
-  border-radius: 1rem;
-  margin-bottom: 0.5rem;
-  background-color: #eee;
-  color: #333;
-}
+.profileBadge { display: inline-block; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; padding: 0.3rem 0.8rem; border-radius: 1rem; margin-bottom: 0.5rem; background-color: #eee; color: #333; }
+.zawodowy { background-color: #e50914; color: #fff; }
+.hobbystyczny { background-color: #2d8cf0; color: #fff; }
+.serwis { background-color: #f5a623; color: #fff; }
+.społeczność { background-color: #9b59b6; color: #fff; }
 
-// Kolory dla typów profilu
-.zawodowy {
-  background-color: #e50914;
-  color: #fff;
-}
-
-.hobbystyczny {
-  background-color: #2d8cf0;
-  color: #fff;
-}
-
-.serwis {
-  background-color: #f5a623;
-  color: #fff;
-}
-
-.społeczność {
-  background-color: #9b59b6;
-  color: #fff;
-}
-
-.name,
-.role,
-.location {
-  word-break: break-word;
-  overflow-wrap: anywhere;
-  white-space: normal;
-  max-width: 100%;
+.name, .role, .location {
+  word-break: break-word; overflow-wrap: anywhere; white-space: normal; max-width: 100%;
 }
 
 .description {
-  font-size: 0.85rem;
-  color: $color-gray;
-  margin: 0.6rem 0 0.6rem;
-  text-align: center;
-  max-width: 100%;
-  line-height: 1.4;
-
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-
-  /* stylelint-disable-next-line property-no-vendor-prefix */
-  -webkit-line-clamp: 2;
-
-  &.expanded {
-    -webkit-line-clamp: initial;
-    overflow: visible;
-    display: block;
-  }
+  font-size: 0.85rem; color: $color-gray; margin: 0.6rem 0 0.6rem; text-align: center;
+  max-width: 100%; line-height: 1.4; overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  &.expanded { -webkit-line-clamp: initial; overflow: visible; display: block; }
 }
 
 .toggleButton {
-  background: none;
-  border: none;
-  color: $primary-color;
-  font-size: 0.75rem;
-  margin-bottom: 0.5rem;
-  cursor: pointer;
-  font-family: $font-accent;
-  text-decoration: underline;
-
-  &:hover {
-    text-decoration: none;
-  }
+  background: none; border: none; color: $primary-color; font-size: 0.75rem;
+  margin-bottom: 0.5rem; cursor: pointer; font-family: $font-accent; text-decoration: underline;
+  &:hover { text-decoration: none; }
 }
 
-// *** FINALNY BLOK PRZYCISKÓW – ZAWSZE RÓWNE! ***
 .buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem; // malutki odstęp
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  align-items: center; // środek!
-  justify-content: center;
+  display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0;
+  align-items: center; justify-content: center;
 
-  button,
-  .buttonSecondary,
-  .calendarToggle {
-    width: 250px;           // 👉 stała szerokość (możesz np. 140px, 120px)
-    min-width: 0;
-    max-width: 90%;
-    box-sizing: border-box;
-    font-size: 0.82rem;     // mała czcionka!
-    font-family: $font-accent;
-    font-weight: bold;
-    padding: 0.5rem 1rem;     // niziutkie!
-    border-radius: 1.5rem;
-    background: white;
-    color: $primary-color;
-    border: 1px solid $primary-color;
-    transition: background 0.18s, color 0.18s;
-    cursor: pointer;
-    margin: 0 auto;         // Dla pewności – środek w flex
-
-    &:hover,
-    &:focus {
-      background: $primary-color;
-      color: white;
-    }
+  button, .buttonSecondary, .calendarToggle {
+    width: 250px; max-width: 90%; box-sizing: border-box; font-size: 0.82rem;
+    font-family: $font-accent; font-weight: bold; padding: 0.5rem 1rem;
+    border-radius: 1.5rem; background: white; color: $primary-color;
+    border: 1px solid $primary-color; transition: background 0.18s, color 0.18s; cursor: pointer; margin: 0 auto;
+    &:hover, &:focus { background: $primary-color; color: white; }
   }
 
-  .buttonSecondary {
-    background: white;
-    color: $primary-color;
-    border: 1px solid $primary-color;
-
-    &:hover {
-      background: $primary-color;
-      color: white;
-    }
-  }
+  .buttonSecondary { background: white; color: $primary-color; border: 1px solid $primary-color; &:hover { background: $primary-color; color: white; } }
 }
 
-// Komunikat o braku rezerwacji
-.noReservationInfo {
-  color: #ba4400;
-  background: #fff6ed;
-  border-radius: 1rem;
-  text-align: center;
-  font-size: 0.95rem;
-  padding: 0.6rem 1rem;
-  border: 1px solid #ffd9b2;
-}
-
-// Opis i braki
-.noDescription {
-  color: var(--text-muted, #888);
-  margin: 0.6rem 0 0.6rem;
-  font-size: 0.9rem;
-  text-align: center;
-}
+.noReservationInfo { color: #ba4400; background: #fff6ed; border-radius: 1rem; text-align: center; font-size: 0.95rem; padding: 0.6rem 1rem; border: 1px solid #ffd9b2; }
+.noDescription { color: var(--text-muted, #888); margin: 0.6rem 0; font-size: 0.9rem; text-align: center; }

@@ -1,0 +1,102 @@
+@import '../../styles/variables';
+
+/* spójnie z ReservationList / Notifications */
+.section {
+  padding: 3rem 1rem;
+}
+
+.wrapper {
+  max-width: 1200px;     /* jak sekcje na stronie głównej */
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 1rem;
+  font-family: $font-body;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: 1.25rem 0;
+}
+
+.sectionTitle {
+  margin: 0 0 .25rem;
+  font-size: 1.6rem;
+  color: $text-color;
+  font-family: $font-heading;
+}
+
+.subTitle {
+  margin: 0;
+  color: $color-gray;
+  line-height: 1.5;
+  font-size: .95rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.2rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: #f4f4f4;
+  color: #333;
+  border: 1px solid #e2e2e2;
+}
+
+/* GRID identyczny jak na głównej (karty pełna szerokość kolumny) */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+  padding-bottom: 1.5rem;
+}
+
+/* zdejmujemy ograniczenie 400px z UserCard tylko w tej sekcji */
+.grid :global(.card) {
+  max-width: 100% !important;
+  width: 100%;
+  height: 100%;
+}
+
+/* puste stany */
+.emptyBox {
+  margin: 1rem 0 2rem;
+  padding: 2rem 1.25rem;
+  border: 1px dashed #ddd;
+  border-radius: 1rem;
+  text-align: center;
+  color: #666;
+  background: #fafafa;
+
+  .emptyIcon {
+    font-size: 1.75rem;
+    margin-bottom: .25rem;
+    color: $primary-color;
+  }
+
+  .cta {
+    display: inline-block;
+    margin-top: .5rem;
+    padding: .5rem 1rem;
+    border-radius: 999px;
+    border: 1px solid $primary-color;
+    color: $primary-color;
+    text-decoration: none;
+    font-weight: 700;
+
+    &:hover {
+      background: $primary-color;
+      color: #fff;
+    }
+  }
+}
+
+/* proste komunikaty */
+.info { text-align: center; padding: 2rem 0; color: #666; }
+.error { text-align: center; padding: 2rem 0; color: #b00020; }

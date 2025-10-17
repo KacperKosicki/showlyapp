@@ -7,13 +7,27 @@ const UserCardList = ({ currentUser }) => {
   const [topRatedUsers, setTopRatedUsers] = useState([]);
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_URL}/api/profiles`)
-      .then(res => {
-        const sorted = res.data.sort((a, b) => b.rating - a.rating).slice(0, 3);
-        setTopRatedUsers(sorted);
-      })
-      .catch(err => console.error('Błąd pobierania profili:', err));
-  }, []);
+    const run = async () => {
+      try {
+        const { data: profiles } = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles`);
+        const sorted = profiles.sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 3);
+
+        if (currentUser?.uid) {
+          const { data: favs } = await axios.get(
+            `${process.env.REACT_APP_API_URL}/api/favorites/my`,
+            { headers: { uid: currentUser.uid } }
+          );
+          const favSet = new Set(favs.map(f => f.userId));
+          setTopRatedUsers(sorted.map(p => ({ ...p, isFavorite: favSet.has(p.userId) })));
+        } else {
+          setTopRatedUsers(sorted);
+        }
+      } catch (err) {
+        console.error('Błąd pobierania profili:', err);
+      }
+    };
+    run();
+  }, [currentUser?.uid]);
 
   return (
     <section className={styles.section}>
@@ -24,7 +38,7 @@ const UserCardList = ({ currentUser }) => {
 
       <div className={styles.list}>
         {topRatedUsers.map((user, index) => (
-          <UserCard key={user._id || index} user={user} currentUser={currentUser} />
+          <UserCard key={user._id || user.userId || index} user={user} currentUser={currentUser} />
         ))}
       </div>
     </section>

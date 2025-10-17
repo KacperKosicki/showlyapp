@@ -191,6 +191,11 @@ const UserDropdown = ({
           Powiadomienia {unreadCount > 0 && <strong>({unreadCount})</strong>}
         </button>
 
+        {/* Ulubione */}
+        <button onClick={() => handleNavigate('/ulubione', 'scrollToId')}>
+          Ulubione
+        </button>
+
         {/* Rezerwacje */}
         <button onClick={() => handleNavigate('/rezerwacje', 'scrollToId')}>
           Rezerwacje{' '}

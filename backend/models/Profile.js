@@ -64,6 +64,7 @@ const profileSchema = new mongoose.Schema({
       default: 'user-pick'
     }
   },
+  favoritesCount: { type: Number, default: 0 },
   isVisible: { type: Boolean, default: true },
   visibleUntil: { type: Date, required: true },
   description: String,
