@@ -213,6 +213,10 @@
   }
 }
 
+.systemContent {
+  white-space: pre-line; // respektuje \n jako nowe linie
+}
+
 .own {
   align-self: flex-end;
   background: linear-gradient(135deg, #ffffff, #f9f9f9);

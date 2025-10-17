@@ -243,14 +243,22 @@ router.post('/', async (req, res) => {
           '• minimum: 15 min / 1 h / 1 dzień,',
           '• przykłady: „Strzyżenie — 45 min”, „Audyt WWW — 3 h”.',
           '',
+          '🧑‍🤝‍🧑 Zespół i pracownicy:',
+          '• możesz dodać swój zespół i przypisać do profilu dowolną liczbę pracowników;',
+          '• każdy pracownik ma przypisane usługi, które może wykonywać;',
+          '• możesz tymczasowo dezaktywować pracownika — wtedy nie będzie brany pod uwagę przy automatycznym przydzielaniu rezerwacji (np. gdy ma wolne lub jest niedostępny);',
+          '• możesz włączyć jeden z trybów przydzielania rezerwacji:',
+          '   - 🟦 „Wybór przez klienta” – klient sam wybiera osobę z zespołu;',
+          '   - 🟢 „Automatyczny przydział” – system sam wybiera dostępnego pracownika (uwzględniając godziny i pojemność).',
+          '',
           '🗓️ Wybierz tryb rezerwacji:',
           '• Kalendarz godzinowy — pracujesz w podanych godzinach i dniach, klienci rezerwują konkretne sloty;',
           '• Rezerwacja dnia — blokujesz cały dzień na zlecenie;',
           '• Zapytanie bez blokowania — zbierasz zapytania, planujesz samodzielnie.',
           '',
           '⏰ Jeśli korzystasz z kalendarza:',
-          '• ustaw godziny pracy (od–do) i dni pracy,',
-          '• opcjonalnie pokaż dostępne terminy (data + od–do), aby klienci widzieli okienka w profilu.',
+          '• ustaw godziny pracy (od–do) i dni pracy;',
+          '• system automatycznie dodaje przerwę między usługami (15 min).',
           '',
           '🔗 Linki i media:',
           '• dodaj do 3 linków zewnętrznych,',
@@ -261,7 +269,7 @@ router.post('/', async (req, res) => {
           '• tytuł do 10 znaków, odpowiedź do 64 znaków.',
           '',
           'ℹ️ Wszystko edytujesz w zakładce „Twój profil”. Powodzenia! 👊'
-        ].join('\n');
+        ].join('\\n');
 
         // 1) Szukamy istniejącej konwersacji systemowej
         let convo = await Conversation.findOne({ channel: 'system', pairKey }).exec();

@@ -88,10 +88,6 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     if (isUserPick) fetchReservations(); // eslint-disable-line
   }, [selectedStaffId]); // eslint-disable-line
 
-  // Helpers dla auto-assign (zostawione na przyszłość)
-  const staffSupportsService = (st, serviceId) =>
-    Array.isArray(st?.serviceIds) && st.serviceIds.some(id => String(id) === String(serviceId));
-
   // Generowanie slotów (capacity-aware dla auto-assign)
   useEffect(() => {
     if (!selectedDate || !selectedService) {

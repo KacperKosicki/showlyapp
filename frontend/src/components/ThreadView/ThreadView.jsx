@@ -85,7 +85,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
         try {
           const f = JSON.parse(raw);
           setFlash(f);
-        } catch {/* ignore */}
+        } catch {/* ignore */ }
       }
     }
   }, [location.key, location.state]);
@@ -116,7 +116,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
         if (optimistic && optimistic.content) {
           setMessages(prev => [...prev, optimistic]);
         }
-      } catch {/* ignore */}
+      } catch {/* ignore */ }
     }
     // draft
     const rawDraft = location.state?.draft || sessionStorage.getItem('draft');
@@ -124,7 +124,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
       try {
         const draft = typeof rawDraft === 'string' ? rawDraft : String(rawDraft);
         setNewMessage(draft);
-      } catch {/* ignore */}
+      } catch {/* ignore */ }
     }
   }, [location.state]);
 
@@ -301,23 +301,32 @@ const ThreadView = ({ user, setUnreadCount }) => {
           </h2>
 
           <div className={styles.thread}>
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`${styles.message} ${msg.fromUid === user.uid ? styles.own : styles.their} ${msg.isSystem ? styles.system : ''}`}
-              >
-                {!msg.isSystem && (
-                  <p className={styles.author}>
-                    {msg.fromUid === user.uid ? 'Ty' : receiverName}
+            {messages.map((msg, i) => {
+              const displayContent = msg.isSystem
+                // jeśli przyszły podwójnie escapowane nowe linie "\\n", zamień je na "\n"
+                ? String(msg.content).replace(/\\n/g, '\n')
+                : msg.content;
+
+              return (
+                <div
+                  key={i}
+                  className={`${styles.message} ${msg.fromUid === user.uid ? styles.own : styles.their} ${msg.isSystem ? styles.system : ''}`}
+                >
+                  {!msg.isSystem && (
+                    <p className={styles.author}>
+                      {msg.fromUid === user.uid ? 'Ty' : receiverName}
+                    </p>
+                  )}
+
+                  <p className={`${styles.content} ${msg.isSystem ? styles.systemContent : ''}`}>
+                    {displayContent}
+                    {msg.pending && <em className={styles.pending}> (wysyłanie…)</em>}
                   </p>
-                )}
-                <p className={styles.content}>
-                  {msg.content}
-                  {msg.pending && <em className={styles.pending}> (wysyłanie…)</em>}
-                </p>
-                <p className={styles.time}>{new Date(msg.createdAt).toLocaleString()}</p>
-              </div>
-            ))}
+
+                  <p className={styles.time}>{new Date(msg.createdAt).toLocaleString()}</p>
+                </div>
+              );
+            })}
           </div>
 
           {(() => {
