@@ -19,8 +19,9 @@ const durationToMinutes = (svc) => {
 };
 
 export default function BookingModeCalendar({ user, provider, pushAlert }) {
-  const [reservedSlots, setReserved] = useState([]); // { date, from, to }
-  const [pendingSlots, setPending] = useState([]);   // { date, from, to }
+  const [reservedSlots, setReserved] = useState([]); // { date, fromTime, toTime }
+  const [pendingSlots, setPending] = useState([]);   // { date, fromTime, toTime }
+  const [reservationsAll, setReservationsAll] = useState([]); // RAW rezerwacje całego zespołu
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setDate] = useState(null);
   const [selectedService, setService] = useState(null);
@@ -64,13 +65,16 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
       ? data.filter(r => r.staffId && String(r.staffId) === String(selectedStaffId))
       : data;
 
+    // RAW całego zespołu – potrzebne dla auto-assign
+    setReservationsAll(data);
+
     const booked = filtered
       .filter(r => r.status === 'zaakceptowana')
-      .map(r => ({ date: r.date, from: r.fromTime, to: r.toTime }));
+      .map(r => ({ date: r.date, fromTime: r.fromTime, toTime: r.toTime }));
 
     const pending = filtered
-      .filter(r => r.status === 'oczekująca')
-      .map(r => ({ date: r.date, from: r.fromTime, to: r.toTime }));
+      .filter(r => r.status === 'oczekująca' || r.status === 'tymczasowa')
+      .map(r => ({ date: r.date, fromTime: r.fromTime, toTime: r.toTime }));
 
     setReserved(booked);
     setPending(pending);
@@ -84,7 +88,11 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     if (isUserPick) fetchReservations(); // eslint-disable-line
   }, [selectedStaffId]); // eslint-disable-line
 
-  // Generowanie slotów
+  // Helpers dla auto-assign (zostawione na przyszłość)
+  const staffSupportsService = (st, serviceId) =>
+    Array.isArray(st?.serviceIds) && st.serviceIds.some(id => String(id) === String(serviceId));
+
+  // Generowanie slotów (capacity-aware dla auto-assign)
   useEffect(() => {
     if (!selectedDate || !selectedService) {
       setTimeSlots([]);
@@ -94,57 +102,134 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     const [h0, m0] = provider.workingHours.from.split(':').map(Number);
     const [h1, m1] = provider.workingHours.to.split(':').map(Number);
 
-    let cursor = startOfMinute(new Date(selectedDate));
-    cursor.setHours(h0, m0, 0, 0);
     const step = 15;
-    const rem = cursor.getMinutes() % step;
-    if (rem) cursor = addMinutes(cursor, step - rem);
-
-    const dayEnd = new Date(selectedDate);
-    dayEnd.setHours(h1, m1, 0, 0);
-
     const buffer = 15;
     const durMin = durationToMinutes(selectedService);
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
-    const allBusy = [...reservedSlots, ...pendingSlots]
-      .filter(s => s.date === dateStr)
-      .map(s => ({
-        from: new Date(`${s.date}T${s.from}`).getTime(),
-        to: addMinutes(new Date(`${s.date}T${s.to}`), buffer).getTime(),
-        status: reservedSlots.find(r => r.date === s.date && r.from === s.from) ? 'reserved' : 'pending'
-      }))
-      .sort((a, b) => a.from - b.from);
+    // godziny dnia
+    let cursor = startOfMinute(new Date(selectedDate));
+    cursor.setHours(h0, m0, 0, 0);
+    const rem = cursor.getMinutes() % step;
+    if (rem) cursor = addMinutes(cursor, step - rem);
+    const dayEnd = new Date(selectedDate);
+    dayEnd.setHours(h1, m1, 0, 0);
 
+    // teraz (dla dzisiejszego dnia)
     const isToday = isSameDay(selectedDate, new Date());
     let nowRoundedUp = null;
     if (isToday) {
-      const now = new Date();
-      nowRoundedUp = startOfMinute(now);
-      const remNow = nowRoundedUp.getMinutes() % step;
-      if (remNow) nowRoundedUp = addMinutes(nowRoundedUp, step - remNow);
+      const now = startOfMinute(new Date());
+      const remNow = now.getMinutes() % step;
+      nowRoundedUp = remNow ? addMinutes(now, step - remNow) : now;
     }
 
+    // ===== eligible & capacity dla auto-assign =====
+    const eligibleStaff = (isTeamEnabled && provider?.team?.enabled)
+      ? staffList.filter(s =>
+          s.active &&
+          (s.serviceIds || []).some(id => String(id) === String(selectedService?._id))
+        )
+      : [];
+
+    const eligibleIds = new Set(eligibleStaff.map(s => String(s._id)));
+
+    const totalCapacity = isAutoAssign
+      ? Math.max(0, eligibleStaff.reduce((sum, s) => sum + Math.max(1, Number(s.capacity) || 1), 0))
+      : 0;
+
+    // 🆕 mapa pojemności per pracownik (dla auto-assign)
+    const capacityMap = new Map(
+      eligibleStaff.map(s => [String(s._id), Math.max(1, Number(s.capacity) || 1)])
+    );
+
+    // ===== dayBusy =====
+    // auto-assign → liczymy zajętość TYLKO z rezerwacji pracowników z puli dla wybranej usługi
+    // pozostałe tryby → stara lista z reservedSlots/pendingSlots (już przefiltrowana dla user-pick)
+    const dayBusy = (isAutoAssign
+      ? reservationsAll
+          .filter(r => r.date === dateStr)
+          .filter(r => !r.dateOnly && ['zaakceptowana', 'oczekująca', 'tymczasowa'].includes(r.status))
+          .filter(r => eligibleIds.has(String(r.staffId)))
+          .map(r => {
+            const from = new Date(`${r.date}T${r.fromTime}`);
+            const to = addMinutes(new Date(`${r.date}T${r.toTime}`), buffer);
+            return {
+              fromMs: +from,
+              toMs: +to,
+              status: (r.status === 'zaakceptowana') ? 'reserved' : 'pending',
+              staffId: String(r.staffId || '')
+            };
+          })
+      : [...reservedSlots, ...pendingSlots]
+          .filter(s => s.date === dateStr)
+          .map(s => {
+            const from = new Date(`${s.date}T${s.fromTime}`);
+            const to = addMinutes(new Date(`${s.date}T${s.toTime}`), buffer);
+            const isRes = reservedSlots.find(r => r.date === s.date && r.fromTime === s.fromTime);
+            return {
+              fromMs: +from,
+              toMs: +to,
+              status: isRes ? 'reserved' : 'pending',
+              staffId: '' // bez zespołu nie ma znaczenia
+            };
+          })
+    ).sort((a, b) => a.fromMs - b.fromMs);
+
     const slots = [];
+
     while (cursor < dayEnd) {
       const start = new Date(cursor);
       const end = addMinutes(start, durMin);
       const endWithBuffer = addMinutes(end, buffer);
-      const slotStartMs = start.getTime();
-      const slotEndMs = endWithBuffer.getTime();
+      const slotStartMs = +start;
+      const slotEndMs = +endWithBuffer;
 
       let status = 'free';
       if (endWithBuffer > dayEnd) status = 'disabled';
 
-      const conflict = allBusy.find(busy => slotStartMs >= busy.from && slotStartMs < busy.to);
-      if (conflict) {
-        status = conflict.status;
-      } else if (status === 'free') {
-        const nextBusy = allBusy.find(busy => busy.from >= slotStartMs);
-        if (nextBusy && slotEndMs > nextBusy.from) status = 'disabled';
+      // twarde nakładki na ten slot (uwzględniając buffer)
+      const overlaps = dayBusy.filter(b => slotStartMs < b.toMs && slotEndMs > b.fromMs);
+
+      if (isAutoAssign) {
+        if (totalCapacity <= 0) {
+          status = 'disabled';
+        } else {
+          // 🆕 policz zużytą pojemność per pracownik w tym slocie
+          const perStaffCounts = new Map();
+          for (const o of overlaps) {
+            if (!o.staffId) continue;
+            perStaffCounts.set(o.staffId, (perStaffCounts.get(o.staffId) || 0) + 1);
+          }
+
+          let usedCapacity = 0;
+          for (const [sid, count] of perStaffCounts.entries()) {
+            const cap = capacityMap.get(sid) || 1;
+            usedCapacity += Math.min(count, cap);
+          }
+
+          if (usedCapacity >= totalCapacity) {
+            const hasAccepted = overlaps.some(o => o.status === 'reserved');
+            status = hasAccepted ? 'reserved' : 'pending';
+          }
+          // brak „onlyNextStarts” – zero sztucznego szarzenia
+        }
+      } else {
+        // bez zespołu / user-pick: jeden konflikt blokuje slot
+        const directConflict = overlaps.length > 0;
+        if (directConflict && status !== 'disabled') {
+          status = overlaps.some(o => o.status === 'reserved') ? 'reserved' : 'pending';
+        } else if (status === 'free') {
+          // opcjonalny „soft block” przed zbliżającą się rezerwacją
+          const nextBusy = dayBusy.find(b => b.fromMs >= slotStartMs);
+          if (nextBusy && slotEndMs > nextBusy.fromMs) status = 'disabled';
+        }
       }
-      if (isToday && nowRoundedUp && start < nowRoundedUp && status === 'free') {
-        status = 'disabled';
+
+      // przeszłość dziś – szare, chyba że w tym oknie jest zaakceptowana rezerwacja
+      if (isToday && nowRoundedUp && start < nowRoundedUp) {
+        const overlapsAccepted = overlaps.some(o => o.status === 'reserved');
+        if (!overlapsAccepted) status = 'disabled';
       }
 
       slots.push({ label: format(start, 'HH:mm'), status });
@@ -152,7 +237,17 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     }
 
     setTimeSlots(slots);
-  }, [selectedDate, selectedService, provider, reservedSlots, pendingSlots]);
+  }, [
+    selectedDate,
+    selectedService,
+    provider,
+    reservedSlots,
+    pendingSlots,
+    isAutoAssign,
+    isTeamEnabled,
+    staffList,
+    reservationsAll
+  ]);
 
   const handleSubmit = async (e) => {
     e.preventDefault?.();
@@ -257,7 +352,7 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
               {s.name} {s.duration.value}{' '}
               {s.duration.unit === 'minutes' ? 'min' :
                 s.duration.unit === 'hours' ? 'godzin' :
-                  s.duration.unit === 'days' ? 'dni' : s.duration.unit}
+                s.duration.unit === 'days' ? 'dni' : s.duration.unit}
             </option>
           ))}
         </select>

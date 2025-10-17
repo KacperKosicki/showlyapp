@@ -3,50 +3,122 @@ const router = express.Router();
 const Reservation = require('../models/Reservation');
 const User = require('../models/User');
 const Profile = require('../models/Profile');
-const Staff = require('../models/Staff'); // ⬅️ DODAJ TO
+const Staff = require('../models/Staff');
 
 // === USTAWIENIA ===
-const PENDING_MINUTES = Number(process.env.PENDING_MINUTES ?? 1);  // np. 60 w produkcji
+const PENDING_MINUTES = Number(process.env.PENDING_MINUTES ?? 60);
 const SLOT_BUFFER_MIN = 15;
 
-// helper – kolizje
+// helpery
 const toMin = (hhmm) => {
   const [h, m] = String(hhmm).split(':').map(Number);
   return (h || 0) * 60 + (m || 0);
 };
 const overlap = (aStart, aEnd, bStart, bEnd) => aStart < bEnd && aEnd > bStart;
 
-// ISO z 'YYYY-MM-DD' + 'HH:mm' (jeśli masz strefę czasową, skonwertuj tutaj)
+// Uwaga: jeśli masz strefy, tu trzeba skonwertować lokalny czas na UTC. Na razie prosta wersja:
 const toDateTime = (dateStr, hhmm) => new Date(`${dateStr}T${hhmm}:00.000Z`);
 
-// żywe statusy, które blokują slot
 const ALIVE_STATUSES = ['zaakceptowana', 'oczekująca', 'tymczasowa'];
 
-// auto-assign: wybierz pierwszą osobę, która wykonuje usługę i nie ma konfliktu (z uwzględnieniem capacity)
-async function pickAvailableStaffForProfile({ providerProfileId, serviceId, startAt, endAt }) {
-  // bierz tylko aktywny personel z tego profilu
+// ⬇️ wspólny warunek czasowy z buforem – używany w picku i w finalnym checku
+function mongoTimeCondition(startAt, endAt, bufferMin = SLOT_BUFFER_MIN) {
+  const bufMs = bufferMin * 60000;
+  return {
+    // istniejąca.startAt < nowy.koniec + buffer
+    startAt: { $lt: new Date(endAt.getTime() + bufMs) },
+    // istniejąca.endAt + buffer > nowy.start
+    endAt:   { $gt: new Date(startAt.getTime() - bufMs) },
+  };
+}
+
+// wybór osoby dla auto-assign (z buforem i capacity)
+// wybór osoby dla auto-assign (z buforem, capacity i preferencją faktycznie wolnych)
+async function pickAvailableStaffForProfile({ providerProfileId, serviceId, startAt, endAt, excludeIds = [] }) {
   const all = await Staff.find({ profileId: providerProfileId, active: true }).lean();
 
-  // filtr: czy osoba w ogóle wykonuje tę usługę
-  const candidates = all.filter(s => (s.serviceIds || []).some(id => String(id) === String(serviceId)));
+  // Kandydaci, którzy mogą wykonać usługę
+  const candidates = all.filter(s =>
+    !excludeIds.some(ex => String(ex) === String(s._id)) &&
+    (s.serviceIds || []).some(id => String(id) === String(serviceId))
+  );
 
-  for (const s of candidates) {
-    const overlaps = await Reservation.countDocuments({
+  if (!candidates.length) return null;
+
+  // Dla każdego kandydata policz:
+  // - overlapCount: ile rezerwacji (z buforem) nachodzi na żądany slot
+  // - loadNow: bieżące obciążenie w tym oknie (ile równoległych wizyt)
+  // - lastEndBefore: ostatnia zakończona rezerwacja tego dnia przed startAt (do tie-breakerów)
+  const results = await Promise.all(candidates.map(async s => {
+    const capacity = Math.max(1, Number(s.capacity) || 1);
+
+    // kolizje w oknie (z buforem)
+    const overlapCond = {
       providerProfileId,
       staffId: s._id,
       dateOnly: false,
       status: { $in: ALIVE_STATUSES },
-      startAt: { $lt: endAt },
-      endAt: { $gt: startAt }
-    });
-    if (overlaps < (s.capacity ?? 1)) {
-      return s; // zwróć cały dokument staff (przyda się name)
-    }
-  }
-  return null;
+      ...mongoTimeCondition(startAt, endAt), // zawiera SLOT_BUFFER_MIN
+    };
+
+    const overlapCount = await Reservation.countDocuments(overlapCond);
+
+    // Jeśli są nakładające się rezerwacje, sprawdź ile ich faktycznie „wchodzi” w capacity
+    // (czyli realne obciążenie „tu i teraz”)
+    const overlapping = overlapCount > 0
+      ? await Reservation.find(overlapCond, { startAt: 1, endAt: 1 }).lean()
+      : [];
+
+    // policz ile faktycznie „równoległych” wizyt zachodzi
+    // (tu wystarczy sama liczba dokumentów, bo każdy dokument liczy się 1:1 w oknie).
+    const loadNow = overlapping.length;
+
+    // ostatnie zakończenie przed startem (do preferencji osoby, która „kończy wcześniej”)
+    const lastBefore = await Reservation
+      .findOne({
+        providerProfileId,
+        staffId: s._id,
+        dateOnly: false,
+        status: { $in: ALIVE_STATUSES },
+        endAt: { $lte: new Date(startAt.getTime() + SLOT_BUFFER_MIN * 60000) } // z szacunkiem do bufora
+      })
+      .sort({ endAt: -1 })
+      .select({ endAt: 1 })
+      .lean();
+
+    return {
+      staff: s,
+      capacity,
+      overlapCount,
+      loadNow,
+      lastEndBefore: lastBefore?.endAt ? lastBefore.endAt.getTime() : 0
+    };
+  }));
+
+  // 1) Wytnij tych, u których przekroczylibyśmy/osiągnęli capacity w tym oknie
+  const feasible = results.filter(r => r.loadNow < r.capacity);
+
+  if (!feasible.length) return null;
+
+  // 2) Preferuj osoby BEZ żadnej kolizji (tzn. realnie wolne w oknie)
+  const trulyFree = feasible.filter(r => r.overlapCount === 0);
+
+  const pool = trulyFree.length ? trulyFree : feasible;
+
+  // 3) Sortowanie „fair”:
+  //   a) mniej loadNow (mniej równoległych w tym momencie)
+  //   b) wcześniejszy lastEndBefore (kto skończył wcześniej, ma „priorytet”)
+  //   c) stabilnie po _id (żeby wynik był deterministyczny)
+  pool.sort((a, b) => {
+    if (a.loadNow !== b.loadNow) return a.loadNow - b.loadNow;
+    if (a.lastEndBefore !== b.lastEndBefore) return a.lastEndBefore - b.lastEndBefore;
+    return String(a.staff._id).localeCompare(String(b.staff._id));
+  });
+
+  return pool[0].staff || null;
 }
 
-// Zamień przeterminowane „oczekujące” na zamknięte („wygasłe”), widoczne TYLKO u klienta
+// zamykanie przeterminowanych pendingów
 async function closeExpiredPending() {
   const now = new Date();
   await Reservation.updateMany(
@@ -58,14 +130,14 @@ async function closeExpiredPending() {
         closedBy: 'system',
         closedReason: 'expired',
         clientSeen: false,
-        providerSeen: false // usługodawca nie będzie widział „wygasła”
+        providerSeen: false,
       }
     }
   );
 }
 
 // =====================
-// POST /api/reservations  – rezerwacja godzinowa (calendar)
+// POST /api/reservations – godzinowa
 // =====================
 router.post('/', async (req, res) => {
   try {
@@ -79,7 +151,6 @@ router.post('/', async (req, res) => {
       duration,
       description,
       serviceId,
-      // ⬇️ opcjonalnie przy user-pick
       staffId: staffIdFromClient
     } = req.body;
 
@@ -87,30 +158,22 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Brakuje wymaganych pól' });
     }
 
-    // wylicz znormalizowane czasy (ułatwią konflikty)
     const startAt = toDateTime(date, fromTime);
     const endAt = toDateTime(date, toTime);
 
-    // pobierz ładne nazwy i profil
     const [user, provider, profile] = await Promise.all([
       User.findOne({ firebaseUid: userId }),
       User.findOne({ firebaseUid: providerUserId }),
       Profile.findById(providerProfileId)
     ]);
-
-    if (!profile) {
-      return res.status(404).json({ message: 'Profil usługodawcy nie istnieje' });
-    }
+    if (!profile) return res.status(404).json({ message: 'Profil usługodawcy nie istnieje' });
 
     const serviceName =
       profile?.services?.find(s => String(s._id) === String(serviceId))?.name || null;
 
-    // wykryj, czy działa tryb zespołu
-    const isCalendarTeam =
-      profile.bookingMode === 'calendar' && profile.team?.enabled === true;
+    const isCalendarTeam = profile.bookingMode === 'calendar' && profile.team?.enabled === true;
 
-    let staffId = null;
-    let staffName = null;
+    let staffDocFinal = null;
     let staffAutoAssigned = false;
 
     if (isCalendarTeam) {
@@ -120,23 +183,17 @@ router.post('/', async (req, res) => {
         if (!staffIdFromClient) {
           return res.status(400).json({ message: 'Wybierz pracownika' });
         }
-        // weryfikacja, że pracownik należy do profilu i wykonuje tę usługę
         const staffDoc = await Staff.findOne({
           _id: staffIdFromClient,
           profileId: providerProfileId,
           active: true
         }).lean();
+        if (!staffDoc) return res.status(400).json({ message: 'Nieprawidłowy pracownik' });
 
-        if (!staffDoc) {
-          return res.status(400).json({ message: 'Nieprawidłowy pracownik' });
-        }
         const canDoService = (staffDoc.serviceIds || []).some(id => String(id) === String(serviceId));
-        if (!canDoService) {
-          return res.status(400).json({ message: 'Wybrana osoba nie wykonuje tej usługi' });
-        }
+        if (!canDoService) return res.status(400).json({ message: 'Wybrana osoba nie wykonuje tej usługi' });
 
-        staffId = staffDoc._id;
-        staffName = staffDoc.name || null;
+        staffDocFinal = staffDoc;
       }
 
       if (mode === 'auto-assign' && !staffIdFromClient) {
@@ -149,13 +206,12 @@ router.post('/', async (req, res) => {
         if (!picked) {
           return res.status(409).json({ message: 'Brak dostępnego pracownika' });
         }
-        staffId = picked._id;
-        staffName = picked.name || null;
+        staffDocFinal = picked;
         staffAutoAssigned = true;
       }
 
-      // jeśli ktoś mimo auto-assign przysłał staffId, możesz zaakceptować po weryfikacji jak wyżej
-      if (mode === 'auto-assign' && staffIdFromClient && !staffId) {
+      // jeśli auto-assign, ale klient manualnie przysłał staffId — zaakceptuj po weryfikacji
+      if (mode === 'auto-assign' && staffIdFromClient && !staffDocFinal) {
         const staffDoc = await Staff.findOne({
           _id: staffIdFromClient,
           profileId: providerProfileId,
@@ -164,27 +220,47 @@ router.post('/', async (req, res) => {
         if (!staffDoc) return res.status(400).json({ message: 'Nieprawidłowy pracownik' });
         const canDoService = (staffDoc.serviceIds || []).some(id => String(id) === String(serviceId));
         if (!canDoService) return res.status(400).json({ message: 'Wybrana osoba nie wykonuje tej usługi' });
-        staffId = staffDoc._id;
-        staffName = staffDoc.name || null;
+        staffDocFinal = staffDoc;
       }
     }
 
     // 🔒 KOLIZJE
-    // 1) Tryb z zespołem: konflikt liczymy per staffId (i tylko dla godzinowych)
-    if (isCalendarTeam && staffId) {
-      const overlaps = await Reservation.countDocuments({
+    if (isCalendarTeam && staffDocFinal?._id) {
+      // Końcowa walidacja z buforem dla WYBRANEGO pracownika
+      let overlaps = await Reservation.countDocuments({
         providerProfileId,
-        staffId,
+        staffId: staffDocFinal._id,
         dateOnly: false,
         status: { $in: ALIVE_STATUSES },
-        startAt: { $lt: endAt },
-        endAt: { $gt: startAt }
+        ...mongoTimeCondition(startAt, endAt),
       });
-      if (overlaps) {
+
+      // RETRY dla auto-assign (np. wyścig: ktoś zajął slot między pickiem a checkiem)
+      if (overlaps >= (staffDocFinal.capacity ?? 1) && staffAutoAssigned) {
+        const retryPick = await pickAvailableStaffForProfile({
+          providerProfileId,
+          serviceId,
+          startAt,
+          endAt,
+          excludeIds: [staffDocFinal._id]
+        });
+        if (retryPick) {
+          staffDocFinal = retryPick;
+          overlaps = await Reservation.countDocuments({
+            providerProfileId,
+            staffId: retryPick._id,
+            dateOnly: false,
+            status: { $in: ALIVE_STATUSES },
+            ...mongoTimeCondition(startAt, endAt),
+          });
+        }
+      }
+
+      if (overlaps >= (staffDocFinal.capacity ?? 1)) {
         return res.status(409).json({ message: 'Wybrany slot dla tej osoby jest zajęty.' });
       }
     } else {
-      // 2) Dotychczasowa logika bez zespołu (zgodna z Twoim kodem)
+      // bez zespołu – dotychczasowa logika z buforem
       const now = new Date();
       const existing = await Reservation.find({
         providerUserId,
@@ -210,30 +286,19 @@ router.post('/', async (req, res) => {
       }
     }
 
-    // ustawienie terminów wygasania „oczekującej”
     const pendingExpiresAt = new Date(Date.now() + PENDING_MINUTES * 60 * 1000);
 
-    // UTWÓRZ REZERWACJĘ
     const newReservation = await Reservation.create({
-      // KLIENT
       userId,
       userName: user?.name || 'Klient',
-
-      // USŁUGODAWCA
       providerUserId,
       providerName: provider?.name || 'Usługodawca',
-
-      // PROFIL
       providerProfileId,
       providerProfileName: profile?.name || 'Profil',
       providerProfileRole: profile?.role || 'Brak roli',
-
-      // PERSONEL (jeśli dotyczy)
-      staffId: staffId || null,
-      staffName: staffName || null,
+      staffId: staffDocFinal?._id || null,
+      staffName: staffDocFinal?.name || null,
       staffAutoAssigned,
-
-      // DATA/CZAS
       date,
       dateOnly: false,
       fromTime,
@@ -241,12 +306,8 @@ router.post('/', async (req, res) => {
       startAt,
       endAt,
       duration,
-
-      // USŁUGA (snapshot)
       serviceId: serviceId || null,
       serviceName: serviceName || null,
-
-      // INNE
       description,
       status: 'oczekująca',
       pendingExpiresAt,
@@ -261,10 +322,7 @@ router.post('/', async (req, res) => {
 });
 
 // =====================
-// GET /api/reservations/by-user/:uid – widok klienta
-//   - zaakceptowane
-//   - żywe oczekujące
-//   - zamknięte (anul/odrz/wygasła), jeśli clientSeen === false
+// GET /api/reservations/by-user/:uid
 // =====================
 router.get('/by-user/:uid', async (req, res) => {
   try {
@@ -287,10 +345,7 @@ router.get('/by-user/:uid', async (req, res) => {
 });
 
 // =====================
-// GET /api/reservations/by-provider/:uid – widok usługodawcy
-//   - zaakceptowane
-//   - żywe oczekujące
-//   - zamknięte, jeśli providerSeen === false
+// GET /api/reservations/by-provider/:uid
 // =====================
 router.get('/by-provider/:uid', async (req, res) => {
   try {
@@ -313,7 +368,7 @@ router.get('/by-provider/:uid', async (req, res) => {
 });
 
 // =====================
-// GET /unavailable-days – (bez zmian)
+// GET /unavailable-days/:providerUid
 // =====================
 router.get('/unavailable-days/:providerUid', async (req, res) => {
   try {
@@ -341,7 +396,7 @@ router.get('/unavailable-days/:providerUid', async (req, res) => {
 });
 
 // =====================
-// POST /day – rezerwacja całego dnia (ustawiamy pendingExpiresAt)
+// POST /api/reservations/day – rezerwacja całego dnia
 // =====================
 router.post('/day', async (req, res) => {
   try {
@@ -350,8 +405,8 @@ router.post('/day', async (req, res) => {
       providerUserId, providerName,
       providerProfileId, providerProfileName, providerProfileRole,
       date, description,
-      serviceId,        // <--- NOWE
-      serviceName: svcNameFromClient // <--- (opcjonalne)
+      serviceId,
+      serviceName: svcNameFromClient
     } = req.body;
 
     if (!userId || !providerUserId || !providerProfileId || !date) {
@@ -383,7 +438,6 @@ router.post('/day', async (req, res) => {
       return res.status(409).json({ message: 'Masz już oczekującą prośbę na ten dzień.' });
     }
 
-    // --- Ustal serviceName ---
     let serviceName = svcNameFromClient || null;
     if (!serviceName && serviceId && Array.isArray(profile?.services)) {
       const svc = profile.services.find(s => String(s._id) === String(serviceId));
@@ -403,8 +457,8 @@ router.post('/day', async (req, res) => {
       description: (description || '').trim(),
       status: 'oczekująca',
       pendingExpiresAt,
-      serviceId: serviceId || null,      // <--- NOWE
-      serviceName: serviceName || null,  // <--- NOWE
+      serviceId: serviceId || null,
+      serviceName: serviceName || null,
     });
 
     res.json(created);
@@ -415,7 +469,7 @@ router.post('/day', async (req, res) => {
 });
 
 // =====================
-// PATCH /:id/status – zmiana statusu + zamknięcie + oznaczenie aktora jako „seen”
+// PATCH /:id/status
 // =====================
 router.patch('/:id/status', async (req, res) => {
   const { id } = req.params;
@@ -427,33 +481,30 @@ router.patch('/:id/status', async (req, res) => {
 
     const now = new Date();
 
-    // anulowana przez klienta → zobaczy to tylko usługodawca
     if (status === 'anulowana') {
       reservation.status = 'anulowana';
       reservation.closedAt = now;
       reservation.closedBy = 'client';
       reservation.closedReason = 'cancelled';
       reservation.pendingExpiresAt = null;
-      reservation.clientSeen = true;   // klient nie zobaczy
-      reservation.providerSeen = false; // usługodawca zobaczy dopóki nie kliknie „OK, widzę”
+      reservation.clientSeen = true;
+      reservation.providerSeen = false;
       await reservation.save();
       return res.send('Reservation closed by client');
     }
 
-    // odrzucona przez usługodawcę → zobaczy to tylko klient
     if (status === 'odrzucona') {
       reservation.status = 'odrzucona';
       reservation.closedAt = now;
       reservation.closedBy = 'provider';
       reservation.closedReason = 'rejected';
       reservation.pendingExpiresAt = null;
-      reservation.clientSeen = false;   // klient zobaczy
-      reservation.providerSeen = true;  // usługodawca nie
+      reservation.clientSeen = false;
+      reservation.providerSeen = true;
       await reservation.save();
       return res.send('Reservation closed by provider');
     }
 
-    // zaakceptowana → normalnie (i zdejmujemy slot z availableDates)
     if (status === 'zaakceptowana') {
       reservation.status = 'zaakceptowana';
       reservation.pendingExpiresAt = null;
@@ -475,7 +526,6 @@ router.patch('/:id/status', async (req, res) => {
       return res.send('Status updated to accepted');
     }
 
-    // inne (raczej nieużywane)
     reservation.status = status;
     await reservation.save();
     res.send('Status updated');
@@ -486,12 +536,11 @@ router.patch('/:id/status', async (req, res) => {
 });
 
 // =====================
-// PATCH /:id/seen – „OK, widzę” (usuwa z listy patrzącego; TTL skasuje dokument później)
-// payload: { who: 'client' | 'provider' }
+// PATCH /:id/seen
 // =====================
 router.patch('/:id/seen', async (req, res) => {
   const { id } = req.params;
-  const { who } = req.body; // 'client' | 'provider'
+  const { who } = req.body;
   try {
     const reservation = await Reservation.findById(id);
     if (!reservation) return res.status(404).send('Reservation not found');
