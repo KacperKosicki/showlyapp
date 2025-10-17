@@ -127,9 +127,9 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     // ===== eligible & capacity dla auto-assign =====
     const eligibleStaff = (isTeamEnabled && provider?.team?.enabled)
       ? staffList.filter(s =>
-          s.active &&
-          (s.serviceIds || []).some(id => String(id) === String(selectedService?._id))
-        )
+        s.active &&
+        (s.serviceIds || []).some(id => String(id) === String(selectedService?._id))
+      )
       : [];
 
     const eligibleIds = new Set(eligibleStaff.map(s => String(s._id)));
@@ -148,32 +148,32 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     // pozostałe tryby → stara lista z reservedSlots/pendingSlots (już przefiltrowana dla user-pick)
     const dayBusy = (isAutoAssign
       ? reservationsAll
-          .filter(r => r.date === dateStr)
-          .filter(r => !r.dateOnly && ['zaakceptowana', 'oczekująca', 'tymczasowa'].includes(r.status))
-          .filter(r => eligibleIds.has(String(r.staffId)))
-          .map(r => {
-            const from = new Date(`${r.date}T${r.fromTime}`);
-            const to = addMinutes(new Date(`${r.date}T${r.toTime}`), buffer);
-            return {
-              fromMs: +from,
-              toMs: +to,
-              status: (r.status === 'zaakceptowana') ? 'reserved' : 'pending',
-              staffId: String(r.staffId || '')
-            };
-          })
+        .filter(r => r.date === dateStr)
+        .filter(r => !r.dateOnly && ['zaakceptowana', 'oczekująca', 'tymczasowa'].includes(r.status))
+        .filter(r => eligibleIds.has(String(r.staffId)))
+        .map(r => {
+          const from = new Date(`${r.date}T${r.fromTime}`);
+          const to = addMinutes(new Date(`${r.date}T${r.toTime}`), buffer);
+          return {
+            fromMs: +from,
+            toMs: +to,
+            status: (r.status === 'zaakceptowana') ? 'reserved' : 'pending',
+            staffId: String(r.staffId || '')
+          };
+        })
       : [...reservedSlots, ...pendingSlots]
-          .filter(s => s.date === dateStr)
-          .map(s => {
-            const from = new Date(`${s.date}T${s.fromTime}`);
-            const to = addMinutes(new Date(`${s.date}T${s.toTime}`), buffer);
-            const isRes = reservedSlots.find(r => r.date === s.date && r.fromTime === s.fromTime);
-            return {
-              fromMs: +from,
-              toMs: +to,
-              status: isRes ? 'reserved' : 'pending',
-              staffId: '' // bez zespołu nie ma znaczenia
-            };
-          })
+        .filter(s => s.date === dateStr)
+        .map(s => {
+          const from = new Date(`${s.date}T${s.fromTime}`);
+          const to = addMinutes(new Date(`${s.date}T${s.toTime}`), buffer);
+          const isRes = reservedSlots.find(r => r.date === s.date && r.fromTime === s.fromTime);
+          return {
+            fromMs: +from,
+            toMs: +to,
+            status: isRes ? 'reserved' : 'pending',
+            staffId: '' // bez zespołu nie ma znaczenia
+          };
+        })
     ).sort((a, b) => a.fromMs - b.fromMs);
 
     const slots = [];
@@ -209,17 +209,52 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
           }
 
           if (usedCapacity >= totalCapacity) {
-            const hasAccepted = overlaps.some(o => o.status === 'reserved');
-            status = hasAccepted ? 'reserved' : 'pending';
+            const accepted = overlaps.filter(o => o.status === 'reserved');
+            const pendingOnly = overlaps.filter(o => o.status === 'pending');
+
+            const startsInsideAccepted = accepted.some(o =>
+              slotStartMs >= o.fromMs && slotStartMs < o.toMs
+            );
+            const startsInsidePending = pendingOnly.some(o =>
+              slotStartMs >= o.fromMs && slotStartMs < o.toMs
+            );
+
+            if (startsInsideAccepted) {
+              status = 'reserved';   // czerwony
+            } else if (startsInsidePending) {
+              status = 'pending';    // żółty
+            } else {
+              status = 'disabled';   // tylko dogonienie/BUF → szary
+            }
           }
+
+
           // brak „onlyNextStarts” – zero sztucznego szarzenia
         }
       } else {
         // bez zespołu / user-pick: jeden konflikt blokuje slot
         const directConflict = overlaps.length > 0;
         if (directConflict && status !== 'disabled') {
-          status = overlaps.some(o => o.status === 'reserved') ? 'reserved' : 'pending';
-        } else if (status === 'free') {
+          const accepted = overlaps.filter(o => o.status === 'reserved');
+          const pendingOnly = overlaps.filter(o => o.status === 'pending');
+
+          const startsInsideAccepted = accepted.some(o =>
+            slotStartMs >= o.fromMs && slotStartMs < o.toMs
+          );
+          const startsInsidePending = pendingOnly.some(o =>
+            slotStartMs >= o.fromMs && slotStartMs < o.toMs
+          );
+
+          if (startsInsideAccepted) {
+            status = 'reserved';   // czerwony
+          } else if (startsInsidePending) {
+            status = 'pending';    // żółty
+          } else {
+            status = 'disabled';   // dogonienie/BUF → szary
+          }
+        }
+
+        else if (status === 'free') {
           // opcjonalny „soft block” przed zbliżającą się rezerwacją
           const nextBusy = dayBusy.find(b => b.fromMs >= slotStartMs);
           if (nextBusy && slotEndMs > nextBusy.fromMs) status = 'disabled';
@@ -227,10 +262,11 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
       }
 
       // przeszłość dziś – szare, chyba że w tym oknie jest zaakceptowana rezerwacja
+      // ⛔️ Dziś: wszystko, co zaczyna się przed "teraz", jest po prostu niedostępne (szare)
       if (isToday && nowRoundedUp && start < nowRoundedUp) {
-        const overlapsAccepted = overlaps.some(o => o.status === 'reserved');
-        if (!overlapsAccepted) status = 'disabled';
+        status = 'disabled';
       }
+
 
       slots.push({ label: format(start, 'HH:mm'), status });
       cursor = addMinutes(cursor, step);
@@ -352,7 +388,7 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
               {s.name} {s.duration.value}{' '}
               {s.duration.unit === 'minutes' ? 'min' :
                 s.duration.unit === 'hours' ? 'godzin' :
-                s.duration.unit === 'days' ? 'dni' : s.duration.unit}
+                  s.duration.unit === 'days' ? 'dni' : s.duration.unit}
             </option>
           ))}
         </select>
