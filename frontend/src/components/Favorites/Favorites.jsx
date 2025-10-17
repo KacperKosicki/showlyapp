@@ -117,7 +117,7 @@ export default function Favorites({ currentUser }) {
       <div className={styles.wrapper}>
         <div className={styles.headerRow}>
           <div>
-            <h2 className={styles.sectionTitle}>Twoje ulubione</h2>
+            <h2 className={styles.sectionTitle}>Twoje ulubione profile</h2>
             <p className={styles.subTitle}>
               Zapisane wizytówki specjalistów, do których chcesz szybko wracać.
             </p>

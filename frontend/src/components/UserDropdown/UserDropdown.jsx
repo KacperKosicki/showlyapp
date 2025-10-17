@@ -191,17 +191,17 @@ const UserDropdown = ({
           Powiadomienia {unreadCount > 0 && <strong>({unreadCount})</strong>}
         </button>
 
-        {/* Ulubione */}
-        <button onClick={() => handleNavigate('/ulubione', 'scrollToId')}>
-          Ulubione
-        </button>
-
         {/* Rezerwacje */}
         <button onClick={() => handleNavigate('/rezerwacje', 'scrollToId')}>
           Rezerwacje{' '}
           {Number(pendingReservationsCount) > 0 && (
             <strong className={styles.badge}>({pendingReservationsCount})</strong>
           )}
+        </button>
+
+        {/* Ulubione */}
+        <button onClick={() => handleNavigate('/ulubione', 'scrollToId')}>
+          Ulubione
         </button>
 
         {/* Wylogowanie */}
