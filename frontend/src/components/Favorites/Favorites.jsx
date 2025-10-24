@@ -93,8 +93,7 @@ export default function Favorites({ currentUser }) {
             <div>
               <h2 className={styles.sectionTitle}>Twoje ulubione</h2>
               <p className={styles.subTitle}>
-                Nie masz jeszcze żadnych ulubionych profili. Dodawaj je klikając
-                <strong> serduszko</strong> na karcie specjalisty.
+                Nie dodałeś/aś jeszcze do <strong>ulubionych</strong> żadnego profilu.
               </p>
             </div>
             <span className={styles.badge}>0</span>

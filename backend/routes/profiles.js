@@ -3,6 +3,7 @@ const router = express.Router();
 const Profile = require('../models/Profile');
 const User = require('../models/User'); // 👈 dodaj to
 const Conversation = require('../models/Conversation');
+const Favorite = require('../models/Favorite'); // <- model od ulubionych (nazwa wg Twojej struktury)
 
 // Pomocnicza funkcja do tworzenia slugów
 const slugify = (text) =>
@@ -75,19 +76,31 @@ router.get('/by-user/:uid', async (req, res) => {
 // GET /api/profiles/slug/:slug – pobierz profil po unikalnym slugu
 router.get('/slug/:slug', async (req, res) => {
   try {
-    const profile = await Profile.findOne({ slug: req.params.slug });
+    const profile = await Profile.findOne({ slug: req.params.slug }).lean(); // <- lean, żeby łatwo dopisać pola
+    if (!profile) return res.status(404).json({ message: 'Nie znaleziono profilu.' });
 
-    if (!profile) {
-      return res.status(404).json({ message: 'Nie znaleziono profilu.' });
-    }
-
-    // ⛔ ZABLOKUJ dostęp jeśli profil nie jest widoczny lub wygasł
     const now = new Date();
     if (!profile.isVisible || profile.visibleUntil < now) {
       return res.status(403).json({ message: 'Profil jest obecnie niewidoczny.' });
     }
 
-    res.json(profile);
+    const viewerUid = req.headers.uid || null;
+
+    // policz flagę i (opcjonalnie) licznik na podstawie kolekcji ulubionych
+    let isFavorite = false;
+    let favoritesCount = profile.favoritesCount; // jeśli to pole utrzymujesz w toggle – zostaw
+
+    if (viewerUid) {
+      const [favExists, freshCount] = await Promise.all([
+        Favorite.exists({ ownerUid: viewerUid, profileUserId: profile.userId }),
+        // jeśli wolisz zawsze świeżo liczyć licznik, odkomentuj poniższą linię i przypisz do favoritesCount
+        // Favorite.countDocuments({ profileUserId: profile.userId })
+      ]);
+      isFavorite = !!favExists;
+      // favoritesCount = freshCount; // <- użyj tylko jeśli chcesz zawsze liczyć na żywo
+    }
+
+    return res.json({ ...profile, isFavorite, favoritesCount });
   } catch (err) {
     console.error('❌ Błąd w GET /slug/:slug:', err);
     res.status(500).json({ message: 'Błąd serwera.' });

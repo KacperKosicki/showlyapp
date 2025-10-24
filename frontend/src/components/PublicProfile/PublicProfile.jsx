@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styles from './PublicProfile.module.scss';
 import { FaMapMarkerAlt, FaStar, FaRegEye } from 'react-icons/fa';
+import { FaHeart, FaRegHeart } from 'react-icons/fa6';
 import { auth } from '../../firebase';
 import 'react-calendar/dist/Calendar.css';
 import AlertBox from '../AlertBox/AlertBox';
 import { useLocation } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const prettyUrl = (url) => {
   try {
@@ -30,6 +32,7 @@ const PublicProfile = () => {
   const [comment, setComment] = useState('');
   const [alert, setAlert] = useState(null);
   const [fullscreenImage, setFullscreenImage] = useState(null);
+  const [uid, setUid] = useState(auth.currentUser?.uid ?? null);
   const maxChars = 200;
   const routerLocation = useLocation();
 
@@ -41,6 +44,21 @@ const PublicProfile = () => {
       default: return unit;
     }
   };
+
+  const [favCount, setFavCount] = useState(0);
+  const [isFav, setIsFav] = useState(false);
+
+  // 🔄 Synchronizacja po pobraniu profilu
+  useEffect(() => {
+    if (!profile) return;
+    if (typeof profile.favoritesCount === 'number') setFavCount(profile.favoritesCount);
+    setIsFav(!!profile.isFavorite);
+  }, [profile]);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => setUid(u?.uid ?? null));
+    return unsub;
+  }, []);
 
   useEffect(() => {
     const scrollTo = routerLocation.state?.scrollToId;
@@ -59,15 +77,15 @@ const PublicProfile = () => {
     requestAnimationFrame(tryScroll);
   }, [routerLocation.state, loading]);
 
-
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`);
+        const headers = uid ? { uid } : {};
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`, { headers });
 
         if (res.status === 403) {
           setAlert({ type: 'error', message: 'Profil jest obecnie niewidoczny lub wygasł.' });
-          setProfile(null); // profil nie będzie renderowany
+          setProfile(null);
           return;
         }
 
@@ -75,6 +93,11 @@ const PublicProfile = () => {
 
         const data = await res.json();
         setProfile(data);
+
+        // 🟩 DODAJ TE 2 LINIE:
+        if (typeof data.favoritesCount === 'number') setFavCount(data.favoritesCount);
+        if (typeof data.isFavorite === 'boolean') setIsFav(data.isFavorite);
+
       } catch (err) {
         console.error('❌ Błąd:', err);
         setAlert({ type: 'error', message: 'Nie udało się załadować wizytówki.' });
@@ -84,8 +107,7 @@ const PublicProfile = () => {
     };
 
     fetchProfile();
-  }, [slug]);
-
+  }, [slug, uid]); // 🟩 ważne: dodaj uid!
 
   useEffect(() => {
     const currentUserId = auth.currentUser?.uid;
@@ -137,6 +159,41 @@ const PublicProfile = () => {
       setProfile(updatedData);
     } catch (err) {
       setAlert({ type: 'error', message: `${err.message}` });
+    }
+  };
+
+  const toggleFavorite = async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      setAlert({ type: 'error', message: 'Aby dodać do ulubionych, musisz być zalogowany.' });
+      return;
+    }
+    if (currentUser.uid === profile?.userId) {
+      setAlert({ type: 'error', message: 'Nie możesz dodać własnego profilu do ulubionych.' });
+      return;
+    }
+
+    const next = !isFav;
+    setIsFav(next);
+    setFavCount(c => Math.max(0, c + (next ? 1 : -1)));
+
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/favorites/toggle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          uid: currentUser.uid
+        },
+        body: JSON.stringify({ profileUserId: profile.userId })
+      });
+      const data = await res.json();
+      if (typeof data?.isFav === 'boolean') setIsFav(data.isFav);
+      if (typeof data?.count === 'number') setFavCount(data.count);
+    } catch {
+      // revert na błędzie
+      setIsFav(v => !v);
+      setFavCount(c => Math.max(0, c + (next ? -1 : +1)));
+      setAlert({ type: 'error', message: 'Nie udało się zaktualizować ulubionych. Spróbuj ponownie.' });
     }
   };
 
@@ -221,7 +278,6 @@ const PublicProfile = () => {
             </div>
           </div>
 
-
           <div className={styles.top}>
             <img src={avatar} alt={name} className={styles.avatar} />
             <div className={styles.info}>
@@ -283,7 +339,7 @@ const PublicProfile = () => {
             {!isOwner && (
               <div className={styles.ratingSection}>
                 <div className={styles.separator} />
-                <p>{hasRated ? 'Oceniłeś/aś już ten profil:' : 'Oceń tę wizytówkę:'}</p>
+                <p>{hasRated ? 'Oceniłeś/aś już ten profil:' : 'Oceń ten profil:'}</p>
                 <div className={styles.stars}>
                   {[1, 2, 3, 4, 5].map(val => (
                     <FaStar
@@ -329,12 +385,26 @@ const PublicProfile = () => {
 
           <div className={styles.separator} />
 
-          <div className={styles.visits}>
-            <FaRegEye />
-            <span>
-              Ten profil odwiedzono <strong>{profile?.visits ?? 0}</strong> razy
-            </span>
+          <div className={styles.bottomMeta}>
+            <div className={styles.visits}>
+              <FaRegEye />
+              <span>Ten profil odwiedzono <strong>{profile?.visits ?? 0}</strong> razy</span>
+            </div>
+
+            <button
+              type="button"
+              className={`${styles.favoritesBtn} ${isFav ? styles.active : ''}`}
+              onClick={toggleFavorite}
+              aria-label={isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+              title={isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+            >
+              <span className={styles.favLabel}>
+                Ulubione: <strong>{favCount}</strong>
+              </span>
+              {isFav ? <FaHeart className={styles.heartFilled} /> : <FaRegHeart className={styles.heart} />}
+            </button>
           </div>
+
         </div>
 
         <div className={styles.reviewsBox}>

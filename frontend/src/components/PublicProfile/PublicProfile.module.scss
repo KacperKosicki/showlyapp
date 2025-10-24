@@ -175,48 +175,6 @@
   /* ważne, żeby rogi bannera były równo z kartą */
 }
 
-.visits {
-  position: absolute;
-  left: var(--pad);
-  bottom: var(--pad);
-
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-
-  font-size: 0.9rem;
-  color: $text-color;
-
-  svg {
-    font-size: 1rem;
-    color: $primary-color;
-  }
-
-  span {
-    color: $text-color;
-  }
-
-  strong {
-    color: $secondary-color;
-    font-weight: 700;
-  }
-
-  /* kolorowa, pogrubiona liczba */
-}
-
-@media (max-width: 480px) {
-  .visits {
-    font-size: 0.85rem;
-  }
-}
-
-@media (max-width: 900px) {
-  .card {
-    width: 100%;
-    max-width: 700px;
-  }
-}
-
 /* ============ OPINIE ============ */
 .reviewsBox {
   position: relative;
@@ -993,4 +951,67 @@ $container-max: calc(#{$card-max} + #{$reviews-max} + #{$cols-gap}); // ≈ 1180
   font-family: $font-accent;
   opacity: .9;
   color: #f0f0f0;
+}
+
+.card {
+  --pad-y: 2rem;
+  --pad-x: 1.5rem;
+  --pad: 1.5rem;            /* DODANE: używane przez pasek/meta */
+  position: relative;
+  padding: var(--pad-y) var(--pad-x);
+  padding-bottom: calc(var(--pad-y) + 32px); /* miejsce na bottomMeta */
+  /* ...reszta bez zmian... */
+}
+
+.bottomMeta {
+  position: absolute;
+  left: var(--pad);
+  right: var(--pad);
+  bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.visits {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  svg { color: $primary-color; font-size: 1rem; }
+  span { color: $text-color; }
+  strong { color: $secondary-color; font-weight: 700; }
+}
+
+.favoritesBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fff;
+  border: 1px solid $primary-color;
+  color: $primary-color;
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+  font-family: $font-accent;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.15s ease;
+
+  &:hover, &:focus {
+    background: $primary-color;
+    color: #fff;
+    .heart, .heartFilled { color: #fff; }
+  }
+
+  &.active {
+    background: $primary-color;
+    color: #fff;
+    border-color: $primary-color;
+    .heartFilled { color: #fff; }
+    &:hover { background: darken($primary-color, 8%); transform: scale(1.05); }
+  }
+
+  .favLabel { white-space: nowrap; }
+  .heart, .heartFilled { font-size: 1rem; color: $primary-color; transition: color 0.18s; }
 }
