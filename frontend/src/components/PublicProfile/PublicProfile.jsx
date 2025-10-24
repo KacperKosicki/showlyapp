@@ -172,6 +172,31 @@ const PublicProfile = () => {
         )}
 
         <div className={styles.card}>
+          <div className={styles.banner}>
+            <div className={styles.bannerOverlay}></div>
+            <div className={styles.bannerContent}>
+              <p className={styles.bannerSubtitle}>Witaj na profilu</p>
+              <h2 className={styles.bannerName}>{name}</h2>
+              <p className={styles.bannerDesc}>
+                Odkryj ofertę, zarezerwuj termin i poznaj bliżej
+              </p>
+            </div>
+
+            <svg
+              className={styles.bannerWave}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 1440 320"
+              preserveAspectRatio="none"
+            >
+              <path
+                fill="#ffffff"
+                fillOpacity="1"
+                d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"
+              ></path>
+            </svg>
+          </div>
+
+
           <div className={styles.topBar}>
             <div className={styles.location}>
               <FaMapMarkerAlt />
@@ -182,6 +207,7 @@ const PublicProfile = () => {
               <span>{rating} <small>({reviews})</small></span>
             </div>
           </div>
+
 
           <div className={styles.top}>
             <img src={avatar} alt={name} className={styles.avatar} />
@@ -296,37 +322,47 @@ const PublicProfile = () => {
           </div>
         </div>
 
-        <div className={styles.reviewsBox}>
-          <h3>Opinie użytkowników</h3>
-          {profile.ratedBy?.length > 0 ? (
-            <ul className={styles.reviewsList}>
-              {profile.ratedBy.map((op, i) => {
-                const ratingVal = Number(op.rating);
-                return (
-                  <li key={i} className={styles.reviewItem}>
-                    <div className={styles.reviewHeader}>
-                      <strong className={styles.reviewUser}>
-                        {op.userName || 'Użytkownik'}
-                      </strong>
-                      <span className={styles.reviewRating}>
-                        {[...Array(5)].map((_, idx) => (
-                          <FaStar
-                            key={idx}
-                            className={idx < ratingVal ? styles.starSelected : styles.star}
-                          />
-                        ))}
-                      </span>
-                    </div>
-                    <p className={styles.reviewText}>{op.comment}</p>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className={styles.noReviews}>Brak opinii użytkowników</p>
-          )}
-        </div>
+<div className={styles.reviewsBox}>
+  <div className={styles.reviewsBanner}>
+    <div className={styles.reviewsBannerOverlay}></div>
+    <div className={styles.reviewsBannerContent}>
+      <h3 className={styles.reviewsBannerTitle}>Opinie użytkowników</h3>
+      <p className={styles.reviewsBannerDesc}>Sprawdź, co inni sądzą o tym profilu!</p>
+    </div>
+    <svg className={styles.reviewsWave} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path fill="#ffffff" d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"/>
+    </svg>
+  </div>
+
+  <div className={styles.reviewsBody}>
+    {profile.ratedBy?.length > 0 ? (
+      <ul className={styles.reviewsList}>
+        {profile.ratedBy.map((op, i) => {
+          const ratingVal = Number(op.rating);
+          return (
+            <li key={i} className={styles.reviewItem}>
+              <div className={styles.reviewHeader}>
+                <strong className={styles.reviewUser}>{op.userName || 'Użytkownik'}</strong>
+                <span className={styles.reviewRating}>
+                  {[...Array(5)].map((_, idx) => (
+                    <FaStar key={idx} className={idx < ratingVal ? styles.starSelected : styles.star}/>
+                  ))}
+                </span>
+              </div>
+              <p className={styles.reviewText}>{op.comment}</p>
+            </li>
+          );
+        })}
+      </ul>
+    ) : (
+      <p className={styles.noReviews}>Brak opinii użytkowników</p>
+    )}
+  </div>
+</div>
+
+
       </div>
+
       {profile.photos?.length > 0 && (
         <div className={styles.galleryWrapper}>
           <div className={styles.galleryHeader}>
