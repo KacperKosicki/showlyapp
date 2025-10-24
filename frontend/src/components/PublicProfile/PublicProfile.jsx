@@ -7,18 +7,30 @@ import 'react-calendar/dist/Calendar.css';
 import AlertBox from '../AlertBox/AlertBox';
 import { useLocation } from 'react-router-dom';
 
+const prettyUrl = (url) => {
+  try {
+    const u = new URL(url.startsWith('http') ? url : `https://${url}`);
+    const host = u.hostname.replace(/^www\./, '');
+    const path = u.pathname === '/' ? '' : u.pathname.replace(/\/$/, '');
+    const qs = u.search || '';
+    return `${host}${path}${qs}`;
+  } catch {
+    return url;
+  }
+};
+
 const PublicProfile = () => {
   const { slug } = useParams();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showCalendar, setShowCalendar] = useState(false);
   const [selectedRating, setSelectedRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [hasRated, setHasRated] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [comment, setComment] = useState('');
   const [alert, setAlert] = useState(null);
-  const maxChars = 100;
+  const [fullscreenImage, setFullscreenImage] = useState(null);
+  const maxChars = 200;
   const routerLocation = useLocation();
 
   const mapUnit = (unit) => {
@@ -93,11 +105,6 @@ const PublicProfile = () => {
     setHasRated(profile.ratedBy?.some(r => r.userId === currentUserId));
   }, [profile]);
 
-  const tileDisabled = ({ date }) => {
-    const formatted = date.toLocaleDateString('sv-SE');
-    return !profile.availableDates.includes(formatted);
-  };
-
   const handleRate = async () => {
     const userId = auth.currentUser?.uid;
     if (!userId) return setAlert({ type: 'error', message: 'Musisz być zalogowany, aby ocenić.' });
@@ -156,13 +163,24 @@ const PublicProfile = () => {
 
   const {
     name, avatar, role, rating, reviews, location, tags,
-    priceFrom, priceTo, availableDates = [], description, links = [],
+    priceFrom, priceTo = [], description, links = [],
     profileType
   } = profile;
 
+  const hasGallery = Array.isArray(profile.photos) && profile.photos.length > 0;
+  const hasServices = Array.isArray(profile.services) && profile.services.length > 0;
+  const needsBottomSpace = !(hasGallery || hasServices);
+
+  const cleanLinks = (links || [])
+    .map(l => (l || '').trim())
+    .filter(Boolean);
+
   return (
     <>
-      <div id="profileWrapper" className={styles.profileWrapper}>
+      <div
+        id="profileWrapper"
+        className={`${styles.profileWrapper} ${needsBottomSpace ? styles.spaciousBottom : ''}`}
+      >
         {alert && (
           <AlertBox
             type={alert.type}
@@ -175,10 +193,9 @@ const PublicProfile = () => {
           <div className={styles.banner}>
             <div className={styles.bannerOverlay}></div>
             <div className={styles.bannerContent}>
-              <p className={styles.bannerSubtitle}>Witaj na profilu</p>
-              <h2 className={styles.bannerName}>{name}</h2>
+              <h3 className={styles.bannerTitle}>Witaj na profilu {name}</h3>
               <p className={styles.bannerDesc}>
-                Odkryj ofertę, zarezerwuj termin i poznaj bliżej
+                Profil, który mówi sam za siebie — sprawdź szczegóły!
               </p>
             </div>
 
@@ -187,15 +204,11 @@ const PublicProfile = () => {
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 1440 320"
               preserveAspectRatio="none"
+              style={{ display: 'block', transform: 'translateZ(0)' }}   // anty-hairline
             >
-              <path
-                fill="#ffffff"
-                fillOpacity="1"
-                d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"
-              ></path>
+              <path fill="#ffffff" stroke="none" d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z" />
             </svg>
           </div>
-
 
           <div className={styles.topBar}>
             <div className={styles.location}>
@@ -252,21 +265,20 @@ const PublicProfile = () => {
               </p>
             )}
 
-            {links?.filter(link => link.trim() !== '').length > 0 ? (
+            {cleanLinks.length > 0 ? (
               <ul className={styles.links}>
-                {links.map((link, i) =>
-                  link.trim() ? (
-                    <li key={i}>
-                      <a href={link} target="_blank" rel="noopener noreferrer">
-                        🌐 Link {i + 1}
-                      </a>
-                    </li>
-                  ) : null
-                )}
+                {cleanLinks.map((link, i) => (
+                  <li key={`${link}-${i}`}>
+                    <a href={link} target="_blank" rel="noopener noreferrer" title={link}>
+                      {prettyUrl(link)}
+                    </a>
+                  </li>
+                ))}
               </ul>
             ) : (
               <p className={styles.noLinks}>Użytkownik nie dodał jeszcze żadnych linków.</p>
             )}
+
 
             {!isOwner && (
               <div className={styles.ratingSection}>
@@ -314,6 +326,9 @@ const PublicProfile = () => {
               </div>
             )}
           </div>
+
+          <div className={styles.separator} />
+
           <div className={styles.visits}>
             <FaRegEye />
             <span>
@@ -322,85 +337,125 @@ const PublicProfile = () => {
           </div>
         </div>
 
-<div className={styles.reviewsBox}>
-  <div className={styles.reviewsBanner}>
-    <div className={styles.reviewsBannerOverlay}></div>
-    <div className={styles.reviewsBannerContent}>
-      <h3 className={styles.reviewsBannerTitle}>Opinie użytkowników</h3>
-      <p className={styles.reviewsBannerDesc}>Sprawdź, co inni sądzą o tym profilu!</p>
-    </div>
-    <svg className={styles.reviewsWave} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
-      <path fill="#ffffff" d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"/>
-    </svg>
-  </div>
+        <div className={styles.reviewsBox}>
+          <div className={styles.reviewsBanner}>
+            <div className={styles.bannerOverlay}></div>
+            <div className={styles.bannerContent}>
+              <h3 className={styles.bannerTitle}>Opinie profilu {name}</h3>
+              <p className={styles.bannerDesc}>Sprawdź, co inni sądzą o tym profilu!</p>
+            </div>
+            <svg className={styles.bannerWave} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
+              <path fill="#ffffff" d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z" />
+            </svg>
+          </div>
 
-  <div className={styles.reviewsBody}>
-    {profile.ratedBy?.length > 0 ? (
-      <ul className={styles.reviewsList}>
-        {profile.ratedBy.map((op, i) => {
-          const ratingVal = Number(op.rating);
-          return (
-            <li key={i} className={styles.reviewItem}>
-              <div className={styles.reviewHeader}>
-                <strong className={styles.reviewUser}>{op.userName || 'Użytkownik'}</strong>
-                <span className={styles.reviewRating}>
-                  {[...Array(5)].map((_, idx) => (
-                    <FaStar key={idx} className={idx < ratingVal ? styles.starSelected : styles.star}/>
-                  ))}
-                </span>
-              </div>
-              <p className={styles.reviewText}>{op.comment}</p>
-            </li>
-          );
-        })}
-      </ul>
-    ) : (
-      <p className={styles.noReviews}>Brak opinii użytkowników</p>
-    )}
-  </div>
-</div>
-
-
+          <div className={styles.reviewsBody}>
+            {profile.ratedBy?.length > 0 ? (
+              <ul className={styles.reviewsList}>
+                {profile.ratedBy.map((op, i) => {
+                  const ratingVal = Number(op.rating);
+                  return (
+                    <li key={i} className={styles.reviewItem}>
+                      <div className={styles.reviewHeader}>
+                        <strong className={styles.reviewUser}>{op.userName || 'Użytkownik'}</strong>
+                        <span className={styles.reviewRating}>
+                          {[...Array(5)].map((_, idx) => (
+                            <FaStar key={idx} className={idx < ratingVal ? styles.starSelected : styles.star} />
+                          ))}
+                        </span>
+                      </div>
+                      <p className={styles.reviewText}>{op.comment}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className={styles.noReviews}>Brak opinii użytkowników</p>
+            )}
+          </div>
+        </div>
       </div>
 
       {profile.photos?.length > 0 && (
-        <div className={styles.galleryWrapper}>
-          <div className={styles.galleryHeader}>
-            <h2>Galeria użytkownika {name}</h2>
-            <p>Rzuć okiem na to, czym się zajmuje ten użytkownik — zdjęcia mówią więcej niż słowa!</p>
+        <section className={styles.galleryBox}>
+          <div className={styles.galleryBanner}>
+            <div className={styles.bannerOverlay}></div>
+            <div className={styles.bannerContent}>
+              <h3 className={styles.bannerTitle}>Galeria profilu {name}</h3>
+              <p className={styles.bannerDesc}>Zobacz efekty pracy i inspiracje — obrazy mówią więcej niż słowa!</p>
+            </div>
+            <svg
+              className={styles.bannerWave}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 1440 320"
+              preserveAspectRatio="none"
+            >
+              <path
+                fill="#ffffff"
+                d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"
+              />
+            </svg>
           </div>
-          <div className={styles.carousel}>
-            {profile.photos.map((url, i) => (
-              <div key={i} className={styles.slide}>
-                <img src={url} alt={`Zdjęcie ${i + 1}`} />
-              </div>
-            ))}
+
+          <div className={styles.galleryBody}>
+            <div className={styles.galleryGrid}>
+              {profile.photos.map((url, i) => (
+                <div
+                  key={i}
+                  className={styles.galleryItem}
+                  onClick={() => setFullscreenImage(url)}
+                >
+                  <img src={url} alt={`Zdjęcie ${i + 1}`} />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+
+          {fullscreenImage && (
+            <div className={styles.lightbox} onClick={() => setFullscreenImage(null)}>
+              <img src={fullscreenImage} alt="Podgląd zdjęcia" />
+            </div>
+          )}
+        </section>
       )}
+
       {/* ===== Sekcja usług użytkownika ===== */}
       {profile.services?.length > 0 && (
-        <div className={styles.servicesWrapper}>           {/* nowy wrapper */}
-          <section className={styles.servicesSection} id="services">
-            <h3>Usługi <span className={styles.spanName}>{name}</span></h3>
-            {profile.services.length > 0 ? (
-              <ul className={styles.servicesList}>
-                {profile.services.map((s, i) => (
-                  <li key={i}>
-                    <span className={styles.serviceName}>{s.name}</span>
-                    <span className={styles.serviceDuration}>
-                      — {s.duration.value} {mapUnit(s.duration.unit)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className={styles.noDescription}>
-                Użytkownik nie dodał jeszcze żadnych usług.
+        <section className={styles.servicesBox} id="services">
+          <div className={styles.servicesBanner}>
+            <div className={styles.bannerOverlay}></div>
+            <div className={styles.bannerContent}>
+              <h3 className={styles.bannerTitle}>Usługi profilu {name}</h3>
+              <p className={styles.bannerDesc}>
+                Wybierz coś dla siebie — nazwa usługi oraz czas jej realizacji poniżej!
               </p>
-            )}
-          </section>
-        </div>
+            </div>
+            <svg
+              className={styles.bannerWave}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 1440 320"
+              preserveAspectRatio="none"
+            >
+              <path
+                fill="#ffffff"
+                d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"
+              />
+            </svg>
+          </div>
+
+          <div className={styles.servicesBody}>
+            <ul className={styles.servicesList}>
+              {profile.services.map((s, i) => (
+                <li key={i}>
+                  <span className={styles.serviceName}>{s.name}</span>
+                  <span className={styles.serviceDuration}>
+                    — {s.duration.value} {mapUnit(s.duration.unit)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
       )}
     </>
   );

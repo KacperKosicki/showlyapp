@@ -14,7 +14,7 @@ const profileSchema = new mongoose.Schema({
   ratedBy: [{
     userId: String,
     rating: { type: Number, min: 1, max: 5 },
-    comment: { type: String, minlength: 5, maxlength: 100 },
+    comment: { type: String, minlength: 10, maxlength: 200 },
     userName: String,
   }],
   location: String,

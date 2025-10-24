@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from 'react';
 import { Navigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import styles from './YourProfile.module.scss';
-import AlertBox from '../AlertBox/AlertBox';
 import {
   FaMapMarkerAlt,
   FaTags,
@@ -18,7 +17,6 @@ import {
   FaUsers,
   FaTrash,
   FaPlus,
-  FaSave,
   FaTimes
 } from 'react-icons/fa';
 
@@ -37,6 +35,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     durationValue: '',
     durationUnit: 'minutes'
   });
+  
+  const MAX_PHOTOS = 6;
 
   const [profile, setProfile] = useState(null);
   const [editData, setEditData] = useState({});
@@ -174,18 +174,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     } catch (e) {
       console.error('Błąd dodawania pracownika', e);
       showAlert('Błąd dodawania pracownika.', 'error');
-    }
-  };
-
-  const patchStaff = async (id, changes) => {
-    try {
-      // API: PATCH /api/staff/:id
-      await axios.patch(`${process.env.REACT_APP_API_URL}/api/staff/${id}`, changes);
-      await fetchStaff(profile._id);
-      showAlert('Zapisano pracownika.', 'success');
-    } catch (e) {
-      console.error('Błąd zapisu pracownika', e);
-      showAlert('Błąd zapisu pracownika.', 'error');
     }
   };
 
@@ -339,8 +327,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const openAddPhotoPicker = () => {
     const current = (editData.photos || []).length;
-    if (current >= 5) {
-      showAlert('Można dodać maksymalnie 5 zdjęć.', 'warning');
+    if (current >= MAX_PHOTOS) {
+      showAlert('Można dodać maksymalnie ${MAX_PHOTOS} zdjęć.', 'warning');
       return;
     }
     addPhotoInputRef.current?.click();
@@ -351,7 +339,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     if (!filesAll.length) return;
 
     const existing = (editData.photos || []).length;
-    const slotsLeft = Math.max(0, 5 - existing);
+    const slotsLeft = Math.max(0, MAX_PHOTOS - existing);
     const files = filesAll.slice(0, slotsLeft);
 
     const accepted = [];
@@ -380,8 +368,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         showAlert('Pominięto duplikaty zdjęć.', 'info');
       }
 
-      const nextPhotos = [...existingPhotos, ...fresh.map(x => x.dataUrl)].slice(0, 5);
-      const nextHashes = [...existingHashes, ...fresh.map(x => x.hash)].slice(0, 5);
+      const nextPhotos = [...existingPhotos, ...fresh.map(x => x.dataUrl)].slice(0, MAX_PHOTOS);
+      const nextHashes = [...existingHashes, ...fresh.map(x => x.hash)].slice(0, MAX_PHOTOS);
 
       return { ...prev, photos: nextPhotos, photoHashes: nextHashes };
     });
@@ -1617,7 +1605,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   </div>
                 </div>
               ))}
-              {editData.photos?.length < 5 && (
+              {editData.photos?.length < MAX_PHOTOS && (
                 <>
                   <button
                     type="button"

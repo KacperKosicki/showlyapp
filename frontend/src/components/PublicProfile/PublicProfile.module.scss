@@ -1,17 +1,158 @@
 @import '../../styles/variables';
 
+/* ======= WSPÓLNY BANER ======= */
+@mixin bannerBase {
+  /* zmienne – łatwo podkręcisz wysokość/falę jedną zmianą */
+  --wave-h: 60px;
+  --content-pad-y: clamp(18px, 4vw, 28px);
+
+  position: relative;
+  height: 220px;
+  background: linear-gradient(135deg, #6f4ef2, #ff4081);
+  color: #fff;
+  text-align: center;
+  overflow: hidden;
+
+  display: grid;
+  place-items: center;
+  padding: calc(var(--content-pad-y) + 6px) 16px calc(var(--content-pad-y) + var(--wave-h));
+
+  @media (max-width: 768px) {
+    height: 200px;
+    --wave-h: 64px;
+    --content-pad-y: clamp(14px, 6vw, 24px);
+  }
+
+  /* elementy wewnętrzne (wspólne dla obu banerów) */
+  .bannerOverlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 30% 40%, rgba(255, 255, 255, .15), transparent 60%);
+    z-index: 0;
+  }
+
+  .bannerContent {
+    position: relative;
+    z-index: 1;
+    animation: fadeIn 1s ease forwards;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100% - var(--wave-h));
+    gap: 6px;
+    padding: 0 12px;
+  }
+
+  .bannerTitle {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(90deg, #ffffff, #ffe6f0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .bannerDesc {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    color: #f0f0f0;
+    margin: 0;
+  }
+
+  .bannerWave {
+    display: block;
+    position: absolute;
+    bottom: -3px;
+    /* lekko pod białe tło */
+    left: -1px;
+    /* overdraw */
+    width: calc(100% + 2px);
+    height: var(--wave-h);
+    z-index: 1;
+    transform: translateZ(0);
+    /* anty-hairline */
+    pointer-events: none;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(15px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* mobile drobiazgi */
+  @media (max-width: 600px) {
+    .bannerTitle {
+      font-size: 1.15rem;
+    }
+
+    .bannerDesc {
+      font-size: .9rem;
+    }
+  }
+}
+
+/* Baner na głównej karcie – różnica: full-bleed (wyjeżdża na padding) */
+.banner {
+  @include bannerBase;
+
+  /* full-bleed względem paddingu karty */
+  width: calc(100% + (var(--pad-x) * 2));
+  margin-left: calc(-1 * var(--pad-x));
+  margin-right: calc(-1 * var(--pad-x));
+  margin-top: calc(-1 * var(--pad-y));
+  margin-bottom: 2rem;
+}
+
+/* Baner opinii – ten sam wygląd, bez full-bleed (w środku boxa) */
+.reviewsBanner {
+  @include bannerBase;
+}
+
+/* delikatne wejście treści */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .profileWrapper {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 2rem;
-  padding: 4rem 1rem;
-  max-width: 1200px;
+  padding-top: 4rem;
   margin: 0 auto;
 
   @media (max-width: 900px) {
     flex-direction: column;
     align-items: center;
+  }
+}
+
+/* więcej oddechu, gdy nie ma dolnych sekcji (galerii/usług) */
+.spaciousBottom {
+  margin-bottom: clamp(3rem, 6vw, 6rem);
+  padding-bottom: clamp(2rem, 5vw, 4rem);
+}
+
+@media (max-width: 768px) {
+  .spaciousBottom {
+    margin-bottom: clamp(2.5rem, 8vw, 5rem);
+    padding-bottom: clamp(1.5rem, 6vw, 3rem);
   }
 }
 
@@ -30,7 +171,8 @@
   font-family: $font-body;
 
   position: relative;
-  overflow: hidden; /* ważne, żeby rogi bannera były równo z kartą */
+  overflow: hidden;
+  /* ważne, żeby rogi bannera były równo z kartą */
 }
 
 .visits {
@@ -45,13 +187,27 @@
   font-size: 0.9rem;
   color: $text-color;
 
-  svg { font-size: 1rem; color: $primary-color; }
-  span { color: $text-color; }
-  strong { color: $secondary-color; font-weight: 700; } /* kolorowa, pogrubiona liczba */
+  svg {
+    font-size: 1rem;
+    color: $primary-color;
+  }
+
+  span {
+    color: $text-color;
+  }
+
+  strong {
+    color: $secondary-color;
+    font-weight: 700;
+  }
+
+  /* kolorowa, pogrubiona liczba */
 }
 
 @media (max-width: 480px) {
-  .visits { font-size: 0.85rem; }
+  .visits {
+    font-size: 0.85rem;
+  }
 }
 
 @media (max-width: 900px) {
@@ -62,7 +218,6 @@
 }
 
 /* ============ OPINIE ============ */
-
 .reviewsBox {
   position: relative;
   width: 35%;
@@ -70,81 +225,20 @@
   max-width: 440px;
   border: 1px solid #ccc;
   border-radius: 1rem;
-  padding: 0;                         /* banner full-bleed */
-  box-shadow: 0 6px 24px rgba(0,0,0,.08);
+  padding: 0;
+  /* banner full-bleed */
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .08);
   font-family: $font-body;
   align-self: flex-start;
   background: #fff;
-  overflow: hidden;                   /* równe rogi z falą */
-}
-
-/* Banner opinii – centrowanie + bufor na falę jak w głównym */
-.reviewsBanner {
-  --wave-h: 56px;
-  --content-pad-y: clamp(14px, 4.5vw, 22px);
-
-  position: relative;
-  height: 180px;
-  background: linear-gradient(315deg, #6f4ef2, #ff4081); /* 135deg + 180 = 315deg */
-  color: #fff;
-  text-align: center;
   overflow: hidden;
-
-  display: grid;
-  place-items: center;
-  padding: calc(var(--content-pad-y) + 4px) 16px
-           calc(var(--content-pad-y) + var(--wave-h));
-}
-
-.reviewsBannerOverlay {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 70% 60%, rgba(255,255,255,.15), transparent 60%);
-  z-index: 0;
-}
-
-.reviewsBannerContent {
-  position: relative;
-  z-index: 1;
-  animation: fadeIn 0.8s ease forwards;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;          /* pionowe centrowanie */
-  min-height: calc(100% - var(--wave-h));
-  gap: 6px;
-  padding: 0 8px;
-}
-
-.reviewsBannerTitle {
-  font-size: 1.35rem;
-  font-weight: 700;
-  margin: 0;
-  background: linear-gradient(90deg, #ffffff, #ffe6f0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.reviewsBannerDesc {
-  font-size: 0.95rem;
-  opacity: 0.9;
-  color: #f0f0f0;
-  margin: 0;
-}
-
-.reviewsWave {
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 100%;
-  height: var(--wave-h);
-  z-index: 1;
+  /* równe rogi z falą */
 }
 
 /* Treść opinii pod bannerem — tu jest padding sekcji */
 .reviewsBody {
-  padding: 1.75rem 1.75rem;          /* desktop */
+  padding: 1.75rem 1.75rem;
+  /* desktop */
 }
 
 .reviewsList {
@@ -153,7 +247,8 @@
   flex-direction: column;
   gap: 1.1rem;
   margin: 0;
-  padding: 0;                        /* padding mamy w .reviewsBody */
+  padding: 0;
+  /* padding mamy w .reviewsBody */
 }
 
 .reviewItem {
@@ -161,11 +256,13 @@
   border: 1px solid #e8e8e8;
   border-radius: 1rem;
   padding: 1rem 1.1rem;
-  box-shadow: 0 4px 12px rgba(0,0,0,.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .03);
   transition: transform .2s ease;
   position: relative;
 
-  &:hover { transform: translateY(-2px); }
+  &:hover {
+    transform: translateY(-2px);
+  }
 }
 
 .reviewHeader {
@@ -186,8 +283,15 @@
     display: flex;
     gap: .2rem;
 
-    .star { font-size: 1rem; color: #ccc; }
-    .starSelected { font-size: 1rem; color: gold; }
+    .star {
+      font-size: 1rem;
+      color: #ccc;
+    }
+
+    .starSelected {
+      font-size: 1rem;
+      color: gold;
+    }
   }
 }
 
@@ -218,7 +322,10 @@
     max-width: 700px;
     margin-top: 2rem;
   }
-  .reviewsBody { padding: 1.4rem 1.4rem; }
+
+  .reviewsBody {
+    padding: 1.4rem 1.4rem;
+  }
 }
 
 @media (max-width: 600px) {
@@ -227,11 +334,25 @@
     --wave-h: 60px;
     --content-pad-y: clamp(12px, 6vw, 20px);
   }
-  .reviewsBannerTitle { font-size: 1.15rem; }
-  .reviewsBannerDesc { font-size: .9rem; }
 
-  .reviewsBody { padding: 1.1rem 1.1rem; }     /* spójny, mniejszy padding na mobile */
-  .reviewItem { padding: .9rem 1rem; }
+  .bannerTitle,
+  .reviewsBannerTitle {
+    font-size: 1.15rem;
+  }
+
+  .bannerDescAlt,
+  .reviewsBannerDesc {
+    font-size: .9rem;
+  }
+
+  .reviewsBody {
+    padding: 1.1rem 1.1rem;
+  }
+
+  /* spójny, mniejszy padding na mobile */
+  .reviewItem {
+    padding: .9rem 1rem;
+  }
 }
 
 .topBar {
@@ -301,7 +422,7 @@
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;              // odrobinkę więcej miejsca
+  gap: 1rem; // odrobinkę więcej miejsca
   justify-content: center;
   margin: 2rem 0 1rem;
 
@@ -309,18 +430,18 @@
     border: 1px solid $primary-color;
     color: $primary-color;
     font-family: $font-accent;
-    font-size: 0.86rem;     // było 0.74rem → wyraźnie większe
-    padding: 0.6rem 1.2rem;  // więcej „powietrza”
-    border-radius: 1.1rem;  // ładna „pigułka”
+    font-size: 0.86rem; // było 0.74rem → wyraźnie większe
+    padding: 0.6rem 1.2rem; // więcej „powietrza”
+    border-radius: 1.1rem; // ładna „pigułka”
     transition: all 0.2s ease;
     cursor: default;
     white-space: nowrap;
     cursor: pointer;
 
-      &:hover {
-    background-color: $primary-color;
-    color: white;
-  }
+    &:hover {
+      background-color: $primary-color;
+      color: white;
+    }
   }
 }
 
@@ -421,8 +542,8 @@
 
 .commentInput {
   margin: 1rem auto 0;
-  width: 90%;           // np. 90% szerokości
-  max-width: 500px;     // ograniczenie
+  width: 90%; // np. 90% szerokości
+  max-width: 500px; // ograniczenie
   min-height: 80px;
   padding: 0.8rem;
   font-size: 0.95rem;
@@ -436,10 +557,10 @@
   display: block;
   font-size: 0.85rem;
   color: #777;
-  margin: 0.3rem auto 0;   // auto = wyśrodkowanie
-  width: 90%;              // taka sama szerokość jak .commentInput
-  max-width: 500px;        // takie samo ograniczenie
-  text-align: right;       // licznik wyrównany do prawej wewnątrz
+  margin: 0.3rem auto 0; // auto = wyśrodkowanie
+  width: 90%; // taka sama szerokość jak .commentInput
+  max-width: 500px; // takie samo ograniczenie
+  text-align: right; // licznik wyrównany do prawej wewnątrz
 }
 
 .sendButton {
@@ -514,79 +635,135 @@
   text-align: center;
 }
 
-.galleryWrapper {
+/* ===== NOWA GALERIA (3x2 desktop / karuzela mobile) ===== */
+
+.galleryBox {
   position: relative;
   width: 100%;
-  margin: 3rem 0;
-  padding: 3rem clamp(1.5rem, 6vw, 5rem);
-  background: url('../../../public/images/whyus/whyus-bg.png') center center / cover no-repeat;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-  border-radius: 0;
-  z-index: 1;
+  min-width: 320px;
+  max-width: 1200px;
+  margin: 3rem auto;
+  border: 1px solid #ccc;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .08);
   overflow: hidden;
 
-  .carousel {
+  @media (max-width: 900px) {
+    width: 100%;
+    max-width: 700px;
+    margin: 2rem auto;
+  }
+}
+
+.galleryBanner {
+  @include bannerBase;
+}
+
+/* ciało sekcji */
+.galleryBody {
+  padding: 1.75rem clamp(1rem, 4vw, 1.75rem);
+  background: #fff;
+}
+
+/* siatka desktop / karuzela mobile */
+.galleryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.2rem;
+  justify-items: center;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: 768px) {
     display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    scroll-snap-type: x mandatory;
-    gap: 2rem;
-    padding: 1rem 0;
     overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 1rem;
+    padding-bottom: 0.5rem;
+    -webkit-overflow-scrolling: touch;
 
     &::-webkit-scrollbar {
       display: none;
     }
   }
+}
 
-  .slide {
-    flex: 0 0 auto;
-    scroll-snap-align: start;
-    width: 60%;
-    max-width: 500px;
-    aspect-ratio: 4 / 3;
-    border-radius: 1rem;
-    overflow: hidden;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-    background: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.galleryItem {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 1rem;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .1);
+  transition: transform .25s ease, box-shadow .25s ease;
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .4s ease;
+    display: block;
+  }
+
+  &:hover img {
+    transform: scale(1.05);
+  }
+
+  &:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .15);
   }
 
   @media (max-width: 768px) {
-    .slide {
-      width: 90%;
-      max-width: 95%;
-      aspect-ratio: 4 / 3;
-    }
+    flex: 0 0 85%;
+    scroll-snap-align: center;
+    aspect-ratio: 4 / 3;
   }
 }
 
-.galleryHeader {
-  text-align: center;
-  margin-bottom: 2rem;
+/* LIGHTBOX */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn .3s ease forwards;
+  cursor: zoom-out;
 
-  h2 {
-    font-size: 1.3rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    margin-top: 1rem;
-    font-family: $font-heading;
-    color: #f0f0f0;
+  img {
+    max-width: 90%;
+    max-height: 90vh;
+    border-radius: 1rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    animation: zoomIn .3s ease;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
 
-  p {
-    font-size: 1rem;
-    color: #f0f0f0;
-    font-family: $font-accent;
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
@@ -672,126 +849,6 @@
   }
 }
 
-.banner {
-  /* pełna szerokość wewnątrz .card */
-  position: relative;
-  width: calc(100% + (var(--pad-x) * 2));
-  height: 220px;
-  margin-bottom: 2rem;
-
-  /* wyjeżdżamy poza padding karty (full-bleed) */
-  margin-left: calc(-1 * var(--pad-x));
-  margin-right: calc(-1 * var(--pad-x));
-  margin-top: calc(-1 * var(--pad-y));
-
-  /* zmienne kontroli */
-  --wave-h: 60px;                            /* wysokość fali */
-  --content-pad-y: clamp(18px, 4vw, 28px);   /* pionowy oddech treści */
-
-  /* tło i layout */
-  background: linear-gradient(135deg, #6f4ef2, #ff4081);
-  color: #fff;
-  text-align: center;
-  overflow: hidden;
-
-  /* centrowanie przez grid + zapas na falę na dole */
-  display: grid;
-  place-items: center;
-  padding: calc(var(--content-pad-y) + 6px) var(--pad-x)
-           calc(var(--content-pad-y) + var(--wave-h));
-
-  @media (max-width: 768px) {
-    height: 200px;                /* możesz zwiększyć do 220, jeśli chcesz więcej powietrza */
-    --wave-h: 64px;
-    --content-pad-y: clamp(14px, 6vw, 24px);
-  }
-}
-
-.bannerOverlay {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle at 30% 40%,
-    rgba(255, 255, 255, 0.15),
-    transparent 60%
-  );
-  z-index: 0;
-}
-
-.bannerContent {
-  position: relative;
-  z-index: 1;
-  animation: fadeIn 1s ease forwards;
-
-  /* pionowe centrowanie i stały „rytm” odległości */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: calc(100% - var(--wave-h));  /* żeby tekst nie „siadał” przy fali */
-  gap: 6px;
-  padding: 0 12px;
-}
-
-.bannerSubtitle {
-  font-size: 1rem;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  opacity: 0.9;
-  margin: 0 0 2px 0;
-
-  @media (max-width: 768px) {
-    font-size: 0.9rem;
-    letter-spacing: 0.6px;
-  }
-}
-
-.bannerName {
-  font-size: 2.2rem;
-  font-weight: 700;
-  margin: 0;
-  background: linear-gradient(90deg, #ffffff, #ffe6f0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
-
-  @media (max-width: 768px) {
-    font-size: clamp(1.5rem, 6.2vw, 2rem);
-    line-height: 1.1;
-  }
-}
-
-.bannerDesc {
-  font-size: 0.95rem;
-  margin: 2px 0 0 0;
-  opacity: 0.9;
-  color: #f0f0f0;
-
-  @media (max-width: 768px) {
-    font-size: 0.9rem;
-  }
-}
-
-.bannerWave,
-.reviewsWave {
-  display: block;
-  position: absolute;
-  bottom: -3px;                /* lekko zachodzi pod białe tło */
-  left: -1px;                  /* „overdraw” po lewej */
-  width: calc(100% + 2px);     /* overdraw po prawej */
-  height: var(--wave-h);
-  z-index: 1;
-  transform: translateZ(0);    /* niweluje hairline w Chrome */
-  pointer-events: none;
-}
-
-
-/* delikatne wejście treści */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
 @media (max-width: 1024px) {
   .profileWrapper {
     flex-direction: column;
@@ -811,23 +868,15 @@
 @media (max-width: 768px) {
   .profileWrapper {
     padding: 1rem;
+    padding-top: 4rem;
     margin: 2rem 0;
-  }
-
-  .galleryWrapper {
-    padding: 2rem;
-    margin: 2rem 0;
-  }
-
-  .galleryHeader h2,
-  .galleryHeader p {
-    text-align: center;
   }
 }
 
 @media (max-width: 480px) {
   .profileWrapper {
     padding: 1rem;
+    padding-top: 4rem;
     margin: 2rem 0;
   }
 
@@ -839,13 +888,109 @@
     width: 100px;
     height: 100px;
   }
+}
 
-  .galleryWrapper {
-    padding: 2rem;
-    margin: 2rem 0;
-  }
+/* --- Ujednolicenie typografii w galerii --- */
+.galleryBox,
+.galleryBanner,
+.galleryBody {
+  font-family: $font-body;
+  /* tak jak .card i .reviewsBox */
+  color: $text-color;
+}
 
-  .slide {
-    width: 95%;
+/* Nagłówek banera w galerii tak jak reszta nagłówków */
+.galleryBanner .bannerTitle {
+  font-family: $font-heading;
+  /* spójny font jak h2 itp. */
+}
+
+/* Opis w banerze galerii – jeśli chcesz jak akcent (np. .role) */
+.galleryBanner .bannerDesc {
+  font-family: $font-accent;
+  /* opcjonalnie: usuń tę linię, jeśli wolisz body */
+  color: #f0f0f0;
+  /* zachowaj jasny opis jak w innych banerach */
+  opacity: 0.9;
+}
+
+/* --- KONFIG szerokości --- */
+$card-max: 700px;
+$reviews-max: 440px;
+$cols-gap: 2rem;
+$container-max: calc(#{$card-max} + #{$reviews-max} + #{$cols-gap}); // ≈ 1180px
+
+/* Wrapper dwóch kolumn – zostawiamy dotychczasowy padding-inline: 1rem */
+.profileWrapper {
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2rem;
+}
+
+/* Galeria – ten sam kontener: ta sama max-width i ten sam oddech 1rem */
+.galleryBox {
+  max-width: $container-max;
+  width: calc(100% - 2rem);
+  /* ↔ identyczny “oddech” jak wrapper */
+  margin: 3rem auto 2.5rem;
+  /* auto centruje względem kontenera */
+  border: 1px solid #ccc;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .08);
+  overflow: hidden;
+
+  @media (max-width: 900px) {
+    max-width: 700px;
+    /* gdy kolumny składają się w jedną */
+    margin: 2rem auto;
   }
+}
+
+/* Ciało galerii – zostaw wewnętrzny padding (nie dokładamy zewnętrznego) */
+.galleryBody {
+  padding: 1.75rem clamp(1rem, 4vw, 1.75rem);
+}
+
+/* --- Kontener "Usługi" z naszym banerem --- */
+.servicesBox {
+  max-width: $container-max;
+  /* taka sama szerokość jak galeria */
+  width: calc(100% - 2rem);
+  /* ten sam „oddech” 1rem po bokach */
+  margin: 3rem auto 2.5rem;
+  border: 1px solid #ccc;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .08);
+  overflow: hidden;
+
+  @media (max-width: 900px) {
+    max-width: 700px;
+    margin: 2rem auto;
+  }
+}
+
+/* Baner usług – ten sam mixin co inne */
+.servicesBanner {
+  @include bannerBase;
+}
+
+/* Treść poniżej banera */
+.servicesBody {
+  padding: 1.75rem clamp(1rem, 4vw, 1.75rem);
+  background: #fff;
+}
+
+/* (opcjonalnie) dopasowanie nagłówków/typografii do reszty */
+.servicesBanner .bannerTitle {
+  font-family: $font-heading;
+}
+
+.servicesBanner .bannerDesc {
+  font-family: $font-accent;
+  opacity: .9;
+  color: #f0f0f0;
 }

@@ -384,18 +384,18 @@ router.patch('/rate/:slug', async (req, res) => {
   const { userId, rating, comment } = req.body;
   const numericRating = Number(rating);
 
-  // 🔒 Walidacja danych
+  // 🔒 Walidacja danych wejściowych
   if (
     !userId ||
     isNaN(numericRating) ||
     numericRating < 1 ||
     numericRating > 5 ||
     !comment ||
-    comment.trim().length < 5 ||
-    comment.trim().length > 100
+    comment.trim().length < 10 ||
+    comment.trim().length > 200
   ) {
     return res.status(400).json({
-      message: 'Ocena musi być liczbą od 1 do 5, a komentarz musi mieć od 5 do 100 znaków.'
+      message: 'Ocena musi być liczbą od 1 do 5, a komentarz musi mieć od 10 do 200 znaków.'
     });
   }
 
@@ -409,19 +409,30 @@ router.patch('/rate/:slug', async (req, res) => {
       return res.status(403).json({ message: 'Nie możesz ocenić własnej wizytówki.' });
     }
 
+    // zabezpieczenie gdy ratedBy nie istnieje
+    if (!Array.isArray(profile.ratedBy)) {
+      profile.ratedBy = [];
+    }
+
     const alreadyRated = profile.ratedBy.find(r => r.userId === userId);
     if (alreadyRated) {
       return res.status(400).json({ message: 'Już oceniłeś ten profil.' });
     }
 
-    const user = await User.findOne({ firebaseUid: userId });
-    const userName = user?.name || 'Użytkownik';
+    // bezpieczne pobranie usera
+    let userName = 'Użytkownik';
+    try {
+      const user = await User.findOne({ firebaseUid: userId }).select('name');
+      if (user && user.name) userName = user.name;
+    } catch (e) {
+      console.warn('⚠️ Nie udało się pobrać nazwy użytkownika:', e.message);
+    }
 
-    // ✅ Dodanie oceny
+    // ✅ Dodanie nowej oceny
     profile.ratedBy.push({
       userId,
       rating: numericRating,
-      comment,
+      comment: comment.trim(),
       userName
     });
 
@@ -431,15 +442,15 @@ router.patch('/rate/:slug', async (req, res) => {
     profile.reviews = profile.ratedBy.length;
 
     await profile.save();
+
     res.json({
       message: 'Ocena dodana.',
       rating: profile.rating,
       reviews: profile.reviews
     });
-
   } catch (err) {
     console.error('❌ Błąd oceniania:', err);
-    res.status(500).json({ message: 'Błąd serwera.' });
+    res.status(500).json({ message: 'Błąd serwera.', error: err.message });
   }
 });
 
