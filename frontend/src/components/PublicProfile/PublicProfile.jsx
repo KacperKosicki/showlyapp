@@ -421,24 +421,40 @@ const PublicProfile = () => {
 
           <div className={styles.reviewsBody}>
             {profile.ratedBy?.length > 0 ? (
-              <ul className={styles.reviewsList}>
-                {profile.ratedBy.map((op, i) => {
-                  const ratingVal = Number(op.rating);
-                  return (
-                    <li key={i} className={styles.reviewItem}>
-                      <div className={styles.reviewHeader}>
-                        <strong className={styles.reviewUser}>{op.userName || 'Użytkownik'}</strong>
-                        <span className={styles.reviewRating}>
-                          {[...Array(5)].map((_, idx) => (
-                            <FaStar key={idx} className={idx < ratingVal ? styles.starSelected : styles.star} />
-                          ))}
-                        </span>
-                      </div>
-                      <p className={styles.reviewText}>{op.comment}</p>
-                    </li>
-                  );
-                })}
-              </ul>
+<ul className={styles.reviewsList}>
+  {profile.ratedBy.map((op, i) => {
+    const ratingVal = Number(op.rating);
+    const avatarSrc = op.userAvatar && op.userAvatar.trim()
+      ? op.userAvatar
+      : '/images/other/no-image.png'; // fallback
+
+    const dateLabel = op.createdAt
+      ? new Date(op.createdAt).toLocaleDateString('pl-PL', { year: 'numeric', month: 'short', day: 'numeric' })
+      : '';
+
+    return (
+      <li key={i} className={styles.reviewItem}>
+        <div className={styles.reviewHeader}>
+          <div className={styles.reviewUserBox}>
+            <img className={styles.reviewAvatar} src={avatarSrc} alt="" />
+            <div className={styles.reviewUserMeta}>
+              <strong className={styles.reviewUser}>{op.userName || 'Użytkownik'}</strong>
+              {dateLabel && <span className={styles.reviewDate}>{dateLabel}</span>}
+            </div>
+          </div>
+
+          <span className={styles.reviewRating}>
+            {[...Array(5)].map((_, idx) => (
+              <FaStar key={idx} className={idx < ratingVal ? styles.starSelected : styles.star} />
+            ))}
+          </span>
+        </div>
+
+        <p className={styles.reviewText}>{op.comment}</p>
+      </li>
+    );
+  })}
+</ul>
             ) : (
               <p className={styles.noReviews}>Brak opinii użytkowników</p>
             )}

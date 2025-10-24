@@ -16,6 +16,8 @@ const profileSchema = new mongoose.Schema({
     rating: { type: Number, min: 1, max: 5 },
     comment: { type: String, minlength: 10, maxlength: 200 },
     userName: String,
+    userAvatar: String,                          // ⬅️ NOWE
+    createdAt: { type: Date, default: Date.now } // ⬅️ NOWE
   }],
   location: String,
   tags: [String],

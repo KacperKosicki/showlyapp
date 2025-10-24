@@ -408,62 +408,81 @@ router.patch('/rate/:slug', async (req, res) => {
     comment.trim().length > 200
   ) {
     return res.status(400).json({
-      message: 'Ocena musi być liczbą od 1 do 5, a komentarz musi mieć od 10 do 200 znaków.'
+      message:
+        'Ocena musi być liczbą od 1 do 5, a komentarz musi mieć od 10 do 200 znaków.'
     });
   }
 
   try {
-    const profile = await Profile.findOne({ slug: req.params.slug });
+    // Pobieramy profil po slugu
+    const profile = await Profile.findOne({ slug: req.params.slug }).select(
+      'userId ratedBy rating reviews'
+    );
     if (!profile) {
       return res.status(404).json({ message: 'Nie znaleziono profilu.' });
     }
 
+    // Właściciel nie może ocenić własnej wizytówki
     if (profile.userId === userId) {
-      return res.status(403).json({ message: 'Nie możesz ocenić własnej wizytówki.' });
+      return res
+        .status(403)
+        .json({ message: 'Nie możesz ocenić własnej wizytówki.' });
     }
 
-    // zabezpieczenie gdy ratedBy nie istnieje
+    // Upewnij się, że tablica istnieje
     if (!Array.isArray(profile.ratedBy)) {
       profile.ratedBy = [];
     }
 
-    const alreadyRated = profile.ratedBy.find(r => r.userId === userId);
-    if (alreadyRated) {
+    // Blokada wielokrotnej oceny przez tego samego usera
+    if (profile.ratedBy.find((r) => r.userId === userId)) {
       return res.status(400).json({ message: 'Już oceniłeś ten profil.' });
     }
 
-    // bezpieczne pobranie usera
+    // 👤 Pobierz nazwę i avatar autora opinii
     let userName = 'Użytkownik';
+    let userAvatar = '';
     try {
-      const user = await User.findOne({ firebaseUid: userId }).select('name');
-      if (user && user.name) userName = user.name;
+      const user = await User.findOne({ firebaseUid: userId }).select(
+        'name avatar'
+      );
+      if (user?.name) userName = user.name;
+      if (user?.avatar) userAvatar = user.avatar;
     } catch (e) {
-      console.warn('⚠️ Nie udało się pobrać nazwy użytkownika:', e.message);
+      console.warn('⚠️ Nie udało się pobrać danych użytkownika:', e.message);
     }
 
-    // ✅ Dodanie nowej oceny
+    // ✅ Zapisz opinię (z avatarem i datą)
     profile.ratedBy.push({
       userId,
       rating: numericRating,
       comment: comment.trim(),
-      userName
+      userName,
+      userAvatar,               // <— miniaturka autora
+      createdAt: new Date()     // <— data dodania
     });
 
-    // 🔢 Aktualizacja średniej oceny
-    const totalRatings = profile.ratedBy.reduce((sum, r) => sum + r.rating, 0);
-    profile.rating = Number((totalRatings / profile.ratedBy.length).toFixed(2));
+    // 🔢 Przelicz średnią i liczbę opinii
+    const total = profile.ratedBy.reduce((sum, r) => sum + r.rating, 0);
+    profile.rating = Number((total / profile.ratedBy.length).toFixed(2));
     profile.reviews = profile.ratedBy.length;
 
     await profile.save();
 
-    res.json({
+    // (opcjonalnie) zwróć też ostatnio dodaną opinię
+    const lastReview = profile.ratedBy[profile.ratedBy.length - 1];
+
+    return res.json({
       message: 'Ocena dodana.',
       rating: profile.rating,
-      reviews: profile.reviews
+      reviews: profile.reviews,
+      review: lastReview
     });
   } catch (err) {
     console.error('❌ Błąd oceniania:', err);
-    res.status(500).json({ message: 'Błąd serwera.', error: err.message });
+    return res
+      .status(500)
+      .json({ message: 'Błąd serwera.', error: err.message });
   }
 });
 
