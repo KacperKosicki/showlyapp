@@ -66,7 +66,6 @@ app.use('/api/users', usersRoutes);
 const favoritesRouter = require('./routes/favorites');
 app.use('/api/favorites', favoritesRouter);
 
-
 // Wiadomości
 const conversationRoutes = require('./routes/conversations');
 app.use('/api/conversations', conversationRoutes);

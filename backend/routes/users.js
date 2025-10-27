@@ -13,7 +13,7 @@ const User = require('../models/User');
    ========================= */
 function getProto(req) {
   const xf = req.headers['x-forwarded-proto'];
-  if (xf) return String(xf).split(',')[0].trim(); // "https" na Render
+  if (xf) return String(xf).split(',')[0].trim(); // "https" np. na Render/CF
   return req.protocol || 'https';
 }
 
@@ -23,7 +23,19 @@ function absoluteUrl(req, relative) {
   return `${proto}://${host}${relative.startsWith('/') ? '' : '/'}${relative}`;
 }
 
-// Zamień publiczny URL (https://.../uploads/avatars/plik.jpg) na ścieżkę pliku na dysku
+/** Zwraca publiczny URL:
+ *  - jeśli wartość zaczyna się od "/uploads/" -> dokleja host i protokół
+ *  - jeśli już jest https:// -> zostawia
+ *  - w innych przypadkach -> pusty string (bezpiecznie)
+ */
+function toPublicUrl(req, val = '') {
+  if (!val) return '';
+  if (val.startsWith('/uploads/')) return absoluteUrl(req, val);
+  if (/^https:\/\/.+/i.test(val)) return val;
+  return '';
+}
+
+// (opcjonalnie) Zamienia publiczny URL na ścieżkę dyskową
 function filePathFromPublicUrl(publicUrl) {
   try {
     const pathname = new URL(publicUrl).pathname; // "/uploads/avatars/xxx.jpg"
@@ -60,7 +72,9 @@ const upload = multer({
    Endpointy użytkownika
    ========================= */
 
-// POST /api/users – dodaje użytkownika do bazy (jeśli nie istnieje)
+/** POST /api/users
+ *  Dodaje użytkownika do bazy (jeśli nie istnieje)
+ */
 router.post('/', async (req, res) => {
   console.log('🧾 Żądanie do /api/users:', req.body);
 
@@ -79,20 +93,29 @@ router.post('/', async (req, res) => {
       if (existingUser.firebaseUid !== firebaseUid) {
         return res.status(409).json({ message: 'E-mail jest już powiązany z innym kontem.' });
       } else {
-        return res.status(200).json({ message: 'Użytkownik już istnieje', user: existingUser });
+        // Ujednolicamy avatar w odpowiedzi
+        const avatar = toPublicUrl(req, existingUser.avatar);
+        return res.status(200).json({
+          message: 'Użytkownik już istnieje',
+          user: { ...existingUser.toObject(), avatar }
+        });
       }
     }
 
     const newUser = new User({ email, name, firebaseUid, provider });
     await newUser.save();
-    res.status(201).json({ message: 'Użytkownik dodany do bazy', user: newUser });
+
+    return res.status(201).json({
+      message: 'Użytkownik dodany do bazy',
+      user: { ...newUser.toObject(), avatar: toPublicUrl(req, newUser.avatar) }
+    });
   } catch (error) {
     console.error('❌ Błąd w /api/users:', error);
-    res.status(500).json({ message: 'Błąd serwera', error });
+    res.status(500).json({ message: 'Błąd serwera', error: error.message });
   }
 });
 
-// GET /api/users/check-email?email=...
+/** GET /api/users/check-email?email=... */
 router.get('/check-email', async (req, res) => {
   const email = req.query.email?.toLowerCase();
   if (!email) return res.status(400).json({ message: 'Brak emaila w zapytaniu' });
@@ -105,18 +128,24 @@ router.get('/check-email', async (req, res) => {
   }
 });
 
-// GET /api/users/:uid – pobierz usera po firebaseUid
+/** GET /api/users/:uid
+ *  Zwraca dane usera, avatar jako absolutny URL
+ */
 router.get('/:uid', async (req, res) => {
   try {
-    const user = await User.findOne({ firebaseUid: req.params.uid });
+    const user = await User.findOne({ firebaseUid: req.params.uid }).lean();
     if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
-    res.json(user);
+
+    return res.json({ ...user, avatar: toPublicUrl(req, user.avatar) });
   } catch (e) {
     res.status(500).json({ message: 'Błąd serwera', error: e.message });
   }
 });
 
-// PATCH /api/users/:uid – proste aktualizacje danych
+/** PATCH /api/users/:uid
+ *  Proste aktualizacje danych (displayName, name, avatar)
+ *  avatar przyjmuje: pełny https:// albo względne /uploads/...
+ */
 router.patch('/:uid', async (req, res) => {
   try {
     const { displayName, avatar, name } = req.body;
@@ -125,16 +154,29 @@ router.patch('/:uid', async (req, res) => {
 
     if (typeof displayName === 'string') user.displayName = displayName;
     if (typeof name === 'string') user.name = name;
-    if (typeof avatar === 'string') user.avatar = avatar;
+
+    if (typeof avatar === 'string') {
+      if (avatar.startsWith('/uploads/')) {
+        user.avatar = avatar;
+      } else if (/^https:\/\/.+/i.test(avatar)) {
+        user.avatar = avatar;
+      } else {
+        return res.status(400).json({ message: 'avatar musi być https:// lub /uploads/...' });
+      }
+    }
 
     await user.save();
-    res.json({ ok: true, user });
+
+    // zwróć spójnie z-normalizowany avatar
+    res.json({ ok: true, user: { ...user.toObject(), avatar: toPublicUrl(req, user.avatar) } });
   } catch (e) {
     res.status(500).json({ message: 'Błąd aktualizacji', error: e.message });
   }
 });
 
-// POST /api/users/:uid/avatar – upload pliku (multipart/form-data)
+/** POST /api/users/:uid/avatar
+ *  Upload pliku, zapis ścieżki względnej w DB, zwrot pełnego URL-a
+ */
 router.post('/:uid/avatar', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Brak pliku' });
@@ -142,34 +184,66 @@ router.post('/:uid/avatar', upload.single('file'), async (req, res) => {
     const user = await User.findOne({ firebaseUid: req.params.uid });
     if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
 
-    // Jeśli poprzedni avatar był w /uploads/avatars/, usuń z dysku
-    if (user.avatar && user.avatar.includes('/uploads/avatars/')) {
-      const oldDiskPath = filePathFromPublicUrl(user.avatar);
-      if (oldDiskPath) fs.unlink(oldDiskPath, () => {});
+    // Usuń stary plik jeśli był nasz
+    if (user.avatar && user.avatar.startsWith('/uploads/avatars/')) {
+      const oldDiskPath = path.join(__dirname, '..', user.avatar.replace(/^\//, ''));
+      fs.unlink(oldDiskPath, () => {});
     }
 
     const publicPath = `/uploads/avatars/${req.file.filename}`;
-    const url = absoluteUrl(req, publicPath);
 
-    user.avatar = url;
+    // ZAPISUJEMY TYLKO ŚCIEŻKĘ WZGLĘDNĄ
+    user.avatar = publicPath;
     await user.save();
 
-    res.json({ url });
+    // W odpowiedzi zwracamy pełny URL
+    res.json({ url: absoluteUrl(req, publicPath) });
   } catch (e) {
     console.error('Upload avatar error:', e);
     res.status(500).json({ message: 'Błąd uploadu', error: e.message });
   }
 });
 
-// DELETE /api/users/:uid/avatar – usuń avatar (i plik z dysku, jeśli nasz)
+/** PATCH /api/users/:uid/avatar-url
+ *  Ustawienie avatara na zewnętrzny HTTPS URL.
+ *  Jeżeli dotychczas był lokalny plik — usuwamy go.
+ */
+router.patch('/:uid/avatar-url', async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url || !/^https:\/\/.+/i.test(url)) {
+      return res.status(400).json({ message: 'Podaj poprawny HTTPS URL.' });
+    }
+    const user = await User.findOne({ firebaseUid: req.params.uid });
+    if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
+
+    // usuń stary lokalny plik (jeśli był)
+    if (user.avatar && user.avatar.startsWith('/uploads/avatars/')) {
+      const diskPath = path.join(__dirname, '..', user.avatar.replace(/^\//, ''));
+      fs.unlink(diskPath, () => {});
+    }
+
+    user.avatar = url;
+    await user.save();
+
+    res.json({ ok: true, avatar: toPublicUrl(req, user.avatar) });
+  } catch (e) {
+    res.status(500).json({ message: 'Błąd', error: e.message });
+  }
+});
+
+/** DELETE /api/users/:uid/avatar
+ *  Usuwa avatar (i plik, jeśli lokalny), czyści pole w DB.
+ */
 router.delete('/:uid/avatar', async (req, res) => {
   try {
     const user = await User.findOne({ firebaseUid: req.params.uid });
     if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
 
-    if (user.avatar && user.avatar.includes('/uploads/avatars/')) {
-      const diskPath = filePathFromPublicUrl(user.avatar);
-      if (diskPath) fs.unlink(diskPath, () => {});
+    // jeśli trzymamy względną ścieżkę – usuńmy plik z dysku
+    if (user.avatar && user.avatar.startsWith('/uploads/avatars/')) {
+      const diskPath = path.join(__dirname, '..', user.avatar.replace(/^\//, ''));
+      fs.unlink(diskPath, () => {});
     }
 
     user.avatar = '';

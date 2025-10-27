@@ -1,23 +1,66 @@
 const express = require('express');
 const router = express.Router();
 const Profile = require('../models/Profile');
-const User = require('../models/User'); // 👈 dodaj to
+const User = require('../models/User'); // 👈 potrzebne do pobrania nazwy i avatara oceniającego
 const Conversation = require('../models/Conversation');
-const Favorite = require('../models/Favorite'); // <- model od ulubionych (nazwa wg Twojej struktury)
+const Favorite = require('../models/Favorite'); // 👈 model ulubionych
+const VisitLock = require('../models/VisitLock'); // 👈 anty-spam dla odwiedzin
 
-// Pomocnicza funkcja do tworzenia slugów
+// -----------------------------
+// Helpers: slug + public URLs
+// -----------------------------
 const slugify = (text) =>
   text
     .toLowerCase()
-    .normalize("NFD") // usuwa diakrytyki (ó → o)
-    .replace(/[\u0300-\u036f]/g, "")
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .trim()
     .replace(/\s+/g, '-')
     .replace(/[^\w\-]+/g, '')
     .replace(/\-\-+/g, '-');
 
-const VisitLock = require('../models/VisitLock'); // 👈 NOWE
+// 🔧 pełne https URL-e (Render/Vercel za proxy)
+function getProto(req) {
+  const xf = req.headers['x-forwarded-proto'];
+  if (xf) return String(xf).split(',')[0].trim();
+  return req.protocol || 'https';
+}
 
+function absoluteUrl(req, relative) {
+  const proto = getProto(req);
+  const host = req.get('host');
+  return `${proto}://${host}${relative.startsWith('/') ? '' : '/'}${relative}`;
+}
+
+// --- NEW: doprowadza wszystkie warianty "uploads" do /uploads/...
+function normalizeUploadPath(p = '') {
+  if (!p) return '';
+  // "uploads/..."  → "/uploads/..."
+  if (p.startsWith('uploads/')) return `/${p}`;
+  // "./uploads/..." lub "../uploads/..." → "/uploads/..."
+  if (p.startsWith('./uploads/') || p.startsWith('../uploads/')) {
+    return '/' + p.replace(/^\.{1,2}\//, '');
+  }
+  return p;
+}
+
+// akceptuj /uploads, http i https; wymuś https na produkcji
+function toPublicUrl(req, val = '') {
+  if (!val) return '';
+  const v = normalizeUploadPath(val);
+
+  if (v.startsWith('/uploads/')) return absoluteUrl(req, v);
+
+  if (/^https?:\/\/.+/i.test(v)) {
+    const wantedProto = getProto(req); // 'https' za proxy, 'http' lokalnie
+    return v.replace(/^https?:\/\//i, `${wantedProto}://`);
+  }
+
+  // zostaw np. data:uri itp.
+  return v;
+}
+
+// Odwiedziny – identyfikacja oglądającego
 function getViewerKey(req) {
   const uid = req.headers.uid && String(req.headers.uid);
   if (uid) return `uid:${uid}`;
@@ -39,7 +82,9 @@ async function canCountVisit(ownerUid, viewerKey) {
   }
 }
 
-// GET /api/profiles – tylko aktywne i ważne (wg visibleUntil)
+// --------------------------------------
+// GET /api/profiles – aktywne i ważne
+// --------------------------------------
 router.get('/', async (req, res) => {
   try {
     const now = new Date();
@@ -57,10 +102,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/profiles/by-user/:uid – pobierz profil po userId
+// -------------------------------------------------
+// GET /api/profiles/by-user/:uid – profil po userId
+// -------------------------------------------------
 router.get('/by-user/:uid', async (req, res) => {
   console.log('🔍 Szukam profilu dla userId:', req.params.uid);
-
   try {
     const profile = await Profile.findOne({ userId: req.params.uid });
     if (!profile) {
@@ -73,10 +119,13 @@ router.get('/by-user/:uid', async (req, res) => {
   }
 });
 
-// GET /api/profiles/slug/:slug – pobierz profil po unikalnym slugu
+// -----------------------------------------------------------
+// GET /api/profiles/slug/:slug – profil po unikalnym slugu
+// + normalizacja avatarów w ratedBy → pełne https URL-e
+// -----------------------------------------------------------
 router.get('/slug/:slug', async (req, res) => {
   try {
-    const profile = await Profile.findOne({ slug: req.params.slug }).lean(); // <- lean, żeby łatwo dopisać pola
+    const profile = await Profile.findOne({ slug: req.params.slug }).lean(); // lean dla prostszego modyfikowania
     if (!profile) return res.status(404).json({ message: 'Nie znaleziono profilu.' });
 
     const now = new Date();
@@ -86,28 +135,46 @@ router.get('/slug/:slug', async (req, res) => {
 
     const viewerUid = req.headers.uid || null;
 
-    // policz flagę i (opcjonalnie) licznik na podstawie kolekcji ulubionych
+    // 🔧 NORMALIZACJA avatarów w opiniach
+    const ratedBy = Array.isArray(profile.ratedBy)
+      ? profile.ratedBy.map((r) => ({
+          ...r,
+          userAvatar: toPublicUrl(req, r.userAvatar),
+        }))
+      : [];
+
+    // (opcjonalnie) możesz też znormalizować główny avatar i zdjęcia
+    const avatar = toPublicUrl(req, profile.avatar);
+    const photos = Array.isArray(profile.photos) ? profile.photos.map((p) => toPublicUrl(req, p)) : profile.photos;
+
+    // Ulubione: flaga + liczba (licznik z pola lub liczony na żywo)
     let isFavorite = false;
-    let favoritesCount = profile.favoritesCount; // jeśli to pole utrzymujesz w toggle – zostaw
+    let favoritesCount = profile.favoritesCount;
 
     if (viewerUid) {
-      const [favExists, freshCount] = await Promise.all([
-        Favorite.exists({ ownerUid: viewerUid, profileUserId: profile.userId }),
-        // jeśli wolisz zawsze świeżo liczyć licznik, odkomentuj poniższą linię i przypisz do favoritesCount
-        // Favorite.countDocuments({ profileUserId: profile.userId })
-      ]);
+      const favExists = await Favorite.exists({ ownerUid: viewerUid, profileUserId: profile.userId });
       isFavorite = !!favExists;
-      // favoritesCount = freshCount; // <- użyj tylko jeśli chcesz zawsze liczyć na żywo
+      // Jeśli chcesz liczyć licznik na żywo:
+      // favoritesCount = await Favorite.countDocuments({ profileUserId: profile.userId });
     }
 
-    return res.json({ ...profile, isFavorite, favoritesCount });
+    return res.json({
+      ...profile,
+      ratedBy,
+      avatar,
+      photos,
+      isFavorite,
+      favoritesCount,
+    });
   } catch (err) {
     console.error('❌ Błąd w GET /slug/:slug:', err);
     res.status(500).json({ message: 'Błąd serwera.' });
   }
 });
 
-// PATCH /api/profiles/:uid/visit — zlicz odwiedziny (anty-spam włączony)
+// ------------------------------------------------------
+// PATCH /api/profiles/:uid/visit — zlicz odwiedziny
+// ------------------------------------------------------
 router.patch('/:uid/visit', async (req, res) => {
   try {
     const ownerUid = req.params.uid;
@@ -145,7 +212,9 @@ router.patch('/:uid/visit', async (req, res) => {
   }
 });
 
-// PATCH /api/profiles/slug/:slug/visit — zlicz po slugu (anty-spam włączony)
+// ------------------------------------------------------------
+// PATCH /api/profiles/slug/:slug/visit — zlicz po slugu
+// ------------------------------------------------------------
 router.patch('/slug/:slug/visit', async (req, res) => {
   try {
     const { slug } = req.params;
@@ -182,10 +251,13 @@ router.patch('/slug/:slug/visit', async (req, res) => {
   }
 });
 
+// -----------------------------------------
+// POST /api/profiles — tworzenie profilu
+// -----------------------------------------
 router.post('/', async (req, res) => {
   console.log('📦 Żądanie do /api/profiles:', req.body);
 
-  // bezpieczne Stringi – żeby .trim() nie wywaliło przy undefined
+  // bezpieczne Stringi
   const userId = String(req.body.userId || '');
   const name = String(req.body.name || '');
   const role = String(req.body.role || '');
@@ -210,7 +282,7 @@ router.post('/', async (req, res) => {
       return res.status(409).json({ message: 'Ten użytkownik już posiada wizytówkę.' });
     }
 
-    // slug
+    // slug unikalny
     const baseSlug = slugify(`${name}-${role}`);
     let uniqueSlug = baseSlug, i = 1;
     while (await Profile.findOne({ slug: uniqueSlug })) uniqueSlug = `${baseSlug}-${i++}`;
@@ -222,19 +294,19 @@ router.post('/', async (req, res) => {
       location: location.trim(),
       slug: uniqueSlug,
       isVisible: true,
-      visibleUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // ⚠️ już 30 dni, nie 1 min
+      visibleUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 dni
     });
 
     await newProfile.save();
 
-    // ✅ najpierw odpowiedź do frontu
+    // ✅ odpowiedź do frontu
     res.status(201).json({ message: 'Profil utworzony', profile: newProfile });
 
-    // 🔔 „fire-and-forget” – NIE czekamy, nie psujemy 201
+    // 🔔 fire-and-forget: systemowa wiadomość powitalna
     queueMicrotask(async () => {
       try {
         const fromUid = 'SYSTEM';
-        const toUid = userId;                              // ← właściciel nowego profilu
+        const toUid = userId;
         const pairKey = [fromUid, toUid].sort().join('|');
 
         const welcomeContent = [
@@ -257,38 +329,28 @@ router.post('/', async (req, res) => {
           '• przykłady: „Strzyżenie — 45 min”, „Audyt WWW — 3 h”.',
           '',
           '🧑‍🤝‍🧑 Zespół i pracownicy:',
-          '• możesz dodać swój zespół i przypisać do profilu dowolną liczbę pracowników;',
-          '• każdy pracownik ma przypisane usługi, które może wykonywać;',
-          '• możesz tymczasowo dezaktywować pracownika — wtedy nie będzie brany pod uwagę przy automatycznym przydzielaniu rezerwacji (np. gdy ma wolne lub jest niedostępny);',
-          '• możesz włączyć jeden z trybów przydzielania rezerwacji:',
-          '   - 🟦 „Wybór przez klienta” – klient sam wybiera osobę z zespołu;',
-          '   - 🟢 „Automatyczny przydział” – system sam wybiera dostępnego pracownika (uwzględniając godziny i pojemność).',
+          '• możesz dodać zespół i przypisać do profilu pracowników;',
+          '• każdy pracownik ma przypisane usługi;',
+          '• tryby przydzielania: „Wybór przez klienta” lub „Automatyczny przydział”.',
           '',
-          '🗓️ Wybierz tryb rezerwacji:',
-          '• Kalendarz godzinowy — pracujesz w podanych godzinach i dniach, klienci rezerwują konkretne sloty;',
-          '• Rezerwacja dnia — blokujesz cały dzień na zlecenie;',
-          '• Zapytanie bez blokowania — zbierasz zapytania, planujesz samodzielnie.',
+          '🗓️ Tryb rezerwacji:',
+          '• Kalendarz godzinowy / Rezerwacja dnia / Zapytanie bez blokowania.',
           '',
           '⏰ Jeśli korzystasz z kalendarza:',
-          '• ustaw godziny pracy (od–do) i dni pracy;',
-          '• system automatycznie dodaje przerwę między usługami (15 min).',
+          '• ustaw godziny i dni pracy; przerwy między usługami 15 min.',
           '',
           '🔗 Linki i media:',
-          '• dodaj do 3 linków zewnętrznych,',
-          '• wrzuć zdjęcia do galerii (max 5, ok. 3 MB).',
+          '• do 3 linków i 5 zdjęć (ok. 3 MB).',
           '',
           '❓ Szybkie odpowiedzi (FAQ):',
-          '• maksymalnie 3 wpisy,',
-          '• tytuł do 10 znaków, odpowiedź do 64 znaków.',
+          '• maks. 3 wpisy — tytuł do 10 znaków, odpowiedź do 64 znaków.',
           '',
           'ℹ️ Wszystko edytujesz w zakładce „Twój profil”. Powodzenia! 👊'
-        ].join('\\n');
+        ].join('\n');
 
-        // 1) Szukamy istniejącej konwersacji systemowej
         let convo = await Conversation.findOne({ channel: 'system', pairKey }).exec();
 
         if (!convo) {
-          // 2) Nie ma? Tworzymy NOWĄ konwersację z 1. wiadomością
           convo = await Conversation.create({
             channel: 'system',
             pairKey,
@@ -307,7 +369,6 @@ router.post('/', async (req, res) => {
           });
           console.log('✅ Utworzono wątek systemowy:', convo._id);
         } else {
-          // 3) Jest? Dopinamy kolejną wiadomość
           convo.messages.push({
             fromUid: fromUid,
             toUid: toUid,
@@ -323,16 +384,15 @@ router.post('/', async (req, res) => {
         console.error('⚠️ Błąd tworzenia/dopinania wątku systemowego:', e);
       }
     });
-
-
   } catch (err) {
     console.error('❌ Błąd w POST /api/profiles:', err);
     return res.status(500).json({ message: 'Błąd tworzenia profilu' });
   }
 });
 
-
-// PATCH /api/profiles/extend/:uid – przedłuż widoczność profilu o 30 dni
+// ------------------------------------------------------
+// PATCH /api/profiles/extend/:uid – +30 dni widoczności
+// ------------------------------------------------------
 router.patch('/extend/:uid', async (req, res) => {
   try {
     const profile = await Profile.findOne({ userId: req.params.uid });
@@ -341,7 +401,7 @@ router.patch('/extend/:uid', async (req, res) => {
     }
 
     profile.isVisible = true;
-    profile.visibleUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // +30 dni
+    profile.visibleUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await profile.save();
 
     res.json({ message: 'Widoczność przedłużona o 30 dni.', profile });
@@ -351,13 +411,14 @@ router.patch('/extend/:uid', async (req, res) => {
   }
 });
 
-// PATCH /api/profiles/update/:uid – aktualizacja wybranych pól profilu
-// + dodaj 'team' do listy:
+// -------------------------------------------------------------
+// PATCH /api/profiles/update/:uid – aktualizacja wybranych pól
+// -------------------------------------------------------------
 const allowedFields = [
   'avatar', 'photos', 'profileType', 'location', 'priceFrom', 'priceTo',
   'role', 'availableDates', 'description', 'tags', 'links', 'quickAnswers',
   'showAvailableDates', 'services', 'bookingMode', 'workingHours', 'workingDays',
-  'team' // ⬅️ DODANE
+  'team'
 ];
 
 router.patch('/update/:uid', async (req, res) => {
@@ -372,7 +433,7 @@ router.patch('/update/:uid', async (req, res) => {
       }
     }
 
-    // team ustaw kropkowo lub jako merge obiektu
+    // team – częściowe ustawienia
     if (req.body.team) {
       if (typeof req.body.team.enabled !== 'undefined') {
         profile.set('team.enabled', !!req.body.team.enabled);
@@ -393,11 +454,15 @@ router.patch('/update/:uid', async (req, res) => {
   }
 });
 
+// -----------------------------------------------------------------
+// PATCH /api/profiles/rate/:slug – dodanie oceny + komentarza
+// + zwrot lastReview z pełnym https URL avatara
+// -----------------------------------------------------------------
 router.patch('/rate/:slug', async (req, res) => {
   const { userId, rating, comment } = req.body;
   const numericRating = Number(rating);
 
-  // 🔒 Walidacja danych wejściowych
+  // 🔒 Walidacja
   if (
     !userId ||
     isNaN(numericRating) ||
@@ -408,13 +473,11 @@ router.patch('/rate/:slug', async (req, res) => {
     comment.trim().length > 200
   ) {
     return res.status(400).json({
-      message:
-        'Ocena musi być liczbą od 1 do 5, a komentarz musi mieć od 10 do 200 znaków.'
+      message: 'Ocena musi być liczbą od 1 do 5, a komentarz musi mieć od 10 do 200 znaków.'
     });
   }
 
   try {
-    // Pobieramy profil po slugu
     const profile = await Profile.findOne({ slug: req.params.slug }).select(
       'userId ratedBy rating reviews'
     );
@@ -422,55 +485,54 @@ router.patch('/rate/:slug', async (req, res) => {
       return res.status(404).json({ message: 'Nie znaleziono profilu.' });
     }
 
-    // Właściciel nie może ocenić własnej wizytówki
+    // Właściciel nie ocenia własnej wizytówki
     if (profile.userId === userId) {
-      return res
-        .status(403)
-        .json({ message: 'Nie możesz ocenić własnej wizytówki.' });
+      return res.status(403).json({ message: 'Nie możesz ocenić własnej wizytówki.' });
     }
 
-    // Upewnij się, że tablica istnieje
     if (!Array.isArray(profile.ratedBy)) {
       profile.ratedBy = [];
     }
 
-    // Blokada wielokrotnej oceny przez tego samego usera
+    // Jeden użytkownik → jedna ocena
     if (profile.ratedBy.find((r) => r.userId === userId)) {
       return res.status(400).json({ message: 'Już oceniłeś ten profil.' });
     }
 
-    // 👤 Pobierz nazwę i avatar autora opinii
+    // 👤 dane autora opinii
     let userName = 'Użytkownik';
     let userAvatar = '';
     try {
-      const user = await User.findOne({ firebaseUid: userId }).select(
-        'name avatar'
-      );
+      const user = await User.findOne({ firebaseUid: userId }).select('name avatar');
       if (user?.name) userName = user.name;
       if (user?.avatar) userAvatar = user.avatar;
     } catch (e) {
       console.warn('⚠️ Nie udało się pobrać danych użytkownika:', e.message);
     }
 
-    // ✅ Zapisz opinię (z avatarem i datą)
+    // ✅ zapis opinii
     profile.ratedBy.push({
       userId,
       rating: numericRating,
       comment: comment.trim(),
       userName,
-      userAvatar,               // <— miniaturka autora
-      createdAt: new Date()     // <— data dodania
+      userAvatar,            // przechowujemy jak w bazie (może być względny)
+      createdAt: new Date()
     });
 
-    // 🔢 Przelicz średnią i liczbę opinii
+    // 🔢 nowa średnia i liczba opinii
     const total = profile.ratedBy.reduce((sum, r) => sum + r.rating, 0);
     profile.rating = Number((total / profile.ratedBy.length).toFixed(2));
     profile.reviews = profile.ratedBy.length;
 
     await profile.save();
 
-    // (opcjonalnie) zwróć też ostatnio dodaną opinię
-    const lastReview = profile.ratedBy[profile.ratedBy.length - 1];
+    // 🧩 świeżo dodana opinia – znormalizuj avatar do pełnego URL-a ZANIM zwrócisz
+    const rawLast = profile.ratedBy[profile.ratedBy.length - 1];
+    const lastReview = {
+      ...(rawLast.toObject?.() || rawLast),
+      userAvatar: toPublicUrl(req, rawLast.userAvatar),
+    };
 
     return res.json({
       message: 'Ocena dodana.',
@@ -480,9 +542,7 @@ router.patch('/rate/:slug', async (req, res) => {
     });
   } catch (err) {
     console.error('❌ Błąd oceniania:', err);
-    return res
-      .status(500)
-      .json({ message: 'Błąd serwera.', error: err.message });
+    return res.status(500).json({ message: 'Błąd serwera.', error: err.message });
   }
 });
 
