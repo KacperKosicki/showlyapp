@@ -21,6 +21,20 @@ const prettyUrl = (url) => {
   }
 };
 
+const API = process.env.REACT_APP_API_URL;
+
+const isLocalhostUrl = (u = '') =>
+  /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(u);
+
+const normalizeAvatar = (val = '') => {
+  if (!val) return '';
+  if (isLocalhostUrl(val)) return '';               // ⬅️ odrzuć localhost
+  if (val.startsWith('/uploads/')) return `${API}${val}`;
+  if (val.startsWith('uploads/')) return `${API}/${val}`;
+  return val.replace(/^http:\/\//i, 'https://');
+};
+
+
 const PublicProfile = () => {
   const { slug } = useParams();
   const [profile, setProfile] = useState(null);
@@ -143,11 +157,16 @@ const PublicProfile = () => {
       });
     }
 
+    const u = auth.currentUser;
+    const userName = u?.displayName || u?.email || 'Użytkownik';
+    const userAvatar = normalizeAvatar(u?.photoURL || '');
+
+
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/rate/${slug}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, rating: selectedRating, comment }),
+        body: JSON.stringify({ userId, rating: selectedRating, comment, userName, userAvatar }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -280,10 +299,14 @@ const PublicProfile = () => {
 
           <div className={styles.top}>
             <img
-              src={avatar && avatar.trim() ? avatar : '/images/other/no-image.png'}
+              src={avatar && avatar.trim()
+                ? normalizeAvatar(avatar)
+                : '/images/other/no-image.png'}
               alt={name}
               className={styles.avatar}
+              onError={(e) => { e.currentTarget.src = '/images/other/no-image.png'; }}
             />
+
 
             <div className={styles.info}>
               <span className={`${styles.badge} ${styles[profileType]}`}>
@@ -429,9 +452,8 @@ const PublicProfile = () => {
               <ul className={styles.reviewsList}>
                 {profile.ratedBy.map((op, i) => {
                   const ratingVal = Number(op.rating);
-                  const avatarSrc = op.userAvatar && op.userAvatar.trim()
-                    ? op.userAvatar
-                    : '/images/other/no-image.png'; // fallback
+                  const avatarSrc = normalizeAvatar(op.userAvatar || '') || '/images/other/no-image.png';
+
 
                   const dateLabel = op.createdAt
                     ? new Date(op.createdAt).toLocaleDateString('pl-PL', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -441,7 +463,13 @@ const PublicProfile = () => {
                     <li key={i} className={styles.reviewItem}>
                       <div className={styles.reviewHeader}>
                         <div className={styles.reviewUserBox}>
-                          <img className={styles.reviewAvatar} src={avatarSrc} alt="" />
+                          <img
+                            className={styles.reviewAvatar}
+                            src={avatarSrc}
+                            alt=""
+                            onError={(e) => { e.currentTarget.src = '/images/other/no-image.png'; }}
+                          />
+
                           <div className={styles.reviewUserMeta}>
                             <strong className={styles.reviewUser}>{op.userName || 'Użytkownik'}</strong>
                             {dateLabel && <span className={styles.reviewDate}>{dateLabel}</span>}
