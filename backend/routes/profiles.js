@@ -459,7 +459,14 @@ router.patch('/update/:uid', async (req, res) => {
 // + zwrot lastReview z pełnym https URL avatara
 // -----------------------------------------------------------------
 router.patch('/rate/:slug', async (req, res) => {
-  const { userId, rating, comment } = req.body;
+  const {
+    userId,
+    rating,
+    comment,
+    userName: bodyName,
+    userAvatar: bodyAvatar
+  } = req.body;
+
   const numericRating = Number(rating);
 
   // 🔒 Walidacja
@@ -490,44 +497,57 @@ router.patch('/rate/:slug', async (req, res) => {
       return res.status(403).json({ message: 'Nie możesz ocenić własnej wizytówki.' });
     }
 
-    if (!Array.isArray(profile.ratedBy)) {
-      profile.ratedBy = [];
-    }
+    if (!Array.isArray(profile.ratedBy)) profile.ratedBy = [];
 
     // Jeden użytkownik → jedna ocena
     if (profile.ratedBy.find((r) => r.userId === userId)) {
       return res.status(400).json({ message: 'Już oceniłeś ten profil.' });
     }
 
-    // 👤 dane autora opinii
-    let userName = 'Użytkownik';
-    let userAvatar = '';
-    try {
-      const user = await User.findOne({ firebaseUid: userId }).select('name avatar');
-      if (user?.name) userName = user.name;
-      if (user?.avatar) userAvatar = user.avatar;
-    } catch (e) {
-      console.warn('⚠️ Nie udało się pobrać danych użytkownika:', e.message);
+    // 👤 Źródła danych autora opinii: BODY (priorytet) → DB
+    let finalName = (bodyName || '').trim();
+    let rawAvatar = (bodyAvatar || '').trim();
+
+    if (!finalName || !rawAvatar) {
+      try {
+        const dbUser = await User.findOne({ firebaseUid: userId })
+          .select('displayName name avatar')
+          .lean();
+        if (!finalName) {
+          finalName = dbUser?.displayName || dbUser?.name || 'Użytkownik';
+        }
+        if (!rawAvatar) {
+          rawAvatar = dbUser?.avatar || '';
+        }
+      } catch (e) {
+        // brak w DB to nie błąd krytyczny
+      }
     }
 
-    // ✅ zapis opinii
+    // 🧹 Zapisujemy SUROWĄ wartość do bazy:
+    //  - jeśli nasz upload: trzymaj jako "/uploads/..."
+    //  - jeśli URL: trzymaj "https://..." (albo "http://", ale i tak znormalizujemy przy odczycie)
+    //  - jeśli ktoś przysłał "uploads/...": sprowadź do "/uploads/..."
+    const storedUserAvatar = normalizeUploadPath(rawAvatar);
+
+    // ✅ Zapis opinii
     profile.ratedBy.push({
       userId,
       rating: numericRating,
       comment: comment.trim(),
-      userName,
-      userAvatar,            // przechowujemy jak w bazie (może być względny)
+      userName: finalName || 'Użytkownik',
+      userAvatar: storedUserAvatar,  // <-- surowa wartość (np. "/uploads/..."), normalizujemy przy odczycie
       createdAt: new Date()
     });
 
-    // 🔢 nowa średnia i liczba opinii
-    const total = profile.ratedBy.reduce((sum, r) => sum + r.rating, 0);
-    profile.rating = Number((total / profile.ratedBy.length).toFixed(2));
+    // 🔢 Nowa średnia i liczba opinii
+    const total = profile.ratedBy.reduce((sum, r) => sum + Number(r.rating || 0), 0);
     profile.reviews = profile.ratedBy.length;
+    profile.rating = Number((total / profile.reviews).toFixed(2));
 
     await profile.save();
 
-    // 🧩 świeżo dodana opinia – znormalizuj avatar do pełnego URL-a ZANIM zwrócisz
+    // 🧩 Odpowiedź: znormalizuj avatar do pełnego URL-a
     const rawLast = profile.ratedBy[profile.ratedBy.length - 1];
     const lastReview = {
       ...(rawLast.toObject?.() || rawLast),
