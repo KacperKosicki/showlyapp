@@ -14,20 +14,23 @@ const isLocalhostUrl = (u = '') =>
 
 const normalizeAvatar = (val = '') => {
   if (!val) return '';
+
   // /uploads… albo uploads… -> doklej backend
   if (val.startsWith('/uploads/')) return `${API}${val}`;
   if (val.startsWith('uploads/')) return `${API}/${val}`;
-  // http -> https
+
+  // ✅ Jeśli backend jest localhost — nie zmieniaj protokołu
+  if (isLocalhostUrl(API)) return val;
+
+  // 🌐 Produkcja — wymuszamy https
   return val.replace(/^http:\/\//i, 'https://');
 };
 
 const pickAvatar = ({ dbAvatar, firebasePhotoURL }) => {
-  // 1) avatar z DB (o ile nie localhost) ma priorytet
-  if (dbAvatar && !isLocalhostUrl(dbAvatar)) return normalizeAvatar(dbAvatar);
-  // 2) firebase photoURL (o ile nie localhost)
-  if (firebasePhotoURL && !isLocalhostUrl(firebasePhotoURL))
-    return normalizeAvatar(firebasePhotoURL);
-  // 3) fallback
+  // ✅ priorytet avatar z DB — bez blokowania localhost
+  if (dbAvatar) return normalizeAvatar(dbAvatar);
+  // ✅ jeśli brak, bierz photoURL z Firebase
+  if (firebasePhotoURL) return normalizeAvatar(firebasePhotoURL);
   return '';
 };
 
@@ -48,7 +51,7 @@ const UserDropdown = ({
   const dropdownRef = useRef(null);
   const location = useLocation();
 
-  // 🔄 Świeży user + naprawa złego photoURL (localhost)
+  // 🔄 Świeży user + avatar z backendu lub Firebase
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       try {
@@ -57,11 +60,12 @@ const UserDropdown = ({
           return;
         }
         await u.reload().catch(() => {});
-        // Jeśli w Firebase wisi stary localhost, wyczyść go
+
+        // jeśli Firebase ma localhost → wyczyść
         if (isLocalhostUrl(u.photoURL)) {
           try { await updateProfile(u, { photoURL: '' }); } catch {}
         }
-        // Pobierz usera z backendu, by mieć avatar z DB
+
         let dbAvatar = '';
         try {
           const r = await fetch(`${API}/api/users/${u.uid}`);
@@ -70,7 +74,13 @@ const UserDropdown = ({
             dbAvatar = db?.avatar || '';
           }
         } catch {}
-        setPhotoURL(pickAvatar({ dbAvatar, firebasePhotoURL: auth.currentUser?.photoURL || '' }));
+
+        setPhotoURL(
+          pickAvatar({
+            dbAvatar,
+            firebasePhotoURL: auth.currentUser?.photoURL || ''
+          })
+        );
       } catch {}
     });
     return () => unsub();
@@ -126,7 +136,7 @@ const UserDropdown = ({
     fetchUnread();
   }, [user, refreshTrigger, location.pathname, setUnreadCount]);
 
-  // 👋 Zamknięcie dropdown po kliknięciu poza
+  // 👋 Zamknięcie dropdown
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpen(false);
@@ -139,7 +149,7 @@ const UserDropdown = ({
     setOpen(false);
     if (location.pathname === path && scrollToId) {
       const el = document.getElementById(scrollToId);
-      if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 100);
     } else {
       navigate(path, { state: { scrollToId } });
     }
@@ -155,22 +165,23 @@ const UserDropdown = ({
     }
   };
 
-  const currentUser = auth.currentUser;
-  const displayEmail = user?.email || currentUser?.email || 'Konto';
+  const displayEmail = user?.email || auth.currentUser?.email || 'Konto';
 
   return (
     <div className={styles.dropdown} ref={dropdownRef}>
-      <div className={styles.trigger} onClick={() => setOpen((prev) => !prev)}>
-        {photoURL ? (
+      <div className={styles.trigger} onClick={() => setOpen(prev => !prev)}>
+        {photoURL && (
           <img
             src={photoURL}
             alt=""
             className={styles.miniAvatar}
             decoding="async"
             referrerPolicy="no-referrer"
-            onError={(e) => { e.currentTarget.src = '/images/other/no-image.png'; }}
+            onError={(e) => {
+              e.currentTarget.src = '/images/other/no-image.png';
+            }}
           />
-        ) : null}
+        )}
         <span>{displayEmail}</span>
         <FaChevronDown className={styles.icon} />
       </div>
@@ -195,7 +206,9 @@ const UserDropdown = ({
                 Pozostało {remainingDays} dni
               </span>
             ) : (
-              <span className={`${styles.itemSub} ${styles.statusExpired}`}>Wygasła</span>
+              <span className={`${styles.itemSub} ${styles.statusExpired}`}>
+                Wygasła
+              </span>
             )}
           </button>
         )}
@@ -211,6 +224,7 @@ const UserDropdown = ({
         </button>
 
         <button onClick={() => handleNavigate('/ulubione', 'scrollToId')}>Ulubione</button>
+
         <button onClick={handleLogout}>Wyloguj</button>
       </div>
     </div>
