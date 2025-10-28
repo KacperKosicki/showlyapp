@@ -11,6 +11,28 @@ import {
 
 const API = process.env.REACT_APP_API_URL;
 
+const isLocalhostUrl = (u = '') =>
+  /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(u);
+
+const normalizeAvatar = (val = '') => {
+  if (!val) return '';
+
+  // 1️⃣ absolutny URL
+  if (/^https?:\/\//i.test(val)) {
+    // ✅ localhost → zostaw jak jest
+    if (isLocalhostUrl(val)) return val;
+
+    // 🌍 produkcja → wymuś https
+    return val.replace(/^http:\/\//i, 'https://');
+  }
+
+  // 2️⃣ uploady z backendu → zbuduj pełny URL z API
+  if (val.startsWith('/uploads/')) return `${API}${val}`;
+  if (val.startsWith('uploads/')) return `${API}/${val}`;
+
+  return val;
+};
+
 export default function AccountSettings() {
   const location = useLocation();
 
@@ -48,12 +70,12 @@ export default function AccountSettings() {
               dbUser?.avatar ||
               auth.currentUser?.photoURL ||
               fallbackImg;
-            setPreview(avatarUrl);
+            setPreview(normalizeAvatar(avatarUrl));
           } else {
-            setPreview(auth.currentUser?.photoURL || fallbackImg);
+            setPreview(normalizeAvatar(auth.currentUser?.photoURL) || fallbackImg);
           }
         } catch {
-          setPreview(auth.currentUser?.photoURL || fallbackImg);
+          setPreview(normalizeAvatar(auth.currentUser?.photoURL) || fallbackImg);
         }
       } finally {
         setLoading(false);
@@ -115,7 +137,7 @@ export default function AccountSettings() {
         await updateProfile(user, { photoURL: url });
         await user.reload();
       } catch {}
-      setPreview(url);
+      setPreview(normalizeAvatar(url));
       setFile(null);
       showAlert('success', 'Zapisano nowy awatar.');
     } catch (e) {

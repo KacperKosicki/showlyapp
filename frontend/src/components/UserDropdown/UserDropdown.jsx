@@ -113,6 +113,7 @@ const UserDropdown = ({
           setHasProfile(false);
           setIsVisible(false);
           setRemainingDays(null);
+          console.warn('ℹ️ Brak profilu — wszystko OK ✅');
         } else {
           console.error('❌ Błąd pobierania profilu:', err);
         }
