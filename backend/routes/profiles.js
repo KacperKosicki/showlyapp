@@ -340,7 +340,7 @@ router.post('/', async (req, res) => {
           '• ustaw godziny i dni pracy; przerwy między usługami 15 min.',
           '',
           '🔗 Linki i media:',
-          '• do 3 linków i 5 zdjęć (ok. 3 MB).',
+          '• do 3 linków i 6 zdjęć (ok. 3 MB).',
           '',
           '❓ Szybkie odpowiedzi (FAQ):',
           '• maks. 3 wpisy — tytuł do 10 znaków, odpowiedź do 64 znaków.',
