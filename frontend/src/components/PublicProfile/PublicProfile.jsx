@@ -34,6 +34,33 @@ const normalizeAvatar = (val = '') => {
   return val.replace(/^http:\/\//i, 'https://');
 };
 
+// === blokada body bez „skoku” strony ===
+const lockBodyScroll = () => {
+  const y = window.scrollY || document.documentElement.scrollTop;
+  document.body.dataset.scrollY = String(y);
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${y}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.width = '100%';
+};
+
+const unlockBodyScroll = () => {
+  const y = parseInt(document.body.dataset.scrollY || '0', 10);
+
+  // zdejmij blokadę
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+
+  // odtwórz pozycję PO jednym tiku
+  requestAnimationFrame(() => {
+    window.scrollTo(0, y);
+    document.body.dataset.scrollY = ''; // wyczyść dopiero teraz
+  });
+};
 
 const PublicProfile = () => {
   const { slug } = useParams();
@@ -49,6 +76,31 @@ const PublicProfile = () => {
   const [uid, setUid] = useState(auth.currentUser?.uid ?? null);
   const maxChars = 200;
   const routerLocation = useLocation();
+
+  // Handlery już wewnątrz komponentu
+  const openLightbox = (src) => setFullscreenImage(src);
+  const closeLightbox = () => setFullscreenImage(null);
+
+  // Blokuj/odblokuj scroll gdy lightbox się pojawia/znika
+useEffect(() => {
+  if (fullscreenImage) {
+    lockBodyScroll();
+    return () => {
+      // odblokuj TYLKO gdy zamykamy lightbox
+      unlockBodyScroll();
+    };
+  }
+  // gdy fullscreenImage === false nic tu nie rób
+}, [fullscreenImage]);
+
+
+  // Zamknięcie klawiszem Escape
+  useEffect(() => {
+    if (!fullscreenImage) return;
+    const onKey = (e) => e.key === 'Escape' && closeLightbox();
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [fullscreenImage]);
 
   const mapUnit = (unit) => {
     switch (unit) {
@@ -522,7 +574,7 @@ const PublicProfile = () => {
                 <div
                   key={i}
                   className={styles.galleryItem}
-                  onClick={() => setFullscreenImage(url)}
+                  onClick={() => openLightbox(url)}
                 >
                   <img src={url} alt={`Zdjęcie ${i + 1}`} />
                 </div>
@@ -531,8 +583,8 @@ const PublicProfile = () => {
           </div>
 
           {fullscreenImage && (
-            <div className={styles.lightbox} onClick={() => setFullscreenImage(null)}>
-              <img src={fullscreenImage} alt="Podgląd zdjęcia" />
+            <div className={styles.lightbox} onClick={closeLightbox} role="dialog" aria-modal="true">
+              <img src={fullscreenImage} alt="" />
             </div>
           )}
         </section>
