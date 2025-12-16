@@ -15,19 +15,41 @@ const ThreadView = ({ user, setUnreadCount }) => {
   const [receiverId, setReceiverId] = useState(null);
   const [receiverProfile, setReceiverProfile] = useState(null);
 
+  // nazwy konta/profilu odbiorcy (kontrolowane + skeleton)
   const [accountName, setAccountName] = useState('');
   const [profileName, setProfileName] = useState('');
 
   const [canReply, setCanReply] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // status profilu odbiorcy (dla FAQ)
   const [profileStatus, setProfileStatus] = useState('loading');
 
+  // moja nazwa profilu (dla labela "wyślesz jako...")
   const [myProfileName, setMyProfileName] = useState('');
+
   const [channel, setChannel] = useState(null);
   const [firstFromUid, setFirstFromUid] = useState(null);
 
+  // SKELETON / pending: mapka rozstrzygnięć nazw profili (jak w Notifications)
+  // value: undefined (pending), null (brak profilu), string (nazwa profilu)
+  const [profileNameMap, setProfileNameMap] = useState({});
+
   // FLASH (alert przenoszony między ekranami)
   const [flash, setFlash] = useState(null);
+
+  // ----------------------------
+  // Helpers skeleton
+  // ----------------------------
+  const isResolved = (uid) =>
+    Object.prototype.hasOwnProperty.call(profileNameMap, uid) && profileNameMap[uid] !== undefined;
+
+  const renderNameNode = (rawName) =>
+    rawName ? (
+      <span className={styles.receiverName}>{rawName}</span>
+    ) : (
+      <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />
+    );
 
   // scroll to anchor (np. 'threadPageLayout')
   useEffect(() => {
@@ -56,11 +78,12 @@ const ThreadView = ({ user, setUnreadCount }) => {
       if (err.response?.status === 404) {
         return null; // brak profilu to normalny przypadek
       }
-      console.error("❌ Błąd pobierania nazwy profilu:", err);
+      console.error('❌ Błąd pobierania nazwy profilu:', err);
       return null;
     }
   }, []);
 
+  // moja nazwa profilu (do senderHint)
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -75,7 +98,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
   useEffect(() => {
     if (location.state?.flash) {
       setFlash(location.state.flash);
-      // usuń flash ze state, by nie dublował się po F5/back
       const clean = { ...(location.state || {}) };
       delete clean.flash;
       window.history.replaceState({ ...window.history.state, usr: clean }, '');
@@ -85,7 +107,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
         try {
           const f = JSON.parse(raw);
           setFlash(f);
-        } catch {/* ignore */ }
+        } catch {/* ignore */}
       }
     }
   }, [location.key, location.state]);
@@ -108,26 +130,28 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
   // Dorysowanie optimisticMessage + wklejenie draft (z state albo sessionStorage)
   useEffect(() => {
-    // optimistic
     const rawOpt = location.state?.optimisticMessage || sessionStorage.getItem('optimisticMessage');
     if (rawOpt) {
       try {
         const optimistic = typeof rawOpt === 'string' ? JSON.parse(rawOpt) : rawOpt;
         if (optimistic && optimistic.content) {
-          setMessages(prev => [...prev, optimistic]);
+          setMessages((prev) => [...prev, optimistic]);
         }
-      } catch {/* ignore */ }
+      } catch {/* ignore */}
     }
-    // draft
+
     const rawDraft = location.state?.draft || sessionStorage.getItem('draft');
     if (rawDraft) {
       try {
         const draft = typeof rawDraft === 'string' ? rawDraft : String(rawDraft);
         setNewMessage(draft);
-      } catch {/* ignore */ }
+      } catch {/* ignore */}
     }
   }, [location.state]);
 
+  // ----------------------------
+  // FETCH THREAD
+  // ----------------------------
   const fetchThread = useCallback(async () => {
     try {
       const res = await axios.get(
@@ -137,35 +161,36 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
       const { messages: msgs, participants, channel: ch, firstFromUid: ff } = res.data;
 
-      // scal z ewentualnymi „pending” (optimistic)
-      setMessages(prev => {
-        const withoutPending = prev.filter(m => !m?.pending);
+      // scal z ewentualnymi pending (optimistic)
+      setMessages((prev) => {
+        const withoutPending = prev.filter((m) => !m?.pending);
         return msgs && msgs.length ? msgs : withoutPending;
       });
 
       setChannel(ch);
-      setFirstFromUid(ff || (msgs[0]?.fromUid ?? null));
+      setFirstFromUid(ff || (msgs?.[0]?.fromUid ?? null));
 
-      const other = participants.find(p => p.uid !== user.uid);
+      const other = participants.find((p) => p.uid !== user.uid);
       if (other) {
         setReceiverId(other.uid);
         setAccountName(other.displayName || 'Użytkownik');
       }
 
+      // BLOKADA ODPOWIEDZI: można odpowiedzieć tylko jeśli ostatnia wiadomość jest od drugiej strony
       const last = (msgs && msgs.length ? msgs : []).slice(-1)[0];
       setCanReply(!!last && !last.isSystem && last.fromUid !== user.uid);
 
-      const unreadInThread = (msgs || []).filter(m => !m.read && m.toUid === user.uid);
+      // mark read + update counter
+      const unreadInThread = (msgs || []).filter((m) => !m.read && m.toUid === user.uid);
       if (unreadInThread.length > 0) {
         await axios.patch(
           `${process.env.REACT_APP_API_URL}/api/conversations/${threadId}/read`,
           null,
           { headers: { uid: user.uid } }
         );
-        if (setUnreadCount) setUnreadCount(prev => Math.max(prev - unreadInThread.length, 0));
+        if (setUnreadCount) setUnreadCount((prev) => Math.max(prev - unreadInThread.length, 0));
       }
 
-      // po sukcesie czyścimy optimistic/draft
       sessionStorage.removeItem('optimisticMessage');
       sessionStorage.removeItem('draft');
     } catch (err) {
@@ -174,8 +199,33 @@ const ThreadView = ({ user, setUnreadCount }) => {
     }
   }, [threadId, user.uid, navigate, setUnreadCount]);
 
-  useEffect(() => { fetchThread(); }, [fetchThread]);
+  useEffect(() => {
+    fetchThread();
+  }, [fetchThread]);
 
+  // ----------------------------
+  // SKELETON: rozstrzyganie profilu drugiej strony (tylko kiedy znamy receiverId)
+  // ----------------------------
+  useEffect(() => {
+    const uid = receiverId;
+    if (!uid || uid === 'SYSTEM') return;
+
+    // oznacz pending jeśli nie było
+    setProfileNameMap((prev) => {
+      if (Object.prototype.hasOwnProperty.call(prev, uid)) return prev;
+      return { ...prev, [uid]: undefined };
+    });
+
+    (async () => {
+      const name = await fetchProfileName(uid);
+      setProfileNameMap((prev) => ({ ...prev, [uid]: name })); // string | null
+      if (typeof name === 'string' && name.trim()) setProfileName(name.trim());
+    })();
+  }, [receiverId, fetchProfileName]);
+
+  // ----------------------------
+  // RECEIVER PROFILE (FAQ)
+  // ----------------------------
   useEffect(() => {
     const fetchReceiverProfile = async () => {
       try {
@@ -197,10 +247,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
         if (prof?.visibleUntil) expired = new Date(prof.visibleUntil) < new Date();
         if (prof?.isActive === false) expired = true;
         setProfileStatus(expired ? 'expired' : 'exists');
-
       } catch (err) {
         if (err.response?.status === 404) {
-          setProfileStatus('missing'); // brak profilu to ok
+          setProfileStatus('missing');
           setReceiverProfile(null);
         } else {
           console.error('❌ Błąd pobierania profilu odbiorcy:', err);
@@ -212,20 +261,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
     fetchReceiverProfile();
   }, [receiverId, channel, firstFromUid]);
 
-  const receiverName = useMemo(() => {
-    if (receiverId === 'SYSTEM' || channel === 'system') {
-      return 'Showly.app';
-    }
-    if (channel === 'account_to_profile') {
-      if (firstFromUid === user.uid) return profileName || accountName;
-      return accountName || profileName;
-    }
-    if (channel === 'profile_to_account') {
-      return profileName || accountName;
-    }
-    return accountName || profileName || 'Użytkownik';
-  }, [channel, firstFromUid, user.uid, profileName, accountName]);
-
+  // ----------------------------
+  // Kto jest po której stronie?
+  // ----------------------------
   const amProfileSide = useMemo(() => {
     if (!channel || !firstFromUid || !user?.uid) return false;
     if (channel === 'account_to_profile') return user.uid !== firstFromUid;
@@ -233,16 +271,63 @@ const ThreadView = ({ user, setUnreadCount }) => {
     return false;
   }, [channel, firstFromUid, user?.uid]);
 
+  // label nad textarea
   const mySenderLabel = useMemo(() => {
     return amProfileSide
       ? (myProfileName ? `Wyślesz wiadomość jako: ${myProfileName}` : 'Wyślesz wiadomość jako: Twoja wizytówka')
       : 'Wyślesz wiadomość jako: Twoje konto';
   }, [amProfileSide, myProfileName]);
 
-  const showFaq = receiverId !== 'SYSTEM'
-    && channel === 'account_to_profile'
-    && !amProfileSide;
+  // ✅ FAQ tylko klient
+  const showFaq =
+    receiverId !== 'SYSTEM' &&
+    channel === 'account_to_profile' &&
+    !amProfileSide;
 
+  // ----------------------------
+  // Nazwa odbiorcy z “utajnieniem”
+  // - prefer="profile" => dopóki pending, NIE pokazuj konta (skeleton)
+  // - prefer="account" => konto może się pokazać od razu
+  // ----------------------------
+  const receiverName = useMemo(() => {
+    if (receiverId === 'SYSTEM' || channel === 'system') return 'Showly.app';
+
+    const profResolved = receiverId ? isResolved(receiverId) : false;
+    const prof = receiverId ? profileNameMap[receiverId] : undefined; // undefined pending | null | string
+
+    if (channel === 'account_to_profile') {
+      if (firstFromUid === user.uid) {
+        // Twoje konto -> ich profil: NAJPIERW profil, a dopóki pending: skeleton
+        if (!profResolved) return ''; // pending -> skeleton
+        if (typeof prof === 'string' && prof.trim()) return prof.trim();
+        return accountName || 'Użytkownik';
+      }
+
+      // oni -> Twój profil: pokazuj konto (może być od razu)
+      return accountName || (typeof prof === 'string' ? prof : '') || 'Użytkownik';
+    }
+
+    if (channel === 'profile_to_account') {
+      // tu możesz trzymać profil jako preferencję
+      if (!profResolved) return ''; // pending
+      if (typeof prof === 'string' && prof.trim()) return prof.trim();
+      return accountName || 'Użytkownik';
+    }
+
+    // fallback
+    return accountName || (typeof prof === 'string' ? prof : '') || 'Użytkownik';
+  }, [
+    receiverId,
+    channel,
+    firstFromUid,
+    user.uid,
+    accountName,
+    profileNameMap
+  ]);
+
+  // ----------------------------
+  // Wysyłanie odpowiedzi
+  // ----------------------------
   const handleReply = async (e) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -258,8 +343,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
         from: user.uid,
         to: receiverId,
         content: newMessage.trim(),
-        channel,                 // kanał wątku
-        conversationId: threadId // dopinamy do TEGO wątku
+        channel,
+        conversationId: threadId
       });
 
       setNewMessage('');
@@ -287,6 +372,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
         />
       )}
 
+      {/* ✅ centrowanie gdy FAQ nie ma */}
       <div className={`${styles.mainArea} ${!showFaq ? styles.centered : ''}`}>
         <div className={styles.threadWrapper}>
           <button
@@ -297,24 +383,28 @@ const ThreadView = ({ user, setUnreadCount }) => {
           </button>
 
           <h2 className={styles.title}>
-            Rozmowa z&nbsp;<span className={styles.receiverName}>{receiverName}</span>
+            Rozmowa z&nbsp;{renderNameNode(receiverName)}
           </h2>
 
           <div className={styles.thread}>
             {messages.map((msg, i) => {
               const displayContent = msg.isSystem
-                // jeśli przyszły podwójnie escapowane nowe linie "\\n", zamień je na "\n"
                 ? String(msg.content).replace(/\\n/g, '\n')
                 : msg.content;
+
+              const isMe = msg.fromUid === user.uid;
 
               return (
                 <div
                   key={i}
-                  className={`${styles.message} ${msg.fromUid === user.uid ? styles.own : styles.their} ${msg.isSystem ? styles.system : ''}`}
+                  className={`${styles.message} ${isMe ? styles.own : styles.their} ${msg.isSystem ? styles.system : ''}`}
                 >
                   {!msg.isSystem && (
                     <p className={styles.author}>
-                      {msg.fromUid === user.uid ? 'Ty' : receiverName}
+                      {isMe ? 'Ty' : (receiverName ? receiverName : '')}
+                      {!isMe && !receiverName && (
+                        <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />
+                      )}
                     </p>
                   )}
 
@@ -329,6 +419,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
             })}
           </div>
 
+          {/* ✅ BLOKADA / INFOboxy dokładnie jak u Ciebie */}
           {(() => {
             const last = messages[messages.length - 1];
             if (!last) return null;
@@ -355,12 +446,14 @@ const ThreadView = ({ user, setUnreadCount }) => {
               return (
                 <form onSubmit={handleReply} className={styles.form}>
                   <div className={styles.senderHint}>{mySenderLabel}</div>
+
                   <textarea
                     placeholder="Napisz odpowiedź..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     required
                   />
+
                   <button type="submit">Wyślij wiadomość</button>
                 </form>
               );
@@ -377,25 +470,30 @@ const ThreadView = ({ user, setUnreadCount }) => {
           {errorMsg && <p className={styles.error}>{errorMsg}</p>}
         </div>
 
+        {/* ✅ FAQ tylko klient */}
         {showFaq && (
           <div className={styles.faqBoxWrapper}>
             <div className={styles.faqBox}>
               <div className={styles.quickAnswers}>
                 <h3>
                   Najczęstsze pytania i odpowiedzi&nbsp;
-                  <span className={styles.receiverName}>{receiverName}</span>
+                  <span className={styles.receiverName}>{receiverName || ''}</span>
                 </h3>
+
                 {profileStatus === 'loading' && <p className={styles.noFaq}>Ładowanie profilu…</p>}
                 {profileStatus === 'missing' && <p className={styles.noFaq}>Użytkownik nie posiada jeszcze profilu.</p>}
                 {profileStatus === 'expired' && <p className={styles.noFaq}>Profil użytkownika jest nieważny (wygasł).</p>}
                 {profileStatus === 'error' && <p className={styles.noFaq}>Nie udało się pobrać informacji o profilu.</p>}
+
                 {profileStatus === 'exists' && (
                   <>
                     {receiverProfile?.quickAnswers?.length > 0 &&
-                      receiverProfile.quickAnswers.some(qa => (qa.title || '').trim() || (qa.answer || '').trim()) ? (
+                    receiverProfile.quickAnswers.some(
+                      (qa) => (qa.title || '').trim() || (qa.answer || '').trim()
+                    ) ? (
                       <ul>
                         {receiverProfile.quickAnswers
-                          .filter(qa => (qa.title || '').trim() || (qa.answer || '').trim())
+                          .filter((qa) => (qa.title || '').trim() || (qa.answer || '').trim())
                           .map((qa, i) => (
                             <li key={i}>
                               <strong>{qa.title}</strong> {qa.answer}
