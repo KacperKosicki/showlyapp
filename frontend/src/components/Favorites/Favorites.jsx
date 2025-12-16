@@ -3,12 +3,13 @@ import styles from './Favorites.module.scss';
 import axios from 'axios';
 import UserCard from '../UserCard/UserCard';
 import { FiHeart } from 'react-icons/fi';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function Favorites({ currentUser }) {
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState([]);
   const [error, setError] = useState('');
+  const location = useLocation();
 
   useEffect(() => {
     const run = async () => {
@@ -26,6 +27,17 @@ export default function Favorites({ currentUser }) {
     };
     if (currentUser?.uid) run();
   }, [currentUser?.uid]);
+
+  useEffect(() => {
+    const scrollTo = location.state?.scrollToId;
+    if (!scrollTo || loading) return;
+
+    const el = document.getElementById(scrollTo);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start'});
+      window.history.replaceState({}, document.title, location.pathname);
+    }
+  }, [location.state, location.pathname, loading]);
 
   const count = useMemo(() => profiles.length, [profiles]);
 
