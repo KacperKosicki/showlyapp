@@ -26,6 +26,14 @@ function getProto(req) {
   return req.protocol || 'https';
 }
 
+function withCacheBust(url, v) {
+  if (!url) return '';
+  if (url.startsWith('data:')) return url; // 🚫 nie doklejamy nic do data URI
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}v=${v}`;
+}
+
+
 function absoluteUrl(req, relative) {
   const proto = getProto(req);
   const host = req.get('host');
@@ -108,11 +116,20 @@ router.get('/', async (req, res) => {
 router.get('/by-user/:uid', async (req, res) => {
   console.log('🔍 Szukam profilu dla userId:', req.params.uid);
   try {
-    const profile = await Profile.findOne({ userId: req.params.uid });
+    const profile = await Profile.findOne({ userId: req.params.uid }).lean();
     if (!profile) {
       return res.status(404).json({ message: 'Brak wizytówki dla tego użytkownika.' });
     }
-    res.json(profile);
+
+const baseAvatar = profile.avatar ? toPublicUrl(req, profile.avatar) : '';
+const v = profile.updatedAt ? new Date(profile.updatedAt).getTime() : Date.now();
+const avatar = withCacheBust(baseAvatar, v);
+
+
+    return res.json({
+      ...profile,
+      avatar,
+    });
   } catch (err) {
     console.error('❌ Błąd w GET /by-user/:uid:', err);
     res.status(500).json({ message: 'Błąd serwera.' });
@@ -136,15 +153,47 @@ router.get('/slug/:slug', async (req, res) => {
     const viewerUid = req.headers.uid || null;
 
     // 🔧 NORMALIZACJA avatarów w opiniach
-    const ratedBy = Array.isArray(profile.ratedBy)
-      ? profile.ratedBy.map((r) => ({
-          ...r,
-          userAvatar: toPublicUrl(req, r.userAvatar),
-        }))
-      : [];
+let ratedBy = Array.isArray(profile.ratedBy) ? profile.ratedBy : [];
 
-    // (opcjonalnie) możesz też znormalizować główny avatar i zdjęcia
-    const avatar = toPublicUrl(req, profile.avatar);
+// firebaseUid autorów opinii
+const ids = [...new Set(ratedBy.map(r => r.userId).filter(Boolean))];
+
+// mapa: uid -> { avatar, updatedAt }
+let usersMap = {};
+if (ids.length) {
+  const users = await User.find({ firebaseUid: { $in: ids } })
+    .select('firebaseUid avatar updatedAt')
+    .lean();
+
+  usersMap = users.reduce((acc, u) => {
+    acc[u.firebaseUid] = {
+      avatar: u.avatar || '',
+      updatedAt: u.updatedAt || null
+    };
+    return acc;
+  }, {});
+}
+
+// avatar ZAWSZE z Users (fallback: snapshot)
+ratedBy = ratedBy.map(r => {
+  const u = usersMap[r.userId];
+  const picked = u?.avatar || r.userAvatar || '';
+  const v = u?.updatedAt ? new Date(u.updatedAt).getTime() : null;
+
+  const base = picked ? toPublicUrl(req, picked) : '';
+  const userAvatar = v ? withCacheBust(base, v) : base;
+
+  return {
+    ...r,
+    userAvatar,
+  };
+});
+
+
+const baseAvatar = profile.avatar ? toPublicUrl(req, profile.avatar) : '';
+const v = profile.updatedAt ? new Date(profile.updatedAt).getTime() : Date.now();
+const avatar = withCacheBust(baseAvatar, v);
+
     const photos = Array.isArray(profile.photos) ? profile.photos.map((p) => toPublicUrl(req, p)) : profile.photos;
 
     // Ulubione: flaga + liczba (licznik z pola lub liczony na żywo)

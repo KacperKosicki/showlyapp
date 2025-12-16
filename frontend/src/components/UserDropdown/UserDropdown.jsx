@@ -8,32 +8,32 @@ import { auth } from '../../firebase';
 
 const API = process.env.REACT_APP_API_URL;
 
-/** === helpers === */
+/** =========================
+ * helpers
+ * ========================= */
 const isLocalhostUrl = (u = '') =>
-  /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(u);
+  /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(String(u || ''));
 
 const normalizeAvatar = (val = '') => {
-  if (!val) return '';
+  const v = String(val || '').trim();
+  if (!v) return '';
 
-  // /uploads… albo uploads… -> doklej backend
-  if (val.startsWith('/uploads/')) return `${API}${val}`;
-  if (val.startsWith('uploads/')) return `${API}/${val}`;
+  // pełny URL (Cloudinary/Google/itd.) → zostaw jak jest
+  if (/^https?:\/\//i.test(v)) return v;
 
-  // ✅ Jeśli backend jest localhost — nie zmieniaj protokołu
-  if (isLocalhostUrl(API)) return val;
+  // kompatybilność ze starym /uploads (jeśli jeszcze gdzieś występuje)
+  if (v.startsWith('/uploads/')) return `${API}${v}`;
+  if (v.startsWith('uploads/')) return `${API}/${v}`;
 
-  // 🌐 Produkcja — wymuszamy https
-  return val.replace(/^http:\/\//i, 'https://');
-};
-
-const pickAvatar = ({ dbAvatar, firebasePhotoURL }) => {
-  // ✅ priorytet avatar z DB — bez blokowania localhost
-  if (dbAvatar) return normalizeAvatar(dbAvatar);
-  // ✅ jeśli brak, bierz photoURL z Firebase
-  if (firebasePhotoURL) return normalizeAvatar(firebasePhotoURL);
   return '';
 };
 
+const pickAvatar = ({ dbAvatar, firebasePhotoURL }) =>
+  normalizeAvatar(dbAvatar) || normalizeAvatar(firebasePhotoURL) || '';
+
+/** =========================
+ * component
+ * ========================= */
 const UserDropdown = ({
   user,
   refreshTrigger,
@@ -59,13 +59,17 @@ const UserDropdown = ({
           setPhotoURL('');
           return;
         }
+
         await u.reload().catch(() => {});
 
-        // jeśli Firebase ma localhost → wyczyść
+        // jeśli Firebase ma photoURL na localhost → wyczyść (żeby nie psuło produkcji)
         if (isLocalhostUrl(u.photoURL)) {
-          try { await updateProfile(u, { photoURL: '' }); } catch {}
+          try {
+            await updateProfile(u, { photoURL: '' });
+          } catch {}
         }
 
+        // pobierz avatar z DB
         let dbAvatar = '';
         try {
           const r = await fetch(`${API}/api/users/${u.uid}`);
@@ -81,8 +85,12 @@ const UserDropdown = ({
             firebasePhotoURL: auth.currentUser?.photoURL || ''
           })
         );
-      } catch {}
+      } catch {
+        // jak coś wybuchnie — pokaż placeholder
+        setPhotoURL('');
+      }
     });
+
     return () => unsub();
   }, []);
 
@@ -90,16 +98,20 @@ const UserDropdown = ({
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user?.uid) return;
+
       try {
         const res = await axios.get(
           `${API}/api/profiles/by-user/${user.uid}`,
           { headers: { Accept: 'application/json' } }
         );
+
         const profile = res.data;
+
         if (profile?.visibleUntil) {
           const now = new Date();
           const until = new Date(profile.visibleUntil);
           const diff = Math.ceil((until - now) / (1000 * 60 * 60 * 24));
+
           setIsVisible(profile.isVisible !== false && until > now);
           setRemainingDays(diff > 0 ? diff : 0);
           setHasProfile(true);
@@ -119,6 +131,7 @@ const UserDropdown = ({
         }
       }
     };
+
     fetchProfile();
   }, [user, refreshTrigger]);
 
@@ -126,6 +139,7 @@ const UserDropdown = ({
   useEffect(() => {
     const fetchUnread = async () => {
       if (!user?.uid || !setUnreadCount) return;
+
       try {
         const res = await axios.get(`${API}/api/conversations/by-uid/${user.uid}`);
         const totalUnread = res.data.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
@@ -134,10 +148,11 @@ const UserDropdown = ({
         console.error('❌ Błąd pobierania liczby wiadomości:', err);
       }
     };
+
     fetchUnread();
   }, [user, refreshTrigger, location.pathname, setUnreadCount]);
 
-  // 👋 Zamknięcie dropdown
+  // 👋 Zamknięcie dropdown po kliknięciu poza
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpen(false);
@@ -148,6 +163,7 @@ const UserDropdown = ({
 
   const handleNavigate = (path, scrollToId = null) => {
     setOpen(false);
+
     if (location.pathname === path && scrollToId) {
       const el = document.getElementById(scrollToId);
       if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 100);
@@ -170,19 +186,19 @@ const UserDropdown = ({
 
   return (
     <div className={styles.dropdown} ref={dropdownRef}>
-      <div className={styles.trigger} onClick={() => setOpen(prev => !prev)}>
-        {photoURL && (
-          <img
-            src={photoURL}
-            alt=""
-            className={styles.miniAvatar}
-            decoding="async"
-            referrerPolicy="no-referrer"
-            onError={(e) => {
-              e.currentTarget.src = '/images/other/no-image.png';
-            }}
-          />
-        )}
+      <div className={styles.trigger} onClick={() => setOpen((prev) => !prev)}>
+        {/* zawsze pokazuj avatara (fallback) */}
+        <img
+          src={photoURL || '/images/other/no-image.png'}
+          alt=""
+          className={styles.miniAvatar}
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            e.currentTarget.src = '/images/other/no-image.png';
+          }}
+        />
+
         <span>{displayEmail}</span>
         <FaChevronDown className={styles.icon} />
       </div>
@@ -207,9 +223,7 @@ const UserDropdown = ({
                 Pozostało {remainingDays} dni
               </span>
             ) : (
-              <span className={`${styles.itemSub} ${styles.statusExpired}`}>
-                Wygasła
-              </span>
+              <span className={`${styles.itemSub} ${styles.statusExpired}`}>Wygasła</span>
             )}
           </button>
         )}

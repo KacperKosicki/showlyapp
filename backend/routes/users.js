@@ -1,66 +1,42 @@
+// routes/users.js
 const express = require('express');
 const router = express.Router();
-
-const path = require('path');
-const fs = require('fs');
 const multer = require('multer');
-const mime = require('mime-types');
 
 const User = require('../models/User');
+const cloudinary = require('../config/cloudinary'); // ✅ popraw ścieżkę jeśli trzeba
 
 /* =========================
-   URL helpers (https za proxy + pełne URL-e)
+   Helpers
    ========================= */
-function getProto(req) {
-  const xf = req.headers['x-forwarded-proto'];
-  if (xf) return String(xf).split(',')[0].trim(); // "https" np. na Render/CF
-  return req.protocol || 'https';
-}
 
-function absoluteUrl(req, relative) {
-  const proto = getProto(req);
-  const host = req.get('host');
-  return `${proto}://${host}${relative.startsWith('/') ? '' : '/'}${relative}`;
-}
-
-/** Zwraca publiczny URL:
- *  - jeśli wartość zaczyna się od "/uploads/" -> dokleja host i protokół
- *  - jeśli już jest https:// -> zostawia
- *  - w innych przypadkach -> pusty string (bezpiecznie)
- */
-function toPublicUrl(req, val = '') {
-  if (!val) return '';
-  if (val.startsWith('/uploads/')) return absoluteUrl(req, val);
-  if (/^https:\/\/.+/i.test(val)) return val;
-  return '';
-}
-
-// (opcjonalnie) Zamienia publiczny URL na ścieżkę dyskową
-function filePathFromPublicUrl(publicUrl) {
+// wyciągamy public_id z URL Cloudinary, żeby móc usuwać stary obraz
+function getCloudinaryPublicId(url = '') {
   try {
-    const pathname = new URL(publicUrl).pathname; // "/uploads/avatars/xxx.jpg"
-    return path.join(__dirname, '..', pathname.replace(/^\//, ''));
+    if (!url.includes('res.cloudinary.com')) return null;
+
+    // np: https://res.cloudinary.com/<cloud>/image/upload/v123/showly/avatars/UID_123.jpg
+    const afterUpload = url.split('/upload/')[1];
+    if (!afterUpload) return null;
+
+    const withoutVersion = afterUpload.replace(/^v\d+\//, ''); // usuń v123/
+    const withoutExt = withoutVersion.replace(/\.[a-zA-Z0-9]+$/, ''); // usuń .jpg/.png
+    return withoutExt; // "showly/avatars/UID_123"
   } catch {
     return null;
   }
 }
 
+// twarda walidacja https url (dla avatar-url)
+function isHttpsUrl(u = '') {
+  return /^https:\/\/.+/i.test(String(u || '').trim());
+}
+
 /* =========================
-   Multer – upload avatara
+   Multer – upload do RAM
    ========================= */
-const AVATAR_DIR = path.join(__dirname, '..', 'uploads', 'avatars');
-fs.mkdirSync(AVATAR_DIR, { recursive: true });
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, AVATAR_DIR),
-  filename: (req, file, cb) => {
-    const ext = mime.extension(file.mimetype) || 'jpg';
-    cb(null, `${req.params.uid}-${Date.now()}.${ext}`);
-  },
-});
-
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB
   fileFilter: (req, file, cb) => {
     if (!file.mimetype.startsWith('image/')) return cb(new Error('Tylko obrazy'));
@@ -73,7 +49,7 @@ const upload = multer({
    ========================= */
 
 /** POST /api/users
- *  Dodaje użytkownika do bazy (jeśli nie istnieje)
+ * Dodaje użytkownika do bazy (jeśli nie istnieje)
  */
 router.post('/', async (req, res) => {
   console.log('🧾 Żądanie do /api/users:', req.body);
@@ -81,9 +57,9 @@ router.post('/', async (req, res) => {
   const { email, name, firebaseUid, provider } = req.body;
 
   if (!email || !firebaseUid || !provider) {
-    return res
-      .status(400)
-      .json({ message: 'Brakuje wymaganych danych (email, uid lub provider)' });
+    return res.status(400).json({
+      message: 'Brakuje wymaganych danych (email, uid lub provider)',
+    });
   }
 
   try {
@@ -92,14 +68,11 @@ router.post('/', async (req, res) => {
     if (existingUser) {
       if (existingUser.firebaseUid !== firebaseUid) {
         return res.status(409).json({ message: 'E-mail jest już powiązany z innym kontem.' });
-      } else {
-        // Ujednolicamy avatar w odpowiedzi
-        const avatar = toPublicUrl(req, existingUser.avatar);
-        return res.status(200).json({
-          message: 'Użytkownik już istnieje',
-          user: { ...existingUser.toObject(), avatar }
-        });
       }
+      return res.status(200).json({
+        message: 'Użytkownik już istnieje',
+        user: existingUser.toObject(),
+      });
     }
 
     const newUser = new User({ email, name, firebaseUid, provider });
@@ -107,7 +80,7 @@ router.post('/', async (req, res) => {
 
     return res.status(201).json({
       message: 'Użytkownik dodany do bazy',
-      user: { ...newUser.toObject(), avatar: toPublicUrl(req, newUser.avatar) }
+      user: newUser.toObject(),
     });
   } catch (error) {
     console.error('❌ Błąd w /api/users:', error);
@@ -121,34 +94,31 @@ router.get('/check-email', async (req, res) => {
   if (!email) return res.status(400).json({ message: 'Brak emaila w zapytaniu' });
 
   const user = await User.findOne({ email });
-  if (user) {
-    return res.status(200).json({ exists: true, provider: user.provider });
-  } else {
-    return res.status(200).json({ exists: false });
-  }
+  if (user) return res.status(200).json({ exists: true, provider: user.provider });
+  return res.status(200).json({ exists: false });
 });
 
 /** GET /api/users/:uid
- *  Zwraca dane usera, avatar jako absolutny URL
+ * Zwraca dane usera (avatar to już https URL)
  */
 router.get('/:uid', async (req, res) => {
   try {
     const user = await User.findOne({ firebaseUid: req.params.uid }).lean();
     if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
-
-    return res.json({ ...user, avatar: toPublicUrl(req, user.avatar) });
+    return res.json(user);
   } catch (e) {
     res.status(500).json({ message: 'Błąd serwera', error: e.message });
   }
 });
 
 /** PATCH /api/users/:uid
- *  Proste aktualizacje danych (displayName, name, avatar)
- *  avatar przyjmuje: pełny https:// albo względne /uploads/...
+ * Aktualizacje danych (displayName, name, avatar)
+ * avatar przyjmuje tylko https:// (Cloudinary albo inne CDN)
  */
 router.patch('/:uid', async (req, res) => {
   try {
     const { displayName, avatar, name } = req.body;
+
     const user = await User.findOne({ firebaseUid: req.params.uid });
     if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
 
@@ -156,26 +126,31 @@ router.patch('/:uid', async (req, res) => {
     if (typeof name === 'string') user.name = name;
 
     if (typeof avatar === 'string') {
-      if (avatar.startsWith('/uploads/')) {
-        user.avatar = avatar;
-      } else if (/^https:\/\/.+/i.test(avatar)) {
-        user.avatar = avatar;
+      const a = avatar.trim();
+      if (!a) {
+        user.avatar = '';
+      } else if (!isHttpsUrl(a)) {
+        return res.status(400).json({ message: 'avatar musi być https://...' });
       } else {
-        return res.status(400).json({ message: 'avatar musi być https:// lub /uploads/...' });
+        // jeżeli zmieniasz avatar ręcznie url-em, usuń stary z cloudinary jeśli był
+        const oldPublicId = getCloudinaryPublicId(user.avatar);
+        if (oldPublicId) {
+          try { await cloudinary.uploader.destroy(oldPublicId); } catch {}
+        }
+        user.avatar = a;
       }
     }
 
     await user.save();
 
-    // zwróć spójnie z-normalizowany avatar
-    res.json({ ok: true, user: { ...user.toObject(), avatar: toPublicUrl(req, user.avatar) } });
+    res.json({ ok: true, user: user.toObject() });
   } catch (e) {
     res.status(500).json({ message: 'Błąd aktualizacji', error: e.message });
   }
 });
 
 /** POST /api/users/:uid/avatar
- *  Upload pliku, zapis ścieżki względnej w DB, zwrot pełnego URL-a
+ * Upload pliku -> Cloudinary -> zapis secure_url w DB
  */
 router.post('/:uid/avatar', upload.single('file'), async (req, res) => {
   try {
@@ -184,66 +159,86 @@ router.post('/:uid/avatar', upload.single('file'), async (req, res) => {
     const user = await User.findOne({ firebaseUid: req.params.uid });
     if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
 
-    // Usuń stary plik jeśli był nasz
-    if (user.avatar && user.avatar.startsWith('/uploads/avatars/')) {
-      const oldDiskPath = path.join(__dirname, '..', user.avatar.replace(/^\//, ''));
-      fs.unlink(oldDiskPath, () => {});
+    // usuń stary avatar z Cloudinary (jeśli był)
+    const oldPublicId = getCloudinaryPublicId(user.avatar);
+    if (oldPublicId) {
+      try { await cloudinary.uploader.destroy(oldPublicId); } catch {}
     }
 
-    const publicPath = `/uploads/avatars/${req.file.filename}`;
+    // upload do Cloudinary z bufora
+    const uploaded = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'showly/avatars',
+          public_id: `${req.params.uid}_${Date.now()}`,
+          resource_type: 'image',
+          overwrite: true,
+          transformation: [
+            { width: 256, height: 256, crop: 'fill', gravity: 'face' },
+            { quality: 'auto' },
+            { fetch_format: 'auto' },
+          ],
+        },
+        (err, result) => {
+          if (err) return reject(err);
+          resolve(result);
+        }
+      );
 
-    // ZAPISUJEMY TYLKO ŚCIEŻKĘ WZGLĘDNĄ
-    user.avatar = publicPath;
+      stream.end(req.file.buffer);
+    });
+
+    user.avatar = uploaded.secure_url;
     await user.save();
 
-    // W odpowiedzi zwracamy pełny URL
-    res.json({ url: absoluteUrl(req, publicPath) });
+    return res.json({ url: uploaded.secure_url });
   } catch (e) {
-    console.error('Upload avatar error:', e);
+    console.error('Upload avatar (cloudinary) error:', e);
     res.status(500).json({ message: 'Błąd uploadu', error: e.message });
   }
 });
 
 /** PATCH /api/users/:uid/avatar-url
- *  Ustawienie avatara na zewnętrzny HTTPS URL.
- *  Jeżeli dotychczas był lokalny plik — usuwamy go.
+ * Ustawienie avatara na zewnętrzny HTTPS URL
+ * + usuń stary cloudinary jeśli był
  */
 router.patch('/:uid/avatar-url', async (req, res) => {
   try {
     const { url } = req.body;
-    if (!url || !/^https:\/\/.+/i.test(url)) {
+    const next = String(url || '').trim();
+
+    if (!isHttpsUrl(next)) {
       return res.status(400).json({ message: 'Podaj poprawny HTTPS URL.' });
     }
+
     const user = await User.findOne({ firebaseUid: req.params.uid });
     if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
 
-    // usuń stary lokalny plik (jeśli był)
-    if (user.avatar && user.avatar.startsWith('/uploads/avatars/')) {
-      const diskPath = path.join(__dirname, '..', user.avatar.replace(/^\//, ''));
-      fs.unlink(diskPath, () => {});
+    const oldPublicId = getCloudinaryPublicId(user.avatar);
+    if (oldPublicId) {
+      try { await cloudinary.uploader.destroy(oldPublicId); } catch {}
     }
 
-    user.avatar = url;
+    user.avatar = next;
     await user.save();
 
-    res.json({ ok: true, avatar: toPublicUrl(req, user.avatar) });
+    res.json({ ok: true, avatar: user.avatar });
   } catch (e) {
     res.status(500).json({ message: 'Błąd', error: e.message });
   }
 });
 
 /** DELETE /api/users/:uid/avatar
- *  Usuwa avatar (i plik, jeśli lokalny), czyści pole w DB.
+ * Usuwa avatar (jeśli z Cloudinary – usuwa plik), czyści pole w DB
  */
 router.delete('/:uid/avatar', async (req, res) => {
   try {
     const user = await User.findOne({ firebaseUid: req.params.uid });
     if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
 
-    // jeśli trzymamy względną ścieżkę – usuńmy plik z dysku
-    if (user.avatar && user.avatar.startsWith('/uploads/avatars/')) {
-      const diskPath = path.join(__dirname, '..', user.avatar.replace(/^\//, ''));
-      fs.unlink(diskPath, () => {});
+    const publicId = getCloudinaryPublicId(user.avatar);
+    if (publicId) {
+      try { await cloudinary.uploader.destroy(publicId); } catch {}
     }
 
     user.avatar = '';
@@ -251,7 +246,7 @@ router.delete('/:uid/avatar', async (req, res) => {
 
     res.json({ ok: true });
   } catch (e) {
-    console.error('Delete avatar error:', e);
+    console.error('Delete avatar (cloudinary) error:', e);
     res.status(500).json({ message: 'Błąd usuwania', error: e.message });
   }
 });

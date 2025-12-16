@@ -23,15 +23,27 @@ const prettyUrl = (url) => {
 
 const API = process.env.REACT_APP_API_URL;
 
-const isLocalhostUrl = (u = '') =>
-  /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(u);
-
 const normalizeAvatar = (val = '') => {
-  if (!val) return '';
-  if (isLocalhostUrl(val)) return '';               // ⬅️ odrzuć localhost
-  if (val.startsWith('/uploads/')) return `${API}${val}`;
-  if (val.startsWith('uploads/')) return `${API}/${val}`;
-  return val.replace(/^http:\/\//i, 'https://');
+  const v = String(val || '').trim();
+  if (!v) return '';
+
+  // ✅ obsługa base64/DataURL (Twoje avatary z uploadu)
+  if (v.startsWith('data:image/')) return v;
+
+  // ✅ obsługa blob (czasem przy podglądzie)
+  if (v.startsWith('blob:')) return v;
+
+  // pełny URL -> zostaw
+  if (/^https?:\/\//i.test(v)) return v;
+
+  // kompatybilność /uploads (z backendu)
+  if (v.startsWith('/uploads/')) return `${API}${v}`;
+  if (v.startsWith('uploads/')) return `${API}/${v}`;
+
+  // jeśli wygląda jak domena/URL bez protokołu -> dodaj https
+  if (/^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(v)) return `https://${v}`;
+
+  return '';
 };
 
 // === blokada body bez „skoku” strony ===
@@ -82,16 +94,16 @@ const PublicProfile = () => {
   const closeLightbox = () => setFullscreenImage(null);
 
   // Blokuj/odblokuj scroll gdy lightbox się pojawia/znika
-useEffect(() => {
-  if (fullscreenImage) {
-    lockBodyScroll();
-    return () => {
-      // odblokuj TYLKO gdy zamykamy lightbox
-      unlockBodyScroll();
-    };
-  }
-  // gdy fullscreenImage === false nic tu nie rób
-}, [fullscreenImage]);
+  useEffect(() => {
+    if (fullscreenImage) {
+      lockBodyScroll();
+      return () => {
+        // odblokuj TYLKO gdy zamykamy lightbox
+        unlockBodyScroll();
+      };
+    }
+    // gdy fullscreenImage === false nic tu nie rób
+  }, [fullscreenImage]);
 
 
   // Zamknięcie klawiszem Escape
@@ -210,9 +222,17 @@ useEffect(() => {
     }
 
     const u = auth.currentUser;
-    const userName = u?.displayName || u?.email || 'Użytkownik';
-    const userAvatar = normalizeAvatar(u?.photoURL || '');
+const userName = u?.displayName || u?.email || 'Użytkownik';
 
+let userAvatar = normalizeAvatar(u?.photoURL || '');
+
+try {
+  const r = await fetch(`${API}/api/users/${userId}`);
+  if (r.ok) {
+    const dbUser = await r.json();
+    userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || '';
+  }
+} catch {}
 
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/rate/${slug}`, {
@@ -351,14 +371,11 @@ useEffect(() => {
 
           <div className={styles.top}>
             <img
-              src={avatar && avatar.trim()
-                ? normalizeAvatar(avatar)
-                : '/images/other/no-image.png'}
+              src={normalizeAvatar(avatar) || '/images/other/no-image.png'}
               alt={name}
               className={styles.avatar}
               onError={(e) => { e.currentTarget.src = '/images/other/no-image.png'; }}
             />
-
 
             <div className={styles.info}>
               <span className={`${styles.badge} ${styles[profileType]}`}>
@@ -504,8 +521,7 @@ useEffect(() => {
               <ul className={styles.reviewsList}>
                 {profile.ratedBy.map((op, i) => {
                   const ratingVal = Number(op.rating);
-                  const avatarSrc = normalizeAvatar(op.userAvatar || '') || '/images/other/no-image.png';
-
+                  const avatarSrc = normalizeAvatar(op.userAvatar) || '/images/other/no-image.png';
 
                   const dateLabel = op.createdAt
                     ? new Date(op.createdAt).toLocaleDateString('pl-PL', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -515,12 +531,15 @@ useEffect(() => {
                     <li key={i} className={styles.reviewItem}>
                       <div className={styles.reviewHeader}>
                         <div className={styles.reviewUserBox}>
-                          <img
-                            className={styles.reviewAvatar}
-                            src={avatarSrc}
-                            alt=""
-                            onError={(e) => { e.currentTarget.src = '/images/other/no-image.png'; }}
-                          />
+<img
+  className={styles.reviewAvatar}
+  src={avatarSrc}
+  alt=""
+  decoding="async"
+  referrerPolicy="no-referrer"
+  onError={(e) => { e.currentTarget.src = '/images/other/no-image.png'; }}
+/>
+
 
                           <div className={styles.reviewUserMeta}>
                             <strong className={styles.reviewUser}>{op.userName || 'Użytkownik'}</strong>
