@@ -138,9 +138,36 @@
   align-items: center;
   gap: .5rem;
 
-  button {
+  .primary,
+  .secondary,
+  .ghost {
+    height: 42px;
+    padding: 0 1.1rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 42px;
+    box-sizing: border-box;
     white-space: nowrap;
+
+    font-family: $font-accent;
+    font-weight: 700;
+    font-size: .95rem;
   }
+
+  a.primary { text-decoration: none; }
+
+  // KLUCZ: wyzeruj różnice przeglądarki dla buttona
+  button.primary,
+  button.secondary,
+  button.ghost {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0; // jeśli chcesz border w secondary/ghost, to daj tam osobno
+  }
+
+  .secondary { border-width: 1px; }
 }
 
 /* Mobile – układ w kolumnie, przycisk do prawej krawędzi */

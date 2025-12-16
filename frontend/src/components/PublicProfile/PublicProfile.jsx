@@ -222,17 +222,17 @@ const PublicProfile = () => {
     }
 
     const u = auth.currentUser;
-const userName = u?.displayName || u?.email || 'Użytkownik';
+    const userName = u?.displayName || u?.email || 'Użytkownik';
 
-let userAvatar = normalizeAvatar(u?.photoURL || '');
+    let userAvatar = normalizeAvatar(u?.photoURL || '');
 
-try {
-  const r = await fetch(`${API}/api/users/${userId}`);
-  if (r.ok) {
-    const dbUser = await r.json();
-    userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || '';
-  }
-} catch {}
+    try {
+      const r = await fetch(`${API}/api/users/${userId}`);
+      if (r.ok) {
+        const dbUser = await r.json();
+        userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || '';
+      }
+    } catch { }
 
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/rate/${slug}`, {
@@ -531,14 +531,14 @@ try {
                     <li key={i} className={styles.reviewItem}>
                       <div className={styles.reviewHeader}>
                         <div className={styles.reviewUserBox}>
-<img
-  className={styles.reviewAvatar}
-  src={avatarSrc}
-  alt=""
-  decoding="async"
-  referrerPolicy="no-referrer"
-  onError={(e) => { e.currentTarget.src = '/images/other/no-image.png'; }}
-/>
+                          <img
+                            className={styles.reviewAvatar}
+                            src={avatarSrc}
+                            alt=""
+                            decoding="async"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => { e.currentTarget.src = '/images/other/no-image.png'; }}
+                          />
 
 
                           <div className={styles.reviewUserMeta}>

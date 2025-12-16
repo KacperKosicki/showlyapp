@@ -35,7 +35,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     durationValue: '',
     durationUnit: 'minutes'
   });
-  
+
   const MAX_PHOTOS = 6;
 
   const [profile, setProfile] = useState(null);
@@ -72,10 +72,11 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   };
 
   useEffect(() => {
-    const scrollTo = location.state?.scrollToId;
-    if (!scrollTo || loading) return;
+    const scrollTo = location.state?.scrollToId || 'profileWrapper';
+    if (loading) return;
+
     const tryScroll = () => {
-      const el = document.getElementById(scrollTo);
+      const el = document.getElementById(scrollTo) || document.getElementById('scrollToId');
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         window.history.replaceState({}, document.title, location.pathname);
@@ -83,8 +84,10 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         requestAnimationFrame(tryScroll);
       }
     };
+
     requestAnimationFrame(tryScroll);
   }, [location.state, loading, location.pathname]);
+
 
   // =========================
   // Pobieranie profilu
@@ -551,6 +554,18 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
         {!isEditing && (
           <div className={styles.headerActions}>
+            <Link
+              to={profile?.slug ? `/profil/${profile.slug}` : '#'}
+              state={profile?.slug ? { scrollToId: 'profileWrapper' } : undefined} // ✅ TO
+              className={styles.primary}
+              style={!profile?.slug ? { pointerEvents: 'none', opacity: 0.6 } : undefined}
+              aria-label="Przejdź do publicznego profilu"
+              title={profile?.slug ? 'Zobacz swój publiczny profil' : 'Brak sluga profilu'}
+            >
+              Przejdź do profilu
+            </Link>
+
+
             <button
               onClick={() => setIsEditing(true)}
               className={styles.primary}
@@ -560,6 +575,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             </button>
           </div>
         )}
+
       </div>
 
       {!profile.isVisible && (
