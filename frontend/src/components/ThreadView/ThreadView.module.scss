@@ -14,7 +14,7 @@
   gap: 2rem;
   max-width: 1200px;
   width: 100%;
-  height: 100%; // <---
+  height: 100%;
 
   &.centered {
     justify-content: center;
@@ -43,7 +43,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
-  min-height: 100%; // <-- TO JEST KLUCZ
+  min-height: 100%;
 
   @media (max-width: 1024px) {
     width: 100%;
@@ -59,6 +59,11 @@
   margin-top: 2rem;
   margin-bottom: 1rem;
   font-size: 1.3rem;
+}
+
+.receiverName {
+  color: $secondary-color;
+  font-weight: 700;
 }
 
 .senderHint {
@@ -80,7 +85,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: flex-start; // 🚩 start na desktop
+  align-items: flex-start;
   justify-content: flex-start;
   margin-top: 0;
   margin-bottom: 0;
@@ -88,14 +93,14 @@
 
   @media (max-width: 800px) {
     margin-bottom: 2.5rem;
-    align-items: stretch; // mobilnie wypełnia całą szerokość
+    align-items: stretch;
   }
 }
 
 .faqBox {
   flex: 1 1 auto;
   max-width: 380px;
-  align-self: flex-start; // 🚩
+  align-self: flex-start;
   min-height: 200px;
   display: flex;
   flex-direction: column;
@@ -168,7 +173,6 @@
 
   @media (max-width: 1024px) {
     padding: 1.5rem 1rem;
-
   }
 }
 
@@ -214,7 +218,7 @@
 }
 
 .systemContent {
-  white-space: pre-line; // respektuje \n jako nowe linie
+  white-space: pre-line;
 }
 
 .own {
@@ -322,27 +326,6 @@
   }
 }
 
-.threadWrapper {
-  flex: 0 0 65%;
-  background: $secondary-bg;
-  border: 1px solid #ccc;
-  border-radius: 1rem;
-  padding: 2rem 1rem;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
-  font-family: $font-body;
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
-  min-height: 100%;
-
-  @media (max-width: 1024px) {
-    width: 100%;
-    margin-bottom: 2rem; // ✅ margines dolny na mobile
-    padding: 2rem 1rem;
-    height: unset;
-  }
-}
-
 .mainArea.centered {
   flex-direction: column;
   justify-content: center;
@@ -356,6 +339,9 @@
   }
 }
 
+/* -----------------------------
+   ✅ Skeleton (pełna karta)
+------------------------------ */
 .nameSkeleton {
   display: inline-block;
   width: 140px;
@@ -375,17 +361,93 @@
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.55), rgba(255,255,255,0));
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0.55),
+      rgba(255, 255, 255, 0)
+    );
     animation: shimmer 1.2s infinite;
   }
 }
 
 @keyframes shimmer {
-  100% { transform: translateX(100%); }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
+.skeletonTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
 
-// --- MOBILE ---
+.skeletonBtn {
+  width: 180px;
+  height: 38px;
+  border-radius: 999px;
+  background: #eee;
+}
+
+.skeletonTitle {
+  width: 320px;
+  max-width: 60%;
+  height: 18px;
+  border-radius: 8px;
+  background: #eee;
+}
+
+.skeletonThread {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+.skeletonMsg {
+  height: 72px;
+  border-radius: 1rem;
+  background: #eee;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+  width: 70%;
+}
+
+.skeletonLeft {
+  align-self: flex-start;
+}
+
+.skeletonRight {
+  align-self: flex-end;
+  width: 58%;
+}
+
+.skeletonBottom {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.skeletonTextarea {
+  flex: 1;
+  height: 84px;
+  border-radius: 1rem;
+  background: #eee;
+  border: 1px solid #ddd;
+}
+
+.skeletonSend {
+  width: 140px;
+  height: 44px;
+  border-radius: 999px;
+  background: #eee;
+  border: 1px solid #ddd;
+}
+
+/* --- MOBILE --- */
 @media (max-width: 800px) {
   .pageLayout {
     min-height: unset;
@@ -417,5 +479,22 @@
     margin-bottom: 0;
     align-self: stretch;
     min-height: 120px;
+  }
+
+  .skeletonTitle {
+    width: 220px;
+    max-width: 55%;
+  }
+
+  .skeletonBtn {
+    width: 150px;
+  }
+
+  .skeletonMsg {
+    width: 85%;
+  }
+
+  .skeletonRight {
+    width: 70%;
   }
 }

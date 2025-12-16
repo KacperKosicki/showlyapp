@@ -38,6 +38,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
   // FLASH (alert przenoszony między ekranami)
   const [flash, setFlash] = useState(null);
 
+  // FULL PAGE LOADING (jak w Notifications)
+  const [loading, setLoading] = useState(true);
+
   // ----------------------------
   // Helpers skeleton
   // ----------------------------
@@ -107,7 +110,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
         try {
           const f = JSON.parse(raw);
           setFlash(f);
-        } catch {/* ignore */}
+        } catch {
+          /* ignore */
+        }
       }
     }
   }, [location.key, location.state]);
@@ -137,7 +142,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
         if (optimistic && optimistic.content) {
           setMessages((prev) => [...prev, optimistic]);
         }
-      } catch {/* ignore */}
+      } catch {
+        /* ignore */
+      }
     }
 
     const rawDraft = location.state?.draft || sessionStorage.getItem('draft');
@@ -145,7 +152,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
       try {
         const draft = typeof rawDraft === 'string' ? rawDraft : String(rawDraft);
         setNewMessage(draft);
-      } catch {/* ignore */}
+      } catch {
+        /* ignore */
+      }
     }
   }, [location.state]);
 
@@ -154,10 +163,11 @@ const ThreadView = ({ user, setUnreadCount }) => {
   // ----------------------------
   const fetchThread = useCallback(async () => {
     try {
-      const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/conversations/${threadId}`,
-        { headers: { uid: user.uid } }
-      );
+      setLoading(true);
+
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/conversations/${threadId}`, {
+        headers: { uid: user.uid }
+      });
 
       const { messages: msgs, participants, channel: ch, firstFromUid: ff } = res.data;
 
@@ -196,6 +206,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
     } catch (err) {
       console.error('❌ Błąd pobierania konwersacji:', err);
       if ([401, 403].includes(err.response?.status)) navigate('/');
+    } finally {
+      setLoading(false);
     }
   }, [threadId, user.uid, navigate, setUnreadCount]);
 
@@ -308,22 +320,51 @@ const ThreadView = ({ user, setUnreadCount }) => {
     }
 
     if (channel === 'profile_to_account') {
-      // tu możesz trzymać profil jako preferencję
+      // tu preferuj profil
       if (!profResolved) return ''; // pending
       if (typeof prof === 'string' && prof.trim()) return prof.trim();
       return accountName || 'Użytkownik';
     }
 
-    // fallback
     return accountName || (typeof prof === 'string' ? prof : '') || 'Użytkownik';
-  }, [
-    receiverId,
-    channel,
-    firstFromUid,
-    user.uid,
-    accountName,
-    profileNameMap
-  ]);
+  }, [receiverId, channel, firstFromUid, user.uid, accountName, profileNameMap]);
+
+  // ----------------------------
+  // FULL PAGE SKELETON (jak w Notifications)
+  // ----------------------------
+  const ThreadSkeleton = () => (
+    <div className={styles.loadingBox}>
+      <div className={styles.skeletonTop}>
+        <div className={`${styles.skeletonBtn} ${styles.shimmer}`} />
+        <div className={`${styles.skeletonTitle} ${styles.shimmer}`} />
+      </div>
+
+      <div className={styles.skeletonThread}>
+        <div className={`${styles.skeletonBubble} ${styles.left} ${styles.shimmer}`}>
+          <div className={`${styles.skeletonMeta} ${styles.shimmer}`} />
+          <div className={`${styles.skeletonText} ${styles.shimmer}`} />
+          <div className={`${styles.skeletonTextShort} ${styles.shimmer}`} />
+        </div>
+
+        <div className={`${styles.skeletonBubble} ${styles.right} ${styles.shimmer}`}>
+          <div className={`${styles.skeletonMeta} ${styles.shimmer}`} />
+          <div className={`${styles.skeletonText} ${styles.shimmer}`} />
+          <div className={`${styles.skeletonTextShort} ${styles.shimmer}`} />
+        </div>
+
+        <div className={`${styles.skeletonBubble} ${styles.left} ${styles.shimmer}`}>
+          <div className={`${styles.skeletonMeta} ${styles.shimmer}`} />
+          <div className={`${styles.skeletonText} ${styles.shimmer}`} />
+          <div className={`${styles.skeletonTextShort} ${styles.shimmer}`} />
+        </div>
+      </div>
+
+      <div className={styles.skeletonReplyBar}>
+        <div className={`${styles.skeletonInput} ${styles.shimmer}`} />
+        <div className={`${styles.skeletonSend} ${styles.shimmer}`} />
+      </div>
+    </div>
+  );
 
   // ----------------------------
   // Wysyłanie odpowiedzi
@@ -364,13 +405,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
   return (
     <div id="threadPageLayout" className={styles.pageLayout}>
-      {flash && (
-        <AlertBox
-          type={flash.type}
-          message={flash.message}
-          onClose={closeFlash}
-        />
-      )}
+      {flash && <AlertBox type={flash.type} message={flash.message} onClose={closeFlash} />}
 
       {/* ✅ centrowanie gdy FAQ nie ma */}
       <div className={`${styles.mainArea} ${!showFaq ? styles.centered : ''}`}>
@@ -386,92 +421,102 @@ const ThreadView = ({ user, setUnreadCount }) => {
             Rozmowa z&nbsp;{renderNameNode(receiverName)}
           </h2>
 
-          <div className={styles.thread}>
-            {messages.map((msg, i) => {
-              const displayContent = msg.isSystem
-                ? String(msg.content).replace(/\\n/g, '\n')
-                : msg.content;
+          {/* ✅ FULL SKELETON zamiast samego “pola” */}
+          {loading ? (
+            <ThreadSkeleton />
+          ) : (
+            <>
+              <div className={styles.thread}>
+                {messages.map((msg, i) => {
+                  const displayContent = msg.isSystem
+                    ? String(msg.content).replace(/\\n/g, '\n')
+                    : msg.content;
 
-              const isMe = msg.fromUid === user.uid;
+                  const isMe = msg.fromUid === user.uid;
 
-              return (
-                <div
-                  key={i}
-                  className={`${styles.message} ${isMe ? styles.own : styles.their} ${msg.isSystem ? styles.system : ''}`}
-                >
-                  {!msg.isSystem && (
-                    <p className={styles.author}>
-                      {isMe ? 'Ty' : (receiverName ? receiverName : '')}
-                      {!isMe && !receiverName && (
-                        <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />
+                  return (
+                    <div
+                      key={i}
+                      className={`${styles.message} ${isMe ? styles.own : styles.their} ${
+                        msg.isSystem ? styles.system : ''
+                      }`}
+                    >
+                      {!msg.isSystem && (
+                        <p className={styles.author}>
+                          {isMe ? 'Ty' : (receiverName ? receiverName : '')}
+                          {!isMe && !receiverName && (
+                            <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />
+                          )}
+                        </p>
                       )}
-                    </p>
-                  )}
 
-                  <p className={`${styles.content} ${msg.isSystem ? styles.systemContent : ''}`}>
-                    {displayContent}
-                    {msg.pending && <em className={styles.pending}> (wysyłanie…)</em>}
-                  </p>
+                      <p className={`${styles.content} ${msg.isSystem ? styles.systemContent : ''}`}>
+                        {displayContent}
+                        {msg.pending && <em className={styles.pending}> (wysyłanie…)</em>}
+                      </p>
 
-                  <p className={styles.time}>{new Date(msg.createdAt).toLocaleString()}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* ✅ BLOKADA / INFOboxy dokładnie jak u Ciebie */}
-          {(() => {
-            const last = messages[messages.length - 1];
-            if (!last) return null;
-
-            if (last.isSystem || receiverId === 'SYSTEM') {
-              return (
-                <div className={styles.infoBox}>
-                  <span className={styles.icon}>🔒</span>
-                  <p>Nie możesz odpowiadać na wiadomości systemowe.</p>
-                </div>
-              );
-            }
-
-            if (last.fromUid === user.uid) {
-              return (
-                <div className={styles.infoBox}>
-                  <span className={styles.icon}>⏳</span>
-                  <p>Wysłałeś/aś wiadomość. Czekasz teraz na odpowiedź drugiej osoby.</p>
-                </div>
-              );
-            }
-
-            if (canReply) {
-              return (
-                <form onSubmit={handleReply} className={styles.form}>
-                  <div className={styles.senderHint}>{mySenderLabel}</div>
-
-                  <textarea
-                    placeholder="Napisz odpowiedź..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    required
-                  />
-
-                  <button type="submit">Wyślij wiadomość</button>
-                </form>
-              );
-            }
-
-            return (
-              <div className={styles.infoBox}>
-                <span className={styles.icon}>🚫</span>
-                <p>Nie możesz odpowiedzieć na tę wiadomość.</p>
+                      <p className={styles.time}>{new Date(msg.createdAt).toLocaleString()}</p>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })()}
 
-          {errorMsg && <p className={styles.error}>{errorMsg}</p>}
+              {/* ✅ BLOKADA / INFOboxy (dopiero po załadowaniu) */}
+              {(() => {
+                const last = messages[messages.length - 1];
+                if (!last) return null;
+
+                if (last.isSystem || receiverId === 'SYSTEM') {
+                  return (
+                    <div className={styles.infoBox}>
+                      <span className={styles.icon}>🔒</span>
+                      <p>Nie możesz odpowiadać na wiadomości systemowe.</p>
+                    </div>
+                  );
+                }
+
+                // jeśli ostatnia jest od Ciebie → blokada i brak formy
+                if (last.fromUid === user.uid) {
+                  return (
+                    <div className={styles.infoBox}>
+                      <span className={styles.icon}>⏳</span>
+                      <p>Wysłałeś/aś wiadomość. Czekasz teraz na odpowiedź drugiej osoby.</p>
+                    </div>
+                  );
+                }
+
+                if (canReply) {
+                  return (
+                    <form onSubmit={handleReply} className={styles.form}>
+                      <div className={styles.senderHint}>{mySenderLabel}</div>
+
+                      <textarea
+                        placeholder="Napisz odpowiedź..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        required
+                      />
+
+                      <button type="submit">Wyślij wiadomość</button>
+                    </form>
+                  );
+                }
+
+                return (
+                  <div className={styles.infoBox}>
+                    <span className={styles.icon}>🚫</span>
+                    <p>Nie możesz odpowiedzieć na tę wiadomość.</p>
+                  </div>
+                );
+              })()}
+
+              {errorMsg && <p className={styles.error}>{errorMsg}</p>}
+            </>
+          )}
         </div>
 
         {/* ✅ FAQ tylko klient */}
-        {showFaq && (
+        {!loading && showFaq && (
           <div className={styles.faqBoxWrapper}>
             <div className={styles.faqBox}>
               <div className={styles.quickAnswers}>
