@@ -21,14 +21,10 @@ app.use('/api/staff', require('./routes/staff'));
 app.use('/api/slots', require('./routes/slots'));
 
 // Połączenie z MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+mongoose.connect(process.env.MONGO_URI)
 .then(async () => {
   console.log('✅ Połączono z MongoDB (SHOWLY)');
 
-  // ⛳️ Upewnij się, że indeksy dla VisitLock (TTL + unique) są założone
   try {
     const VisitLock = require('./models/VisitLock');
     await VisitLock.syncIndexes();
@@ -37,8 +33,6 @@ mongoose.connect(process.env.MONGO_URI, {
     console.error('❌ Błąd synchronizacji indeksów VisitLock:', e);
   }
 
-  // (opcjonalnie) zadbaj też o unikalne indeksy w Profile (slug, userId)
-  // Uwaga: na dużych kolekcjach może to potrwać przy pierwszym uruchomieniu.
   try {
     const Profile = require('./models/Profile');
     await Profile.syncIndexes();
