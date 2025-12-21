@@ -98,6 +98,26 @@ const profileSchema = new mongoose.Schema(
 
     description: String,
     links: [String],
+    contact: {
+      street: { type: String, default: '', trim: true },
+      postcode: { type: String, default: '', trim: true },
+
+      addressFull: { type: String, default: '', trim: true },
+
+      phone: { type: String, default: '', trim: true },
+      email: { type: String, default: '', trim: true, lowercase: true },
+    },
+
+    socials: {
+      website: { type: String, default: '', trim: true },
+      facebook: { type: String, default: '', trim: true },
+      instagram: { type: String, default: '', trim: true },
+      youtube: { type: String, default: '', trim: true },
+      tiktok: { type: String, default: '', trim: true },
+      linkedin: { type: String, default: '', trim: true },
+      x: { type: String, default: '', trim: true },
+    },
+
     profileType: String,
 
     hasBusiness: Boolean,

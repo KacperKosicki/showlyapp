@@ -466,7 +466,8 @@ const allowedFields = [
   'avatar', 'photos', 'profileType', 'location', 'priceFrom', 'priceTo',
   'role', 'availableDates', 'description', 'tags', 'links', 'quickAnswers',
   'showAvailableDates', 'services', 'bookingMode', 'workingHours', 'workingDays',
-  'team', 'theme'
+  'team', 'theme',
+  'contact', 'socials' // ✅ DODAJ
 ];
 
 router.patch('/update/:uid', async (req, res) => {
@@ -474,35 +475,79 @@ router.patch('/update/:uid', async (req, res) => {
     const profile = await Profile.findOne({ userId: req.params.uid });
     if (!profile) return res.status(404).json({ message: 'Nie znaleziono profilu.' });
 
+    // ✅ tu dodaj
+    const updates = { ...req.body };
+
+    // ✅ NORMALIZACJA kontaktu
+if (updates.contact) {
+  const clean = (v) => (v ?? '').toString().trim();
+  const prev = profile.contact?.toObject ? profile.contact.toObject() : (profile.contact || {});
+
+  updates.contact = {
+    ...prev,
+    street: clean(updates.contact.street),
+    postcode: clean(updates.contact.postcode),
+    addressFull: clean(updates.contact.addressFull),
+    phone: clean(updates.contact.phone),
+    email: clean(updates.contact.email).toLowerCase(),
+  };
+
+  profile.set('contact', updates.contact);
+}
+
+if (updates.socials) {
+  const clean = (v) => (v ?? '').toString().trim();
+  const prev = profile.socials?.toObject ? profile.socials.toObject() : (profile.socials || {});
+
+  updates.socials = {
+    ...prev,
+    website: clean(updates.socials.website),
+    facebook: clean(updates.socials.facebook),
+    instagram: clean(updates.socials.instagram),
+    youtube: clean(updates.socials.youtube),
+    tiktok: clean(updates.socials.tiktok),
+    linkedin: clean(updates.socials.linkedin),
+    x: clean(updates.socials.x),
+  };
+
+  profile.set('socials', updates.socials);
+}
+
     // zwykłe pola
-    for (const field of allowedFields) {
-      if (field !== 'team' && field !== 'theme' && req.body[field] !== undefined) {
-        profile[field] = req.body[field];
-      }
-    }
+for (const field of allowedFields) {
+  if (
+    field !== 'team' &&
+    field !== 'theme' &&
+    updates[field] !== undefined
+  ) {
+    profile[field] = updates[field];
+  }
+}
+
+
 
     // ✅ theme – częściowo
-    if (req.body.theme) {
-      if (typeof req.body.theme.variant !== 'undefined') {
-        profile.set('theme.variant', req.body.theme.variant);
+    if (updates.theme) {
+      if (typeof updates.theme.variant !== 'undefined') {
+        profile.set('theme.variant', updates.theme.variant);
       }
-      if (typeof req.body.theme.primary !== 'undefined') {
-        profile.set('theme.primary', req.body.theme.primary);
+      if (typeof updates.theme.primary !== 'undefined') {
+        profile.set('theme.primary', updates.theme.primary);
       }
-      if (typeof req.body.theme.secondary !== 'undefined') {
-        profile.set('theme.secondary', req.body.theme.secondary);
+      if (typeof updates.theme.secondary !== 'undefined') {
+        profile.set('theme.secondary', updates.theme.secondary);
       }
     }
 
     // ✅ team – częściowo
-    if (req.body.team) {
-      if (typeof req.body.team.enabled !== 'undefined') {
-        profile.set('team.enabled', !!req.body.team.enabled);
+    if (updates.team) {
+      if (typeof updates.team.enabled !== 'undefined') {
+        profile.set('team.enabled', !!updates.team.enabled);
       }
-      if (req.body.team.assignmentMode) {
+      if (updates.team.assignmentMode) {
         profile.set(
           'team.assignmentMode',
-          req.body.team.assignmentMode === 'auto-assign' ? 'auto-assign' : 'user-pick'
+          updates.team.assignmentMode === 'auto-assign' ? 'auto-assign' : 'user-pick'
         );
       }
     }
@@ -512,7 +557,6 @@ router.patch('/update/:uid', async (req, res) => {
   } catch (err) {
     console.error('❌ Błąd aktualizacji profilu:', err);
 
-    // ✅ jeżeli to walidacja Mongoose (np. zły HEX)
     if (err?.name === 'ValidationError') {
       return res.status(400).json({
         message: 'Błąd walidacji danych.',
@@ -522,7 +566,6 @@ router.patch('/update/:uid', async (req, res) => {
 
     res.status(500).json({ message: 'Błąd podczas aktualizacji profilu.' });
   }
-
 });
 
 // -----------------------------------------------------------------

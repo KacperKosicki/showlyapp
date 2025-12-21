@@ -8,6 +8,8 @@ import 'react-calendar/dist/Calendar.css';
 import AlertBox from '../AlertBox/AlertBox';
 import { useLocation } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
+import { FaPhoneAlt, FaEnvelope, FaMapMarkedAlt, FaGlobe } from 'react-icons/fa';
+import { FaFacebook, FaInstagram, FaYoutube, FaTiktok, FaLinkedin, FaXTwitter } from 'react-icons/fa6';
 
 const prettyUrl = (url) => {
   try {
@@ -19,6 +21,21 @@ const prettyUrl = (url) => {
   } catch {
     return url;
   }
+};
+
+const normalizePhone = (val = '') => String(val || '').replace(/\s+/g, '').trim();
+
+const buildGoogleMapsLink = (address) => {
+  const a = (address || '').trim();
+  if (!a) return '';
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a)}`;
+};
+
+const ensureUrl = (url = '') => {
+  const u = (url || '').trim();
+  if (!u) return '';
+  if (/^https?:\/\//i.test(u)) return u;
+  return `https://${u}`;
 };
 
 const API = process.env.REACT_APP_API_URL;
@@ -95,9 +112,7 @@ const resolveProfileTheme = (theme) => {
     secondary,
     banner: `linear-gradient(135deg, ${primary}, ${secondary})`,
   };
-
 };
-
 
 const PublicProfile = () => {
   const { slug } = useParams();
@@ -337,7 +352,9 @@ const PublicProfile = () => {
   const {
     name, avatar, role, rating, reviews, location, tags,
     priceFrom = null, priceTo = null, description, links = [],
-    profileType
+    profileType,
+    contact = {},
+    socials = {},
   } = profile;
 
   const themeVars = resolveProfileTheme(profile.theme);
@@ -355,6 +372,30 @@ const PublicProfile = () => {
   const cleanLinks = (links || [])
     .map(l => (l || '').trim())
     .filter(Boolean);
+
+  const contactPhone = normalizePhone(contact?.phone);
+  const contactEmail = (contact?.email || '').trim();
+
+  const fullAddress =
+    (contact?.addressFull || '').trim() ||
+    [location, contact?.street, contact?.postcode]
+      .map(v => (v || '').trim())
+      .filter(Boolean)
+      .join(', ');
+
+  const mapsUrl = buildGoogleMapsLink(fullAddress);
+
+  const socialItems = [
+    { key: 'website', label: 'WWW', icon: <FaGlobe />, url: socials?.website },
+    { key: 'facebook', label: 'Facebook', icon: <FaFacebook />, url: socials?.facebook },
+    { key: 'instagram', label: 'Instagram', icon: <FaInstagram />, url: socials?.instagram },
+    { key: 'youtube', label: 'YouTube', icon: <FaYoutube />, url: socials?.youtube },
+    { key: 'tiktok', label: 'TikTok', icon: <FaTiktok />, url: socials?.tiktok },
+    { key: 'linkedin', label: 'LinkedIn', icon: <FaLinkedin />, url: socials?.linkedin },
+    { key: 'x', label: 'X', icon: <FaXTwitter />, url: socials?.x },
+  ]
+    .map(s => ({ ...s, url: ensureUrl(s.url) }))
+    .filter(s => !!s.url);
 
   return (
     <div style={cssVars}>
@@ -700,44 +741,171 @@ const PublicProfile = () => {
         </section>
       )}
 
-      {profile.services?.length > 0 && (
-        <section className={styles.servicesBox} id="services">
-          <div className={styles.servicesBanner}>
-            <div className={styles.bannerOverlay}></div>
-            <div className={styles.bannerContent}>
-              <h3 className={styles.bannerTitle}>Usługi profilu {name}</h3>
-              <p className={styles.bannerDesc}>
-                Wybierz coś dla siebie — nazwa usługi oraz czas jej realizacji poniżej!
-              </p>
+      {(profile.services?.length > 0 || contact || socials) && (
+        <section className={styles.bottomRow} id="services">
+          {/* ===== USŁUGI ===== */}
+          {profile.services?.length > 0 && (
+            <div className={styles.servicesBox}>
+              <div className={styles.servicesBanner}>
+                <div className={styles.bannerOverlay}></div>
+                <div className={styles.bannerContent}>
+                  <h3 className={styles.bannerTitle}>Usługi profilu {name}</h3>
+                  <p className={styles.bannerDesc}>
+                    Wybierz coś dla siebie — nazwa usługi oraz czas jej realizacji poniżej!
+                  </p>
+                </div>
+
+                <svg
+                  className={styles.bannerWave}
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 1440 320"
+                  preserveAspectRatio="none"
+                >
+                  <path
+                    fill="#ffffff"
+                    d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"
+                  />
+                </svg>
+              </div>
+
+              <div className={styles.servicesBody}>
+                <ul className={styles.servicesList}>
+                  {profile.services.map((s, i) => (
+                    <li key={i}>
+                      <span className={styles.serviceName}>{s.name}</span>
+                      <span className={styles.serviceDuration}>
+                        — {s.duration.value} {mapUnit(s.duration.unit)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* ===== INFORMACJE PROFILU ===== */}
+          <div className={styles.profileInfoBox}>
+            <div className={styles.profileInfoBanner}>
+              <div className={styles.bannerOverlay}></div>
+              <div className={styles.bannerContent}>
+                <h3 className={styles.bannerTitle}>Informacje profilu {name}</h3>
+                <p className={styles.bannerDesc}>
+                  Dane kontaktowe i social media — kliknij, aby przejść lub skontaktować się.
+                </p>
+              </div>
+
+              <svg
+                className={styles.bannerWave}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 1440 320"
+                preserveAspectRatio="none"
+              >
+                <path
+                  fill="#ffffff"
+                  d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"
+                />
+              </svg>
             </div>
 
-            <svg
-              className={styles.bannerWave}
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 1440 320"
-              preserveAspectRatio="none"
-            >
-              <path
-                fill="#ffffff"
-                d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"
-              />
-            </svg>
-          </div>
-
-          <div className={styles.servicesBody}>
-            <ul className={styles.servicesList}>
-              {profile.services.map((s, i) => (
-                <li key={i}>
-                  <span className={styles.serviceName}>{s.name}</span>
-                  <span className={styles.serviceDuration}>
-                    — {s.duration.value} {mapUnit(s.duration.unit)}
+            <div className={styles.profileInfoBody}>
+              <ul className={styles.contactList}>
+                <li className={styles.contactRow}>
+                  <span className={styles.contactLeft}>
+                    <FaMapMarkedAlt className={styles.contactIcon} />
+                    <span className={styles.contactLabel}>Adres</span>
                   </span>
+
+                  {fullAddress ? (
+                    <a
+                      className={styles.contactValueLink}
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {fullAddress}
+                    </a>
+                  ) : (
+                    <span className={styles.contactValueMuted}>Brak danych</span>
+                  )}
                 </li>
-              ))}
-            </ul>
+
+                <li className={styles.contactRow}>
+                  <span className={styles.contactLeft}>
+                    <FaPhoneAlt className={styles.contactIcon} />
+                    <span className={styles.contactLabel}>Telefon</span>
+                  </span>
+
+                  {contactPhone ? (
+                    <a className={styles.contactValueLink} href={`tel:${contactPhone}`}>
+                      {contact.phone}
+                    </a>
+                  ) : (
+                    <span className={styles.contactValueMuted}>Brak danych</span>
+                  )}
+                </li>
+
+                <li className={styles.contactRow}>
+                  <span className={styles.contactLeft}>
+                    <FaEnvelope className={styles.contactIcon} />
+                    <span className={styles.contactLabel}>E-mail</span>
+                  </span>
+
+                  {contactEmail ? (
+                    <a className={styles.contactValueLink} href={`mailto:${contactEmail}`}>
+                      {contactEmail}
+                    </a>
+                  ) : (
+                    <span className={styles.contactValueMuted}>Brak danych</span>
+                  )}
+                </li>
+              </ul>
+
+              <div className={styles.infoDivider} />
+
+              {socialItems.length > 0 ? (
+                <div className={styles.socialGrid}>
+                  {socialItems.map((s) => (
+                    <a
+                      key={s.key}
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.socialTile}
+                      title={s.label}
+                      aria-label={s.label}
+                    >
+                      <span className={styles.socialIcon}>{s.icon}</span>
+                      <span className={styles.socialLabel}>{s.label}</span>
+                    </a>
+                  ))}
+                </div>
+              ) : (
+                <p className={styles.infoEmpty}>Brak social mediów.</p>
+              )}
+
+              {cleanLinks.length > 0 && (
+                <>
+                  <div className={styles.infoDivider} />
+                  <div className={styles.infoLinksGrid}>
+                    {cleanLinks.map((link, i) => (
+                      <a
+                        key={`${link}-${i}`}
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.infoLinkPill}
+                      >
+                        {prettyUrl(link)}
+                      </a>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </section>
       )}
+
     </div>
   );
 };

@@ -2353,3 +2353,80 @@
     font-size: 1.45rem;
   }
 }
+
+.contactGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.contactField label,
+.socialField label {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-weight: 800;
+  margin-bottom: .35rem;
+
+  svg {
+    color: $primary-color;
+  }
+}
+
+.contactView {
+  list-style: none;
+  padding: 0;
+  margin: .35rem 0 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .6rem;
+}
+
+.contactItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .65rem .9rem;
+  background: linear-gradient(180deg, #fafbfd 0%, #f6f7f9 100%);
+  border: 1px solid #e9ecf1;
+  border-radius: .9rem;
+}
+
+.contactLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  font-weight: 800;
+
+  svg { color: $primary-color; }
+}
+
+.contactValue {
+  font-weight: 800;
+  color: $text-color;
+  opacity: .9;
+  text-align: right;
+  word-break: break-word;
+}
+
+.socialGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.socialPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: .35rem;
+}

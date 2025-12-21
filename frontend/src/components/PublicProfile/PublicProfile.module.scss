@@ -12,6 +12,15 @@
   color: #fff;
   text-align: center;
   overflow: hidden;
+  font-family: $font-body;
+
+    .bannerTitle {
+    font-family: $font-heading;
+  }
+
+    .bannerDesc {
+    font-family: $font-accent;
+  }
 
   display: grid;
   place-items: center;
@@ -1138,3 +1147,210 @@ $container-max: calc(#{$card-max} + #{$reviews-max} + #{$cols-gap}); // ≈ 1180
     transition: color .18s;
   }
 }
+
+/* ===== DOLNY RZĄD: USŁUGI + INFORMACJE ===== */
+.bottomRow {
+  max-width: $container-max;
+  width: calc(100% - 2rem);
+  margin: 3rem auto 2.5rem;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+
+  @media (max-width: 900px) {
+    max-width: 700px;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin: 2rem auto;
+  }
+}
+
+/* żeby Twoje obecne .servicesBox dalej wyglądało identycznie w gridzie */
+.bottomRow .servicesBox {
+  margin: 0; /* bo wrapper już daje margines */
+  width: 100%;
+}
+
+/* ===== INFO BOX (kopiuje styl boxów) ===== */
+.profileInfoBox {
+  border: 1px solid #ccc;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .08);
+  overflow: hidden;
+}
+
+.profileInfoBanner {
+  @include bannerBase;
+}
+
+.profileInfoBody {
+  padding: 1.75rem clamp(1rem, 4vw, 1.75rem);
+  background: #fff;
+}
+
+/* divider w środku info */
+.infoDivider {
+  height: 1px;
+  background: #eee;
+  width: 100%;
+  margin: 1.25rem 0;
+}
+
+.infoEmpty {
+  text-align: center;
+  color: var(--text-muted, #888);
+  margin: 0;
+}
+
+/* ===== CONTACT LIST ===== */
+.contactList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: .85rem;
+}
+
+.contactRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+
+  background: linear-gradient(135deg, #ffffff, #f9f9f9);
+  border: 1px solid #e8e8e8;
+  border-radius: 1rem;
+  padding: .85rem 1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .03);
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .4rem;
+  }
+}
+
+.contactLeft {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  min-width: 0;
+}
+
+.contactIcon {
+  color: var(--pp-primary, #6f4ef2);
+  font-size: 1.05rem;
+  flex: 0 0 auto;
+}
+
+.contactLabel {
+  font-family: $font-accent;
+  color: $color-gray;
+  font-size: .9rem;
+  white-space: nowrap;
+}
+
+.contactValueLink {
+  font-family: $font-heading;
+  color: var(--pp-primary, #6f4ef2);
+  font-size: .95rem;
+  text-decoration: none;
+  text-align: right;
+  word-break: break-word;
+
+  &:hover {
+    color: #fff;
+    background: var(--pp-primary, #6f4ef2);
+    padding: .2rem .55rem;
+    border-radius: 999px;
+  }
+
+  @media (max-width: 480px) {
+    text-align: left;
+  }
+}
+
+.contactValueMuted {
+  color: var(--text-muted, #888);
+  font-size: .95rem;
+}
+
+/* ===== SOCIAL GRID ===== */
+.socialGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .8rem;
+
+  @media (max-width: 520px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.socialTile {
+  border: 1px solid #e8e8e8;
+  background: linear-gradient(135deg, #ffffff, #f9f9f9);
+  border-radius: 1rem;
+  padding: .85rem .7rem;
+  text-decoration: none;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .03);
+  transition: transform .2s ease, border-color .2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--pp-primary, #6f4ef2);
+  }
+}
+
+.socialIcon {
+  font-size: 1.25rem;
+  color: $color-gray;
+}
+
+.socialLabel {
+  font-size: .88rem;
+  color: $color-gray;
+  font-family: $font-accent;
+  text-align: center;
+}
+
+/* ===== linki jako pigułki w info ===== */
+.infoLinksGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: center;
+}
+
+.infoLinkPill {
+  font-family: $font-accent; /* albo $font-body jeśli chcesz bardziej neutralnie */
+  background-color: rgba(0, 0, 0, 0.03);
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  color: var(--pp-primary, #6f4ef2);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: background 0.2s;
+
+  &:hover {
+    background-color: var(--pp-primary, #6f4ef2);
+    color: #fff;
+  }
+}
+
+.profileInfoBox,
+.profileInfoBody {
+  font-family: $font-body;
+}
+
+
