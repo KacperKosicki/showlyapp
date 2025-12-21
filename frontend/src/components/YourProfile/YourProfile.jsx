@@ -331,7 +331,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const openAddPhotoPicker = () => {
     const current = (editData.photos || []).length;
     if (current >= MAX_PHOTOS) {
-      showAlert('Można dodać maksymalnie ${MAX_PHOTOS} zdjęć.', 'warning');
+      showAlert(`Można dodać maksymalnie ${MAX_PHOTOS} zdjęć.`, 'warning');
       return;
     }
     addPhotoInputRef.current?.click();

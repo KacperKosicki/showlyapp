@@ -25,7 +25,7 @@ const API = process.env.REACT_APP_API_URL;
 
 const normalizeAvatar = (val = '') => {
   const v = String(val || '').trim();
-  if (!v) return '';
+  if (!v) return v;
 
   // ✅ obsługa base64/DataURL (Twoje avatary z uploadu)
   if (v.startsWith('data:image/')) return v;
@@ -43,7 +43,7 @@ const normalizeAvatar = (val = '') => {
   // jeśli wygląda jak domena/URL bez protokołu -> dodaj https
   if (/^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(v)) return `https://${v}`;
 
-  return '';
+  return v;
 };
 
 // === blokada body bez „skoku” strony ===
@@ -311,9 +311,10 @@ const PublicProfile = () => {
 
   const {
     name, avatar, role, rating, reviews, location, tags,
-    priceFrom, priceTo = [], description, links = [],
+    priceFrom = null, priceTo = null, description, links = [],
     profileType
   } = profile;
+
 
   const hasGallery = Array.isArray(profile.photos) && profile.photos.length > 0;
   const hasServices = Array.isArray(profile.services) && profile.services.length > 0;
@@ -408,16 +409,13 @@ const PublicProfile = () => {
           )}
 
           <div className={styles.details}>
-            {priceFrom && priceTo ? (
+            {typeof priceFrom === 'number' && typeof priceTo === 'number' ? (
               <p className={styles.price}>
                 Cennik od <strong>{priceFrom} zł</strong> do <strong>{priceTo} zł</strong>
               </p>
             ) : (
-              <p className={styles.price}>
-                <em>Cennik: brak danych</em>
-              </p>
+              <p className={styles.price}><em>Cennik: brak danych</em></p>
             )}
-
             {cleanLinks.length > 0 ? (
               <ul className={styles.links}>
                 {cleanLinks.map((link, i) => (
@@ -589,15 +587,23 @@ const PublicProfile = () => {
 
           <div className={styles.galleryBody}>
             <div className={styles.galleryGrid}>
-              {profile.photos.map((url, i) => (
-                <div
-                  key={i}
-                  className={styles.galleryItem}
-                  onClick={() => openLightbox(url)}
-                >
-                  <img src={url} alt={`Zdjęcie ${i + 1}`} />
-                </div>
-              ))}
+              {profile.photos.map((url, i) => {
+                const src = normalizeAvatar(url) || url;
+                return (
+                  <div
+                    key={i}
+                    className={styles.galleryItem}
+                    onClick={() => openLightbox(src)}
+                  >
+                    <img
+                      src={src}
+                      alt={`Zdjęcie ${i + 1}`}
+                      onError={(e) => { e.currentTarget.src = '/images/other/no-image.png'; }}
+                    />
+                  </div>
+                );
+              })}
+
             </div>
           </div>
 
