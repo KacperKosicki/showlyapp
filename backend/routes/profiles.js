@@ -121,10 +121,9 @@ router.get('/by-user/:uid', async (req, res) => {
       return res.status(404).json({ message: 'Brak wizytówki dla tego użytkownika.' });
     }
 
-const baseAvatar = profile.avatar ? toPublicUrl(req, profile.avatar) : '';
-const v = profile.updatedAt ? new Date(profile.updatedAt).getTime() : Date.now();
-const avatar = withCacheBust(baseAvatar, v);
-
+    const baseAvatar = profile.avatar ? toPublicUrl(req, profile.avatar) : '';
+    const v = profile.updatedAt ? new Date(profile.updatedAt).getTime() : Date.now();
+    const avatar = withCacheBust(baseAvatar, v);
 
     return res.json({
       ...profile,
@@ -153,46 +152,46 @@ router.get('/slug/:slug', async (req, res) => {
     const viewerUid = req.headers.uid || null;
 
     // 🔧 NORMALIZACJA avatarów w opiniach
-let ratedBy = Array.isArray(profile.ratedBy) ? profile.ratedBy : [];
+    let ratedBy = Array.isArray(profile.ratedBy) ? profile.ratedBy : [];
 
-// firebaseUid autorów opinii
-const ids = [...new Set(ratedBy.map(r => r.userId).filter(Boolean))];
+    // firebaseUid autorów opinii
+    const ids = [...new Set(ratedBy.map(r => r.userId).filter(Boolean))];
 
-// mapa: uid -> { avatar, updatedAt }
-let usersMap = {};
-if (ids.length) {
-  const users = await User.find({ firebaseUid: { $in: ids } })
-    .select('firebaseUid avatar updatedAt')
-    .lean();
+    // mapa: uid -> { avatar, updatedAt }
+    let usersMap = {};
+    if (ids.length) {
+      const users = await User.find({ firebaseUid: { $in: ids } })
+        .select('firebaseUid avatar updatedAt')
+        .lean();
 
-  usersMap = users.reduce((acc, u) => {
-    acc[u.firebaseUid] = {
-      avatar: u.avatar || '',
-      updatedAt: u.updatedAt || null
-    };
-    return acc;
-  }, {});
-}
+      usersMap = users.reduce((acc, u) => {
+        acc[u.firebaseUid] = {
+          avatar: u.avatar || '',
+          updatedAt: u.updatedAt || null
+        };
+        return acc;
+      }, {});
+    }
 
-// avatar ZAWSZE z Users (fallback: snapshot)
-ratedBy = ratedBy.map(r => {
-  const u = usersMap[r.userId];
-  const picked = u?.avatar || r.userAvatar || '';
-  const v = u?.updatedAt ? new Date(u.updatedAt).getTime() : null;
+    // avatar ZAWSZE z Users (fallback: snapshot)
+    ratedBy = ratedBy.map(r => {
+      const u = usersMap[r.userId];
+      const picked = u?.avatar || r.userAvatar || '';
+      const v = u?.updatedAt ? new Date(u.updatedAt).getTime() : null;
 
-  const base = picked ? toPublicUrl(req, picked) : '';
-  const userAvatar = v ? withCacheBust(base, v) : base;
+      const base = picked ? toPublicUrl(req, picked) : '';
+      const userAvatar = v ? withCacheBust(base, v) : base;
 
-  return {
-    ...r,
-    userAvatar,
-  };
-});
+      return {
+        ...r,
+        userAvatar,
+      };
+    });
 
 
-const baseAvatar = profile.avatar ? toPublicUrl(req, profile.avatar) : '';
-const v = profile.updatedAt ? new Date(profile.updatedAt).getTime() : Date.now();
-const avatar = withCacheBust(baseAvatar, v);
+    const baseAvatar = profile.avatar ? toPublicUrl(req, profile.avatar) : '';
+    const v = profile.updatedAt ? new Date(profile.updatedAt).getTime() : Date.now();
+    const avatar = withCacheBust(baseAvatar, v);
 
     const photos = Array.isArray(profile.photos) ? profile.photos.map((p) => toPublicUrl(req, p)) : profile.photos;
 
@@ -467,7 +466,7 @@ const allowedFields = [
   'avatar', 'photos', 'profileType', 'location', 'priceFrom', 'priceTo',
   'role', 'availableDates', 'description', 'tags', 'links', 'quickAnswers',
   'showAvailableDates', 'services', 'bookingMode', 'workingHours', 'workingDays',
-  'team'
+  'team', 'theme'
 ];
 
 router.patch('/update/:uid', async (req, res) => {
@@ -477,12 +476,25 @@ router.patch('/update/:uid', async (req, res) => {
 
     // zwykłe pola
     for (const field of allowedFields) {
-      if (field !== 'team' && req.body[field] !== undefined) {
+      if (field !== 'team' && field !== 'theme' && req.body[field] !== undefined) {
         profile[field] = req.body[field];
       }
     }
 
-    // team – częściowe ustawienia
+    // ✅ theme – częściowo
+    if (req.body.theme) {
+      if (typeof req.body.theme.variant !== 'undefined') {
+        profile.set('theme.variant', req.body.theme.variant);
+      }
+      if (typeof req.body.theme.primary !== 'undefined') {
+        profile.set('theme.primary', req.body.theme.primary);
+      }
+      if (typeof req.body.theme.secondary !== 'undefined') {
+        profile.set('theme.secondary', req.body.theme.secondary);
+      }
+    }
+
+    // ✅ team – częściowo
     if (req.body.team) {
       if (typeof req.body.team.enabled !== 'undefined') {
         profile.set('team.enabled', !!req.body.team.enabled);
@@ -499,8 +511,18 @@ router.patch('/update/:uid', async (req, res) => {
     res.json({ message: 'Profil zaktualizowany', profile });
   } catch (err) {
     console.error('❌ Błąd aktualizacji profilu:', err);
+
+    // ✅ jeżeli to walidacja Mongoose (np. zły HEX)
+    if (err?.name === 'ValidationError') {
+      return res.status(400).json({
+        message: 'Błąd walidacji danych.',
+        details: Object.values(err.errors || {}).map(e => e.message)
+      });
+    }
+
     res.status(500).json({ message: 'Błąd podczas aktualizacji profilu.' });
   }
+
 });
 
 // -----------------------------------------------------------------

@@ -8,7 +8,7 @@
 
   position: relative;
   height: 220px;
-  background: linear-gradient(135deg, #6f4ef2, #ff4081);
+  background: var(--pp-banner, linear-gradient(135deg, #6f4ef2, #ff4081));
   color: #fff;
   text-align: center;
   overflow: hidden;
@@ -231,7 +231,7 @@
   height: 34px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
   border: 2px solid #fff;
 }
 
@@ -294,7 +294,7 @@
   color: #444;
   line-height: 1.45;
   padding-left: .7rem;
-  border-left: 3px solid $primary-color;
+  border-left: 3px solid var(--pp-primary, #6f4ef2);
   margin-top: .2rem;
   word-break: break-word;
   white-space: pre-wrap;
@@ -317,7 +317,8 @@
 
   .reviewsList {
     display: flex;
-    flex-direction: row !important;   /* ⬅️ KLUCZ: wymuś poziomo */
+    flex-direction: row !important;
+    /* ⬅️ KLUCZ: wymuś poziomo */
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     gap: 1rem;
@@ -326,13 +327,18 @@
     -webkit-overflow-scrolling: touch;
     scroll-padding: 1rem;
 
-    &::-webkit-scrollbar { display: none; }
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   .reviewItem {
-    flex: 0 0 auto;    /* nie pozwól się ściskać */
-    width: 85%;        /* szerokość karty jak w galerii */
-    min-width: 85%;    /* „anty-ściśnięcie” w Safari/Chrome */
+    flex: 0 0 auto;
+    /* nie pozwól się ściskać */
+    width: 85%;
+    /* szerokość karty jak w galerii */
+    min-width: 85%;
+    /* „anty-ściśnięcie” w Safari/Chrome */
     scroll-snap-align: center;
     padding: 0.9rem 1rem;
   }
@@ -403,7 +409,7 @@
     font-size: 1rem;
 
     svg {
-      color: $primary-color;
+      color: var(--pp-primary, #6f4ef2);
       font-size: 1.2rem;
     }
   }
@@ -427,7 +433,7 @@
   object-fit: cover;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   margin-bottom: 1rem;
-  border: 4px solid $primary-color;
+  border: 4px solid var(--pp-primary, #6f4ef2);
 }
 
 .info {
@@ -459,8 +465,8 @@
   margin: 2rem 0 1rem;
 
   .tag {
-    border: 1px solid $primary-color;
-    color: $primary-color;
+    border: 1px solid var(--pp-primary, #6f4ef2);
+    color: var(--pp-primary, #6f4ef2);
     font-family: $font-accent;
     font-size: 0.86rem; // było 0.74rem → wyraźnie większe
     padding: 0.6rem 1.2rem; // więcej „powietrza”
@@ -471,8 +477,8 @@
     cursor: pointer;
 
     &:hover {
-      background-color: $primary-color;
-      color: white;
+      background-color: var(--pp-primary, #6f4ef2);
+      color: #fff;
     }
   }
 }
@@ -494,14 +500,14 @@
     margin-bottom: 1.5rem;
 
     strong {
-      color: $secondary-color;
+      color: var(--pp-secondary, #ff4081);
     }
   }
 
   .calendarToggle {
     background: none;
     border: none;
-    color: $primary-color;
+    color: var(--pp-primary, #6f4ef2);
     font-size: 0.95rem;
     margin-top: 0.3rem;
     cursor: pointer;
@@ -527,14 +533,14 @@
         background-color: rgba(0, 0, 0, 0.03);
         padding: 0.4rem 0.8rem;
         border-radius: 1.5rem;
-        color: $primary-color;
+        color: var(--pp-primary, #6f4ef2);
         font-size: 0.85rem;
         text-decoration: none;
         transition: background 0.2s;
 
         &:hover {
-          background-color: $primary-color;
-          color: white;
+          background-color: var(--pp-primary, #6f4ef2);
+          color: #fff;
         }
       }
     }
@@ -597,7 +603,7 @@
 
 .sendButton {
   margin-top: 1rem;
-  background-color: $primary-color;
+  background-color: var(--pp-primary, #6f4ef2);
   color: white;
   border: none;
   padding: 0.6rem 1.2rem;
@@ -606,7 +612,7 @@
   cursor: pointer;
 
   &:hover {
-    background-color: darken($primary-color, 10%);
+    filter: brightness(0.92);
   }
 }
 
@@ -727,8 +733,10 @@
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 10;
-  overflow: visible;          /* było: hidden – cień ma wyjść poza kontener */
-  border-radius: 0;           /* zaokrąglenie damy na img */
+  overflow: visible;
+  /* było: hidden – cień ma wyjść poza kontener */
+  border-radius: 0;
+  /* zaokrąglenie damy na img */
   cursor: pointer;
   transition: transform .25s ease;
 }
@@ -744,18 +752,20 @@
   clip-path: inset(0 round 1rem);
 
   /* prawdziwy cień na obrazie */
-  filter: drop-shadow(0 6px 16px rgba(0,0,0,.12));
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, .12));
   transition: transform .4s ease, filter .2s ease;
   will-change: transform, filter;
 }
 
 .galleryItem:hover img {
   transform: scale(1.05);
-  filter: drop-shadow(0 12px 28px rgba(0,0,0,.18));
+  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, .18));
 }
 
 /* nie potrzebujemy cienia na kontenerze */
-.galleryItem:hover { box-shadow: none; }
+.galleryItem:hover {
+  box-shadow: none;
+}
 
 @media (max-width: 768px) {
   .galleryItem {
@@ -877,14 +887,13 @@
     }
 
     .serviceName {
-      //font-weight: 600;
-      color: $primary-color;
+      color: var(--pp-primary, #6f4ef2);
       font-family: $font-heading;
     }
 
     .serviceDuration {
       font-size: 0.85rem;
-      color: $secondary-color;
+      color: var(--pp-secondary, #ff4081);
       font-family: $font-accent;
     }
   }
@@ -1039,10 +1048,12 @@ $container-max: calc(#{$card-max} + #{$reviews-max} + #{$cols-gap}); // ≈ 1180
 .card {
   --pad-y: 2rem;
   --pad-x: 1.5rem;
-  --pad: 1.5rem;            /* DODANE: używane przez pasek/meta */
+  --pad: 1.5rem;
+  /* DODANE: używane przez pasek/meta */
   position: relative;
   padding: var(--pad-y) var(--pad-x);
-  padding-bottom: calc(var(--pad-y) + 32px); /* miejsce na bottomMeta */
+  padding-bottom: calc(var(--pad-y) + 32px);
+  /* miejsce na bottomMeta */
   /* ...reszta bez zmian... */
 }
 
@@ -1062,9 +1073,18 @@ $container-max: calc(#{$card-max} + #{$reviews-max} + #{$cols-gap}); // ≈ 1180
   align-items: center;
   gap: 0.4rem;
   font-size: 0.9rem;
-  svg { color: $primary-color; font-size: 1rem; }
-  span { color: $text-color; }
-  strong { color: $secondary-color; font-weight: 700; }
+
+  svg {
+    color: var(--pp-primary, #6f4ef2);
+  }
+
+  span {
+    color: $text-color;
+  }
+
+  strong {
+    color: var(--pp-secondary, #ff4081);
+  }
 }
 
 .favoritesBtn {
@@ -1072,8 +1092,8 @@ $container-max: calc(#{$card-max} + #{$reviews-max} + #{$cols-gap}); // ≈ 1180
   align-items: center;
   gap: 0.5rem;
   background: #fff;
-  border: 1px solid $primary-color;
-  color: $primary-color;
+  border: 1px solid var(--pp-primary, #6f4ef2);
+  color: var(--pp-primary, #6f4ef2);
   border-radius: 999px;
   padding: 0.35rem 0.75rem;
   font-size: 0.9rem;
@@ -1081,20 +1101,40 @@ $container-max: calc(#{$card-max} + #{$reviews-max} + #{$cols-gap}); // ≈ 1180
   cursor: pointer;
   transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.15s ease;
 
-  &:hover, &:focus {
-    background: $primary-color;
+  &:hover,
+  &:focus {
+    background: var(--pp-primary, #6f4ef2);
     color: #fff;
-    .heart, .heartFilled { color: #fff; }
+
+    .heart,
+    .heartFilled {
+      color: #fff;
+    }
   }
 
   &.active {
-    background: $primary-color;
+    background: var(--pp-primary, #6f4ef2);
     color: #fff;
-    border-color: $primary-color;
-    .heartFilled { color: #fff; }
-    &:hover { background: darken($primary-color, 8%); transform: scale(1.05); }
+    border-color: var(--pp-primary, #6f4ef2);
+
+    .heart,
+    .heartFilled {
+      color: #fff;
+    }
+
+    &:hover {
+      filter: brightness(0.92);
+      transform: scale(1.05);
+    }
   }
 
-  .favLabel { white-space: nowrap; }
-  .heart, .heartFilled { font-size: 1rem; color: $primary-color; transition: color 0.18s; }
+  .favLabel {
+    white-space: nowrap;
+  }
+
+  .heart,
+  .heartFilled {
+    color: var(--pp-primary, #6f4ef2);
+    transition: color .18s;
+  }
 }

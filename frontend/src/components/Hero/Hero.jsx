@@ -30,7 +30,7 @@ const Hero = ({ user, setUser, refreshTrigger, unreadCount, setUnreadCount, pend
               className={styles.ctaButton}
               aria-label="Przejdź do profilu"
             >
-              Przejdź do profilu
+              Przejdź do edycji profilu
             </Link>
           ) : (
             <Link

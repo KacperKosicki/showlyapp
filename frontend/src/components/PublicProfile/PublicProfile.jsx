@@ -74,6 +74,31 @@ const unlockBodyScroll = () => {
   });
 };
 
+const THEME_PRESETS = {
+  violet: { primary: '#6f4ef2', secondary: '#ff4081' },
+  blue: { primary: '#2563eb', secondary: '#06b6d4' },
+  green: { primary: '#22c55e', secondary: '#a3e635' },
+  orange: { primary: '#f97316', secondary: '#facc15' },
+  red: { primary: '#ef4444', secondary: '#fb7185' },
+  dark: { primary: '#111827', secondary: '#4b5563' },
+};
+
+const resolveProfileTheme = (theme) => {
+  const variant = theme?.variant || 'violet';
+  const preset = THEME_PRESETS[variant] || THEME_PRESETS.violet;
+
+  const primary = (theme?.primary || theme?.accent || '').trim() || preset.primary;
+  const secondary = (theme?.secondary || theme?.accent2 || '').trim() || preset.secondary;
+
+  return {
+    primary,
+    secondary,
+    banner: `linear-gradient(135deg, ${primary}, ${secondary})`,
+  };
+
+};
+
+
 const PublicProfile = () => {
   const { slug } = useParams();
   const [profile, setProfile] = useState(null);
@@ -315,6 +340,13 @@ const PublicProfile = () => {
     profileType
   } = profile;
 
+  const themeVars = resolveProfileTheme(profile.theme);
+
+  const cssVars = {
+    '--pp-primary': themeVars.primary,
+    '--pp-secondary': themeVars.secondary,
+    '--pp-banner': themeVars.banner,
+  };
 
   const hasGallery = Array.isArray(profile.photos) && profile.photos.length > 0;
   const hasServices = Array.isArray(profile.services) && profile.services.length > 0;
@@ -325,7 +357,7 @@ const PublicProfile = () => {
     .filter(Boolean);
 
   return (
-    <>
+    <div style={cssVars}>
       <div
         id="profileWrapper"
         className={`${styles.profileWrapper} ${needsBottomSpace ? styles.spaciousBottom : ''}`}
@@ -353,9 +385,13 @@ const PublicProfile = () => {
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 1440 320"
               preserveAspectRatio="none"
-              style={{ display: 'block', transform: 'translateZ(0)' }}   // anty-hairline
+              style={{ display: 'block', transform: 'translateZ(0)' }}
             >
-              <path fill="#ffffff" stroke="none" d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z" />
+              <path
+                fill="#ffffff"
+                stroke="none"
+                d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"
+              />
             </svg>
           </div>
 
@@ -366,7 +402,9 @@ const PublicProfile = () => {
             </div>
             <div className={styles.rating}>
               <FaStar />
-              <span>{rating} <small>({reviews})</small></span>
+              <span>
+                {rating} <small>({reviews})</small>
+              </span>
             </div>
           </div>
 
@@ -375,7 +413,9 @@ const PublicProfile = () => {
               src={normalizeAvatar(avatar) || '/images/other/no-image.png'}
               alt={name}
               className={styles.avatar}
-              onError={(e) => { e.currentTarget.src = '/images/other/no-image.png'; }}
+              onError={(e) => {
+                e.currentTarget.src = '/images/other/no-image.png';
+              }}
             />
 
             <div className={styles.info}>
@@ -385,6 +425,7 @@ const PublicProfile = () => {
                 {profileType === 'serwis' && 'Serwis'}
                 {profileType === 'społeczność' && 'Społeczność'}
               </span>
+
               <h2>{name}</h2>
               <p className={styles.role}>{role}</p>
 
@@ -402,8 +443,10 @@ const PublicProfile = () => {
 
           {tags?.length > 0 && (
             <div className={styles.tags}>
-              {tags.map(tag => (
-                <span key={tag} className={styles.tag}>{tag.toUpperCase()}</span>
+              {tags.map((tag) => (
+                <span key={tag} className={styles.tag}>
+                  {tag.toUpperCase()}
+                </span>
               ))}
             </div>
           )}
@@ -414,13 +457,21 @@ const PublicProfile = () => {
                 Cennik od <strong>{priceFrom} zł</strong> do <strong>{priceTo} zł</strong>
               </p>
             ) : (
-              <p className={styles.price}><em>Cennik: brak danych</em></p>
+              <p className={styles.price}>
+                <em>Cennik: brak danych</em>
+              </p>
             )}
+
             {cleanLinks.length > 0 ? (
               <ul className={styles.links}>
                 {cleanLinks.map((link, i) => (
                   <li key={`${link}-${i}`}>
-                    <a href={link} target="_blank" rel="noopener noreferrer" title={link}>
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={link}
+                    >
                       {prettyUrl(link)}
                     </a>
                   </li>
@@ -430,13 +481,13 @@ const PublicProfile = () => {
               <p className={styles.noLinks}>Użytkownik nie dodał jeszcze żadnych linków.</p>
             )}
 
-
             {!isOwner && (
               <div className={styles.ratingSection}>
                 <div className={styles.separator} />
                 <p>{hasRated ? 'Oceniłeś/aś już ten profil:' : 'Oceń ten profil:'}</p>
+
                 <div className={styles.stars}>
-                  {[1, 2, 3, 4, 5].map(val => (
+                  {[1, 2, 3, 4, 5].map((val) => (
                     <FaStar
                       key={val}
                       className={
@@ -459,9 +510,7 @@ const PublicProfile = () => {
                       value={comment}
                       onChange={(e) => {
                         const text = e.target.value;
-                        if (text.length <= maxChars) {
-                          setComment(text);
-                        }
+                        if (text.length <= maxChars) setComment(text);
                       }}
                     />
 
@@ -483,7 +532,9 @@ const PublicProfile = () => {
           <div className={styles.bottomMeta}>
             <div className={styles.visits}>
               <FaRegEye />
-              <span>Ten profil odwiedzono <strong>{profile?.visits ?? 0}</strong> razy</span>
+              <span>
+                Ten profil odwiedzono <strong>{profile?.visits ?? 0}</strong> razy
+              </span>
             </div>
 
             <button
@@ -496,10 +547,13 @@ const PublicProfile = () => {
               <span className={styles.favLabel}>
                 Ulubione: <strong>{favCount}</strong>
               </span>
-              {isFav ? <FaHeart className={styles.heartFilled} /> : <FaRegHeart className={styles.heart} />}
+              {isFav ? (
+                <FaHeart className={styles.heartFilled} />
+              ) : (
+                <FaRegHeart className={styles.heart} />
+              )}
             </button>
           </div>
-
         </div>
 
         <div className={styles.reviewsBox}>
@@ -509,8 +563,17 @@ const PublicProfile = () => {
               <h3 className={styles.bannerTitle}>Opinie profilu {name}</h3>
               <p className={styles.bannerDesc}>Sprawdź, co inni sądzą o tym profilu!</p>
             </div>
-            <svg className={styles.bannerWave} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
-              <path fill="#ffffff" d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z" />
+
+            <svg
+              className={styles.bannerWave}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 1440 320"
+              preserveAspectRatio="none"
+            >
+              <path
+                fill="#ffffff"
+                d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"
+              />
             </svg>
           </div>
 
@@ -519,10 +582,15 @@ const PublicProfile = () => {
               <ul className={styles.reviewsList}>
                 {profile.ratedBy.map((op, i) => {
                   const ratingVal = Number(op.rating);
-                  const avatarSrc = normalizeAvatar(op.userAvatar) || '/images/other/no-image.png';
+                  const avatarSrc =
+                    normalizeAvatar(op.userAvatar) || '/images/other/no-image.png';
 
                   const dateLabel = op.createdAt
-                    ? new Date(op.createdAt).toLocaleDateString('pl-PL', { year: 'numeric', month: 'short', day: 'numeric' })
+                    ? new Date(op.createdAt).toLocaleDateString('pl-PL', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })
                     : '';
 
                   return (
@@ -535,19 +603,27 @@ const PublicProfile = () => {
                             alt=""
                             decoding="async"
                             referrerPolicy="no-referrer"
-                            onError={(e) => { e.currentTarget.src = '/images/other/no-image.png'; }}
+                            onError={(e) => {
+                              e.currentTarget.src = '/images/other/no-image.png';
+                            }}
                           />
 
-
                           <div className={styles.reviewUserMeta}>
-                            <strong className={styles.reviewUser}>{op.userName || 'Użytkownik'}</strong>
-                            {dateLabel && <span className={styles.reviewDate}>{dateLabel}</span>}
+                            <strong className={styles.reviewUser}>
+                              {op.userName || 'Użytkownik'}
+                            </strong>
+                            {dateLabel && (
+                              <span className={styles.reviewDate}>{dateLabel}</span>
+                            )}
                           </div>
                         </div>
 
                         <span className={styles.reviewRating}>
                           {[...Array(5)].map((_, idx) => (
-                            <FaStar key={idx} className={idx < ratingVal ? styles.starSelected : styles.star} />
+                            <FaStar
+                              key={idx}
+                              className={idx < ratingVal ? styles.starSelected : styles.star}
+                            />
                           ))}
                         </span>
                       </div>
@@ -570,8 +646,11 @@ const PublicProfile = () => {
             <div className={styles.bannerOverlay}></div>
             <div className={styles.bannerContent}>
               <h3 className={styles.bannerTitle}>Galeria profilu {name}</h3>
-              <p className={styles.bannerDesc}>Zobacz efekty pracy i inspiracje — obrazy mówią więcej niż słowa!</p>
+              <p className={styles.bannerDesc}>
+                Zobacz efekty pracy i inspiracje — obrazy mówią więcej niż słowa!
+              </p>
             </div>
+
             <svg
               className={styles.bannerWave}
               xmlns="http://www.w3.org/2000/svg"
@@ -598,24 +677,29 @@ const PublicProfile = () => {
                     <img
                       src={src}
                       alt={`Zdjęcie ${i + 1}`}
-                      onError={(e) => { e.currentTarget.src = '/images/other/no-image.png'; }}
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/other/no-image.png';
+                      }}
                     />
                   </div>
                 );
               })}
-
             </div>
           </div>
 
           {fullscreenImage && (
-            <div className={styles.lightbox} onClick={closeLightbox} role="dialog" aria-modal="true">
+            <div
+              className={styles.lightbox}
+              onClick={closeLightbox}
+              role="dialog"
+              aria-modal="true"
+            >
               <img src={fullscreenImage} alt="" />
             </div>
           )}
         </section>
       )}
 
-      {/* ===== Sekcja usług użytkownika ===== */}
       {profile.services?.length > 0 && (
         <section className={styles.servicesBox} id="services">
           <div className={styles.servicesBanner}>
@@ -626,6 +710,7 @@ const PublicProfile = () => {
                 Wybierz coś dla siebie — nazwa usługi oraz czas jej realizacji poniżej!
               </p>
             </div>
+
             <svg
               className={styles.bannerWave}
               xmlns="http://www.w3.org/2000/svg"
@@ -653,7 +738,7 @@ const PublicProfile = () => {
           </div>
         </section>
       )}
-    </>
+    </div>
   );
 };
 

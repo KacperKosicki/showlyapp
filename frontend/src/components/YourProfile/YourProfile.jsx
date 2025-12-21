@@ -46,6 +46,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const [notFound, setNotFound] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [alert, setAlert] = useState(null);
+  const [initialEditData, setInitialEditData] = useState(null);
 
   // --- PRACOWNICY ---
   const [staff, setStaff] = useState([]); // [{_id, name, active, capacity, serviceIds: []}]
@@ -105,6 +106,13 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       const photos = p.photos || [];
       const photoHashes = await Promise.all(photos.map(ph => hashString(ph)));
 
+      const normalizedTheme = {
+        variant: p.theme?.variant || 'system',
+        primary: p.theme?.primary || '#6f4ef2',
+        secondary: p.theme?.secondary || '#ff4081',
+      };
+
+
       setEditData({
         ...p,
         services: p.services || [],
@@ -113,11 +121,27 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         quickAnswers: p.quickAnswers || [
           { title: '', answer: '' }, { title: '', answer: '' }, { title: '', answer: '' }
         ],
+        theme: normalizedTheme, // ✅ TU
         bookingMode: p.bookingMode || 'request-open',
         workingHours: p.workingHours || { from: '08:00', to: '20:00' },
         workingDays: p.workingDays || [1, 2, 3, 4, 5],
-        team: p.team || { enabled: false, assignmentMode: 'user-pick' }, // ⬅️ DODAJ
+        team: p.team || { enabled: false, assignmentMode: 'user-pick' },
       });
+
+      setInitialEditData({
+        ...p,
+        services: p.services || [],
+        photos,
+        photoHashes,
+        quickAnswers: p.quickAnswers || [{ title: '', answer: '' }, { title: '', answer: '' }, { title: '', answer: '' }],
+        theme: normalizedTheme,
+        bookingMode: p.bookingMode || 'request-open',
+        workingHours: p.workingHours || { from: '08:00', to: '20:00' },
+        workingDays: p.workingDays || [1, 2, 3, 4, 5],
+        team: p.team || { enabled: false, assignmentMode: 'user-pick' },
+      });
+
+
 
       // Po profilu dociągnij pracowników
       await fetchStaff(p._id);
@@ -422,14 +446,24 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     try {
       const { photoHashes, ...payload } = editData;
 
+      const t = payload.theme || {};
+
+      const mappedTheme = {
+        variant: t.variant || 'system',
+        primary: t.primary || '#6f4ef2',
+        secondary: t.secondary || '#ff4081',
+      };
+
       // 1) Zapis profilu
       await axios.patch(`${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`, {
         ...payload,
+        theme: mappedTheme, // ✅ TU
         showAvailableDates: !!payload.showAvailableDates,
         tags: (payload.tags || []).filter(tag => tag.trim() !== ''),
         quickAnswers: (payload.quickAnswers || []).filter(qa => qa.title?.trim() || qa.answer?.trim()),
         team: payload.team || { enabled: false, assignmentMode: 'user-pick' },
       });
+
 
       // 2) Zbiorczy zapis zmian pracowników (tylko te, które zmieniono)
       const staffUpdateEntries = Object.entries(staffEdits); // [[id, changes], ...]
@@ -562,7 +596,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
               aria-label="Przejdź do publicznego profilu"
               title={profile?.slug ? 'Zobacz swój publiczny profil' : 'Brak sluga profilu'}
             >
-              Przejdź do profilu
+              Przejdź do widoku profilu
             </Link>
 
 
@@ -731,6 +765,134 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           )}
         </div>
       </section>
+
+      {/* =========================
+          Wygląd profilu (Kolory)
+        ========================= */}
+      <section className={styles.card}>
+        <h3>Wygląd profilu</h3>
+        <div className={styles.inputBlock}>
+          {/* Presety */}
+          {isEditing && (
+            <div className={styles.colorPresets}>
+              {[
+                { name: 'Systemowy', primary: '#6f4ef2', secondary: '#ff4081', variant: 'system' },
+                { name: 'Pomarańczowy', primary: '#ff5a1f', secondary: '#ffb86b', variant: 'orange' },
+                { name: 'Niebieski', primary: '#2563eb', secondary: '#7c9dff', variant: 'blue' },
+                { name: 'Zielony', primary: '#16a34a', secondary: '#86efac', variant: 'green' },
+                { name: 'Różowy', primary: '#db2777', secondary: '#ff6ea8', variant: 'violet' },
+                { name: 'Ciemny', primary: '#e50914', secondary: '#9aa3af', variant: 'dark' },
+              ].map(p => (
+                <button
+                  key={p.name}
+                  type="button"
+                  className={styles.presetBtn}
+                  onClick={() =>
+                    setEditData(prev => ({
+                      ...prev,
+                      theme: {
+                        ...(prev.theme || {}),
+                        variant: p.variant,
+                        primary: p.primary,
+                        secondary: p.secondary,
+                      }
+                    }))
+                  }
+                  title={`Ustaw preset: ${p.name}`}
+                >
+                  <span className={styles.presetDot} style={{ background: p.primary }} aria-hidden="true" />
+                  <span className={styles.presetDot} style={{ background: p.secondary }} aria-hidden="true" />
+                  <span className={styles.presetName}>{p.name}</span>
+                </button>
+              ))}
+
+            </div>
+          )}
+
+          {/* Edycja kolorów */}
+          {isEditing ? (
+            <div className={styles.colorGrid}>
+              <div className={styles.colorField}>
+                <label className={styles.colorLabel}>Akcent</label>
+                <div className={styles.colorRow}>
+                  <input
+                    type="color"
+                    value={editData.theme?.primary || '#ff5a1f'}
+                    onChange={(e) => setEditData(prev => ({
+                      ...prev,
+                      theme: { ...(prev.theme || {}), primary: e.target.value }
+                    }))}
+                  />
+                  <input
+                    className={styles.formInput}
+                    value={editData.theme?.primary || '#ff5a1f'}
+                    onChange={(e) => setEditData(prev => ({
+                      ...prev,
+                      theme: { ...(prev.theme || {}), primary: e.target.value }
+                    }))}
+
+                    placeholder="#ff5a1f"
+                  />
+                </div>
+              </div>
+
+              <div className={styles.colorField}>
+                <label className={styles.colorLabel}>Akcent 2</label>
+                <div className={styles.colorRow}>
+                  <input
+                    type="color"
+                    value={editData.theme?.secondary || '#7c9dff'}
+                    onChange={(e) => setEditData(prev => ({
+                      ...prev,
+                      theme: { ...(prev.theme || {}), secondary: e.target.value }
+                    }))}
+
+                  />
+                  <input
+                    className={styles.formInput}
+                    value={editData.theme?.secondary || '#7c9dff'}
+                    onChange={(e) => setEditData(prev => ({
+                      ...prev,
+                      theme: { ...(prev.theme || {}), secondary: e.target.value }
+                    }))}
+
+                    placeholder="#7c9dff"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.colorPreview}>
+              <div
+                className={styles.previewCard}
+                style={{
+                  borderColor: profile.theme?.primary || '#ff5a1f'
+                }}
+              >
+                <div className={styles.previewTop}>
+                  <span
+                    className={styles.previewPill}
+                    style={{ background: profile.theme?.primary || '#ff5a1f' }}
+                  >
+                    Akcent
+                  </span>
+                  <span
+                    className={styles.previewPill}
+                    style={{ background: profile.theme?.secondary || '#7c9dff' }}
+                  >
+                    Akcent 2
+                  </span>
+                </div>
+                <div className={styles.previewLine} />
+                <div className={styles.previewText}>
+                  Podgląd kolorów profilu
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
 
       {/* =========================
           Dostępność i usługi
@@ -1843,7 +2005,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 type="button"
                 className={styles.ghost}
                 onClick={() => {
-                  setEditData(profile);
+                  setEditData(initialEditData || editData);
+                  setStaffEdits({});
                   setFormErrors({});
                   setIsEditing(false);
                 }}

@@ -58,7 +58,7 @@ const AboutApp = ({ user }) => {
                 state={{ scrollToId: 'scrollToId' }}
                 className={styles.secondary}
               >
-                Przejdź do profilu
+                Przejdź do edycji profilu
               </Link>
             ) : (
               <Link
