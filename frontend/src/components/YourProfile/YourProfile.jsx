@@ -120,20 +120,23 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         secondary: p.theme?.secondary || '#ff4081',
       };
 
-const normalizedContact = {
-  email: p.contact?.email || '',
-  phone: p.contact?.phone || '',
-  addressFull: p.contact?.addressFull || '',
-};
+      const normalizedContact = {
+        email: p.contact?.email || '',
+        phone: p.contact?.phone || '',
+        street: p.contact?.street || '',
+        postcode: p.contact?.postcode || '',
+        addressFull: p.contact?.addressFull || '', // zostaw dla kompatybilności
+      };
 
 
-const normalizedSocials = {
-  website: p.socials?.website || '',
-  facebook: p.socials?.facebook || '',
-  instagram: p.socials?.instagram || '',
-  youtube: p.socials?.youtube || '',
-  tiktok: p.socials?.tiktok || '',
-};
+
+      const normalizedSocials = {
+        website: p.socials?.website || '',
+        facebook: p.socials?.facebook || '',
+        instagram: p.socials?.instagram || '',
+        youtube: p.socials?.youtube || '',
+        tiktok: p.socials?.tiktok || '',
+      };
 
       setEditData({
         ...p,
@@ -145,7 +148,7 @@ const normalizedSocials = {
         ],
         theme: normalizedTheme, // ✅ TU
         contact: normalizedContact,
-socials: normalizedSocials,
+        socials: normalizedSocials,
 
         bookingMode: p.bookingMode || 'request-open',
         workingHours: p.workingHours || { from: '08:00', to: '20:00' },
@@ -161,7 +164,7 @@ socials: normalizedSocials,
         quickAnswers: p.quickAnswers || [{ title: '', answer: '' }, { title: '', answer: '' }, { title: '', answer: '' }],
         theme: normalizedTheme,
         contact: normalizedContact,
-socials: normalizedSocials,
+        socials: normalizedSocials,
 
         bookingMode: p.bookingMode || 'request-open',
         workingHours: p.workingHours || { from: '08:00', to: '20:00' },
@@ -379,30 +382,34 @@ socials: normalizedSocials,
     }
 
     // Kontakt
-const email = data.contact?.email?.trim();
-if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-  errors.contactEmail = 'Nieprawidłowy e-mail';
-}
+    const email = data.contact?.email?.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.contactEmail = 'Nieprawidłowy e-mail';
+    }
 
-const phone = data.contact?.phone?.trim();
-if (phone && phone.length > 20) {
-  errors.contactPhone = 'Telefon max. 20 znaków';
-}
+    const phone = data.contact?.phone?.trim();
+    if (phone && phone.length > 20) {
+      errors.contactPhone = 'Telefon max. 20 znaków';
+    }
 
-const addressFull = data.contact?.addressFull?.trim();
-if (addressFull && addressFull.length > 80) errors.contactAddress = 'Adres max. 80 znaków';
+    const street = data.contact?.street?.trim();
+    if (street && street.length > 80) errors.contactStreet = 'Ulica max. 80 znaków';
 
-// Social linki (opcjonalnie lekko pilnujemy URL)
-const isUrlish = (v) => {
-  if (!v) return true;
-  try { new URL(v.startsWith('http') ? v : `https://${v}`); return true; } catch { return false; }
-};
+    const postcode = data.contact?.postcode?.trim();
+    if (postcode && postcode.length > 12) errors.contactPostcode = 'Kod max. 12 znaków';
 
-const socials = data.socials || {};
-['website', 'facebook', 'instagram', 'youtube', 'tiktok'].forEach((k) => {
-  const v = socials[k]?.trim();
-  if (v && !isUrlish(v)) errors[`social_${k}`] = 'Nieprawidłowy link';
-});
+
+    // Social linki (opcjonalnie lekko pilnujemy URL)
+    const isUrlish = (v) => {
+      if (!v) return true;
+      try { new URL(v.startsWith('http') ? v : `https://${v}`); return true; } catch { return false; }
+    };
+
+    const socials = data.socials || {};
+    ['website', 'facebook', 'instagram', 'youtube', 'tiktok'].forEach((k) => {
+      const v = socials[k]?.trim();
+      if (v && !isUrlish(v)) errors[`social_${k}`] = 'Nieprawidłowy link';
+    });
 
     return errors;
   };
@@ -510,18 +517,28 @@ const socials = data.socials || {};
       };
 
       // 1) Zapis profilu
-await axios.patch(`${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`, {
-  ...payload,
-  theme: mappedTheme,
-  contact: payload.contact || { email: '', phone: '', addressFull: '' },   // ✅
-  socials: payload.socials || { website: '', facebook: '', instagram: '', youtube: '', tiktok: '' }, // ✅
-  showAvailableDates: !!payload.showAvailableDates,
-  tags: (payload.tags || []).filter(tag => tag.trim() !== ''),
-  quickAnswers: (payload.quickAnswers || []).filter(qa => qa.title?.trim() || qa.answer?.trim()),
-  team: payload.team || { enabled: false, assignmentMode: 'user-pick' },
-});
+      const c = payload.contact || {};
+      const builtAddressFull = [payload.location, c.postcode, c.street]
+        .filter(Boolean)
+        .join(', ')
+        .trim();
 
-
+      await axios.patch(`${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`, {
+        ...payload,
+        theme: mappedTheme,
+        contact: {
+          email: c.email || '',
+          phone: c.phone || '',
+          street: c.street || '',
+          postcode: c.postcode || '',
+          addressFull: builtAddressFull, // ✅ auto
+        },
+        socials: payload.socials || { website: '', facebook: '', instagram: '', youtube: '', tiktok: '' },
+        showAvailableDates: !!payload.showAvailableDates,
+        tags: (payload.tags || []).filter(tag => tag.trim() !== ''),
+        quickAnswers: (payload.quickAnswers || []).filter(qa => qa.title?.trim() || qa.answer?.trim()),
+        team: payload.team || { enabled: false, assignmentMode: 'user-pick' },
+      });
 
       // 2) Zbiorczy zapis zmian pracowników (tylko te, które zmieniono)
       const staffUpdateEntries = Object.entries(staffEdits); // [[id, changes], ...]
@@ -1928,150 +1945,192 @@ await axios.patch(`${process.env.REACT_APP_API_URL}/api/profiles/update/${user.u
       </section>
 
       <section className={styles.card}>
-  <h3>Kontakt i social media</h3>
+        <h3>Kontakt i social media</h3>
 
-  {/* KONTAKT */}
-  <div className={styles.inputBlock}>
-    <div className={styles.groupTitle}>
-      <FaEnvelope /> Kontakt
-    </div>
-
-    {isEditing ? (
-      <div className={styles.contactGrid}>
-        <div className={styles.contactField}>
-          <label><FaEnvelope /> E-mail</label>
-          <input
-            className={`${styles.formInput} ${formErrors.contactEmail ? styles.inputError : ''}`}
-            value={editData.contact?.email || ''}
-            onChange={(e) =>
-              setEditData(prev => ({
-                ...prev,
-                contact: { ...(prev.contact || {}), email: e.target.value }
-              }))
-            }
-            placeholder="np. kontakt@twojadomena.pl"
-          />
-          {formErrors.contactEmail && <small className={styles.error}>{formErrors.contactEmail}</small>}
-        </div>
-
-        <div className={styles.contactField}>
-          <label><FaPhone /> Telefon</label>
-          <input
-            className={`${styles.formInput} ${formErrors.contactPhone ? styles.inputError : ''}`}
-            value={editData.contact?.phone || ''}
-            onChange={(e) =>
-              setEditData(prev => ({
-                ...prev,
-                contact: { ...(prev.contact || {}), phone: e.target.value }
-              }))
-            }
-            placeholder="np. +48 123 456 789"
-          />
-          {formErrors.contactPhone && <small className={styles.error}>{formErrors.contactPhone}</small>}
-        </div>
-
-        <div className={styles.contactField} style={{ gridColumn: '1 / -1' }}>
-          <label><FaHome /> Adres</label>
-          <input
-            className={`${styles.formInput} ${formErrors.contactAddress ? styles.inputError : ''}`}
-value={editData.contact?.addressFull || ''}
-onChange={(e) =>
-  setEditData(prev => ({
-    ...prev,
-    contact: { ...(prev.contact || {}), addressFull: e.target.value }
-  }))
-}
-
-            placeholder="np. Warszawa, ul. Przykładowa 12"
-          />
-          {formErrors.contactAddress && <small className={styles.error}>{formErrors.contactAddress}</small>}
-        </div>
-      </div>
-    ) : (
-      <ul className={styles.contactView}>
-        <li className={styles.contactItem}>
-          <span className={styles.contactLabel}><FaEnvelope /> E-mail</span>
-          <span className={styles.contactValue}>{profile.contact?.email || '—'}</span>
-        </li>
-        <li className={styles.contactItem}>
-          <span className={styles.contactLabel}><FaPhone /> Telefon</span>
-          <span className={styles.contactValue}>{profile.contact?.phone || '—'}</span>
-        </li>
-        <li className={styles.contactItem}>
-          <span className={styles.contactLabel}><FaHome /> Adres</span>
-          <span className={styles.contactValue}>{profile.contact?.addressFull || '—'}</span>
-        </li>
-      </ul>
-    )}
-  </div>
-
-  <div className={styles.subsection}></div>
-
-  {/* SOCIALS */}
-  <div className={styles.inputBlock}>
-    <div className={styles.groupTitle}>
-      <FaGlobe /> Social media
-    </div>
-
-    {isEditing ? (
-      <div className={styles.socialGrid}>
-        {[
-          { key: 'website', label: 'Strona', icon: <FaGlobe /> },
-          { key: 'facebook', label: 'Facebook', icon: <FaFacebook /> },
-          { key: 'instagram', label: 'Instagram', icon: <FaInstagram /> },
-          { key: 'youtube', label: 'YouTube', icon: <FaYoutube /> },
-          { key: 'tiktok', label: 'TikTok', icon: <FaTiktok /> },
-        ].map((s) => (
-          <div key={s.key} className={styles.socialField}>
-            <label>{s.icon} {s.label}</label>
-            <input
-              className={`${styles.formInput} ${formErrors[`social_${s.key}`] ? styles.inputError : ''}`}
-              value={editData.socials?.[s.key] || ''}
-              onChange={(e) =>
-                setEditData(prev => ({
-                  ...prev,
-                  socials: { ...(prev.socials || {}), [s.key]: e.target.value }
-                }))
-              }
-              placeholder={`Link do ${s.label}`}
-            />
-            {formErrors[`social_${s.key}`] && (
-              <small className={styles.error}>{formErrors[`social_${s.key}`]}</small>
-            )}
+        {/* KONTAKT */}
+        <div className={styles.inputBlock}>
+          <div className={styles.groupTitle}>
+            <FaEnvelope /> Kontakt
           </div>
-        ))}
-      </div>
-    ) : (
-      <div className={styles.socialPills}>
-        {[
-          { key: 'website', label: 'WWW', icon: <FaGlobe /> },
-          { key: 'facebook', label: 'Facebook', icon: <FaFacebook /> },
-          { key: 'instagram', label: 'Instagram', icon: <FaInstagram /> },
-          { key: 'youtube', label: 'YouTube', icon: <FaYoutube /> },
-          { key: 'tiktok', label: 'TikTok', icon: <FaTiktok /> },
-        ]
-          .filter(s => profile.socials?.[s.key])
-          .map((s) => (
-            <a
-              key={s.key}
-              href={profile.socials[s.key]}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.linkPill}
-              title={profile.socials[s.key]}
-            >
-              {s.icon} {s.label}
-            </a>
-          ))
-        }
 
-        {!Object.values(profile.socials || {}).some(Boolean) && (
-          <p className={styles.noInfo}><span>❔</span> Nie dodałeś/aś linków do social mediów.</p>
-        )}
-      </div>
-    )}
-  </div>
-</section>
+          {isEditing ? (
+            <div className={styles.contactGrid}>
+              <div className={styles.contactField}>
+                <label><FaEnvelope /> E-mail</label>
+                <input
+                  className={`${styles.formInput} ${formErrors.contactEmail ? styles.inputError : ''}`}
+                  value={editData.contact?.email || ''}
+                  onChange={(e) =>
+                    setEditData(prev => ({
+                      ...prev,
+                      contact: { ...(prev.contact || {}), email: e.target.value }
+                    }))
+                  }
+                  placeholder="np. kontakt@twojadomena.pl"
+                />
+                {formErrors.contactEmail && <small className={styles.error}>{formErrors.contactEmail}</small>}
+              </div>
+
+              <div className={styles.contactField}>
+                <label><FaPhone /> Telefon</label>
+                <input
+                  className={`${styles.formInput} ${formErrors.contactPhone ? styles.inputError : ''}`}
+                  value={editData.contact?.phone || ''}
+                  onChange={(e) =>
+                    setEditData(prev => ({
+                      ...prev,
+                      contact: { ...(prev.contact || {}), phone: e.target.value }
+                    }))
+                  }
+                  placeholder="np. +48 123 456 789"
+                />
+                {formErrors.contactPhone && <small className={styles.error}>{formErrors.contactPhone}</small>}
+              </div>
+
+              {/* Miejscowość (z location) */}
+              <div className={styles.contactField}>
+                <label><FaMapMarkerAlt /> Miejscowość</label>
+                <input
+                  className={styles.formInput}
+                  value={editData.location || ''}
+                  disabled
+                  title="Miejscowość edytujesz w sekcji: Dane podstawowe → Lokalizacja"
+                />
+                <small className={styles.hint}>Miejscowość ustawiasz wyżej w profilu.</small>
+              </div>
+
+              {/* Kod pocztowy */}
+              <div className={styles.contactField}>
+                <label><FaHome /> Kod pocztowy</label>
+                <input
+                  className={`${styles.formInput} ${formErrors.contactPostcode ? styles.inputError : ''}`}
+                  value={editData.contact?.postcode || ''}
+                  onChange={(e) =>
+                    setEditData(prev => ({
+                      ...prev,
+                      contact: { ...(prev.contact || {}), postcode: e.target.value }
+                    }))
+                  }
+                  placeholder="np. 64-761"
+                  maxLength={12}
+                />
+                {formErrors.contactPostcode && <small className={styles.error}>{formErrors.contactPostcode}</small>}
+              </div>
+
+              {/* Ulica + numer */}
+              <div className={styles.contactField} style={{ gridColumn: '1 / -1' }}>
+                <label><FaHome /> Ulica i numer</label>
+                <input
+                  className={`${styles.formInput} ${formErrors.contactStreet ? styles.inputError : ''}`}
+                  value={editData.contact?.street || ''}
+                  onChange={(e) =>
+                    setEditData(prev => ({
+                      ...prev,
+                      contact: { ...(prev.contact || {}), street: e.target.value }
+                    }))
+                  }
+                  placeholder="np. ul. Przykładowa 12"
+                  maxLength={80}
+                />
+                {formErrors.contactStreet && <small className={styles.error}>{formErrors.contactStreet}</small>}
+              </div>
+
+              {/* Podgląd złożonego adresu */}
+              <div className={styles.contactField} style={{ gridColumn: '1 / -1' }}>
+                <small className={styles.hint}>
+                  Podgląd: {[editData.location, editData.contact?.postcode, editData.contact?.street].filter(Boolean).join(', ') || '—'}
+                </small>
+              </div>
+
+            </div>
+          ) : (
+            <ul className={styles.contactView}>
+              <li className={styles.contactItem}>
+                <span className={styles.contactLabel}><FaEnvelope /> E-mail</span>
+                <span className={styles.contactValue}>{profile.contact?.email || '—'}</span>
+              </li>
+              <li className={styles.contactItem}>
+                <span className={styles.contactLabel}><FaPhone /> Telefon</span>
+                <span className={styles.contactValue}>{profile.contact?.phone || '—'}</span>
+              </li>
+              <li className={styles.contactItem}>
+                <span className={styles.contactLabel}><FaHome /> Adres</span>
+                <span className={styles.contactValue}>
+                  {[profile.location, profile.contact?.postcode, profile.contact?.street].filter(Boolean).join(', ') || '—'}
+                </span>
+              </li>
+
+            </ul>
+          )}
+        </div>
+
+        <div className={styles.subsection}></div>
+
+        {/* SOCIALS */}
+        <div className={styles.inputBlock}>
+          <div className={styles.groupTitle}>
+            <FaGlobe /> Social media
+          </div>
+
+          {isEditing ? (
+            <div className={styles.socialGrid}>
+              {[
+                { key: 'website', label: 'Strona', icon: <FaGlobe /> },
+                { key: 'facebook', label: 'Facebook', icon: <FaFacebook /> },
+                { key: 'instagram', label: 'Instagram', icon: <FaInstagram /> },
+                { key: 'youtube', label: 'YouTube', icon: <FaYoutube /> },
+                { key: 'tiktok', label: 'TikTok', icon: <FaTiktok /> },
+              ].map((s) => (
+                <div key={s.key} className={styles.socialField}>
+                  <label>{s.icon} {s.label}</label>
+                  <input
+                    className={`${styles.formInput} ${formErrors[`social_${s.key}`] ? styles.inputError : ''}`}
+                    value={editData.socials?.[s.key] || ''}
+                    onChange={(e) =>
+                      setEditData(prev => ({
+                        ...prev,
+                        socials: { ...(prev.socials || {}), [s.key]: e.target.value }
+                      }))
+                    }
+                    placeholder={`Link do ${s.label}`}
+                  />
+                  {formErrors[`social_${s.key}`] && (
+                    <small className={styles.error}>{formErrors[`social_${s.key}`]}</small>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.socialPills}>
+              {[
+                { key: 'website', label: 'WWW', icon: <FaGlobe /> },
+                { key: 'facebook', label: 'Facebook', icon: <FaFacebook /> },
+                { key: 'instagram', label: 'Instagram', icon: <FaInstagram /> },
+                { key: 'youtube', label: 'YouTube', icon: <FaYoutube /> },
+                { key: 'tiktok', label: 'TikTok', icon: <FaTiktok /> },
+              ]
+                .filter(s => profile.socials?.[s.key])
+                .map((s) => (
+                  <a
+                    key={s.key}
+                    href={profile.socials[s.key]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.linkPill}
+                    title={profile.socials[s.key]}
+                  >
+                    {s.icon} {s.label}
+                  </a>
+                ))
+              }
+
+              {!Object.values(profile.socials || {}).some(Boolean) && (
+                <p className={styles.noInfo}><span>❔</span> Nie dodałeś/aś linków do social mediów.</p>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* =========================
           FAQ

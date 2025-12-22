@@ -378,7 +378,7 @@ const PublicProfile = () => {
 
   const fullAddress =
     (contact?.addressFull || '').trim() ||
-    [location, contact?.street, contact?.postcode]
+    [location, contact?.postcode, contact?.street]   // ✅ KOLEJNOŚĆ jak w YourProfile
       .map(v => (v || '').trim())
       .filter(Boolean)
       .join(', ');
@@ -396,6 +396,10 @@ const PublicProfile = () => {
   ]
     .map(s => ({ ...s, url: ensureUrl(s.url) }))
     .filter(s => !!s.url);
+
+  const hasContact = !!fullAddress || !!contactPhone || !!contactEmail;
+  const hasSocials = socialItems.length > 0;
+  const hasInfoBox = hasContact || hasSocials || cleanLinks.length > 0;
 
   return (
     <div style={cssVars}>
@@ -741,7 +745,7 @@ const PublicProfile = () => {
         </section>
       )}
 
-      {(profile.services?.length > 0 || contact || socials) && (
+      {(profile.services?.length > 0 || hasInfoBox) && (
         <section className={styles.bottomRow} id="services">
           {/* ===== USŁUGI ===== */}
           {profile.services?.length > 0 && (
@@ -790,7 +794,7 @@ const PublicProfile = () => {
               <div className={styles.bannerContent}>
                 <h3 className={styles.bannerTitle}>Informacje profilu {name}</h3>
                 <p className={styles.bannerDesc}>
-                  Dane kontaktowe i social media — kliknij, aby przejść lub skontaktować się.
+                  Dane kontaktowe i linki — kliknij, aby przejść.
                 </p>
               </div>
 
@@ -905,7 +909,6 @@ const PublicProfile = () => {
           </div>
         </section>
       )}
-
     </div>
   );
 };

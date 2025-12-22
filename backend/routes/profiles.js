@@ -479,50 +479,65 @@ router.patch('/update/:uid', async (req, res) => {
     const updates = { ...req.body };
 
     // ✅ NORMALIZACJA kontaktu
-if (updates.contact) {
-  const clean = (v) => (v ?? '').toString().trim();
-  const prev = profile.contact?.toObject ? profile.contact.toObject() : (profile.contact || {});
+    if (updates.contact) {
+      const clean = (v) => (v ?? '').toString().trim();
+      const prev = profile.contact?.toObject ? profile.contact.toObject() : (profile.contact || {});
 
-  updates.contact = {
-    ...prev,
-    street: clean(updates.contact.street),
-    postcode: clean(updates.contact.postcode),
-    addressFull: clean(updates.contact.addressFull),
-    phone: clean(updates.contact.phone),
-    email: clean(updates.contact.email).toLowerCase(),
-  };
+      const street = clean(updates.contact.street);
+      const postcode = clean(updates.contact.postcode);
 
-  profile.set('contact', updates.contact);
-}
+      // jeśli nie podano addressFull, zbuduj go automatycznie
+      let addressFull = clean(updates.contact.addressFull);
+      if (!addressFull) {
+        const parts = [
+          clean(profile.location),                 // miejscowość z głównego pola
+          postcode ? `${postcode}` : '',
+          street ? `${street}` : ''
+        ].filter(Boolean);
+        addressFull = parts.join(', ');
+      }
 
-if (updates.socials) {
-  const clean = (v) => (v ?? '').toString().trim();
-  const prev = profile.socials?.toObject ? profile.socials.toObject() : (profile.socials || {});
+      updates.contact = {
+        ...prev,
+        street,
+        postcode,
+        addressFull,
+        phone: clean(updates.contact.phone),
+        email: clean(updates.contact.email).toLowerCase(),
+      };
 
-  updates.socials = {
-    ...prev,
-    website: clean(updates.socials.website),
-    facebook: clean(updates.socials.facebook),
-    instagram: clean(updates.socials.instagram),
-    youtube: clean(updates.socials.youtube),
-    tiktok: clean(updates.socials.tiktok),
-    linkedin: clean(updates.socials.linkedin),
-    x: clean(updates.socials.x),
-  };
+      profile.set('contact', updates.contact);
+    }
 
-  profile.set('socials', updates.socials);
-}
+
+    if (updates.socials) {
+      const clean = (v) => (v ?? '').toString().trim();
+      const prev = profile.socials?.toObject ? profile.socials.toObject() : (profile.socials || {});
+
+      updates.socials = {
+        ...prev,
+        website: clean(updates.socials.website),
+        facebook: clean(updates.socials.facebook),
+        instagram: clean(updates.socials.instagram),
+        youtube: clean(updates.socials.youtube),
+        tiktok: clean(updates.socials.tiktok),
+        linkedin: clean(updates.socials.linkedin),
+        x: clean(updates.socials.x),
+      };
+
+      profile.set('socials', updates.socials);
+    }
 
     // zwykłe pola
-for (const field of allowedFields) {
-  if (
-    field !== 'team' &&
-    field !== 'theme' &&
-    updates[field] !== undefined
-  ) {
-    profile[field] = updates[field];
-  }
-}
+    for (const field of allowedFields) {
+      if (
+        field !== 'team' &&
+        field !== 'theme' &&
+        updates[field] !== undefined
+      ) {
+        profile[field] = updates[field];
+      }
+    }
 
 
 

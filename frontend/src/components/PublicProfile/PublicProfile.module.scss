@@ -14,11 +14,11 @@
   overflow: hidden;
   font-family: $font-body;
 
-    .bannerTitle {
+  .bannerTitle {
     font-family: $font-heading;
   }
 
-    .bannerDesc {
+  .bannerDesc {
     font-family: $font-accent;
   }
 
@@ -1168,7 +1168,8 @@ $container-max: calc(#{$card-max} + #{$reviews-max} + #{$cols-gap}); // ≈ 1180
 
 /* żeby Twoje obecne .servicesBox dalej wyglądało identycznie w gridzie */
 .bottomRow .servicesBox {
-  margin: 0; /* bo wrapper już daje margines */
+  margin: 0;
+  /* bo wrapper już daje margines */
   width: 100%;
 }
 
@@ -1255,21 +1256,41 @@ $container-max: calc(#{$card-max} + #{$reviews-max} + #{$cols-gap}); // ≈ 1180
 }
 
 .contactValueLink {
+  display: inline-flex;
+  /* ⬅️ ważne: zachowanie jak “pill” */
+  align-items: center;
+  justify-content: flex-end;
+
   font-family: $font-heading;
   color: var(--pp-primary, #6f4ef2);
   font-size: .95rem;
   text-decoration: none;
   text-align: right;
+
+  padding: .25rem .6rem;
+  /* ⬅️ zawsze, nie dopiero na hover */
+  border-radius: 999px;
+  /* ⬅️ zawsze */
+  background: transparent;
+  /* ⬅️ zawsze */
+  transition: background .2s ease, color .2s ease, transform .15s ease, filter .2s ease;
+
   word-break: break-word;
+  max-width: 100%;
 
   &:hover {
-    color: #fff;
     background: var(--pp-primary, #6f4ef2);
-    padding: .2rem .55rem;
-    border-radius: 999px;
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    filter: brightness(.95);
   }
 
   @media (max-width: 480px) {
+    justify-content: flex-start;
     text-align: left;
   }
 }
@@ -1333,7 +1354,8 @@ $container-max: calc(#{$card-max} + #{$reviews-max} + #{$cols-gap}); // ≈ 1180
 }
 
 .infoLinkPill {
-  font-family: $font-accent; /* albo $font-body jeśli chcesz bardziej neutralnie */
+  font-family: $font-accent;
+  /* albo $font-body jeśli chcesz bardziej neutralnie */
   background-color: rgba(0, 0, 0, 0.03);
   padding: 0.45rem 0.85rem;
   border-radius: 999px;
@@ -1352,5 +1374,3 @@ $container-max: calc(#{$card-max} + #{$reviews-max} + #{$cols-gap}); // ≈ 1180
 .profileInfoBody {
   font-family: $font-body;
 }
-
-
