@@ -39,9 +39,9 @@
   gap: 0.4rem;
   font-size: 0.85rem;
 
-  svg { color: $primary-color; font-size: 1rem; }
+  svg { color: var(--uc-primary); }
   span { color: #777; }
-  strong { color: $secondary-color; font-weight: 700; }
+  strong { color: var(--uc-secondary); }
 }
 
 /* przycisk ulubionych */
@@ -50,8 +50,8 @@
   align-items: center;
   gap: 0.5rem;
   background: #fff;
-  border: 1px solid $primary-color;
-  color: $primary-color;
+  border: 1px solid var(--uc-primary);
+  color: var(--uc-primary);
   border-radius: 999px;
   padding: 0.35rem 0.75rem;
   font-size: 0.85rem;
@@ -61,7 +61,7 @@
 
   &:hover,
   &:focus {
-    background: $primary-color;
+    background: var(--uc-primary);
     color: #fff;
 
     .heart,
@@ -69,15 +69,14 @@
   }
 
   &.active {
-    background: $primary-color;
+    background: var(--uc-primary);
     color: #fff;
-    border-color: $primary-color;
+    border-color: var(--uc-primary);
 
     .heartFilled { color: #fff; }
 
     &:hover {
-      background: darken($primary-color, 8%);
-      transform: scale(1.05);
+      filter: brightness(0.92);
     }
   }
 
@@ -86,7 +85,7 @@
   .heart,
   .heartFilled {
     font-size: 1rem;
-    color: $primary-color;
+    color: var(--uc-primary);
     transition: color 0.18s;
   }
 }
@@ -106,7 +105,7 @@
   gap: 0.3rem;
   font-size: 0.85rem;
   color: #777;
-  svg { color: $primary-color; }
+  svg { color: var(--uc-primary); }
 }
 
 .rating {
@@ -143,17 +142,17 @@
 }
 
 .tag {
-  border: 1px solid $primary-color; color: $primary-color;
+  border: 1px solid var(--uc-primary); color: var(--uc-primary);
   font-family: $font-accent; font-size: 0.75rem;
   padding: 0.35rem 0.8rem; border-radius: 1rem; transition: all 0.2s ease; cursor: pointer;
-  &:hover { background-color: $primary-color; color: white; }
+  &:hover { background-color: var(--uc-primary); color: white; }
 }
 
 .separator { height: 1px; background-color: #e0e0e0; margin: 0.6rem auto; width: 85%; border-radius: 2px; }
 
 .details {
   margin: 1rem 0 0.5rem; font-size: 0.85rem; color: #444; text-align: center;
-  .price { strong { color: $secondary-color; } }
+  .price { strong { color: var(--uc-secondary); } }
   .date { margin-bottom: 0.3rem; }
 }
 
@@ -161,8 +160,8 @@
   margin-top: 0.8rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem;
   a {
     background-color: rgba(0,0,0,0.03); padding: 0.4rem 0.8rem; border-radius: 1rem;
-    color: $primary-color; font-size: 0.85rem; text-decoration: none; transition: background 0.2s;
-    &:hover { background-color: $primary-color; color: white; }
+    color: var(--uc-primary); font-size: 0.85rem; text-decoration: none; transition: background 0.2s;
+    &:hover { background-color: var(--uc-primary); color: white; }
   }
 }
 
@@ -184,7 +183,7 @@
 }
 
 .toggleButton {
-  background: none; border: none; color: $primary-color; font-size: 0.75rem;
+  background: none; border: none; color: var(--uc-primary); font-size: 0.75rem;
   margin-bottom: 0.5rem; cursor: pointer; font-family: $font-accent; text-decoration: underline;
   &:hover { text-decoration: none; }
 }
@@ -196,12 +195,12 @@
   button, .buttonSecondary, .calendarToggle {
     width: 250px; max-width: 90%; box-sizing: border-box; font-size: 0.82rem;
     font-family: $font-accent; font-weight: bold; padding: 0.5rem 1rem;
-    border-radius: 1.5rem; background: white; color: $primary-color;
-    border: 1px solid $primary-color; transition: background 0.18s, color 0.18s; cursor: pointer; margin: 0 auto;
-    &:hover, &:focus { background: $primary-color; color: white; }
+    border-radius: 1.5rem; background: white; color: var(--uc-primary);
+    border: 1px solid var(--uc-primary); transition: background 0.18s, color 0.18s; cursor: pointer; margin: 0 auto;
+    &:hover, &:focus { background: var(--uc-primary); color: white; }
   }
 
-  .buttonSecondary { background: white; color: $primary-color; border: 1px solid $primary-color; &:hover { background: $primary-color; color: white; } }
+  .buttonSecondary { background: white; color: var(--uc-primary); border: 1px solid var(--uc-primary); &:hover { background: var(--uc-primary); color: white; } }
 }
 
 .noReservationInfo { color: #ba4400; background: #fff6ed; border-radius: 1rem; text-align: center; font-size: 0.95rem; padding: 0.6rem 1rem; border: 1px solid #ffd9b2; }

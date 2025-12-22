@@ -1,8 +1,20 @@
 @import '../../styles/variables';
 
+/* =========================
+   AllUsersList – KARUZELA
+   ========================= */
+
 .section {
   padding: 3rem 1rem;
   text-align: center;
+
+  --cardW: 400px;
+  --gap: 1.5rem;
+  --peek: 0.35;
+  --sidePad: 72px;
+
+  max-width: calc((3 + var(--peek)) * var(--cardW) + (3 + var(--peek) - 1) * var(--gap) + (2 * var(--sidePad)));
+  margin: 0 auto;
 }
 
 .heading {
@@ -18,42 +30,163 @@
   border: 1px solid #ccc;
   font-size: 1rem;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   margin: 0 auto 2rem;
   font-family: $font-body;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba(111, 78, 242, 0.12);
+  }
 }
 
+/* ===== wrapper karuzeli ===== */
+.carousel {
+  position: relative;
+  overflow: visible;
+  padding-left: var(--sidePad);
+  padding-right: var(--sidePad);
+}
+
+/* Fade po bokach */
+.carousel::before,
+.carousel::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 56px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.carousel::before {
+  left: var(--sidePad);
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0));
+}
+
+.carousel::after {
+  right: var(--sidePad);
+  transform: translateX(100%);
+  background: linear-gradient(270deg, #fff, rgba(255, 255, 255, 0));
+}
+
+/* ===== scroller ===== */
 .grid {
   display: flex;
-  flex-wrap: wrap;
-  gap: 2rem;
+  flex-wrap: nowrap;
+  gap: var(--gap);
+  justify-content: flex-start;
+
+  overflow-x: auto;
+  overflow-y: visible;
+
+  padding: 0.5rem 0.25rem 1.25rem;
+
+  scroll-snap-type: x mandatory;
+  scroll-padding-left: 0.25rem;
+  /* desktop start */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* wrapper karty */
+.cardWrap {
+  flex: 0 0 var(--cardW);
+  width: var(--cardW);
+  scroll-snap-align: start;
+
+  display: flex;
   justify-content: center;
 }
 
-@media (max-width: 1024px) {
+/* ===== strzałki ===== */
+.navBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.10);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+
+  svg {
+    color: $primary-color;
+    font-size: 1.05rem;
+  }
+
+  &:hover {
+    transform: translateY(-50%) scale(1.06);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+    background: #fff;
+  }
+
+  &:active {
+    transform: translateY(-50%) scale(1.02);
+  }
+}
+
+.left {
+  left: calc(var(--sidePad) / 2 - 22px);
+}
+
+.right {
+  right: calc(var(--sidePad) / 2 - 22px);
+}
+
+.disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
+/* =========================
+   RWD
+   ========================= */
+
+@media (max-width: 1200px) {
   .section {
-    padding: 3rem 1rem;
+    max-width: calc((2 + var(--peek)) * var(--cardW) + (2 + var(--peek) - 1) * var(--gap) + (2 * var(--sidePad)));
+  }
+}
+
+@media (max-width: 900px) {
+  .section {
+    max-width: calc((1 + var(--peek)) * var(--cardW) + (1 + var(--peek) - 1) * var(--gap) + (2 * var(--sidePad)));
   }
 
-  .heading {
-    font-size: 1.7rem;
-  }
-
-  .search {
-    font-size: 0.95rem;
-    padding: 0.7rem 1rem;
-    max-width: 350px;
-  }
-
-  .grid {
-    gap: 1.5rem;
+  .navBtn {
+    width: 42px;
+    height: 42px;
   }
 }
 
 @media (max-width: 768px) {
   .section {
     padding: 2.5rem 1rem;
+    max-width: 100%;
+    --cardMobileW: min(var(--cardW), 86vw);
   }
 
   .heading {
@@ -66,14 +199,71 @@
     max-width: 100%;
   }
 
+  /* mobile: palec, więc strzałki out */
+  .navBtn {
+    display: none;
+  }
+
+  /* ❗ KLUCZ: na mobile NIE dodajemy sidePad na carousel,
+     bo centrowanie robimy paddingiem samego scroller'a (.grid) */
+  .carousel {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* fade na mobile najlepiej wyłączyć, bo daje wrażenie “ucięcia” */
+  .carousel::before,
+  .carousel::after {
+    display: none;
+  }
+
   .grid {
-    gap: 1.2rem;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1.1rem;
+
+    overflow-x: auto;
+    overflow-y: visible;
+
+    /* ✅ to jest jedyne centrowanie */
+    padding-left: calc((100vw - var(--cardMobileW)) / 2);
+    padding-right: calc((100vw - var(--cardMobileW)) / 2);
+    padding-top: 0.5rem;
+    padding-bottom: 1rem;
+
+    scroll-snap-type: x mandatory;
+    scroll-snap-stop: always;
+    scroll-padding-left: 0;
+    scroll-padding-right: 0;
+
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+
+    /* mniej “dziwnych” bounce na mobile */
+    overscroll-behavior-x: contain;
+
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .cardWrap {
+    width: var(--cardMobileW);
+    flex: 0 0 var(--cardMobileW);
+    scroll-snap-align: center;
+
+    display: flex;
+    justify-content: center;
   }
 }
+
 
 @media (max-width: 480px) {
   .section {
     padding: 2rem 1rem;
+    --cardMobileW: min(var(--cardW), 90vw);
   }
 
   .heading {
@@ -88,7 +278,12 @@
   }
 
   .grid {
-    flex-direction: column;
-    gap: 1rem;
+    padding-left: calc((100vw - var(--cardMobileW)) / 2);
+    padding-right: calc((100vw - var(--cardMobileW)) / 2);
+  }
+
+  .cardWrap {
+    width: var(--cardMobileW);
+    flex: 0 0 var(--cardMobileW);
   }
 }

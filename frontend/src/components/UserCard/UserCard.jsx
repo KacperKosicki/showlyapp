@@ -134,9 +134,40 @@ const UserCard = ({ user, currentUser }) => {
 
   const cleanLinks = (links || []).map(l => (l || '').trim()).filter(Boolean);
 
+  const THEME_PRESETS = {
+  violet: { primary: '#6f4ef2', secondary: '#ff4081' },
+  blue: { primary: '#2563eb', secondary: '#06b6d4' },
+  green: { primary: '#22c55e', secondary: '#a3e635' },
+  orange: { primary: '#f97316', secondary: '#facc15' },
+  red: { primary: '#ef4444', secondary: '#fb7185' },
+  dark: { primary: '#111827', secondary: '#4b5563' },
+};
+
+const resolveUserCardTheme = (theme) => {
+  const variant = theme?.variant || 'violet';
+  const preset = THEME_PRESETS[variant] || THEME_PRESETS.violet;
+
+  const primary = (theme?.primary || theme?.accent || '').trim() || preset.primary;
+  const secondary = (theme?.secondary || theme?.accent2 || '').trim() || preset.secondary;
+
+  return {
+    primary,
+    secondary,
+    banner: `linear-gradient(135deg, ${primary}, ${secondary})`,
+  };
+};
+
+const t = resolveUserCardTheme(user?.theme);
+
+const cssVars = {
+  '--uc-primary': t.primary,
+  '--uc-secondary': t.secondary,
+  '--uc-banner': t.banner,
+};
+
   return (
     <>
-      <div className={styles.card}>
+      <div className={styles.card} style={cssVars}>
         <div className={styles.topBar}>
           <div className={styles.location}><FaMapMarkerAlt /><span>{location}</span></div>
           <div className={styles.rating}><FaStar /><span>{rating} <small>({reviews})</small></span></div>
