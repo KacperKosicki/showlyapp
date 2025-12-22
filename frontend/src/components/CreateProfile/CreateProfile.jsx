@@ -62,23 +62,40 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
 
-        let newValue = value;
-
-        if (name === 'priceFrom') {
-            const numeric = parseInt(value, 10);
-            if (numeric > 100000) newValue = 100000;
-            else if (numeric < 1) newValue = 1;
+        // checkbox bez zmian
+        if (type === 'checkbox') {
+            setForm((prev) => ({ ...prev, [name]: checked }));
+            return;
         }
 
-        if (name === 'priceTo') {
-            const numeric = parseInt(value, 10);
-            if (numeric > 1000000) newValue = 1000000;
-            // NIE blokujemy wpisywania mniejszych niż priceFrom!
+        // ceny: trzymaj jako number lub '' (żeby dało się wyczyścić pole)
+        if (name === 'priceFrom' || name === 'priceTo') {
+            if (value === '') {
+                setForm((prev) => ({ ...prev, [name]: '' }));
+                return;
+            }
+
+            let n = Number(value);
+            if (!Number.isFinite(n)) n = '';
+
+            if (name === 'priceFrom') {
+                if (n < 1) n = 1;
+                if (n > 100000) n = 100000;
+            }
+
+            if (name === 'priceTo') {
+                if (n > 1000000) n = 1000000;
+                // nie blokujemy w trakcie wpisywania mniejszego niż priceFrom
+            }
+
+            setForm((prev) => ({ ...prev, [name]: n }));
+            return;
         }
 
+        // reszta pól normalnie
         setForm((prev) => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : newValue,
+            [name]: value,
         }));
     };
 
@@ -137,13 +154,21 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
             errors.profileType = 'Wybierz typ profilu';
         }
 
-        if (!form.priceFrom || form.priceFrom < 1 || form.priceFrom > 100000) {
+        const priceFromNum = Number(form.priceFrom);
+        const priceToNum = Number(form.priceTo);
+
+        if (!Number.isFinite(priceFromNum) || priceFromNum < 1 || priceFromNum > 100000) {
             errors.priceFrom = 'Cena od musi być w zakresie 1–100 000';
         }
 
-        if (!form.priceTo || form.priceTo < form.priceFrom || form.priceTo > 1000000) {
+        if (
+            !Number.isFinite(priceToNum) ||
+            priceToNum < priceFromNum ||
+            priceToNum > 1000000
+        ) {
             errors.priceTo = 'Cena do musi być większa niż "od" i nie większa niż 1 000 000';
         }
+
 
         // WALIDACJA USŁUG!
         if ((form.services || []).some(s =>
@@ -162,6 +187,8 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
         const payload = {
             ...form,
+            priceFrom: priceFromNum,
+            priceTo: priceToNum,
             rating: 0,
             reviews: 0,
             tags: nonEmptyTags.map(tag => tag.trim()),
@@ -295,7 +322,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                             name="priceTo"
                             value={form.priceTo}
                             onChange={handleChange}
-                            min={form.priceFrom || 1}
+                            min={form.priceFrom ? Number(form.priceFrom) : 1}
                             max={1000000}
                         />
                         {formErrors.priceTo && <small className={styles.error}>{formErrors.priceTo}</small>}
