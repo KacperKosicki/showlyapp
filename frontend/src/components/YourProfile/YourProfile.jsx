@@ -940,19 +940,19 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
               <div
                 className={styles.previewCard}
                 style={{
-                  borderColor: profile.theme?.primary || '#ff5a1f'
+                  borderColor: profile.theme?.primary || '#6f4ef2'
                 }}
               >
                 <div className={styles.previewTop}>
                   <span
                     className={styles.previewPill}
-                    style={{ background: profile.theme?.primary || '#ff5a1f' }}
+                    style={{ background: profile.theme?.primary || '#6f4ef2' }}
                   >
                     Akcent
                   </span>
                   <span
                     className={styles.previewPill}
-                    style={{ background: profile.theme?.secondary || '#7c9dff' }}
+                    style={{ background: profile.theme?.secondary || '#ff4081' }}
                   >
                     Akcent 2
                   </span>
