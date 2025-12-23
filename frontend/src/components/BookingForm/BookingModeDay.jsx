@@ -8,6 +8,7 @@ import { pl } from 'date-fns/locale';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styles from './BookingForm.module.scss';
+import LoadingButton from "../ui/LoadingButton/LoadingButton";
 
 const CHANNEL = 'account_to_profile';
 
@@ -18,6 +19,7 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
   const [selectedService, setService] = useState(null);
   const [onlyInquiry, setOnlyInquiry] = useState(false);
   const [description, setDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   // Dni niedostępne
@@ -53,78 +55,96 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
     return !past && !blocked && respectsWorkingDays;
   };
 
-  const handleSubmit = async () => {
-    if (!user?.uid) {
-      return pushAlert({ show: true, type: 'error', message: 'Musisz być zalogowany.' });
-    }
-    if (!selectedDate) {
-      return pushAlert({ show: true, type: 'error', message: 'Wybierz dzień.' });
-    }
+  const handleSubmit = async (e) => {
+    e?.preventDefault?.();
 
-    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
-    // A) Tylko zapytanie → rozmowa
-    if (onlyInquiry) {
-      const content = [
-        `Zapytanie o dostępność dnia ${dateStr}`,
-        selectedService ? `Usługa: ${selectedService.name}` : null,
-        description?.trim() ? `Opis:\n${description.trim()}` : null
-      ].filter(Boolean).join('\n\n');
+    try {
+      if (!user?.uid) {
+        pushAlert?.({ show: true, type: 'error', message: 'Musisz być zalogowany.' });
+        return;
+      }
+      if (!selectedDate) {
+        pushAlert?.({ show: true, type: 'error', message: 'Wybierz dzień.' });
+        return;
+      }
 
-      try {
-        const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/conversations/send`, {
-          from: user.uid,
-          to: provider.userId,
-          channel: CHANNEL,
-          content
-        });
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
-        // przenosimy feedback do wątku
-        if (data?.id) {
-          sessionStorage.setItem('flash', JSON.stringify({
-            type: 'success',
-            message: 'Twoje zapytanie zostało wysłane.',
-            ttl: 6000,
-            ts: Date.now(),
-          }));
-          sessionStorage.setItem('optimisticMessage', JSON.stringify({
-            _id: `temp-${Date.now()}`,
+      // A) Tylko zapytanie → rozmowa
+      if (onlyInquiry) {
+        const content = [
+          `Zapytanie o dostępność dnia ${dateStr}`,
+          selectedService ? `Usługa: ${selectedService.name}` : null,
+          description?.trim() ? `Opis:\n${description.trim()}` : null,
+        ].filter(Boolean).join('\n\n');
+
+        try {
+          const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/conversations/send`, {
             from: user.uid,
             to: provider.userId,
             channel: CHANNEL,
             content,
-            createdAt: new Date().toISOString(),
-            pending: true,
-          }));
-          navigate(`/konwersacja/${data.id}`, { state: { scrollToId: 'threadPageLayout' } });
-        }
-      } catch (err) {
-        if (err?.response?.status === 403) {
-          const existingId = err?.response?.data?.conversationId || null;
-          sessionStorage.setItem('flash', JSON.stringify({
-            type: 'info',
-            message: 'Masz już otwartą rozmowę z tym użytkownikiem. Kontynuuj w istniejącym wątku.',
-            ttl: 6000,
-            ts: Date.now(),
-          }));
-          sessionStorage.setItem('draft', [
-            `Zapytanie o dostępność dnia ${dateStr}`,
-            selectedService ? `Usługa: ${selectedService.name}` : null,
-            description?.trim() ? `Opis:\n${description.trim()}` : null
-          ].filter(Boolean).join('\n\n'));
-          navigate(
-            existingId ? `/konwersacja/${existingId}` : `/wiadomosc/${provider.userId}`,
-            { state: { scrollToId: 'threadPageLayout' } }
-          );
-          return;
-        }
-        pushAlert({ show: true, type: 'error', message: 'Nie udało się wysłać zapytania.' });
-      }
-      return;
-    }
+          });
 
-    // B) Rezerwacja całego dnia → po sukcesie przekierowanie do /rezerwacje (z flashem)
-    try {
+          if (data?.id) {
+            sessionStorage.setItem('flash', JSON.stringify({
+              type: 'success',
+              message: 'Twoje zapytanie zostało wysłane.',
+              ttl: 6000,
+              ts: Date.now(),
+            }));
+
+            sessionStorage.setItem('optimisticMessage', JSON.stringify({
+              _id: `temp-${Date.now()}`,
+              from: user.uid,
+              to: provider.userId,
+              channel: CHANNEL,
+              content,
+              createdAt: new Date().toISOString(),
+              pending: true,
+            }));
+
+            navigate(`/konwersacja/${data.id}`, { state: { scrollToId: 'threadPageLayout' } });
+          }
+        } catch (err) {
+          if (err?.response?.status === 403) {
+            const existingId = err?.response?.data?.conversationId || null;
+
+            sessionStorage.setItem('flash', JSON.stringify({
+              type: 'info',
+              message: 'Masz już otwartą rozmowę z tym użytkownikiem. Kontynuuj w istniejącym wątku.',
+              ttl: 6000,
+              ts: Date.now(),
+            }));
+
+            sessionStorage.setItem('draft', [
+              `Zapytanie o dostępność dnia ${dateStr}`,
+              selectedService ? `Usługa: ${selectedService.name}` : null,
+              description?.trim() ? `Opis:\n${description.trim()}` : null,
+            ].filter(Boolean).join('\n\n'));
+
+            navigate(
+              existingId ? `/konwersacja/${existingId}` : `/wiadomosc/${provider.userId}`,
+              { state: { scrollToId: 'threadPageLayout' } }
+            );
+            return;
+          }
+
+          pushAlert?.({ show: true, type: 'error', message: 'Nie udało się wysłać zapytania.' });
+        }
+
+        return;
+      }
+
+      // B) Rezerwacja całego dnia
+      if (isUnavailable(dateStr)) {
+        pushAlert?.({ show: true, type: 'error', message: 'Ten dzień jest niedostępny. Użyj "Tylko zapytanie".' });
+        return;
+      }
+
       const payload = {
         userId: user.uid,
         userName: user.displayName || user.email || 'Użytkownik',
@@ -135,25 +155,24 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
         providerProfileRole: provider.role || '',
         date: dateStr,
         description: (description || '').trim(),
+        ...(selectedService?._id ? { serviceId: selectedService._id, serviceName: selectedService.name } : {}),
       };
-      if (selectedService?._id) {
-        payload.serviceId = selectedService._id;
-        payload.serviceName = selectedService.name;
-      }
 
       await axios.post(`${process.env.REACT_APP_API_URL}/api/reservations/day`, payload);
 
-      // zamiast lokalnego pushAlert — flash na /rezerwacje
       sessionStorage.setItem('flash', JSON.stringify({
         type: 'success',
         message: 'Wysłano prośbę o rezerwację dnia – oczekuje na potwierdzenie.',
         ttl: 6000,
         ts: Date.now(),
       }));
+
       navigate('/rezerwacje');
     } catch (err) {
       const msg = err?.response?.data?.message || 'Nie udało się utworzyć rezerwacji dnia.';
-      pushAlert({ show: true, type: 'error', message: msg });
+      pushAlert?.({ show: true, type: 'error', message: msg });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -197,10 +216,25 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
 
       {/* Nawigacja miesięcy */}
       <div className={styles.monthNav}>
-        <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>&lt;</button>
+        <button
+          type="button"
+          disabled={isSubmitting}
+          onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+        >
+          &lt;
+        </button>
+
         <span>{format(currentMonth, 'LLLL yyyy', { locale: pl })}</span>
-        <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>&gt;</button>
+
+        <button
+          type="button"
+          disabled={isSubmitting}
+          onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+        >
+          &gt;
+        </button>
       </div>
+
 
       {/* Siatka kalendarza (bez slotów) */}
       <div className={styles.calendarGrid}>
@@ -220,8 +254,8 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
             <button
               key={day.toISOString()}
               className={`${styles.day} ${(!active || unavailable) ? styles.disabledDay : ''} ${sel ? styles.selectedDay : ''}`}
-              disabled={!active}
-              onClick={() => active && setDate(day)}
+              disabled={!active || isSubmitting}
+              onClick={() => !isSubmitting && active && setDate(day)}
               title={unavailable ? 'Dzień niedostępny' : ''}
             >
               {format(day, 'd')}
@@ -255,9 +289,14 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
         </div>
       )}
 
-      <button onClick={handleSubmit} className={styles.submit}>
+      <LoadingButton
+        onClick={handleSubmit}
+        isLoading={isSubmitting}
+        disabled={!selectedDate || isSubmitting}
+        className={styles.submit}
+      >
         {onlyInquiry ? 'Wyślij zapytanie' : 'Rezerwuj termin'}
-      </button>
+      </LoadingButton>
     </>
   );
 }

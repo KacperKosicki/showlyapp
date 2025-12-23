@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useNavigate, Navigate } from 'react-router-dom';
 import UserCard from '../UserCard/UserCard';
 import { useLocation } from 'react-router-dom';
+import LoadingButton from "../ui/LoadingButton/LoadingButton";
 
 const CreateProfile = ({ user, setRefreshTrigger }) => {
     const [form, setForm] = useState({
@@ -36,6 +37,8 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     const fileInputRef = useRef(null);
     const [formErrors, setFormErrors] = useState({});
     const [serviceError, setServiceError] = useState('');
+    const [previewMsg, setPreviewMsg] = useState('');
+    const [resetAvatarLoading, setResetAvatarLoading] = useState(false);
 
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -127,6 +130,9 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (loading) return;
+
         const errors = {};
 
         if (!form.name.trim() || form.name.length > 30) {
@@ -264,18 +270,31 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                         Avatar (z pliku):
                         <input type="file" accept="image/*" onChange={handleFileChange} ref={fileInputRef} />
                     </label>
-                    <button
+                    <LoadingButton
                         type="button"
+                        isLoading={resetAvatarLoading}
+                        disabled={resetAvatarLoading}
                         className={styles.resetAvatar}
                         onClick={() => {
+                            if (resetAvatarLoading) return;
+
+                            setResetAvatarLoading(true);
+
+                            // logika resetu
                             setForm((prev) => ({ ...prev, avatar: '/images/other/no-image.png' }));
                             if (fileInputRef.current) {
                                 fileInputRef.current.value = '';
                             }
+
+                            // krótki, kontrolowany delay (UX)
+                            setTimeout(() => {
+                                setResetAvatarLoading(false);
+                            }, 400); // 300–500 ms jest idealne
                         }}
                     >
                         Przywróć domyślny avatar
-                    </button>
+                    </LoadingButton>
+
 
                     <label>
                         Opis działalności / O mnie:
@@ -515,14 +534,21 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                         </label>
                     )}
 
-                    <button type="submit" disabled={loading}>
-                        {loading ? 'Tworzenie...' : 'Utwórz profil'}
-                    </button>
+                    <LoadingButton
+                        type="submit"
+                        isLoading={loading}
+                        disabled={loading}
+                        className={styles.submitButton} // opcjonalnie, jeśli masz klasę
+                    >
+                        Utwórz profil
+                    </LoadingButton>
+
                     {formErrors.general && <p className={styles.error}>{formErrors.general}</p>}
                 </form>
 
                 <div className={styles.preview}>
                     <h3 className={styles.previewTitle}>Podgląd tworzonego profilu</h3>
+
                     <UserCard
                         user={{
                             ...form,
@@ -530,8 +556,15 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                             rating: 0,
                             reviews: 0,
                             availableDates: [],
+                            // ważne: żeby nie było "undefined" w UserCard
+                            userId: user?.uid || user?.localId || user?.email,
                         }}
+                        currentUser={user}
+                        isPreview={true}
+                        onPreviewBlocked={(msg) => setPreviewMsg(msg)}
                     />
+
+                    {previewMsg && <p className={styles.error}>{previewMsg}</p>}
                 </div>
             </div>
         </div>

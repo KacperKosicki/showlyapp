@@ -10,6 +10,7 @@ import { useLocation } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkedAlt, FaGlobe } from 'react-icons/fa';
 import { FaFacebook, FaInstagram, FaYoutube, FaTiktok, FaLinkedin, FaXTwitter } from 'react-icons/fa6';
+import LoadingButton from '../ui/LoadingButton/LoadingButton';
 
 const prettyUrl = (url) => {
   try {
@@ -128,6 +129,7 @@ const PublicProfile = () => {
   const [uid, setUid] = useState(auth.currentUser?.uid ?? null);
   const maxChars = 200;
   const routerLocation = useLocation();
+  const [isRatingSending, setIsRatingSending] = useState(false);
 
   // Handlery już wewnątrz komponentu
   const openLightbox = (src) => setFullscreenImage(src);
@@ -246,52 +248,65 @@ const PublicProfile = () => {
   }, [profile]);
 
   const handleRate = async () => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) return setAlert({ type: 'error', message: 'Musisz być zalogowany, aby ocenić.' });
-    if (hasRated) return setAlert({ type: 'info', message: 'Już oceniłeś/aś ten profil.' });
-    if (!selectedRating) return setAlert({ type: 'warning', message: 'Wybierz liczbę gwiazdek.' });
+  if (isRatingSending) return; // ✅ blokada podwójnego kliknięcia
 
-    if (comment.trim().length < 10)
-      return setAlert({ type: 'warning', message: 'Komentarz musi mieć min. 10 znaków.' });
+  const userId = auth.currentUser?.uid;
+  if (!userId) return setAlert({ type: 'error', message: 'Musisz być zalogowany, aby ocenić.' });
+  if (hasRated) return setAlert({ type: 'info', message: 'Już oceniłeś/aś ten profil.' });
+  if (!selectedRating) return setAlert({ type: 'warning', message: 'Wybierz liczbę gwiazdek.' });
 
-    if (comment.length > maxChars) {
-      return setAlert({
-        type: 'error',
-        message: `Komentarz może mieć maksymalnie ${maxChars} znaków (obecnie: ${comment.length}).`,
-      });
+  if (comment.trim().length < 10)
+    return setAlert({ type: 'warning', message: 'Komentarz musi mieć min. 10 znaków.' });
+
+  if (comment.length > maxChars) {
+    return setAlert({
+      type: 'error',
+      message: `Komentarz może mieć maksymalnie ${maxChars} znaków (obecnie: ${comment.length}).`,
+    });
+  }
+
+  setIsRatingSending(true); // ✅ start kropek
+
+  const u = auth.currentUser;
+  const userName = u?.displayName || u?.email || 'Użytkownik';
+
+  let userAvatar = normalizeAvatar(u?.photoURL || '');
+
+  try {
+    const r = await fetch(`${API}/api/users/${userId}`);
+    if (r.ok) {
+      const dbUser = await r.json();
+      userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || '';
     }
+  } catch { }
 
-    const u = auth.currentUser;
-    const userName = u?.displayName || u?.email || 'Użytkownik';
+  try {
+    const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/rate/${slug}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId,
+        rating: selectedRating,
+        comment,
+        userName,
+        userAvatar
+      }),
+    });
 
-    let userAvatar = normalizeAvatar(u?.photoURL || '');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message);
 
-    try {
-      const r = await fetch(`${API}/api/users/${userId}`);
-      if (r.ok) {
-        const dbUser = await r.json();
-        userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || '';
-      }
-    } catch { }
+    setAlert({ type: 'success', message: 'Dziękujemy za opinię!' });
 
-    try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/rate/${slug}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, rating: selectedRating, comment, userName, userAvatar }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      setAlert({ type: 'success', message: 'Dziękujemy za opinię!' });
-
-      const updated = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`);
-      const updatedData = await updated.json();
-      setProfile(updatedData);
-    } catch (err) {
-      setAlert({ type: 'error', message: `${err.message}` });
-    }
-  };
+    const updated = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`);
+    const updatedData = await updated.json();
+    setProfile(updatedData);
+  } catch (err) {
+    setAlert({ type: 'error', message: `${err.message}` });
+  } finally {
+    setIsRatingSending(false); // ✅ stop kropek (zawsze)
+  }
+};
 
   const toggleFavorite = async () => {
     const currentUser = auth.currentUser;

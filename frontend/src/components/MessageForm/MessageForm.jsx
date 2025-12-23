@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import styles from './MessageForm.module.scss';
 import axios from 'axios';
 import AlertBox from '../AlertBox/AlertBox';
+import LoadingButton from '../ui/LoadingButton/LoadingButton';
 
 const CHANNEL = 'account_to_profile'; // zawsze KONTO ➜ WIZYTÓWKA
 
@@ -14,12 +15,15 @@ const MessageForm = ({ user }) => {
   const [message, setMessage] = useState('');
   const [alert, setAlert] = useState(null);
   const [receiverName, setReceiverName] = useState('');
-  const [loading, setLoading] = useState(true);
+
+  const [loading, setLoading] = useState(true);      // ładowanie strony (checkConversation)
+  const [isSending, setIsSending] = useState(false); // wysyłanie wiadomości
 
   // płynny scroll
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo) return;
+
     const t = setTimeout(() => {
       const tryScroll = () => {
         const el = document.getElementById(scrollTo);
@@ -32,6 +36,7 @@ const MessageForm = ({ user }) => {
       };
       requestAnimationFrame(tryScroll);
     }, 100);
+
     return () => clearTimeout(t);
   }, [location.state, location.pathname]);
 
@@ -83,6 +88,9 @@ const MessageForm = ({ user }) => {
       }
     } catch (_) {
       // brak wątku lub błąd – pokaż formularz
+      // (receiverName i tak spróbujemy ustawić)
+      const gotProfile = await fetchProfileNameByUid(recipientId);
+      if (!gotProfile) await fetchAccountLabelByUid(recipientId);
     } finally {
       setLoading(false);
     }
@@ -95,6 +103,10 @@ const MessageForm = ({ user }) => {
   const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim()) return;
+    if (isSending) return;
+
+    setIsSending(true);
+    setAlert(null);
 
     try {
       const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/conversations/send`, {
@@ -123,13 +135,19 @@ const MessageForm = ({ user }) => {
       } else {
         setAlert({ type: 'error', message: 'Błąd podczas wysyłania wiadomości.' });
       }
+    } finally {
+      setIsSending(false);
     }
   };
 
   if (loading) {
     return (
       <div id="messageFormContainer" className={styles.container}>
-        <div className={styles.wrapper}><p>Ładowanie…</p></div>
+        <div className={styles.wrapper}>
+          <LoadingButton type="button" isLoading={true} disabled={true}>
+            Ładowanie
+          </LoadingButton>
+        </div>
       </div>
     );
   }
@@ -138,7 +156,7 @@ const MessageForm = ({ user }) => {
     <div id="messageFormContainer" className={styles.container}>
       <div className={styles.wrapper}>
         <h2 className={styles.conversationTitle}>
-          Konto ➜ Wizytówka: napisz do{' '}
+          Konto ➜ Profil: napisz do{' '}
           <span className={styles.receiverName}>{receiverName}</span>
         </h2>
 
@@ -157,8 +175,17 @@ const MessageForm = ({ user }) => {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Wpisz swoją wiadomość..."
             required
+            disabled={isSending}
           />
-          <button type="submit" className={styles.button}>Wyślij wiadomość</button>
+
+          <LoadingButton
+            type="submit"
+            isLoading={isSending}
+            disabled={isSending}
+            className={styles.button}
+          >
+            Wyślij wiadomość
+          </LoadingButton>
         </form>
       </div>
     </div>

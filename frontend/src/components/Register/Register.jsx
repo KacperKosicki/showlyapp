@@ -13,6 +13,7 @@ import Hero from '../Hero/Hero';
 import Footer from '../Footer/Footer';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
+import LoadingButton from '../ui/LoadingButton/LoadingButton';
 
 const Register = ({ user, setUser, setRefreshTrigger }) => {
   const [form, setForm] = useState({
@@ -25,6 +26,11 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [emailSent, setEmailSent] = useState(false);
+
+  // 🔥 kropki / loadery
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -74,6 +80,9 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // blokada podwójnych klików
+    if (isRegistering || isGoogleLoading) return;
+
     if (form.password !== form.confirmPassword) {
       setError('Hasła nie są identyczne.');
       return;
@@ -81,11 +90,17 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
     setError('');
     setMessage('');
+    setIsRegistering(true);
 
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/users/check-email?email=${encodeURIComponent(form.email)}`);
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/users/check-email?email=${encodeURIComponent(form.email)}`
+      );
+
       if (res.data.exists) {
-        setError(`Ten e-mail jest już powiązany z kontem (${res.data.provider === 'google' ? 'Google' : 'e-mail + hasło'}). Zaloguj się tą metodą.`);
+        setError(
+          `Ten e-mail jest już powiązany z kontem (${res.data.provider === 'google' ? 'Google' : 'e-mail + hasło'}). Zaloguj się tą metodą.`
+        );
         return;
       }
 
@@ -106,13 +121,19 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
       } else {
         setError('Błąd podczas rejestracji.');
       }
+    } finally {
+      setIsRegistering(false);
     }
   };
 
   const handleGoogleLogin = async () => {
+    // blokada podwójnych klików
+    if (isRegistering || isGoogleLoading) return;
+
     setError('');
     setMessage('');
-    sessionStorage.setItem('authFlow', '1'); // ⬅️ start (bo za chwilę będziesz zalogowany i guard nie może przerwać /register)
+    setIsGoogleLoading(true);
+    sessionStorage.setItem('authFlow', '1'); // ⬅️ start
 
     try {
       const provider = googleProvider;
@@ -166,8 +187,12 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
         setError('Błąd podczas logowania przez Google.');
       }
       sessionStorage.removeItem('authFlow'); // ⬅️ stop przy błędzie
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
+
+  const isBusy = isRegistering || isGoogleLoading;
 
   return (
     <>
@@ -184,6 +209,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
                 placeholder="Imię i nazwisko"
                 onChange={handleChange}
                 required
+                disabled={isBusy}
               />
               <input
                 type="email"
@@ -191,6 +217,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
                 placeholder="Adres email"
                 onChange={handleChange}
                 required
+                disabled={isBusy}
               />
               <input
                 type="password"
@@ -198,6 +225,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
                 placeholder="Hasło"
                 onChange={handleChange}
                 required
+                disabled={isBusy}
               />
               <input
                 type="password"
@@ -205,19 +233,35 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
                 placeholder="Powtórz hasło"
                 onChange={handleChange}
                 required
+                disabled={isBusy}
               />
-              <button type="submit">Zarejestruj się</button>
+
+              <LoadingButton
+                type="submit"
+                isLoading={isRegistering}
+                disabled={isBusy}
+              >
+                Zarejestruj się
+              </LoadingButton>
             </form>
 
             <div className={styles.orSeparator}>lub</div>
-            <button onClick={handleGoogleLogin} className={styles.googleButton}>
+
+            <LoadingButton
+              type="button"
+              onClick={handleGoogleLogin}
+              isLoading={isGoogleLoading}
+              disabled={isBusy}
+              className={styles.googleButton}
+            >
               <img src="/images/icons/google.png" alt="Google" />
               Kontynuuj przez Google
-            </button>
+            </LoadingButton>
           </>
         ) : (
           <div className={styles.success}>
-            Rejestracja zakończona. Sprawdź swoją skrzynkę i kliknij link aktywacyjny, aby aktywować konto. Następnie możesz się zalogować.
+            Rejestracja zakończona. Sprawdź swoją skrzynkę i kliknij link aktywacyjny, aby aktywować konto.
+            Następnie możesz się zalogować.
           </div>
         )}
 

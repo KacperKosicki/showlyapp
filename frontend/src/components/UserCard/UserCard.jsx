@@ -17,7 +17,7 @@ const prettyUrl = (url) => {
   } catch { return url; }
 };
 
-const UserCard = ({ user, currentUser }) => {
+const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) => {
   const {
     name, avatar, role, rating, reviews, location, tags,
     priceFrom, priceTo, availableDates = [], profileType,
@@ -58,6 +58,15 @@ const UserCard = ({ user, currentUser }) => {
       .replace(/--+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
 
   const slug = `${slugify(name)}-${slugify(role)}`;
+
+  const blockIfPreview = (e, msg) => {
+    if (!isPreview) return false;
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    if (typeof onPreviewBlocked === 'function') onPreviewBlocked(msg);
+    else showAlert(msg, 'info');
+    return true;
+  };
 
   // === Ulubione ===
   const toggleFavorite = async () => {
@@ -102,7 +111,7 @@ const UserCard = ({ user, currentUser }) => {
         );
         if (typeof data?.visits === 'number') setVisits(data.visits);
       }
-    } catch {}
+    } catch { }
     navigate(`/profil/${slug}`, { state: { scrollToId: 'profileWrapper' } });
   };
 
@@ -135,35 +144,35 @@ const UserCard = ({ user, currentUser }) => {
   const cleanLinks = (links || []).map(l => (l || '').trim()).filter(Boolean);
 
   const THEME_PRESETS = {
-  violet: { primary: '#6f4ef2', secondary: '#ff4081' },
-  blue: { primary: '#2563eb', secondary: '#06b6d4' },
-  green: { primary: '#22c55e', secondary: '#a3e635' },
-  orange: { primary: '#f97316', secondary: '#facc15' },
-  red: { primary: '#ef4444', secondary: '#fb7185' },
-  dark: { primary: '#111827', secondary: '#4b5563' },
-};
-
-const resolveUserCardTheme = (theme) => {
-  const variant = theme?.variant || 'violet';
-  const preset = THEME_PRESETS[variant] || THEME_PRESETS.violet;
-
-  const primary = (theme?.primary || theme?.accent || '').trim() || preset.primary;
-  const secondary = (theme?.secondary || theme?.accent2 || '').trim() || preset.secondary;
-
-  return {
-    primary,
-    secondary,
-    banner: `linear-gradient(135deg, ${primary}, ${secondary})`,
+    violet: { primary: '#6f4ef2', secondary: '#ff4081' },
+    blue: { primary: '#2563eb', secondary: '#06b6d4' },
+    green: { primary: '#22c55e', secondary: '#a3e635' },
+    orange: { primary: '#f97316', secondary: '#facc15' },
+    red: { primary: '#ef4444', secondary: '#fb7185' },
+    dark: { primary: '#111827', secondary: '#4b5563' },
   };
-};
 
-const t = resolveUserCardTheme(user?.theme);
+  const resolveUserCardTheme = (theme) => {
+    const variant = theme?.variant || 'violet';
+    const preset = THEME_PRESETS[variant] || THEME_PRESETS.violet;
 
-const cssVars = {
-  '--uc-primary': t.primary,
-  '--uc-secondary': t.secondary,
-  '--uc-banner': t.banner,
-};
+    const primary = (theme?.primary || theme?.accent || '').trim() || preset.primary;
+    const secondary = (theme?.secondary || theme?.accent2 || '').trim() || preset.secondary;
+
+    return {
+      primary,
+      secondary,
+      banner: `linear-gradient(135deg, ${primary}, ${secondary})`,
+    };
+  };
+
+  const t = resolveUserCardTheme(user?.theme);
+
+  const cssVars = {
+    '--uc-primary': t.primary,
+    '--uc-secondary': t.secondary,
+    '--uc-banner': t.banner,
+  };
 
   return (
     <>
@@ -199,13 +208,13 @@ const cssVars = {
 
         {description?.trim()
           ? <>
-              <p className={`${styles.description} ${isExpanded ? styles.expanded : ''}`}>{description}</p>
-              {description.length > 120 && (
-                <button className={styles.toggleButton} onClick={() => setIsExpanded(p => !p)}>
-                  {isExpanded ? 'Zwiń' : 'Pokaż więcej'}
-                </button>
-              )}
-            </>
+            <p className={`${styles.description} ${isExpanded ? styles.expanded : ''}`}>{description}</p>
+            {description.length > 120 && (
+              <button className={styles.toggleButton} onClick={() => setIsExpanded(p => !p)}>
+                {isExpanded ? 'Zwiń' : 'Pokaż więcej'}
+              </button>
+            )}
+          </>
           : <p className={styles.noDescription}>Użytkownik nie dodał jeszcze opisu.</p>
         }
 
@@ -222,18 +231,48 @@ const cssVars = {
             ? <p className={styles.price}>Cennik od <strong>{priceFrom} zł</strong> do <strong>{priceTo} zł</strong></p>
             : <p className={styles.price}>Cennik: <em>Brak danych</em></p>
           }
-          {cleanLinks.length > 0
-            ? (
-              <div className={styles.links}>
-                {cleanLinks.map((link, i) => (
-                  <a key={`${link}-${i}`} href={link} target="_blank" rel="noopener noreferrer" title={link}>
-                    {prettyUrl(link)}
+          {cleanLinks.length > 0 ? (
+            <div className={styles.links}>
+              {cleanLinks.map((link, i) => {
+                const label = prettyUrl(link);
+
+                if (isPreview) {
+                  return (
+                    <span
+                      key={`${link}-${i}`}
+                      className={styles.linkDisabled}
+                      onClick={(e) => blockIfPreview(e, 'Linki są aktywne dopiero po utworzeniu profilu.')}
+                      title="Podgląd — link nieaktywny"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          blockIfPreview(e, 'Linki są aktywne dopiero po utworzeniu profilu.');
+                        }
+                      }}
+                    >
+                      {label}
+                    </span>
+                  );
+                }
+
+                return (
+                  <a
+                    key={`${link}-${i}`}
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={link}
+                  >
+                    {label}
                   </a>
-                ))}
-              </div>
-            )
-            : <p className={styles.noDescription}>Użytkownik nie dodał jeszcze żadnych linków.</p>
-          }
+                );
+              })}
+            </div>
+          ) : (
+            <p className={styles.noDescription}>Użytkownik nie dodał jeszcze żadnych linków.</p>
+          )}
+
         </div>
 
         <div className={styles.separator} />
@@ -246,20 +285,41 @@ const cssVars = {
 
         <div className={styles.buttons}>
           {showAvailableDates && (
-            <button className={styles.calendarToggle} onClick={goToBooking}>
+            <button
+              type="button"
+              className={styles.calendarToggle}
+              disabled={isPreview}
+              onClick={(e) => {
+                if (blockIfPreview(e, 'Rezerwacje są dostępne dopiero po utworzeniu profilu.')) return;
+                goToBooking();
+              }}
+              title={isPreview ? 'Podgląd — rezerwacje wyłączone' : 'Zarezerwuj termin'}
+            >
               ZAREZERWUJ TERMIN
             </button>
           )}
 
-          <button className={styles.buttonSecondary} onClick={handleViewProfile}>
+
+          <button
+            type="button"
+            className={styles.buttonSecondary}
+            onClick={(e) => {
+              if (blockIfPreview(e, 'To tylko podgląd — profil będzie dostępny po utworzeniu.')) return;
+              handleViewProfile();
+            }}
+            title={isPreview ? 'Podgląd — po utworzeniu profilu' : 'Zobacz profil'}
+          >
             ZOBACZ PROFIL
           </button>
 
-          {currentUser && currentUser.uid !== user.userId && (
+
+
+          {!isPreview && currentUser && currentUser.uid !== user.userId && (
             <button className={styles.buttonSecondary} onClick={startAccountToProfile}>
               ZADAJ PYTANIE
             </button>
           )}
+
         </div>
 
         {/* meta dół */}
@@ -272,9 +332,12 @@ const cssVars = {
           <button
             type="button"
             className={`${styles.favoritesBtn} ${isFav ? styles.active : ''}`}
-            onClick={toggleFavorite}
+            onClick={(e) => {
+              if (blockIfPreview(e, 'Nie możesz dodać do ulubionych w podglądzie.')) return;
+              toggleFavorite();
+            }}
             aria-label={isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
-            title={isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
+            title={isPreview ? 'Podgląd — ulubione wyłączone' : (isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych')}
           >
             <span className={styles.favLabel}>
               Ulubione: <strong>{favCount}</strong>

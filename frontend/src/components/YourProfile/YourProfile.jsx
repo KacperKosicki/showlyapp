@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Navigate, useLocation, Link } from 'react-router-dom';
 import axios from 'axios';
 import styles from './YourProfile.module.scss';
+import LoadingButton from '../ui/LoadingButton/LoadingButton';
 import {
   FaMapMarkerAlt,
   FaTags,
@@ -55,6 +56,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const [formErrors, setFormErrors] = useState({});
   const [alert, setAlert] = useState(null);
   const [initialEditData, setInitialEditData] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // --- PRACOWNICY ---
   const [staff, setStaff] = useState([]); // [{_id, name, active, capacity, serviceIds: []}]
@@ -488,6 +490,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   };
 
   const handleSaveChanges = async () => {
+    if (isSaving) return; // ✅ blokada podwójnego kliknięcia
+
     const errors = validateEditData(editData);
 
     // Walidacja czasu usług
@@ -505,11 +509,12 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       return;
     }
 
+    setIsSaving(true); // ✅ start loadera
+
     try {
       const { photoHashes, ...payload } = editData;
 
       const t = payload.theme || {};
-
       const mappedTheme = {
         variant: t.variant || 'system',
         primary: t.primary || '#6f4ef2',
@@ -531,7 +536,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           phone: c.phone || '',
           street: c.street || '',
           postcode: c.postcode || '',
-          addressFull: builtAddressFull, // ✅ auto
+          addressFull: builtAddressFull,
         },
         socials: payload.socials || { website: '', facebook: '', instagram: '', youtube: '', tiktok: '' },
         showAvailableDates: !!payload.showAvailableDates,
@@ -540,8 +545,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         team: payload.team || { enabled: false, assignmentMode: 'user-pick' },
       });
 
-      // 2) Zbiorczy zapis zmian pracowników (tylko te, które zmieniono)
-      const staffUpdateEntries = Object.entries(staffEdits); // [[id, changes], ...]
+      // 2) Zbiorczy zapis pracowników (tylko zmienione)
+      const staffUpdateEntries = Object.entries(staffEdits);
       if (staffUpdateEntries.length) {
         await Promise.all(
           staffUpdateEntries.map(([id, changes]) =>
@@ -550,15 +555,17 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         );
       }
 
-      // 3) Odśwież dane i posprzątaj lokalny stan edycji
+      // 3) Odśwież + sprzątnij
       await fetchProfile();
-      setStaffEdits({});          // wyczyść „brudne” zmiany pracowników
+      setStaffEdits({});
       setIsEditing(false);
       setFormErrors({});
       showAlert('Zapisano zmiany!', 'success');
     } catch (err) {
       console.error('❌ Błąd zapisu profilu/pracowników:', err);
       showAlert('Wystąpił błąd podczas zapisywania.', 'error');
+    } finally {
+      setIsSaving(false); // ✅ stop loadera zawsze
     }
   };
 
@@ -2255,17 +2262,20 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           <div className={styles.editBarInner}>
             <span className={styles.editHint}>Masz niezapisane zmiany</span>
             <div className={styles.editBarBtns}>
-              <button
+              <LoadingButton
                 type="button"
+                isLoading={isSaving}
+                disabled={isSaving}
                 className={styles.primary}
                 onClick={handleSaveChanges}
               >
                 Zapisz zmiany profilu
-              </button>
+              </LoadingButton>
 
               <button
                 type="button"
                 className={styles.ghost}
+                disabled={isSaving}
                 onClick={() => {
                   setEditData(initialEditData || editData);
                   setStaffEdits({});

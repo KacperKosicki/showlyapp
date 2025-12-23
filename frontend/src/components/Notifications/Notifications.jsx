@@ -302,7 +302,7 @@ const Notifications = ({ user, setUnreadCount }) => {
                   {myProfile?.name ? ` „${myProfile.name}”` : ''}
                 </h3>
                 <span className={styles.badge}>
-                  {inboxUnread > 0 ? `${inboxUnread} nieprzeczyt.` : `${inboxToMyProfile.length}`}
+                  {inboxUnread > 0 ? `${inboxUnread} nieprze.` : `${inboxToMyProfile.length}`}
                 </span>
               </div>
 
@@ -321,7 +321,7 @@ const Notifications = ({ user, setUnreadCount }) => {
                 </h3>
                 <span className={styles.badge}>
                   {outboxUnread > 0
-                    ? `${outboxUnread} nieprzeczyt.`
+                    ? `${outboxUnread} nieprze.`
                     : `${myAccountToOtherProfiles.length}`}
                 </span>
               </div>
@@ -340,7 +340,7 @@ const Notifications = ({ user, setUnreadCount }) => {
               <div className={styles.groupHeader}>
                 <h3 className={styles.groupTitle}>Wiadomości systemowe</h3>
                 <span className={styles.badge}>
-                  {systemUnread > 0 ? `${systemUnread} nieprzeczyt.` : `${systemConversations.length}`}
+                  {systemUnread > 0 ? `${systemUnread} nieprze.` : `${systemConversations.length}`}
                 </span>
               </div>
 

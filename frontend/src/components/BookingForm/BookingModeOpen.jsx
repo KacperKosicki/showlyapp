@@ -3,6 +3,7 @@ import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styles from './BookingForm.module.scss';
+import LoadingButton from "../ui/LoadingButton/LoadingButton";
 
 const CHANNEL = 'account_to_profile';
 
@@ -13,24 +14,30 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
   const [sending, setSending] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async () => {
-    if (!user?.uid) {
-      return pushAlert?.({ show: true, type: 'error', message: 'Musisz być zalogowany.' });
-    }
-    const body = (message || '').trim();
-    if (!body) {
-      return pushAlert?.({ show: true, type: 'error', message: 'Napisz krótką wiadomość.' });
-    }
+  const handleSubmit = async (e) => {
+    e?.preventDefault?.();
 
-    const content = [
-      subject?.trim() ? `Temat: ${subject.trim()}` : null,
-      phone?.trim() ? `Telefon: ${phone.trim()}` : null,
-      '',
-      body,
-    ].filter(Boolean).join('\n');
+    if (sending) return; // ✅ blokada podwójnego kliku
+    setSending(true);
 
     try {
-      setSending(true);
+      if (!user?.uid) {
+        pushAlert?.({ show: true, type: 'error', message: 'Musisz być zalogowany.' });
+        return;
+      }
+
+      const body = (message || '').trim();
+      if (!body) {
+        pushAlert?.({ show: true, type: 'error', message: 'Napisz krótką wiadomość.' });
+        return;
+      }
+
+      const content = [
+        subject?.trim() ? `Temat: ${subject.trim()}` : null,
+        phone?.trim() ? `Telefon: ${phone.trim()}` : null,
+        '',
+        body,
+      ].filter(Boolean).join('\n');
 
       const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/conversations/send`, {
         from: user.uid,
@@ -46,6 +53,7 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
           ttl: 6000,
           ts: Date.now(),
         }));
+
         sessionStorage.setItem('optimisticMessage', JSON.stringify({
           _id: `temp-${Date.now()}`,
           from: user.uid,
@@ -55,10 +63,12 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
           createdAt: new Date().toISOString(),
           pending: true,
         }));
+
         navigate(`/konwersacja/${data.id}`, { state: { scrollToId: 'threadPageLayout' } });
         return;
       }
 
+      // fallback (gdyby API nie zwróciło id)
       pushAlert?.({ show: true, type: 'success', message: 'Zapytanie wysłane.' });
       setMessage('');
       setPhone('');
@@ -66,12 +76,20 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
       if (err?.response?.status === 403) {
         const existingId = err?.response?.data?.conversationId || null;
 
+        const content = [
+          subject?.trim() ? `Temat: ${subject.trim()}` : null,
+          phone?.trim() ? `Telefon: ${phone.trim()}` : null,
+          '',
+          (message || '').trim(),
+        ].filter(Boolean).join('\n');
+
         sessionStorage.setItem('flash', JSON.stringify({
           type: 'info',
           message: 'Masz już otwartą rozmowę z tym użytkownikiem. Kontynuuj w istniejącym wątku.',
           ttl: 6000,
           ts: Date.now(),
         }));
+
         sessionStorage.setItem('draft', content);
 
         navigate(
@@ -80,13 +98,13 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
         );
         return;
       }
+
       pushAlert?.({ show: true, type: 'error', message: 'Nie udało się wysłać zapytania.' });
     } finally {
-      setSending(false);
+      setSending(false); // ✅ zawsze odblokuje
     }
   };
 
-  // ⤵️ tylko zawartość (bez własnego <section>/<div className="wrapper">)
   return (
     <>
       <label className={styles.field}>
@@ -96,6 +114,7 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
           value={subject}
           onChange={e => setSubject(e.target.value)}
           placeholder="Np. Wycena strony internetowej"
+          disabled={sending}
         />
       </label>
 
@@ -106,6 +125,7 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
           value={phone}
           onChange={e => setPhone(e.target.value)}
           placeholder="Np. 500 600 700"
+          disabled={sending}
         />
       </label>
 
@@ -116,17 +136,18 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
           value={message}
           onChange={e => setMessage(e.target.value)}
           placeholder="Opisz krótko czego potrzebujesz, budżet, termin orientacyjny itp."
+          disabled={sending}
         />
       </label>
 
-      <button
+      <LoadingButton
         onClick={handleSubmit}
+        isLoading={sending}
+        disabled={sending || !(message || '').trim()}
         className={styles.submit}
-        disabled={sending}
-        aria-busy={sending}
       >
-        {sending ? 'Wysyłanie…' : 'Wyślij zapytanie'}
-      </button>
+        Wyślij zapytanie
+      </LoadingButton>
     </>
   );
 }

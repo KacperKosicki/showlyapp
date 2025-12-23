@@ -1,7 +1,7 @@
 import styles from './Hero.module.scss';
 import Navbar from '../Navbar/Navbar';
-import { Link } from 'react-router-dom';
 import SearchBar from '../SearchBar/SearchBar';
+import LoadingLink from '../ui/LoadingLink/LoadingLink';
 
 const Hero = ({ user, setUser, refreshTrigger, unreadCount, setUnreadCount, pendingReservationsCount }) => {
   return (
@@ -14,6 +14,7 @@ const Hero = ({ user, setUser, refreshTrigger, unreadCount, setUnreadCount, pend
         setUnreadCount={setUnreadCount}
         pendingReservationsCount={pendingReservationsCount}
       />
+
       <div className={styles.heroContent}>
         <h1>Promuj się<br />online!</h1>
         <p>Stwórz swój profil i zaprezentuj swoje usługi</p>
@@ -24,23 +25,23 @@ const Hero = ({ user, setUser, refreshTrigger, unreadCount, setUnreadCount, pend
           </div>
 
           {user ? (
-            <Link
+            <LoadingLink
               to="/profil"
-              state={{ scrollToId: 'scrollToId' }}  // ← ID elementu w YourProfile
+              state={{ scrollToId: 'scrollToId' }}
               className={styles.ctaButton}
-              aria-label="Przejdź do profilu"
+              aria-label="Przejdź do edycji profilu"
             >
               Przejdź do edycji profilu
-            </Link>
+            </LoadingLink>
           ) : (
-            <Link
+            <LoadingLink
               to="/register"
               state={{ scrollToId: 'registerContainer' }}
               className={styles.ctaButton}
               aria-label="Załóż konto"
             >
               Załóż konto
-            </Link>
+            </LoadingLink>
           )}
         </div>
       </div>

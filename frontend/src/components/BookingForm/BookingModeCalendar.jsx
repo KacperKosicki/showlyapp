@@ -8,6 +8,7 @@ import { pl } from 'date-fns/locale';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styles from './BookingForm.module.scss';
+import LoadingButton from "../ui/LoadingButton/LoadingButton";
 
 const durationToMinutes = (svc) => {
   const { value, unit } = svc?.duration || {};
@@ -28,6 +29,7 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
   const [timeSlots, setTimeSlots] = useState([]);
   const [selectedSlot, setSlot] = useState(''); // "HH:mm"
   const [description, setDescription] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // ✨ Zespół
   const [staffList, setStaffList] = useState([]);
@@ -284,71 +286,95 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
   const handleSubmit = async (e) => {
     e.preventDefault?.();
 
-    if (!user?.uid) {
-      return pushAlert?.({ show: true, type: 'error', message: 'Musisz być zalogowany.' });
-    }
-    if (!selectedDate || !selectedService || !selectedSlot) {
-      return pushAlert?.({ show: true, type: 'error', message: 'Wybierz dzień, usługę i godzinę.' });
-    }
-    if (isUserPick && !selectedStaffId) {
-      return pushAlert?.({ show: true, type: 'error', message: 'Wybierz pracownika.' });
-    }
-
-    // anty-przeterminowanie
-    const step = 15;
-    const [h, m] = selectedSlot.split(':').map(Number);
-    const startDateTime = new Date(selectedDate);
-    startDateTime.setHours(h, m, 0, 0);
-    let nowRoundedUp = startOfMinute(new Date());
-    const remNow = nowRoundedUp.getMinutes() % step;
-    if (remNow) nowRoundedUp = addMinutes(nowRoundedUp, step - remNow);
-    if (isSameDay(selectedDate, new Date()) && startDateTime < nowRoundedUp) {
-      return pushAlert?.({ show: true, type: 'error', message: 'Wybrany slot już minął. Wybierz nowszą godzinę.' });
-    }
-
-    const fromTime = format(startDateTime, 'HH:mm');
-    const toTime = format(addMinutes(startDateTime, durationToMinutes(selectedService)), 'HH:mm');
-
-    const payload = {
-      userId: user.uid,
-      providerUserId: provider.userId,
-      providerProfileId: provider._id,
-      date: format(selectedDate, 'yyyy-MM-dd'),
-      fromTime,
-      toTime,
-      description,
-      serviceId: selectedService._id,
-      ...(isUserPick && selectedStaffId ? { staffId: selectedStaffId } : {})
-    };
+    if (isSubmitting) return; // ⬅️ blokada podwójnego kliku
+    setIsSubmitting(true);
 
     try {
+      if (!user?.uid) {
+        pushAlert?.({ show: true, type: 'error', message: 'Musisz być zalogowany.' });
+        return;
+      }
+      if (!selectedDate || !selectedService || !selectedSlot) {
+        pushAlert?.({ show: true, type: 'error', message: 'Wybierz dzień, usługę i godzinę.' });
+        return;
+      }
+      if (isUserPick && !selectedStaffId) {
+        pushAlert?.({ show: true, type: 'error', message: 'Wybierz pracownika.' });
+        return;
+      }
+
+      // anty-przeterminowanie
+      const step = 15;
+      const [h, m] = selectedSlot.split(':').map(Number);
+      const startDateTime = new Date(selectedDate);
+      startDateTime.setHours(h, m, 0, 0);
+
+      let nowRoundedUp = startOfMinute(new Date());
+      const remNow = nowRoundedUp.getMinutes() % step;
+      if (remNow) nowRoundedUp = addMinutes(nowRoundedUp, step - remNow);
+
+      if (isSameDay(selectedDate, new Date()) && startDateTime < nowRoundedUp) {
+        pushAlert?.({ show: true, type: 'error', message: 'Wybrany slot już minął. Wybierz nowszą godzinę.' });
+        return;
+      }
+
+      const fromTime = format(startDateTime, 'HH:mm');
+      const toTime = format(
+        addMinutes(startDateTime, durationToMinutes(selectedService)),
+        'HH:mm'
+      );
+
+      const payload = {
+        userId: user.uid,
+        providerUserId: provider.userId,
+        providerProfileId: provider._id,
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        fromTime,
+        toTime,
+        description,
+        serviceId: selectedService._id,
+        ...(isUserPick && selectedStaffId ? { staffId: selectedStaffId } : {}),
+      };
+
       await axios.post(`${process.env.REACT_APP_API_URL}/api/reservations`, payload);
 
       // odśwież lokalne rezerwacje (żeby slot zmienił kolor)
       await fetchReservations();
 
       // flash po przejściu
-      sessionStorage.setItem('flash', JSON.stringify({
-        type: 'success',
-        message: 'Rezerwacja wysłana – oczekuje na potwierdzenie.',
-        ttl: 6000,
-        ts: Date.now(),
-      }));
+      sessionStorage.setItem(
+        'flash',
+        JSON.stringify({
+          type: 'success',
+          message: 'Rezerwacja wysłana – oczekuje na potwierdzenie.',
+          ttl: 6000,
+          ts: Date.now(),
+        })
+      );
 
-      sessionStorage.setItem('reservationHighlight', JSON.stringify({
-        date: payload.date,
-        fromTime,
-        toTime,
-        serviceId: selectedService._id,
-      }));
+      sessionStorage.setItem(
+        'reservationHighlight',
+        JSON.stringify({
+          date: payload.date,
+          fromTime,
+          toTime,
+          serviceId: selectedService._id,
+        })
+      );
 
       navigate('/rezerwacje', { state: { scrollToId: 'reservationsTop' } });
 
       setSlot('');
       setDescription('');
-      setTimeout(() => { setDate(null); setService(null); setSelectedStaffId(''); }, 100);
+      setTimeout(() => {
+        setDate(null);
+        setService(null);
+        setSelectedStaffId('');
+      }, 100);
     } catch {
       pushAlert?.({ show: true, type: 'error', message: 'Błąd przy wysyłaniu.' });
+    } finally {
+      setIsSubmitting(false); // ✅ zawsze odblokuje przycisk
     }
   };
 
@@ -471,8 +497,8 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
                       ${s.status === 'pending' ? styles.slotPending : ''}
                       ${selectedSlot === s.label ? styles.slotSelected : ''}
                     `}
-                    disabled={s.status !== 'free'}
-                    onClick={() => s.status === 'free' && setSlot(s.label)}
+                    disabled={s.status !== 'free' || isSubmitting}
+                    onClick={() => !isSubmitting && s.status === 'free' && setSlot(s.label)}
                   >
                     {s.label}
                   </button>
@@ -487,7 +513,14 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
                 <span className={styles.legendInfo}>+ 15 min przerwy między usługami</span>
               </div>
 
-              <button type="submit" className={styles.submit}>Rezerwuj termin</button>
+              <LoadingButton
+                type="submit"
+                isLoading={isSubmitting}
+                disabled={!selectedSlot || isSubmitting}
+                className={styles.submit}
+              >
+                Rezerwuj termin
+              </LoadingButton>
             </form>
           )}
         </>
