@@ -57,6 +57,9 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const [alert, setAlert] = useState(null);
   const [initialEditData, setInitialEditData] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isExtending, setIsExtending] = useState(false);
+  const [isCreatingStaff, setIsCreatingStaff] = useState(false);
+  const [deletingStaffIds, setDeletingStaffIds] = useState([]); // lista id w trakcie usuwania
 
   // --- PRACOWNICY ---
   const [staff, setStaff] = useState([]); // [{_id, name, active, capacity, serviceIds: []}]
@@ -213,13 +216,16 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   };
 
   const createStaff = async () => {
+    if (isCreatingStaff) return;
     if (!profile?._id) return;
+
     if (!newStaff.name.trim()) {
       showAlert('Podaj imię pracownika.', 'warning');
       return;
     }
+
+    setIsCreatingStaff(true);
     try {
-      // API: POST /api/staff
       const payload = {
         profileId: profile._id,
         name: newStaff.name.trim(),
@@ -227,17 +233,27 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         active: !!newStaff.active,
         serviceIds: newStaff.serviceIds || []
       };
+
       await axios.post(`${process.env.REACT_APP_API_URL}/api/staff`, payload);
+
       setNewStaff({ name: '', capacity: 1, active: true, serviceIds: [] });
       await fetchStaff(profile._id);
+
       showAlert('Dodano pracownika.', 'success');
     } catch (e) {
       console.error('Błąd dodawania pracownika', e);
       showAlert('Błąd dodawania pracownika.', 'error');
+    } finally {
+      setIsCreatingStaff(false);
     }
   };
 
   const deleteStaff = async (id) => {
+    if (deletingStaffIds.includes(id)) return;
+
+    // loader tylko dla tego jednego elementu
+    setDeletingStaffIds(prev => [...prev, id]);
+
     // optymistycznie usuń z listy od razu
     setStaff(prev => prev.filter(s => s._id !== id));
 
@@ -246,12 +262,12 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       showAlert('Usunięto pracownika.', 'success');
     } catch (e) {
       console.error('Błąd usuwania pracownika', e);
-      // przy błędzie przywróć listę z serwera
       await fetchStaff(profile._id);
       showAlert('Błąd usuwania pracownika.', 'error');
+    } finally {
+      setDeletingStaffIds(prev => prev.filter(x => x !== id));
     }
   };
-
 
   // =========================
   // Helpers: obrazy, hash
@@ -479,15 +495,22 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   };
 
   const handleExtendVisibility = async () => {
+    if (isExtending) return;
+
+    setIsExtending(true);
     try {
       await axios.patch(`${process.env.REACT_APP_API_URL}/api/profiles/extend/${user.uid}`);
       await fetchProfile();
       setRefreshTrigger(Date.now());
+      showAlert('Przedłużono widoczność!', 'success');
     } catch (err) {
       console.error('❌ Błąd przedłużania widoczności:', err);
       showAlert('Nie udało się przedłużyć widoczności.', 'error');
+    } finally {
+      setIsExtending(false);
     }
   };
+
 
   const handleSaveChanges = async () => {
     if (isSaving) return; // ✅ blokada podwójnego kliknięcia
@@ -697,7 +720,15 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         <div className={`${styles.card} ${styles.expiredNotice}`}>
           <p>🔒 Twój profil jest <strong>niewidoczny</strong>.</p>
           <p>Wygasł: <strong>{new Date(profile.visibleUntil).toLocaleDateString()}</strong></p>
-          <button className={styles.secondary} onClick={handleExtendVisibility}>Przedłuż widoczność</button>
+          <LoadingButton
+            type="button"
+            isLoading={isExtending}
+            disabled={isExtending}
+            className={styles.secondary}
+            onClick={handleExtendVisibility}
+          >
+            Przedłuż widoczność
+          </LoadingButton>
         </div>
       )}
 
@@ -1633,14 +1664,15 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                     {/* Akcje – tylko w trybie edycji */}
                     {isEditing && (
                       <>
-                        <button
+                        <LoadingButton
                           type="button"
+                          isLoading={deletingStaffIds.includes(st._id)}
+                          disabled={deletingStaffIds.includes(st._id)}
                           className={styles.ghost}
                           onClick={() => deleteStaff(st._id)}
-                          title="Usuń"
                         >
                           <FaTrash style={{ transform: 'translateY(1px)' }} /> Usuń
-                        </button>
+                        </LoadingButton>
                         <button
                           type="button"
                           className={styles.ghost}
@@ -1737,9 +1769,15 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             </div>
 
             <div style={{ marginTop: '.6rem' }}>
-              <button type="button" className={styles.primary} onClick={createStaff}>
+              <LoadingButton
+                type="button"
+                isLoading={isCreatingStaff}
+                disabled={isCreatingStaff}
+                className={styles.primary}
+                onClick={createStaff}
+              >
                 <FaPlus style={{ transform: 'translateY(1px)' }} /> Dodaj pracownika
-              </button>
+              </LoadingButton>
             </div>
           </div>
         ) : (
@@ -1747,7 +1785,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             Aby dodać pracownika, kliknij <strong>Edytuj profil</strong>.
           </div>
         )}
-
       </section>
 
       {/* =========================
