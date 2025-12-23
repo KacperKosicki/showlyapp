@@ -248,65 +248,65 @@ const PublicProfile = () => {
   }, [profile]);
 
   const handleRate = async () => {
-  if (isRatingSending) return; // ✅ blokada podwójnego kliknięcia
+    if (isRatingSending) return; // ✅ blokada podwójnego kliknięcia
 
-  const userId = auth.currentUser?.uid;
-  if (!userId) return setAlert({ type: 'error', message: 'Musisz być zalogowany, aby ocenić.' });
-  if (hasRated) return setAlert({ type: 'info', message: 'Już oceniłeś/aś ten profil.' });
-  if (!selectedRating) return setAlert({ type: 'warning', message: 'Wybierz liczbę gwiazdek.' });
+    const userId = auth.currentUser?.uid;
+    if (!userId) return setAlert({ type: 'error', message: 'Musisz być zalogowany, aby ocenić.' });
+    if (hasRated) return setAlert({ type: 'info', message: 'Już oceniłeś/aś ten profil.' });
+    if (!selectedRating) return setAlert({ type: 'warning', message: 'Wybierz liczbę gwiazdek.' });
 
-  if (comment.trim().length < 10)
-    return setAlert({ type: 'warning', message: 'Komentarz musi mieć min. 10 znaków.' });
+    if (comment.trim().length < 10)
+      return setAlert({ type: 'warning', message: 'Komentarz musi mieć min. 10 znaków.' });
 
-  if (comment.length > maxChars) {
-    return setAlert({
-      type: 'error',
-      message: `Komentarz może mieć maksymalnie ${maxChars} znaków (obecnie: ${comment.length}).`,
-    });
-  }
-
-  setIsRatingSending(true); // ✅ start kropek
-
-  const u = auth.currentUser;
-  const userName = u?.displayName || u?.email || 'Użytkownik';
-
-  let userAvatar = normalizeAvatar(u?.photoURL || '');
-
-  try {
-    const r = await fetch(`${API}/api/users/${userId}`);
-    if (r.ok) {
-      const dbUser = await r.json();
-      userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || '';
+    if (comment.length > maxChars) {
+      return setAlert({
+        type: 'error',
+        message: `Komentarz może mieć maksymalnie ${maxChars} znaków (obecnie: ${comment.length}).`,
+      });
     }
-  } catch { }
 
-  try {
-    const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/rate/${slug}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId,
-        rating: selectedRating,
-        comment,
-        userName,
-        userAvatar
-      }),
-    });
+    setIsRatingSending(true); // ✅ start kropek
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message);
+    const u = auth.currentUser;
+    const userName = u?.displayName || u?.email || 'Użytkownik';
 
-    setAlert({ type: 'success', message: 'Dziękujemy za opinię!' });
+    let userAvatar = normalizeAvatar(u?.photoURL || '');
 
-    const updated = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`);
-    const updatedData = await updated.json();
-    setProfile(updatedData);
-  } catch (err) {
-    setAlert({ type: 'error', message: `${err.message}` });
-  } finally {
-    setIsRatingSending(false); // ✅ stop kropek (zawsze)
-  }
-};
+    try {
+      const r = await fetch(`${API}/api/users/${userId}`);
+      if (r.ok) {
+        const dbUser = await r.json();
+        userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || '';
+      }
+    } catch { }
+
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/rate/${slug}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          rating: selectedRating,
+          comment,
+          userName,
+          userAvatar
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      setAlert({ type: 'success', message: 'Dziękujemy za opinię!' });
+
+      const updated = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`);
+      const updatedData = await updated.json();
+      setProfile(updatedData);
+    } catch (err) {
+      setAlert({ type: 'error', message: `${err.message}` });
+    } finally {
+      setIsRatingSending(false); // ✅ stop kropek (zawsze)
+    }
+  };
 
   const toggleFavorite = async () => {
     const currentUser = auth.currentUser;
@@ -578,9 +578,16 @@ const PublicProfile = () => {
                       {comment.length} / {maxChars} znaków
                     </small>
 
-                    <button className={styles.sendButton} onClick={handleRate}>
+                    <LoadingButton
+                      type="button"
+                      isLoading={isRatingSending}
+                      disabled={isRatingSending}
+                      className={styles.sendButton}
+                      onClick={handleRate}
+                    >
                       Wyślij opinię
-                    </button>
+                    </LoadingButton>
+
                   </>
                 )}
               </div>
