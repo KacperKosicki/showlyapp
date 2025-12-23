@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from './AboutApp.module.scss';
 import { Link } from 'react-router-dom';
+import LoadingLink from '../LoadingLink/LoadingLink';
 
 const AboutApp = ({ user }) => {
   return (
@@ -50,26 +51,27 @@ const AboutApp = ({ user }) => {
             Wszystko działa na telefonie i komputerze.
           </p>
           <div className={styles.buttons}>
-            <Link to="/wizytowki" className={styles.primary}>Zobacz innych</Link>
+            <LoadingLink to="/wizytowki" className={styles.primary}>
+              Zobacz innych
+            </LoadingLink>
 
             {user ? (
-              <Link
+              <LoadingLink
                 to="/profil"
                 state={{ scrollToId: 'scrollToId' }}
                 className={styles.secondary}
               >
                 Przejdź do edycji profilu
-              </Link>
+              </LoadingLink>
             ) : (
-              <Link
+              <LoadingLink
                 to="/register"
-                className={styles.secondary}
                 state={{ scrollToId: 'registerContainer' }}
+                className={styles.secondary}
               >
                 Załóż swoją wizytówkę
-              </Link>
+              </LoadingLink>
             )}
-
           </div>
         </div>
       </div>
