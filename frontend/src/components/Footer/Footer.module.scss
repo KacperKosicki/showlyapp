@@ -52,6 +52,34 @@
   }
 }
 
+.footerLogo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.beta {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  font-family: $font-accent;
+
+  background: transparent;
+  color: white;
+
+  border: 1px solid transparent;
+  background-image:
+    linear-gradient(transparent, transparent),
+    linear-gradient(135deg, $primary-color, $secondary-color);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+
+  opacity: 0.85;
+}
+
 .socials {
   margin-top: 1rem;
   display: flex;

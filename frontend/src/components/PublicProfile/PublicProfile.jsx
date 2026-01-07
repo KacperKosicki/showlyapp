@@ -587,7 +587,6 @@ const PublicProfile = () => {
                     >
                       Wyślij opinię
                     </LoadingButton>
-
                   </>
                 )}
               </div>

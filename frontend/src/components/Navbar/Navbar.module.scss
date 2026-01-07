@@ -29,6 +29,37 @@
   -webkit-text-fill-color: transparent;
 }
 
+.logoWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.beta {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  font-family: $font-accent;
+
+  background: transparent;
+  color: white;
+
+  border: 1.5px solid transparent;
+  background-image:
+    linear-gradient(transparent, transparent),
+    linear-gradient(135deg, $primary-color, $secondary-color);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+
+  box-shadow: 0 0 12px rgba(111, 78, 242, 0.35);
+
+  transform: translateY(-6px);
+}
+
 .right {
   display: flex;
   justify-content: flex-end;

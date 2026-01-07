@@ -6,7 +6,9 @@ const Footer = () => {
     <footer className={styles.footer}>
       <div className={styles.container}>
         <div className={styles.column}>
-          <h4>LooklyApp</h4>
+          <h4 className={styles.footerLogo}>
+            LooklyApp <span className={styles.beta}>BETA</span>
+          </h4>
           <p>Łączymy specjalistów z klientami – prosto, szybko i skutecznie.</p>
         </div>
         <div className={styles.column}>

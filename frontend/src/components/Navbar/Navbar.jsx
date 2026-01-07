@@ -9,7 +9,10 @@ const Navbar = ({ user, refreshTrigger, unreadCount, setUnreadCount, pendingRese
   return (
     <nav className={styles.navbar}>
       <div className={styles.left}>
-        <Link to="/" className={styles.logo}>LOOKLYAPP</Link>
+        <Link to="/" className={styles.logoWrap}>
+          <span className={styles.logo}>LOOKLYAPP</span>
+          <span className={styles.beta}>BETA</span>
+        </Link>
       </div>
 
       <div className={styles.right}>
