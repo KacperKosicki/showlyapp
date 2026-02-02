@@ -30,8 +30,11 @@ export default function BookingForm({ user }) {
 
   // 2) Redirect gdy ukryte
   useEffect(() => {
-    if (provider?.showAvailableDates === false) {
-      navigate('/', { replace: true });
+    const mode = String(provider?.bookingMode || "off").toLowerCase();
+
+    // showAvailableDates ma sens tylko dla trybu calendar (udostępnianie slotów)
+    if (mode === "calendar" && provider?.showAvailableDates === false) {
+      navigate("/", { replace: true });
     }
   }, [provider, navigate]);
 

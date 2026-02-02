@@ -1,64 +1,58 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import styles from './PublicProfile.module.scss';
-import { FaMapMarkerAlt, FaStar, FaRegEye } from 'react-icons/fa';
-import { FaHeart, FaRegHeart } from 'react-icons/fa6';
-import { auth } from '../../firebase';
-import 'react-calendar/dist/Calendar.css';
-import AlertBox from '../AlertBox/AlertBox';
-import { useLocation } from 'react-router-dom';
-import { onAuthStateChanged } from 'firebase/auth';
-import { FaPhoneAlt, FaEnvelope, FaMapMarkedAlt, FaGlobe } from 'react-icons/fa';
-import { FaFacebook, FaInstagram, FaYoutube, FaTiktok, FaLinkedin, FaXTwitter } from 'react-icons/fa6';
-import LoadingButton from '../ui/LoadingButton/LoadingButton';
+import { useEffect, useState } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
+import styles from "./PublicProfile.module.scss";
+import { auth } from "../../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+
+import AlertBox from "../AlertBox/AlertBox";
+import LoadingButton from "../ui/LoadingButton/LoadingButton";
+
+import { FaMapMarkerAlt, FaStar, FaRegEye, FaPhoneAlt, FaEnvelope, FaMapMarkedAlt, FaGlobe } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaFacebook, FaInstagram, FaYoutube, FaTiktok, FaLinkedin, FaXTwitter } from "react-icons/fa6";
+import { FaRegCalendarAlt, FaPaperPlane } from "react-icons/fa";
+
+import "react-calendar/dist/Calendar.css";
 
 const prettyUrl = (url) => {
   try {
-    const u = new URL(url.startsWith('http') ? url : `https://${url}`);
-    const host = u.hostname.replace(/^www\./, '');
-    const path = u.pathname === '/' ? '' : u.pathname.replace(/\/$/, '');
-    const qs = u.search || '';
+    const u = new URL(url.startsWith("http") ? url : `https://${url}`);
+    const host = u.hostname.replace(/^www\./, "");
+    const path = u.pathname === "/" ? "" : u.pathname.replace(/\/$/, "");
+    const qs = u.search || "";
     return `${host}${path}${qs}`;
   } catch {
     return url;
   }
 };
 
-const normalizePhone = (val = '') => String(val || '').replace(/\s+/g, '').trim();
+const normalizePhone = (val = "") => String(val || "").replace(/\s+/g, "").trim();
 
 const buildGoogleMapsLink = (address) => {
-  const a = (address || '').trim();
-  if (!a) return '';
+  const a = (address || "").trim();
+  if (!a) return "";
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a)}`;
 };
 
-const ensureUrl = (url = '') => {
-  const u = (url || '').trim();
-  if (!u) return '';
+const ensureUrl = (url = "") => {
+  const u = (url || "").trim();
+  if (!u) return "";
   if (/^https?:\/\//i.test(u)) return u;
   return `https://${u}`;
 };
 
 const API = process.env.REACT_APP_API_URL;
 
-const normalizeAvatar = (val = '') => {
-  const v = String(val || '').trim();
+const normalizeAvatar = (val = "") => {
+  const v = String(val || "").trim();
   if (!v) return v;
 
-  // ✅ obsługa base64/DataURL (Twoje avatary z uploadu)
-  if (v.startsWith('data:image/')) return v;
-
-  // ✅ obsługa blob (czasem przy podglądzie)
-  if (v.startsWith('blob:')) return v;
-
-  // pełny URL -> zostaw
+  if (v.startsWith("data:image/")) return v;
+  if (v.startsWith("blob:")) return v;
   if (/^https?:\/\//i.test(v)) return v;
 
-  // kompatybilność /uploads (z backendu)
-  if (v.startsWith('/uploads/')) return `${API}${v}`;
-  if (v.startsWith('uploads/')) return `${API}/${v}`;
+  if (v.startsWith("/uploads/")) return `${API}${v}`;
+  if (v.startsWith("uploads/")) return `${API}/${v}`;
 
-  // jeśli wygląda jak domena/URL bez protokołu -> dodaj https
   if (/^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(v)) return `https://${v}`;
 
   return v;
@@ -68,45 +62,43 @@ const normalizeAvatar = (val = '') => {
 const lockBodyScroll = () => {
   const y = window.scrollY || document.documentElement.scrollTop;
   document.body.dataset.scrollY = String(y);
-  document.body.style.position = 'fixed';
+  document.body.style.position = "fixed";
   document.body.style.top = `-${y}px`;
-  document.body.style.left = '0';
-  document.body.style.right = '0';
-  document.body.style.width = '100%';
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  document.body.style.width = "100%";
 };
 
 const unlockBodyScroll = () => {
-  const y = parseInt(document.body.dataset.scrollY || '0', 10);
+  const y = parseInt(document.body.dataset.scrollY || "0", 10);
 
-  // zdejmij blokadę
-  document.body.style.position = '';
-  document.body.style.top = '';
-  document.body.style.left = '';
-  document.body.style.right = '';
-  document.body.style.width = '';
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.width = "";
 
-  // odtwórz pozycję PO jednym tiku
   requestAnimationFrame(() => {
     window.scrollTo(0, y);
-    document.body.dataset.scrollY = ''; // wyczyść dopiero teraz
+    document.body.dataset.scrollY = "";
   });
 };
 
 const THEME_PRESETS = {
-  violet: { primary: '#6f4ef2', secondary: '#ff4081' },
-  blue: { primary: '#2563eb', secondary: '#06b6d4' },
-  green: { primary: '#22c55e', secondary: '#a3e635' },
-  orange: { primary: '#f97316', secondary: '#facc15' },
-  red: { primary: '#ef4444', secondary: '#fb7185' },
-  dark: { primary: '#111827', secondary: '#4b5563' },
+  violet: { primary: "#6f4ef2", secondary: "#ff4081" },
+  blue: { primary: "#2563eb", secondary: "#06b6d4" },
+  green: { primary: "#22c55e", secondary: "#a3e635" },
+  orange: { primary: "#f97316", secondary: "#facc15" },
+  red: { primary: "#ef4444", secondary: "#fb7185" },
+  dark: { primary: "#111827", secondary: "#4b5563" },
 };
 
 const resolveProfileTheme = (theme) => {
-  const variant = theme?.variant || 'violet';
+  const variant = theme?.variant || "violet";
   const preset = THEME_PRESETS[variant] || THEME_PRESETS.violet;
 
-  const primary = (theme?.primary || theme?.accent || '').trim() || preset.primary;
-  const secondary = (theme?.secondary || theme?.accent2 || '').trim() || preset.secondary;
+  const primary = (theme?.primary || theme?.accent || "").trim() || preset.primary;
+  const secondary = (theme?.secondary || theme?.accent2 || "").trim() || preset.secondary;
 
   return {
     primary,
@@ -115,63 +107,65 @@ const resolveProfileTheme = (theme) => {
   };
 };
 
-const PublicProfile = () => {
+export default function PublicProfile() {
   const { slug } = useParams();
+  const routerLocation = useLocation();
+  const navigate = useNavigate();
+
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+
   const [selectedRating, setSelectedRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [hasRated, setHasRated] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
-  const [comment, setComment] = useState('');
+
+  const [comment, setComment] = useState("");
   const [alert, setAlert] = useState(null);
+
   const [fullscreenImage, setFullscreenImage] = useState(null);
   const [uid, setUid] = useState(auth.currentUser?.uid ?? null);
-  const maxChars = 200;
-  const routerLocation = useLocation();
+
   const [isRatingSending, setIsRatingSending] = useState(false);
 
-  // Handlery już wewnątrz komponentu
+  const maxChars = 200;
+
   const openLightbox = (src) => setFullscreenImage(src);
   const closeLightbox = () => setFullscreenImage(null);
 
-  // Blokuj/odblokuj scroll gdy lightbox się pojawia/znika
   useEffect(() => {
     if (fullscreenImage) {
       lockBodyScroll();
-      return () => {
-        // odblokuj TYLKO gdy zamykamy lightbox
-        unlockBodyScroll();
-      };
+      return () => unlockBodyScroll();
     }
-    // gdy fullscreenImage === false nic tu nie rób
   }, [fullscreenImage]);
 
-
-  // Zamknięcie klawiszem Escape
   useEffect(() => {
     if (!fullscreenImage) return;
-    const onKey = (e) => e.key === 'Escape' && closeLightbox();
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    const onKey = (e) => e.key === "Escape" && closeLightbox();
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, [fullscreenImage]);
 
   const mapUnit = (unit) => {
     switch (unit) {
-      case 'minutes': return 'min';
-      case 'hours': return 'h';
-      case 'days': return 'dni';
-      default: return unit;
+      case "minutes":
+        return "min";
+      case "hours":
+        return "h";
+      case "days":
+        return "dni";
+      default:
+        return unit;
     }
   };
 
   const [favCount, setFavCount] = useState(0);
   const [isFav, setIsFav] = useState(false);
 
-  // 🔄 Synchronizacja po pobraniu profilu
   useEffect(() => {
     if (!profile) return;
-    if (typeof profile.favoritesCount === 'number') setFavCount(profile.favoritesCount);
+    if (typeof profile.favoritesCount === "number") setFavCount(profile.favoritesCount);
     setIsFav(!!profile.isFavorite);
   }, [profile]);
 
@@ -180,6 +174,7 @@ const PublicProfile = () => {
     return unsub;
   }, []);
 
+  // scroll do sekcji po wejściu
   useEffect(() => {
     const scrollTo = routerLocation.state?.scrollToId;
     if (!scrollTo || loading) return;
@@ -187,7 +182,7 @@ const PublicProfile = () => {
     const tryScroll = () => {
       const el = document.getElementById(scrollTo);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
         window.history.replaceState({}, document.title, routerLocation.pathname);
       } else {
         requestAnimationFrame(tryScroll);
@@ -195,8 +190,9 @@ const PublicProfile = () => {
     };
 
     requestAnimationFrame(tryScroll);
-  }, [routerLocation.state, loading]);
+  }, [routerLocation.state, loading, routerLocation.pathname]);
 
+  // fetch profilu
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -204,734 +200,738 @@ const PublicProfile = () => {
         const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`, { headers });
 
         if (res.status === 403) {
-          setAlert({ type: 'error', message: 'Profil jest obecnie niewidoczny lub wygasł.' });
+          setAlert({ type: "error", message: "Profil jest obecnie niewidoczny lub wygasł." });
           setProfile(null);
           return;
         }
 
-        if (!res.ok) throw new Error('Nie znaleziono wizytówki.');
+        if (!res.ok) throw new Error("Nie znaleziono wizytówki.");
 
         const data = await res.json();
         setProfile(data);
 
-        // 🟩 DODAJ TE 2 LINIE:
-        if (typeof data.favoritesCount === 'number') setFavCount(data.favoritesCount);
-        if (typeof data.isFavorite === 'boolean') setIsFav(data.isFavorite);
-
+        if (typeof data.favoritesCount === "number") setFavCount(data.favoritesCount);
+        if (typeof data.isFavorite === "boolean") setIsFav(data.isFavorite);
       } catch (err) {
-        console.error('❌ Błąd:', err);
-        setAlert({ type: 'error', message: 'Nie udało się załadować wizytówki.' });
+        console.error("❌ Błąd:", err);
+        setAlert({ type: "error", message: "Nie udało się załadować wizytówki." });
       } finally {
         setLoading(false);
       }
     };
 
     fetchProfile();
-  }, [slug, uid]); // 🟩 ważne: dodaj uid!
+  }, [slug, uid]);
 
+  // wykryj czy już oceniał
   useEffect(() => {
     const currentUserId = auth.currentUser?.uid;
     if (!currentUserId || !profile?.ratedBy) return;
 
-    const userRating = profile.ratedBy.find(r => r.userId === currentUserId);
+    const userRating = profile.ratedBy.find((r) => r.userId === currentUserId);
     if (userRating) {
       setHasRated(true);
       setSelectedRating(userRating.rating);
     }
   }, [profile]);
 
+  // owner / rated
   useEffect(() => {
     const currentUserId = auth.currentUser?.uid;
     if (!currentUserId || !profile?.userId) return;
     setIsOwner(profile.userId === currentUserId);
-    setHasRated(profile.ratedBy?.some(r => r.userId === currentUserId));
+    setHasRated(profile.ratedBy?.some((r) => r.userId === currentUserId));
   }, [profile]);
 
   const handleRate = async () => {
-    if (isRatingSending) return; // ✅ blokada podwójnego kliknięcia
+    if (isRatingSending) return;
 
     const userId = auth.currentUser?.uid;
-    if (!userId) return setAlert({ type: 'error', message: 'Musisz być zalogowany, aby ocenić.' });
-    if (hasRated) return setAlert({ type: 'info', message: 'Już oceniłeś/aś ten profil.' });
-    if (!selectedRating) return setAlert({ type: 'warning', message: 'Wybierz liczbę gwiazdek.' });
+    if (!userId) return setAlert({ type: "error", message: "Musisz być zalogowany, aby ocenić." });
+    if (hasRated) return setAlert({ type: "info", message: "Już oceniłeś/aś ten profil." });
+    if (!selectedRating) return setAlert({ type: "warning", message: "Wybierz liczbę gwiazdek." });
 
-    if (comment.trim().length < 10)
-      return setAlert({ type: 'warning', message: 'Komentarz musi mieć min. 10 znaków.' });
+    if (comment.trim().length < 10) {
+      return setAlert({ type: "warning", message: "Komentarz musi mieć min. 10 znaków." });
+    }
 
     if (comment.length > maxChars) {
       return setAlert({
-        type: 'error',
+        type: "error",
         message: `Komentarz może mieć maksymalnie ${maxChars} znaków (obecnie: ${comment.length}).`,
       });
     }
 
-    setIsRatingSending(true); // ✅ start kropek
+    setIsRatingSending(true);
 
     const u = auth.currentUser;
-    const userName = u?.displayName || u?.email || 'Użytkownik';
-
-    let userAvatar = normalizeAvatar(u?.photoURL || '');
+    const userName = u?.displayName || u?.email || "Użytkownik";
+    let userAvatar = normalizeAvatar(u?.photoURL || "");
 
     try {
       const r = await fetch(`${API}/api/users/${userId}`);
       if (r.ok) {
         const dbUser = await r.json();
-        userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || '';
+        userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || "";
       }
     } catch { }
 
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/rate/${slug}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          rating: selectedRating,
-          comment,
-          userName,
-          userAvatar
-        }),
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, rating: selectedRating, comment, userName, userAvatar }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
-      setAlert({ type: 'success', message: 'Dziękujemy za opinię!' });
+      setAlert({ type: "success", message: "Dziękujemy za opinię!" });
 
       const updated = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`);
       const updatedData = await updated.json();
       setProfile(updatedData);
     } catch (err) {
-      setAlert({ type: 'error', message: `${err.message}` });
+      setAlert({ type: "error", message: `${err.message}` });
     } finally {
-      setIsRatingSending(false); // ✅ stop kropek (zawsze)
+      setIsRatingSending(false);
     }
   };
+
+  const goToBooking = () => {
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      setAlert({ type: "error", message: "Aby skorzystać z rezerwacji, musisz być zalogowany." });
+      return;
+    }
+    if (currentUser.uid === profile?.userId) {
+      setAlert({ type: "info", message: "Nie możesz wykonać rezerwacji na własnym profilu." });
+      return;
+    }
+
+    // ✅ jedyna blokada: showAvailableDates
+    if (profile?.showAvailableDates === false) {
+      setAlert({ type: "info", message: "Ten profil nie udostępnia wolnych terminów — możesz tylko napisać wiadomość." });
+      return;
+    }
+
+    navigate(`/rezerwacja/${slug}`);
+  };
+
+  const startMessage = () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      setAlert({ type: "error", message: "Aby wysłać wiadomość, musisz być zalogowany." });
+      return;
+    }
+    if (currentUser.uid === profile?.userId) {
+      setAlert({ type: "info", message: "Nie możesz wysłać wiadomości do własnego profilu." });
+      return;
+    }
+
+    navigate(`/wiadomosc/${profile.userId}`, { state: { scrollToId: "messageFormContainer" } });
+  };
+
 
   const toggleFavorite = async () => {
     const currentUser = auth.currentUser;
     if (!currentUser) {
-      setAlert({ type: 'error', message: 'Aby dodać do ulubionych, musisz być zalogowany.' });
+      setAlert({ type: "error", message: "Aby dodać do ulubionych, musisz być zalogowany." });
       return;
     }
     if (currentUser.uid === profile?.userId) {
-      setAlert({ type: 'error', message: 'Nie możesz dodać własnego profilu do ulubionych.' });
+      setAlert({ type: "error", message: "Nie możesz dodać własnego profilu do ulubionych." });
       return;
     }
 
     const next = !isFav;
     setIsFav(next);
-    setFavCount(c => Math.max(0, c + (next ? 1 : -1)));
+    setFavCount((c) => Math.max(0, c + (next ? 1 : -1)));
 
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/favorites/toggle`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          uid: currentUser.uid
+          "Content-Type": "application/json",
+          uid: currentUser.uid,
         },
-        body: JSON.stringify({ profileUserId: profile.userId })
+        body: JSON.stringify({ profileUserId: profile.userId }),
       });
+
       const data = await res.json();
-      if (typeof data?.isFav === 'boolean') setIsFav(data.isFav);
-      if (typeof data?.count === 'number') setFavCount(data.count);
+      if (typeof data?.isFav === "boolean") setIsFav(data.isFav);
+      if (typeof data?.count === "number") setFavCount(data.count);
     } catch {
-      // revert na błędzie
-      setIsFav(v => !v);
-      setFavCount(c => Math.max(0, c + (next ? -1 : +1)));
-      setAlert({ type: 'error', message: 'Nie udało się zaktualizować ulubionych. Spróbuj ponownie.' });
+      setIsFav((v) => !v);
+      setFavCount((c) => Math.max(0, c + (next ? -1 : +1)));
+      setAlert({ type: "error", message: "Nie udało się zaktualizować ulubionych. Spróbuj ponownie." });
     }
   };
 
-  if (loading) return <div className={styles.loading}>⏳ Wczytywanie wizytówki...</div>;
+  // ====== UI states ======
+  if (loading) return <div className={styles.state}>⏳ Wczytywanie wizytówki...</div>;
+
   if (!profile) {
     return (
-      <div className={styles.error}>
+      <div className={styles.state}>
         {alert ? (
-          <AlertBox
-            type={alert.type}
-            message={alert.message}
-            onClose={() => setAlert(null)}
-          />
+          <AlertBox type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
         ) : (
-          <div className={styles.errorBox}>
-            <span className={styles.icon}>❌</span>
-            <p>Nie znaleziono profilu lub jest obecnie niewidoczony.</p>
+          <div className={styles.emptyCard}>
+            <span className={styles.emptyIcon}>❌</span>
+            <p>Nie znaleziono profilu lub jest obecnie niewidoczny.</p>
           </div>
-
         )}
       </div>
     );
   }
 
   const {
-    name, avatar, role, rating, reviews, location, tags,
-    priceFrom = null, priceTo = null, description, links = [],
+    name,
+    avatar,
+    role,
+    rating,
+    reviews,
+    location,
+    tags,
+    priceFrom = null,
+    priceTo = null,
+    description,
+    links = [],
     profileType,
     contact = {},
     socials = {},
   } = profile;
 
   const themeVars = resolveProfileTheme(profile.theme);
-
   const cssVars = {
-    '--pp-primary': themeVars.primary,
-    '--pp-secondary': themeVars.secondary,
-    '--pp-banner': themeVars.banner,
+    "--pp-primary": themeVars.primary,
+    "--pp-secondary": themeVars.secondary,
+    "--pp-banner": themeVars.banner,
   };
 
   const hasGallery = Array.isArray(profile.photos) && profile.photos.length > 0;
   const hasServices = Array.isArray(profile.services) && profile.services.length > 0;
-  const needsBottomSpace = !(hasGallery || hasServices);
+
+  const bookingMode = String(profile?.bookingMode || "off").toLowerCase();
+  const bookingEnabled = !["off", "none", "disabled", ""].includes(bookingMode);
+
+  const isCalendar = bookingMode === "calendar";
+  const isRequest = bookingMode === "request-open" || bookingMode === "request-blocking";
+
+  // ✅ jedyne źródło prawdy (bez dat)
+  const allowBookingUI = bookingEnabled && profile?.showAvailableDates !== false;
+
+  // ✅ pokazujemy główne CTA tylko gdy allowBookingUI
+  const showBookButton = !isOwner && allowBookingUI;
+
+  // ✅ info “możesz tylko napisać” tylko gdy booking włączony, ale showAvailableDates wyłączone
+  const showNoBookingInfo = !isOwner && bookingEnabled && !allowBookingUI;
+
+  // Tekst CTA zależny od trybu
+  const bookBtnLabel = isCalendar ? "ZAREZERWUJ TERMIN" : "WYŚLIJ ZAPYTANIE";
 
   const cleanLinks = (links || [])
-    .map(l => (l || '').trim())
+    .map((l) => (l || "").trim())
     .filter(Boolean);
 
   const contactPhone = normalizePhone(contact?.phone);
-  const contactEmail = (contact?.email || '').trim();
+  const contactEmail = (contact?.email || "").trim();
 
   const fullAddress =
-    (contact?.addressFull || '').trim() ||
-    [location, contact?.postcode, contact?.street]   // ✅ KOLEJNOŚĆ jak w YourProfile
-      .map(v => (v || '').trim())
+    (contact?.addressFull || "").trim() ||
+    [location, contact?.postcode, contact?.street]
+      .map((v) => (v || "").trim())
       .filter(Boolean)
-      .join(', ');
+      .join(", ");
 
   const mapsUrl = buildGoogleMapsLink(fullAddress);
 
   const socialItems = [
-    { key: 'website', label: 'WWW', icon: <FaGlobe />, url: socials?.website },
-    { key: 'facebook', label: 'Facebook', icon: <FaFacebook />, url: socials?.facebook },
-    { key: 'instagram', label: 'Instagram', icon: <FaInstagram />, url: socials?.instagram },
-    { key: 'youtube', label: 'YouTube', icon: <FaYoutube />, url: socials?.youtube },
-    { key: 'tiktok', label: 'TikTok', icon: <FaTiktok />, url: socials?.tiktok },
-    { key: 'linkedin', label: 'LinkedIn', icon: <FaLinkedin />, url: socials?.linkedin },
-    { key: 'x', label: 'X', icon: <FaXTwitter />, url: socials?.x },
+    { key: "website", label: "WWW", icon: <FaGlobe />, url: socials?.website },
+    { key: "facebook", label: "Facebook", icon: <FaFacebook />, url: socials?.facebook },
+    { key: "instagram", label: "Instagram", icon: <FaInstagram />, url: socials?.instagram },
+    { key: "youtube", label: "YouTube", icon: <FaYoutube />, url: socials?.youtube },
+    { key: "tiktok", label: "TikTok", icon: <FaTiktok />, url: socials?.tiktok },
+    { key: "linkedin", label: "LinkedIn", icon: <FaLinkedin />, url: socials?.linkedin },
+    { key: "x", label: "X", icon: <FaXTwitter />, url: socials?.x },
   ]
-    .map(s => ({ ...s, url: ensureUrl(s.url) }))
-    .filter(s => !!s.url);
+    .map((s) => ({ ...s, url: ensureUrl(s.url) }))
+    .filter((s) => !!s.url);
 
   const hasContact = !!fullAddress || !!contactPhone || !!contactEmail;
   const hasSocials = socialItems.length > 0;
   const hasInfoBox = hasContact || hasSocials || cleanLinks.length > 0;
 
+  const typeLabel =
+    profileType === "zawodowy"
+      ? "Zawód"
+      : profileType === "hobbystyczny"
+        ? "Hobby"
+        : profileType === "serwis"
+          ? "Serwis"
+          : profileType === "społeczność"
+            ? "Społeczność"
+            : "Profil";
+
   return (
-    <div style={cssVars}>
-      <div
-        id="profileWrapper"
-        className={`${styles.profileWrapper} ${needsBottomSpace ? styles.spaciousBottom : ''}`}
-      >
-        {alert && (
-          <AlertBox
-            type={alert.type}
-            message={alert.message}
-            onClose={() => setAlert(null)}
-          />
-        )}
+    <div className={styles.page} style={cssVars}>
+      {/* top glow background */}
+      <div className={styles.bgGlow} aria-hidden="true" />
 
-        <div className={styles.card}>
-          <div className={styles.banner}>
-            <div className={styles.bannerOverlay}></div>
-            <div className={styles.bannerContent}>
-              <h3 className={styles.bannerTitle}>Witaj na profilu {name}</h3>
-              <p className={styles.bannerDesc}>
-                Profil, który mówi sam za siebie — sprawdź szczegóły!
-              </p>
+      <div className={styles.shell} id="profileWrapper">
+        {alert && <AlertBox type={alert.type} message={alert.message} onClose={() => setAlert(null)} />}
+
+        {/* ===== HERO ===== */}
+        <header className={styles.hero}>
+          <div className={styles.heroInner}>
+            {/* ✅ BADGE w prawym górnym rogu */}
+            <div className={styles.heroBadge}>
+              <div className={styles.badgeItem}>
+                <FaStar />
+                <span><strong>{profile?.ratedBy?.length || 0}</strong> opinii</span>
+              </div>
+              <div className={styles.badgeDot} />
+              <div className={styles.badgeItem}>
+                <FaRegEye />
+                <span><strong>{profile?.visits ?? 0}</strong> odwiedzin</span>
+              </div>
             </div>
-
-            <svg
-              className={styles.bannerWave}
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 1440 320"
-              preserveAspectRatio="none"
-              style={{ display: 'block', transform: 'translateZ(0)' }}
-            >
-              <path
-                fill="#ffffff"
-                stroke="none"
-                d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"
-              />
-            </svg>
-          </div>
-
-          <div className={styles.topBar}>
-            <div className={styles.location}>
-              <FaMapMarkerAlt />
-              <span>{location}</span>
-            </div>
-            <div className={styles.rating}>
-              <FaStar />
-              <span>
-                {rating} <small>({reviews})</small>
+            {/* ✅ LOKALIZACJA w lewym górnym rogu heroInner */}
+            <div className={styles.heroTopLeft}>
+              <span className={styles.locPill} title={location || "Brak lokalizacji"}>
+                <FaMapMarkerAlt />
+                <span className={styles.locText}>{location || "Brak lokalizacji"}</span>
               </span>
             </div>
-          </div>
 
-          <div className={styles.top}>
-            <img
-              src={normalizeAvatar(avatar) || '/images/other/no-image.png'}
-              alt={name}
-              className={styles.avatar}
-              onError={(e) => {
-                e.currentTarget.src = '/images/other/no-image.png';
-              }}
-            />
+            <div className={styles.heroLeft}>
+              {/* ✅ NAZWA + TYP obok nazwy */}
+              <div className={styles.titleRow}>
+                <h1 className={styles.heroTitle}>{name}</h1>
 
-            <div className={styles.info}>
-              <span className={`${styles.badge} ${styles[profileType]}`}>
-                {profileType === 'zawodowy' && 'Zawód'}
-                {profileType === 'hobbystyczny' && 'Hobby'}
-                {profileType === 'serwis' && 'Serwis'}
-                {profileType === 'społeczność' && 'Społeczność'}
-              </span>
-
-              <h2>{name}</h2>
-              <p className={styles.role}>{role}</p>
-
-              <div className={styles.separator} />
-
-              {description?.trim() ? (
-                <p className={styles.description}>{description}</p>
-              ) : (
-                <p className={styles.noDescription}>Użytkownik nie dodał jeszcze opisu.</p>
-              )}
-            </div>
-          </div>
-
-          <div className={styles.separator} />
-
-          {tags?.length > 0 && (
-            <div className={styles.tags}>
-              {tags.map((tag) => (
-                <span key={tag} className={styles.tag}>
-                  {tag.toUpperCase()}
+                <span className={`${styles.titlePill} ${styles[`type_${profileType}`] || ""}`}>
+                  {typeLabel}
                 </span>
-              ))}
-            </div>
-          )}
+              </div>
+              <div className={styles.heroActions}>
+                <button
+                  type="button"
+                  className={`${styles.favBtn} ${isFav ? styles.favActive : ""}`}
+                  onClick={toggleFavorite}
+                  aria-label={isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
+                  title={isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
+                >
+                  {isFav ? <FaHeart /> : <FaRegHeart />}
+                  <span>
+                    Ulubione: <strong>{favCount}</strong>
+                  </span>
+                </button>
 
-          <div className={styles.details}>
-            {typeof priceFrom === 'number' && typeof priceTo === 'number' ? (
-              <p className={styles.price}>
-                Cennik od <strong>{priceFrom} zł</strong> do <strong>{priceTo} zł</strong>
-              </p>
-            ) : (
-              <p className={styles.price}>
-                <em>Cennik: brak danych</em>
-              </p>
-            )}
+                {hasServices && (
+                  <a className={styles.ghostBtn} href="#services">
+                    Zobacz usługi
+                  </a>
+                )}
 
-            {cleanLinks.length > 0 ? (
-              <ul className={styles.links}>
-                {cleanLinks.map((link, i) => (
-                  <li key={`${link}-${i}`}>
-                    <a
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title={link}
-                    >
-                      {prettyUrl(link)}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className={styles.noLinks}>Użytkownik nie dodał jeszcze żadnych linków.</p>
-            )}
+                {/* ✅ NOWE CTA */}
+                <div className={styles.ctaRow}>
+                  {showBookButton && (
+                    <button type="button" className={styles.ctaPrimary} onClick={goToBooking}>
+                      <FaRegCalendarAlt />
+                      {bookBtnLabel}
+                    </button>
+                  )}
 
-            {!isOwner && (
-              <div className={styles.ratingSection}>
-                <div className={styles.separator} />
-                <p>{hasRated ? 'Oceniłeś/aś już ten profil:' : 'Oceń ten profil:'}</p>
+                  {showNoBookingInfo && (
+                    <div className={styles.reservationInfo}>
+                      Ten profil nie udostępnia wolnych terminów – możesz tylko napisać wiadomość.
+                    </div>
+                  )}
 
-                <div className={styles.stars}>
-                  {[1, 2, 3, 4, 5].map((val) => (
-                    <FaStar
-                      key={val}
-                      className={
-                        val <= (hoveredRating || selectedRating)
-                          ? styles.starSelected
-                          : styles.star
-                      }
-                      onClick={!hasRated ? () => setSelectedRating(val) : undefined}
-                      onMouseEnter={!hasRated ? () => setHoveredRating(val) : undefined}
-                      onMouseLeave={!hasRated ? () => setHoveredRating(0) : undefined}
-                    />
-                  ))}
+                  {!isOwner && (
+                    <button type="button" className={styles.ctaSecondary} onClick={startMessage}>
+                      <FaPaperPlane />
+                      ZADAJ PYTANIE
+                    </button>
+                  )}
                 </div>
 
-                {!hasRated && (
+              </div>
+
+            </div>
+
+            <div className={styles.heroRight}>
+              <div className={styles.avatarWrap}>
+                <img
+                  src={normalizeAvatar(avatar) || "/images/other/no-image.png"}
+                  alt={name}
+                  className={styles.avatar}
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/other/no-image.png";
+                  }}
+                />
+                <div className={styles.avatarRing} aria-hidden="true" />
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.heroFade} aria-hidden="true" />
+        </header>
+
+        {/* ===== GRID ===== */}
+        <main className={styles.grid}>
+          {/* ===== LEFT / MAIN CARD ===== */}
+          <section className={styles.mainCard}>
+            <div className={styles.cardHeader}>
+              <div className={styles.titleWrap}>
+                <h2 className={styles.sectionTitle}>O profilu</h2>
+              </div>
+
+              <div className={styles.pricePill}>
+
+                {typeof priceFrom === "number" && typeof priceTo === "number" ? (
                   <>
-                    <textarea
-                      className={styles.commentInput}
-                      placeholder="Dlaczego wystawiasz taką ocenę?"
-                      value={comment}
-                      onChange={(e) => {
-                        const text = e.target.value;
-                        if (text.length <= maxChars) setComment(text);
-                      }}
-                    />
-
-                    <small className={styles.wordCounter}>
-                      {comment.length} / {maxChars} znaków
-                    </small>
-
-                    <LoadingButton
-                      type="button"
-                      isLoading={isRatingSending}
-                      disabled={isRatingSending}
-                      className={styles.sendButton}
-                      onClick={handleRate}
-                    >
-                      Wyślij opinię
-                    </LoadingButton>
+                    Cennik: <strong>od {priceFrom} zł</strong> <span>do</span> <strong>{priceTo} zł</strong>
                   </>
+                ) : (
+                  <em>Cennik: brak danych</em>
                 )}
               </div>
-            )}
-          </div>
-
-          <div className={styles.separator} />
-
-          <div className={styles.bottomMeta}>
-            <div className={styles.visits}>
-              <FaRegEye />
-              <span>
-                Ten profil odwiedzono <strong>{profile?.visits ?? 0}</strong> razy
-              </span>
             </div>
 
-            <button
-              type="button"
-              className={`${styles.favoritesBtn} ${isFav ? styles.active : ''}`}
-              onClick={toggleFavorite}
-              aria-label={isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
-              title={isFav ? 'Usuń z ulubionych' : 'Dodaj do ulubionych'}
-            >
-              <span className={styles.favLabel}>
-                Ulubione: <strong>{favCount}</strong>
-              </span>
-              {isFav ? (
-                <FaHeart className={styles.heartFilled} />
+            <div className={styles.cardBody}>
+              {description?.trim() ? (
+                <p className={styles.desc}>{description}</p>
               ) : (
-                <FaRegHeart className={styles.heart} />
-              )}
-            </button>
-          </div>
-        </div>
-
-        <div className={styles.reviewsBox}>
-          <div className={styles.reviewsBanner}>
-            <div className={styles.bannerOverlay}></div>
-            <div className={styles.bannerContent}>
-              <h3 className={styles.bannerTitle}>Opinie profilu {name}</h3>
-              <p className={styles.bannerDesc}>Sprawdź, co inni sądzą o tym profilu!</p>
-            </div>
-
-            <svg
-              className={styles.bannerWave}
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 1440 320"
-              preserveAspectRatio="none"
-            >
-              <path
-                fill="#ffffff"
-                d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"
-              />
-            </svg>
-          </div>
-
-          <div className={styles.reviewsBody}>
-            {profile.ratedBy?.length > 0 ? (
-              <ul className={styles.reviewsList}>
-                {profile.ratedBy.map((op, i) => {
-                  const ratingVal = Number(op.rating);
-                  const avatarSrc =
-                    normalizeAvatar(op.userAvatar) || '/images/other/no-image.png';
-
-                  const dateLabel = op.createdAt
-                    ? new Date(op.createdAt).toLocaleDateString('pl-PL', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })
-                    : '';
-
-                  return (
-                    <li key={i} className={styles.reviewItem}>
-                      <div className={styles.reviewHeader}>
-                        <div className={styles.reviewUserBox}>
-                          <img
-                            className={styles.reviewAvatar}
-                            src={avatarSrc}
-                            alt=""
-                            decoding="async"
-                            referrerPolicy="no-referrer"
-                            onError={(e) => {
-                              e.currentTarget.src = '/images/other/no-image.png';
-                            }}
-                          />
-
-                          <div className={styles.reviewUserMeta}>
-                            <strong className={styles.reviewUser}>
-                              {op.userName || 'Użytkownik'}
-                            </strong>
-                            {dateLabel && (
-                              <span className={styles.reviewDate}>{dateLabel}</span>
-                            )}
-                          </div>
-                        </div>
-
-                        <span className={styles.reviewRating}>
-                          {[...Array(5)].map((_, idx) => (
-                            <FaStar
-                              key={idx}
-                              className={idx < ratingVal ? styles.starSelected : styles.star}
-                            />
-                          ))}
-                        </span>
-                      </div>
-
-                      <p className={styles.reviewText}>{op.comment}</p>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className={styles.noReviews}>Brak opinii użytkowników</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {profile.photos?.length > 0 && (
-        <section className={styles.galleryBox}>
-          <div className={styles.galleryBanner}>
-            <div className={styles.bannerOverlay}></div>
-            <div className={styles.bannerContent}>
-              <h3 className={styles.bannerTitle}>Galeria profilu {name}</h3>
-              <p className={styles.bannerDesc}>
-                Zobacz efekty pracy i inspiracje — obrazy mówią więcej niż słowa!
-              </p>
-            </div>
-
-            <svg
-              className={styles.bannerWave}
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 1440 320"
-              preserveAspectRatio="none"
-            >
-              <path
-                fill="#ffffff"
-                d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"
-              />
-            </svg>
-          </div>
-
-          <div className={styles.galleryBody}>
-            <div className={styles.galleryGrid}>
-              {profile.photos.map((url, i) => {
-                const src = normalizeAvatar(url) || url;
-                return (
-                  <div
-                    key={i}
-                    className={styles.galleryItem}
-                    onClick={() => openLightbox(src)}
-                  >
-                    <img
-                      src={src}
-                      alt={`Zdjęcie ${i + 1}`}
-                      onError={(e) => {
-                        e.currentTarget.src = '/images/other/no-image.png';
-                      }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {fullscreenImage && (
-            <div
-              className={styles.lightbox}
-              onClick={closeLightbox}
-              role="dialog"
-              aria-modal="true"
-            >
-              <img src={fullscreenImage} alt="" />
-            </div>
-          )}
-        </section>
-      )}
-
-      {(profile.services?.length > 0 || hasInfoBox) && (
-        <section className={styles.bottomRow} id="services">
-          {/* ===== USŁUGI ===== */}
-          {profile.services?.length > 0 && (
-            <div className={styles.servicesBox}>
-              <div className={styles.servicesBanner}>
-                <div className={styles.bannerOverlay}></div>
-                <div className={styles.bannerContent}>
-                  <h3 className={styles.bannerTitle}>Usługi profilu {name}</h3>
-                  <p className={styles.bannerDesc}>
-                    Wybierz coś dla siebie — nazwa usługi oraz czas jej realizacji poniżej!
-                  </p>
-                </div>
-
-                <svg
-                  className={styles.bannerWave}
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 1440 320"
-                  preserveAspectRatio="none"
-                >
-                  <path
-                    fill="#ffffff"
-                    d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"
-                  />
-                </svg>
-              </div>
-
-              <div className={styles.servicesBody}>
-                <ul className={styles.servicesList}>
-                  {profile.services.map((s, i) => (
-                    <li key={i}>
-                      <span className={styles.serviceName}>{s.name}</span>
-                      <span className={styles.serviceDuration}>
-                        — {s.duration.value} {mapUnit(s.duration.unit)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {/* ===== INFORMACJE PROFILU ===== */}
-          <div className={styles.profileInfoBox}>
-            <div className={styles.profileInfoBanner}>
-              <div className={styles.bannerOverlay}></div>
-              <div className={styles.bannerContent}>
-                <h3 className={styles.bannerTitle}>Informacje profilu {name}</h3>
-                <p className={styles.bannerDesc}>
-                  Dane kontaktowe i linki — kliknij, aby przejść.
-                </p>
-              </div>
-
-              <svg
-                className={styles.bannerWave}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 1440 320"
-                preserveAspectRatio="none"
-              >
-                <path
-                  fill="#ffffff"
-                  d="M0,160L60,170.7C120,181,240,203,360,192C480,181,600,139,720,128C840,117,960,139,1080,154.7C1200,171,1320,181,1380,186.7L1440,192L1440,320L0,320Z"
-                />
-              </svg>
-            </div>
-
-            <div className={styles.profileInfoBody}>
-              <ul className={styles.contactList}>
-                <li className={styles.contactRow}>
-                  <span className={styles.contactLeft}>
-                    <FaMapMarkedAlt className={styles.contactIcon} />
-                    <span className={styles.contactLabel}>Adres</span>
-                  </span>
-
-                  {fullAddress ? (
-                    <a
-                      className={styles.contactValueLink}
-                      href={mapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {fullAddress}
-                    </a>
-                  ) : (
-                    <span className={styles.contactValueMuted}>Brak danych</span>
-                  )}
-                </li>
-
-                <li className={styles.contactRow}>
-                  <span className={styles.contactLeft}>
-                    <FaPhoneAlt className={styles.contactIcon} />
-                    <span className={styles.contactLabel}>Telefon</span>
-                  </span>
-
-                  {contactPhone ? (
-                    <a className={styles.contactValueLink} href={`tel:${contactPhone}`}>
-                      {contact.phone}
-                    </a>
-                  ) : (
-                    <span className={styles.contactValueMuted}>Brak danych</span>
-                  )}
-                </li>
-
-                <li className={styles.contactRow}>
-                  <span className={styles.contactLeft}>
-                    <FaEnvelope className={styles.contactIcon} />
-                    <span className={styles.contactLabel}>E-mail</span>
-                  </span>
-
-                  {contactEmail ? (
-                    <a className={styles.contactValueLink} href={`mailto:${contactEmail}`}>
-                      {contactEmail}
-                    </a>
-                  ) : (
-                    <span className={styles.contactValueMuted}>Brak danych</span>
-                  )}
-                </li>
-              </ul>
-
-              <div className={styles.infoDivider} />
-
-              {socialItems.length > 0 ? (
-                <div className={styles.socialGrid}>
-                  {socialItems.map((s) => (
-                    <a
-                      key={s.key}
-                      href={s.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.socialTile}
-                      title={s.label}
-                      aria-label={s.label}
-                    >
-                      <span className={styles.socialIcon}>{s.icon}</span>
-                      <span className={styles.socialLabel}>{s.label}</span>
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <p className={styles.infoEmpty}>Brak social mediów.</p>
+                <p className={styles.muted}>Użytkownik nie dodał jeszcze opisu.</p>
               )}
 
-              {cleanLinks.length > 0 && (
-                <>
-                  <div className={styles.infoDivider} />
-                  <div className={styles.infoLinksGrid}>
+              {tags?.length > 0 && (
+                <div className={styles.chips}>
+                  {tags.map((tag) => (
+                    <span key={tag} className={styles.chip}>
+                      {String(tag).toUpperCase()}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className={styles.splitLine} />
+
+              {/* LINKI */}
+              <div className={styles.block}>
+                <h3 className={styles.blockTitle}>Linki</h3>
+
+                {cleanLinks.length > 0 ? (
+                  <div className={styles.linkGrid}>
                     {cleanLinks.map((link, i) => (
                       <a
                         key={`${link}-${i}`}
                         href={link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={styles.infoLinkPill}
+                        className={styles.linkTile}
+                        title={link}
                       >
-                        {prettyUrl(link)}
+                        <span className={styles.linkDomain}>{prettyUrl(link)}</span>
+                        <span className={styles.linkHint}>Otwórz</span>
                       </a>
                     ))}
                   </div>
-                </>
+                ) : (
+                  <p className={styles.muted}>Użytkownik nie dodał jeszcze żadnych linków.</p>
+                )}
+              </div>
+
+              <div className={styles.splitLine} />
+
+              {/* OCENA */}
+              {!isOwner && (
+                <div className={styles.rateBox}>
+                  <div className={styles.rateTop}>
+                    <h3 className={styles.blockTitle}>{hasRated ? "Twoja ocena" : "Oceń profil"}</h3>
+                    <span className={styles.rateHint}>{hasRated ? "Dziękujemy!" : "Wybierz gwiazdki + dodaj komentarz"}</span>
+                  </div>
+
+                  <div className={styles.starsRow}>
+                    {[1, 2, 3, 4, 5].map((val) => (
+                      <FaStar
+                        key={val}
+                        className={
+                          val <= (hoveredRating || selectedRating) ? styles.starOn : styles.starOff
+                        }
+                        onClick={!hasRated ? () => setSelectedRating(val) : undefined}
+                        onMouseEnter={!hasRated ? () => setHoveredRating(val) : undefined}
+                        onMouseLeave={!hasRated ? () => setHoveredRating(0) : undefined}
+                      />
+                    ))}
+                  </div>
+
+                  {!hasRated && (
+                    <>
+                      <textarea
+                        className={styles.textarea}
+                        placeholder="Napisz krótko, co było na plus / co można poprawić (min. 10 znaków)"
+                        value={comment}
+                        onChange={(e) => {
+                          const text = e.target.value;
+                          if (text.length <= maxChars) setComment(text);
+                        }}
+                      />
+
+                      <div className={styles.textareaMeta}>
+                        <span className={styles.mutedSmall}>Bądź konkretny/a — to pomaga.</span>
+                        <span className={styles.counter}>
+                          {comment.length} / {maxChars}
+                        </span>
+                      </div>
+
+                      <LoadingButton
+                        type="button"
+                        isLoading={isRatingSending}
+                        disabled={isRatingSending}
+                        className={styles.primaryBtn}
+                        onClick={handleRate}
+                      >
+                        Wyślij opinię
+                      </LoadingButton>
+                    </>
+                  )}
+                </div>
               )}
             </div>
-          </div>
-        </section>
+          </section>
+
+          {/* ===== RIGHT / STICKY PANEL ===== */}
+          <aside className={styles.side}>
+            {/* OPINIE */}
+            <section className={styles.sideCard}>
+              <div className={styles.sideHeader}>
+                <h2 className={styles.sectionTitle}>Opinie</h2>
+                <span className={styles.badgeCount}>{profile.ratedBy?.length || 0}</span>
+              </div>
+
+              {profile.ratedBy?.length > 0 ? (
+                <ul className={styles.reviewList}>
+                  {profile.ratedBy.map((op, i) => {
+                    const ratingVal = Number(op.rating);
+                    const avatarSrc = normalizeAvatar(op.userAvatar) || "/images/other/no-image.png";
+
+                    const dateLabel = op.createdAt
+                      ? new Date(op.createdAt).toLocaleDateString("pl-PL", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })
+                      : "";
+
+                    return (
+                      <li key={i} className={styles.review}>
+                        <div className={styles.reviewTop}>
+                          <div className={styles.reviewUser}>
+                            <img
+                              src={avatarSrc}
+                              alt=""
+                              className={styles.reviewAvatar}
+                              decoding="async"
+                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                e.currentTarget.src = "/images/other/no-image.png";
+                              }}
+                            />
+                            <div className={styles.reviewMeta}>
+                              <strong className={styles.reviewName}>{op.userName || "Użytkownik"}</strong>
+                              {dateLabel && <span className={styles.reviewDate}>{dateLabel}</span>}
+                            </div>
+                          </div>
+
+                          <div className={styles.reviewStars}>
+                            {[...Array(5)].map((_, idx) => (
+                              <FaStar key={idx} className={idx < ratingVal ? styles.starMiniOn : styles.starMiniOff} />
+                            ))}
+                          </div>
+                        </div>
+
+                        <p className={styles.reviewText}>{op.comment}</p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p className={styles.muted}>Brak opinii użytkowników.</p>
+              )}
+            </section>
+
+            {/* INFO / KONTAKT */}
+            {hasInfoBox && (
+              <section className={styles.sideCard}>
+                <div className={styles.sideHeader}>
+                  <h2 className={styles.sectionTitle}>Kontakt i social</h2>
+                </div>
+
+                <div className={styles.infoList}>
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLeft}>
+                      <FaMapMarkedAlt />
+                      <span>Adres</span>
+                    </span>
+
+                    {fullAddress ? (
+                      <a className={styles.infoLink} href={mapsUrl} target="_blank" rel="noopener noreferrer">
+                        {fullAddress}
+                      </a>
+                    ) : (
+                      <span className={styles.muted}>Brak danych</span>
+                    )}
+                  </div>
+
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLeft}>
+                      <FaPhoneAlt />
+                      <span>Telefon</span>
+                    </span>
+
+                    {contactPhone ? (
+                      <a className={styles.infoLink} href={`tel:${contactPhone}`}>
+                        {contact.phone}
+                      </a>
+                    ) : (
+                      <span className={styles.muted}>Brak danych</span>
+                    )}
+                  </div>
+
+                  <div className={styles.infoRow}>
+                    <span className={styles.infoLeft}>
+                      <FaEnvelope />
+                      <span>E-mail</span>
+                    </span>
+
+                    {contactEmail ? (
+                      <a className={styles.infoLink} href={`mailto:${contactEmail}`}>
+                        {contactEmail}
+                      </a>
+                    ) : (
+                      <span className={styles.muted}>Brak danych</span>
+                    )}
+                  </div>
+                </div>
+
+                {hasSocials && (
+                  <>
+                    <div className={styles.splitLine} />
+                    <div className={styles.socialGrid}>
+                      {socialItems.map((s) => (
+                        <a
+                          key={s.key}
+                          href={s.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.socialTile}
+                          title={s.label}
+                          aria-label={s.label}
+                        >
+                          <span className={styles.socialIcon}>{s.icon}</span>
+                          <span className={styles.socialText}>{s.label}</span>
+                        </a>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {cleanLinks.length > 0 && (
+                  <>
+                    <div className={styles.splitLine} />
+                    <div className={styles.pills}>
+                      {cleanLinks.map((link, i) => (
+                        <a
+                          key={`${link}-${i}`}
+                          href={link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.pill}
+                        >
+                          {prettyUrl(link)}
+                        </a>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </section>
+            )}
+          </aside>
+        </main>
+
+        {/* ===== GALLERY ===== */}
+        {hasGallery && (
+          <section className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>Galeria</h2>
+              <span className={styles.mutedSmall}>Kliknij zdjęcie, aby powiększyć</span>
+            </div>
+
+            <div className={styles.gallery}>
+              {profile.photos.map((url, i) => {
+                const src = normalizeAvatar(url) || url;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    className={styles.galleryItem}
+                    onClick={() => openLightbox(src)}
+                    aria-label={`Otwórz zdjęcie ${i + 1}`}
+                    title="Otwórz"
+                  >
+                    <img
+                      src={src}
+                      alt={`Zdjęcie ${i + 1}`}
+                      onError={(e) => {
+                        e.currentTarget.src = "/images/other/no-image.png";
+                      }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ===== SERVICES ===== */}
+        {(hasServices || hasInfoBox) && (
+          <section className={styles.sectionCard} id="services">
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>Usługi</h2>
+              <span className={styles.mutedSmall}>Nazwa + czas realizacji</span>
+            </div>
+
+            {hasServices ? (
+              <ul className={styles.services}>
+                {profile.services.map((s, i) => (
+                  <li key={i} className={styles.serviceRow}>
+                    <span className={styles.serviceName}>{s.name}</span>
+                    <span className={styles.serviceTime}>
+                      {s.duration.value} {mapUnit(s.duration.unit)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.muted}>Brak usług do wyświetlenia.</p>
+            )}
+          </section>
+        )}
+      </div>
+
+      {/* LIGHTBOX */}
+      {fullscreenImage && (
+        <div className={styles.lightbox} onClick={closeLightbox} role="dialog" aria-modal="true">
+          <button type="button" className={styles.lightboxClose} onClick={closeLightbox} aria-label="Zamknij">
+            ✕
+          </button>
+          <img src={fullscreenImage} alt="" onClick={(e) => e.stopPropagation()} />
+        </div>
       )}
     </div>
   );
-};
-
-export default PublicProfile;
+}
