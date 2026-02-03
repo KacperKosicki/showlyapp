@@ -33,12 +33,6 @@ $page-max: 1180px;
   --pp-s-10: color-mix(in srgb, var(--pp-secondary) 10%, transparent);
   --pp-s-14: color-mix(in srgb, var(--pp-secondary) 14%, transparent);
   --pp-s-22: color-mix(in srgb, var(--pp-secondary) 22%, transparent);
-
-  /* delikatne tło pod całą stroną */
-  background:
-    radial-gradient(1000px 500px at 10% 5%, var(--pp-p-14), transparent 60%),
-    radial-gradient(900px 600px at 90% 10%, var(--pp-s-14), transparent 55%),
-    linear-gradient(180deg, #fbfbfd 0%, #ffffff 40%, #ffffff 100%);
 }
 
 .bgGlow {
@@ -1422,6 +1416,15 @@ $page-max: 1180px;
   to {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+@media (min-width: 981px) {
+  .mainCard {
+    position: sticky;
+    top: 18px;
+    /* taki sam top jak .side */
+    align-self: start;
   }
 }
 
