@@ -17,7 +17,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
   // nazwy konta/profilu odbiorcy (kontrolowane + skeleton)
   const [accountName, setAccountName] = useState('');
-  const [profileName, setProfileName] = useState('');
 
   const [canReply, setCanReply] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -44,8 +43,12 @@ const ThreadView = ({ user, setUnreadCount }) => {
   // ----------------------------
   // Helpers skeleton
   // ----------------------------
-  const isResolved = (uid) =>
-    Object.prototype.hasOwnProperty.call(profileNameMap, uid) && profileNameMap[uid] !== undefined;
+  const isResolved = useCallback(
+    (uid) =>
+      Object.prototype.hasOwnProperty.call(profileNameMap, uid) &&
+      profileNameMap[uid] !== undefined,
+    [profileNameMap]
+  );
 
   const renderNameNode = (rawName) =>
     rawName ? (
@@ -231,7 +234,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
     (async () => {
       const name = await fetchProfileName(uid);
       setProfileNameMap((prev) => ({ ...prev, [uid]: name })); // string | null
-      if (typeof name === 'string' && name.trim()) setProfileName(name.trim());
     })();
   }, [receiverId, fetchProfileName]);
 
@@ -250,10 +252,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
         const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${receiverId}`);
         const prof = res.data;
         setReceiverProfile(prof);
-
-        if (prof?.name?.trim()) {
-          setProfileName(prof.name.trim());
-        }
 
         let expired = false;
         if (prof?.visibleUntil) expired = new Date(prof.visibleUntil) < new Date();
@@ -327,7 +325,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
     }
 
     return accountName || (typeof prof === 'string' ? prof : '') || 'Użytkownik';
-  }, [receiverId, channel, firstFromUid, user.uid, accountName, profileNameMap]);
+  }, [receiverId, channel, firstFromUid, user.uid, accountName, profileNameMap, isResolved]);
 
   // ----------------------------
   // FULL PAGE SKELETON (jak w Notifications)
@@ -437,9 +435,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
                   return (
                     <div
                       key={i}
-                      className={`${styles.message} ${isMe ? styles.own : styles.their} ${
-                        msg.isSystem ? styles.system : ''
-                      }`}
+                      className={`${styles.message} ${isMe ? styles.own : styles.their} ${msg.isSystem ? styles.system : ''
+                        }`}
                     >
                       {!msg.isSystem && (
                         <p className={styles.author}>
@@ -533,9 +530,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
                 {profileStatus === 'exists' && (
                   <>
                     {receiverProfile?.quickAnswers?.length > 0 &&
-                    receiverProfile.quickAnswers.some(
-                      (qa) => (qa.title || '').trim() || (qa.answer || '').trim()
-                    ) ? (
+                      receiverProfile.quickAnswers.some(
+                        (qa) => (qa.title || '').trim() || (qa.answer || '').trim()
+                      ) ? (
                       <ul>
                         {receiverProfile.quickAnswers
                           .filter((qa) => (qa.title || '').trim() || (qa.answer || '').trim())

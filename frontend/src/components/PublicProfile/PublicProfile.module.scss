@@ -198,6 +198,98 @@ $page-max: 1180px;
   gap: 10px;
 }
 
+/* ===== META POD NAZWĄ: role + rating ===== */
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  align-items: center;
+
+  @media (max-width: 520px) {
+    gap: 8px;
+    margin-top: 8px;
+  }
+}
+
+.rolePill {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 9px 12px;
+  border-radius: 999px;
+
+  font-family: $font-accent;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
+
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (max-width: 520px) {
+    width: 100%;
+    justify-content: center;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    border-radius: 16px;
+  }
+}
+
+.ratingPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 9px 12px;
+  border-radius: 999px;
+
+  color: #fff;
+  background: rgba(0, 0, 0, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
+
+  @media (max-width: 520px) {
+    width: 100%;
+    justify-content: center;
+    border-radius: 16px;
+    flex-wrap: wrap;
+  }
+
+  strong {
+    font-family: $font-accent;
+    font-weight: 900;
+  }
+}
+
+.ratingIcon {
+  opacity: 0.95;
+}
+
+.ratingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.ratingText {
+  font-family: $font-accent;
+  font-weight: 800;
+  opacity: 0.95;
+}
+
 /* ✅ pill obok nazwy (HOBBY/ZAWÓD/...) */
 .titlePill {
   width: fit-content;
@@ -230,13 +322,6 @@ $page-max: 1180px;
   strong {
     font-weight: 900;
   }
-}
-
-.badgeDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 99px;
-  background: rgba(255, 255, 255, 0.55);
 }
 
 .heroFade {

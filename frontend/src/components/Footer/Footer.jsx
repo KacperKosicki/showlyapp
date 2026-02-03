@@ -25,11 +25,43 @@ const Footer = () => {
           <p>kontakt@looklyapp.pl</p>
           <p>+48 123 456 789</p>
           <div className={styles.socials}>
-            <a href="#"><FaFacebookF /></a>
-            <a href="#"><FaInstagram /></a>
-            <a href="#"><FaTwitter /></a>
-            <a href="#"><FaLinkedin /></a>
+            <button
+              type="button"
+              className={styles.socialBtn}
+              aria-label="Facebook (wkrótce)"
+              title="Wkrótce"
+            >
+              <FaFacebookF />
+            </button>
+
+            <button
+              type="button"
+              className={styles.socialBtn}
+              aria-label="Instagram (wkrótce)"
+              title="Wkrótce"
+            >
+              <FaInstagram />
+            </button>
+
+            <button
+              type="button"
+              className={styles.socialBtn}
+              aria-label="Twitter (wkrótce)"
+              title="Wkrótce"
+            >
+              <FaTwitter />
+            </button>
+
+            <button
+              type="button"
+              className={styles.socialBtn}
+              aria-label="LinkedIn (wkrótce)"
+              title="Wkrótce"
+            >
+              <FaLinkedin />
+            </button>
           </div>
+
         </div>
       </div>
       <div className={styles.bottom}>

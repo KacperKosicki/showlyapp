@@ -404,6 +404,29 @@ export default function PublicProfile() {
     socials = {},
   } = profile;
 
+  // ===== rating/reviews (ładnie + bezpiecznie) =====
+  const ratedByArr = Array.isArray(profile?.ratedBy) ? profile.ratedBy : [];
+
+  // liczba opinii: najpierw ratedBy, potem reviews, na końcu 0
+  const reviewsCount =
+    ratedByArr.length > 0
+      ? ratedByArr.length
+      : Array.isArray(reviews)
+        ? reviews.length
+        : Number.isFinite(Number(reviews))
+          ? Number(reviews)
+          : 0;
+
+  // średnia ocena: najpierw liczona z ratedBy, potem rating z bazy, na końcu 0
+  const avgRating =
+    ratedByArr.length > 0
+      ? ratedByArr.reduce((sum, r) => sum + Number(r?.rating || 0), 0) / ratedByArr.length
+      : Number.isFinite(Number(rating))
+        ? Number(rating)
+        : 0;
+
+  const avgRatingLabel = avgRating > 0 ? avgRating.toFixed(1) : "0.0";
+
   const themeVars = resolveProfileTheme(profile.theme);
   const cssVars = {
     "--pp-primary": themeVars.primary,
@@ -489,15 +512,13 @@ export default function PublicProfile() {
             {/* ✅ BADGE w prawym górnym rogu */}
             <div className={styles.heroBadge}>
               <div className={styles.badgeItem}>
-                <FaStar />
-                <span><strong>{profile?.ratedBy?.length || 0}</strong> opinii</span>
-              </div>
-              <div className={styles.badgeDot} />
-              <div className={styles.badgeItem}>
                 <FaRegEye />
-                <span><strong>{profile?.visits ?? 0}</strong> odwiedzin</span>
+                <span>
+                  <strong>{Number(profile?.visits ?? 0).toLocaleString("pl-PL")}</strong> odwiedzin
+                </span>
               </div>
             </div>
+
             {/* ✅ LOKALIZACJA w lewym górnym rogu heroInner */}
             <div className={styles.heroTopLeft}>
               <span className={styles.locPill} title={location || "Brak lokalizacji"}>
@@ -515,6 +536,28 @@ export default function PublicProfile() {
                   {typeLabel}
                 </span>
               </div>
+              {/* ✅ ROLE + RATING pod nazwą */}
+              <div className={styles.metaRow}>
+                {role?.trim() && (
+                  <span className={styles.rolePill} title={role}>
+                    {role}
+                  </span>
+                )}
+
+                <span
+                  className={styles.ratingPill}
+                  title={`Ocena: ${avgRatingLabel} (${reviewsCount} opinii)`}
+                  aria-label={`Ocena ${avgRatingLabel}, liczba opinii ${reviewsCount}`}
+                >
+                  <FaStar className={styles.ratingIcon} />
+                  <strong>{avgRatingLabel}</strong>
+                  <span className={styles.ratingDot} />
+                  <span className={styles.ratingText}>
+                    {reviewsCount} {reviewsCount === 1 ? "opinia" : reviewsCount > 1 && reviewsCount < 5 ? "opinie" : "opinii"}
+                  </span>
+                </span>
+              </div>
+
               <div className={styles.heroActions}>
                 <button
                   type="button"
