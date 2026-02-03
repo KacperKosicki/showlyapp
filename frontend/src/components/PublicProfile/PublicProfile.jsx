@@ -887,25 +887,6 @@ export default function PublicProfile() {
                     </div>
                   </>
                 )}
-
-                {cleanLinks.length > 0 && (
-                  <>
-                    <div className={styles.splitLine} />
-                    <div className={styles.pills}>
-                      {cleanLinks.map((link, i) => (
-                        <a
-                          key={`${link}-${i}`}
-                          href={link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.pill}
-                        >
-                          {prettyUrl(link)}
-                        </a>
-                      ))}
-                    </div>
-                  </>
-                )}
               </section>
             )}
           </aside>
