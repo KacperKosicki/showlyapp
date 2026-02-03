@@ -86,7 +86,6 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
     profileType,
     description,
     links = [],
-    showAvailableDates,
   } = user;
 
   const navigate = useNavigate();

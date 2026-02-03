@@ -294,8 +294,6 @@ const renderInfo = (res) => (
 );
 
   // ► Liczniki do badge
-  const sentCount = clientReservations.length;
-  const receivedCount = serviceReservations.length;
   const pendingSent = clientReservations.filter(r => r.status === 'oczekująca').length;
   const pendingReceived = serviceReservations.filter(r => r.status === 'oczekująca').length;
 

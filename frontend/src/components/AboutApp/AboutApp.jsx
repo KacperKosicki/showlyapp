@@ -1,6 +1,5 @@
 import React from 'react';
 import styles from './AboutApp.module.scss';
-import { Link } from 'react-router-dom';
 import LoadingLink from '../ui/LoadingLink/LoadingLink';
 
 const AboutApp = ({ user }) => {

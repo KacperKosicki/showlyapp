@@ -1,9 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from './CreateProfile.module.scss';
 import axios from 'axios';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, useLocation, Navigate } from 'react-router-dom';
 import UserCard from '../UserCard/UserCard';
-import { useLocation } from 'react-router-dom';
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
 
 const CreateProfile = ({ user, setRefreshTrigger }) => {
@@ -50,7 +49,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
         const tryScroll = () => {
             const el = document.getElementById(scrollTo);
             if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                el.scrollIntoView({ behavior: "smooth", block: "start" });
                 window.history.replaceState({}, document.title, location.pathname);
             } else {
                 requestAnimationFrame(tryScroll);
@@ -58,7 +57,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
         };
 
         requestAnimationFrame(tryScroll);
-    }, [location.state]);
+    }, [location.state, location.pathname]);
 
     if (!user) return <Navigate to="/login" replace />;
 
