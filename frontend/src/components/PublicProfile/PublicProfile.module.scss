@@ -2024,3 +2024,23 @@ $page-max: 1180px;
     text-overflow: unset;
   }
 }
+
+@media (max-width: 520px) {
+  .titleRow {
+    width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .heroTitle {
+    width: 100%;
+    text-align: center;
+  }
+
+  .titlePill {
+    margin: 0 auto;
+  }
+}
