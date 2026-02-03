@@ -118,7 +118,7 @@ $page-max: 1180px;
 
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 
   padding: 10px 12px;
   border-radius: 999px;
@@ -131,10 +131,31 @@ $page-max: 1180px;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.16);
 
   @media (max-width: 520px) {
-    top: 10px;
-    right: 10px;
-    padding: 9px 10px;
+    position: static !important;
+    top: auto !important;
+    right: auto !important;
+
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+
+    border-radius: 16px;
     gap: 8px;
+    padding: 10px 12px;
+  }
+}
+
+/* kropka separatorowa w badge (5.0 • 3 opinie) */
+.badgeDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin: 0 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.55);
+
+  @media (max-width: 520px) {
+    margin: 0 6px;
   }
 }
 
@@ -209,6 +230,33 @@ $page-max: 1180px;
   @media (max-width: 520px) {
     gap: 8px;
     margin-top: 8px;
+  }
+}
+
+.roleText {
+  font-family: $font-accent;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+
+  opacity: 0.95;
+  color: rgba(255, 255, 255, 0.92);
+
+  /* brak tła/border — czysty napis */
+  padding: 0;
+  margin-top: -2px;
+
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (max-width: 520px) {
+    width: 100%;
+    text-align: center;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    margin-top: 0;
   }
 }
 
@@ -321,6 +369,12 @@ $page-max: 1180px;
 
   strong {
     font-weight: 900;
+  }
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
   }
 }
 

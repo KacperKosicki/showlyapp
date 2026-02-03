@@ -513,7 +513,25 @@ export default function PublicProfile() {
               <div className={styles.badgeItem}>
                 <FaRegEye />
                 <span>
-                  <strong>{Number(profile?.visits ?? 0).toLocaleString("pl-PL")}</strong> odwiedzin
+                  <span>
+                    <strong>{Number(profile?.visits ?? 0).toLocaleString("pl-PL")}</strong>&nbsp;odwiedzin
+                  </span>
+                </span>
+              </div>
+
+              <div
+                className={styles.badgeItem}
+                title={`Ocena: ${avgRatingLabel} (${reviewsCount} opinii)`}
+                aria-label={`Ocena ${avgRatingLabel}, liczba opinii ${reviewsCount}`}
+              >
+                <FaStar />
+                <span>
+                  <strong>{avgRatingLabel}</strong>
+                  <span className={styles.badgeDot} />
+                  <span>
+                    {reviewsCount}{" "}
+                    {reviewsCount === 1 ? "opinia" : reviewsCount > 1 && reviewsCount < 5 ? "opinie" : "opinii"}
+                  </span>
                 </span>
               </div>
             </div>
@@ -538,24 +556,12 @@ export default function PublicProfile() {
               {/* ✅ ROLE + RATING pod nazwą */}
               <div className={styles.metaRow}>
                 {role?.trim() && (
-                  <span className={styles.rolePill} title={role}>
+                  <div className={styles.roleText} title={role}>
                     {role}
-                  </span>
+                  </div>
                 )}
-
-                <span
-                  className={styles.ratingPill}
-                  title={`Ocena: ${avgRatingLabel} (${reviewsCount} opinii)`}
-                  aria-label={`Ocena ${avgRatingLabel}, liczba opinii ${reviewsCount}`}
-                >
-                  <FaStar className={styles.ratingIcon} />
-                  <strong>{avgRatingLabel}</strong>
-                  <span className={styles.ratingDot} />
-                  <span className={styles.ratingText}>
-                    {reviewsCount} {reviewsCount === 1 ? "opinia" : reviewsCount > 1 && reviewsCount < 5 ? "opinie" : "opinii"}
-                  </span>
-                </span>
               </div>
+
 
               <div className={styles.heroActions}>
                 <button
@@ -635,7 +641,7 @@ export default function PublicProfile() {
 
                 {typeof priceFrom === "number" && typeof priceTo === "number" ? (
                   <>
-                    Cennik: <strong>od {priceFrom} zł</strong> <span>do</span> <strong>{priceTo} zł</strong>
+                    Cennik: <span>od</span> <strong>{priceFrom} zł</strong> <span>do</span> <strong>{priceTo} zł</strong>
                   </>
                 ) : (
                   <em>Cennik: brak danych</em>
