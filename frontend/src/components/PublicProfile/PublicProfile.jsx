@@ -441,7 +441,6 @@ export default function PublicProfile() {
   const bookingEnabled = !["off", "none", "disabled", ""].includes(bookingMode);
 
   const isCalendar = bookingMode === "calendar";
-  const isRequest = bookingMode === "request-open" || bookingMode === "request-blocking";
 
   // ✅ jedyne źródło prawdy (bez dat)
   const allowBookingUI = bookingEnabled && profile?.showAvailableDates !== false;
