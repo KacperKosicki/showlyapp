@@ -7,8 +7,25 @@ import { onAuthStateChanged } from "firebase/auth";
 import AlertBox from "../AlertBox/AlertBox";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
 
-import { FaMapMarkerAlt, FaStar, FaRegEye, FaPhoneAlt, FaEnvelope, FaMapMarkedAlt, FaGlobe } from "react-icons/fa";
-import { FaHeart, FaRegHeart, FaFacebook, FaInstagram, FaYoutube, FaTiktok, FaLinkedin, FaXTwitter } from "react-icons/fa6";
+import {
+  FaMapMarkerAlt,
+  FaStar,
+  FaRegEye,
+  FaPhoneAlt,
+  FaEnvelope,
+  FaMapMarkedAlt,
+  FaGlobe,
+} from "react-icons/fa";
+import {
+  FaHeart,
+  FaRegHeart,
+  FaFacebook,
+  FaInstagram,
+  FaYoutube,
+  FaTiktok,
+  FaLinkedin,
+  FaXTwitter,
+} from "react-icons/fa6";
 import { FaRegCalendarAlt, FaPaperPlane } from "react-icons/fa";
 
 import "react-calendar/dist/Calendar.css";
@@ -42,9 +59,19 @@ const ensureUrl = (url = "") => {
 
 const API = process.env.REACT_APP_API_URL;
 
-const normalizeAvatar = (val = "") => {
-  const v = String(val || "").trim();
-  if (!v) return v;
+// ✅ avatar/photos mogą być: string albo { url, publicId }
+const pickUrl = (val) => {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object" && typeof val.url === "string") return val.url;
+  return "";
+};
+
+// ✅ ujednolicone (uploads / http / data / blob) + obsługa obiektu {url,publicId}
+const normalizeAvatar = (val) => {
+  const raw = pickUrl(val);
+  const v = String(raw || "").trim();
+  if (!v) return "";
 
   if (v.startsWith("data:image/")) return v;
   if (v.startsWith("blob:")) return v;
@@ -56,6 +83,15 @@ const normalizeAvatar = (val = "") => {
   if (/^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(v)) return `https://${v}`;
 
   return v;
+};
+
+// ✅ normalizacja galerii: wspiera nowy typ [{url, publicId}] i stary [string]
+const normalizePhotos = (photos) => {
+  if (!Array.isArray(photos)) return [];
+  return photos
+    .map((p) => normalizeAvatar(p) || (typeof p === "string" ? p : p?.url) || "")
+    .map((s) => String(s || "").trim())
+    .filter(Boolean);
 };
 
 // === blokada body bez „skoku” strony ===
@@ -274,7 +310,7 @@ export default function PublicProfile() {
         const dbUser = await r.json();
         userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || "";
       }
-    } catch { }
+    } catch {}
 
     try {
       const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/rate/${slug}`, {
@@ -312,7 +348,10 @@ export default function PublicProfile() {
 
     // ✅ jedyna blokada: showAvailableDates
     if (profile?.showAvailableDates === false) {
-      setAlert({ type: "info", message: "Ten profil nie udostępnia wolnych terminów — możesz tylko napisać wiadomość." });
+      setAlert({
+        type: "info",
+        message: "Ten profil nie udostępnia wolnych terminów — możesz tylko napisać wiadomość.",
+      });
       return;
     }
 
@@ -332,7 +371,6 @@ export default function PublicProfile() {
 
     navigate(`/wiadomosc/${profile.userId}`, { state: { scrollToId: "messageFormContainer" } });
   };
-
 
   const toggleFavorite = async () => {
     const currentUser = auth.currentUser;
@@ -404,26 +442,36 @@ export default function PublicProfile() {
     socials = {},
   } = profile;
 
+  // ✅ ceny: obsługa stringów z API
+  const pf = Number(priceFrom);
+  const pt = Number(priceTo);
+  const hasPrice = Number.isFinite(pf) && Number.isFinite(pt) && pf > 0 && pt >= pf;
+
+  // ✅ avatar profilu: nowy typ {url,publicId} + fallback
+  const profileAvatarSrc = normalizeAvatar(avatar) || "/images/other/no-image.png";
+
+  // ✅ galeria: nowy typ [{url,publicId}] + stary [string]
+  const gallery = normalizePhotos(profile.photos);
+  const hasGallery = gallery.length > 0;
+
   // ===== rating/reviews (ładnie + bezpiecznie) =====
   const ratedByArr = Array.isArray(profile?.ratedBy) ? profile.ratedBy : [];
 
-  // liczba opinii: najpierw ratedBy, potem reviews, na końcu 0
   const reviewsCount =
     ratedByArr.length > 0
       ? ratedByArr.length
       : Array.isArray(reviews)
-        ? reviews.length
-        : Number.isFinite(Number(reviews))
-          ? Number(reviews)
-          : 0;
+      ? reviews.length
+      : Number.isFinite(Number(reviews))
+      ? Number(reviews)
+      : 0;
 
-  // średnia ocena: najpierw liczona z ratedBy, potem rating z bazy, na końcu 0
   const avgRating =
     ratedByArr.length > 0
       ? ratedByArr.reduce((sum, r) => sum + Number(r?.rating || 0), 0) / ratedByArr.length
       : Number.isFinite(Number(rating))
-        ? Number(rating)
-        : 0;
+      ? Number(rating)
+      : 0;
 
   const avgRatingLabel = avgRating > 0 ? avgRating.toFixed(1) : "0.0";
 
@@ -434,7 +482,6 @@ export default function PublicProfile() {
     "--pp-banner": themeVars.banner,
   };
 
-  const hasGallery = Array.isArray(profile.photos) && profile.photos.length > 0;
   const hasServices = Array.isArray(profile.services) && profile.services.length > 0;
 
   const bookingMode = String(profile?.bookingMode || "off").toLowerCase();
@@ -445,18 +492,12 @@ export default function PublicProfile() {
   // ✅ jedyne źródło prawdy (bez dat)
   const allowBookingUI = bookingEnabled && profile?.showAvailableDates !== false;
 
-  // ✅ pokazujemy główne CTA tylko gdy allowBookingUI
   const showBookButton = !isOwner && allowBookingUI;
-
-  // ✅ info “możesz tylko napisać” tylko gdy booking włączony, ale showAvailableDates wyłączone
   const showNoBookingInfo = !isOwner && bookingEnabled && !allowBookingUI;
 
-  // Tekst CTA zależny od trybu
   const bookBtnLabel = isCalendar ? "ZAREZERWUJ TERMIN" : "WYŚLIJ ZAPYTANIE";
 
-  const cleanLinks = (links || [])
-    .map((l) => (l || "").trim())
-    .filter(Boolean);
+  const cleanLinks = (links || []).map((l) => (l || "").trim()).filter(Boolean);
 
   const contactPhone = normalizePhone(contact?.phone);
   const contactEmail = (contact?.email || "").trim();
@@ -490,12 +531,12 @@ export default function PublicProfile() {
     profileType === "zawodowy"
       ? "Zawód"
       : profileType === "hobbystyczny"
-        ? "Hobby"
-        : profileType === "serwis"
-          ? "Serwis"
-          : profileType === "społeczność"
-            ? "Społeczność"
-            : "Profil";
+      ? "Hobby"
+      : profileType === "serwis"
+      ? "Serwis"
+      : profileType === "społeczność"
+      ? "Społeczność"
+      : "Profil";
 
   return (
     <div className={styles.page} style={cssVars}>
@@ -549,10 +590,9 @@ export default function PublicProfile() {
               <div className={styles.titleRow}>
                 <h1 className={styles.heroTitle}>{name}</h1>
 
-                <span className={`${styles.titlePill} ${styles[`type_${profileType}`] || ""}`}>
-                  {typeLabel}
-                </span>
+                <span className={`${styles.titlePill} ${styles[`type_${profileType}`] || ""}`}>{typeLabel}</span>
               </div>
+
               {/* ✅ ROLE + RATING pod nazwą */}
               <div className={styles.metaRow}>
                 {role?.trim() && (
@@ -561,7 +601,6 @@ export default function PublicProfile() {
                   </div>
                 )}
               </div>
-
 
               <div className={styles.heroActions}>
                 <button
@@ -605,17 +644,16 @@ export default function PublicProfile() {
                     </button>
                   )}
                 </div>
-
               </div>
-
             </div>
 
             <div className={styles.heroRight}>
               <div className={styles.avatarWrap}>
                 <img
-                  src={normalizeAvatar(avatar) || "/images/other/no-image.png"}
+                  src={profileAvatarSrc}
                   alt={name}
                   className={styles.avatar}
+                  decoding="async"
                   onError={(e) => {
                     e.currentTarget.src = "/images/other/no-image.png";
                   }}
@@ -638,10 +676,9 @@ export default function PublicProfile() {
               </div>
 
               <div className={styles.pricePill}>
-
-                {typeof priceFrom === "number" && typeof priceTo === "number" ? (
+                {hasPrice ? (
                   <>
-                    Cennik: <span>od</span> <strong>{priceFrom} zł</strong> <span>do</span> <strong>{priceTo} zł</strong>
+                    Cennik: <span>od</span> <strong>{pf} zł</strong> <span>do</span> <strong>{pt} zł</strong>
                   </>
                 ) : (
                   <em>Cennik: brak danych</em>
@@ -650,11 +687,7 @@ export default function PublicProfile() {
             </div>
 
             <div className={styles.cardBody}>
-              {description?.trim() ? (
-                <p className={styles.desc}>{description}</p>
-              ) : (
-                <p className={styles.muted}>Użytkownik nie dodał jeszcze opisu.</p>
-              )}
+              {description?.trim() ? <p className={styles.desc}>{description}</p> : <p className={styles.muted}>Użytkownik nie dodał jeszcze opisu.</p>}
 
               {tags?.length > 0 && (
                 <div className={styles.chips}>
@@ -674,19 +707,22 @@ export default function PublicProfile() {
 
                 {cleanLinks.length > 0 ? (
                   <div className={styles.linkGrid}>
-                    {cleanLinks.map((link, i) => (
-                      <a
-                        key={`${link}-${i}`}
-                        href={link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.linkTile}
-                        title={link}
-                      >
-                        <span className={styles.linkDomain}>{prettyUrl(link)}</span>
-                        <span className={styles.linkHint}>Otwórz</span>
-                      </a>
-                    ))}
+                    {cleanLinks.map((link, i) => {
+                      const href = ensureUrl(link);
+                      return (
+                        <a
+                          key={`${href}-${i}`}
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.linkTile}
+                          title={href}
+                        >
+                          <span className={styles.linkDomain}>{prettyUrl(href)}</span>
+                          <span className={styles.linkHint}>Otwórz</span>
+                        </a>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className={styles.muted}>Użytkownik nie dodał jeszcze żadnych linków.</p>
@@ -707,9 +743,7 @@ export default function PublicProfile() {
                     {[1, 2, 3, 4, 5].map((val) => (
                       <FaStar
                         key={val}
-                        className={
-                          val <= (hoveredRating || selectedRating) ? styles.starOn : styles.starOff
-                        }
+                        className={val <= (hoveredRating || selectedRating) ? styles.starOn : styles.starOff}
                         onClick={!hasRated ? () => setSelectedRating(val) : undefined}
                         onMouseEnter={!hasRated ? () => setHoveredRating(val) : undefined}
                         onMouseLeave={!hasRated ? () => setHoveredRating(0) : undefined}
@@ -765,14 +799,15 @@ export default function PublicProfile() {
                 <ul className={styles.reviewList}>
                   {profile.ratedBy.map((op, i) => {
                     const ratingVal = Number(op.rating);
+                    // ✅ avatary opinii zostają jak były (string z API) — normalizacja zostaje i wspiera cloudinary
                     const avatarSrc = normalizeAvatar(op.userAvatar) || "/images/other/no-image.png";
 
                     const dateLabel = op.createdAt
                       ? new Date(op.createdAt).toLocaleDateString("pl-PL", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
                       : "";
 
                     return (
@@ -797,7 +832,10 @@ export default function PublicProfile() {
 
                           <div className={styles.reviewStars}>
                             {[...Array(5)].map((_, idx) => (
-                              <FaStar key={idx} className={idx < ratingVal ? styles.starMiniOn : styles.starMiniOff} />
+                              <FaStar
+                                key={idx}
+                                className={idx < ratingVal ? styles.starMiniOn : styles.starMiniOff}
+                              />
                             ))}
                           </div>
                         </div>
@@ -816,7 +854,7 @@ export default function PublicProfile() {
             {hasInfoBox && (
               <section className={styles.sideCard}>
                 <div className={styles.sideHeader}>
-                  <h2 className={styles.sectionTitle}>Kontakt i social</h2>
+                  <h2 className={styles.sectionTitle}>Kontakt i social media</h2>
                 </div>
 
                 <div className={styles.infoList}>
@@ -866,7 +904,7 @@ export default function PublicProfile() {
                   </div>
                 </div>
 
-                {hasSocials && (
+                {socialItems.length > 0 && (
                   <>
                     <div className={styles.splitLine} />
                     <div className={styles.socialGrid}>
@@ -901,27 +939,24 @@ export default function PublicProfile() {
             </div>
 
             <div className={styles.gallery}>
-              {profile.photos.map((url, i) => {
-                const src = normalizeAvatar(url) || url;
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    className={styles.galleryItem}
-                    onClick={() => openLightbox(src)}
-                    aria-label={`Otwórz zdjęcie ${i + 1}`}
-                    title="Otwórz"
-                  >
-                    <img
-                      src={src}
-                      alt={`Zdjęcie ${i + 1}`}
-                      onError={(e) => {
-                        e.currentTarget.src = "/images/other/no-image.png";
-                      }}
-                    />
-                  </button>
-                );
-              })}
+              {gallery.map((src, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={styles.galleryItem}
+                  onClick={() => openLightbox(src)}
+                  aria-label={`Otwórz zdjęcie ${i + 1}`}
+                  title="Otwórz"
+                >
+                  <img
+                    src={src}
+                    alt={`Zdjęcie ${i + 1}`}
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/other/no-image.png";
+                    }}
+                  />
+                </button>
+              ))}
             </div>
           </section>
         )}

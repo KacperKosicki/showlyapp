@@ -1,10 +1,15 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const Profile = require('../models/Profile');
-const User = require('../models/User'); // 👈 potrzebne do pobrania nazwy i avatara oceniającego
-const Conversation = require('../models/Conversation');
-const Favorite = require('../models/Favorite'); // 👈 model ulubionych
-const VisitLock = require('../models/VisitLock'); // 👈 anty-spam dla odwiedzin
+
+const Profile = require("../models/Profile");
+const User = require("../models/User");
+const Conversation = require("../models/Conversation");
+const Favorite = require("../models/Favorite");
+const VisitLock = require("../models/VisitLock");
+
+const upload = require("../middleware/upload"); // multer memoryStorage (buffer)
+const cloudinary = require("../utils/cloudinary");
+const { uploadBuffer } = require("../utils/cloudinaryUpload");
 
 // -----------------------------
 // Helpers: slug + public URLs
@@ -12,68 +17,104 @@ const VisitLock = require('../models/VisitLock'); // 👈 anty-spam dla odwiedzi
 const slugify = (text) =>
   text
     .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-');
+    .replace(/\s+/g, "-")
+    .replace(/[^\w\-]+/g, "")
+    .replace(/\-\-+/g, "-");
 
 // 🔧 pełne https URL-e (Render/Vercel za proxy)
 function getProto(req) {
-  const xf = req.headers['x-forwarded-proto'];
-  if (xf) return String(xf).split(',')[0].trim();
-  return req.protocol || 'https';
+  const xf = req.headers["x-forwarded-proto"];
+  if (xf) return String(xf).split(",")[0].trim();
+  return req.protocol || "https";
 }
 
 function withCacheBust(url, v) {
-  if (!url) return '';
-  if (url.startsWith('data:')) return url; // 🚫 nie doklejamy nic do data URI
-  const sep = url.includes('?') ? '&' : '?';
+  if (!url) return "";
+  if (url.startsWith("data:")) return url;
+  const sep = url.includes("?") ? "&" : "?";
   return `${url}${sep}v=${v}`;
 }
 
-
 function absoluteUrl(req, relative) {
   const proto = getProto(req);
-  const host = req.get('host');
-  return `${proto}://${host}${relative.startsWith('/') ? '' : '/'}${relative}`;
+  const host = req.get("host");
+  return `${proto}://${host}${relative.startsWith("/") ? "" : "/"}${relative}`;
 }
 
-// --- NEW: doprowadza wszystkie warianty "uploads" do /uploads/...
-function normalizeUploadPath(p = '') {
-  if (!p) return '';
-  // "uploads/..."  → "/uploads/..."
-  if (p.startsWith('uploads/')) return `/${p}`;
-  // "./uploads/..." lub "../uploads/..." → "/uploads/..."
-  if (p.startsWith('./uploads/') || p.startsWith('../uploads/')) {
-    return '/' + p.replace(/^\.{1,2}\//, '');
+// --- doprowadza wszystkie warianty "uploads" do /uploads/...
+function normalizeUploadPath(p = "") {
+  if (!p) return "";
+  if (p.startsWith("uploads/")) return `/${p}`;
+  if (p.startsWith("./uploads/") || p.startsWith("../uploads/")) {
+    return "/" + p.replace(/^\.{1,2}\//, "");
   }
   return p;
 }
 
-// akceptuj /uploads, http i https; wymuś https na produkcji
-function toPublicUrl(req, val = '') {
-  if (!val) return '';
+// akceptuj /uploads, http i https
+function toPublicUrl(req, val = "") {
+  if (!val) return "";
   const v = normalizeUploadPath(val);
 
-  if (v.startsWith('/uploads/')) return absoluteUrl(req, v);
+  if (v.startsWith("/uploads/")) return absoluteUrl(req, v);
 
   if (/^https?:\/\/.+/i.test(v)) {
-    const wantedProto = getProto(req); // 'https' za proxy, 'http' lokalnie
+    const wantedProto = getProto(req);
     return v.replace(/^https?:\/\//i, `${wantedProto}://`);
   }
 
-  // zostaw np. data:uri itp.
   return v;
+}
+
+// ======= Cloudinary field helpers (kompatybilność string/obiekt) =======
+function pickUrlField(val) {
+  // avatar / photo może być: string lub {url, publicId}
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object" && typeof val.url === "string") return val.url;
+  return "";
+}
+
+function pickPublicIdField(val) {
+  if (!val) return "";
+  if (typeof val === "object" && typeof val.publicId === "string") return val.publicId;
+  return "";
+}
+
+function normalizeAvatarOut(req, avatar, updatedAt) {
+  const rawUrl = pickUrlField(avatar);
+  const base = rawUrl ? toPublicUrl(req, rawUrl) : "";
+  const v = updatedAt ? new Date(updatedAt).getTime() : Date.now();
+  const url = base ? withCacheBust(base, v) : "";
+  const publicId = pickPublicIdField(avatar);
+  // zwracamy obiekt – front ma jasno
+  return { url, publicId };
+}
+
+function normalizePhotosOut(req, photos = []) {
+  if (!Array.isArray(photos)) return [];
+  return photos
+    .map((p) => {
+      if (typeof p === "string") {
+        return { url: toPublicUrl(req, p), publicId: "" };
+      }
+      if (p && typeof p === "object") {
+        return { url: toPublicUrl(req, p.url || ""), publicId: p.publicId || "" };
+      }
+      return null;
+    })
+    .filter(Boolean);
 }
 
 // Odwiedziny – identyfikacja oglądającego
 function getViewerKey(req) {
   const uid = req.headers.uid && String(req.headers.uid);
   if (uid) return `uid:${uid}`;
-  const ip = req.ip || req.connection?.remoteAddress || '0.0.0.0';
-  const ua = (req.get('user-agent') || '').slice(0, 100);
+  const ip = req.ip || req.connection?.remoteAddress || "0.0.0.0";
+  const ua = (req.get("user-agent") || "").slice(0, 100);
   return `ipua:${ip}:${ua}`;
 }
 
@@ -86,124 +127,233 @@ async function canCountVisit(ownerUid, viewerKey) {
     );
     return res.upsertedCount === 1 || !!res.upsertedId;
   } catch (e) {
-    return false; // np. E11000 → duplikat → nie liczymy
+    return false;
   }
 }
 
-// --------------------------------------
+// =========================================================
+// ✅ CLOUDINARY: AVATAR + PHOTOS
+// =========================================================
+
+// POST /api/profiles/:uid/avatar
+router.post("/:uid/avatar", upload.single("file"), async (req, res) => {
+  try {
+    const uid = req.params.uid;
+    if (!req.file) return res.status(400).json({ message: "Brak pliku." });
+
+    const profile = await Profile.findOne({ userId: uid });
+    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
+
+    // usuń stary avatar (jeśli był w Cloudinary)
+    const oldPublicId = pickPublicIdField(profile.avatar);
+    if (oldPublicId) {
+      await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => {});
+    }
+
+    const result = await uploadBuffer(req.file.buffer, {
+      folder: `showly/profiles/${uid}/avatar`,
+      resource_type: "image",
+      transformation: [
+        { width: 512, height: 512, crop: "fill", gravity: "face" },
+        { quality: "auto", fetch_format: "auto" },
+      ],
+    });
+
+    // zapisuj jako obiekt
+    profile.avatar = { url: result.secure_url, publicId: result.public_id };
+    await profile.save();
+
+    return res.json({
+      message: "Avatar zapisany.",
+      avatar: normalizeAvatarOut(req, profile.avatar, profile.updatedAt),
+    });
+  } catch (e) {
+    console.error("❌ upload avatar:", e);
+    return res.status(500).json({ message: "Błąd uploadu avatara." });
+  }
+});
+
+// DELETE /api/profiles/:uid/avatar
+router.delete("/:uid/avatar", async (req, res) => {
+  try {
+    const uid = req.params.uid;
+    const profile = await Profile.findOne({ userId: uid });
+    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
+
+    const oldPublicId = pickPublicIdField(profile.avatar);
+    if (oldPublicId) {
+      await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => {});
+    }
+
+    // czyścimy (obiekt)
+    profile.avatar = { url: "", publicId: "" };
+    await profile.save();
+
+    return res.json({
+      message: "Avatar usunięty.",
+      avatar: normalizeAvatarOut(req, profile.avatar, profile.updatedAt),
+    });
+  } catch (e) {
+    console.error("❌ delete avatar:", e);
+    return res.status(500).json({ message: "Błąd usuwania avatara." });
+  }
+});
+
+// POST /api/profiles/:uid/photos (max 6 łącznie)
+router.post("/:uid/photos", upload.array("files", 6), async (req, res) => {
+  try {
+    const uid = req.params.uid;
+    const files = req.files || [];
+    if (!files.length) return res.status(400).json({ message: "Brak plików." });
+
+    const profile = await Profile.findOne({ userId: uid });
+    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
+
+    const MAX = 6;
+    const currentCount = Array.isArray(profile.photos) ? profile.photos.length : 0;
+    if (currentCount + files.length > MAX) {
+      return res.status(400).json({ message: `Maksymalnie ${MAX} zdjęć w galerii.` });
+    }
+
+    const uploaded = [];
+    for (const f of files) {
+      const r = await uploadBuffer(f.buffer, {
+        folder: `showly/profiles/${uid}/photos`,
+        resource_type: "image",
+        transformation: [
+          { width: 1600, height: 1600, crop: "limit" },
+          { quality: "auto", fetch_format: "auto" },
+        ],
+      });
+      uploaded.push({ url: r.secure_url, publicId: r.public_id });
+    }
+
+    // zapewnij tablicę
+    profile.photos = Array.isArray(profile.photos) ? profile.photos : [];
+    profile.photos = [...profile.photos, ...uploaded];
+
+    await profile.save();
+
+    return res.json({
+      message: "Zdjęcia dodane.",
+      photos: normalizePhotosOut(req, profile.photos),
+    });
+  } catch (e) {
+    console.error("❌ upload photos:", e);
+    return res.status(500).json({ message: "Błąd uploadu zdjęć." });
+  }
+});
+
+// DELETE /api/profiles/:uid/photos/:publicId
+router.delete("/:uid/photos/:publicId", async (req, res) => {
+  try {
+    const { uid, publicId } = req.params;
+
+    const profile = await Profile.findOne({ userId: uid });
+    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
+
+    const decoded = decodeURIComponent(publicId);
+
+    await cloudinary.uploader.destroy(decoded, { resource_type: "image" }).catch(() => {});
+
+    profile.photos = Array.isArray(profile.photos) ? profile.photos : [];
+    profile.photos = profile.photos.filter((p) => {
+      if (typeof p === "string") return true; // stary typ (nie umiemy usunąć po publicId)
+      return p?.publicId !== decoded;
+    });
+
+    await profile.save();
+
+    return res.json({
+      message: "Zdjęcie usunięte.",
+      photos: normalizePhotosOut(req, profile.photos),
+    });
+  } catch (e) {
+    console.error("❌ delete photo:", e);
+    return res.status(500).json({ message: "Błąd usuwania zdjęcia." });
+  }
+});
+
+// ======================================
 // GET /api/profiles – aktywne i ważne
-// --------------------------------------
-router.get('/', async (req, res) => {
+// ======================================
+router.get("/", async (req, res) => {
   try {
     const now = new Date();
-    await Profile.updateMany(
-      { isVisible: true, visibleUntil: { $lt: now } },
-      { $set: { isVisible: false } }
-    );
-    const visible = await Profile.find({
-      isVisible: true,
-      visibleUntil: { $gte: now }
-    });
+    await Profile.updateMany({ isVisible: true, visibleUntil: { $lt: now } }, { $set: { isVisible: false } });
+
+    const visible = await Profile.find({ isVisible: true, visibleUntil: { $gte: now } });
     res.json(visible);
   } catch (e) {
-    res.status(500).json({ message: 'Błąd pobierania profili' });
+    res.status(500).json({ message: "Błąd pobierania profili" });
   }
 });
 
 // -------------------------------------------------
 // GET /api/profiles/by-user/:uid – profil po userId
 // -------------------------------------------------
-router.get('/by-user/:uid', async (req, res) => {
-  console.log('🔍 Szukam profilu dla userId:', req.params.uid);
+router.get("/by-user/:uid", async (req, res) => {
   try {
     const profile = await Profile.findOne({ userId: req.params.uid }).lean();
-    if (!profile) {
-      return res.status(404).json({ message: 'Brak wizytówki dla tego użytkownika.' });
-    }
+    if (!profile) return res.status(404).json({ message: "Brak wizytówki dla tego użytkownika." });
 
-    const baseAvatar = profile.avatar ? toPublicUrl(req, profile.avatar) : '';
-    const v = profile.updatedAt ? new Date(profile.updatedAt).getTime() : Date.now();
-    const avatar = withCacheBust(baseAvatar, v);
+    const avatar = normalizeAvatarOut(req, profile.avatar, profile.updatedAt);
+    const photos = normalizePhotosOut(req, profile.photos);
 
-    return res.json({
-      ...profile,
-      avatar,
-    });
+    return res.json({ ...profile, avatar, photos });
   } catch (err) {
-    console.error('❌ Błąd w GET /by-user/:uid:', err);
-    res.status(500).json({ message: 'Błąd serwera.' });
+    console.error("❌ Błąd w GET /by-user/:uid:", err);
+    res.status(500).json({ message: "Błąd serwera." });
   }
 });
 
 // -----------------------------------------------------------
 // GET /api/profiles/slug/:slug – profil po unikalnym slugu
-// + normalizacja avatarów w ratedBy → pełne https URL-e
 // -----------------------------------------------------------
-router.get('/slug/:slug', async (req, res) => {
+router.get("/slug/:slug", async (req, res) => {
   try {
-    const profile = await Profile.findOne({ slug: req.params.slug }).lean(); // lean dla prostszego modyfikowania
-    if (!profile) return res.status(404).json({ message: 'Nie znaleziono profilu.' });
+    const profile = await Profile.findOne({ slug: req.params.slug }).lean();
+    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
     const now = new Date();
     if (!profile.isVisible || profile.visibleUntil < now) {
-      return res.status(403).json({ message: 'Profil jest obecnie niewidoczny.' });
+      return res.status(403).json({ message: "Profil jest obecnie niewidoczny." });
     }
 
     const viewerUid = req.headers.uid || null;
 
-    // 🔧 NORMALIZACJA avatarów w opiniach
+    // ratedBy – jak masz (nie tykamy logiki, tylko normalizacja avatara w odpowiedzi)
     let ratedBy = Array.isArray(profile.ratedBy) ? profile.ratedBy : [];
+    const ids = [...new Set(ratedBy.map((r) => r.userId).filter(Boolean))];
 
-    // firebaseUid autorów opinii
-    const ids = [...new Set(ratedBy.map(r => r.userId).filter(Boolean))];
-
-    // mapa: uid -> { avatar, updatedAt }
     let usersMap = {};
     if (ids.length) {
-      const users = await User.find({ firebaseUid: { $in: ids } })
-        .select('firebaseUid avatar updatedAt')
-        .lean();
-
+      const users = await User.find({ firebaseUid: { $in: ids } }).select("firebaseUid avatar updatedAt").lean();
       usersMap = users.reduce((acc, u) => {
-        acc[u.firebaseUid] = {
-          avatar: u.avatar || '',
-          updatedAt: u.updatedAt || null
-        };
+        acc[u.firebaseUid] = { avatar: u.avatar || "", updatedAt: u.updatedAt || null };
         return acc;
       }, {});
     }
 
-    // avatar ZAWSZE z Users (fallback: snapshot)
-    ratedBy = ratedBy.map(r => {
+    ratedBy = ratedBy.map((r) => {
       const u = usersMap[r.userId];
-      const picked = u?.avatar || r.userAvatar || '';
+      const picked = u?.avatar || r.userAvatar || "";
       const v = u?.updatedAt ? new Date(u.updatedAt).getTime() : null;
-
-      const base = picked ? toPublicUrl(req, picked) : '';
+      const base = picked ? toPublicUrl(req, picked) : "";
       const userAvatar = v ? withCacheBust(base, v) : base;
-
-      return {
-        ...r,
-        userAvatar,
-      };
+      return { ...r, userAvatar };
     });
 
+    const avatar = normalizeAvatarOut(req, profile.avatar, profile.updatedAt);
+    const photos = normalizePhotosOut(req, profile.photos);
 
-    const baseAvatar = profile.avatar ? toPublicUrl(req, profile.avatar) : '';
-    const v = profile.updatedAt ? new Date(profile.updatedAt).getTime() : Date.now();
-    const avatar = withCacheBust(baseAvatar, v);
-
-    const photos = Array.isArray(profile.photos) ? profile.photos.map((p) => toPublicUrl(req, p)) : profile.photos;
-
-    // Ulubione: flaga + liczba (licznik z pola lub liczony na żywo)
+    // Ulubione: flaga + liczba
     let isFavorite = false;
     let favoritesCount = profile.favoritesCount;
 
     if (viewerUid) {
       const favExists = await Favorite.exists({ ownerUid: viewerUid, profileUserId: profile.userId });
       isFavorite = !!favExists;
-      // Jeśli chcesz liczyć licznik na żywo:
-      // favoritesCount = await Favorite.countDocuments({ profileUserId: profile.userId });
     }
 
     return res.json({
@@ -215,65 +365,57 @@ router.get('/slug/:slug', async (req, res) => {
       favoritesCount,
     });
   } catch (err) {
-    console.error('❌ Błąd w GET /slug/:slug:', err);
-    res.status(500).json({ message: 'Błąd serwera.' });
+    console.error("❌ Błąd w GET /slug/:slug:", err);
+    res.status(500).json({ message: "Błąd serwera." });
   }
 });
 
 // ------------------------------------------------------
 // PATCH /api/profiles/:uid/visit — zlicz odwiedziny
 // ------------------------------------------------------
-router.patch('/:uid/visit', async (req, res) => {
+router.patch("/:uid/visit", async (req, res) => {
   try {
     const ownerUid = req.params.uid;
     const viewerUid = req.headers.uid || null;
 
-    const profile = await Profile.findOne({ userId: ownerUid }).select('visits isVisible visibleUntil userId');
-    if (!profile) return res.status(404).json({ message: 'Nie znaleziono profilu.' });
+    const profile = await Profile.findOne({ userId: ownerUid }).select("visits isVisible visibleUntil userId");
+    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
     const now = new Date();
     if (!profile.isVisible || (profile.visibleUntil && profile.visibleUntil < now)) {
-      return res.status(403).json({ message: 'Profil niewidoczny/nieaktywny.' });
+      return res.status(403).json({ message: "Profil niewidoczny/nieaktywny." });
     }
 
-    // nie licz własnych wejść
     if (viewerUid && viewerUid === ownerUid) {
       return res.json({ visits: profile.visits, skipped: true });
     }
 
     const viewerKey = getViewerKey(req);
     const ok = await canCountVisit(ownerUid, viewerKey);
-    if (!ok) {
-      return res.json({ visits: profile.visits, throttled: true });
-    }
+    if (!ok) return res.json({ visits: profile.visits, throttled: true });
 
-    const updated = await Profile.findOneAndUpdate(
-      { userId: ownerUid },
-      { $inc: { visits: 1 } },
-      { new: true, select: 'visits' }
-    );
-
+    const updated = await Profile.findOneAndUpdate({ userId: ownerUid }, { $inc: { visits: 1 } }, { new: true, select: "visits" });
     return res.json({ visits: updated.visits });
   } catch (e) {
-    console.error('❌ Błąd /:uid/visit:', e);
-    return res.status(500).json({ message: 'Błąd serwera.' });
+    console.error("❌ Błąd /:uid/visit:", e);
+    return res.status(500).json({ message: "Błąd serwera." });
   }
 });
 
 // ------------------------------------------------------------
 // PATCH /api/profiles/slug/:slug/visit — zlicz po slugu
 // ------------------------------------------------------------
-router.patch('/slug/:slug/visit', async (req, res) => {
+router.patch("/slug/:slug/visit", async (req, res) => {
   try {
     const { slug } = req.params;
     const viewerUid = req.headers.uid || null;
 
-    const profile = await Profile.findOne({ slug }).select('userId visits isVisible visibleUntil');
-    if (!profile) return res.status(404).json({ message: 'Nie znaleziono profilu.' });
+    const profile = await Profile.findOne({ slug }).select("userId visits isVisible visibleUntil");
+    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
     const now = new Date();
     if (!profile.isVisible || (profile.visibleUntil && profile.visibleUntil < now)) {
-      return res.status(403).json({ message: 'Profil niewidoczny/nieaktywny.' });
+      return res.status(403).json({ message: "Profil niewidoczny/nieaktywny." });
     }
 
     if (viewerUid && viewerUid === profile.userId) {
@@ -282,57 +424,44 @@ router.patch('/slug/:slug/visit', async (req, res) => {
 
     const viewerKey = getViewerKey(req);
     const ok = await canCountVisit(profile.userId, viewerKey);
-    if (!ok) {
-      return res.json({ visits: profile.visits, throttled: true });
-    }
+    if (!ok) return res.json({ visits: profile.visits, throttled: true });
 
-    const updated = await Profile.findOneAndUpdate(
-      { slug },
-      { $inc: { visits: 1 } },
-      { new: true, select: 'visits' }
-    );
-
+    const updated = await Profile.findOneAndUpdate({ slug }, { $inc: { visits: 1 } }, { new: true, select: "visits" });
     return res.json({ visits: updated.visits });
   } catch (e) {
-    console.error('❌ Błąd /slug/:slug/visit:', e);
-    return res.status(500).json({ message: 'Błąd serwera.' });
+    console.error("❌ Błąd /slug/:slug/visit:", e);
+    return res.status(500).json({ message: "Błąd serwera." });
   }
 });
 
 // -----------------------------------------
 // POST /api/profiles — tworzenie profilu
 // -----------------------------------------
-router.post('/', async (req, res) => {
-  console.log('📦 Żądanie do /api/profiles:', req.body);
-
+router.post("/", async (req, res) => {
   // bezpieczne Stringi
-  const userId = String(req.body.userId || '');
-  const name = String(req.body.name || '');
-  const role = String(req.body.role || '');
-  const location = String(req.body.location || '');
+  const userId = String(req.body.userId || "");
+  const name = String(req.body.name || "");
+  const role = String(req.body.role || "");
+  const location = String(req.body.location || "");
 
   if (!userId || !name) {
-    return res.status(400).json({ message: 'Brakuje userId lub name w danych profilu' });
+    return res.status(400).json({ message: "Brakuje userId lub name w danych profilu" });
   }
 
   try {
-    const existing = await Profile.findOne({
-      name: name.trim(),
-      role: role.trim(),
-      location: location.trim()
-    });
+    const existing = await Profile.findOne({ name: name.trim(), role: role.trim(), location: location.trim() });
     if (existing) {
-      return res.status(409).json({ message: 'Taka wizytówka już istnieje (imię + rola + lokalizacja).' });
+      return res.status(409).json({ message: "Taka wizytówka już istnieje (imię + rola + lokalizacja)." });
     }
 
     const existingByUser = await Profile.findOne({ userId });
     if (existingByUser) {
-      return res.status(409).json({ message: 'Ten użytkownik już posiada wizytówkę.' });
+      return res.status(409).json({ message: "Ten użytkownik już posiada wizytówkę." });
     }
 
-    // slug unikalny
     const baseSlug = slugify(`${name}-${role}`);
-    let uniqueSlug = baseSlug, i = 1;
+    let uniqueSlug = baseSlug,
+      i = 1;
     while (await Profile.findOne({ slug: uniqueSlug })) uniqueSlug = `${baseSlug}-${i++}`;
 
     const newProfile = new Profile({
@@ -342,120 +471,88 @@ router.post('/', async (req, res) => {
       location: location.trim(),
       slug: uniqueSlug,
       isVisible: true,
-      visibleUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 dni
+      visibleUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     });
 
     await newProfile.save();
-
-    // ✅ odpowiedź do frontu
-    res.status(201).json({ message: 'Profil utworzony', profile: newProfile });
+    res.status(201).json({ message: "Profil utworzony", profile: newProfile });
 
     // 🔔 fire-and-forget: systemowa wiadomość powitalna
     queueMicrotask(async () => {
       try {
-        const fromUid = 'SYSTEM';
+        const fromUid = "SYSTEM";
         const toUid = userId;
-        const pairKey = [fromUid, toUid].sort().join('|');
+        const pairKey = [fromUid, toUid].sort().join("|");
 
         const welcomeContent = [
-          '🎉 Dziękujemy za utworzenie profilu w Showly!',
-          '',
-          '✅ Co masz na start:',
-          '• Twój profil jest widoczny przez 30 dni (możesz przedłużyć w „Twój profil”).',
-          '• Domyślny tryb rezerwacji: „Zapytanie bez blokowania” — możesz zmienić w każdej chwili.',
-          '',
-          '👉 Uzupełnij podstawowe informacje:',
-          '• avatar i krótki opis (max 500 znaków),',
-          '• rola / specjalizacja i lokalizacja,',
-          '• 1–3 tagi,',
-          '• widełki cenowe: „od–do”.',
-          '',
-          '🧰 Dodaj usługi (z czasem trwania/realizacji):',
-          '• każda usługa ma nazwę i czas trwania,',
-          '• jednostki: minuty / godziny / dni,',
-          '• minimum: 15 min / 1 h / 1 dzień,',
-          '• przykłady: „Strzyżenie — 45 min”, „Audyt WWW — 3 h”.',
-          '',
-          '🧑‍🤝‍🧑 Zespół i pracownicy:',
-          '• możesz dodać zespół i przypisać do profilu pracowników;',
-          '• każdy pracownik ma przypisane usługi;',
-          '• tryby przydzielania: „Wybór przez klienta” lub „Automatyczny przydział”.',
-          '',
-          '🗓️ Tryb rezerwacji:',
-          '• Kalendarz godzinowy / Rezerwacja dnia / Zapytanie bez blokowania.',
-          '',
-          '⏰ Jeśli korzystasz z kalendarza:',
-          '• ustaw godziny i dni pracy; przerwy między usługami 15 min.',
-          '',
-          '🔗 Linki i media:',
-          '• do 3 linków i 6 zdjęć (ok. 3 MB).',
-          '',
-          '❓ Szybkie odpowiedzi (FAQ):',
-          '• maks. 3 wpisy — tytuł do 10 znaków, odpowiedź do 64 znaków.',
-          '',
-          'ℹ️ Wszystko edytujesz w zakładce „Twój profil”. Powodzenia! 👊'
-        ].join('\n');
+          "🎉 Dziękujemy za utworzenie profilu w Showly!",
+          "",
+          "✅ Co masz na start:",
+          "• Twój profil jest widoczny przez 30 dni (możesz przedłużyć w „Twój profil”).",
+          "• Domyślny tryb rezerwacji: „Zapytanie bez blokowania” — możesz zmienić w każdej chwili.",
+          "",
+          "👉 Uzupełnij podstawowe informacje:",
+          "• avatar i krótki opis (max 500 znaków),",
+          "• rola / specjalizacja i lokalizacja,",
+          "• 1–3 tagi,",
+          "• widełki cenowe: „od–do”.",
+          "",
+          "🧰 Dodaj usługi (z czasem trwania/realizacji):",
+          "• każda usługa ma nazwę i czas trwania,",
+          "• jednostki: minuty / godziny / dni,",
+          "• minimum: 15 min / 1 h / 1 dzień,",
+          "",
+          "🔗 Linki i media:",
+          "• do 3 linków i 6 zdjęć (ok. 3 MB).",
+          "",
+          "ℹ️ Wszystko edytujesz w zakładce „Twój profil”. Powodzenia! 👊",
+        ].join("\n");
 
-        let convo = await Conversation.findOne({ channel: 'system', pairKey }).exec();
-
+        let convo = await Conversation.findOne({ channel: "system", pairKey }).exec();
         if (!convo) {
           convo = await Conversation.create({
-            channel: 'system',
+            channel: "system",
             pairKey,
             participants: [{ uid: fromUid }, { uid: toUid }],
             firstFromUid: fromUid,
-            messages: [{
-              fromUid: fromUid,
-              toUid: toUid,
-              content: welcomeContent,
-              isSystem: true,
-              createdAt: new Date()
-            }],
+            messages: [
+              { fromUid, toUid, content: welcomeContent, isSystem: true, createdAt: new Date() },
+            ],
             createdAt: new Date(),
             updatedAt: new Date(),
-            isClosed: false
+            isClosed: false,
           });
-          console.log('✅ Utworzono wątek systemowy:', convo._id);
         } else {
-          convo.messages.push({
-            fromUid: fromUid,
-            toUid: toUid,
-            content: welcomeContent,
-            isSystem: true,
-            createdAt: new Date()
-          });
+          convo.messages.push({ fromUid, toUid, content: welcomeContent, isSystem: true, createdAt: new Date() });
           convo.updatedAt = new Date();
           await convo.save();
-          console.log('✅ Dopięto systemową wiadomość do wątku:', convo._id);
         }
       } catch (e) {
-        console.error('⚠️ Błąd tworzenia/dopinania wątku systemowego:', e);
+        console.error("⚠️ Błąd wątku systemowego:", e);
       }
     });
   } catch (err) {
-    console.error('❌ Błąd w POST /api/profiles:', err);
-    return res.status(500).json({ message: 'Błąd tworzenia profilu' });
+    console.error("❌ Błąd w POST /api/profiles:", err);
+    return res.status(500).json({ message: "Błąd tworzenia profilu" });
   }
 });
 
 // ------------------------------------------------------
 // PATCH /api/profiles/extend/:uid – +30 dni widoczności
 // ------------------------------------------------------
-router.patch('/extend/:uid', async (req, res) => {
+router.patch("/extend/:uid", async (req, res) => {
   try {
     const profile = await Profile.findOne({ userId: req.params.uid });
-    if (!profile) {
-      return res.status(404).json({ message: 'Nie znaleziono profilu do przedłużenia.' });
-    }
+    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu do przedłużenia." });
 
     profile.isVisible = true;
     profile.visibleUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await profile.save();
 
-    res.json({ message: 'Widoczność przedłużona o 30 dni.', profile });
+    res.json({ message: "Widoczność przedłużona o 30 dni.", profile });
   } catch (error) {
-    console.error('❌ Błąd w PATCH /api/profiles/extend:', error);
-    res.status(500).json({ message: 'Błąd podczas przedłużania widoczności', error });
+    console.error("❌ Błąd w PATCH /extend:", error);
+    res.status(500).json({ message: "Błąd podczas przedłużania widoczności", error });
   }
 });
 
@@ -463,38 +560,68 @@ router.patch('/extend/:uid', async (req, res) => {
 // PATCH /api/profiles/update/:uid – aktualizacja wybranych pól
 // -------------------------------------------------------------
 const allowedFields = [
-  'avatar', 'photos', 'profileType', 'location', 'priceFrom', 'priceTo',
-  'role', 'availableDates', 'description', 'tags', 'links', 'quickAnswers',
-  'showAvailableDates', 'services', 'bookingMode', 'workingHours', 'workingDays',
-  'team', 'theme',
-  'contact', 'socials' // ✅ DODAJ
+  "avatar",
+  "photos",
+  "profileType",
+  "location",
+  "priceFrom",
+  "priceTo",
+  "role",
+  "availableDates",
+  "description",
+  "tags",
+  "links",
+  "quickAnswers",
+  "showAvailableDates",
+  "services",
+  "bookingMode",
+  "workingHours",
+  "workingDays",
+  "team",
+  "theme",
+  "contact",
+  "socials",
 ];
 
-router.patch('/update/:uid', async (req, res) => {
+router.patch("/update/:uid", async (req, res) => {
   try {
     const profile = await Profile.findOne({ userId: req.params.uid });
-    if (!profile) return res.status(404).json({ message: 'Nie znaleziono profilu.' });
+    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
-    // ✅ tu dodaj
     const updates = { ...req.body };
 
-    // ✅ NORMALIZACJA kontaktu
+    const isDataImage = (s) => typeof s === "string" && s.trim().startsWith("data:image/");
+    const isBlobUrl = (s) => typeof s === "string" && s.trim().startsWith("blob:");
+
+    // blokuj base64
+    if (updates.avatar && typeof updates.avatar === "string" && isDataImage(updates.avatar)) {
+      return res.status(400).json({ message: "Avatar nie może być base64. Wgraj przez upload i zapisz URL." });
+    }
+    if (Array.isArray(updates.photos) && updates.photos.some((p) => typeof p === "string" && isDataImage(p))) {
+      return res.status(400).json({ message: "Zdjęcia nie mogą być base64. Wgrywaj przez upload i zapisuj URL-e." });
+    }
+
+    // blob url out
+    if (typeof updates.avatar === "string" && isBlobUrl(updates.avatar)) {
+      updates.avatar = profile.avatar || "";
+    }
+    if (Array.isArray(updates.photos)) {
+      updates.photos = updates.photos.filter((p) => p && !(typeof p === "string" && isBlobUrl(p)));
+    }
+
+    // normalizacja kontaktu
     if (updates.contact) {
-      const clean = (v) => (v ?? '').toString().trim();
-      const prev = profile.contact?.toObject ? profile.contact.toObject() : (profile.contact || {});
+      const clean = (v) => (v ?? "").toString().trim();
+      const prev = profile.contact?.toObject ? profile.contact.toObject() : profile.contact || {};
 
       const street = clean(updates.contact.street);
       const postcode = clean(updates.contact.postcode);
+      const locationForAddress = clean(typeof updates.location !== "undefined" ? updates.location : profile.location);
 
-      // jeśli nie podano addressFull, zbuduj go automatycznie
       let addressFull = clean(updates.contact.addressFull);
       if (!addressFull) {
-        const parts = [
-          clean(profile.location),                 // miejscowość z głównego pola
-          postcode ? `${postcode}` : '',
-          street ? `${street}` : ''
-        ].filter(Boolean);
-        addressFull = parts.join(', ');
+        const parts = [locationForAddress, postcode, street].filter(Boolean);
+        addressFull = parts.join(", ");
       }
 
       updates.contact = {
@@ -506,13 +633,13 @@ router.patch('/update/:uid', async (req, res) => {
         email: clean(updates.contact.email).toLowerCase(),
       };
 
-      profile.set('contact', updates.contact);
+      profile.set("contact", updates.contact);
     }
 
-
+    // normalizacja socials
     if (updates.socials) {
-      const clean = (v) => (v ?? '').toString().trim();
-      const prev = profile.socials?.toObject ? profile.socials.toObject() : (profile.socials || {});
+      const clean = (v) => (v ?? "").toString().trim();
+      const prev = profile.socials?.toObject ? profile.socials.toObject() : profile.socials || {};
 
       updates.socials = {
         ...prev,
@@ -525,80 +652,54 @@ router.patch('/update/:uid', async (req, res) => {
         x: clean(updates.socials.x),
       };
 
-      profile.set('socials', updates.socials);
+      profile.set("socials", updates.socials);
     }
 
     // zwykłe pola
     for (const field of allowedFields) {
-      if (
-        field !== 'team' &&
-        field !== 'theme' &&
-        updates[field] !== undefined
-      ) {
+      if (field !== "team" && field !== "theme" && updates[field] !== undefined) {
         profile[field] = updates[field];
       }
     }
 
-
-
-    // ✅ theme – częściowo
+    // theme
     if (updates.theme) {
-      if (typeof updates.theme.variant !== 'undefined') {
-        profile.set('theme.variant', updates.theme.variant);
-      }
-      if (typeof updates.theme.primary !== 'undefined') {
-        profile.set('theme.primary', updates.theme.primary);
-      }
-      if (typeof updates.theme.secondary !== 'undefined') {
-        profile.set('theme.secondary', updates.theme.secondary);
-      }
+      if (typeof updates.theme.variant !== "undefined") profile.set("theme.variant", updates.theme.variant);
+      if (typeof updates.theme.primary !== "undefined") profile.set("theme.primary", updates.theme.primary);
+      if (typeof updates.theme.secondary !== "undefined") profile.set("theme.secondary", updates.theme.secondary);
     }
 
-    // ✅ team – częściowo
+    // team
     if (updates.team) {
-      if (typeof updates.team.enabled !== 'undefined') {
-        profile.set('team.enabled', !!updates.team.enabled);
-      }
+      if (typeof updates.team.enabled !== "undefined") profile.set("team.enabled", !!updates.team.enabled);
       if (updates.team.assignmentMode) {
-        profile.set(
-          'team.assignmentMode',
-          updates.team.assignmentMode === 'auto-assign' ? 'auto-assign' : 'user-pick'
-        );
+        profile.set("team.assignmentMode", updates.team.assignmentMode === "auto-assign" ? "auto-assign" : "user-pick");
       }
     }
 
     await profile.save();
-    res.json({ message: 'Profil zaktualizowany', profile });
+    return res.json({ message: "Profil zaktualizowany", profile });
   } catch (err) {
-    console.error('❌ Błąd aktualizacji profilu:', err);
+    console.error("❌ Błąd aktualizacji profilu:", err);
 
-    if (err?.name === 'ValidationError') {
+    if (err?.name === "ValidationError") {
       return res.status(400).json({
-        message: 'Błąd walidacji danych.',
-        details: Object.values(err.errors || {}).map(e => e.message)
+        message: "Błąd walidacji danych.",
+        details: Object.values(err.errors || {}).map((e) => e.message),
       });
     }
 
-    res.status(500).json({ message: 'Błąd podczas aktualizacji profilu.' });
+    return res.status(500).json({ message: "Błąd podczas aktualizacji profilu." });
   }
 });
 
 // -----------------------------------------------------------------
 // PATCH /api/profiles/rate/:slug – dodanie oceny + komentarza
-// + zwrot lastReview z pełnym https URL avatara
 // -----------------------------------------------------------------
-router.patch('/rate/:slug', async (req, res) => {
-  const {
-    userId,
-    rating,
-    comment,
-    userName: bodyName,
-    userAvatar: bodyAvatar
-  } = req.body;
-
+router.patch("/rate/:slug", async (req, res) => {
+  const { userId, rating, comment, userName: bodyName, userAvatar: bodyAvatar } = req.body;
   const numericRating = Number(rating);
 
-  // 🔒 Walidacja
   if (
     !userId ||
     isNaN(numericRating) ||
@@ -609,74 +710,49 @@ router.patch('/rate/:slug', async (req, res) => {
     comment.trim().length > 200
   ) {
     return res.status(400).json({
-      message: 'Ocena musi być liczbą od 1 do 5, a komentarz musi mieć od 10 do 200 znaków.'
+      message: "Ocena musi być liczbą od 1 do 5, a komentarz musi mieć od 10 do 200 znaków.",
     });
   }
 
   try {
-    const profile = await Profile.findOne({ slug: req.params.slug }).select(
-      'userId ratedBy rating reviews'
-    );
-    if (!profile) {
-      return res.status(404).json({ message: 'Nie znaleziono profilu.' });
-    }
+    const profile = await Profile.findOne({ slug: req.params.slug }).select("userId ratedBy rating reviews");
+    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
-    // Właściciel nie ocenia własnej wizytówki
-    if (profile.userId === userId) {
-      return res.status(403).json({ message: 'Nie możesz ocenić własnej wizytówki.' });
-    }
+    if (profile.userId === userId) return res.status(403).json({ message: "Nie możesz ocenić własnej wizytówki." });
 
     if (!Array.isArray(profile.ratedBy)) profile.ratedBy = [];
-
-    // Jeden użytkownik → jedna ocena
     if (profile.ratedBy.find((r) => r.userId === userId)) {
-      return res.status(400).json({ message: 'Już oceniłeś ten profil.' });
+      return res.status(400).json({ message: "Już oceniłeś ten profil." });
     }
 
-    // 👤 Źródła danych autora opinii: BODY (priorytet) → DB
-    let finalName = (bodyName || '').trim();
-    let rawAvatar = (bodyAvatar || '').trim();
+    let finalName = (bodyName || "").trim();
+    let rawAvatar = (bodyAvatar || "").trim();
 
     if (!finalName || !rawAvatar) {
       try {
-        const dbUser = await User.findOne({ firebaseUid: userId })
-          .select('displayName name avatar')
-          .lean();
-        if (!finalName) {
-          finalName = dbUser?.displayName || dbUser?.name || 'Użytkownik';
-        }
-        if (!rawAvatar) {
-          rawAvatar = dbUser?.avatar || '';
-        }
-      } catch (e) {
-        // brak w DB to nie błąd krytyczny
-      }
+        const dbUser = await User.findOne({ firebaseUid: userId }).select("displayName name avatar").lean();
+        if (!finalName) finalName = dbUser?.displayName || dbUser?.name || "Użytkownik";
+        if (!rawAvatar) rawAvatar = dbUser?.avatar || "";
+      } catch {}
     }
 
-    // 🧹 Zapisujemy SUROWĄ wartość do bazy:
-    //  - jeśli nasz upload: trzymaj jako "/uploads/..."
-    //  - jeśli URL: trzymaj "https://..." (albo "http://", ale i tak znormalizujemy przy odczycie)
-    //  - jeśli ktoś przysłał "uploads/...": sprowadź do "/uploads/..."
     const storedUserAvatar = normalizeUploadPath(rawAvatar);
 
-    // ✅ Zapis opinii
     profile.ratedBy.push({
       userId,
       rating: numericRating,
       comment: comment.trim(),
-      userName: finalName || 'Użytkownik',
-      userAvatar: storedUserAvatar,  // <-- surowa wartość (np. "/uploads/..."), normalizujemy przy odczycie
-      createdAt: new Date()
+      userName: finalName || "Użytkownik",
+      userAvatar: storedUserAvatar,
+      createdAt: new Date(),
     });
 
-    // 🔢 Nowa średnia i liczba opinii
     const total = profile.ratedBy.reduce((sum, r) => sum + Number(r.rating || 0), 0);
     profile.reviews = profile.ratedBy.length;
     profile.rating = Number((total / profile.reviews).toFixed(2));
 
     await profile.save();
 
-    // 🧩 Odpowiedź: znormalizuj avatar do pełnego URL-a
     const rawLast = profile.ratedBy[profile.ratedBy.length - 1];
     const lastReview = {
       ...(rawLast.toObject?.() || rawLast),
@@ -684,14 +760,47 @@ router.patch('/rate/:slug', async (req, res) => {
     };
 
     return res.json({
-      message: 'Ocena dodana.',
+      message: "Ocena dodana.",
       rating: profile.rating,
       reviews: profile.reviews,
-      review: lastReview
+      review: lastReview,
     });
   } catch (err) {
-    console.error('❌ Błąd oceniania:', err);
-    return res.status(500).json({ message: 'Błąd serwera.', error: err.message });
+    console.error("❌ Błąd oceniania:", err);
+    return res.status(500).json({ message: "Błąd serwera.", error: err.message });
+  }
+});
+
+// 🗑️ USUWANIE 1 zdjęcia z galerii (Cloudinary)
+router.delete("/:uid/photos", async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const { publicId } = req.body;
+
+    if (!publicId) {
+      return res.status(400).json({ message: "Brak publicId zdjęcia" });
+    }
+
+    const profile = await Profile.findOne({ userId: uid });
+    if (!profile) {
+      return res.status(404).json({ message: "Profil nie istnieje" });
+    }
+
+    // usuń z cloudinary
+    try {
+      await cloudinary.uploader.destroy(publicId);
+    } catch (err) {
+      console.log("Cloudinary destroy error:", err.message);
+    }
+
+    // usuń z tablicy
+    profile.photos = (profile.photos || []).filter(p => p.publicId !== publicId);
+    await profile.save();
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("DELETE PHOTO ERROR:", err);
+    res.status(500).json({ message: "Błąd usuwania zdjęcia" });
   }
 });
 

@@ -30,9 +30,18 @@ const prettyUrl = (url) => {
   }
 };
 
-// ✅ ujednolicone z PublicProfile (uploads / http / data / blob)
-const normalizeAvatar = (val = "") => {
-  const v = String(val || "").trim();
+// ✅ avatar/photos mogą być: string albo { url, publicId }
+const pickUrl = (val) => {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object" && typeof val.url === "string") return val.url;
+  return "";
+};
+
+// ✅ ujednolicone z PublicProfile (uploads / http / data / blob) + obsługa obiektu
+const normalizeAvatar = (val) => {
+  const raw = pickUrl(val);
+  const v = String(raw || "").trim();
   if (!v) return "";
 
   if (v.startsWith("data:image/")) return v;
@@ -90,8 +99,13 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
 
   const navigate = useNavigate();
 
-  // ✅ avatar (fallback + normalizacja)
+  // ✅ avatar (fallback + normalizacja) — działa dla string i {url, publicId}
   const avatarSrc = normalizeAvatar(avatar) || DEFAULT_AVATAR;
+
+  // ✅ ceny — czasem z API przychodzą jako stringi
+  const pf = Number(priceFrom);
+  const pt = Number(priceTo);
+  const hasPrice = Number.isFinite(pf) && Number.isFinite(pt) && pf > 0 && pt >= pf;
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [visits, setVisits] = useState(typeof user.visits === "number" ? user.visits : 0);
@@ -153,7 +167,11 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
   const allowBookingUI = bookingEnabled && user?.showAvailableDates !== false;
   const showNoBookingInfo = bookingEnabled && user?.showAvailableDates === false;
 
-  const bookBtnLabel = isCalendar ? "ZAREZERWUJ TERMIN" : isRequest ? "WYŚLIJ ZAPYTANIE" : "ZAREZERWUJ TERMIN";
+  const bookBtnLabel = isCalendar
+    ? "ZAREZERWUJ TERMIN"
+    : isRequest
+    ? "WYŚLIJ ZAPYTANIE"
+    : "ZAREZERWUJ TERMIN";
 
   // === Ulubione ===
   const toggleFavorite = async () => {
@@ -198,7 +216,7 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
         );
         if (typeof data?.visits === "number") setVisits(data.visits);
       }
-    } catch { }
+    } catch {}
     navigate(`/profil/${slug}`, { state: { scrollToId: "profileWrapper" } });
   };
 
@@ -236,9 +254,7 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
   };
 
   // ✅ linki: normalizacja + filtr
-  const cleanLinks = (links || [])
-    .map((l) => ensureUrl((l || "").trim()))
-    .filter(Boolean);
+  const cleanLinks = (links || []).map((l) => ensureUrl((l || "").trim())).filter(Boolean);
 
   const t = resolveUserCardTheme(user?.theme);
   const cssVars = {
@@ -315,9 +331,9 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
         )}
 
         <div className={styles.details}>
-          {typeof priceFrom === "number" && typeof priceTo === "number" ? (
+          {hasPrice ? (
             <p className={styles.price}>
-              Cennik od <strong>{priceFrom} zł</strong> do <strong>{priceTo} zł</strong>
+              Cennik od <strong>{pf} zł</strong> do <strong>{pt} zł</strong>
             </p>
           ) : (
             <p className={styles.price}>
@@ -357,10 +373,7 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
                     target="_blank"
                     rel="noopener noreferrer"
                     title={link}
-                    onClick={(e) => {
-                      // na wszelki wypadek: nie pozwól kliknąć w kartę jeśli link
-                      e.stopPropagation();
-                    }}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     {label}
                   </a>
@@ -436,8 +449,8 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
               isPreview
                 ? "Podgląd — ulubione wyłączone"
                 : isFav
-                  ? "Usuń z ulubionych"
-                  : "Dodaj do ulubionych"
+                ? "Usuń z ulubionych"
+                : "Dodaj do ulubionych"
             }
           >
             <span className={styles.favLabel}>

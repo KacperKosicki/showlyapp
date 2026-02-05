@@ -3,11 +3,20 @@ import Navbar from '../Navbar/Navbar';
 import SearchBar from '../SearchBar/SearchBar';
 import LoadingLink from '../ui/LoadingLink/LoadingLink';
 
-const Hero = ({ user, setUser, refreshTrigger, unreadCount, setUnreadCount, pendingReservationsCount }) => {
+const Hero = ({
+  user,
+  loadingUser,
+  setUser,
+  refreshTrigger,
+  unreadCount,
+  setUnreadCount,
+  pendingReservationsCount
+}) => {
   return (
     <section className={styles.hero} id="hero">
       <Navbar
         user={user}
+        loadingUser={loadingUser}
         setUser={setUser}
         refreshTrigger={refreshTrigger}
         unreadCount={unreadCount}

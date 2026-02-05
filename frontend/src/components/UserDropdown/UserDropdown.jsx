@@ -3,7 +3,7 @@ import styles from './UserDropdown.module.scss';
 import { FaChevronDown } from 'react-icons/fa';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { signOut, onAuthStateChanged, updateProfile } from 'firebase/auth';
+import { signOut } from 'firebase/auth';
 import { auth } from '../../firebase';
 
 const API = process.env.REACT_APP_API_URL;
@@ -11,9 +11,6 @@ const API = process.env.REACT_APP_API_URL;
 /** =========================
  * helpers
  * ========================= */
-const isLocalhostUrl = (u = '') =>
-  /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(String(u || ''));
-
 const normalizeAvatar = (val = '') => {
   const v = String(val || '').trim();
   if (!v) return '';
@@ -36,76 +33,95 @@ const pickAvatar = ({ dbAvatar, firebasePhotoURL }) =>
  * ========================= */
 const UserDropdown = ({
   user,
+  loadingUser,
   refreshTrigger,
   unreadCount,
   setUnreadCount,
   pendingReservationsCount
 }) => {
   const [open, setOpen] = useState(false);
+
+  // profile state
+  const [profileStatus, setProfileStatus] = useState('loading'); // loading | has | none | error
   const [remainingDays, setRemainingDays] = useState(null);
-  const [hasProfile, setHasProfile] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+
+  // avatar
   const [photoURL, setPhotoURL] = useState('');
 
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const location = useLocation();
 
-  // 🔄 Świeży user + avatar z backendu lub Firebase
+  // ✅ Avatar: bez drugiego listenera auth
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
+    const run = async () => {
+      if (!user?.uid) {
+        setPhotoURL('');
+        return;
+      }
+
       try {
-        if (!u) {
-          setPhotoURL('');
-          return;
-        }
-
-        await u.reload().catch(() => {});
-
-        // jeśli Firebase ma photoURL na localhost → wyczyść (żeby nie psuło produkcji)
-        if (isLocalhostUrl(u.photoURL)) {
-          try {
-            await updateProfile(u, { photoURL: '' });
-          } catch {}
-        }
-
-        // pobierz avatar z DB
         let dbAvatar = '';
         try {
-          const r = await fetch(`${API}/api/users/${u.uid}`);
+          const r = await fetch(`${API}/api/users/${user.uid}`, {
+            headers: { Accept: 'application/json' }
+          });
           if (r.ok) {
             const db = await r.json();
             dbAvatar = db?.avatar || '';
           }
         } catch {}
 
+        const firebasePhotoURL = auth.currentUser?.photoURL || '';
+
         setPhotoURL(
           pickAvatar({
             dbAvatar,
-            firebasePhotoURL: auth.currentUser?.photoURL || ''
+            firebasePhotoURL
           })
         );
       } catch {
-        // jak coś wybuchnie — pokaż placeholder
         setPhotoURL('');
       }
-    });
+    };
 
-    return () => unsub();
-  }, []);
+    run();
+  }, [user?.uid]);
 
-  // 🔍 Status wizytówki
+  // ✅ Status wizytówki: Abort + nie pokazuj "stwórz profil" przy błędzie sieci
   useEffect(() => {
+    if (!user?.uid) {
+      setProfileStatus('none');
+      setIsVisible(false);
+      setRemainingDays(null);
+      return;
+    }
+
+    const controller = new AbortController();
+
     const fetchProfile = async () => {
-      if (!user?.uid) return;
-
       try {
-        const res = await axios.get(
-          `${API}/api/profiles/by-user/${user.uid}`,
-          { headers: { Accept: 'application/json' } }
-        );
+        setProfileStatus('loading');
 
-        const profile = res.data;
+        const res = await fetch(`${API}/api/profiles/by-user/${user.uid}`, {
+          headers: { Accept: 'application/json' },
+          signal: controller.signal,
+        });
+
+        if (res.status === 404) {
+          setProfileStatus('none');
+          setIsVisible(false);
+          setRemainingDays(null);
+          return;
+        }
+
+        if (!res.ok) {
+          setProfileStatus('error');
+          return;
+        }
+
+        const profile = await res.json();
 
         if (profile?.visibleUntil) {
           const now = new Date();
@@ -114,35 +130,35 @@ const UserDropdown = ({
 
           setIsVisible(profile.isVisible !== false && until > now);
           setRemainingDays(diff > 0 ? diff : 0);
-          setHasProfile(true);
         } else {
-          setHasProfile(!!profile);
           setIsVisible(!!profile);
           setRemainingDays(!!profile ? 0 : null);
         }
+
+        setProfileStatus(profile ? 'has' : 'none');
       } catch (err) {
-        if (err.response?.status === 404) {
-          setHasProfile(false);
-          setIsVisible(false);
-          setRemainingDays(null);
-          console.warn('ℹ️ Brak profilu — wszystko OK ✅');
-        } else {
-          console.error('❌ Błąd pobierania profilu:', err);
-        }
+        if (err?.name === 'AbortError') return;
+        setProfileStatus('error');
+        console.error('❌ Błąd pobierania profilu:', err);
       }
     };
 
     fetchProfile();
-  }, [user, refreshTrigger]);
 
-  // 🔔 Unread
+    return () => controller.abort();
+  }, [user?.uid, refreshTrigger]);
+
+  // 🔔 Unread: zostawiamy axios jak miałeś (ok), ale tylko gdy jest uid
   useEffect(() => {
     const fetchUnread = async () => {
       if (!user?.uid || !setUnreadCount) return;
 
       try {
         const res = await axios.get(`${API}/api/conversations/by-uid/${user.uid}`);
-        const totalUnread = res.data.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
+        const totalUnread = Array.isArray(res.data)
+          ? res.data.reduce((acc, c) => acc + Number(c.unreadCount || 0), 0)
+          : 0;
+
         setUnreadCount(totalUnread);
       } catch (err) {
         console.error('❌ Błąd pobierania liczby wiadomości:', err);
@@ -150,7 +166,7 @@ const UserDropdown = ({
     };
 
     fetchUnread();
-  }, [user, refreshTrigger, location.pathname, setUnreadCount]);
+  }, [user?.uid, refreshTrigger, location.pathname, setUnreadCount]);
 
   // 👋 Zamknięcie dropdown po kliknięciu poza
   useEffect(() => {
@@ -184,10 +200,12 @@ const UserDropdown = ({
 
   const displayEmail = user?.email || auth.currentUser?.email || 'Konto';
 
+  // ✅ gdy aplikacja jeszcze ładuje auth – nie pokazuj "stwórz profil"
+  const showProfileActions = !loadingUser;
+
   return (
     <div className={styles.dropdown} ref={dropdownRef}>
       <div className={styles.trigger} onClick={() => setOpen((prev) => !prev)}>
-        {/* zawsze pokazuj avatara (fallback) */}
         <img
           src={photoURL || '/images/other/no-image.png'}
           alt=""
@@ -206,13 +224,14 @@ const UserDropdown = ({
       <div className={`${styles.menu} ${open ? styles.visible : ''}`}>
         <button onClick={() => handleNavigate('/konto', 'scrollToId')}>Twoje konto</button>
 
-        {!hasProfile && (
+        {/* ✅ tylko jeśli auth już gotowy */}
+        {showProfileActions && profileStatus === 'none' && (
           <button onClick={() => handleNavigate('/stworz-profil', 'scrollToId')}>
             Stwórz profil
           </button>
         )}
 
-        {hasProfile && (
+        {showProfileActions && profileStatus === 'has' && (
           <button
             onClick={() => handleNavigate('/profil', 'scrollToId')}
             className={styles.menuItemTwoLine}
@@ -226,6 +245,13 @@ const UserDropdown = ({
               <span className={`${styles.itemSub} ${styles.statusExpired}`}>Wygasła</span>
             )}
           </button>
+        )}
+
+        {/* ✅ błąd sieci = nie udawaj, że nie ma profilu */}
+        {showProfileActions && profileStatus === 'error' && (
+          <div style={{ padding: '10px 12px', fontSize: 13, opacity: 0.8 }}>
+            Problem z połączeniem… spróbuj odświeżyć.
+          </div>
         )}
 
         <button onClick={() => handleNavigate('/powiadomienia', 'scrollToId')}>

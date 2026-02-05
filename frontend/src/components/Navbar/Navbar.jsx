@@ -3,7 +3,14 @@ import styles from './Navbar.module.scss';
 import { Link, useNavigate } from 'react-router-dom';
 import UserDropdown from '../UserDropdown/UserDropdown';
 
-const Navbar = ({ user, refreshTrigger, unreadCount, setUnreadCount, pendingReservationsCount }) => {
+const Navbar = ({
+  user,
+  loadingUser,
+  refreshTrigger,
+  unreadCount,
+  setUnreadCount,
+  pendingReservationsCount
+}) => {
   const navigate = useNavigate();
 
   return (
@@ -20,6 +27,7 @@ const Navbar = ({ user, refreshTrigger, unreadCount, setUnreadCount, pendingRese
           {user ? (
             <UserDropdown
               user={user}
+              loadingUser={loadingUser}
               refreshTrigger={refreshTrigger}
               unreadCount={unreadCount}
               setUnreadCount={setUnreadCount}

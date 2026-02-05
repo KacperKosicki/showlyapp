@@ -61,6 +61,15 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const [isCreatingStaff, setIsCreatingStaff] = useState(false);
   const [deletingStaffIds, setDeletingStaffIds] = useState([]); // lista id w trakcie usuwania
 
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
+
+  const [newPhotoFiles, setNewPhotoFiles] = useState([]); // File[]
+  const [newPhotoPreviews, setNewPhotoPreviews] = useState([]); // string[] blob
+  const [newPhotoHashes, setNewPhotoHashes] = useState([]); // string[] SHA-256
+  const [photosUploading, setPhotosUploading] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+
   // --- PRACOWNICY ---
   const [staff, setStaff] = useState([]); // [{_id, name, active, capacity, serviceIds: []}]
   const [staffLoading, setStaffLoading] = useState(false);
@@ -133,8 +142,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         addressFull: p.contact?.addressFull || '', // zostaw dla kompatybilności
       };
 
-
-
       const normalizedSocials = {
         website: p.socials?.website || '',
         facebook: p.socials?.facebook || '',
@@ -176,8 +183,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         workingDays: p.workingDays || [1, 2, 3, 4, 5],
         team: p.team || { enabled: false, assignmentMode: 'user-pick' },
       });
-
-
 
       // Po profilu dociągnij pracowników
       await fetchStaff(p._id);
@@ -278,83 +283,86 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
-  const fileToDataUrlAndHash = async (file) => {
+  const hashFile = async (file) => {
     const buf = await file.arrayBuffer();
-    const hashBuf = await crypto.subtle.digest('SHA-256', buf);
-    const hashHex = Array.from(new Uint8Array(hashBuf))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+    const hashBuf = await crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(hashBuf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  };
 
-    const dataUrl = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+  const getAvatarUrl = (p) => {
+    if (!p) return DEFAULT_AVATAR;
 
-    return { dataUrl, hash: hashHex };
+    // tryb edycji: jeśli jest blob preview → pokazuj blob
+    if (isEditing && avatarPreview) return avatarPreview;
+
+    // nowy format
+    if (p.avatar?.url) return p.avatar.url;
+
+    // stary format (gdyby kiedyś był string)
+    if (typeof p.avatar === "string" && p.avatar) return p.avatar;
+
+    return DEFAULT_AVATAR;
+  };
+
+  const getPhotoUrl = (photo) => {
+    if (!photo) return "";
+    if (typeof photo === "string") return photo;         // stary format
+    if (photo.url) return photo.url;                     // nowy format
+    return "";
   };
 
   // =========================
   // Handlery obrazów
   // =========================
-  const handleImageChange = async (e) => {
+  const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      showAlert('Nieprawidłowy format. Wybierz obraz.', 'warning');
-      e.target.value = '';
+    if (!file.type.startsWith("image/")) {
+      showAlert("Nieprawidłowy format. Wybierz obraz.", "warning");
+      e.target.value = "";
       return;
     }
     if (file.size > 3 * 1024 * 1024) {
-      showAlert('Zdjęcie jest za duże (maks. 3MB).', 'warning');
-      e.target.value = '';
+      showAlert("Zdjęcie jest za duże (maks. 3MB).", "warning");
+      e.target.value = "";
       return;
     }
 
-    try {
-      const { dataUrl } = await fileToDataUrlAndHash(file);
-      setEditData(prev => ({ ...prev, avatar: dataUrl }));
-    } finally {
-      e.target.value = '';
+    // sprzątanie poprzedniego blob
+    if (avatarPreview) {
+      try { URL.revokeObjectURL(avatarPreview); } catch { }
     }
+
+    const blobUrl = URL.createObjectURL(file);
+    setAvatarFile(file);
+    setAvatarPreview(blobUrl);
+
+    e.target.value = "";
   };
 
-  const handleRemoveAvatar = () => {
-    setEditData(prev => ({ ...prev, avatar: null }));
-    fileInputRef.current && (fileInputRef.current.value = '');
-    showAlert('Usunięto zdjęcie profilowe. Utrwal zmianę przyciskiem „Zapisz”.', 'info');
-  };
-
-  const handlePhotoChange = async (e, index) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) { showAlert('Nieprawidłowy format pliku. Wybierz obraz.', 'warning'); e.target.value = ''; return; }
-    if (file.size > 3 * 1024 * 1024) { showAlert('Zdjęcie jest za duże (maks. 3MB).', 'warning'); e.target.value = ''; return; }
-
+  const handleRemoveAvatar = async () => {
     try {
-      const { dataUrl, hash } = await fileToDataUrlAndHash(file);
+      setAvatarUploading(true);
 
-      setEditData(prev => {
-        const hashes = prev.photoHashes || [];
-        const photos = [...(prev.photos || [])];
+      // usuń blob preview
+      if (avatarPreview) {
+        try { URL.revokeObjectURL(avatarPreview); } catch { }
+      }
+      setAvatarPreview("");
+      setAvatarFile(null);
 
-        const alreadyIdx = hashes.indexOf(hash);
-        if (alreadyIdx !== -1 && alreadyIdx !== index) {
-          showAlert('To zdjęcie już jest w galerii.', 'info');
-          return prev;
-        }
-
-        photos[index] = dataUrl;
-        const nextHashes = [...hashes];
-        nextHashes[index] = hash;
-
-        return { ...prev, photos, photoHashes: nextHashes };
-      });
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/avatar`);
+      await fetchProfile();
+      setRefreshTrigger(Date.now());
+      showAlert("Usunięto avatar.", "success");
+    } catch (e) {
+      console.error(e);
+      showAlert("Nie udało się usunąć avatara.", "error");
     } finally {
-      e.target.value = '';
+      setAvatarUploading(false);
     }
   };
 
@@ -434,8 +442,9 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const openAddPhotoPicker = () => {
     const current = (editData.photos || []).length;
-    if (current >= MAX_PHOTOS) {
-      showAlert(`Można dodać maksymalnie ${MAX_PHOTOS} zdjęć.`, 'warning');
+    const pending = newPhotoFiles.length;
+    if (current + pending >= MAX_PHOTOS) {
+      showAlert(`Można dodać maksymalnie ${MAX_PHOTOS} zdjęć.`, "warning");
       return;
     }
     addPhotoInputRef.current?.click();
@@ -445,53 +454,143 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     const filesAll = Array.from(e.target.files || []);
     if (!filesAll.length) return;
 
-    const existing = (editData.photos || []).length;
-    const slotsLeft = Math.max(0, MAX_PHOTOS - existing);
+    const current = (editData.photos || []).length;
+    const pending = newPhotoFiles.length;
+    const slotsLeft = Math.max(0, MAX_PHOTOS - (current + pending));
     const files = filesAll.slice(0, slotsLeft);
 
-    const accepted = [];
-    for (const file of files) {
-      if (!file.type.startsWith('image/')) { showAlert('Pominięto plik: nie jest obrazem.', 'warning'); continue; }
-      if (file.size > 3 * 1024 * 1024) { showAlert('Pominięto plik > 3MB.', 'warning'); continue; }
+    // ✅ set hashy które już mamy w pending
+    const existingPending = new Set(newPhotoHashes);
 
-      try {
-        const { dataUrl, hash } = await fileToDataUrlAndHash(file);
-        accepted.push({ dataUrl, hash });
-      } catch {
-        showAlert('Nie udało się wczytać jednego z plików.', 'error');
+    // (opcjonalnie) lekka deduplikacja po "podpisie" pliku w ramach aktualnie wybranych + pending
+    const existingSignatures = new Set(
+      newPhotoFiles.map((f) => `${f.name}|${f.size}|${f.lastModified}`)
+    );
+
+    const okFiles = [];
+    const okPreviews = [];
+    const okHashes = [];
+
+    let skippedDup = 0;
+
+    for (const file of files) {
+      if (!file.type.startsWith("image/")) {
+        showAlert("Pominięto plik: nie jest obrazem.", "warning");
+        continue;
       }
+      if (file.size > 3 * 1024 * 1024) {
+        showAlert("Pominięto plik > 3MB.", "warning");
+        continue;
+      }
+
+      // szybki podpis (czasem wystarczy)
+      const sig = `${file.name}|${file.size}|${file.lastModified}`;
+      if (existingSignatures.has(sig)) {
+        skippedDup++;
+        continue;
+      }
+
+      // ✅ twarda deduplikacja po hash
+      const h = await hashFile(file);
+      if (existingPending.has(h)) {
+        skippedDup++;
+        continue;
+      }
+
+      existingSignatures.add(sig);
+      existingPending.add(h);
+
+      okFiles.push(file);
+      okHashes.push(h);
+      okPreviews.push(URL.createObjectURL(file));
     }
 
-    if (!accepted.length) { e.target.value = ''; return; }
+    if (!okFiles.length) {
+      if (skippedDup) showAlert("Duplikaty zostały pominięte.", "info");
+      e.target.value = "";
+      return;
+    }
 
-    setEditData(prev => {
-      const existingPhotos = prev.photos || [];
-      const existingHashes = prev.photoHashes || [];
+    setNewPhotoFiles((prev) => [...prev, ...okFiles]);
+    setNewPhotoHashes((prev) => [...prev, ...okHashes]);
+    setNewPhotoPreviews((prev) => [...prev, ...okPreviews]);
 
-      let fresh = accepted.filter(x => !existingHashes.includes(x.hash));
-      fresh = fresh.filter(x => !existingPhotos.includes(x.dataUrl));
+    if (skippedDup) showAlert("Część plików była duplikatami — pominięto.", "info");
 
-      if (fresh.length < accepted.length) {
-        showAlert('Pominięto duplikaty zdjęć.', 'info');
-      }
-
-      const nextPhotos = [...existingPhotos, ...fresh.map(x => x.dataUrl)].slice(0, MAX_PHOTOS);
-      const nextHashes = [...existingHashes, ...fresh.map(x => x.hash)].slice(0, MAX_PHOTOS);
-
-      return { ...prev, photos: nextPhotos, photoHashes: nextHashes };
-    });
-
-    e.target.value = '';
+    e.target.value = "";
   };
 
-  const handleRemovePhoto = (index) => {
-    setEditData(prev => {
-      const p = [...(prev.photos || [])];
-      const h = [...(prev.photoHashes || [])];
-      p.splice(index, 1);
-      h.splice(index, 1);
-      return { ...prev, photos: p, photoHashes: h };
+  const removePendingPhoto = (idx) => {
+    setNewPhotoFiles((prev) => prev.filter((_, i) => i !== idx));
+    setNewPhotoHashes((prev) => prev.filter((_, i) => i !== idx));
+    setNewPhotoPreviews((prev) => {
+      const url = prev[idx];
+      if (url) { try { URL.revokeObjectURL(url); } catch { } }
+      return prev.filter((_, i) => i !== idx);
     });
+  };
+
+  const removeSavedPhoto = async (publicId) => {
+    try {
+      setPhotosUploading(true);
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`, {
+        data: { publicId }
+      });
+      await fetchProfile();
+      setRefreshTrigger(Date.now());
+      showAlert("Usunięto zdjęcie.", "success");
+    } catch (e) {
+      console.error(e);
+      showAlert("Nie udało się usunąć zdjęcia.", "error");
+    } finally {
+      setPhotosUploading(false);
+    }
+  };
+
+  const handleReplaceSavedPhoto = async (e, publicId) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showAlert("Nieprawidłowy format. Wybierz obraz.", "warning");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      showAlert("Zdjęcie jest za duże (maks. 3MB).", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      setPhotosUploading(true);
+
+      // 1) usuń stare z backendu (Cloud + DB)
+      await axios.delete(`${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`, {
+        data: { publicId },
+      });
+
+      // 2) wrzuć nowe
+      const fd = new FormData();
+      fd.append("files", file);
+
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
+        fd,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      // 3) odśwież
+      await fetchProfile();
+      setRefreshTrigger(Date.now());
+      showAlert("Zamieniono zdjęcie.", "success");
+    } catch (err) {
+      console.error(err);
+      showAlert("Nie udało się zamienić zdjęcia.", "error");
+    } finally {
+      setPhotosUploading(false);
+      e.target.value = "";
+    }
   };
 
   const handleExtendVisibility = async () => {
@@ -568,7 +667,47 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         team: payload.team || { enabled: false, assignmentMode: 'user-pick' },
       });
 
-      // 2) Zbiorczy zapis pracowników (tylko zmienione)
+      // 2) avatar upload (jeśli wybrano nowy)
+      if (avatarFile) {
+        setAvatarUploading(true);
+        const fd = new FormData();
+        fd.append("file", avatarFile);
+
+        await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/avatar`,
+          fd,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+
+        setAvatarUploading(false);
+
+        // sprzątanie blob
+        if (avatarPreview) { try { URL.revokeObjectURL(avatarPreview); } catch { } }
+        setAvatarPreview("");
+        setAvatarFile(null);
+      }
+
+      // 3) galeria upload (jeśli są pending)
+      if (newPhotoFiles.length) {
+        setPhotosUploading(true);
+        const fd = new FormData();
+        newPhotoFiles.forEach((f) => fd.append("files", f));
+
+        await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
+          fd,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+
+        // sprzątanie preview blobów
+        newPhotoPreviews.forEach((u) => { try { URL.revokeObjectURL(u); } catch { } });
+        setNewPhotoFiles([]);
+        setNewPhotoPreviews([]);
+        setNewPhotoHashes([]);
+        setPhotosUploading(false);
+      }
+
+      // 4) Zbiorczy zapis pracowników (tylko zmienione)
       const staffUpdateEntries = Object.entries(staffEdits);
       if (staffUpdateEntries.length) {
         await Promise.all(
@@ -578,7 +717,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         );
       }
 
-      // 3) Odśwież + sprzątnij
+      // 5) Odśwież + sprzątnij
       await fetchProfile();
       setStaffEdits({});
       setIsEditing(false);
@@ -742,10 +881,11 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           {/* Avatar */}
           <div className={styles.avatarRow}>
             <img
-              src={(isEditing ? editData.avatar : profile.avatar) || DEFAULT_AVATAR}
+              src={getAvatarUrl(isEditing ? editData : profile)}
               alt="Avatar"
               className={styles.avatar}
             />
+
 
             {isEditing && (
               <div className={styles.controls}>
@@ -1882,57 +2022,99 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       </section>
 
       {/* =========================
-          Galeria zdjęć
-      ========================= */}
+    Galeria zdjęć
+========================= */}
       <section className={styles.card}>
         <h3>Galeria zdjęć</h3>
-        <div className={styles.galleryEditor}>
-          {isEditing ? (
-            <>
-              {(editData.photos || []).map((photo, index) => (
-                <div key={index} className={styles.photoItem}>
-                  <img src={photo} alt={`Zdjęcie ${index + 1}`} />
-                  <div className={styles.photoButtons}>
-                    <button className={styles.ghost} onClick={() => handleRemovePhoto(index)}>Usuń</button>
-                    <label className={styles.fileBtn}>
-                      Zamień
-                      <input type="file" accept="image/*,.heic,.heif" onChange={(e) => handlePhotoChange(e, index)} />
-                    </label>
-                  </div>
+
+        {/* ======= PODGLĄD (bez edycji) ======= */}
+        {!isEditing && (
+          <div className={styles.galleryEditor}>
+            {(profile?.photos || []).length ? (
+              (profile.photos || []).map((p, idx) => (
+                <div key={p.publicId || idx} className={styles.photoItem}>
+                  <img src={getPhotoUrl(p)} alt={`Zdjęcie ${idx + 1}`} />
+                  {/* ❌ brak przycisków */}
                 </div>
-              ))}
-              {editData.photos?.length < MAX_PHOTOS && (
-                <>
+              ))
+            ) : (
+              <p className={styles.noInfo}>
+                <span>❔</span> Nie dodałeś/aś jeszcze zdjęć w galerii.
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* ======= EDYCJA ======= */}
+        {isEditing && (
+          <div className={styles.galleryEditor}>
+            {/* zapisane w profilu */}
+            {(editData.photos || []).map((p, idx) => (
+              <div key={p.publicId || idx} className={styles.photoItem}>
+                <img src={getPhotoUrl(p)} alt={`Zdjęcie ${idx + 1}`} />
+
+                <div className={styles.photoButtons}>
+                  {/* ✅ ZAMIEŃ */}
+                  <label className={styles.ghost}>
+                    Zamień
+                    <input
+                      type="file"
+                      accept="image/*,.heic,.heif"
+                      style={{ display: "none" }}
+                      onChange={(e) => handleReplaceSavedPhoto(e, p?.publicId)}
+                    />
+                  </label>
+
+                  {/* ✅ USUŃ */}
                   <button
                     type="button"
-                    className={styles.primary}
-                    onClick={openAddPhotoPicker}
+                    className={styles.ghost}
+                    disabled={photosUploading}
+                    onClick={() => removeSavedPhoto(p.publicId)}
                   >
-                    Dodaj zdjęcie
+                    Usuń
                   </button>
-                  <input
-                    ref={addPhotoInputRef}
-                    type="file"
-                    accept="image/*,.heic,.heif"
-                    multiple
-                    onChange={handleAddPhotosSelect}
-                    style={{ display: 'none' }}
-                  />
-                </>
-              )}
-            </>
-          ) : (
-            <div className={styles.galleryView}>
-              {profile.photos?.length > 0 ? (
-                profile.photos.map((photo, i) => (
-                  <img key={i} src={photo} alt={`Zdjęcie ${i + 1}`} />
-                ))
-              ) : (
-                <p className={styles.noInfo}><span>❔</span> Nie dodałeś/aś jeszcze zdjęć.</p>
-              )}
-            </div>
-          )}
-        </div>
+                </div>
+              </div>
+            ))}
+
+            {/* pending (niezapisane) */}
+            {newPhotoPreviews.map((url, idx) => (
+              <div key={`pending-${idx}`} className={styles.photoItem}>
+                <img src={url} alt={`Nowe zdjęcie ${idx + 1}`} />
+                <div className={styles.photoButtons}>
+                  <button
+                    type="button"
+                    className={styles.ghost}
+                    onClick={() => removePendingPhoto(idx)}
+                  >
+                    Usuń
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {(editData.photos?.length + newPhotoFiles.length) < MAX_PHOTOS && (
+              <>
+                <button type="button" className={styles.primary} onClick={openAddPhotoPicker}>
+                  Dodaj zdjęcia
+                </button>
+                <input
+                  ref={addPhotoInputRef}
+                  type="file"
+                  accept="image/*,.heic,.heif"
+                  multiple
+                  onChange={handleAddPhotosSelect}
+                  style={{ display: "none" }}
+                />
+              </>
+            )}
+
+            {(photosUploading || avatarUploading) && (
+              <p className={styles.infoMuted}>⏳ Trwa upload zdjęć…</p>
+            )}
+          </div>
+        )}
       </section>
 
       {/* =========================

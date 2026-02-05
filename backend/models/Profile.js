@@ -7,10 +7,18 @@ const profileSchema = new mongoose.Schema(
     userId: { type: String, required: true, unique: true },
 
     name: String,
-    avatar: String,
+    avatar: {
+      url: { type: String, default: '' },
+      publicId: { type: String, default: '' },
+    },
 
     photos: {
-      type: [String],
+      type: [
+        {
+          url: String,
+          publicId: String,
+        },
+      ],
       default: [],
     },
 

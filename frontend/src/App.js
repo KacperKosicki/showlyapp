@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
 
@@ -25,15 +25,24 @@ import ReservationList from './components/ReservationList/ReservationList';
 import AccountSettings from './components/AccountSettings/AccountSettings';
 import Favorites from './components/Favorites/Favorites';
 
+const API = process.env.REACT_APP_API_URL;
+
 function App() {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
+
   const [refreshTrigger, setRefreshTrigger] = useState(Date.now());
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingReservationsCount, setPendingReservationsCount] = useState(0);
-  const resetPendingReservationsCount = () => setPendingReservationsCount(0);
 
-  const triggerRefresh = () => setRefreshTrigger(Date.now()); // 🔁
+  const resetPendingReservationsCount = () => setPendingReservationsCount(0);
+  const triggerRefresh = () => setRefreshTrigger(Date.now());
+
+  // ✅ stabilne user object (żeby nie powodować zbędnych re-renderów)
+  const safeUser = useMemo(() => {
+    if (!user?.uid) return null;
+    return { uid: user.uid, email: user.email || '' };
+  }, [user?.uid, user?.email]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -51,46 +60,91 @@ function App() {
     return () => unsubscribe();
   }, []);
 
+  // ✅ rezerwacje – AbortController + nie licz jak brak uid
   useEffect(() => {
+    if (!safeUser?.uid) {
+      setPendingReservationsCount(0);
+      return;
+    }
+
+    const controller = new AbortController();
+
     const fetchPendingReservations = async () => {
-      if (!user?.uid) return;
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/reservations/by-provider/${user.uid}`);
+        const res = await fetch(
+          `${API}/api/reservations/by-provider/${safeUser.uid}`,
+          { signal: controller.signal }
+        );
+
+        if (!res.ok) return;
+
         const data = await res.json();
-        const pending = data.filter(r => r.status === 'oczekująca').length;
+        const pending = Array.isArray(data)
+          ? data.filter(r => r?.status === 'oczekująca').length
+          : 0;
+
         setPendingReservationsCount(pending);
       } catch (err) {
+        if (err?.name === 'AbortError') return;
         console.error('❌ Błąd pobierania liczby rezerwacji:', err);
       }
     };
 
     fetchPendingReservations();
-  }, [user, refreshTrigger]);
 
+    return () => controller.abort();
+  }, [safeUser?.uid, refreshTrigger]);
+
+  // ✅ unread – AbortController
   useEffect(() => {
-    const fetchUnreadCount = async () => {
-      if (!user?.uid) return;
+    if (!safeUser?.uid) {
+      setUnreadCount(0);
+      return;
+    }
 
+    const controller = new AbortController();
+
+    const fetchUnreadCount = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/conversations/by-uid/${user.uid}`)
+        const res = await fetch(
+          `${API}/api/conversations/by-uid/${safeUser.uid}`,
+          { signal: controller.signal }
+        );
+        if (!res.ok) return;
+
         const data = await res.json();
-        const totalUnread = data.reduce((acc, convo) => acc + convo.unreadCount, 0);
+        const totalUnread = Array.isArray(data)
+          ? data.reduce((acc, convo) => acc + Number(convo?.unreadCount || 0), 0)
+          : 0;
+
         setUnreadCount(totalUnread);
       } catch (err) {
+        if (err?.name === 'AbortError') return;
         console.error('❌ Błąd globalnego pobierania liczby nieprzeczytanych wiadomości:', err);
       }
     };
 
     fetchUnreadCount();
-  }, [user, refreshTrigger]);
+
+    return () => controller.abort();
+  }, [safeUser?.uid, refreshTrigger]);
 
   if (loadingUser) {
     return <p style={{ padding: "2rem", textAlign: "center" }}>⏳ Trwa ładowanie aplikacji...</p>;
   }
 
-  // ✅ Flaga pozwala „ominąć” guard TYLKO podczas trwającego logowania,
-  // żeby komunikat na /login mógł się wyświetlić i zrobić swój navigate.
   const isAuthFlow = sessionStorage.getItem('authFlow') === '1';
+
+  const heroProps = {
+    user: safeUser,
+    loadingUser,
+    setUser,
+    refreshTrigger,
+    setRefreshTrigger,
+    unreadCount,
+    setUnreadCount,
+    pendingReservationsCount,
+  };
 
   return (
     <Router>
@@ -100,34 +154,32 @@ function App() {
           path="/"
           element={
             <>
-              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
-              <AboutApp user={user} />
-              <UserCardList currentUser={user} />
+              <Hero {...heroProps} />
+              <AboutApp user={safeUser} />
+              <UserCardList currentUser={safeUser} />
               <WhyUs />
               <CategoryFilter />
-              <AllUsersList currentUser={user} />
+              <AllUsersList currentUser={safeUser} />
               <Footer />
             </>
           }
         />
 
-        {/* ✅ Blokada /login dla zalogowanych, ALE nie w trakcie authFlow */}
         <Route
           path="/login"
           element={
-            user && !isAuthFlow
+            safeUser && !isAuthFlow
               ? <Navigate to="/" replace />
               : <Login setUser={setUser} setRefreshTrigger={setRefreshTrigger} />
           }
         />
 
-        {/* ✅ Blokada /register dla zalogowanych, ALE nie w trakcie authFlow */}
         <Route
           path="/register"
           element={
-            user && !isAuthFlow
+            safeUser && !isAuthFlow
               ? <Navigate to="/" replace />
-              : <Register user={user} setUser={setUser} setRefreshTrigger={setRefreshTrigger} />
+              : <Register user={safeUser} setUser={setUser} setRefreshTrigger={setRefreshTrigger} />
           }
         />
 
@@ -137,8 +189,8 @@ function App() {
           path="/stworz-profil"
           element={
             <>
-              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
-              <CreateProfile user={user} setRefreshTrigger={setRefreshTrigger} />
+              <Hero {...heroProps} />
+              <CreateProfile user={safeUser} setRefreshTrigger={setRefreshTrigger} />
               <Footer />
             </>
           }
@@ -148,8 +200,8 @@ function App() {
           path="/profil"
           element={
             <>
-              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
-              <YourProfile user={user} setRefreshTrigger={setRefreshTrigger} />
+              <Hero {...heroProps} />
+              <YourProfile user={safeUser} setRefreshTrigger={setRefreshTrigger} />
               <Footer />
             </>
           }
@@ -159,7 +211,7 @@ function App() {
           path="/profil/:slug"
           element={
             <>
-              <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
+              <Hero {...heroProps} />
               <PublicProfile />
               <Footer />
             </>
@@ -169,10 +221,10 @@ function App() {
         <Route
           path="/wiadomosc/:recipientId"
           element={
-            user ? (
+            safeUser ? (
               <>
-                <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
-                <MessageForm user={user} />
+                <Hero {...heroProps} />
+                <MessageForm user={safeUser} />
                 <Footer />
               </>
             ) : (
@@ -184,10 +236,10 @@ function App() {
         <Route
           path="/powiadomienia"
           element={
-            user ? (
+            safeUser ? (
               <>
-                <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
-                <Notifications user={user} setUnreadCount={setUnreadCount} />
+                <Hero {...heroProps} />
+                <Notifications user={safeUser} setUnreadCount={setUnreadCount} />
                 <Footer />
               </>
             ) : (
@@ -199,18 +251,10 @@ function App() {
         <Route
           path="/ulubione"
           element={
-            user ? (
+            safeUser ? (
               <>
-                <Hero
-                  user={user}
-                  setUser={setUser}
-                  refreshTrigger={refreshTrigger}
-                  setRefreshTrigger={setRefreshTrigger}
-                  unreadCount={unreadCount}
-                  setUnreadCount={setUnreadCount}
-                  pendingReservationsCount={pendingReservationsCount}
-                />
-                <Favorites currentUser={user} />
+                <Hero {...heroProps} />
+                <Favorites currentUser={safeUser} />
                 <Footer />
               </>
             ) : (
@@ -222,10 +266,10 @@ function App() {
         <Route
           path="/konwersacja/:threadId"
           element={
-            user ? (
+            safeUser ? (
               <>
-                <Hero user={user} setUser={setUser} refreshTrigger={refreshTrigger} setRefreshTrigger={setRefreshTrigger} unreadCount={unreadCount} setUnreadCount={setUnreadCount} pendingReservationsCount={pendingReservationsCount} />
-                <ThreadView user={user} setUnreadCount={setUnreadCount} triggerRefresh={triggerRefresh} />
+                <Hero {...heroProps} />
+                <ThreadView user={safeUser} setUnreadCount={setUnreadCount} triggerRefresh={triggerRefresh} />
                 <Footer />
               </>
             ) : (
@@ -237,18 +281,10 @@ function App() {
         <Route
           path="/rezerwacja/:slug"
           element={
-            user ? (
+            safeUser ? (
               <>
-                <Hero
-                  user={user}
-                  setUser={setUser}
-                  refreshTrigger={refreshTrigger}
-                  setRefreshTrigger={setRefreshTrigger}
-                  unreadCount={unreadCount}
-                  setUnreadCount={setUnreadCount}
-                  pendingReservationsCount={pendingReservationsCount}
-                />
-                <BookingForm user={user} />
+                <Hero {...heroProps} />
+                <BookingForm user={safeUser} />
                 <Footer />
               </>
             ) : (
@@ -260,17 +296,9 @@ function App() {
         <Route
           path="/konto"
           element={
-            user ? (
+            safeUser ? (
               <>
-                <Hero
-                  user={user}
-                  setUser={setUser}
-                  refreshTrigger={refreshTrigger}
-                  setRefreshTrigger={setRefreshTrigger}
-                  unreadCount={unreadCount}
-                  setUnreadCount={setUnreadCount}
-                  pendingReservationsCount={pendingReservationsCount}
-                />
+                <Hero {...heroProps} />
                 <AccountSettings />
                 <Footer />
               </>
@@ -283,18 +311,10 @@ function App() {
         <Route
           path="/rezerwacje"
           element={
-            user ? (
+            safeUser ? (
               <>
-                <Hero
-                  user={user}
-                  setUser={setUser}
-                  refreshTrigger={refreshTrigger}
-                  setRefreshTrigger={setRefreshTrigger}
-                  unreadCount={unreadCount}
-                  setUnreadCount={setUnreadCount}
-                  pendingReservationsCount={pendingReservationsCount}
-                />
-                <ReservationList user={user} resetPendingReservationsCount={resetPendingReservationsCount} />
+                <Hero {...heroProps} />
+                <ReservationList user={safeUser} resetPendingReservationsCount={resetPendingReservationsCount} />
                 <Footer />
               </>
             ) : (
