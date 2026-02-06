@@ -36,7 +36,6 @@ const normalizeAvatar = (val) => {
 const Notifications = ({ user, setUnreadCount }) => {
   const [conversations, setConversations] = useState([]);
 
-  // zamiast samej nazwy: trzymamy metę profilu (name + avatar)
   // uid -> undefined (pending) | { name: string|null, avatar: string|null }
   const [profileMetaMap, setProfileMetaMap] = useState({});
 
@@ -163,18 +162,15 @@ const Notifications = ({ user, setUnreadCount }) => {
   const getAvatarSrc = (convo, variant) => {
     const otherUid = convo.withUid;
 
-    // SYSTEM
     if (variant === "system") return "";
 
-    // INBOX: avatar konta (z conversations list)
     if (variant === "inbox") {
       const a = normalizeAvatar(convo.withAvatar) || "";
       return a;
     }
 
-    // OUTBOX: avatar profilu drugiej strony (z profileMetaMap)
     const meta = profileMetaMap[otherUid];
-    if (!isProfileResolved(otherUid)) return ""; // pending => skeleton
+    if (!isProfileResolved(otherUid)) return "";
     return normalizeAvatar(meta?.avatar) || "";
   };
 
@@ -184,19 +180,16 @@ const Notifications = ({ user, setUnreadCount }) => {
     [conversations]
   );
 
-  // Konto innych -> Twoja wizytówka (kto zaczął? nie Ty)
   const inboxToMyProfile = useMemo(
     () => accountToProfile.filter((c) => c.firstFromUid && c.firstFromUid !== user?.uid),
     [accountToProfile, user?.uid]
   );
 
-  // Twoje konto -> cudze wizytówki (kto zaczął? Ty)
   const myAccountToOtherProfiles = useMemo(
     () => accountToProfile.filter((c) => c.firstFromUid && c.firstFromUid === user?.uid),
     [accountToProfile, user?.uid]
   );
 
-  // System
   const systemConversations = useMemo(() => conversations.filter((c) => c.channel === "system"), [conversations]);
   const systemUnread = systemConversations.reduce((a, c) => a + (c.unreadCount || 0), 0);
 
@@ -243,7 +236,6 @@ const Notifications = ({ user, setUnreadCount }) => {
 
     const isUnread = (convo.unreadCount || 0) > 0;
     const otherUid = convo.withUid;
-
     const avatarSrc = getAvatarSrc(convo, variant);
 
     let header;
@@ -287,31 +279,30 @@ const Notifications = ({ user, setUnreadCount }) => {
         }`}
       >
         <Link to={`/konwersacja/${convo._id}`} className={styles.link} state={{ scrollToId: "threadPageLayout" }}>
+          {/* ✅ NOWY UKŁAD: grid z obszarami */}
           <div className={styles.row}>
             <div className={styles.avatarWrap}>
               <AvatarNode src={avatarSrc || DEFAULT_AVATAR} variant={variant} />
               {isUnread && <span className={styles.badgeDot} aria-hidden="true" />}
             </div>
 
-            <div className={styles.body}>
-              <div className={styles.top}>
-                <span className={styles.meta}>{header}</span>
-                <span className={styles.date}>{new Date(lastMsg.createdAt).toLocaleString()}</span>
-              </div>
+            <div className={styles.head}>
+              <div className={styles.meta}>{header}</div>
+              <div className={styles.date}>{new Date(lastMsg.createdAt).toLocaleString()}</div>
+            </div>
 
-              <p className={styles.content}>{lastMsg.content}</p>
+            <p className={styles.content}>{lastMsg.content}</p>
 
-              <div className={styles.bottomRow}>
-                {isUnread ? (
-                  <span className={styles.unreadPill}>
-                    Nieprzeczytane: <strong>{convo.unreadCount}</strong>
-                  </span>
-                ) : (
-                  <span className={styles.readPill}>Przeczytane</span>
-                )}
+            <div className={styles.bottomRow}>
+              {isUnread ? (
+                <span className={styles.unreadPill}>
+                  Nieprzeczytane: <strong>{convo.unreadCount}</strong>
+                </span>
+              ) : (
+                <span className={styles.readPill}>Przeczytane</span>
+              )}
 
-                <span className={styles.openPill}>Otwórz wątek →</span>
-              </div>
+              <span className={styles.openPill}>Otwórz wątek →</span>
             </div>
           </div>
         </Link>
@@ -327,16 +318,16 @@ const Notifications = ({ user, setUnreadCount }) => {
             <div className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`} />
           </div>
 
-          <div className={styles.body}>
-            <div className={styles.top}>
-              <span className={`${styles.meta} ${styles.skeleton} ${styles.shimmer}`} />
-              <span className={`${styles.date} ${styles.skeleton} ${styles.shimmer}`} />
-            </div>
-            <p className={`${styles.content} ${styles.skeleton} ${styles.shimmer}`} />
-            <div className={styles.bottomRow}>
-              <span className={`${styles.pillSkel} ${styles.shimmer}`} />
-              <span className={`${styles.pillSkel} ${styles.shimmer}`} />
-            </div>
+          <div className={styles.head}>
+            <span className={`${styles.metaSkel} ${styles.shimmer}`} />
+            <span className={`${styles.dateSkel} ${styles.shimmer}`} />
+          </div>
+
+          <p className={`${styles.content} ${styles.skeleton} ${styles.shimmer}`} />
+
+          <div className={styles.bottomRow}>
+            <span className={`${styles.pillSkel} ${styles.shimmer}`} />
+            <span className={`${styles.pillSkel} ${styles.shimmer}`} />
           </div>
         </div>
       </div>
@@ -384,13 +375,13 @@ const Notifications = ({ user, setUnreadCount }) => {
 
           <div className={styles.headerPills}>
             <span className={styles.headerPill}>
-              INBOX: <strong>{inboxUnread}</strong>
+              Do profilu (nowe): <strong>{inboxUnread}</strong>
             </span>
             <span className={styles.headerPill}>
-              OUTBOX: <strong>{outboxUnread}</strong>
+              Z konta (nowe): <strong>{outboxUnread}</strong>
             </span>
             <span className={styles.headerPill}>
-              SYSTEM: <strong>{systemUnread}</strong>
+              System (nowe): <strong>{systemUnread}</strong>
             </span>
           </div>
         </div>
@@ -403,13 +394,15 @@ const Notifications = ({ user, setUnreadCount }) => {
           </ul>
         ) : (
           <>
-            {/* SEGMENT 1: Konto innych -> Twoja wizytówka */}
+            {/* SEGMENT 1 */}
             <div className={styles.sectionGroup}>
               <div className={styles.groupHeader}>
                 <h3 className={styles.groupTitle}>
                   Otrzymane wiadomości do Twojego profilu{myProfile?.name ? ` „${myProfile.name}”` : ""}
                 </h3>
-                <span className={styles.badge}>{inboxUnread > 0 ? `${inboxUnread} nieprze.` : `${inboxToMyProfile.length}`}</span>
+                <span className={styles.badge}>
+                  {inboxUnread > 0 ? `${inboxUnread} nieprze.` : `${inboxToMyProfile.length}`}
+                </span>
               </div>
 
               {inboxToMyProfile.length === 0 ? (
@@ -419,7 +412,7 @@ const Notifications = ({ user, setUnreadCount }) => {
               )}
             </div>
 
-            {/* SEGMENT 2: Twoje konto -> cudze wizytówki */}
+            {/* SEGMENT 2 */}
             <div className={styles.sectionGroup}>
               <div className={styles.groupHeader}>
                 <h3 className={styles.groupTitle}>Rozmowy z innymi profilami (Twoje konto → inne profile)</h3>
@@ -435,11 +428,13 @@ const Notifications = ({ user, setUnreadCount }) => {
               )}
             </div>
 
-            {/* SEGMENT 3: Wiadomości systemowe */}
+            {/* SEGMENT 3 */}
             <div className={styles.sectionGroup}>
               <div className={styles.groupHeader}>
                 <h3 className={styles.groupTitle}>Wiadomości systemowe</h3>
-                <span className={styles.badge}>{systemUnread > 0 ? `${systemUnread} nieprze.` : `${systemConversations.length}`}</span>
+                <span className={styles.badge}>
+                  {systemUnread > 0 ? `${systemUnread} nieprze.` : `${systemConversations.length}`}
+                </span>
               </div>
 
               {systemConversations.length === 0 ? (
