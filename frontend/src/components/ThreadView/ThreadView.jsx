@@ -6,7 +6,6 @@ import AlertBox from "../AlertBox/AlertBox";
 
 import { FaArrowLeft, FaRegCommentDots, FaUserCircle } from "react-icons/fa";
 import { FaRegEye } from "react-icons/fa";
-import { FaStar } from "react-icons/fa6";
 
 const API = process.env.REACT_APP_API_URL;
 const DEFAULT_AVATAR = "/images/other/no-image.png";
