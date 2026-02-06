@@ -1,178 +1,563 @@
-@import '../../styles/variables';
+@import "../../styles/variables";
 
-.container {
+$page-max: 1180px;
+
+/* =========================================================
+   PAGE + THEME VARS (jak ThreadView)
+========================================================= */
+.page {
+  font-family: $font-body;
+  color: $text-color;
+
+  --tv-primary: #6f4ef2;
+  --tv-secondary: #ff4d8d;
+
+  --tv-p-06: color-mix(in srgb, var(--tv-primary) 6%, transparent);
+  --tv-p-10: color-mix(in srgb, var(--tv-primary) 10%, transparent);
+  --tv-s-10: color-mix(in srgb, var(--tv-secondary) 10%, transparent);
+
+  --tv-border: rgba(0, 0, 0, 0.08);
+  --tv-soft: rgba(255, 255, 255, 0.88);
+  --tv-shadow: 0 18px 45px rgba(0, 0, 0, 0.06);
+  --tv-shadow-strong: 0 24px 70px rgba(0, 0, 0, 0.12);
+
+  min-height: 100vh;
+  position: relative;
+  padding: 2rem 0 70px;
+}
+
+.page :is(h1, h2, h3) { font-family: $font-heading; }
+.page :is(button, input, textarea, a) { font-family: inherit; }
+
+.bgGlow {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.6;
+  background:
+    radial-gradient(700px 300px at 20% 8%, var(--tv-p-10), transparent 60%),
+    radial-gradient(700px 320px at 80% 12%, var(--tv-s-10), transparent 62%);
+  filter: blur(10px);
+}
+
+.shell {
+  width: min(#{$page-max}, calc(100% - 2rem));
+  margin: 0 auto;
+  position: relative;
+}
+
+/* =========================================================
+   WRAPPER (karta jak ThreadView)
+========================================================= */
+.wrapper {
   width: 100%;
-  max-width: 1200px; // ✅ dodaj to
-  margin: 0 auto;     // ✅ wyśrodkowanie
-  padding: 0 1rem;
-  display: flex;
-  justify-content: center;
+  background: var(--tv-soft);
+  border: 1px solid var(--tv-border);
+  border-radius: 22px;
+  box-shadow: var(--tv-shadow);
+  overflow: hidden;
+}
 
-  // boczne odstępy tylko na mobile
-  @media (max-width: 768px) {
-    padding: 0 1rem;
+/* =========================================================
+   HERO (1:1 vibe ThreadView)
+========================================================= */
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px 22px 0 0;
+  background: linear-gradient(135deg, var(--tv-primary), var(--tv-secondary));
+  box-shadow: var(--tv-shadow-strong);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+
+  /* ✅ nowy stacking context + overlay nie psuje klików */
+  isolation: isolate;
+}
+
+.heroInner {
+  position: relative;
+  z-index: 3;
+
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  gap: clamp(14px, 2vw, 22px);
+  padding: clamp(18px, 3vw, 28px);
+  min-height: 170px;
+
+  /* miejsce na back + badge */
+  padding-top: calc(clamp(18px, 3vw, 28px) + 52px);
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
   }
 }
 
-.wrapper {
-  max-width: 800px; // ✅ zwiększono z 800px
-  width: 100%;       // ✅ żeby działało z paddingiem
-  margin: 2rem 0;
-  padding: 4rem 2rem;
-  background: white;
-  border-radius: 1rem;
-  border: 1px solid #ccc;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  font-family: $font-body;
+.heroFade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none; /* ✅ klikalność */
 
-  .conversationTitle {
-    font-size: 1.6rem;
-    margin-bottom: 2rem;
-    text-align: center;
-    color: $color-gray;
+  background:
+    radial-gradient(900px 300px at 15% 15%, rgba(255, 255, 255, 0.22), transparent 55%),
+    radial-gradient(900px 360px at 90% 25%, rgba(255, 255, 255, 0.18), transparent 58%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.22) 100%);
+}
+
+/* top-left */
+.heroTopLeft {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 4;
+}
+
+/* top-right badge */
+.heroBadge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 4;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 12px;
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  color: #fff;
+
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16);
+}
+
+.badgeItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: $font-accent;
+  font-weight: 900;
+  font-size: 0.9rem;
+
+  svg { opacity: 0.95; }
+}
+
+.heroLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #fff;
+  min-width: 0;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+}
+
+.heroTitle {
+  font-family: $font-heading;
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  line-height: 1.1;
+  margin: 0;
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
+  min-width: 0;
+}
+
+.receiverName {
+  color: #fff;
+  font-weight: 900;
+}
+
+.titlePill {
+  width: fit-content;
+  padding: 8px 12px;
+  border-radius: 999px;
+
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  color: #fff;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 6px;
+  min-width: 0;
+}
+
+.roleText {
+  font-family: $font-accent;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  opacity: 0.95;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.metaHint {
+  font-family: $font-body;
+  opacity: 0.9;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.heroRight {
+  display: grid;
+  place-items: center;
+
+  @media (max-width: 860px) {
+    justify-items: start;
   }
+}
+
+.avatarWrap {
+  position: relative;
+  width: 148px;
+  height: 148px;
+  border-radius: 22px;
+  padding: 10px;
+
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 18px;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+
+.avatarSkeleton {
+  background: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+}
+
+.avatarRing {
+  position: absolute;
+  inset: -18px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.30), transparent 60%),
+    radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.18), transparent 62%);
+  filter: blur(10px);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* back button (glass chip) */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+
+  font-family: $font-accent;
+  font-weight: 900;
+
+  backdrop-filter: blur(12px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16);
+
+  transition: transform 0.15s ease, filter 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+    background: rgba(255, 255, 255, 0.20);
+  }
+
+  &:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
+  }
+}
+
+/* =========================================================
+   BODY / FORM (jak replyArea vibe)
+========================================================= */
+.body {
+  padding: 14px;
+  background:
+    radial-gradient(700px 240px at 20% 0%, var(--tv-p-06), transparent 55%),
+    radial-gradient(700px 260px at 80% 10%, var(--tv-s-10), transparent 58%),
+    rgba(255, 255, 255, 0.55);
+}
+
+.senderHint {
+  width: fit-content;
+  padding: 10px 12px;
+  border-radius: 999px;
+
+  font-family: $font-accent;
+  font-weight: 900;
+  font-size: 0.9rem;
+
+  color: rgba(0, 0, 0, 0.70);
+  background:
+    radial-gradient(600px 200px at 20% 20%, var(--tv-p-10), transparent 60%),
+    radial-gradient(500px 220px at 90% 30%, var(--tv-s-10), transparent 55%),
+    #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+
+  margin-bottom: 10px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .textarea {
   width: 100%;
   min-height: 120px;
-  padding: 1rem;
-  font-size: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+
+  padding: 12px 12px;
+  font-size: 0.95rem;
+  outline: none;
   resize: vertical;
-  margin-bottom: 1rem;
-  font-family: inherit;
-  color: $text-color;
+
+  background: rgba(255, 255, 255, 0.92);
+
+  &:focus {
+    border-color: color-mix(in srgb, var(--tv-primary) 35%, rgba(0, 0, 0, 0.12));
+    box-shadow: 0 0 0 4px var(--tv-p-10);
+  }
 }
 
-.button {
-  background: $primary-color;
-  color: white;
-  font-size: 1rem;
-  padding: 0.9rem 1.8rem;
+/* ✅ FIX ikony + baseline */
+.primaryBtn {
+  width: 100%;
   border: none;
-  border-radius: 1.5rem;
+  border-radius: 16px;
+  padding: 12px 14px;
+  min-height: 46px;
   cursor: pointer;
-  font-weight: bold;
+
   font-family: $font-accent;
-  transition: 0.2s;
+  font-weight: 900;
+  font-size: 1rem;
+  line-height: 1;
+
+  color: #fff;
+  background: linear-gradient(135deg, var(--tv-primary), var(--tv-secondary));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.14);
+
+  transition: transform 0.15s ease, filter 0.2s ease;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  svg {
+    flex: 0 0 auto;
+    font-size: 1.05em;
+    transform: translateY(0.5px);
+  }
 
   &:hover {
-    background: darken($primary-color, 10%);
+    transform: translateY(-1px);
+    filter: brightness(1.02);
   }
-}
 
-.info {
-  margin-bottom: 1rem;
-  padding: 1rem 1.5rem;
-  border-radius: 1rem;
-  font-size: 0.95rem;
-  border: 1px solid #ffddcc;
-  background-color: #fff8f3;
-  color: #cc6600 !important;
-}
-
-.infoBanner {
-  margin-top: 1rem;
-  padding: 0.8rem 1rem;
-  border-radius: 1rem;
-  background-color: #f2f2f2;
-  border-left: 4px solid #888;
-  color: #333;
-  font-size: 0.95rem;
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-  to {
-    opacity: 1;
+  &:active {
     transform: translateY(0);
+    filter: brightness(0.98);
   }
 }
 
-// MEDIA QUERIES
+/* INFO */
+.infoBox {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 
-@media (max-width: 1024px) {
-  .wrapper {
-    padding: 2rem;
-    margin: 4rem 0;
-  }
+  padding: 12px 12px;
+  border-radius: 16px;
 
-  .conversationTitle {
-    font-size: 1.5rem;
-  }
+  background: #fff8f3;
+  border: 1px solid #ffddcc;
+  color: #cc6600;
 
-  .textarea {
-    font-size: 1rem;
-    padding: 1rem;
-  }
+  .icon { font-size: 1.3rem; line-height: 1; }
+  p { margin: 0; }
+}
 
-  .button {
-    font-size: 1rem;
-    padding: 0.9rem 1.8rem;
-  }
+/* =========================================================
+   SKELETON / SHIMMER
+========================================================= */
+.nameSkeleton {
+  display: inline-block;
+  width: 160px;
+  height: 1em;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.22);
+  position: relative;
+  vertical-align: middle;
+}
 
-  .info {
-    font-size: 0.95rem;
-    padding: 1rem 1.5rem;
+.shimmer {
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0),
+      rgba(255, 255, 255, 0.55),
+      rgba(255, 255, 255, 0)
+    );
+    animation: shimmer 1.2s infinite;
   }
 }
 
-@media (max-width: 768px) {
-  .wrapper {
-    padding: 2rem;
-    margin: 3rem 0;
-  }
-
-  .conversationTitle {
-    font-size: 1.4rem;
-  }
-
-  .textarea {
-    font-size: 0.95rem;
-    padding: 0.9rem 1rem;
-  }
-
-  .button {
-    font-size: 0.95rem;
-    padding: 0.9rem 1.6rem;
-  }
-
-  .info {
-    font-size: 0.9rem;
-    padding: 0.9rem 1.2rem;
-  }
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
 }
 
-@media (max-width: 480px) {
-  .wrapper {
-    padding: 2rem;
-    margin: 2rem 0;
+/* =========================================================
+   MOBILE — pełne ułożenie (jak ThreadView)
+========================================================= */
+@media (max-width: 520px) {
+  .page { padding: 1.2rem 0 54px; }
+  .shell { width: calc(100% - 1.25rem); }
+
+  .wrapper { border-radius: 18px; }
+  .hero { border-radius: 18px 18px 0 0; }
+
+  .heroInner {
+    padding: 14px;
+    padding-top: 12px !important;
+
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    min-height: unset;
   }
 
-  .conversationTitle {
-    font-size: 1.3rem;
-    margin-bottom: 1rem;
+  .heroTopLeft,
+  .heroBadge {
+    position: static !important;
+    width: 100%;
+  }
+
+  /* ✅ oddech na górze */
+  .heroTopLeft { margin-bottom: 6px; }
+  .heroBadge { margin-top: 6px; border-radius: 14px; justify-content: space-between; }
+
+  .backButton {
+    width: fit-content;
+    padding: 9px 12px;
+    font-size: 0.92rem;
+    gap: 8px;
+  }
+
+  .badgeItem {
+    font-size: 0.86rem;
+    svg { font-size: 1rem; }
+  }
+
+  .heroRight { order: -1; place-items: center; }
+
+  .avatarWrap {
+    width: 108px;
+    height: 108px;
+    border-radius: 18px;
+    padding: 8px;
+    margin: 0 auto;
+  }
+
+  .avatar,
+  .avatarSkeleton { border-radius: 14px; }
+
+  .avatarRing { inset: -12px; }
+
+  .titleRow {
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .heroTitle {
+    font-size: 1.15rem;
+    line-height: 1.15;
+    text-align: center;
+  }
+
+  .titlePill { margin: 0 auto; padding: 7px 12px; font-size: 0.72rem; }
+
+  .metaRow {
+    justify-content: center;
+    text-align: center;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  .dot { display: none; }
+
+  /* body */
+  .body { padding: 12px; }
+
+  .senderHint {
+    width: 100%;
+    text-align: center;
+    border-radius: 14px;
+    padding: 10px 12px;
   }
 
   .textarea {
-    font-size: 0.9rem;
-    padding: 0.8rem 1rem;
-    min-height: 100px;
+    min-height: 110px;
+    border-radius: 14px;
+    font-size: 0.95rem;
   }
 
-  .button {
-    font-size: 0.9rem;
-    padding: 0.8rem 1.4rem;
+  .primaryBtn {
+    border-radius: 14px;
+    min-height: 44px;
   }
 
-  .info {
-    font-size: 0.85rem;
-    padding: 0.8rem 1rem;
-  }
+  .infoBox { border-radius: 14px; padding: 12px; }
 }

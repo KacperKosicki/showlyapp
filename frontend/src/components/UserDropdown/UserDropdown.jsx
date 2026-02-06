@@ -71,7 +71,7 @@ const UserDropdown = ({
             const db = await r.json();
             dbAvatar = db?.avatar || '';
           }
-        } catch {}
+        } catch { }
 
         const firebasePhotoURL = auth.currentUser?.photoURL || '';
 
@@ -247,10 +247,10 @@ const UserDropdown = ({
           </button>
         )}
 
-        {/* ✅ błąd sieci = nie udawaj, że nie ma profilu */}
-        {showProfileActions && profileStatus === 'error' && (
-          <div style={{ padding: '10px 12px', fontSize: 13, opacity: 0.8 }}>
-            Problem z połączeniem… spróbuj odświeżyć.
+        {showProfileActions && profileStatus === "error" && (
+          <div className={styles.netBanner} role="status" aria-live="polite">
+            <span className={styles.netDot} aria-hidden="true" />
+            <span className={styles.netText}>Problem z połączeniem… Spróbuj odświeżyć.</span>
           </div>
         )}
 

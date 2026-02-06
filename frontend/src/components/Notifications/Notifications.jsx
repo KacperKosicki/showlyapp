@@ -1,12 +1,45 @@
-import { useEffect, useState, useMemo } from 'react';
-import styles from './Notifications.module.scss';
-import axios from 'axios';
-import { Link, useLocation } from 'react-router-dom';
-import { FiInbox, FiSend, FiMail } from 'react-icons/fi';
+import { useEffect, useState, useMemo } from "react";
+import styles from "./Notifications.module.scss";
+import axios from "axios";
+import { Link, useLocation } from "react-router-dom";
+import { FiInbox, FiSend, FiMail } from "react-icons/fi";
+
+const API = process.env.REACT_APP_API_URL;
+const DEFAULT_AVATAR = "/images/other/no-image.png";
+
+// ✅ avatar może być string albo { url }
+const pickUrl = (val) => {
+  if (!val) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "object" && typeof val.url === "string") return val.url;
+  return "";
+};
+
+const normalizeAvatar = (val) => {
+  const raw = pickUrl(val);
+  const v = String(raw || "").trim();
+  if (!v) return "";
+
+  if (v.startsWith("data:image/")) return v;
+  if (v.startsWith("blob:")) return v;
+  if (/^https?:\/\//i.test(v)) return v;
+
+  if (v.startsWith("/uploads/")) return `${API}${v}`;
+  if (v.startsWith("uploads/")) return `${API}/${v}`;
+
+  // jeśli ktoś wrzucił "domena.pl/..." bez protokołu
+  if (/^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(v)) return `https://${v}`;
+
+  return v;
+};
 
 const Notifications = ({ user, setUnreadCount }) => {
   const [conversations, setConversations] = useState([]);
-  const [profileNameMap, setProfileNameMap] = useState({});
+
+  // zamiast samej nazwy: trzymamy metę profilu (name + avatar)
+  // uid -> undefined (pending) | { name: string|null, avatar: string|null }
+  const [profileMetaMap, setProfileMetaMap] = useState({});
+
   const [myProfile, setMyProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
@@ -16,9 +49,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     const fetchMyProfile = async () => {
       if (!user?.uid) return;
       try {
-        const r = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`
-        );
+        const r = await axios.get(`${API}/api/profiles/by-user/${user.uid}`);
         if (r?.data?.name) setMyProfile(r.data);
         else setMyProfile(null);
       } catch {
@@ -34,16 +65,14 @@ const Notifications = ({ user, setUnreadCount }) => {
       if (!user?.uid) return;
       setLoading(true);
       try {
-        const res = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/conversations/by-uid/${user.uid}`
-        );
+        const res = await axios.get(`${API}/api/conversations/by-uid/${user.uid}`);
         const list = Array.isArray(res.data) ? res.data : [];
         setConversations(list);
 
         const unread = list.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
         setUnreadCount(unread);
       } catch (err) {
-        console.error('❌ Błąd pobierania konwersacji:', err);
+        console.error("❌ Błąd pobierania konwersacji:", err);
       } finally {
         setLoading(false);
       }
@@ -58,25 +87,24 @@ const Notifications = ({ user, setUnreadCount }) => {
       conversations
         .map((c) => c.withUid)
         .filter(Boolean)
-        .filter((uid) => uid !== 'SYSTEM')
+        .filter((uid) => uid !== "SYSTEM")
         .filter((v, i, arr) => arr.indexOf(v) === i),
     [conversations]
   );
 
-  // helper: czy mamy ROZSTRZYGNIĘCIE (string|null) — pending to undefined
-  const isProfileResolved = (uid) => profileNameMap[uid] !== undefined;
+  const isProfileResolved = (uid) => profileMetaMap[uid] !== undefined;
 
-  // 3) Nazwy PROFILI drugiej strony (pending -> skeleton, potem string|null)
+  // 3) Meta PROFILI drugiej strony (pending -> skeleton, potem {name,avatar})
   useEffect(() => {
     const fetchProfiles = async () => {
       if (otherUids.length === 0) return;
 
-      // 3a) Oznacz nowe UID-y jako pending
-      setProfileNameMap((prev) => {
+      // pending dla nowych UID
+      setProfileMetaMap((prev) => {
         const draft = { ...prev };
         otherUids.forEach((uid) => {
           if (!Object.prototype.hasOwnProperty.call(draft, uid)) {
-            draft[uid] = undefined; // pending
+            draft[uid] = undefined;
           }
         });
         return draft;
@@ -86,57 +114,73 @@ const Notifications = ({ user, setUnreadCount }) => {
         const entries = await Promise.all(
           otherUids.map(async (uid) => {
             try {
-              const r = await axios.get(
-                `${process.env.REACT_APP_API_URL}/api/profiles/by-user/${uid}`
-              );
-              const name = r?.data?.name?.trim();
-              return [uid, name || null]; // string lub null (brak profilu)
+              const r = await axios.get(`${API}/api/profiles/by-user/${uid}`);
+              const name = (r?.data?.name || "").trim() || null;
+              const avatar = normalizeAvatar(r?.data?.avatar) || null;
+              return [uid, { name, avatar }];
             } catch {
-              return [uid, null];
+              return [uid, { name: null, avatar: null }];
             }
           })
         );
 
-        // 3b) Zapisz rozstrzygnięcia
-        setProfileNameMap((prev) => {
+        setProfileMetaMap((prev) => {
           const next = { ...prev };
-          entries.forEach(([uid, name]) => {
-            next[uid] = name; // string | null
+          entries.forEach(([uid, meta]) => {
+            next[uid] = meta;
           });
           return next;
         });
       } catch (e) {
-        console.error('❌ Błąd pobierania nazw profili:', e);
+        console.error("❌ Błąd pobierania profili:", e);
       }
     };
 
     fetchProfiles();
   }, [otherUids]);
 
-  // Helper do etykiet:
-  // prefer="profile"  -> najpierw nazwa profilu; dopóki pending, nie pokazuj konta (skeleton)
+  // prefer="profile"  -> najpierw nazwa profilu; pending => skeleton
   // prefer="account"  -> najpierw nazwa konta; profil tylko gdy konto puste
-  const getName = (otherUid, fallback, prefer = 'profile') => {
-    const account = (fallback || '').trim();
-    const profile = profileNameMap[otherUid]; // undefined (pending) | null | string
+  const getName = (otherUid, fallback, prefer = "profile") => {
+    const account = (fallback || "").trim();
+    const profileMeta = profileMetaMap[otherUid]; // undefined | {name,avatar}
 
-    if (prefer === 'account') {
-      return account || (typeof profile === 'string' ? profile.trim() : '') || 'Użytkownik';
+    if (prefer === "account") {
+      return (
+        account ||
+        (typeof profileMeta?.name === "string" ? profileMeta.name.trim() : "") ||
+        "Użytkownik"
+      );
     }
 
-    if (!isProfileResolved(otherUid)) {
-      return ''; // pending -> skeleton
+    if (!isProfileResolved(otherUid)) return ""; // pending => skeleton
+    if (typeof profileMeta?.name === "string" && profileMeta.name.trim()) return profileMeta.name.trim();
+
+    return account || "Użytkownik";
+  };
+
+  // avatar dla listy
+  const getAvatarSrc = (convo, variant) => {
+    const otherUid = convo.withUid;
+
+    // SYSTEM
+    if (variant === "system") return "";
+
+    // INBOX: avatar konta (z conversations list)
+    if (variant === "inbox") {
+      const a = normalizeAvatar(convo.withAvatar) || "";
+      return a;
     }
-    if (typeof profile === 'string' && profile.trim()) {
-      return profile.trim();
-    }
-    // rozstrzygnięte, że brak profilu
-    return account || 'Użytkownik';
+
+    // OUTBOX: avatar profilu drugiej strony (z profileMetaMap)
+    const meta = profileMetaMap[otherUid];
+    if (!isProfileResolved(otherUid)) return ""; // pending => skeleton
+    return normalizeAvatar(meta?.avatar) || "";
   };
 
   // 5) Podział na segmenty — tylko kanał account_to_profile
   const accountToProfile = useMemo(
-    () => conversations.filter((c) => c.channel === 'account_to_profile'),
+    () => conversations.filter((c) => c.channel === "account_to_profile"),
     [conversations]
   );
 
@@ -152,23 +196,46 @@ const Notifications = ({ user, setUnreadCount }) => {
     [accountToProfile, user?.uid]
   );
 
-  // 5b) System
-  const systemConversations = useMemo(
-    () => conversations.filter((c) => c.channel === 'system'),
-    [conversations]
-  );
+  // System
+  const systemConversations = useMemo(() => conversations.filter((c) => c.channel === "system"), [conversations]);
   const systemUnread = systemConversations.reduce((a, c) => a + (c.unreadCount || 0), 0);
 
   const inboxUnread = inboxToMyProfile.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
   const outboxUnread = myAccountToOtherProfiles.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
 
-  // render nazwy z ewentualnym skeletonem
   const renderNameNode = (rawName) =>
     rawName ? (
       <span className={styles.name}>{rawName}</span>
     ) : (
       <span className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`} />
     );
+
+  const AvatarNode = ({ src, variant }) => {
+    if (variant === "system") {
+      return (
+        <div className={`${styles.avatar} ${styles.avatarSystem}`} aria-hidden="true">
+          <FiMail />
+        </div>
+      );
+    }
+
+    if (!src) {
+      return <div className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`} aria-hidden="true" />;
+    }
+
+    return (
+      <img
+        src={src}
+        alt=""
+        className={styles.avatar}
+        decoding="async"
+        referrerPolicy="no-referrer"
+        onError={(e) => {
+          e.currentTarget.src = DEFAULT_AVATAR;
+        }}
+      />
+    );
+  };
 
   const renderItem = (convo, variant) => {
     const lastMsg = convo.lastMessage;
@@ -177,9 +244,11 @@ const Notifications = ({ user, setUnreadCount }) => {
     const isUnread = (convo.unreadCount || 0) > 0;
     const otherUid = convo.withUid;
 
+    const avatarSrc = getAvatarSrc(convo, variant);
+
     let header;
-    if (variant === 'inbox') {
-      const rawName = getName(otherUid, convo.withDisplayName, 'account');
+    if (variant === "inbox") {
+      const rawName = getName(otherUid, convo.withDisplayName, "account");
       header = (
         <>
           <FiInbox className={styles.icon} />
@@ -188,8 +257,8 @@ const Notifications = ({ user, setUnreadCount }) => {
           </span>
         </>
       );
-    } else if (variant === 'outbox') {
-      const rawName = getName(otherUid, convo.withDisplayName, 'profile');
+    } else if (variant === "outbox") {
+      const rawName = getName(otherUid, convo.withDisplayName, "profile");
       header = (
         <>
           <FiSend className={styles.icon} />
@@ -199,8 +268,7 @@ const Notifications = ({ user, setUnreadCount }) => {
         </>
       );
     } else {
-      // system
-      const sysName = (convo.withDisplayName || 'Showly.app').trim();
+      const sysName = (convo.withDisplayName || "Showly.app").trim();
       header = (
         <>
           <FiMail className={styles.icon} />
@@ -215,22 +283,37 @@ const Notifications = ({ user, setUnreadCount }) => {
       <li
         key={convo._id}
         className={`${styles.item} ${isUnread ? styles.unread : styles.read} ${
-          variant === 'system' ? styles.itemSystem : ''
+          variant === "system" ? styles.itemSystem : ""
         }`}
       >
-        <Link
-          to={`/konwersacja/${convo._id}`}
-          className={styles.link}
-          state={{ scrollToId: 'threadPageLayout' }}
-        >
-          <div className={styles.top}>
-            <span className={styles.meta}>{header}</span>
-            <span className={styles.date}>
-              {new Date(lastMsg.createdAt).toLocaleString()}
-              {isUnread && <span className={styles.dot} aria-hidden="true" />}
-            </span>
+        <Link to={`/konwersacja/${convo._id}`} className={styles.link} state={{ scrollToId: "threadPageLayout" }}>
+          <div className={styles.row}>
+            <div className={styles.avatarWrap}>
+              <AvatarNode src={avatarSrc || DEFAULT_AVATAR} variant={variant} />
+              {isUnread && <span className={styles.badgeDot} aria-hidden="true" />}
+            </div>
+
+            <div className={styles.body}>
+              <div className={styles.top}>
+                <span className={styles.meta}>{header}</span>
+                <span className={styles.date}>{new Date(lastMsg.createdAt).toLocaleString()}</span>
+              </div>
+
+              <p className={styles.content}>{lastMsg.content}</p>
+
+              <div className={styles.bottomRow}>
+                {isUnread ? (
+                  <span className={styles.unreadPill}>
+                    Nieprzeczytane: <strong>{convo.unreadCount}</strong>
+                  </span>
+                ) : (
+                  <span className={styles.readPill}>Przeczytane</span>
+                )}
+
+                <span className={styles.openPill}>Otwórz wątek →</span>
+              </div>
+            </div>
           </div>
-          <p className={styles.content}>{lastMsg.content}</p>
         </Link>
       </li>
     );
@@ -239,11 +322,23 @@ const Notifications = ({ user, setUnreadCount }) => {
   const SkeletonItem = () => (
     <li className={`${styles.item} ${styles.skeletonItem}`}>
       <div className={styles.link}>
-        <div className={styles.top}>
-          <span className={`${styles.meta} ${styles.skeleton} ${styles.shimmer}`} />
-          <span className={`${styles.date} ${styles.skeleton} ${styles.shimmer}`} />
+        <div className={styles.row}>
+          <div className={styles.avatarWrap}>
+            <div className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`} />
+          </div>
+
+          <div className={styles.body}>
+            <div className={styles.top}>
+              <span className={`${styles.meta} ${styles.skeleton} ${styles.shimmer}`} />
+              <span className={`${styles.date} ${styles.skeleton} ${styles.shimmer}`} />
+            </div>
+            <p className={`${styles.content} ${styles.skeleton} ${styles.shimmer}`} />
+            <div className={styles.bottomRow}>
+              <span className={`${styles.pillSkel} ${styles.shimmer}`} />
+              <span className={`${styles.pillSkel} ${styles.shimmer}`} />
+            </div>
+          </div>
         </div>
-        <p className={`${styles.content} ${styles.skeleton} ${styles.shimmer}`} />
       </div>
     </li>
   );
@@ -256,7 +351,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     const tryScroll = () => {
       const el = document.getElementById(scrollTo);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
         window.history.replaceState({}, document.title, location.pathname);
       } else {
         requestAnimationFrame(tryScroll);
@@ -266,8 +361,10 @@ const Notifications = ({ user, setUnreadCount }) => {
   }, [location.state, loading, location.pathname]);
 
   return (
-    <div id="scrollToId" className={styles.section}>
-      <div className={styles.wrapper}>
+    <div id="scrollToId" className={styles.page}>
+      <div className={styles.bgGlow} aria-hidden="true" />
+
+      <div className={styles.shell}>
         <div className={styles.headerRow}>
           <div>
             <h2 className={styles.sectionTitle}>Twoje powiadomienia</h2>
@@ -275,14 +372,26 @@ const Notifications = ({ user, setUnreadCount }) => {
               Zebraliśmy wiadomości do Twojego profilu
               {myProfile?.name ? (
                 <>
-                  {' '}
+                  {" "}
                   <strong className={styles.subStrong}>{myProfile.name}</strong>
                 </>
               ) : (
-                ''
-              )}{' '}
+                ""
+              )}{" "}
               oraz wątki wysłane z <strong className={styles.subStrong}>Twojego konta</strong>.
             </p>
+          </div>
+
+          <div className={styles.headerPills}>
+            <span className={styles.headerPill}>
+              INBOX: <strong>{inboxUnread}</strong>
+            </span>
+            <span className={styles.headerPill}>
+              OUTBOX: <strong>{outboxUnread}</strong>
+            </span>
+            <span className={styles.headerPill}>
+              SYSTEM: <strong>{systemUnread}</strong>
+            </span>
           </div>
         </div>
 
@@ -298,40 +407,31 @@ const Notifications = ({ user, setUnreadCount }) => {
             <div className={styles.sectionGroup}>
               <div className={styles.groupHeader}>
                 <h3 className={styles.groupTitle}>
-                  Otrzymane wiadomości do Twojego profilu
-                  {myProfile?.name ? ` „${myProfile.name}”` : ''}
+                  Otrzymane wiadomości do Twojego profilu{myProfile?.name ? ` „${myProfile.name}”` : ""}
                 </h3>
-                <span className={styles.badge}>
-                  {inboxUnread > 0 ? `${inboxUnread} nieprze.` : `${inboxToMyProfile.length}`}
-                </span>
+                <span className={styles.badge}>{inboxUnread > 0 ? `${inboxUnread} nieprze.` : `${inboxToMyProfile.length}`}</span>
               </div>
 
               {inboxToMyProfile.length === 0 ? (
                 <p className={styles.emptyGroup}>Brak wiadomości do Twojego profilu.</p>
               ) : (
-                <ul className={styles.list}>{inboxToMyProfile.map((c) => renderItem(c, 'inbox'))}</ul>
+                <ul className={styles.list}>{inboxToMyProfile.map((c) => renderItem(c, "inbox"))}</ul>
               )}
             </div>
 
             {/* SEGMENT 2: Twoje konto -> cudze wizytówki */}
             <div className={styles.sectionGroup}>
               <div className={styles.groupHeader}>
-                <h3 className={styles.groupTitle}>
-                  Rozmowy z innymi profilami (Twoje konto → inne profile)
-                </h3>
+                <h3 className={styles.groupTitle}>Rozmowy z innymi profilami (Twoje konto → inne profile)</h3>
                 <span className={styles.badge}>
-                  {outboxUnread > 0
-                    ? `${outboxUnread} nieprze.`
-                    : `${myAccountToOtherProfiles.length}`}
+                  {outboxUnread > 0 ? `${outboxUnread} nieprze.` : `${myAccountToOtherProfiles.length}`}
                 </span>
               </div>
 
               {myAccountToOtherProfiles.length === 0 ? (
                 <p className={styles.emptyGroup}>Brak rozmów z innymi profilami.</p>
               ) : (
-                <ul className={styles.list}>
-                  {myAccountToOtherProfiles.map((c) => renderItem(c, 'outbox'))}
-                </ul>
+                <ul className={styles.list}>{myAccountToOtherProfiles.map((c) => renderItem(c, "outbox"))}</ul>
               )}
             </div>
 
@@ -339,16 +439,14 @@ const Notifications = ({ user, setUnreadCount }) => {
             <div className={styles.sectionGroup}>
               <div className={styles.groupHeader}>
                 <h3 className={styles.groupTitle}>Wiadomości systemowe</h3>
-                <span className={styles.badge}>
-                  {systemUnread > 0 ? `${systemUnread} nieprze.` : `${systemConversations.length}`}
-                </span>
+                <span className={styles.badge}>{systemUnread > 0 ? `${systemUnread} nieprze.` : `${systemConversations.length}`}</span>
               </div>
 
               {systemConversations.length === 0 ? (
                 <p className={styles.emptyGroup}>Brak wiadomości systemowych.</p>
               ) : (
                 <ul className={`${styles.list} ${styles.systemList}`}>
-                  {systemConversations.map((c) => renderItem(c, 'system'))}
+                  {systemConversations.map((c) => renderItem(c, "system"))}
                 </ul>
               )}
             </div>
