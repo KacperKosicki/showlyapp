@@ -1,73 +1,259 @@
-@import '../../styles/variables';
+@import "../../styles/variables";
 
-.wrapper {
-  max-width: 760px;
-  margin: 2rem auto;
-  padding: 3rem 1rem;
+$page-max: 820px;
+
+.page {
+  position: relative;
+  padding: 2rem 0 70px;
+  color: $text-color;
   font-family: $font-body;
+
+  --as-primary: var(--pp-primary, #6f4ef2);
+  --as-secondary: var(--pp-secondary, #ff4081);
+
+  --as-p-06: color-mix(in srgb, var(--as-primary) 6%, transparent);
+  --as-p-10: color-mix(in srgb, var(--as-primary) 10%, transparent);
+  --as-p-18: color-mix(in srgb, var(--as-primary) 18%, transparent);
+  --as-p-30: color-mix(in srgb, var(--as-primary) 30%, transparent);
+
+  --as-s-10: color-mix(in srgb, var(--as-secondary) 10%, transparent);
+  --as-s-18: color-mix(in srgb, var(--as-secondary) 18%, transparent);
 }
 
-h2 {
-  font-family: $font-heading;
-  margin: 0 0 .25rem;
+.bgGlow {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.7;
+  background:
+    radial-gradient(700px 280px at 18% 10%, rgba(255, 255, 255, 0.65), transparent 60%),
+    radial-gradient(700px 320px at 82% 12%, rgba(255, 255, 255, 0.55), transparent 62%);
+  filter: blur(10px);
 }
 
-.sub {
-  color: $color-gray;
-  margin: 0 0 1.25rem;
+.shell {
+  width: min(#{$page-max}, calc(100% - 2rem));
+  margin: 0 auto;
+  position: relative;
 }
 
-.card {
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 1rem;
-  box-shadow: 0 6px 20px rgba(0,0,0,.06);
-  padding: 1.25rem 1.25rem 1rem;
-  margin-bottom: 1rem;
+.loadingCard {
+  padding: 1rem 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.06);
+  text-align: center;
+  color: rgba(0, 0, 0, 0.62);
+  font-family: $font-accent;
+  font-weight: 800;
+}
 
-  h3 {
-    margin: 0 0 .75rem;
-    font-family: $font-heading;
-    color: $text-color;
+/* ===== header ===== */
+.headerRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
-.avatarRow {
+.sectionTitle {
+  margin: 0 0 0.25rem;
+  font-size: 1.55rem;
+  color: $text-color;
+  font-family: $font-heading;
+}
+
+.subTitle {
+  display: block;
+  margin: 0;
+  color: $color-gray;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.subStrong {
+  font-weight: 900;
+  color: $text-color;
+}
+
+/* ✅ pills jak w Notifications: kolumna, równa szerokość */
+.headerPills {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  min-width: 240px;
+
+  @media (max-width: 640px) {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.headerPill {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.06);
+
+  font-family: $font-accent;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.92rem;
+}
+
+.pillLeft {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pillIcon {
+  flex: 0 0 auto;
+  font-size: 1.02rem;
+  opacity: 0.85;
+}
+
+.pillRight {
+  color: var(--as-primary);
+  font-weight: 900;
+}
+
+/* ===== groups ===== */
+.sectionGroup {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.06);
+
+  @media (max-width: 520px) {
+    padding: 14px;
+    border-radius: 18px;
+  }
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+
+.groupTitle {
+  font-size: 1.02rem;
+  font-weight: 900;
+  color: $text-color;
+  font-family: $font-heading;
+  margin: 0;
+  min-width: 0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.4rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+
+  background: var(--as-p-06);
+  color: var(--as-primary);
+  border: 1px solid var(--as-p-18);
+
+  font-family: $font-accent;
+  font-weight: 900;
+}
+
+/* karta wewnątrz grupy */
+.card {
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background:
+    radial-gradient(700px 220px at 18% 18%, var(--as-p-10), transparent 60%),
+    radial-gradient(620px 240px at 86% 26%, var(--as-s-10), transparent 55%),
+    #fff;
+
+  padding: 14px 14px;
+
+  @media (max-width: 520px) {
+    padding: 12px 12px;
+  }
+}
+
+/* ===== avatar ===== */
+.avatarRow {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 14px;
+  align-items: start;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.avatarWrap {
+  width: 88px;
+  height: 88px;
+  border-radius: 18px;
+  overflow: hidden;
+
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.08);
+
+  @media (max-width: 520px) {
+    width: 84px;
+    height: 84px;
+    border-radius: 16px;
+  }
 }
 
 .avatar {
-  width: 84px;
-  height: 84px;
-  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+  display: block;
   object-fit: cover;
-  border: 2px solid #eee;
-  box-shadow: 0 2px 8px rgba(0,0,0,.05);
   background: #fafafa;
-  flex: 0 0 84px;
 }
 
-.controls { display: flex; flex-direction: column; gap: .6rem; }
-
-.fileBtn {
-  display: inline-block;
-  padding: .5rem .9rem;
-  border-radius: 1rem;
-  border: 1px dashed #ccc;
-  cursor: pointer;
-  font-family: $font-accent;
-  color: $text-color;
-  input { display: none; }
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
 }
 
-.row { display: flex; gap: .5rem; flex-wrap: wrap; }
+.actionsRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
 .inline {
   display: flex;
-  gap: .5rem;
+  gap: 10px;
   align-items: center;
   flex-wrap: wrap;
 }
@@ -75,63 +261,188 @@ h2 {
 .input {
   flex: 1 1 260px;
   min-width: 220px;
-  padding: .55rem .8rem;
-  border-radius: .75rem;
-  border: 1px solid #ccc;
-  font-size: .95rem;
-}
 
-.primary {
-  background: $primary-color;
-  color: #fff;
-  border: none;
-  padding: .55rem 1rem;
-  border-radius: 1.25rem;
-  cursor: pointer;
-  font-family: $font-accent;
-  &:disabled { opacity: .6; cursor: not-allowed; }
-}
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.92);
 
-.secondary {
-  background: #fff;
-  color: $primary-color;
-  border: 2px solid $primary-color;
-  padding: .55rem 1rem;
-  border-radius: 1.25rem;
-  cursor: pointer;
-  font-family: $font-accent;
-}
+  font-size: 0.95rem;
+  color: rgba(0, 0, 0, 0.78);
+  font-family: $font-body;
 
-.ghost {
-  background: #fff;
-  color: #c0392b;
-  border: 1px solid #c0392b;
-  padding: .55rem 1rem;
-  border-radius: 1.25rem;
-  cursor: pointer;
-  font-family: $font-accent;
+  transition: box-shadow 260ms ease, transform 260ms ease;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px var(--as-p-10);
+  }
 }
 
 .hint {
-  color: #888;
-  font-size: 0.85rem;
-
+  color: rgba(0, 0, 0, 0.52);
+  font-size: 0.86rem;
+  line-height: 1.45;
 }
 
 .text {
-  color: $color-gray;
-  margin-bottom: .6rem;
+  color: rgba(0, 0, 0, 0.62);
+  margin: 0 0 10px;
+  line-height: 1.55;
 }
 
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: 24px;
-  transform: translateX(-50%);
-  background: rgba(0,0,0,.85);
-  color: #fff;
-  padding: .55rem .9rem;
-  border-radius: .75rem;
-  font-size: .9rem;
-  z-index: 9999;
+/* =========================================================
+   BUTTONS — hover bez zmiany kolorów (tylko ruch + cień + shine)
+========================================================= */
+
+/* ✅ pewny układ ikona + tekst */
+.btnInner {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.btnIcon {
+  flex: 0 0 auto;
+  display: inline-block;
+  font-size: 1.05rem;
+  line-height: 1;
+  vertical-align: -0.12em;
+  opacity: 0.92;
+}
+
+/* wspólny “feeling” (bez zmian kolorów!) */
+@mixin btnMotion {
+  position: relative;
+  isolation: isolate; /* żeby pseudo-elementy nie wychodziły */
+  transition:
+    transform 260ms cubic-bezier(.2,.9,.2,1),
+    box-shadow 340ms ease,
+    filter 340ms ease;
+
+  /* delikatny “shine” na hover */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background:
+      radial-gradient(320px 90px at 30% 20%, rgba(255,255,255,.55), transparent 60%),
+      radial-gradient(260px 110px at 70% 0%, rgba(255,255,255,.38), transparent 55%);
+    filter: blur(10px);
+    transition: opacity 420ms ease;
+    z-index: 0;
+  }
+
+  /* ważne: treść nad shine */
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.10);
+  }
+
+  &:hover::after {
+    opacity: 1;
+  }
+
+  &:active {
+    transform: translateY(1px) scale(0.99);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+    transition-duration: 120ms;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px var(--as-p-10), 0 18px 44px rgba(0, 0, 0, 0.10);
+  }
+
+  &:disabled {
+    opacity: 0.58;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    &::after { opacity: 0 !important; }
+  }
+}
+
+/* FILE button */
+.fileBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  width: fit-content;
+  padding: 10px 12px;
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px dashed rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+
+  font-family: $font-accent;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.68);
+
+  input { display: none; }
+
+  @include btnMotion;
+}
+
+/* LoadingButton klasy */
+.primary,
+.secondary,
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 10px 12px;
+  border-radius: 14px;
+
+  font-family: $font-accent;
+  font-weight: 900;
+  cursor: pointer;
+
+  /* ✅ brak zmian kolorów na hover */
+  @include btnMotion;
+}
+
+/* zachowujesz swoje bazowe kolory (i one nie zmieniają się na hover) */
+.primary {
+  border: 1px solid var(--as-p-18);
+  background: var(--as-p-06);
+  color: var(--as-primary);
+}
+
+.secondary {
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.9);
+  color: rgba(0, 0, 0, 0.72);
+}
+
+.ghost {
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  background: rgba(255, 255, 255, 0.92);
+  color: rgba(185, 28, 28, 0.9);
+}
+
+/* Mobile */
+@media (max-width: 520px) {
+  .primary,
+  .secondary,
+  .ghost,
+  .fileBtn {
+    width: 100%;
+    justify-content: center;
+  }
 }
