@@ -830,7 +830,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const until = profile?.visibleUntil ? new Date(profile.visibleUntil) : new Date(0);
 
   const daysLeft = Math.ceil((until.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  const canExtend = daysLeft <= 7; // zgodnie z backendem
+  const canExtend = daysLeft <= 999; // zgodnie z backendem
   const isExpired = until < now || !profile.isVisible;
 
   // =========================
