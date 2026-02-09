@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
 
@@ -38,7 +38,9 @@ function App() {
   const [pendingReservationsCount, setPendingReservationsCount] = useState(0);
 
   const resetPendingReservationsCount = () => setPendingReservationsCount(0);
-  const triggerRefresh = () => setRefreshTrigger(Date.now());
+  const triggerRefresh = useCallback(() => {
+    setRefreshTrigger(Date.now());
+  }, []);
 
   // ✅ stabilne user object (żeby nie powodować zbędnych re-renderów)
   const safeUser = useMemo(() => {

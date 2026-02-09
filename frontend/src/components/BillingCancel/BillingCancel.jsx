@@ -8,10 +8,11 @@ export default function BillingCancel({ triggerRefresh }) {
 
   useEffect(() => {
     if (typeof triggerRefresh === "function") triggerRefresh();
+
     if (location.search || location.state) {
-      window.history.replaceState({}, document.title);
+      window.history.replaceState({}, document.title, location.pathname);
     }
-  }, [triggerRefresh, location.search, location.state]);
+  }, [triggerRefresh, location.pathname]); // ✅ zamiast search/state
 
   return (
     <div className={styles.page}>

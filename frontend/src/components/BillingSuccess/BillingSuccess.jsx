@@ -9,13 +9,10 @@ export default function BillingSuccess({ triggerRefresh }) {
   const [sec, setSec] = useState(4);
 
   useEffect(() => {
-    // ✅ odśwież globalne liczniki (unread / pending / itd.)
     if (typeof triggerRefresh === "function") triggerRefresh();
 
-    // ✅ zabezpieczenie przed ponownym uruchamianiem przy back/forward
-    // usuwa query/state po wejściu
     if (location.search || location.state) {
-      window.history.replaceState({}, document.title);
+      window.history.replaceState({}, document.title, location.pathname);
     }
 
     const i = setInterval(() => setSec((s) => Math.max(0, s - 1)), 1000);
@@ -27,7 +24,7 @@ export default function BillingSuccess({ triggerRefresh }) {
       clearInterval(i);
       clearTimeout(t);
     };
-  }, [navigate, triggerRefresh, location.search, location.state]);
+  }, [navigate, triggerRefresh, location.pathname]); // ✅ zamiast search/state
 
   return (
     <div className={styles.page}>
