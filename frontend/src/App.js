@@ -24,6 +24,8 @@ import BookingForm from './components/BookingForm/BookingForm';
 import ReservationList from './components/ReservationList/ReservationList';
 import AccountSettings from './components/AccountSettings/AccountSettings';
 import Favorites from './components/Favorites/Favorites';
+import BillingSuccess from './components/BillingSuccess/BillingSuccess';
+import BillingCancel from './components/BillingCancel/BillingCancel';
 
 const API = process.env.REACT_APP_API_URL;
 
@@ -184,6 +186,28 @@ function App() {
         />
 
         <Route path="/verify-success" element={<VerifySuccess />} />
+
+        <Route
+          path="/billing/success"
+          element={
+            <>
+              <Hero {...heroProps} />
+              <BillingSuccess triggerRefresh={triggerRefresh} />
+              <Footer />
+            </>
+          }
+        />
+
+        <Route
+          path="/billing/cancel"
+          element={
+            <>
+              <Hero {...heroProps} />
+              <BillingCancel triggerRefresh={triggerRefresh} />
+              <Footer />
+            </>
+          }
+        />
 
         <Route
           path="/stworz-profil"

@@ -194,11 +194,21 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     }
   };
 
-  useEffect(() => {
-    if (!user?.uid) return;
-    fetchProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.uid]);
+useEffect(() => {
+  if (!user?.uid) return;
+
+  // ✅ jeśli wracamy z billing success/cancel → wymuś odświeżenie
+  const cameFromBilling = !!location.state?.refresh;
+
+  fetchProfile();
+
+  if (cameFromBilling) {
+    // sprzątnij state, żeby nie odświeżało w kółko po back/refresh
+    window.history.replaceState({}, document.title, location.pathname);
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [user?.uid, location.state?.refresh]);
 
   // =========================
   // Staff: API
