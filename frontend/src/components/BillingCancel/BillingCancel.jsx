@@ -9,10 +9,11 @@ export default function BillingCancel({ triggerRefresh }) {
   useEffect(() => {
     if (typeof triggerRefresh === "function") triggerRefresh();
 
+    // usuń query/state po wejściu (żeby back/forward nie odpalało logiki)
     if (location.search || location.state) {
       window.history.replaceState({}, document.title, location.pathname);
     }
-  }, [triggerRefresh, location.pathname]); // ✅ zamiast search/state
+  }, [triggerRefresh, location.pathname, location.search, location.state]);
 
   return (
     <div className={styles.page}>

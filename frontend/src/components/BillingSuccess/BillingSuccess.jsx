@@ -24,7 +24,7 @@ export default function BillingSuccess({ triggerRefresh }) {
       clearInterval(i);
       clearTimeout(t);
     };
-  }, [navigate, triggerRefresh, location.pathname]); // ✅ zamiast search/state
+  }, [navigate, triggerRefresh, location.pathname, location.search, location.state]);
 
   return (
     <div className={styles.page}>
