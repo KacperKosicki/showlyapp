@@ -87,6 +87,58 @@ $page-max: 1180px;
 }
 
 /* =========================================================
+   BACK ROW (NAD HERO)
+========================================================= */
+.backRow {
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+
+  @media (max-width: 520px) {
+    justify-content: center;
+  }
+}
+
+/* back button */
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(255, 255, 255, 0.90);
+  color: rgba(15, 23, 42, 0.92);
+
+  font-family: $font-accent;
+  font-weight: 900;
+
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s ease, filter 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.02);
+    background: rgba(255, 255, 255, 0.98);
+  }
+
+  &:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
+  }
+
+  @media (max-width: 520px) {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* =========================================================
    HERO (jak PublicProfile)
 ========================================================= */
 .hero {
@@ -106,13 +158,26 @@ $page-max: 1180px;
   grid-template-columns: 1.35fr 0.65fr;
   gap: clamp(14px, 2vw, 22px);
   padding: clamp(18px, 3vw, 28px);
-  min-height: 190px;
 
-  /* miejsce na badge/btn gdy są absolute */
-  padding-top: calc(clamp(18px, 3vw, 28px) + 52px);
+  min-height: 190px;
 
   @media (max-width: 860px) {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ✅ TOP BAR w HERO: tylko badge */
+.heroTopBar {
+  position: relative;
+  z-index: 3;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 12px;
+
+  @media (max-width: 520px) {
+    justify-content: stretch;
   }
 }
 
@@ -126,26 +191,8 @@ $page-max: 1180px;
   z-index: 1;
 }
 
-/* top-left */
-.heroTopLeft {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 3;
-
-  @media (max-width: 520px) {
-    top: 10px;
-    left: 10px;
-  }
-}
-
 /* top-right badge */
 .heroBadge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 3;
-
   display: inline-flex;
   align-items: center;
   gap: 12px;
@@ -160,13 +207,11 @@ $page-max: 1180px;
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.16);
 
   @media (max-width: 520px) {
-    position: static !important;
     width: 100%;
-    justify-content: space-between;
+    justify-content: center;
     flex-wrap: wrap;
     border-radius: 16px;
     gap: 8px;
-    padding: 10px 12px;
   }
 }
 
@@ -303,38 +348,6 @@ $page-max: 1180px;
   filter: blur(10px);
   opacity: 0.9;
   pointer-events: none;
-}
-
-/* back button */
-.backButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-
-  padding: 10px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
-
-  font-family: $font-accent;
-  font-weight: 900;
-
-  backdrop-filter: blur(10px);
-  transition: transform 0.15s ease, filter 0.2s ease, background 0.2s ease;
-
-  &:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.05);
-    background: rgba(255, 255, 255, 0.18);
-  }
-
-  &:active {
-    transform: translateY(0);
-    filter: brightness(0.98);
-  }
 }
 
 .receiverName {
@@ -860,26 +873,20 @@ $page-max: 1180px;
 }
 
 /* =========================================================
-   MOBILE — brak nachodzenia badge/back + lepszy układ hero
+   MOBILE — lepszy układ hero
 ========================================================= */
 @media (max-width: 520px) {
   .page { padding: 2rem 0 54px; }
   .shell { width: calc(100% - 2rem); }
 
   .heroInner {
-    padding-top: 14px !important;
     display: flex;
     flex-direction: column;
     gap: 12px;
     min-height: auto;
   }
 
-  .heroTopLeft,
-  .heroBadge {
-    position: static !important;
-    width: 100%;
-  }
-
+  /* ✅ avatar na górę heroInner */
   .heroRight { order: -1; place-items: center; }
 
   .avatarWrap {

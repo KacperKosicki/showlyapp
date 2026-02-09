@@ -356,7 +356,11 @@ const ThreadView = ({ user, setUnreadCount }) => {
         return accountName || "Użytkownik";
       }
       // oni -> Twój profil: pokazuj konto
-      return accountName || (typeof profName === "string" ? profName : "") || "Użytkownik";
+      return (
+        accountName ||
+        (typeof profName === "string" ? profName : "") ||
+        "Użytkownik"
+      );
     }
 
     if (channel === "profile_to_account") {
@@ -469,14 +473,38 @@ const ThreadView = ({ user, setUnreadCount }) => {
   }, [messages, channel, fetchProfileMeta]);
 
   // ----------------------------
-  // HERO avatar/name (jak PublicProfile)
+  // HERO avatar/name (ma pasować do "receiverName" i kanału)
   // ----------------------------
   const receiverHeroAvatar = useMemo(() => {
     if (!receiverId || receiverId === "SYSTEM") return "";
+
     const profA = normalizeAvatar(profileMetaMap?.[receiverId]?.avatar) || "";
     const accA = normalizeAvatar(accountAvatarMap?.[receiverId]) || "";
+
+    // fallback jeśli nie mamy danych
+    if (!channel || !firstFromUid || !user?.uid) return accA || profA || "";
+
+    // Ustalamy jaką "tożsamość" ma odbiorca w tej konwersacji (konto vs profil)
+    let receiverKind = "account";
+
+    if (channel === "account_to_profile") {
+      // firstFromUid = KONTO
+      // jeśli firstFromUid === moje UID, to ja jestem KONTO -> odbiorca jest PROFIL
+      receiverKind = firstFromUid === user.uid ? "profile" : "account";
+    }
+
+    if (channel === "profile_to_account") {
+      // firstFromUid = PROFIL
+      // jeśli firstFromUid === moje UID, to ja jestem PROFIL -> odbiorca jest KONTO
+      receiverKind = firstFromUid === user.uid ? "account" : "profile";
+    }
+
+    // ✅ jeśli odbiorca jest kontem — preferuj konto (a nie profil)
+    if (receiverKind === "account") return accA || profA || "";
+
+    // ✅ jeśli odbiorca jest profilem — preferuj profil
     return profA || accA || "";
-  }, [receiverId, profileMetaMap, accountAvatarMap]);
+  }, [receiverId, profileMetaMap, accountAvatarMap, channel, firstFromUid, user?.uid]);
 
   const statusLabel = useMemo(() => {
     if (!showFaq) return "";
@@ -574,29 +602,30 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
         <div className={`${styles.mainArea} ${!showFaq ? styles.centered : ""}`}>
           <div className={styles.threadWrapper}>
+            {/* ✅ BACK NAD HERO */}
+            <div className={styles.backRow}>
+              <button
+                onClick={() =>
+                  navigate("/powiadomienia", { state: { scrollToId: "threadPageLayout" } })
+                }
+                className={styles.backButton}
+                type="button"
+              >
+                <FaArrowLeft />
+                Wróć do powiadomień
+              </button>
+            </div>
+
             {/* ===== HERO (jak PublicProfile) ===== */}
             <header className={styles.hero}>
-              <div className={styles.heroInner}>
-                {/* top-left: back */}
-                <div className={styles.heroTopLeft}>
-                  <button
-                    onClick={() =>
-                      navigate("/powiadomienia", { state: { scrollToId: "threadPageLayout" } })
-                    }
-                    className={styles.backButton}
-                    type="button"
-                  >
-                    <FaArrowLeft />
-                    Wróć do powiadomień
-                  </button>
-                </div>
-
-                {/* top-right: badge */}
+              {/* ✅ TOP BAR w HERO tylko na badge */}
+              <div className={styles.heroTopBar}>
                 <div className={styles.heroBadge} title={statusLabel || ""}>
                   <div className={styles.badgeItem}>
                     <FaRegCommentDots />
                     <span>
-                      <strong>{messages.filter((m) => !m?.isSystem).length}</strong>&nbsp;wiadomości
+                      <strong>{messages.filter((m) => !m?.isSystem).length}</strong>
+                      &nbsp;wiadomości
                     </span>
                   </div>
 
@@ -607,7 +636,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
                     </div>
                   )}
                 </div>
+              </div>
 
+              <div className={styles.heroInner}>
                 <div className={styles.heroLeft}>
                   <div className={styles.titleRow}>
                     <h2 className={styles.heroTitle}>
@@ -618,8 +649,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
                       {channel === "account_to_profile"
                         ? "KONTO ↔ PROFIL"
                         : channel === "profile_to_account"
-                        ? "PROFIL ↔ KONTO"
-                        : "ROZMOWA"}
+                          ? "PROFIL ↔ KONTO"
+                          : "ROZMOWA"}
                     </span>
                   </div>
 
@@ -648,7 +679,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
                         }}
                       />
                     ) : (
-                      <div className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`}>
+                      <div
+                        className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`}
+                      >
                         <FaUserCircle />
                       </div>
                     )}
@@ -686,9 +719,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
                     return (
                       <div
                         key={i}
-                        className={`${styles.messageRow} ${isMe ? styles.me : styles.other} ${
-                          msg.isSystem ? styles.systemRow : ""
-                        }`}
+                        className={`${styles.messageRow} ${isMe ? styles.me : styles.other} ${msg.isSystem ? styles.systemRow : ""
+                          }`}
                       >
                         {!msg.isSystem && (
                           <div className={styles.msgAvatarWrap}>
@@ -712,9 +744,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
                         )}
 
                         <div
-                          className={`${styles.message} ${isMe ? styles.own : styles.their} ${
-                            msg.isSystem ? styles.system : ""
-                          }`}
+                          className={`${styles.message} ${isMe ? styles.own : styles.their} ${msg.isSystem ? styles.system : ""
+                            }`}
                         >
                           {!msg.isSystem && (
                             <p className={styles.author}>
@@ -731,9 +762,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
                           )}
 
                           <p
-                            className={`${styles.content} ${
-                              msg.isSystem ? styles.systemContent : ""
-                            }`}
+                            className={`${styles.content} ${msg.isSystem ? styles.systemContent : ""
+                              }`}
                           >
                             {displayContent}
                             {msg.pending && <em className={styles.pending}> (wysyłanie…)</em>}
@@ -832,9 +862,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
                   {profileStatus === "exists" && (
                     <>
                       {receiverProfile?.quickAnswers?.length > 0 &&
-                      receiverProfile.quickAnswers.some(
-                        (qa) => (qa.title || "").trim() || (qa.answer || "").trim()
-                      ) ? (
+                        receiverProfile.quickAnswers.some(
+                          (qa) => (qa.title || "").trim() || (qa.answer || "").trim()
+                        ) ? (
                         <ul>
                           {receiverProfile.quickAnswers
                             .filter(

@@ -1,3 +1,4 @@
+// MessageForm.jsx
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import styles from "./MessageForm.module.scss";
@@ -57,20 +58,18 @@ const MessageForm = ({ user }) => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo) return;
 
-    const t = setTimeout(() => {
-      const tryScroll = () => {
-        const el = document.getElementById(scrollTo);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
-          window.history.replaceState({}, document.title, location.pathname);
-        } else {
-          requestAnimationFrame(tryScroll);
-        }
-      };
-      requestAnimationFrame(tryScroll);
-    }, 100);
-
-    return () => clearTimeout(t);
+    let attempts = 0;
+    const tryScroll = () => {
+      const el = document.getElementById(scrollTo);
+      if (el && el.offsetHeight > 0) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        window.history.replaceState({}, document.title, location.pathname);
+      } else if (attempts < 60) {
+        attempts++;
+        setTimeout(tryScroll, 50);
+      }
+    };
+    tryScroll();
   }, [location.state, location.pathname]);
 
   const fetchReceiverMeta = useCallback(async (uid) => {
@@ -123,7 +122,7 @@ const MessageForm = ({ user }) => {
     if (!user?.uid || !recipientId) return;
 
     try {
-      // meta odbiorcy (odpal od razu, niezależnie od istniejącego wątku)
+      // meta odbiorcy (odpal od razu)
       fetchReceiverMeta(recipientId);
 
       const res = await axios.get(
@@ -131,11 +130,12 @@ const MessageForm = ({ user }) => {
       );
 
       if (res.data.exists && res.data.id) {
-        navigate(`/konwersacja/${res.data.id}`, { state: { scrollToId: "threadPageLayout" } });
-        return; // nie pokazuj formularza
+        navigate(`/konwersacja/${res.data.id}`, {
+          state: { scrollToId: "threadPageLayout" },
+        });
+        return;
       }
     } catch (_) {
-      // brak wątku lub błąd – pokaż formularz (meta i tak dociągamy)
       fetchReceiverMeta(recipientId);
     } finally {
       setLoading(false);
@@ -165,17 +165,21 @@ const MessageForm = ({ user }) => {
       setMessage("");
       setAlert({ type: "success", message: "Wiadomość wysłana!" });
 
-      // po wysłaniu wejdź w świeży/odświeżony wątek
       if (data?.id) {
         setTimeout(() => {
-          navigate(`/konwersacja/${data.id}`, { state: { scrollToId: "threadPageLayout" } });
+          navigate(`/konwersacja/${data.id}`, {
+            state: { scrollToId: "threadPageLayout" },
+          });
         }, 600);
       } else {
         setTimeout(() => navigate("/powiadomienia"), 800);
       }
     } catch (err) {
       if (err.response?.status === 403) {
-        setAlert({ type: "error", message: "Musisz poczekać na odpowiedź w tym wątku." });
+        setAlert({
+          type: "error",
+          message: "Musisz poczekać na odpowiedź w tym wątku.",
+        });
       } else if (err.response?.data?.message) {
         setAlert({ type: "error", message: err.response.data.message });
       } else {
@@ -196,18 +200,35 @@ const MessageForm = ({ user }) => {
       <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />
     );
 
+  // SKELETON PAGE (jak ThreadView vibe)
   if (loading) {
     return (
       <div id="messageFormContainer" className={styles.page}>
         <div className={styles.bgGlow} aria-hidden="true" />
         <div className={styles.shell}>
           <div className={styles.wrapper}>
+            <div className={styles.backRow}>
+              <div className={`${styles.backButton} ${styles.disabled}`}>
+                <FaArrowLeft />
+                Wróć
+              </div>
+            </div>
+
             <header className={styles.hero}>
+              <div className={styles.heroTopBar}>
+                <div className={styles.heroBadge}>
+                  <div className={styles.badgeItem}>
+                    <FaRegCommentDots />
+                    <span>KONTO ➜ WIZYTÓWKA</span>
+                  </div>
+                </div>
+              </div>
+
               <div className={styles.heroInner}>
                 <div className={styles.heroLeft}>
                   <div className={styles.titleRow}>
                     <h2 className={styles.heroTitle}>Przygotowuję rozmowę…</h2>
-                    <span className={styles.titlePill}>KONTO ➜ PROFIL</span>
+                    <span className={styles.titlePill}>NOWA WIADOMOŚĆ</span>
                   </div>
                   <div className={styles.metaRow}>
                     <span className={styles.roleText}>Sprawdzam wątek i dane odbiorcy</span>
@@ -228,6 +249,11 @@ const MessageForm = ({ user }) => {
             </header>
 
             <div className={styles.body}>
+              <div className={styles.senderHint}>
+                <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />
+              </div>
+
+              <div className={`${styles.textarea} ${styles.shimmer}`} style={{ minHeight: 120 }} />
               <LoadingButton type="button" isLoading={true} disabled={true} className={styles.primaryBtn}>
                 Ładowanie
               </LoadingButton>
@@ -244,23 +270,30 @@ const MessageForm = ({ user }) => {
 
       <div className={styles.shell}>
         {alert && (
-          <AlertBox type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
+          <AlertBox
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert(null)}
+          />
         )}
 
         <div className={styles.wrapper}>
-          {/* HERO jak ThreadView */}
-          <header className={styles.hero}>
-            <div className={styles.heroTopLeft}>
-              <button type="button" className={styles.backButton} onClick={() => navigate(-1)}>
-                <FaArrowLeft />
-                Wróć
-              </button>
-            </div>
+          {/* ✅ BACK NAD HERO (jak w ThreadView) */}
+          <div className={styles.backRow}>
+            <button type="button" className={styles.backButton} onClick={() => navigate(-1)}>
+              <FaArrowLeft />
+              Wróć
+            </button>
+          </div>
 
-            <div className={styles.heroBadge} title="Kanał wiadomości">
-              <div className={styles.badgeItem}>
-                <FaRegCommentDots />
-                <span>KONTO ➜ WIZYTÓWKA</span>
+          {/* ✅ HERO (jak ThreadView: topBar tylko na badge) */}
+          <header className={styles.hero}>
+            <div className={styles.heroTopBar}>
+              <div className={styles.heroBadge} title="Kanał wiadomości">
+                <div className={styles.badgeItem}>
+                  <FaRegCommentDots />
+                  <span>KONTO ➜ WIZYTÓWKA</span>
+                </div>
               </div>
             </div>
 
@@ -276,9 +309,7 @@ const MessageForm = ({ user }) => {
                 <div className={styles.metaRow}>
                   <span className={styles.roleText}>Pierwsza wiadomość tworzy wątek</span>
                   <span className={styles.dot} aria-hidden="true" />
-                  <span className={styles.metaHint}>
-                    Po wysłaniu przejdziesz do konwersacji
-                  </span>
+                  <span className={styles.metaHint}>Po wysłaniu przejdziesz do konwersacji</span>
                 </div>
               </div>
 
@@ -335,9 +366,7 @@ const MessageForm = ({ user }) => {
 
             <div className={styles.infoBox}>
               <span className={styles.icon}>ℹ️</span>
-              <p>
-                Jeśli wątek już istnieje, zostaniesz automatycznie przekierowany do rozmowy.
-              </p>
+              <p>Jeśli wątek już istnieje, zostaniesz automatycznie przekierowany do rozmowy.</p>
             </div>
           </div>
         </div>

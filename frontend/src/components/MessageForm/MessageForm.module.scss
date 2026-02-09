@@ -1,3 +1,4 @@
+/* MessageForm.module.scss */
 @import "../../styles/variables";
 
 $page-max: 1180px;
@@ -29,6 +30,7 @@ $page-max: 1180px;
 .page :is(h1, h2, h3) { font-family: $font-heading; }
 .page :is(button, input, textarea, a) { font-family: inherit; }
 
+/* top glow background */
 .bgGlow {
   pointer-events: none;
   position: absolute;
@@ -58,79 +60,112 @@ $page-max: 1180px;
   overflow: hidden;
 }
 
+/* ✅ back nad hero (jak ThreadView) */
+.backRow {
+  padding: 12px;
+  padding-bottom: 14px; /* 🔥 DODAJE ODDECH NA DOLE */
+  background: transparent;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: rgba(255, 255, 255, 0.85);
+  color: rgba(15, 23, 42, 0.92);
+
+  font-family: $font-accent;
+  font-weight: 900;
+
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+  transition: transform 0.15s ease, filter 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.02);
+    background: rgba(255, 255, 255, 0.95);
+  }
+
+  &:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
+  }
+
+  &.disabled {
+    pointer-events: none;
+    opacity: 0.75;
+  }
+}
+
 /* =========================================================
    HERO (1:1 vibe ThreadView)
 ========================================================= */
 .hero {
   position: relative;
+  border-radius: 22px;
   overflow: hidden;
-  border-radius: 22px 22px 0 0;
   background: linear-gradient(135deg, var(--tv-primary), var(--tv-secondary));
   box-shadow: var(--tv-shadow-strong);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.22);
 
-  /* ✅ nowy stacking context + overlay nie psuje klików */
   isolation: isolate;
 }
 
-.heroInner {
+.heroTopBar {
   position: relative;
   z-index: 3;
 
-  display: grid;
-  grid-template-columns: 1.35fr 0.65fr;
-  gap: clamp(14px, 2vw, 22px);
-  padding: clamp(18px, 3vw, 28px);
-  min-height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
 
-  /* miejsce na back + badge */
-  padding-top: calc(clamp(18px, 3vw, 28px) + 52px);
+  padding: 12px 12px 0 12px;
 
-  @media (max-width: 860px) {
-    grid-template-columns: 1fr;
+  @media (max-width: 520px) {
+    justify-content: stretch;
   }
 }
 
 .heroFade {
   position: absolute;
   inset: 0;
-  z-index: 1;
-  pointer-events: none; /* ✅ klikalność */
-
   background:
     radial-gradient(900px 300px at 15% 15%, rgba(255, 255, 255, 0.22), transparent 55%),
     radial-gradient(900px 360px at 90% 25%, rgba(255, 255, 255, 0.18), transparent 58%),
     linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.22) 100%);
+  z-index: 1;
+  pointer-events: none;
 }
 
-/* top-left */
-.heroTopLeft {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 4;
-}
-
-/* top-right badge */
+/* badge */
 .heroBadge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 4;
-
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 
   padding: 10px 12px;
   border-radius: 999px;
 
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.26);
   color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.16);
 
-  backdrop-filter: blur(12px);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16);
+  @media (max-width: 520px) {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    border-radius: 16px;
+    gap: 8px;
+  }
 }
 
 .badgeItem {
@@ -142,6 +177,22 @@ $page-max: 1180px;
   font-size: 0.9rem;
 
   svg { opacity: 0.95; }
+}
+
+.heroInner {
+  position: relative;
+  z-index: 2;
+
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  gap: clamp(14px, 2vw, 22px);
+  padding: clamp(18px, 3vw, 28px);
+
+  min-height: 190px;
+
+  @media (max-width: 860px) {
+    grid-template-columns: 1fr;
+  }
 }
 
 .heroLeft {
@@ -197,6 +248,11 @@ $page-max: 1180px;
   align-items: center;
   margin-top: 6px;
   min-width: 0;
+
+  @media (max-width: 520px) {
+    justify-content: center;
+    text-align: center;
+  }
 }
 
 .roleText {
@@ -237,7 +293,7 @@ $page-max: 1180px;
 
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(10px);
 }
 
 .avatar {
@@ -270,40 +326,6 @@ $page-max: 1180px;
   pointer-events: none;
 }
 
-/* back button (glass chip) */
-.backButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-
-  padding: 10px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  background: rgba(255, 255, 255, 0.16);
-  color: #fff;
-
-  font-family: $font-accent;
-  font-weight: 900;
-
-  backdrop-filter: blur(12px);
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16);
-
-  transition: transform 0.15s ease, filter 0.2s ease, background 0.2s ease;
-
-  &:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.05);
-    background: rgba(255, 255, 255, 0.20);
-  }
-
-  &:active {
-    transform: translateY(0);
-    filter: brightness(0.98);
-  }
-}
-
 /* =========================================================
    BODY / FORM (jak replyArea vibe)
 ========================================================= */
@@ -313,6 +335,12 @@ $page-max: 1180px;
     radial-gradient(700px 240px at 20% 0%, var(--tv-p-06), transparent 55%),
     radial-gradient(700px 260px at 80% 10%, var(--tv-s-10), transparent 58%),
     rgba(255, 255, 255, 0.55);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .senderHint {
@@ -330,14 +358,6 @@ $page-max: 1180px;
     radial-gradient(500px 220px at 90% 30%, var(--tv-s-10), transparent 55%),
     #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
-
-  margin-bottom: 10px;
-}
-
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 .textarea {
@@ -359,7 +379,6 @@ $page-max: 1180px;
   }
 }
 
-/* ✅ FIX ikony + baseline */
 .primaryBtn {
   width: 100%;
   border: none;
@@ -427,7 +446,7 @@ $page-max: 1180px;
   width: 160px;
   height: 1em;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.22);
+  background: #eee;
   position: relative;
   vertical-align: middle;
 }
@@ -456,53 +475,31 @@ $page-max: 1180px;
 }
 
 /* =========================================================
-   MOBILE — pełne ułożenie (jak ThreadView)
+   MOBILE — jak ThreadView (brak nachodzenia)
 ========================================================= */
 @media (max-width: 520px) {
-  .page { padding: 1.2rem 0 54px; }
-  .shell { width: calc(100% - 1.25rem); }
+  .page { padding: 2rem 0 54px; }
+  .shell { width: calc(100% - 2rem); }
 
   .wrapper { border-radius: 18px; }
-  .hero { border-radius: 18px 18px 0 0; }
+  .hero { border-radius: 18px; }
+
+  /* ✅ FIX: zostaw oddech na dole na mobile */
+  .backRow { padding: 12px; padding-bottom: 14px; }
 
   .heroInner {
-    padding: 14px;
-    padding-top: 12px !important;
-
     display: flex;
     flex-direction: column;
     gap: 12px;
-
-    min-height: unset;
-  }
-
-  .heroTopLeft,
-  .heroBadge {
-    position: static !important;
-    width: 100%;
-  }
-
-  /* ✅ oddech na górze */
-  .heroTopLeft { margin-bottom: 6px; }
-  .heroBadge { margin-top: 6px; border-radius: 14px; justify-content: space-between; }
-
-  .backButton {
-    width: fit-content;
-    padding: 9px 12px;
-    font-size: 0.92rem;
-    gap: 8px;
-  }
-
-  .badgeItem {
-    font-size: 0.86rem;
-    svg { font-size: 1rem; }
+    min-height: auto;
+    padding: 14px;
   }
 
   .heroRight { order: -1; place-items: center; }
 
   .avatarWrap {
-    width: 108px;
-    height: 108px;
+    width: 118px;
+    height: 118px;
     border-radius: 18px;
     padding: 8px;
     margin: 0 auto;
@@ -511,34 +508,23 @@ $page-max: 1180px;
   .avatar,
   .avatarSkeleton { border-radius: 14px; }
 
-  .avatarRing { inset: -12px; }
+  .avatarRing { inset: -14px; }
 
   .titleRow {
     width: 100%;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
     text-align: center;
     gap: 8px;
   }
 
-  .heroTitle {
-    font-size: 1.15rem;
-    line-height: 1.15;
-    text-align: center;
-  }
+  .heroTitle { text-align: center; }
+  .titlePill { margin: 0 auto; }
 
-  .titlePill { margin: 0 auto; padding: 7px 12px; font-size: 0.72rem; }
-
-  .metaRow {
-    justify-content: center;
-    text-align: center;
-    gap: 8px;
-    margin-top: 2px;
-  }
-
+  .metaRow { justify-content: center; }
   .dot { display: none; }
 
-  /* body */
   .body { padding: 12px; }
 
   .senderHint {
