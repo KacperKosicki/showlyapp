@@ -5,7 +5,8 @@ const router = express.Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const Profile = require("../models/Profile");
 
-const RENEW_WINDOW_DAYS = 7;
+// 🔥 TESTOWO
+const RENEW_WINDOW_DAYS = 999;   // ← zmienisz potem z powrotem na 7
 const DURATION_DAYS = 30;
 
 const addDays = (date, days) =>
@@ -26,13 +27,27 @@ router.post("/checkout-extension", async (req, res) => {
       ? new Date(profile.visibleUntil)
       : new Date(0);
 
-    // blokada jeśli >7 dni
+    // 🔥 DEBUG DO RENDER LOGS
+    console.log("💰 CHECKOUT HIT", {
+      uid,
+      renewWindowDays: RENEW_WINDOW_DAYS,
+      now: now.toISOString(),
+      visibleUntil: visibleUntil.toISOString(),
+      allowAfter: addDays(now, RENEW_WINDOW_DAYS).toISOString(),
+    });
+
+    // 🔥 blokada
     if (visibleUntil > addDays(now, RENEW_WINDOW_DAYS)) {
       return res.status(409).json({
-        error: "Możesz przedłużyć dopiero gdy zostanie ≤7 dni",
-        visibleUntil,
+        error: `BLOCK: możesz przedłużyć dopiero gdy zostanie ≤ ${RENEW_WINDOW_DAYS} dni`,
+        renewWindowDays: RENEW_WINDOW_DAYS,
+        now: now.toISOString(),
+        visibleUntil: visibleUntil.toISOString(),
+        allowAfter: addDays(now, RENEW_WINDOW_DAYS).toISOString(),
       });
     }
+
+    console.log("🟢 PRZECHODZI DO STRIPE");
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -52,8 +67,9 @@ router.post("/checkout-extension", async (req, res) => {
     });
 
     res.json({ url: session.url });
+
   } catch (err) {
-    console.log(err);
+    console.log("❌ checkout error:", err);
     res.status(500).json({ error: "Błąd serwera" });
   }
 });
