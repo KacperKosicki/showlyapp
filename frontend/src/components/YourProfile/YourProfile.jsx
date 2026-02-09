@@ -598,18 +598,31 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
     setIsExtending(true);
     try {
-      await axios.patch(`${process.env.REACT_APP_API_URL}/api/profiles/extend/${user.uid}`);
-      await fetchProfile();
-      setRefreshTrigger(Date.now());
-      showAlert('Przedłużono widoczność!', 'success');
+      const { data } = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/billing/checkout-extension`,
+        { uid: user.uid },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      if (!data?.url) {
+        showAlert("Nie udało się rozpocząć płatności (brak URL).", "error");
+        return;
+      }
+
+      // przekierowanie do Stripe Checkout
+      window.location.href = data.url;
     } catch (err) {
-      console.error('❌ Błąd przedłużania widoczności:', err);
-      showAlert('Nie udało się przedłużyć widoczności.', 'error');
+      const msg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        "Nie udało się rozpocząć płatności.";
+
+      console.error("❌ checkout-extension:", err);
+      showAlert(msg, "error");
     } finally {
       setIsExtending(false);
     }
   };
-
 
   const handleSaveChanges = async () => {
     if (isSaving) return; // ✅ blokada podwójnego kliknięcia
@@ -813,6 +826,13 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       weekday: 'short', day: '2-digit', month: 'short', year: 'numeric'
     }) : '--';
 
+  const now = new Date();
+  const until = profile?.visibleUntil ? new Date(profile.visibleUntil) : new Date(0);
+
+  const daysLeft = Math.ceil((until.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const canExtend = daysLeft <= 7; // zgodnie z backendem
+  const isExpired = until < now || !profile.isVisible;
+
   // =========================
   // Render
   // =========================
@@ -855,10 +875,23 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
       </div>
 
-      {!profile.isVisible && (
+      {(isExpired || canExtend) && (
         <div className={`${styles.card} ${styles.expiredNotice}`}>
-          <p>🔒 Twój profil jest <strong>niewidoczny</strong>.</p>
-          <p>Wygasł: <strong>{new Date(profile.visibleUntil).toLocaleDateString()}</strong></p>
+          {isExpired ? (
+            <>
+              <p>🔒 Twój profil jest <strong>niewidoczny</strong>.</p>
+              <p>Wygasł: <strong>{new Date(profile.visibleUntil).toLocaleDateString()}</strong></p>
+            </>
+          ) : (
+            <>
+              <p>⏳ Twoja wizytówka wkrótce wygaśnie.</p>
+              <p>
+                Pozostało: <strong>{daysLeft} dni</strong> (do:{" "}
+                <strong>{new Date(profile.visibleUntil).toLocaleDateString()}</strong>)
+              </p>
+            </>
+          )}
+
           <LoadingButton
             type="button"
             isLoading={isExtending}
@@ -866,7 +899,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             className={styles.secondary}
             onClick={handleExtendVisibility}
           >
-            Przedłuż widoczność
+            Przedłuż widoczność (Stripe)
           </LoadingButton>
         </div>
       )}
