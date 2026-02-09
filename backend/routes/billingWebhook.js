@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const Profile = require("../models/Profile");
 const BillingEvent = require("../models/BillingEvent");
 
-const RENEW_WINDOW_DAYS = 7;
+const RENEW_WINDOW_DAYS = 999;
 const DURATION_DAYS = 30;
 const MAX_FORWARD_DAYS = 37;
 
