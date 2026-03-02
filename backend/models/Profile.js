@@ -83,6 +83,12 @@ const profileSchema = new mongoose.Schema(
       default: [1, 2, 3, 4, 5], // domyślnie pn–pt
     },
 
+    bookingBufferMin: {
+      type: Number,
+      enum: [0, 5, 10, 15],
+      default: 0,
+    },
+
     bookingMode: {
       type: String,
       enum: ['calendar', 'request-blocking', 'request-open'],

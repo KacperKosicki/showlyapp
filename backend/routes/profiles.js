@@ -576,6 +576,7 @@ const allowedFields = [
   "services",
   "bookingMode",
   "workingHours",
+  "bookingBufferMin",
   "workingDays",
   "team",
   "theme",

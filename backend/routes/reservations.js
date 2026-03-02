@@ -7,7 +7,21 @@ const Staff = require('../models/Staff');
 
 // === USTAWIENIA ===
 const PENDING_MINUTES = Number(process.env.PENDING_MINUTES ?? 60);
-const SLOT_BUFFER_MIN = 15;
+
+// ✅ stała przerwa po usłudze
+const SLOT_BREAK_MIN = 5;
+
+// ✅ bufor tylko 0/5/10/15 (fallback: 0)
+const normalizeBuffer = (v) => {
+  const n = Number(v);
+  return [0, 5, 10, 15].includes(n) ? n : 0;
+};
+
+// ✅ EFFECTIVE = 5 min przerwy + bufor z profilu (0/5/10/15)
+const getEffectiveBufferMin = (profile) => {
+  const profileBuf = normalizeBuffer(profile?.bookingBufferMin);
+  return SLOT_BREAK_MIN + profileBuf;
+};
 
 // helpery
 const toMin = (hhmm) => {
@@ -21,94 +35,82 @@ const toDateTime = (dateStr, hhmm) => new Date(`${dateStr}T${hhmm}:00.000Z`);
 
 const ALIVE_STATUSES = ['zaakceptowana', 'oczekująca', 'tymczasowa'];
 
-// ⬇️ wspólny warunek czasowy z buforem – używany w picku i w finalnym checku
-function mongoTimeCondition(startAt, endAt, bufferMin = SLOT_BUFFER_MIN) {
-  const bufMs = bufferMin * 60000;
+// ⬇️ wspólny warunek czasowy z buforem (w minutach)
+function mongoTimeCondition(startAt, endAt, bufferMin = SLOT_BREAK_MIN) {
+  const bufMs = (Number(bufferMin) || 0) * 60000;
   return {
-    // istniejąca.startAt < nowy.koniec + buffer
     startAt: { $lt: new Date(endAt.getTime() + bufMs) },
-    // istniejąca.endAt + buffer > nowy.start
-    endAt:   { $gt: new Date(startAt.getTime() - bufMs) },
+    endAt: { $gt: new Date(startAt.getTime() - bufMs) },
   };
 }
 
-// wybór osoby dla auto-assign (z buforem i capacity)
 // wybór osoby dla auto-assign (z buforem, capacity i preferencją faktycznie wolnych)
-async function pickAvailableStaffForProfile({ providerProfileId, serviceId, startAt, endAt, excludeIds = [] }) {
+async function pickAvailableStaffForProfile({
+  providerProfileId,
+  serviceId,
+  startAt,
+  endAt,
+  excludeIds = [],
+  bufferMin = SLOT_BREAK_MIN,
+}) {
   const all = await Staff.find({ profileId: providerProfileId, active: true }).lean();
 
-  // Kandydaci, którzy mogą wykonać usługę
-  const candidates = all.filter(s =>
-    !excludeIds.some(ex => String(ex) === String(s._id)) &&
-    (s.serviceIds || []).some(id => String(id) === String(serviceId))
+  const candidates = all.filter((s) =>
+    !excludeIds.some((ex) => String(ex) === String(s._id)) &&
+    (s.serviceIds || []).some((id) => String(id) === String(serviceId))
   );
 
   if (!candidates.length) return null;
 
-  // Dla każdego kandydata policz:
-  // - overlapCount: ile rezerwacji (z buforem) nachodzi na żądany slot
-  // - loadNow: bieżące obciążenie w tym oknie (ile równoległych wizyt)
-  // - lastEndBefore: ostatnia zakończona rezerwacja tego dnia przed startAt (do tie-breakerów)
-  const results = await Promise.all(candidates.map(async s => {
-    const capacity = Math.max(1, Number(s.capacity) || 1);
+  const results = await Promise.all(
+    candidates.map(async (s) => {
+      const capacity = Math.max(1, Number(s.capacity) || 1);
 
-    // kolizje w oknie (z buforem)
-    const overlapCond = {
-      providerProfileId,
-      staffId: s._id,
-      dateOnly: false,
-      status: { $in: ALIVE_STATUSES },
-      ...mongoTimeCondition(startAt, endAt), // zawiera SLOT_BUFFER_MIN
-    };
-
-    const overlapCount = await Reservation.countDocuments(overlapCond);
-
-    // Jeśli są nakładające się rezerwacje, sprawdź ile ich faktycznie „wchodzi” w capacity
-    // (czyli realne obciążenie „tu i teraz”)
-    const overlapping = overlapCount > 0
-      ? await Reservation.find(overlapCond, { startAt: 1, endAt: 1 }).lean()
-      : [];
-
-    // policz ile faktycznie „równoległych” wizyt zachodzi
-    // (tu wystarczy sama liczba dokumentów, bo każdy dokument liczy się 1:1 w oknie).
-    const loadNow = overlapping.length;
-
-    // ostatnie zakończenie przed startem (do preferencji osoby, która „kończy wcześniej”)
-    const lastBefore = await Reservation
-      .findOne({
+      const overlapCond = {
         providerProfileId,
         staffId: s._id,
         dateOnly: false,
         status: { $in: ALIVE_STATUSES },
-        endAt: { $lte: new Date(startAt.getTime() + SLOT_BUFFER_MIN * 60000) } // z szacunkiem do bufora
+        ...mongoTimeCondition(startAt, endAt, bufferMin),
+      };
+
+      const overlapCount = await Reservation.countDocuments(overlapCond);
+      const overlapping =
+        overlapCount > 0
+          ? await Reservation.find(overlapCond, { startAt: 1, endAt: 1 }).lean()
+          : [];
+
+      const loadNow = overlapping.length;
+
+      const lastBefore = await Reservation.findOne({
+        providerProfileId,
+        staffId: s._id,
+        dateOnly: false,
+        status: { $in: ALIVE_STATUSES },
+        endAt: {
+          $lte: new Date(startAt.getTime() + (Number(bufferMin) || 0) * 60000),
+        },
       })
-      .sort({ endAt: -1 })
-      .select({ endAt: 1 })
-      .lean();
+        .sort({ endAt: -1 })
+        .select({ endAt: 1 })
+        .lean();
 
-    return {
-      staff: s,
-      capacity,
-      overlapCount,
-      loadNow,
-      lastEndBefore: lastBefore?.endAt ? lastBefore.endAt.getTime() : 0
-    };
-  }));
+      return {
+        staff: s,
+        capacity,
+        overlapCount,
+        loadNow,
+        lastEndBefore: lastBefore?.endAt ? lastBefore.endAt.getTime() : 0,
+      };
+    })
+  );
 
-  // 1) Wytnij tych, u których przekroczylibyśmy/osiągnęli capacity w tym oknie
-  const feasible = results.filter(r => r.loadNow < r.capacity);
-
+  const feasible = results.filter((r) => r.loadNow < r.capacity);
   if (!feasible.length) return null;
 
-  // 2) Preferuj osoby BEZ żadnej kolizji (tzn. realnie wolne w oknie)
-  const trulyFree = feasible.filter(r => r.overlapCount === 0);
-
+  const trulyFree = feasible.filter((r) => r.overlapCount === 0);
   const pool = trulyFree.length ? trulyFree : feasible;
 
-  // 3) Sortowanie „fair”:
-  //   a) mniej loadNow (mniej równoległych w tym momencie)
-  //   b) wcześniejszy lastEndBefore (kto skończył wcześniej, ma „priorytet”)
-  //   c) stabilnie po _id (żeby wynik był deterministyczny)
   pool.sort((a, b) => {
     if (a.loadNow !== b.loadNow) return a.loadNow - b.loadNow;
     if (a.lastEndBefore !== b.lastEndBefore) return a.lastEndBefore - b.lastEndBefore;
@@ -131,14 +133,16 @@ async function closeExpiredPending() {
         closedReason: 'expired',
         clientSeen: false,
         providerSeen: false,
-      }
+      },
     }
   );
 }
 
-// =====================
-// POST /api/reservations – godzinowa
-// =====================
+/**
+ * =====================
+ * POST /api/reservations – godzinowa (normalna)
+ * =====================
+ */
 router.post('/', async (req, res) => {
   try {
     const {
@@ -151,7 +155,7 @@ router.post('/', async (req, res) => {
       duration,
       description,
       serviceId,
-      staffId: staffIdFromClient
+      staffId: staffIdFromClient,
     } = req.body;
 
     if (!userId || !providerUserId || !providerProfileId || !date || !fromTime || !toTime) {
@@ -164,12 +168,17 @@ router.post('/', async (req, res) => {
     const [user, provider, profile] = await Promise.all([
       User.findOne({ firebaseUid: userId }),
       User.findOne({ firebaseUid: providerUserId }),
-      Profile.findById(providerProfileId)
+      Profile.findById(providerProfileId),
     ]);
     if (!profile) return res.status(404).json({ message: 'Profil usługodawcy nie istnieje' });
 
+    // ✅ bufor z profilu (0/5/10/15)
+    const bufferMin = normalizeBuffer(profile?.bookingBufferMin);
+    // ✅ 5 + bufor z profilu
+    const effectiveBufferMin = getEffectiveBufferMin(profile);
+
     const serviceName =
-      profile?.services?.find(s => String(s._id) === String(serviceId))?.name || null;
+      profile?.services?.find((s) => String(s._id) === String(serviceId))?.name || null;
 
     const isCalendarTeam = profile.bookingMode === 'calendar' && profile.team?.enabled === true;
 
@@ -180,18 +189,20 @@ router.post('/', async (req, res) => {
       const mode = profile.team.assignmentMode; // 'user-pick' | 'auto-assign'
 
       if (mode === 'user-pick') {
-        if (!staffIdFromClient) {
-          return res.status(400).json({ message: 'Wybierz pracownika' });
-        }
+        if (!staffIdFromClient) return res.status(400).json({ message: 'Wybierz pracownika' });
+
         const staffDoc = await Staff.findOne({
           _id: staffIdFromClient,
           profileId: providerProfileId,
-          active: true
+          active: true,
         }).lean();
         if (!staffDoc) return res.status(400).json({ message: 'Nieprawidłowy pracownik' });
 
-        const canDoService = (staffDoc.serviceIds || []).some(id => String(id) === String(serviceId));
-        if (!canDoService) return res.status(400).json({ message: 'Wybrana osoba nie wykonuje tej usługi' });
+        const canDoService = (staffDoc.serviceIds || []).some(
+          (id) => String(id) === String(serviceId)
+        );
+        if (!canDoService)
+          return res.status(400).json({ message: 'Wybrana osoba nie wykonuje tej usługi' });
 
         staffDocFinal = staffDoc;
       }
@@ -201,49 +212,52 @@ router.post('/', async (req, res) => {
           providerProfileId,
           serviceId,
           startAt,
-          endAt
+          endAt,
+          bufferMin: effectiveBufferMin,
         });
-        if (!picked) {
-          return res.status(409).json({ message: 'Brak dostępnego pracownika' });
-        }
+        if (!picked) return res.status(409).json({ message: 'Brak dostępnego pracownika' });
         staffDocFinal = picked;
         staffAutoAssigned = true;
       }
 
-      // jeśli auto-assign, ale klient manualnie przysłał staffId — zaakceptuj po weryfikacji
       if (mode === 'auto-assign' && staffIdFromClient && !staffDocFinal) {
         const staffDoc = await Staff.findOne({
           _id: staffIdFromClient,
           profileId: providerProfileId,
-          active: true
+          active: true,
         }).lean();
         if (!staffDoc) return res.status(400).json({ message: 'Nieprawidłowy pracownik' });
-        const canDoService = (staffDoc.serviceIds || []).some(id => String(id) === String(serviceId));
-        if (!canDoService) return res.status(400).json({ message: 'Wybrana osoba nie wykonuje tej usługi' });
+
+        const canDoService = (staffDoc.serviceIds || []).some(
+          (id) => String(id) === String(serviceId)
+        );
+        if (!canDoService)
+          return res.status(400).json({ message: 'Wybrana osoba nie wykonuje tej usługi' });
+
         staffDocFinal = staffDoc;
       }
     }
 
     // 🔒 KOLIZJE
     if (isCalendarTeam && staffDocFinal?._id) {
-      // Końcowa walidacja z buforem dla WYBRANEGO pracownika
       let overlaps = await Reservation.countDocuments({
         providerProfileId,
         staffId: staffDocFinal._id,
         dateOnly: false,
         status: { $in: ALIVE_STATUSES },
-        ...mongoTimeCondition(startAt, endAt),
+        ...mongoTimeCondition(startAt, endAt, effectiveBufferMin),
       });
 
-      // RETRY dla auto-assign (np. wyścig: ktoś zajął slot między pickiem a checkiem)
       if (overlaps >= (staffDocFinal.capacity ?? 1) && staffAutoAssigned) {
         const retryPick = await pickAvailableStaffForProfile({
           providerProfileId,
           serviceId,
           startAt,
           endAt,
-          excludeIds: [staffDocFinal._id]
+          excludeIds: [staffDocFinal._id],
+          bufferMin: effectiveBufferMin,
         });
+
         if (retryPick) {
           staffDocFinal = retryPick;
           overlaps = await Reservation.countDocuments({
@@ -251,7 +265,7 @@ router.post('/', async (req, res) => {
             staffId: retryPick._id,
             dateOnly: false,
             status: { $in: ALIVE_STATUSES },
-            ...mongoTimeCondition(startAt, endAt),
+            ...mongoTimeCondition(startAt, endAt, effectiveBufferMin),
           });
         }
       }
@@ -260,7 +274,6 @@ router.post('/', async (req, res) => {
         return res.status(409).json({ message: 'Wybrany slot dla tej osoby jest zajęty.' });
       }
     } else {
-      // bez zespołu – dotychczasowa logika z buforem
       const now = new Date();
       const existing = await Reservation.find({
         providerUserId,
@@ -269,49 +282,61 @@ router.post('/', async (req, res) => {
         $or: [
           { status: 'zaakceptowana' },
           { status: 'oczekująca', pendingExpiresAt: { $gt: now } },
-          { status: 'tymczasowa', holdExpiresAt: { $gt: now } }
-        ]
+          { status: 'tymczasowa', holdExpiresAt: { $gt: now } },
+        ],
       }).lean();
 
       const reqStart = toMin(fromTime);
-      const reqEnd = toMin(toTime) + SLOT_BUFFER_MIN;
+      const reqEnd = toMin(toTime) + effectiveBufferMin;
 
-      const hasCollision = existing.some(d => {
+      const hasCollision = existing.some((d) => {
         const s = toMin(d.fromTime);
-        const e = toMin(d.toTime) + SLOT_BUFFER_MIN;
+        const e = toMin(d.toTime) + effectiveBufferMin;
         return overlap(reqStart, reqEnd, s, e);
       });
-      if (hasCollision) {
+      if (hasCollision)
         return res.status(409).json({ message: 'Wybrany slot jest zajęty lub niedostępny.' });
-      }
     }
 
     const pendingExpiresAt = new Date(Date.now() + PENDING_MINUTES * 60 * 1000);
 
     const newReservation = await Reservation.create({
+      offline: false,
       userId,
       userName: user?.name || 'Klient',
+
       providerUserId,
       providerName: provider?.name || 'Usługodawca',
+
       providerProfileId,
       providerProfileName: profile?.name || 'Profil',
       providerProfileRole: profile?.role || 'Brak roli',
+
       staffId: staffDocFinal?._id || null,
       staffName: staffDocFinal?.name || null,
       staffAutoAssigned,
+
       date,
       dateOnly: false,
       fromTime,
       toTime,
       startAt,
       endAt,
+
       duration,
       serviceId: serviceId || null,
       serviceName: serviceName || null,
+
       description,
       status: 'oczekująca',
       pendingExpiresAt,
-      holdExpiresAt: null
+      holdExpiresAt: null,
+
+      closedAt: null,
+      closedBy: null,
+      closedReason: null,
+      clientSeen: false,
+      providerSeen: false,
     });
 
     res.status(201).json({ message: 'Rezerwacja utworzona', reservation: newReservation });
@@ -321,9 +346,410 @@ router.post('/', async (req, res) => {
   }
 });
 
-// =====================
-// GET /api/reservations/by-user/:uid
-// =====================
+/**
+ * =====================
+ * POST /api/reservations/offline – godzinowa (NOWE)
+ * - wpis ręczny usługodawcy
+ * - od razu status: zaakceptowana
+ * =====================
+ */
+router.post('/offline', async (req, res) => {
+  try {
+    const {
+      providerUserId,
+      providerProfileId,
+      date,
+      fromTime,
+      toTime,
+      description,
+      serviceId,
+      serviceName: serviceNameFromClient,
+      staffId: staffIdFromProvider,
+      offlineClientName,
+      offlineClientPhone,
+      offlineNote,
+    } = req.body;
+
+    if (!providerUserId || !providerProfileId || !date || !fromTime || !toTime) {
+      return res.status(400).json({
+        message: 'Brakuje wymaganych pól (providerUserId, providerProfileId, date, fromTime, toTime).',
+      });
+    }
+    if (!offlineClientName || !String(offlineClientName).trim()) {
+      return res
+        .status(400)
+        .json({ message: 'Podaj offlineClientName (np. imię/nazwa klienta).' });
+    }
+
+    const startAt = toDateTime(date, fromTime);
+    const endAt = toDateTime(date, toTime);
+
+    const [provider, profile] = await Promise.all([
+      User.findOne({ firebaseUid: providerUserId }),
+      Profile.findById(providerProfileId),
+    ]);
+    if (!profile) return res.status(404).json({ message: 'Profil usługodawcy nie istnieje' });
+
+    const bufferMin = normalizeBuffer(profile?.bookingBufferMin);
+    const effectiveBufferMin = getEffectiveBufferMin(profile);
+
+    const isCalendarTeam = profile.bookingMode === 'calendar' && profile.team?.enabled === true;
+
+    // ustal serviceName (snapshot)
+    const serviceName =
+      serviceNameFromClient ||
+      profile?.services?.find((s) => String(s._id) === String(serviceId))?.name ||
+      null;
+
+    let staffDocFinal = null;
+    let staffAutoAssigned = false;
+
+    if (isCalendarTeam) {
+      const mode = profile.team.assignmentMode; // 'user-pick' | 'auto-assign'
+      const preferredStaffId = staffIdFromProvider || null;
+
+      if (mode === 'user-pick' || preferredStaffId) {
+        if (!preferredStaffId) return res.status(400).json({ message: 'Wybierz pracownika (staffId).' });
+
+        const staffDoc = await Staff.findOne({
+          _id: preferredStaffId,
+          profileId: providerProfileId,
+          active: true,
+        }).lean();
+        if (!staffDoc) return res.status(400).json({ message: 'Nieprawidłowy pracownik' });
+
+        if (serviceId) {
+          const canDoService = (staffDoc.serviceIds || []).some(
+            (id) => String(id) === String(serviceId)
+          );
+          if (!canDoService)
+            return res.status(400).json({ message: 'Wybrana osoba nie wykonuje tej usługi' });
+        }
+
+        staffDocFinal = staffDoc;
+      }
+
+      if (mode === 'auto-assign' && !staffDocFinal) {
+        if (!serviceId) return res.status(400).json({ message: 'Dla auto-assign wymagany serviceId.' });
+
+        const picked = await pickAvailableStaffForProfile({
+          providerProfileId,
+          serviceId,
+          startAt,
+          endAt,
+          bufferMin: effectiveBufferMin,
+        });
+        if (!picked) return res.status(409).json({ message: 'Brak dostępnego pracownika' });
+
+        staffDocFinal = picked;
+        staffAutoAssigned = true;
+      }
+    }
+
+    // 🔒 KOLIZJE (offline też blokuje slot)
+    if (isCalendarTeam && staffDocFinal?._id) {
+      let overlaps = await Reservation.countDocuments({
+        providerProfileId,
+        staffId: staffDocFinal._id,
+        dateOnly: false,
+        status: { $in: ALIVE_STATUSES },
+        ...mongoTimeCondition(startAt, endAt, effectiveBufferMin),
+      });
+
+      if (overlaps >= (staffDocFinal.capacity ?? 1) && staffAutoAssigned) {
+        const retryPick = await pickAvailableStaffForProfile({
+          providerProfileId,
+          serviceId,
+          startAt,
+          endAt,
+          excludeIds: [staffDocFinal._id],
+          bufferMin: effectiveBufferMin,
+        });
+
+        if (retryPick) {
+          staffDocFinal = retryPick;
+          overlaps = await Reservation.countDocuments({
+            providerProfileId,
+            staffId: retryPick._id,
+            dateOnly: false,
+            status: { $in: ALIVE_STATUSES },
+            ...mongoTimeCondition(startAt, endAt, effectiveBufferMin),
+          });
+        }
+      }
+
+      if (overlaps >= (staffDocFinal.capacity ?? 1)) {
+        return res.status(409).json({ message: 'Wybrany slot dla tej osoby jest zajęty.' });
+      }
+    } else {
+      const existing = await Reservation.find({
+        providerUserId,
+        date,
+        status: { $in: ALIVE_STATUSES },
+      }).lean();
+
+      const reqStart = toMin(fromTime);
+      const reqEnd = toMin(toTime) + effectiveBufferMin;
+
+      const hasCollision = existing.some((d) => {
+        const s = toMin(d.fromTime);
+        const e = toMin(d.toTime) + effectiveBufferMin;
+        return overlap(reqStart, reqEnd, s, e);
+      });
+      if (hasCollision)
+        return res.status(409).json({ message: 'Wybrany slot jest zajęty lub niedostępny.' });
+    }
+
+    const created = await Reservation.create({
+      offline: true,
+      offlineClientName: String(offlineClientName).trim(),
+      offlineClientPhone: offlineClientPhone ? String(offlineClientPhone).trim() : null,
+      offlineNote: offlineNote ? String(offlineNote).trim() : null,
+
+      userId: null,
+      userName: String(offlineClientName).trim(),
+
+      providerUserId,
+      providerName: provider?.name || 'Usługodawca',
+
+      providerProfileId,
+      providerProfileName: profile?.name || 'Profil',
+      providerProfileRole: profile?.role || 'Brak roli',
+
+      staffId: staffDocFinal?._id || null,
+      staffName: staffDocFinal?.name || null,
+      staffAutoAssigned,
+
+      date,
+      dateOnly: false,
+      fromTime,
+      toTime,
+      startAt,
+      endAt,
+
+      description: (description || '').trim(),
+      serviceId: serviceId || null,
+      serviceName: serviceName || null,
+
+      status: 'zaakceptowana',
+      pendingExpiresAt: null,
+      holdExpiresAt: null,
+
+      closedAt: null,
+      closedBy: null,
+      closedReason: null,
+
+      providerSeen: true,
+      clientSeen: true,
+    });
+
+    res.status(201).json({ message: 'Offline rezerwacja utworzona', reservation: created });
+  } catch (err) {
+    console.error('❌ POST /reservations/offline error:', err);
+    res.status(500).json({ message: 'Błąd serwera', error: err?.message || err });
+  }
+});
+
+/**
+ * =====================
+ * POST /api/reservations/day – rezerwacja całego dnia (normalna)
+ * =====================
+ */
+router.post('/day', async (req, res) => {
+  try {
+    const {
+      userId,
+      userName,
+      providerUserId,
+      providerName,
+      providerProfileId,
+      providerProfileName,
+      providerProfileRole,
+      date,
+      description,
+      serviceId,
+      serviceName: svcNameFromClient,
+    } = req.body;
+
+    if (!userId || !providerUserId || !providerProfileId || !date) {
+      return res.status(400).json({ message: 'Brak wymaganych pól.' });
+    }
+
+    const profile = await Profile.findOne({ userId: providerUserId }, { blockedDays: 1, services: 1 }).lean();
+
+    if (profile?.blockedDays?.includes(date)) {
+      return res.status(409).json({ message: 'Ten dzień jest zablokowany przez usługodawcę.' });
+    }
+
+    const existsAccepted = await Reservation.findOne({
+      providerUserId,
+      date,
+      dateOnly: true,
+      status: 'zaakceptowana',
+    }).lean();
+    if (existsAccepted) return res.status(409).json({ message: 'Ten dzień jest już zajęty.' });
+
+    const now = new Date();
+    const dupPending = await Reservation.findOne({
+      userId,
+      providerUserId,
+      date,
+      dateOnly: true,
+      status: 'oczekująca',
+      pendingExpiresAt: { $gt: now },
+    }).lean();
+    if (dupPending) return res.status(409).json({ message: 'Masz już oczekującą prośbę na ten dzień.' });
+
+    let serviceName = svcNameFromClient || null;
+    if (!serviceName && serviceId && Array.isArray(profile?.services)) {
+      const svc = profile.services.find((s) => String(s._id) === String(serviceId));
+      if (svc) serviceName = svc.name;
+    }
+
+    const pendingExpiresAt = new Date(Date.now() + PENDING_MINUTES * 60 * 1000);
+
+    const created = await Reservation.create({
+      offline: false,
+
+      userId,
+      userName,
+
+      providerUserId,
+      providerName,
+
+      providerProfileId,
+      providerProfileName,
+      providerProfileRole,
+
+      date,
+      dateOnly: true,
+      fromTime: '00:00',
+      toTime: '23:59',
+      description: (description || '').trim(),
+
+      status: 'oczekująca',
+      pendingExpiresAt,
+
+      serviceId: serviceId || null,
+      serviceName: serviceName || null,
+
+      closedAt: null,
+      closedBy: null,
+      closedReason: null,
+      clientSeen: false,
+      providerSeen: false,
+    });
+
+    res.json(created);
+  } catch (e) {
+    console.error('POST /reservations/day error', e);
+    res.status(500).json({ message: 'Nie udało się utworzyć rezerwacji dnia.' });
+  }
+});
+
+/**
+ * =====================
+ * POST /api/reservations/offline/day – rezerwacja całego dnia (NOWE)
+ * - od razu zaakceptowana
+ * =====================
+ */
+router.post('/offline/day', async (req, res) => {
+  try {
+    const {
+      providerUserId,
+      providerProfileId,
+      date,
+      description,
+      serviceId,
+      serviceName: svcNameFromClient,
+      offlineClientName,
+      offlineClientPhone,
+      offlineNote,
+    } = req.body;
+
+    if (!providerUserId || !providerProfileId || !date) {
+      return res.status(400).json({
+        message: 'Brakuje wymaganych pól (providerUserId, providerProfileId, date).',
+      });
+    }
+    if (!offlineClientName || !String(offlineClientName).trim()) {
+      return res.status(400).json({ message: 'Podaj offlineClientName (np. imię/nazwa klienta).' });
+    }
+
+    const [provider, profile] = await Promise.all([
+      User.findOne({ firebaseUid: providerUserId }),
+      Profile.findById(providerProfileId),
+    ]);
+    if (!profile) return res.status(404).json({ message: 'Profil usługodawcy nie istnieje' });
+
+    const fullProfile = await Profile.findOne({ userId: providerUserId }, { blockedDays: 1, services: 1 }).lean();
+
+    if (fullProfile?.blockedDays?.includes(date)) {
+      return res.status(409).json({ message: 'Ten dzień jest zablokowany przez usługodawcę.' });
+    }
+
+    const existsAccepted = await Reservation.findOne({
+      providerUserId,
+      date,
+      dateOnly: true,
+      status: 'zaakceptowana',
+    }).lean();
+    if (existsAccepted) return res.status(409).json({ message: 'Ten dzień jest już zajęty.' });
+
+    let serviceName = svcNameFromClient || null;
+    if (!serviceName && serviceId && Array.isArray(fullProfile?.services)) {
+      const svc = fullProfile.services.find((s) => String(s._id) === String(serviceId));
+      if (svc) serviceName = svc.name;
+    }
+
+    const created = await Reservation.create({
+      offline: true,
+      offlineClientName: String(offlineClientName).trim(),
+      offlineClientPhone: offlineClientPhone ? String(offlineClientPhone).trim() : null,
+      offlineNote: offlineNote ? String(offlineNote).trim() : null,
+
+      userId: null,
+      userName: String(offlineClientName).trim(),
+
+      providerUserId,
+      providerName: provider?.name || 'Usługodawca',
+
+      providerProfileId,
+      providerProfileName: profile?.name || 'Profil',
+      providerProfileRole: profile?.role || 'Brak roli',
+
+      date,
+      dateOnly: true,
+      fromTime: '00:00',
+      toTime: '23:59',
+      description: (description || '').trim(),
+
+      status: 'zaakceptowana',
+      pendingExpiresAt: null,
+
+      serviceId: serviceId || null,
+      serviceName: serviceName || null,
+
+      closedAt: null,
+      closedBy: null,
+      closedReason: null,
+
+      providerSeen: true,
+      clientSeen: true,
+    });
+
+    res.status(201).json({ message: 'Offline day utworzony', reservation: created });
+  } catch (e) {
+    console.error('POST /reservations/offline/day error', e);
+    res.status(500).json({ message: 'Nie udało się utworzyć offline day.' });
+  }
+});
+
+/**
+ * =====================
+ * GET /api/reservations/by-user/:uid
+ * =====================
+ */
 router.get('/by-user/:uid', async (req, res) => {
   try {
     await closeExpiredPending();
@@ -344,9 +770,12 @@ router.get('/by-user/:uid', async (req, res) => {
   }
 });
 
-// =====================
-// GET /api/reservations/by-provider/:uid
-// =====================
+/**
+ * =====================
+ * GET /api/reservations/by-provider/:uid
+ * ✅ zwraca też OFFLINE (bo to też Reservation)
+ * =====================
+ */
 router.get('/by-provider/:uid', async (req, res) => {
   try {
     await closeExpiredPending();
@@ -367,17 +796,16 @@ router.get('/by-provider/:uid', async (req, res) => {
   }
 });
 
-// =====================
-// GET /unavailable-days/:providerUid
-// =====================
+/**
+ * =====================
+ * GET /unavailable-days/:providerUid
+ * =====================
+ */
 router.get('/unavailable-days/:providerUid', async (req, res) => {
   try {
     const { providerUid } = req.params;
 
-    const profile = await Profile.findOne(
-      { userId: providerUid },
-      { blockedDays: 1, _id: 0 }
-    ).lean();
+    const profile = await Profile.findOne({ userId: providerUid }, { blockedDays: 1, _id: 0 }).lean();
 
     const blocked = profile?.blockedDays || [];
 
@@ -386,7 +814,7 @@ router.get('/unavailable-days/:providerUid', async (req, res) => {
       { date: 1, _id: 0 }
     ).lean();
 
-    const taken = takenDocs.map(d => d.date);
+    const taken = takenDocs.map((d) => d.date);
     const all = Array.from(new Set([...blocked, ...taken]));
     res.json(all);
   } catch (e) {
@@ -395,82 +823,11 @@ router.get('/unavailable-days/:providerUid', async (req, res) => {
   }
 });
 
-// =====================
-// POST /api/reservations/day – rezerwacja całego dnia
-// =====================
-router.post('/day', async (req, res) => {
-  try {
-    const {
-      userId, userName,
-      providerUserId, providerName,
-      providerProfileId, providerProfileName, providerProfileRole,
-      date, description,
-      serviceId,
-      serviceName: svcNameFromClient
-    } = req.body;
-
-    if (!userId || !providerUserId || !providerProfileId || !date) {
-      return res.status(400).json({ message: 'Brak wymaganych pól.' });
-    }
-
-    const profile = await Profile.findOne(
-      { userId: providerUserId },
-      { blockedDays: 1, services: 1 }
-    ).lean();
-
-    if (profile?.blockedDays?.includes(date)) {
-      return res.status(409).json({ message: 'Ten dzień jest zablokowany przez usługodawcę.' });
-    }
-
-    const existsAccepted = await Reservation.findOne({
-      providerUserId, date, dateOnly: true, status: 'zaakceptowana'
-    }).lean();
-    if (existsAccepted) {
-      return res.status(409).json({ message: 'Ten dzień jest już zajęty.' });
-    }
-
-    const now = new Date();
-    const dupPending = await Reservation.findOne({
-      userId, providerUserId, date, dateOnly: true,
-      status: 'oczekująca', pendingExpiresAt: { $gt: now }
-    }).lean();
-    if (dupPending) {
-      return res.status(409).json({ message: 'Masz już oczekującą prośbę na ten dzień.' });
-    }
-
-    let serviceName = svcNameFromClient || null;
-    if (!serviceName && serviceId && Array.isArray(profile?.services)) {
-      const svc = profile.services.find(s => String(s._id) === String(serviceId));
-      if (svc) serviceName = svc.name;
-    }
-
-    const pendingExpiresAt = new Date(Date.now() + PENDING_MINUTES * 60 * 1000);
-
-    const created = await Reservation.create({
-      userId, userName,
-      providerUserId, providerName,
-      providerProfileId, providerProfileName, providerProfileRole,
-      date,
-      dateOnly: true,
-      fromTime: '00:00',
-      toTime: '23:59',
-      description: (description || '').trim(),
-      status: 'oczekująca',
-      pendingExpiresAt,
-      serviceId: serviceId || null,
-      serviceName: serviceName || null,
-    });
-
-    res.json(created);
-  } catch (e) {
-    console.error('POST /reservations/day error', e);
-    res.status(500).json({ message: 'Nie udało się utworzyć rezerwacji dnia.' });
-  }
-});
-
-// =====================
-// PATCH /:id/status
-// =====================
+/**
+ * =====================
+ * PATCH /:id/status
+ * =====================
+ */
 router.patch('/:id/status', async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -515,10 +872,9 @@ router.patch('/:id/status', async (req, res) => {
 
       const profile = await Profile.findById(reservation.providerProfileId);
       if (profile && Array.isArray(profile.availableDates)) {
-        profile.availableDates = profile.availableDates.filter(slot =>
-          !(slot.date === reservation.date &&
-            slot.fromTime === reservation.fromTime &&
-            slot.toTime === reservation.toTime)
+        profile.availableDates = profile.availableDates.filter(
+          (slot) =>
+            !(slot.date === reservation.date && slot.fromTime === reservation.fromTime && slot.toTime === reservation.toTime)
         );
         await profile.save();
       }
@@ -536,8 +892,64 @@ router.patch('/:id/status', async (req, res) => {
 });
 
 // =====================
-// PATCH /:id/seen
+// GET /api/reservations/meta/:providerUid
+// - żeby frontend zawsze miał providerProfileId + staff listę
 // =====================
+router.get('/meta/:providerUid', async (req, res) => {
+  try {
+    const { providerUid } = req.params;
+
+    const profile = await Profile.findOne(
+      { userId: providerUid },
+      {
+        _id: 1,
+        name: 1,
+        role: 1,
+        bookingMode: 1,
+        team: 1,
+        services: 1,
+        bookingBufferMin: 1, // ✅ DODANE
+
+        workingHours: 1,
+        workingDays: 1,
+        blockedDays: 1,
+      }
+    ).lean();
+
+    if (!profile) return res.status(404).json({ message: 'Profil nie istnieje' });
+
+    const staff = await Staff.find(
+      { profileId: profile._id, active: true },
+      { _id: 1, name: 1, capacity: 1, serviceIds: 1 }
+    ).lean();
+
+    res.json({
+      providerProfileId: profile._id,
+      providerProfileName: profile.name || 'Profil',
+      providerProfileRole: profile.role || 'Brak roli',
+
+      bookingMode: profile.bookingMode,
+      team: profile.team || { enabled: false },
+      services: profile.services || [],
+      staff: staff || [],
+
+      bookingBufferMin: normalizeBuffer(profile.bookingBufferMin), // ✅ DODANE
+
+      workingHours: profile.workingHours || { from: '08:00', to: '20:00' },
+      workingDays: Array.isArray(profile.workingDays) ? profile.workingDays : [1, 2, 3, 4, 5],
+      blockedDays: Array.isArray(profile.blockedDays) ? profile.blockedDays : [],
+    });
+  } catch (e) {
+    console.error('GET /reservations/meta error', e);
+    res.status(500).json({ message: 'Błąd pobierania meta' });
+  }
+});
+
+/**
+ * =====================
+ * PATCH /:id/seen
+ * =====================
+ */
 router.patch('/:id/seen', async (req, res) => {
   const { id } = req.params;
   const { who } = req.body;

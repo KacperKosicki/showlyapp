@@ -26,7 +26,8 @@ import {
   FaInstagram,
   FaYoutube,
   FaGlobe,
-  FaTiktok
+  FaTiktok,
+  FaClock,
 } from 'react-icons/fa';
 
 const YourProfile = ({ user, setRefreshTrigger }) => {
@@ -166,6 +167,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         workingHours: p.workingHours || { from: '08:00', to: '20:00' },
         workingDays: p.workingDays || [1, 2, 3, 4, 5],
         team: p.team || { enabled: false, assignmentMode: 'user-pick' },
+        bookingBufferMin: Number.isFinite(p.bookingBufferMin) ? p.bookingBufferMin : 0,
       });
 
       setInitialEditData({
@@ -182,6 +184,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         workingHours: p.workingHours || { from: '08:00', to: '20:00' },
         workingDays: p.workingDays || [1, 2, 3, 4, 5],
         team: p.team || { enabled: false, assignmentMode: 'user-pick' },
+        bookingBufferMin: Number.isFinite(p.bookingBufferMin) ? p.bookingBufferMin : 0,
       });
 
       // Po profilu dociągnij pracowników
@@ -194,21 +197,21 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     }
   };
 
-useEffect(() => {
-  if (!user?.uid) return;
+  useEffect(() => {
+    if (!user?.uid) return;
 
-  // ✅ jeśli wracamy z billing success/cancel → wymuś odświeżenie
-  const cameFromBilling = !!location.state?.refresh;
+    // ✅ jeśli wracamy z billing success/cancel → wymuś odświeżenie
+    const cameFromBilling = !!location.state?.refresh;
 
-  fetchProfile();
+    fetchProfile();
 
-  if (cameFromBilling) {
-    // sprzątnij state, żeby nie odświeżało w kółko po back/refresh
-    window.history.replaceState({}, document.title, location.pathname);
-  }
+    if (cameFromBilling) {
+      // sprzątnij state, żeby nie odświeżało w kółko po back/refresh
+      window.history.replaceState({}, document.title, location.pathname);
+    }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [user?.uid, location.state?.refresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid, location.state?.refresh]);
 
   // =========================
   // Staff: API
@@ -415,6 +418,11 @@ useEffect(() => {
     });
     if (invalidQA) {
       errors.quickAnswers = 'Każda szybka odpowiedź musi zawierać oba pola. Tytuł max. 10 znaków, odpowiedź max. 64 znaki.';
+    }
+
+    const buf = Number(data.bookingBufferMin ?? 0);
+    if (![0, 5, 10, 15].includes(buf)) {
+      errors.bookingBufferMin = 'Buffer musi mieć wartość: 0, 5, 10 lub 15 minut.';
     }
 
     // Kontakt
@@ -675,6 +683,7 @@ useEffect(() => {
 
       await axios.patch(`${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`, {
         ...payload,
+        bookingBufferMin: Number(payload.bookingBufferMin ?? 0), // ✅ DODAJ
         theme: mappedTheme,
         contact: {
           email: c.email || '',
@@ -1422,6 +1431,46 @@ useEffect(() => {
             </ul>
           )}
         </div>
+
+        {/* BUFFER — przerwa między usługami */}
+        <div className={styles.inputBlock}>
+          <div className={styles.groupTitle}>
+            <FaClock /> Przerwa (buffer) między usługami
+          </div>
+
+          {isEditing ? (
+            <select
+              className={styles.formInput}
+              value={editData.bookingBufferMin ?? 0}
+              onChange={(e) =>
+                setEditData(prev => ({
+                  ...prev,
+                  bookingBufferMin: parseInt(e.target.value, 10),
+                }))
+              }
+            >
+              <option value={0}>0 min (brak przerwy)</option>
+              <option value={5}>5 min</option>
+              <option value={10}>10 min</option>
+              <option value={15}>15 min</option>
+            </select>
+          ) : (
+            <ul className={styles.priceView}>
+              <li className={styles.priceItem}>
+                <span className={styles.priceLabel}>Buffer</span>
+                <span className={styles.priceAmount}>
+                  {profile.bookingBufferMin ?? 0} min
+                </span>
+              </li>
+            </ul>
+          )}
+
+          <div className={styles.infoMuted} style={{ marginTop: 8 }}>
+            Buffer doliczany jest po każdej usłudze (blokuje kolejne sloty, żebyś miał/a przerwę).
+          </div>
+        </div>
+
+        <div className={styles.subsection}></div>
 
         <div className={styles.subsection}></div>
 

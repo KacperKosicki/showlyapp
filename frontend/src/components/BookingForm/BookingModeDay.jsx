@@ -1,4 +1,4 @@
-// BookingModeDay.jsx — kalendarz “dniowy” (bez slotów) + opcjonalna usługa
+// BookingModeDay.jsx — kalendarz “dniowy” (bez slotów) + usługa wymagana do rezerwacji dnia (gdy są usługi)
 import { useEffect, useMemo, useState } from 'react';
 import {
   startOfMonth, endOfMonth, eachDayOfInterval, format, getDay,
@@ -21,6 +21,10 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  // ✅ logika: jeśli profil ma usługi i NIE jest to "Tylko zapytanie" → usługa wymagana
+  const hasServices = Array.isArray(provider?.services) && provider.services.length > 0;
+  const serviceRequiredForBooking = hasServices && !onlyInquiry;
 
   // Dni niedostępne
   useEffect(() => {
@@ -46,12 +50,16 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
 
   // Czy dzień aktywny do wyboru
   const isDayActive = (day) => {
+    // ✅ jeżeli rezerwujemy dzień i są usługi → najpierw wybierz usługę
+    if (serviceRequiredForBooking && !selectedService) return false;
+
     const past = isBefore(startOfDay(day), startOfDay(new Date()));
     const dateStr = format(day, 'yyyy-MM-dd');
     const blocked = isUnavailable(dateStr);
     const respectsWorkingDays = Array.isArray(provider.workingDays) && provider.workingDays.length
       ? provider.workingDays.includes(getDay(day))
       : true;
+
     return !past && !blocked && respectsWorkingDays;
   };
 
@@ -66,6 +74,7 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
         pushAlert?.({ show: true, type: 'error', message: 'Musisz być zalogowany.' });
         return;
       }
+
       if (!selectedDate) {
         pushAlert?.({ show: true, type: 'error', message: 'Wybierz dzień.' });
         return;
@@ -73,7 +82,7 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
 
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
-      // A) Tylko zapytanie → rozmowa
+      // A) Tylko zapytanie → rozmowa (usługa opcjonalna)
       if (onlyInquiry) {
         const content = [
           `Zapytanie o dostępność dnia ${dateStr}`,
@@ -140,6 +149,11 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
       }
 
       // B) Rezerwacja całego dnia
+      if (serviceRequiredForBooking && !selectedService) {
+        pushAlert?.({ show: true, type: 'error', message: 'Wybierz usługę, aby zarezerwować dzień.' });
+        return;
+      }
+
       if (isUnavailable(dateStr)) {
         pushAlert?.({ show: true, type: 'error', message: 'Ten dzień jest niedostępny. Użyj "Tylko zapytanie".' });
         return;
@@ -155,6 +169,7 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
         providerProfileRole: provider.role || '',
         date: dateStr,
         description: (description || '').trim(),
+        // ✅ tu przy rezerwacji dnia usługa będzie już wybrana (gdy są usługi)
         ...(selectedService?._id ? { serviceId: selectedService._id, serviceName: selectedService.name } : {}),
       };
 
@@ -189,29 +204,43 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
         />
       </label>
 
-      {/* (Opcjonalnie) wybór usługi */}
-      {Array.isArray(provider.services) && provider.services.length > 0 && (
+      {/* wybór usługi */}
+      {hasServices && (
         <label className={styles.field}>
-          <h3 className={styles.fieldTitle}>Wybierz usługę (opcjonalnie):</h3>
+          <h3 className={styles.fieldTitle}>
+            {onlyInquiry ? 'Wybierz usługę (opcjonalnie):' : 'Wybierz usługę (wymagane):'}
+          </h3>
           <select
             value={selectedService?._id || ''}
             onChange={e => {
-              const svc = provider.services.find(s => s._id === e.target.value);
+              const svc = provider.services.find(s => String(s._id) === String(e.target.value));
               setService(svc || null);
+              setDate(null); // ✅ reset wyboru dnia po zmianie usługi
             }}
           >
-            <option value="">– bez wyboru –</option>
+            <option value="">
+              {onlyInquiry ? '– bez wyboru –' : '— wybierz usługę —'}
+            </option>
+
             {provider.services.map(s => (
               <option key={s._id} value={s._id}>
                 {s.name}
-                {s.duration?.value ? ` • ${s.duration.value} ${s.duration.unit === 'minutes' ? 'min' :
+                {s.duration?.value ? ` • ${s.duration.value} ${
+                  s.duration.unit === 'minutes' ? 'min' :
                   s.duration.unit === 'hours' ? 'godz.' :
-                    s.duration.unit === 'days' ? 'dni' : s.duration.unit
-                  }` : ''}
+                  s.duration.unit === 'days' ? 'dni' : s.duration.unit
+                }` : ''}
               </option>
             ))}
           </select>
         </label>
+      )}
+
+      {/* ✅ komunikat: blokada dni do czasu wyboru usługi (tylko przy rezerwacji dnia) */}
+      {serviceRequiredForBooking && !selectedService && (
+        <div className={styles.warnBox}>
+          Najpierw wybierz usługę — dopiero potem wybierzesz dzień do rezerwacji.
+        </div>
       )}
 
       {/* Nawigacja miesięcy */}
@@ -235,15 +264,16 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
         </button>
       </div>
 
-
       {/* Siatka kalendarza (bez slotów) */}
       <div className={styles.calendarGrid}>
         {['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'].map(d =>
           <div key={d} className={styles.weekday}>{d}</div>
         )}
+
         {Array(startDayIndex).fill(null).map((_, i) =>
           <div key={i} className={styles.blankDay} />
         )}
+
         {daysInMonth.map(day => {
           const active = isDayActive(day);
           const sel = selectedDate && isSameDay(day, selectedDate);
@@ -256,7 +286,11 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
               className={`${styles.day} ${(!active || unavailable) ? styles.disabledDay : ''} ${sel ? styles.selectedDay : ''}`}
               disabled={!active || isSubmitting}
               onClick={() => !isSubmitting && active && setDate(day)}
-              title={unavailable ? 'Dzień niedostępny' : ''}
+              title={
+                unavailable ? 'Dzień niedostępny' :
+                (serviceRequiredForBooking && !selectedService) ? 'Najpierw wybierz usługę' :
+                ''
+              }
             >
               {format(day, 'd')}
             </button>
@@ -277,7 +311,10 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
           <input
             type="checkbox"
             checked={onlyInquiry}
-            onChange={() => setOnlyInquiry(v => !v)}
+            onChange={() => {
+              setOnlyInquiry(v => !v);
+              setDate(null); // ✅ po zmianie trybu resetujemy wybór dnia
+            }}
           />
           Tylko zapytanie (bez blokowania dnia)
         </label>
@@ -292,7 +329,11 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
       <LoadingButton
         onClick={handleSubmit}
         isLoading={isSubmitting}
-        disabled={!selectedDate || isSubmitting}
+        disabled={
+          !selectedDate ||
+          isSubmitting ||
+          (serviceRequiredForBooking && !selectedService)
+        }
         className={styles.submit}
       >
         {onlyInquiry ? 'Wyślij zapytanie' : 'Rezerwuj termin'}

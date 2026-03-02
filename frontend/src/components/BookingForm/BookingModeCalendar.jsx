@@ -1,14 +1,30 @@
 // BookingModeCalendar.jsx
 import { useEffect, useMemo, useState } from 'react';
 import {
-  startOfMonth, endOfMonth, eachDayOfInterval, format, getDay,
-  addMonths, subMonths, isSameDay, addMinutes, startOfMinute, startOfDay, isBefore
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  format,
+  getDay,
+  addMonths,
+  subMonths,
+  isSameDay,
+  addMinutes,
+  startOfMinute,
+  startOfDay,
+  isBefore,
 } from 'date-fns';
 import { pl } from 'date-fns/locale';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styles from './BookingForm.module.scss';
-import LoadingButton from "../ui/LoadingButton/LoadingButton";
+import LoadingButton from '../ui/LoadingButton/LoadingButton';
+
+// ✅ stała przerwa po usłudze (jak na backendzie)
+const SLOT_BREAK_MIN = 5;
+
+// ✅ siatka startów ZAWSZE co 5 minut (niezależnie od bufora)
+const GRID_STEP_MIN = 5;
 
 const durationToMinutes = (svc) => {
   const { value, unit } = svc?.duration || {};
@@ -19,9 +35,16 @@ const durationToMinutes = (svc) => {
   return value;
 };
 
+// zaokrąglenie "w górę" do kroku (np. 10:02 -> 10:05)
+const ceilToStep = (dt, stepMin) => {
+  const d = startOfMinute(dt);
+  const rem = d.getMinutes() % stepMin;
+  return rem ? addMinutes(d, stepMin - rem) : d;
+};
+
 export default function BookingModeCalendar({ user, provider, pushAlert }) {
   const [reservedSlots, setReserved] = useState([]); // { date, fromTime, toTime }
-  const [pendingSlots, setPending] = useState([]);   // { date, fromTime, toTime }
+  const [pendingSlots, setPending] = useState([]); // { date, fromTime, toTime }
   const [reservationsAll, setReservationsAll] = useState([]); // RAW rezerwacje całego zespołu
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setDate] = useState(null);
@@ -37,16 +60,33 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
 
   const navigate = useNavigate();
 
-  const daysInMonth = useMemo(() => (
-    eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) })
-  ), [currentMonth]);
+  const daysInMonth = useMemo(
+    () =>
+      eachDayOfInterval({
+        start: startOfMonth(currentMonth),
+        end: endOfMonth(currentMonth),
+      }),
+    [currentMonth]
+  );
 
   const startDayIndex = useMemo(() => getDay(startOfMonth(currentMonth)), [currentMonth]);
-  const isDayActive = (day) => Array.isArray(provider.workingDays) && provider.workingDays.includes(getDay(day));
+  const isDayActive = (day) =>
+    Array.isArray(provider?.workingDays) && provider.workingDays.includes(getDay(day));
 
   const isTeamEnabled = provider?.bookingMode === 'calendar' && provider?.team?.enabled === true;
   const isUserPick = isTeamEnabled && provider?.team?.assignmentMode === 'user-pick';
   const isAutoAssign = isTeamEnabled && provider?.team?.assignmentMode === 'auto-assign';
+
+  // ✅ BUFFER z profilu (0/5/10/15), fallback 0
+  const bookingBufferMin = useMemo(() => {
+    const b = Number(provider?.bookingBufferMin);
+    return [0, 5, 10, 15].includes(b) ? b : 0;
+  }, [provider?.bookingBufferMin]);
+
+  // ✅ EFFECTIVE = 5 + bookingBufferMin (czyli 5/10/15/20)
+  const effectiveBufferMin = useMemo(() => {
+    return SLOT_BREAK_MIN + bookingBufferMin;
+  }, [bookingBufferMin]);
 
   // Załaduj personel (gdy team.enabled)
   useEffect(() => {
@@ -63,27 +103,30 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
       `${process.env.REACT_APP_API_URL}/api/reservations/by-provider/${provider.userId}`
     );
 
-    const filtered = (isUserPick && selectedStaffId)
-      ? data.filter(r => r.staffId && String(r.staffId) === String(selectedStaffId))
-      : data;
+    const filtered =
+      isUserPick && selectedStaffId
+        ? data.filter((r) => r.staffId && String(r.staffId) === String(selectedStaffId))
+        : data;
 
     // RAW całego zespołu – potrzebne dla auto-assign
-    setReservationsAll(data);
+    setReservationsAll(Array.isArray(data) ? data : []);
 
-    const booked = filtered
-      .filter(r => r.status === 'zaakceptowana')
-      .map(r => ({ date: r.date, fromTime: r.fromTime, toTime: r.toTime }));
+    const booked = (Array.isArray(filtered) ? filtered : [])
+      .filter((r) => r.status === 'zaakceptowana')
+      .map((r) => ({ date: r.date, fromTime: r.fromTime, toTime: r.toTime }));
 
-    const pending = filtered
-      .filter(r => r.status === 'oczekująca' || r.status === 'tymczasowa')
-      .map(r => ({ date: r.date, fromTime: r.fromTime, toTime: r.toTime }));
+    const pending = (Array.isArray(filtered) ? filtered : [])
+      .filter((r) => r.status === 'oczekująca' || r.status === 'tymczasowa')
+      .map((r) => ({ date: r.date, fromTime: r.fromTime, toTime: r.toTime }));
 
     setReserved(booked);
     setPending(pending);
   };
 
   // Ładuj rezerwacje po wejściu
-  useEffect(() => { fetchReservations(); }, []); // eslint-disable-line
+  useEffect(() => {
+    fetchReservations(); // eslint-disable-line
+  }, []); // eslint-disable-line
 
   // Przeładuj przy zmianie pracownika w trybie user-pick
   useEffect(() => {
@@ -97,19 +140,23 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
       return;
     }
 
-    const [h0, m0] = provider.workingHours.from.split(':').map(Number);
-    const [h1, m1] = provider.workingHours.to.split(':').map(Number);
+    const whFrom = provider?.workingHours?.from || '08:00';
+    const whTo = provider?.workingHours?.to || '20:00';
 
-    const step = 15;
-    const buffer = 15;
+    const [h0, m0] = whFrom.split(':').map(Number);
+    const [h1, m1] = whTo.split(':').map(Number);
+
+    const step = GRID_STEP_MIN; // ✅ zawsze 5
+    const buffer = effectiveBufferMin; // ✅ 5 + bookingBufferMin
     const durMin = durationToMinutes(selectedService);
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
     // godziny dnia
     let cursor = startOfMinute(new Date(selectedDate));
     cursor.setHours(h0, m0, 0, 0);
-    const rem = cursor.getMinutes() % step;
-    if (rem) cursor = addMinutes(cursor, step - rem);
+    // ✅ start dnia do siatki 5-min
+    cursor = ceilToStep(cursor, step);
+
     const dayEnd = new Date(selectedDate);
     dayEnd.setHours(h1, m1, 0, 0);
 
@@ -117,61 +164,71 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     const isToday = isSameDay(selectedDate, new Date());
     let nowRoundedUp = null;
     if (isToday) {
-      const now = startOfMinute(new Date());
-      const remNow = now.getMinutes() % step;
-      nowRoundedUp = remNow ? addMinutes(now, step - remNow) : now;
+      nowRoundedUp = ceilToStep(new Date(), step); // ✅ do 5-min
     }
 
     // ===== eligible & capacity dla auto-assign =====
-    const eligibleStaff = (isTeamEnabled && provider?.team?.enabled)
-      ? staffList.filter(s =>
-        s.active &&
-        (s.serviceIds || []).some(id => String(id) === String(selectedService?._id))
-      )
-      : [];
+    const eligibleStaff =
+      isTeamEnabled && provider?.team?.enabled
+        ? staffList.filter(
+            (s) =>
+              s.active &&
+              (s.serviceIds || []).some((id) => String(id) === String(selectedService?._id))
+          )
+        : [];
 
-    const eligibleIds = new Set(eligibleStaff.map(s => String(s._id)));
+    const eligibleIds = new Set(eligibleStaff.map((s) => String(s._id)));
 
     const totalCapacity = isAutoAssign
       ? Math.max(0, eligibleStaff.reduce((sum, s) => sum + Math.max(1, Number(s.capacity) || 1), 0))
       : 0;
 
-    // 🆕 mapa pojemności per pracownik (dla auto-assign)
     const capacityMap = new Map(
-      eligibleStaff.map(s => [String(s._id), Math.max(1, Number(s.capacity) || 1)])
+      eligibleStaff.map((s) => [String(s._id), Math.max(1, Number(s.capacity) || 1)])
     );
 
-    // ===== dayBusy =====
-    // auto-assign → liczymy zajętość TYLKO z rezerwacji pracowników z puli dla wybranej usługi
-    // pozostałe tryby → stara lista z reservedSlots/pendingSlots (już przefiltrowana dla user-pick)
-    const dayBusy = (isAutoAssign
-      ? reservationsAll
-        .filter(r => r.date === dateStr)
-        .filter(r => !r.dateOnly && ['zaakceptowana', 'oczekująca', 'tymczasowa'].includes(r.status))
-        .filter(r => eligibleIds.has(String(r.staffId)))
-        .map(r => {
-          const from = new Date(`${r.date}T${r.fromTime}`);
-          const to = addMinutes(new Date(`${r.date}T${r.toTime}`), buffer);
-          return {
-            fromMs: +from,
-            toMs: +to,
-            status: (r.status === 'zaakceptowana') ? 'reserved' : 'pending',
-            staffId: String(r.staffId || '')
-          };
-        })
-      : [...reservedSlots, ...pendingSlots]
-        .filter(s => s.date === dateStr)
-        .map(s => {
-          const from = new Date(`${s.date}T${s.fromTime}`);
-          const to = addMinutes(new Date(`${s.date}T${s.toTime}`), buffer);
-          const isRes = reservedSlots.find(r => r.date === s.date && r.fromTime === s.fromTime);
-          return {
-            fromMs: +from,
-            toMs: +to,
-            status: isRes ? 'reserved' : 'pending',
-            staffId: '' // bez zespołu nie ma znaczenia
-          };
-        })
+    // ===== dayBusy (✅ rozdzielamy koniec usługi vs koniec+bufor) =====
+    const dayBusy = (
+      isAutoAssign
+        ? reservationsAll
+            .filter((r) => r.date === dateStr)
+            .filter(
+              (r) =>
+                !r.dateOnly && ['zaakceptowana', 'oczekująca', 'tymczasowa'].includes(r.status)
+            )
+            .filter((r) => eligibleIds.has(String(r.staffId)))
+            .map((r) => {
+              const from = new Date(`${r.date}T${r.fromTime}`);
+              const toNoBuf = new Date(`${r.date}T${r.toTime}`); // ✅ koniec usługi
+              const toWithBuf = addMinutes(toNoBuf, buffer); // ✅ koniec usługi + bufor
+
+              return {
+                fromMs: +from,
+                toMs: +toNoBuf,
+                toBufMs: +toWithBuf,
+                status: r.status === 'zaakceptowana' ? 'reserved' : 'pending',
+                staffId: String(r.staffId || ''),
+              };
+            })
+        : [...reservedSlots, ...pendingSlots]
+            .filter((s) => s.date === dateStr)
+            .map((s) => {
+              const from = new Date(`${s.date}T${s.fromTime}`);
+              const toNoBuf = new Date(`${s.date}T${s.toTime}`); // ✅ koniec usługi
+              const toWithBuf = addMinutes(toNoBuf, buffer); // ✅ koniec usługi + bufor
+
+              const isRes = reservedSlots.some(
+                (r) => r.date === s.date && r.fromTime === s.fromTime && r.toTime === s.toTime
+              );
+
+              return {
+                fromMs: +from,
+                toMs: +toNoBuf,
+                toBufMs: +toWithBuf,
+                status: isRes ? 'reserved' : 'pending',
+                staffId: '',
+              };
+            })
     ).sort((a, b) => a.fromMs - b.fromMs);
 
     const slots = [];
@@ -180,20 +237,33 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
       const start = new Date(cursor);
       const end = addMinutes(start, durMin);
       const endWithBuffer = addMinutes(end, buffer);
+
       const slotStartMs = +start;
       const slotEndMs = +endWithBuffer;
 
       let status = 'free';
       if (endWithBuffer > dayEnd) status = 'disabled';
 
-      // twarde nakładki na ten slot (uwzględniając buffer)
-      const overlaps = dayBusy.filter(b => slotStartMs < b.toMs && slotEndMs > b.fromMs);
+      // ✅ overlap liczymy po "toBufMs" (czyli usługa + bufor)
+      const overlaps = dayBusy.filter((b) => slotStartMs < b.toBufMs && slotEndMs > b.fromMs);
+
+      // ✅ rozróżnienie: start wpada w usługę czy tylko w bufor
+      const startsInService = overlaps.some((o) => slotStartMs >= o.fromMs && slotStartMs < o.toMs);
+      const startsInBuffer =
+        !startsInService && overlaps.some((o) => slotStartMs >= o.toMs && slotStartMs < o.toBufMs);
+
+      // dla nie-auto-assign: jaki kolor ma mieć "usługa" (reserved/pending)
+      const anyReservedHere = overlaps.some(
+        (o) => o.status === 'reserved' && slotStartMs >= o.fromMs && slotStartMs < o.toMs
+      );
+      const anyPendingHere = overlaps.some(
+        (o) => o.status === 'pending' && slotStartMs >= o.fromMs && slotStartMs < o.toMs
+      );
 
       if (isAutoAssign) {
         if (totalCapacity <= 0) {
           status = 'disabled';
         } else {
-          // 🆕 policz zużytą pojemność per pracownik w tym slocie
           const perStaffCounts = new Map();
           for (const o of overlaps) {
             if (!o.staffId) continue;
@@ -207,67 +277,53 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
           }
 
           if (usedCapacity >= totalCapacity) {
-            const accepted = overlaps.filter(o => o.status === 'reserved');
-            const pendingOnly = overlaps.filter(o => o.status === 'pending');
+            const accepted = overlaps.filter((o) => o.status === 'reserved');
+            const pendingOnly = overlaps.filter((o) => o.status === 'pending');
 
-            const startsInsideAccepted = accepted.some(o =>
-              slotStartMs >= o.fromMs && slotStartMs < o.toMs
+            // ✅ usługa (kolor)
+            const startsInsideAccepted = accepted.some(
+              (o) => slotStartMs >= o.fromMs && slotStartMs < o.toMs
             );
-            const startsInsidePending = pendingOnly.some(o =>
-              slotStartMs >= o.fromMs && slotStartMs < o.toMs
+            const startsInsidePending = pendingOnly.some(
+              (o) => slotStartMs >= o.fromMs && slotStartMs < o.toMs
             );
 
-            if (startsInsideAccepted) {
-              status = 'reserved';   // czerwony
-            } else if (startsInsidePending) {
-              status = 'pending';    // żółty
-            } else {
-              status = 'disabled';   // tylko dogonienie/BUF → szary
-            }
+            // ✅ sam bufor (szary)
+            const startsInsideBuffer =
+              !startsInsideAccepted &&
+              !startsInsidePending &&
+              overlaps.some((o) => slotStartMs >= o.toMs && slotStartMs < o.toBufMs);
+
+            if (startsInsideAccepted) status = 'reserved';
+            else if (startsInsidePending) status = 'pending';
+            else if (startsInsideBuffer) status = 'disabled';
+            else status = 'disabled';
           }
-
-
-          // brak „onlyNextStarts” – zero sztucznego szarzenia
         }
       } else {
-        // bez zespołu / user-pick: jeden konflikt blokuje slot
-        const directConflict = overlaps.length > 0;
-        if (directConflict && status !== 'disabled') {
-          const accepted = overlaps.filter(o => o.status === 'reserved');
-          const pendingOnly = overlaps.filter(o => o.status === 'pending');
-
-          const startsInsideAccepted = accepted.some(o =>
-            slotStartMs >= o.fromMs && slotStartMs < o.toMs
-          );
-          const startsInsidePending = pendingOnly.some(o =>
-            slotStartMs >= o.fromMs && slotStartMs < o.toMs
-          );
-
-          if (startsInsideAccepted) {
-            status = 'reserved';   // czerwony
-          } else if (startsInsidePending) {
-            status = 'pending';    // żółty
-          } else {
-            status = 'disabled';   // dogonienie/BUF → szary
+        // ✅ najpierw kolorujemy "obszar usługi", a bufor robimy szary
+        if (startsInService && status !== 'disabled') {
+          status = anyReservedHere ? 'reserved' : 'pending';
+        } else if (startsInBuffer && status !== 'disabled') {
+          status = 'disabled';
+        } else {
+          const directConflict = overlaps.length > 0;
+          if (directConflict && status !== 'disabled') {
+            status = 'disabled';
+          } else if (status === 'free') {
+            const nextBusy = dayBusy.find((b) => b.fromMs >= slotStartMs);
+            if (nextBusy && slotEndMs > nextBusy.fromMs) status = 'disabled';
           }
-        }
-
-        else if (status === 'free') {
-          // opcjonalny „soft block” przed zbliżającą się rezerwacją
-          const nextBusy = dayBusy.find(b => b.fromMs >= slotStartMs);
-          if (nextBusy && slotEndMs > nextBusy.fromMs) status = 'disabled';
         }
       }
 
-      // przeszłość dziś – szare, chyba że w tym oknie jest zaakceptowana rezerwacja
-      // ⛔️ Dziś: wszystko, co zaczyna się przed "teraz", jest po prostu niedostępne (szare)
+      // ⛔️ Dziś: wszystko, co zaczyna się przed "teraz", szare
       if (isToday && nowRoundedUp && start < nowRoundedUp) {
         status = 'disabled';
       }
 
-
       slots.push({ label: format(start, 'HH:mm'), status });
-      cursor = addMinutes(cursor, step);
+      cursor = addMinutes(cursor, step); // ✅ zawsze 5 min
     }
 
     setTimeSlots(slots);
@@ -275,18 +331,24 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     selectedDate,
     selectedService,
     provider,
+    provider?.workingHours,
+    provider?.bookingBufferMin,
     reservedSlots,
     pendingSlots,
     isAutoAssign,
     isTeamEnabled,
+    isUserPick,
     staffList,
-    reservationsAll
+    reservationsAll,
+    bookingBufferMin,
+    effectiveBufferMin,
+    selectedStaffId,
   ]);
 
   const handleSubmit = async (e) => {
     e.preventDefault?.();
 
-    if (isSubmitting) return; // ⬅️ blokada podwójnego kliku
+    if (isSubmitting) return;
     setIsSubmitting(true);
 
     try {
@@ -303,26 +365,24 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
         return;
       }
 
-      // anty-przeterminowanie
-      const step = 15;
+      const step = GRID_STEP_MIN; // ✅ walidacja też co 5 min
       const [h, m] = selectedSlot.split(':').map(Number);
       const startDateTime = new Date(selectedDate);
       startDateTime.setHours(h, m, 0, 0);
 
-      let nowRoundedUp = startOfMinute(new Date());
-      const remNow = nowRoundedUp.getMinutes() % step;
-      if (remNow) nowRoundedUp = addMinutes(nowRoundedUp, step - remNow);
+      const nowRoundedUp = ceilToStep(new Date(), step);
 
       if (isSameDay(selectedDate, new Date()) && startDateTime < nowRoundedUp) {
-        pushAlert?.({ show: true, type: 'error', message: 'Wybrany slot już minął. Wybierz nowszą godzinę.' });
+        pushAlert?.({
+          show: true,
+          type: 'error',
+          message: 'Wybrany slot już minął. Wybierz nowszą godzinę.',
+        });
         return;
       }
 
       const fromTime = format(startDateTime, 'HH:mm');
-      const toTime = format(
-        addMinutes(startDateTime, durationToMinutes(selectedService)),
-        'HH:mm'
-      );
+      const toTime = format(addMinutes(startDateTime, durationToMinutes(selectedService)), 'HH:mm');
 
       const payload = {
         userId: user.uid,
@@ -338,10 +398,8 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
 
       await axios.post(`${process.env.REACT_APP_API_URL}/api/reservations`, payload);
 
-      // odśwież lokalne rezerwacje (żeby slot zmienił kolor)
       await fetchReservations();
 
-      // flash po przejściu
       sessionStorage.setItem(
         'flash',
         JSON.stringify({
@@ -374,7 +432,7 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     } catch {
       pushAlert?.({ show: true, type: 'error', message: 'Błąd przy wysyłaniu.' });
     } finally {
-      setIsSubmitting(false); // ✅ zawsze odblokuje przycisk
+      setIsSubmitting(false);
     }
   };
 
@@ -386,7 +444,7 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
         <textarea
           rows="3"
           value={description}
-          onChange={e => setDescription(e.target.value)}
+          onChange={(e) => setDescription(e.target.value)}
           placeholder="Np. strzyżenie + mycie…"
         />
       </label>
@@ -396,21 +454,25 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
         <h3 className={styles.fieldTitle}>Wybierz usługę:</h3>
         <select
           value={selectedService?._id || ''}
-          onChange={e => {
-            const svc = (provider.services || []).find(s => s._id === e.target.value);
+          onChange={(e) => {
+            const svc = (provider.services || []).find((s) => s._id === e.target.value);
             setService(svc || null);
             setSlot('');
             setDate(null);
-            setSelectedStaffId(''); // reset pracownika przy zmianie usługi
+            setSelectedStaffId('');
           }}
         >
           <option value="">– wybierz –</option>
-          {(provider.services || []).map(s => (
+          {(provider.services || []).map((s) => (
             <option key={s._id} value={s._id}>
               {s.name} {s.duration.value}{' '}
-              {s.duration.unit === 'minutes' ? 'min' :
-                s.duration.unit === 'hours' ? 'godzin' :
-                  s.duration.unit === 'days' ? 'dni' : s.duration.unit}
+              {s.duration.unit === 'minutes'
+                ? 'min'
+                : s.duration.unit === 'hours'
+                ? 'godzin'
+                : s.duration.unit === 'days'
+                ? 'dni'
+                : s.duration.unit}
             </option>
           ))}
         </select>
@@ -422,7 +484,7 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
           <h3 className={styles.fieldTitle}>Wybierz osobę (pracownika):</h3>
           <select
             value={selectedStaffId}
-            onChange={e => {
+            onChange={(e) => {
               setSelectedStaffId(e.target.value);
               setSlot('');
               setDate(null);
@@ -430,10 +492,13 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
           >
             <option value="">– wybierz –</option>
             {staffList
-              .filter(s => (s.serviceIds || []).some(id => String(id) === String(selectedService?._id)))
-              .map(s => (
+              .filter((s) =>
+                (s.serviceIds || []).some((id) => String(id) === String(selectedService?._id))
+              )
+              .map((s) => (
                 <option key={s._id} value={s._id}>
-                  {s.name}{s.role ? ` — ${s.role}` : ''}
+                  {s.name}
+                  {s.role ? ` — ${s.role}` : ''}
                 </option>
               ))}
           </select>
@@ -451,26 +516,37 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
       {selectedService && (
         <>
           <div className={styles.monthNav}>
-            <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>&lt;</button>
+            <button type="button" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+              &lt;
+            </button>
             <span>{format(currentMonth, 'LLLL yyyy', { locale: pl })}</span>
-            <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>&gt;</button>
+            <button type="button" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+              &gt;
+            </button>
           </div>
 
           <div className={styles.calendarGrid}>
-            {['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'].map(d =>
-              <div key={d} className={styles.weekday}>{d}</div>
-            )}
-            {Array(startDayIndex).fill(null).map((_, i) =>
-              <div key={i} className={styles.blankDay} />
-            )}
-            {daysInMonth.map(day => {
+            {['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'].map((d) => (
+              <div key={d} className={styles.weekday}>
+                {d}
+              </div>
+            ))}
+            {Array(startDayIndex)
+              .fill(null)
+              .map((_, i) => (
+                <div key={i} className={styles.blankDay} />
+              ))}
+            {daysInMonth.map((day) => {
               const active = isDayActive(day);
               const sel = selectedDate && isSameDay(day, selectedDate);
               const isPast = isBefore(startOfDay(day), startOfDay(new Date()));
               return (
                 <button
                   key={day.toISOString()}
-                  className={`${styles.day} ${!active || isPast ? styles.disabledDay : ''} ${sel ? styles.selectedDay : ''}`}
+                  type="button"
+                  className={`${styles.day} ${!active || isPast ? styles.disabledDay : ''} ${
+                    sel ? styles.selectedDay : ''
+                  }`}
                   disabled={!active || isPast}
                   onClick={() => active && !isPast && setDate(day)}
                 >
@@ -485,6 +561,7 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
               <h3 className={styles.slotsTitle}>
                 Wolne terminy na dzień: {format(selectedDate, 'dd.MM.yyyy')}
               </h3>
+
               <div className={styles.slotsGrid}>
                 {timeSlots.map((s, i) => (
                   <button
@@ -506,11 +583,30 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
               </div>
 
               <div className={styles.legend}>
-                <span><span className={`${styles.legendBox} ${styles.legendReserved}`}></span>zajęte</span>
-                <span><span className={`${styles.legendBox} ${styles.legendPending}`}></span>oczekujące</span>
-                <span><span className={`${styles.legendBox} ${styles.legendDisabled}`}></span>niedostępne</span>
-                <span><span className={`${styles.legendBox} ${styles.legendFree}`}></span>wolne</span>
-                <span className={styles.legendInfo}>+ 15 min przerwy między usługami</span>
+                <span>
+                  <span className={`${styles.legendBox} ${styles.legendReserved}`} />
+                  zajęte
+                </span>
+                <span>
+                  <span className={`${styles.legendBox} ${styles.legendPending}`} />
+                  oczekujące
+                </span>
+                <span>
+                  <span className={`${styles.legendBox} ${styles.legendDisabled}`} />
+                  niedostępne
+                </span>
+                <span>
+                  <span className={`${styles.legendBox} ${styles.legendFree}`} />
+                  wolne
+                </span>
+
+                <span className={styles.legendInfo}>
+                  Przerwa między usługami: <b>{effectiveBufferMin} min</b>
+                  {bookingBufferMin > 0
+                    ? ` (5 min stałej przerwy + ${bookingBufferMin} min z profilu)`
+                    : ' (5 min stałej przerwy)'}
+                  {` • siatka slotów: ${GRID_STEP_MIN} min`}
+                </span>
               </div>
 
               <LoadingButton
