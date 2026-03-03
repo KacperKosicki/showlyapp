@@ -1894,19 +1894,39 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                     ) : (
                       <div className={styles.wholeDayList}>
                         {dayTimeline.wholeDay.map((r) => {
-                          const whoName = r.offline ? r.offlineClientName || "OFFLINE" : getAccountName(r.userId, r.userName);
+                          const whoName = r.offline
+                            ? (r.offlineClientName || "OFFLINE")
+                            : getAccountName(r.userId, r.userName);
+
+                          const note = (r.description || "").trim();
+                          const service = (r.serviceName || "").trim();
 
                           return (
                             <div key={r._id || `${r.date}-whole`} className={styles.wholeDayItem}>
-                              <span className={styles.wholeDayBadge}>CAŁY DZIEŃ</span>
+                              <div className={styles.wholeDayTop}>
+                                <span className={styles.wholeDayBadge}>CAŁY DZIEŃ</span>
 
-                              <span className={styles.wholeDayName}>
-                                {whoName ? whoName : <span className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`} />}
-                              </span>
+                                <span className={styles.wholeDayName}>
+                                  {whoName
+                                    ? whoName
+                                    : <span className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`} />
+                                  }
+                                </span>
 
-                              <span className={`${styles.wholeDayStatus} ${statusToTlClass(r.status)}`}>
-                                {statusIcon(r.status)} {r.status}
-                              </span>
+                                <span className={`${styles.wholeDayStatus} ${statusToTlClass(r.status)}`}>
+                                  {statusIcon(r.status)} {r.status}
+                                </span>
+                              </div>
+
+                              {(service || note) && (
+                                <div className={styles.wholeDayNote}>
+                                  <FiFileText className={styles.wholeDayNoteIcon} aria-hidden="true" />
+                                  <div className={styles.wholeDayNoteText}>
+                                    {service && <div className={styles.wholeDayService}>{service}</div>}
+                                    {note && <div className={styles.wholeDayDesc}>{note}</div>}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           );
                         })}

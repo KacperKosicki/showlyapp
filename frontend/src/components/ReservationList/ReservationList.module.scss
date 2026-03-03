@@ -664,9 +664,10 @@
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
-    max-height: 320px;
+  max-height: 320px;
   overflow-y: auto;
-  padding-right: 4px; /* miejsce na scrollbar */
+  padding-right: 4px;
+  /* miejsce na scrollbar */
 }
 
 .slotBtn {
@@ -723,10 +724,21 @@
   vertical-align: -1px;
 }
 
-.legReserved { background: rgba(231, 76, 60, 0.75); }
-.legPending  { background: rgba(241, 196, 15, 0.85); }
-.legDisabled { background: rgba(0, 0, 0, 0.25); }
-.legFree     { background: rgba(46, 204, 113, 0.70); }
+.legReserved {
+  background: rgba(231, 76, 60, 0.75);
+}
+
+.legPending {
+  background: rgba(241, 196, 15, 0.85);
+}
+
+.legDisabled {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.legFree {
+  background: rgba(46, 204, 113, 0.70);
+}
 
 .slotSummary {
   margin-top: 10px;
@@ -837,9 +849,17 @@
   border-radius: 999px;
 }
 
-.dotPending { background: rgba(241, 196, 15, 0.95); }
-.dotAccepted { background: rgba(46, 204, 113, 0.95); }
-.dotRejected { background: rgba(231, 76, 60, 0.95); }
+.dotPending {
+  background: rgba(241, 196, 15, 0.95);
+}
+
+.dotAccepted {
+  background: rgba(46, 204, 113, 0.95);
+}
+
+.dotRejected {
+  background: rgba(231, 76, 60, 0.95);
+}
 
 .tileCount {
   font-size: 11px;
@@ -956,10 +976,21 @@
   border-radius: 999px;
 }
 
-.tlDotFree { background: rgba(0, 0, 0, 0.22); }
-.tlDotPending { background: rgba(241, 196, 15, 0.95); }
-.tlDotAccepted { background: rgba(46, 204, 113, 0.95); }
-.tlDotRejected { background: rgba(231, 76, 60, 0.95); }
+.tlDotFree {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.tlDotPending {
+  background: rgba(241, 196, 15, 0.95);
+}
+
+.tlDotAccepted {
+  background: rgba(46, 204, 113, 0.95);
+}
+
+.tlDotRejected {
+  background: rgba(231, 76, 60, 0.95);
+}
 
 .tlCard {
   border-radius: 16px;
@@ -1090,14 +1121,19 @@
 }
 
 .shimmer {
-  background: linear-gradient(90deg, rgba(0,0,0,0.06), rgba(0,0,0,0.12), rgba(0,0,0,0.06));
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.06));
   background-size: 200% 100%;
   animation: shimmer 1.2s infinite linear;
 }
 
 @keyframes shimmer {
-  0% { background-position: 0% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: 0% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .metaSkel {
@@ -1190,7 +1226,7 @@
     justify-content: space-between;
   }
 
-    .modalOverlay {
+  .modalOverlay {
     padding: 10px;
   }
 
@@ -1201,7 +1237,8 @@
 
   .slotGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    max-height: 42dvh; /* na mobile lepiej procentowo */
+    max-height: 42dvh;
+    /* na mobile lepiej procentowo */
   }
 }
 
@@ -1217,17 +1254,65 @@
 
 .wholeDayItem {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  /* ✅ ważne */
   gap: 10px;
-  flex-wrap: wrap;
 
   padding: 10px 12px;
   border-radius: 14px;
-
   background: rgba(255, 255, 255, 0.86);
   border: 1px solid rgba(0, 0, 0, 0.08);
 
   min-width: 0;
+}
+
+.wholeDayTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  /* ✅ */
+  min-width: 0;
+  /* ✅ */
+}
+
+.wholeDayNote {
+  width: 100%;
+  /* ✅ */
+  margin-top: 0;
+  /* bo już masz gap w wholeDayItem */
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.wholeDayNoteIcon {
+  margin-top: 2px;
+  opacity: 0.75;
+  flex: 0 0 auto;
+}
+
+.wholeDayNoteText {
+  min-width: 0;
+}
+
+.wholeDayService {
+  font-weight: 700;
+  font-size: 13px;
+  opacity: 0.95;
+  margin-bottom: 2px;
+}
+
+.wholeDayDesc {
+  font-size: 13px;
+  opacity: 0.9;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 .wholeDayBadge {
@@ -1303,5 +1388,47 @@
     margin-left: 0;
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+
+  /* ✅ whole-day header nie może dusić nazwy */
+  .wholeDayTop {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* badge zostaje jako mały pill */
+  .wholeDayBadge {
+    flex: 0 0 auto;
+  }
+
+  /* status niech będzie obok badge, ale niech może spaść niżej */
+  .wholeDayStatus {
+    margin-left: 0;
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 100%;
+  }
+
+  /* ✅ NAZWA ZAWSZE W KOLEJNEJ LINII I NA PEŁNĄ SZEROKOŚĆ */
+  .wholeDayName {
+    flex: 1 0 100%;
+    width: 100%;
+    line-height: 1.2;
+
+    /* zamiast "pionowych liter" */
+    overflow-wrap: normal;
+    word-break: break-word;
+    /* złamie długie ciągi/underscory gdy trzeba */
+  }
+
+  /* notka też bez pionowego łamania */
+  .wholeDayDesc,
+  .wholeDayService {
+    overflow-wrap: normal;
+    word-break: break-word;
   }
 }
