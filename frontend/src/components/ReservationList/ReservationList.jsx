@@ -1277,10 +1277,6 @@ const fetchOne = async (uid) => {
     }
   };
 
-  const handleExpire = () => {
-    refetch();
-  };
-
   const timeLabel = (res) => {
     const whole = isWholeDay(res);
     return whole ? "cały dzień" : `${res.fromTime} – ${res.toTime}`;
