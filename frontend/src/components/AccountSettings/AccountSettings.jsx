@@ -4,10 +4,31 @@ import styles from "./AccountSettings.module.scss";
 import { auth } from "../../firebase";
 import AlertBox from "../AlertBox/AlertBox";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
-import { updateProfile, sendPasswordResetEmail, onAuthStateChanged } from "firebase/auth";
-import { FiUser, FiImage, FiSave, FiTrash2, FiLock, FiMail } from "react-icons/fi";
+import {
+  updateProfile,
+  sendPasswordResetEmail,
+  onAuthStateChanged,
+} from "firebase/auth";
+import {
+  FiUser,
+  FiImage,
+  FiSave,
+  FiTrash2,
+  FiLock,
+  FiMail,
+} from "react-icons/fi";
 
 const API = process.env.REACT_APP_API_URL;
+
+/** =========================
+ * auth helpers (Bearer token)
+ * ========================= */
+async function authHeaders(extra = {}) {
+  const u = auth.currentUser;
+  if (!u) return { ...extra };
+  const token = await u.getIdToken();
+  return { Authorization: `Bearer ${token}`, ...extra };
+}
 
 const isLocalhostUrl = (u = "") => /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(u);
 
@@ -60,12 +81,15 @@ export default function AccountSettings() {
         setDisplayName(auth.currentUser?.displayName || "");
 
         try {
-          const res = await fetch(`${API}/api/users/${u.uid}`);
+          const headers = await authHeaders({ Accept: "application/json" });
+
+          const res = await fetch(`${API}/api/users/${u.uid}`, { headers });
           if (res.ok) {
             const dbUser = await res.json();
             const avatarUrl = dbUser?.avatar || auth.currentUser?.photoURL || fallbackImg;
             setPreview(normalizeAvatar(avatarUrl));
           } else {
+            // fallback na firebase photo
             setPreview(normalizeAvatar(auth.currentUser?.photoURL) || fallbackImg);
           }
         } catch {
@@ -122,8 +146,11 @@ export default function AccountSettings() {
       const form = new FormData();
       form.append("file", file);
 
+      const headers = await authHeaders(); // ✅ Bearer
+
       const res = await fetch(`${API}/api/users/${user.uid}/avatar`, {
         method: "POST",
+        headers, // ✅ ważne: NIE ustawiaj Content-Type dla FormData
         body: form,
       });
 
@@ -155,8 +182,11 @@ export default function AccountSettings() {
     try {
       setLoadingAction("removeAvatar");
 
+      const headers = await authHeaders(); // ✅ Bearer
+
       const res = await fetch(`${API}/api/users/${user.uid}/avatar`, {
         method: "DELETE",
+        headers,
       });
 
       if (!res.ok) {
@@ -189,9 +219,11 @@ export default function AccountSettings() {
       await updateProfile(user, { displayName: clean });
       await user.reload();
 
+      const headers = await authHeaders({ "Content-Type": "application/json" });
+
       await fetch(`${API}/api/users/${user.uid}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ displayName: clean }),
       }).catch(() => {});
 
@@ -234,13 +266,22 @@ export default function AccountSettings() {
       <div className={styles.bgGlow} aria-hidden="true" />
 
       <div className={styles.shell}>
-        {alert && <AlertBox type={alert.type} message={alert.message} onClose={() => setAlert(null)} />}
+        {alert && (
+          <AlertBox
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert(null)}
+          />
+        )}
 
         <div className={styles.headerRow}>
           <div>
             <h2 className={styles.sectionTitle}>Twoje konto</h2>
             <p className={styles.subTitle}>
-              Pomyślnie zalogowano jako: <strong className={styles.subStrong}>{user?.email || "—"}</strong>
+              Pomyślnie zalogowano jako:{" "}
+              <strong className={styles.subStrong}>
+                {user?.email || "—"}
+              </strong>
             </p>
           </div>
 
@@ -250,7 +291,9 @@ export default function AccountSettings() {
                 <FiMail className={styles.pillIcon} />
                 E-mail
               </span>
-              <strong className={styles.pillRight}>{user?.email ? "OK" : "—"}</strong>
+              <strong className={styles.pillRight}>
+                {user?.email ? "OK" : "—"}
+              </strong>
             </div>
 
             <div className={styles.headerPill}>
@@ -258,7 +301,9 @@ export default function AccountSettings() {
                 <FiImage className={styles.pillIcon} />
                 Awatar
               </span>
-              <strong className={styles.pillRight}>{preview && preview !== fallbackImg ? "Ustawiony" : "Brak"}</strong>
+              <strong className={styles.pillRight}>
+                {preview && preview !== fallbackImg ? "Ustawiony" : "Brak"}
+              </strong>
             </div>
 
             <div className={styles.headerPill}>
@@ -266,7 +311,9 @@ export default function AccountSettings() {
                 <FiUser className={styles.pillIcon} />
                 Nazwa
               </span>
-              <strong className={styles.pillRight}>{(displayName || "").trim() ? "Ustawiona" : "Brak"}</strong>
+              <strong className={styles.pillRight}>
+                {(displayName || "").trim() ? "Ustawiona" : "Brak"}
+              </strong>
             </div>
           </div>
         </div>
@@ -294,42 +341,39 @@ export default function AccountSettings() {
               </div>
 
               <div className={styles.controls}>
-<label className={styles.fileBtn}>
-  <input type="file" accept="image/*" onChange={onFileChange} />
-  <span className={styles.btnInner}>
-    <FiImage className={styles.btnIcon} />
-    <span>Wybierz plik</span>
-  </span>
-</label>
-
+                <label className={styles.fileBtn}>
+                  <input type="file" accept="image/*" onChange={onFileChange} />
+                  <span className={styles.btnInner}>
+                    <FiImage className={styles.btnIcon} />
+                    <span>Wybierz plik</span>
+                  </span>
+                </label>
 
                 <div className={styles.actionsRow}>
-<LoadingButton
-  isLoading={loadingAction === "saveAvatar"}
-  disabled={!file || loadingAction !== null}
-  onClick={handleSaveAvatar}
-  className={styles.primary}
->
-  <span className={styles.btnInner}>
-    <FiSave className={styles.btnIcon} />
-    <span>Zapisz awatar</span>
-  </span>
-</LoadingButton>
-
+                  <LoadingButton
+                    isLoading={loadingAction === "saveAvatar"}
+                    disabled={!file || loadingAction !== null}
+                    onClick={handleSaveAvatar}
+                    className={styles.primary}
+                  >
+                    <span className={styles.btnInner}>
+                      <FiSave className={styles.btnIcon} />
+                      <span>Zapisz awatar</span>
+                    </span>
+                  </LoadingButton>
 
                   {preview && preview !== fallbackImg && (
-<LoadingButton
-  isLoading={loadingAction === "removeAvatar"}
-  disabled={loadingAction !== null}
-  onClick={handleRemoveAvatar}
-  className={styles.ghost}
->
-  <span className={styles.btnInner}>
-    <FiTrash2 className={styles.btnIcon} />
-    <span>Usuń awatar</span>
-  </span>
-</LoadingButton>
-
+                    <LoadingButton
+                      isLoading={loadingAction === "removeAvatar"}
+                      disabled={loadingAction !== null}
+                      onClick={handleRemoveAvatar}
+                      className={styles.ghost}
+                    >
+                      <span className={styles.btnInner}>
+                        <FiTrash2 className={styles.btnIcon} />
+                        <span>Usuń awatar</span>
+                      </span>
+                    </LoadingButton>
                   )}
                 </div>
 
@@ -343,7 +387,9 @@ export default function AccountSettings() {
         <section id="nameSection" className={styles.sectionGroup}>
           <div className={styles.groupHeader}>
             <h3 className={styles.groupTitle}>Nazwa wyświetlana</h3>
-            <span className={styles.badge}>{(displayName || "").trim() ? "OK" : "brak"}</span>
+            <span className={styles.badge}>
+              {(displayName || "").trim() ? "OK" : "brak"}
+            </span>
           </div>
 
           <div className={styles.card}>
@@ -357,18 +403,17 @@ export default function AccountSettings() {
                 maxLength={40}
               />
 
-<LoadingButton
-  isLoading={loadingAction === "saveName"}
-  disabled={loadingAction !== null}
-  onClick={handleSaveDisplayName}
-  className={styles.primary}
->
-  <span className={styles.btnInner}>
-    <FiSave className={styles.btnIcon} />
-    <span>Zapisz</span>
-  </span>
-</LoadingButton>
-
+              <LoadingButton
+                isLoading={loadingAction === "saveName"}
+                disabled={loadingAction !== null}
+                onClick={handleSaveDisplayName}
+                className={styles.primary}
+              >
+                <span className={styles.btnInner}>
+                  <FiSave className={styles.btnIcon} />
+                  <span>Zapisz</span>
+                </span>
+              </LoadingButton>
             </div>
 
             <small className={styles.hint}>
@@ -389,18 +434,17 @@ export default function AccountSettings() {
               Jeśli logujesz się hasłem, wyślemy Ci e-mail z linkiem do zmiany hasła.
             </p>
 
-<LoadingButton
-  isLoading={loadingAction === "resetPass"}
-  disabled={loadingAction !== null}
-  onClick={handlePasswordReset}
-  className={styles.secondary}
->
-  <span className={styles.btnInner}>
-    <FiLock className={styles.btnIcon} />
-    <span>Wyślij link do zmiany hasła</span>
-  </span>
-</LoadingButton>
-
+            <LoadingButton
+              isLoading={loadingAction === "resetPass"}
+              disabled={loadingAction !== null}
+              onClick={handlePasswordReset}
+              className={styles.secondary}
+            >
+              <span className={styles.btnInner}>
+                <FiLock className={styles.btnIcon} />
+                <span>Wyślij link do zmiany hasła</span>
+              </span>
+            </LoadingButton>
           </div>
         </section>
       </div>

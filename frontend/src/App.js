@@ -33,6 +33,10 @@ function App() {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
+  // ✅ token do backendu (Firebase ID Token)
+  const [token, setToken] = useState(null);
+  const [loadingToken, setLoadingToken] = useState(true);
+
   const [refreshTrigger, setRefreshTrigger] = useState(Date.now());
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingReservationsCount, setPendingReservationsCount] = useState(0);
@@ -48,25 +52,54 @@ function App() {
     return { uid: user.uid, email: user.email || '' };
   }, [user?.uid, user?.email]);
 
+  // ✅ helper: fetch z tokenem
+  const authFetch = useCallback(
+    (url, options = {}) => {
+      const headers = {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${token}`,
+      };
+
+      return fetch(url, { ...options, headers });
+    },
+    [token]
+  );
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        setUser({
-          email: firebaseUser.email,
-          uid: firebaseUser.uid,
-        });
-      } else {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      try {
+        setLoadingUser(true);
+        setLoadingToken(true);
+
+        if (firebaseUser) {
+          setUser({
+            email: firebaseUser.email,
+            uid: firebaseUser.uid,
+          });
+
+          // ✅ pobierz token do backendu
+          const idToken = await firebaseUser.getIdToken();
+          setToken(idToken);
+        } else {
+          setUser(null);
+          setToken(null);
+        }
+      } catch (e) {
+        console.error('❌ onAuthStateChanged error:', e);
         setUser(null);
+        setToken(null);
+      } finally {
+        setLoadingUser(false);
+        setLoadingToken(false);
       }
-      setLoadingUser(false);
     });
 
     return () => unsubscribe();
   }, []);
 
-  // ✅ rezerwacje – AbortController + nie licz jak brak uid
+  // ✅ rezerwacje – AbortController + token required
   useEffect(() => {
-    if (!safeUser?.uid) {
+    if (!safeUser?.uid || !token) {
       setPendingReservationsCount(0);
       return;
     }
@@ -75,7 +108,7 @@ function App() {
 
     const fetchPendingReservations = async () => {
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${API}/api/reservations/by-provider/${safeUser.uid}`,
           { signal: controller.signal }
         );
@@ -97,11 +130,11 @@ function App() {
     fetchPendingReservations();
 
     return () => controller.abort();
-  }, [safeUser?.uid, refreshTrigger]);
+  }, [safeUser?.uid, token, refreshTrigger, authFetch]);
 
-  // ✅ unread – AbortController
+  // ✅ unread – AbortController + token required
   useEffect(() => {
-    if (!safeUser?.uid) {
+    if (!safeUser?.uid || !token) {
       setUnreadCount(0);
       return;
     }
@@ -110,7 +143,7 @@ function App() {
 
     const fetchUnreadCount = async () => {
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${API}/api/conversations/by-uid/${safeUser.uid}`,
           { signal: controller.signal }
         );
@@ -131,9 +164,10 @@ function App() {
     fetchUnreadCount();
 
     return () => controller.abort();
-  }, [safeUser?.uid, refreshTrigger]);
+  }, [safeUser?.uid, token, refreshTrigger, authFetch]);
 
-  if (loadingUser) {
+  // ✅ blokuj UI dopóki nie mamy usera i tokena (żeby nie było 401 na starcie)
+  if (loadingUser || loadingToken) {
     return <p style={{ padding: "2rem", textAlign: "center" }}>⏳ Trwa ładowanie aplikacji...</p>;
   }
 

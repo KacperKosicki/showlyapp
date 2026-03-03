@@ -1,46 +1,50 @@
-const express = require('express');
+// routes/favorites.js
+const express = require("express");
 const router = express.Router();
 
-const Favorite = require('../models/Favorite');
-const Profile  = require('../models/Profile');
+const Favorite = require("../models/Favorite");
+const Profile = require("../models/Profile");
 
-// wymaga nagłówka uid
-function requireUid(req, res, next) {
-  const uid = req.headers?.uid;
-  if (!uid) return res.status(401).json({ message: 'Brak nagłówka uid' });
-  req.uid = uid;
-  next();
-}
+const requireAuth = require("../middleware/requireAuth");
 
 /**
  * POST /api/favorites/toggle
  * body: { profileUserId }
- * headers: { uid }
+ * AUTH: Bearer token
  * zwraca: { isFav, count }
  */
-router.post('/toggle', requireUid, async (req, res) => {
+router.post("/toggle", requireAuth, async (req, res) => {
   try {
-    const ownerUid = req.uid;
+    const ownerUid = req.auth.uid; // ✅ tylko z tokena
     const { profileUserId } = req.body || {};
 
-    if (!profileUserId) return res.status(400).json({ message: 'profileUserId wymagane' });
-    if (profileUserId === ownerUid) return res.status(400).json({ message: 'Nie możesz dodać własnego profilu' });
+    if (!profileUserId) {
+      return res.status(400).json({ message: "profileUserId wymagane" });
+    }
+
+    if (String(profileUserId) === String(ownerUid)) {
+      return res.status(400).json({ message: "Nie możesz dodać własnego profilu" });
+    }
 
     const prof = await Profile.findOne({ userId: profileUserId }).lean();
-    if (!prof) return res.status(404).json({ message: 'Profil nie istnieje' });
+    if (!prof) {
+      return res.status(404).json({ message: "Profil nie istnieje" });
+    }
 
     const removed = await Favorite.findOneAndDelete({ ownerUid, profileUserId });
 
     let isFav;
     if (removed) {
       isFav = false;
+
+      // bezpieczne zejście do zera
       await Profile.updateOne(
         { userId: profileUserId },
         [
           {
             $set: {
               favoritesCount: {
-                $max: [{ $subtract: [{ $ifNull: ['$favoritesCount', 0] }, 1] }, 0],
+                $max: [{ $subtract: [{ $ifNull: ["$favoritesCount", 0] }, 1] }, 0],
               },
             },
           },
@@ -52,11 +56,9 @@ router.post('/toggle', requireUid, async (req, res) => {
       } catch (e) {
         if (e?.code !== 11000) throw e; // duplikat – ignoruj
       }
+
       isFav = true;
-      await Profile.updateOne(
-        { userId: profileUserId },
-        { $inc: { favoritesCount: 1 } }
-      );
+      await Profile.updateOne({ userId: profileUserId }, { $inc: { favoritesCount: 1 } });
     }
 
     const doc = await Profile.findOne(
@@ -65,30 +67,30 @@ router.post('/toggle', requireUid, async (req, res) => {
     ).lean();
 
     const count =
-      typeof doc?.favoritesCount === 'number'
+      typeof doc?.favoritesCount === "number"
         ? doc.favoritesCount
         : await Favorite.countDocuments({ profileUserId });
 
     return res.json({ isFav, count });
   } catch (e) {
-    console.error('POST /favorites/toggle error', e);
-    return res.status(500).json({ message: 'Błąd serwera' });
+    console.error("POST /favorites/toggle error", e);
+    return res.status(500).json({ message: "Błąd serwera" });
   }
 });
 
 /**
  * GET /api/favorites/my
- * headers: { uid }
+ * AUTH: Bearer token
  */
-router.get('/my', requireUid, async (req, res) => {
+router.get("/my", requireAuth, async (req, res) => {
   try {
-    const ownerUid = req.uid;
+    const ownerUid = req.auth.uid; // ✅ tylko z tokena
 
     const favs = await Favorite.find({ ownerUid })
       .select({ profileUserId: 1, _id: 0 })
       .lean();
 
-    const ids = favs.map(f => f.profileUserId);
+    const ids = favs.map((f) => f.profileUserId);
     if (ids.length === 0) return res.json([]);
 
     const profiles = await Profile.find(
@@ -113,11 +115,10 @@ router.get('/my', requireUid, async (req, res) => {
       }
     ).lean();
 
-    const withFlag = profiles.map(p => ({ ...p, isFavorite: true }));
-    return res.json(withFlag);
+    return res.json(profiles.map((p) => ({ ...p, isFavorite: true })));
   } catch (e) {
-    console.error('GET /favorites/my error', e);
-    return res.status(500).json({ message: 'Błąd serwera' });
+    console.error("GET /favorites/my error", e);
+    return res.status(500).json({ message: "Błąd serwera" });
   }
 });
 

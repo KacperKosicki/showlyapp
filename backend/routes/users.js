@@ -6,6 +6,9 @@ const multer = require('multer');
 const User = require('../models/User');
 const cloudinary = require('../config/cloudinary'); // ✅ popraw ścieżkę jeśli trzeba
 
+const requireAuth = require("../middleware/requireAuth");
+const requireOwnerOrAdmin = require("../middleware/requireOwnerOrAdmin");
+
 /* =========================
    Helpers
    ========================= */
@@ -50,41 +53,65 @@ const upload = multer({
 
 /** POST /api/users
  * Dodaje użytkownika do bazy (jeśli nie istnieje)
+ * 🔐 WYMAGA requireAuth
  */
-router.post('/', async (req, res) => {
-  console.log('🧾 Żądanie do /api/users:', req.body);
-
-  const { email, name, firebaseUid, provider } = req.body;
-
-  if (!email || !firebaseUid || !provider) {
-    return res.status(400).json({
-      message: 'Brakuje wymaganych danych (email, uid lub provider)',
-    });
-  }
-
+router.post("/", requireAuth, async (req, res) => {
   try {
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const firebaseUid = req.auth.uid; // ✅ tylko z tokena
+    const tokenEmail = req.auth.email?.toLowerCase() || "";
+
+    const { email, name, provider } = req.body;
+
+    if (!email || !provider) {
+      return res.status(400).json({
+        message: "Brakuje wymaganych danych (email lub provider)",
+      });
+    }
+
+    const normalizedEmail = String(email).toLowerCase();
+
+    // 🛑 dodatkowe zabezpieczenie – email z body musi być zgodny z tokenem
+    if (tokenEmail && tokenEmail !== normalizedEmail) {
+      return res.status(403).json({
+        message: "Email nie zgadza się z zalogowanym użytkownikiem.",
+      });
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
 
     if (existingUser) {
+      // jeśli email istnieje, ale UID inny → blokada
       if (existingUser.firebaseUid !== firebaseUid) {
-        return res.status(409).json({ message: 'E-mail jest już powiązany z innym kontem.' });
+        return res.status(409).json({
+          message: "E-mail jest już powiązany z innym kontem.",
+        });
       }
+
       return res.status(200).json({
-        message: 'Użytkownik już istnieje',
+        message: "Użytkownik już istnieje",
         user: existingUser.toObject(),
       });
     }
 
-    const newUser = new User({ email, name, firebaseUid, provider });
+    const newUser = new User({
+      email: normalizedEmail,
+      name: String(name || "").trim(),
+      firebaseUid, // ✅ z tokena
+      provider,
+    });
+
     await newUser.save();
 
     return res.status(201).json({
-      message: 'Użytkownik dodany do bazy',
+      message: "Użytkownik dodany do bazy",
       user: newUser.toObject(),
     });
   } catch (error) {
-    console.error('❌ Błąd w /api/users:', error);
-    res.status(500).json({ message: 'Błąd serwera', error: error.message });
+    console.error("❌ Błąd w POST /api/users:", error);
+    return res.status(500).json({
+      message: "Błąd serwera",
+      error: error.message,
+    });
   }
 });
 
@@ -98,10 +125,32 @@ router.get('/check-email', async (req, res) => {
   return res.status(200).json({ exists: false });
 });
 
+/** GET /api/users/public/:uid
+ * Publiczny (dla zalogowanych) "basic view" – tylko nazwa do UI (bez wrażliwych danych)
+ * ✅ używane w ReservationList do mapowania uid -> displayName
+ */
+router.get('/public/:uid', requireAuth, async (req, res) => {
+  try {
+    const u = await User.findOne({ firebaseUid: req.params.uid })
+      .select('displayName name firebaseUid') // bez email, bez provider itp.
+      .lean();
+
+    if (!u) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
+
+    return res.json({
+      uid: u.firebaseUid,
+      displayName: u.displayName || '',
+      name: u.name || '',
+    });
+  } catch (e) {
+    return res.status(500).json({ message: 'Błąd serwera', error: e.message });
+  }
+});
+
 /** GET /api/users/:uid
  * Zwraca dane usera (avatar to już https URL)
  */
-router.get('/:uid', async (req, res) => {
+router.get('/:uid', requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
     const user = await User.findOne({ firebaseUid: req.params.uid }).lean();
     if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
@@ -115,7 +164,7 @@ router.get('/:uid', async (req, res) => {
  * Aktualizacje danych (displayName, name, avatar)
  * avatar przyjmuje tylko https:// (Cloudinary albo inne CDN)
  */
-router.patch('/:uid', async (req, res) => {
+router.patch('/:uid', requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
     const { displayName, avatar, name } = req.body;
 
@@ -152,7 +201,7 @@ router.patch('/:uid', async (req, res) => {
 /** POST /api/users/:uid/avatar
  * Upload pliku -> Cloudinary -> zapis secure_url w DB
  */
-router.post('/:uid/avatar', upload.single('file'), async (req, res) => {
+router.post('/:uid/avatar', requireAuth, requireOwnerOrAdmin, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Brak pliku' });
 
@@ -202,7 +251,7 @@ router.post('/:uid/avatar', upload.single('file'), async (req, res) => {
  * Ustawienie avatara na zewnętrzny HTTPS URL
  * + usuń stary cloudinary jeśli był
  */
-router.patch('/:uid/avatar-url', async (req, res) => {
+router.patch('/:uid/avatar-url', requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
     const { url } = req.body;
     const next = String(url || '').trim();
@@ -231,7 +280,7 @@ router.patch('/:uid/avatar-url', async (req, res) => {
 /** DELETE /api/users/:uid/avatar
  * Usuwa avatar (jeśli z Cloudinary – usuwa plik), czyści pole w DB
  */
-router.delete('/:uid/avatar', async (req, res) => {
+router.delete('/:uid/avatar', requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
     const user = await User.findOne({ firebaseUid: req.params.uid });
     if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });

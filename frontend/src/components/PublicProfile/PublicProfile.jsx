@@ -59,6 +59,25 @@ const ensureUrl = (url = "") => {
 
 const API = process.env.REACT_APP_API_URL;
 
+const authHeaders = async (extra = {}) => {
+  const firebaseUser = auth.currentUser;
+
+  const uid = firebaseUser?.uid || "";
+  let token = "";
+
+  try {
+    token = firebaseUser?.getIdToken ? await firebaseUser.getIdToken(true) : "";
+  } catch {
+    token = "";
+  }
+
+  return {
+    ...(uid ? { uid } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extra,
+  };
+};
+
 // ✅ avatar/photos mogą być: string albo { url, publicId }
 const pickUrl = (val) => {
   if (!val) return "";
@@ -232,8 +251,8 @@ export default function PublicProfile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const headers = uid ? { uid } : {};
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`, { headers });
+        const headers = await authHeaders();
+        const res = await fetch(`${API}/api/profiles/slug/${slug}`, { headers });
 
         if (res.status === 403) {
           setAlert({ type: "error", message: "Profil jest obecnie niewidoczny lub wygasł." });
@@ -305,17 +324,19 @@ export default function PublicProfile() {
     let userAvatar = normalizeAvatar(u?.photoURL || "");
 
     try {
-      const r = await fetch(`${API}/api/users/${userId}`);
+      const r = await fetch(`${API}/api/users/${userId}`, { headers: await authHeaders() });
       if (r.ok) {
         const dbUser = await r.json();
         userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || "";
       }
-    } catch {}
+    } catch { }
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/rate/${slug}`, {
+      const headers = await authHeaders({ "Content-Type": "application/json" });
+
+      const res = await fetch(`${API}/api/profiles/rate/${slug}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ userId, rating: selectedRating, comment, userName, userAvatar }),
       });
 
@@ -324,7 +345,7 @@ export default function PublicProfile() {
 
       setAlert({ type: "success", message: "Dziękujemy za opinię!" });
 
-      const updated = await fetch(`${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`);
+      const updated = await fetch(`${API}/api/profiles/slug/${slug}`, { headers: await authHeaders() });
       const updatedData = await updated.json();
       setProfile(updatedData);
     } catch (err) {
@@ -388,12 +409,9 @@ export default function PublicProfile() {
     setFavCount((c) => Math.max(0, c + (next ? 1 : -1)));
 
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/favorites/toggle`, {
+      const res = await fetch(`${API}/api/favorites/toggle`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          uid: currentUser.uid,
-        },
+        headers: await authHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ profileUserId: profile.userId }),
       });
 
@@ -461,17 +479,17 @@ export default function PublicProfile() {
     ratedByArr.length > 0
       ? ratedByArr.length
       : Array.isArray(reviews)
-      ? reviews.length
-      : Number.isFinite(Number(reviews))
-      ? Number(reviews)
-      : 0;
+        ? reviews.length
+        : Number.isFinite(Number(reviews))
+          ? Number(reviews)
+          : 0;
 
   const avgRating =
     ratedByArr.length > 0
       ? ratedByArr.reduce((sum, r) => sum + Number(r?.rating || 0), 0) / ratedByArr.length
       : Number.isFinite(Number(rating))
-      ? Number(rating)
-      : 0;
+        ? Number(rating)
+        : 0;
 
   const avgRatingLabel = avgRating > 0 ? avgRating.toFixed(1) : "0.0";
 
@@ -531,12 +549,12 @@ export default function PublicProfile() {
     profileType === "zawodowy"
       ? "Zawód"
       : profileType === "hobbystyczny"
-      ? "Hobby"
-      : profileType === "serwis"
-      ? "Serwis"
-      : profileType === "społeczność"
-      ? "Społeczność"
-      : "Profil";
+        ? "Hobby"
+        : profileType === "serwis"
+          ? "Serwis"
+          : profileType === "społeczność"
+            ? "Społeczność"
+            : "Profil";
 
   return (
     <div className={styles.page} style={cssVars}>
@@ -804,10 +822,10 @@ export default function PublicProfile() {
 
                     const dateLabel = op.createdAt
                       ? new Date(op.createdAt).toLocaleDateString("pl-PL", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })
                       : "";
 
                     return (

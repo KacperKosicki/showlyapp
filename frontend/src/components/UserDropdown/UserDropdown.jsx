@@ -28,6 +28,14 @@ const normalizeAvatar = (val = '') => {
 const pickAvatar = ({ dbAvatar, firebasePhotoURL }) =>
   normalizeAvatar(dbAvatar) || normalizeAvatar(firebasePhotoURL) || '';
 
+// ✅ token header do backendu
+async function getAuthHeader() {
+  const u = auth.currentUser;
+  if (!u) return {};
+  const token = await u.getIdToken();
+  return { Authorization: `Bearer ${token}` };
+}
+
 /** =========================
  * component
  * ========================= */
@@ -64,14 +72,20 @@ const UserDropdown = ({
       try {
         let dbAvatar = '';
         try {
+          const authHeader = await getAuthHeader();
+
           const r = await fetch(`${API}/api/users/${user.uid}`, {
-            headers: { Accept: 'application/json' }
+            headers: {
+              Accept: 'application/json',
+              ...authHeader,
+            }
           });
+
           if (r.ok) {
             const db = await r.json();
             dbAvatar = db?.avatar || '';
           }
-        } catch { }
+        } catch {}
 
         const firebasePhotoURL = auth.currentUser?.photoURL || '';
 
@@ -104,8 +118,13 @@ const UserDropdown = ({
       try {
         setProfileStatus('loading');
 
+        const authHeader = await getAuthHeader();
+
         const res = await fetch(`${API}/api/profiles/by-user/${user.uid}`, {
-          headers: { Accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            ...authHeader,
+          },
           signal: controller.signal,
         });
 
@@ -148,13 +167,20 @@ const UserDropdown = ({
     return () => controller.abort();
   }, [user?.uid, refreshTrigger]);
 
-  // 🔔 Unread: zostawiamy axios jak miałeś (ok), ale tylko gdy jest uid
+  // 🔔 Unread
   useEffect(() => {
     const fetchUnread = async () => {
       if (!user?.uid || !setUnreadCount) return;
 
       try {
-        const res = await axios.get(`${API}/api/conversations/by-uid/${user.uid}`);
+        const authHeader = await getAuthHeader();
+
+        const res = await axios.get(`${API}/api/conversations/by-uid/${user.uid}`, {
+          headers: {
+            ...authHeader,
+          },
+        });
+
         const totalUnread = Array.isArray(res.data)
           ? res.data.reduce((acc, c) => acc + Number(c.unreadCount || 0), 0)
           : 0;
@@ -247,7 +273,7 @@ const UserDropdown = ({
           </button>
         )}
 
-        {showProfileActions && profileStatus === "error" && (
+        {showProfileActions && profileStatus === 'error' && (
           <div className={styles.netBanner} role="status" aria-live="polite">
             <span className={styles.netDot} aria-hidden="true" />
             <span className={styles.netText}>Problem z połączeniem… Spróbuj odświeżyć.</span>

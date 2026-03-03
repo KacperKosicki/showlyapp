@@ -59,7 +59,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
       await auth.currentUser.reload();
       const refreshedUser = auth.currentUser;
 
-      if (!refreshedUser.emailVerified) {
+      if (!refreshedUser?.emailVerified) {
         await sendEmailVerification(refreshedUser);
         await signOut(auth);
         setError('Zweryfikuj swój adres e-mail. Wysłaliśmy ponownie link aktywacyjny.');
@@ -75,12 +75,23 @@ const Login = ({ setUser, setRefreshTrigger }) => {
         return;
       }
 
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/users`, {
-        email,
-        name: refreshedUser.displayName || '',
-        firebaseUid: uid,
-        provider: 'password'
-      });
+      // ✅ TOKEN DO BACKENDU
+      const idToken = await refreshedUser.getIdToken();
+
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/users`,
+        {
+          email,
+          name: refreshedUser.displayName || '',
+          firebaseUid: uid,
+          provider: 'password'
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+          }
+        }
+      );
 
       localStorage.setItem('showlyUser', JSON.stringify({ email, uid }));
       setUser({ email, uid });
@@ -133,13 +144,24 @@ const Login = ({ setUser, setRefreshTrigger }) => {
         return;
       }
 
+      // ✅ TOKEN DO BACKENDU
+      const idToken = await user.getIdToken();
+
       try {
-        await axios.post(`${process.env.REACT_APP_API_URL}/api/users`, {
-          email,
-          name: user.displayName || '',
-          firebaseUid: uid,
-          provider: 'google'
-        });
+        await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/users`,
+          {
+            email,
+            name: user.displayName || '',
+            firebaseUid: uid,
+            provider: 'google'
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${idToken}`,
+            }
+          }
+        );
       } catch (err) {
         if (err.response?.status === 409) {
           setError('Ten e-mail jest już przypisany do innego konta. Zaloguj się metodą, którą wcześniej użyłeś.');

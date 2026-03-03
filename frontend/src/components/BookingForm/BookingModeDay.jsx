@@ -1,14 +1,22 @@
 // BookingModeDay.jsx — kalendarz “dniowy” (bez slotów) + usługa wymagana do rezerwacji dnia (gdy są usługi)
 import { useEffect, useMemo, useState } from 'react';
 import {
-  startOfMonth, endOfMonth, eachDayOfInterval, format, getDay,
-  addMonths, subMonths, isSameDay, startOfDay, isBefore
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  format,
+  getDay,
+  addMonths,
+  subMonths,
+  isSameDay,
+  startOfDay,
+  isBefore,
 } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styles from './BookingForm.module.scss';
-import LoadingButton from "../ui/LoadingButton/LoadingButton";
+import LoadingButton from '../ui/LoadingButton/LoadingButton';
+import { api } from '../../api/api';
 
 const CHANNEL = 'account_to_profile';
 
@@ -20,31 +28,39 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
   const [onlyInquiry, setOnlyInquiry] = useState(false);
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const navigate = useNavigate();
 
   // ✅ logika: jeśli profil ma usługi i NIE jest to "Tylko zapytanie" → usługa wymagana
   const hasServices = Array.isArray(provider?.services) && provider.services.length > 0;
   const serviceRequiredForBooking = hasServices && !onlyInquiry;
 
-  // Dni niedostępne
+  // Dni niedostępne (PUBLIC endpoint)
   useEffect(() => {
     const loadUnavailable = async () => {
       try {
-        const { data } = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/reservations/unavailable-days/${provider.userId}`
-        );
+        if (!provider?.userId) return;
+        const { data } = await api.get(`/api/reservations/unavailable-days/${provider.userId}`);
         setUnavailableDays(Array.isArray(data) ? data : []);
-      } catch { /* cicho – walidacja przy submit */ }
+      } catch {
+        // cicho – walidacja i tak jest przy submit
+        setUnavailableDays([]);
+      }
     };
     loadUnavailable();
-  }, [provider.userId]);
+  }, [provider?.userId]);
 
   const isUnavailable = (yyyyMmDd) => unavailableDays.includes(yyyyMmDd);
 
   // Siatka miesięcy
-  const daysInMonth = useMemo(() => (
-    eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) })
-  ), [currentMonth]);
+  const daysInMonth = useMemo(
+    () =>
+      eachDayOfInterval({
+        start: startOfMonth(currentMonth),
+        end: endOfMonth(currentMonth),
+      }),
+    [currentMonth]
+  );
 
   const startDayIndex = useMemo(() => getDay(startOfMonth(currentMonth)), [currentMonth]);
 
@@ -56,9 +72,11 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
     const past = isBefore(startOfDay(day), startOfDay(new Date()));
     const dateStr = format(day, 'yyyy-MM-dd');
     const blocked = isUnavailable(dateStr);
-    const respectsWorkingDays = Array.isArray(provider.workingDays) && provider.workingDays.length
-      ? provider.workingDays.includes(getDay(day))
-      : true;
+
+    const respectsWorkingDays =
+      Array.isArray(provider?.workingDays) && provider.workingDays.length
+        ? provider.workingDays.includes(getDay(day))
+        : true;
 
     return !past && !blocked && respectsWorkingDays;
   };
@@ -88,10 +106,12 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
           `Zapytanie o dostępność dnia ${dateStr}`,
           selectedService ? `Usługa: ${selectedService.name}` : null,
           description?.trim() ? `Opis:\n${description.trim()}` : null,
-        ].filter(Boolean).join('\n\n');
+        ]
+          .filter(Boolean)
+          .join('\n\n');
 
         try {
-          const { data } = await axios.post(`${process.env.REACT_APP_API_URL}/api/conversations/send`, {
+          const { data } = await api.post(`/api/conversations/send`, {
             from: user.uid,
             to: provider.userId,
             channel: CHANNEL,
@@ -99,22 +119,28 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
           });
 
           if (data?.id) {
-            sessionStorage.setItem('flash', JSON.stringify({
-              type: 'success',
-              message: 'Twoje zapytanie zostało wysłane.',
-              ttl: 6000,
-              ts: Date.now(),
-            }));
+            sessionStorage.setItem(
+              'flash',
+              JSON.stringify({
+                type: 'success',
+                message: 'Twoje zapytanie zostało wysłane.',
+                ttl: 6000,
+                ts: Date.now(),
+              })
+            );
 
-            sessionStorage.setItem('optimisticMessage', JSON.stringify({
-              _id: `temp-${Date.now()}`,
-              from: user.uid,
-              to: provider.userId,
-              channel: CHANNEL,
-              content,
-              createdAt: new Date().toISOString(),
-              pending: true,
-            }));
+            sessionStorage.setItem(
+              'optimisticMessage',
+              JSON.stringify({
+                _id: `temp-${Date.now()}`,
+                from: user.uid,
+                to: provider.userId,
+                channel: CHANNEL,
+                content,
+                createdAt: new Date().toISOString(),
+                pending: true,
+              })
+            );
 
             navigate(`/konwersacja/${data.id}`, { state: { scrollToId: 'threadPageLayout' } });
           }
@@ -122,27 +148,39 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
           if (err?.response?.status === 403) {
             const existingId = err?.response?.data?.conversationId || null;
 
-            sessionStorage.setItem('flash', JSON.stringify({
-              type: 'info',
-              message: 'Masz już otwartą rozmowę z tym użytkownikiem. Kontynuuj w istniejącym wątku.',
-              ttl: 6000,
-              ts: Date.now(),
-            }));
-
-            sessionStorage.setItem('draft', [
-              `Zapytanie o dostępność dnia ${dateStr}`,
-              selectedService ? `Usługa: ${selectedService.name}` : null,
-              description?.trim() ? `Opis:\n${description.trim()}` : null,
-            ].filter(Boolean).join('\n\n'));
-
-            navigate(
-              existingId ? `/konwersacja/${existingId}` : `/wiadomosc/${provider.userId}`,
-              { state: { scrollToId: 'threadPageLayout' } }
+            sessionStorage.setItem(
+              'flash',
+              JSON.stringify({
+                type: 'info',
+                message:
+                  'Masz już otwartą rozmowę z tym użytkownikiem. Kontynuuj w istniejącym wątku.',
+                ttl: 6000,
+                ts: Date.now(),
+              })
             );
+
+            sessionStorage.setItem(
+              'draft',
+              [
+                `Zapytanie o dostępność dnia ${dateStr}`,
+                selectedService ? `Usługa: ${selectedService.name}` : null,
+                description?.trim() ? `Opis:\n${description.trim()}` : null,
+              ]
+                .filter(Boolean)
+                .join('\n\n')
+            );
+
+            navigate(existingId ? `/konwersacja/${existingId}` : `/wiadomosc/${provider.userId}`, {
+              state: { scrollToId: 'threadPageLayout' },
+            });
             return;
           }
 
-          pushAlert?.({ show: true, type: 'error', message: 'Nie udało się wysłać zapytania.' });
+          const msg =
+            err?.response?.data?.message ||
+            (err?.response?.status === 401 ? 'Brak autoryzacji (401). Zaloguj się ponownie.' : null) ||
+            'Nie udało się wysłać zapytania.';
+          pushAlert?.({ show: true, type: 'error', message: msg });
         }
 
         return;
@@ -150,12 +188,20 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
 
       // B) Rezerwacja całego dnia
       if (serviceRequiredForBooking && !selectedService) {
-        pushAlert?.({ show: true, type: 'error', message: 'Wybierz usługę, aby zarezerwować dzień.' });
+        pushAlert?.({
+          show: true,
+          type: 'error',
+          message: 'Wybierz usługę, aby zarezerwować dzień.',
+        });
         return;
       }
 
       if (isUnavailable(dateStr)) {
-        pushAlert?.({ show: true, type: 'error', message: 'Ten dzień jest niedostępny. Użyj "Tylko zapytanie".' });
+        pushAlert?.({
+          show: true,
+          type: 'error',
+          message: 'Ten dzień jest niedostępny. Użyj "Tylko zapytanie".',
+        });
         return;
       }
 
@@ -169,22 +215,29 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
         providerProfileRole: provider.role || '',
         date: dateStr,
         description: (description || '').trim(),
-        // ✅ tu przy rezerwacji dnia usługa będzie już wybrana (gdy są usługi)
-        ...(selectedService?._id ? { serviceId: selectedService._id, serviceName: selectedService.name } : {}),
+        ...(selectedService?._id
+          ? { serviceId: selectedService._id, serviceName: selectedService.name }
+          : {}),
       };
 
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/reservations/day`, payload);
+      await api.post(`/api/reservations/day`, payload);
 
-      sessionStorage.setItem('flash', JSON.stringify({
-        type: 'success',
-        message: 'Wysłano prośbę o rezerwację dnia – oczekuje na potwierdzenie.',
-        ttl: 6000,
-        ts: Date.now(),
-      }));
+      sessionStorage.setItem(
+        'flash',
+        JSON.stringify({
+          type: 'success',
+          message: 'Wysłano prośbę o rezerwację dnia – oczekuje na potwierdzenie.',
+          ttl: 6000,
+          ts: Date.now(),
+        })
+      );
 
       navigate('/rezerwacje');
     } catch (err) {
-      const msg = err?.response?.data?.message || 'Nie udało się utworzyć rezerwacji dnia.';
+      const msg =
+        err?.response?.data?.message ||
+        (err?.response?.status === 401 ? 'Brak autoryzacji (401). Zaloguj się ponownie.' : null) ||
+        'Nie udało się utworzyć rezerwacji dnia.';
       pushAlert?.({ show: true, type: 'error', message: msg });
     } finally {
       setIsSubmitting(false);
@@ -199,7 +252,7 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
         <textarea
           rows="3"
           value={description}
-          onChange={e => setDescription(e.target.value)}
+          onChange={(e) => setDescription(e.target.value)}
           placeholder="Opisz, czego potrzebujesz w danym dniu…"
         />
       </label>
@@ -212,24 +265,30 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
           </h3>
           <select
             value={selectedService?._id || ''}
-            onChange={e => {
-              const svc = provider.services.find(s => String(s._id) === String(e.target.value));
+            onChange={(e) => {
+              const svc = (provider.services || []).find(
+                (s) => String(s._id) === String(e.target.value)
+              );
               setService(svc || null);
               setDate(null); // ✅ reset wyboru dnia po zmianie usługi
             }}
           >
-            <option value="">
-              {onlyInquiry ? '– bez wyboru –' : '— wybierz usługę —'}
-            </option>
+            <option value="">{onlyInquiry ? '– bez wyboru –' : '— wybierz usługę —'}</option>
 
-            {provider.services.map(s => (
+            {(provider.services || []).map((s) => (
               <option key={s._id} value={s._id}>
                 {s.name}
-                {s.duration?.value ? ` • ${s.duration.value} ${
-                  s.duration.unit === 'minutes' ? 'min' :
-                  s.duration.unit === 'hours' ? 'godz.' :
-                  s.duration.unit === 'days' ? 'dni' : s.duration.unit
-                }` : ''}
+                {s.duration?.value
+                  ? ` • ${s.duration.value} ${
+                      s.duration.unit === 'minutes'
+                        ? 'min'
+                        : s.duration.unit === 'hours'
+                        ? 'godz.'
+                        : s.duration.unit === 'days'
+                        ? 'dni'
+                        : s.duration.unit
+                    }`
+                  : ''}
               </option>
             ))}
           </select>
@@ -266,15 +325,19 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
 
       {/* Siatka kalendarza (bez slotów) */}
       <div className={styles.calendarGrid}>
-        {['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'].map(d =>
-          <div key={d} className={styles.weekday}>{d}</div>
-        )}
+        {['Nd', 'Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'Sb'].map((d) => (
+          <div key={d} className={styles.weekday}>
+            {d}
+          </div>
+        ))}
 
-        {Array(startDayIndex).fill(null).map((_, i) =>
-          <div key={i} className={styles.blankDay} />
-        )}
+        {Array(startDayIndex)
+          .fill(null)
+          .map((_, i) => (
+            <div key={i} className={styles.blankDay} />
+          ))}
 
-        {daysInMonth.map(day => {
+        {daysInMonth.map((day) => {
           const active = isDayActive(day);
           const sel = selectedDate && isSameDay(day, selectedDate);
           const dateStr = format(day, 'yyyy-MM-dd');
@@ -283,13 +346,17 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
           return (
             <button
               key={day.toISOString()}
-              className={`${styles.day} ${(!active || unavailable) ? styles.disabledDay : ''} ${sel ? styles.selectedDay : ''}`}
+              className={`${styles.day} ${!active || unavailable ? styles.disabledDay : ''} ${
+                sel ? styles.selectedDay : ''
+              }`}
               disabled={!active || isSubmitting}
               onClick={() => !isSubmitting && active && setDate(day)}
               title={
-                unavailable ? 'Dzień niedostępny' :
-                (serviceRequiredForBooking && !selectedService) ? 'Najpierw wybierz usługę' :
-                ''
+                unavailable
+                  ? 'Dzień niedostępny'
+                  : serviceRequiredForBooking && !selectedService
+                  ? 'Najpierw wybierz usługę'
+                  : ''
               }
             >
               {format(day, 'd')}
@@ -300,9 +367,7 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
 
       {/* Info o niedostępnych (lista) */}
       {unavailableDays.length > 0 && (
-        <div className={styles.infoBox}>
-          Niedostępne: {unavailableDays.join(', ')}
-        </div>
+        <div className={styles.infoBox}>Niedostępne: {unavailableDays.join(', ')}</div>
       )}
 
       {/* Przełącznik „tylko zapytanie” */}
@@ -312,7 +377,7 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
             type="checkbox"
             checked={onlyInquiry}
             onChange={() => {
-              setOnlyInquiry(v => !v);
+              setOnlyInquiry((v) => !v);
               setDate(null); // ✅ po zmianie trybu resetujemy wybór dnia
             }}
           />
@@ -321,19 +386,13 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
       </div>
 
       {!!selectedDate && isUnavailable(format(selectedDate, 'yyyy-MM-dd')) && !onlyInquiry && (
-        <div className={styles.warnBox}>
-          Ten dzień jest niedostępny – prześlij „Tylko zapytanie”.
-        </div>
+        <div className={styles.warnBox}>Ten dzień jest niedostępny – prześlij „Tylko zapytanie”.</div>
       )}
 
       <LoadingButton
         onClick={handleSubmit}
         isLoading={isSubmitting}
-        disabled={
-          !selectedDate ||
-          isSubmitting ||
-          (serviceRequiredForBooking && !selectedService)
-        }
+        disabled={!selectedDate || isSubmitting || (serviceRequiredForBooking && !selectedService)}
         className={styles.submit}
       >
         {onlyInquiry ? 'Wyślij zapytanie' : 'Rezerwuj termin'}

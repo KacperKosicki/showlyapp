@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./CreateProfile.module.scss";
-import axios from "axios";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import UserCard from "../UserCard/UserCard";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
+import { api } from "../../api/api"; // <-- dopasuj ścieżkę, jeśli masz inną
 
 const DEFAULT_AVATAR = "/images/other/no-image.png";
 
@@ -81,7 +81,8 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  const uid = user?.uid || user?.localId || user?.email;
+  // ✅ trzymaj zawsze firebase UID (spójność + autoryzacja)
+  const uid = user?.uid;
 
   // =========================================================
   // ✅ Upload avatara dopiero po utworzeniu profilu
@@ -93,11 +94,8 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     const fd = new FormData();
     fd.append("file", file);
 
-    await axios.post(
-      `${process.env.REACT_APP_API_URL}/api/profiles/${uid}/avatar`,
-      fd,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    );
+    // ✅ ważne: nie ustawiamy ręcznie Content-Type, żeby axios dodał boundary
+    await api.post(`/api/profiles/${uid}/avatar`, fd);
   };
 
   const resetAvatarLocal = async () => {
@@ -191,6 +189,12 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
     const errors = {};
 
+    if (!uid) {
+      errors.general = "Brak UID użytkownika (zaloguj się ponownie).";
+      setFormErrors(errors);
+      return;
+    }
+
     if (!form.name.trim() || form.name.length > 30) {
       errors.name = "Podaj nazwę (maks. 30 znaków)";
     }
@@ -243,7 +247,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
     setLoading(true);
 
-    // ✅ NIE wysyłamy blob: do backendu. Avatar w DB ustawimy po create przez endpoint /:uid/avatar
+    // ✅ NIE wysyłamy blob: do backendu.
     const payload = {
       ...form,
       avatar: { url: "", publicId: "" }, // zgodnie z Twoim modelem
@@ -260,9 +264,9 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
     try {
       // 1) create profile
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/profiles`, payload);
+      await api.post(`/api/profiles`, payload);
 
-      // 2) upload avatar dopiero po create (brak 404)
+      // 2) upload avatar dopiero po create
       if (avatarFile) {
         setAvatarUploading(true);
         await uploadAvatarAfterCreate(avatarFile);

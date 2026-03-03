@@ -1,6 +1,7 @@
 // YourProfile.jsx
 import { useEffect, useState, useRef } from 'react';
 import { Navigate, useLocation, Link } from 'react-router-dom';
+import { auth } from "../../firebase"; // dopasuj ścieżkę
 import axios from 'axios';
 import styles from './YourProfile.module.scss';
 import LoadingButton from '../ui/LoadingButton/LoadingButton';
@@ -90,6 +91,25 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   // =========================
   // Utils
   // =========================
+  const authHeaders = async (extra = {}) => {
+  const firebaseUser = auth.currentUser;
+
+  const uid = firebaseUser?.uid || user?.uid || "";
+  let token = "";
+
+  try {
+    token = firebaseUser?.getIdToken ? await firebaseUser.getIdToken() : "";
+  } catch {
+    token = "";
+  }
+
+  return {
+    ...(uid ? { uid } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extra,
+  };
+};
+
   const showAlert = (message, type = 'info') => {
     setAlert({ message, type });
     setTimeout(() => setAlert(null), 4000);
@@ -118,7 +138,10 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   // =========================
   const fetchProfile = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`);
+      const res = await axios.get(
+  `${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`,
+  { headers: await authHeaders() }
+);
       const p = res.data;
       const now = new Date();
       const until = new Date(p.visibleUntil);
@@ -221,9 +244,10 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     try {
       setStaffLoading(true);
       // API: GET /api/staff?profileId=...
-      const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/staff`, {
-        params: { profileId }
-      });
+const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/staff`, {
+  params: { profileId },
+  headers: await authHeaders(),
+});
       setStaff(data || []);
     } catch (e) {
       console.error('Nie udało się pobrać pracowników', e);
@@ -252,7 +276,11 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         serviceIds: newStaff.serviceIds || []
       };
 
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/staff`, payload);
+      await axios.post(
+  `${process.env.REACT_APP_API_URL}/api/staff`,
+  payload,
+  { headers: await authHeaders({ "Content-Type": "application/json" }) }
+);
 
       setNewStaff({ name: '', capacity: 1, active: true, serviceIds: [] });
       await fetchStaff(profile._id);
@@ -276,7 +304,10 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     setStaff(prev => prev.filter(s => s._id !== id));
 
     try {
-      await axios.delete(`${process.env.REACT_APP_API_URL}/api/staff/${id}`);
+      await axios.delete(
+  `${process.env.REACT_APP_API_URL}/api/staff/${id}`,
+  { headers: await authHeaders() }
+);
       showAlert('Usunięto pracownika.', 'success');
     } catch (e) {
       console.error('Błąd usuwania pracownika', e);
@@ -367,7 +398,10 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       setAvatarPreview("");
       setAvatarFile(null);
 
-      await axios.delete(`${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/avatar`);
+      await axios.delete(
+  `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/avatar`,
+  { headers: await authHeaders() }
+);
       await fetchProfile();
       setRefreshTrigger(Date.now());
       showAlert("Usunięto avatar.", "success");
@@ -551,9 +585,13 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const removeSavedPhoto = async (publicId) => {
     try {
       setPhotosUploading(true);
-      await axios.delete(`${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`, {
-        data: { publicId }
-      });
+await axios.delete(
+  `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
+  {
+    data: { publicId },
+    headers: await authHeaders({ "Content-Type": "application/json" }),
+  }
+);
       await fetchProfile();
       setRefreshTrigger(Date.now());
       showAlert("Usunięto zdjęcie.", "success");
@@ -584,19 +622,23 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       setPhotosUploading(true);
 
       // 1) usuń stare z backendu (Cloud + DB)
-      await axios.delete(`${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`, {
-        data: { publicId },
-      });
+await axios.delete(
+  `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
+  {
+    data: { publicId },
+    headers: await authHeaders({ "Content-Type": "application/json" }),
+  }
+);
 
       // 2) wrzuć nowe
       const fd = new FormData();
       fd.append("files", file);
 
-      await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
-        fd,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+await axios.post(
+  `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
+  fd,
+  { headers: await authHeaders({ "Content-Type": "multipart/form-data" }) }
+);
 
       // 3) odśwież
       await fetchProfile();
@@ -616,11 +658,11 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
     setIsExtending(true);
     try {
-      const { data } = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/billing/checkout-extension`,
-        { uid: user.uid },
-        { headers: { "Content-Type": "application/json" } }
-      );
+const { data } = await axios.post(
+  `${process.env.REACT_APP_API_URL}/api/billing/checkout-extension`,
+  { uid: user.uid },
+  { headers: await authHeaders({ "Content-Type": "application/json" }) }
+);
 
       if (!data?.url) {
         showAlert("Nie udało się rozpocząć płatności (brak URL).", "error");
@@ -643,125 +685,153 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   };
 
   const handleSaveChanges = async () => {
-    if (isSaving) return; // ✅ blokada podwójnego kliknięcia
+  if (isSaving) return; // ✅ blokada podwójnego kliknięcia
 
-    const errors = validateEditData(editData);
+  const errors = validateEditData(editData);
 
-    // Walidacja czasu usług
-    if ((editData.services || []).some(s =>
-      (s.duration.unit === 'minutes' && s.duration.value < 15) ||
-      (s.duration.unit === 'hours' && s.duration.value < 1) ||
-      (s.duration.unit === 'days' && s.duration.value < 1)
-    )) {
-      errors.services = 'Każda usługa musi mieć minimum 15 minut, 1 godzinę lub 1 dzień!';
-    }
+  // Walidacja czasu usług
+  if (
+    (editData.services || []).some(
+      (s) =>
+        (s.duration.unit === "minutes" && s.duration.value < 15) ||
+        (s.duration.unit === "hours" && s.duration.value < 1) ||
+        (s.duration.unit === "days" && s.duration.value < 1)
+    )
+  ) {
+    errors.services = "Każda usługa musi mieć minimum 15 minut, 1 godzinę lub 1 dzień!";
+  }
 
-    setFormErrors(errors);
-    if (Object.keys(errors).length > 0) {
-      showAlert('Uzupełnij poprawnie wszystkie wymagane pola.', 'warning');
-      return;
-    }
+  setFormErrors(errors);
+  if (Object.keys(errors).length > 0) {
+    showAlert("Uzupełnij poprawnie wszystkie wymagane pola.", "warning");
+    return;
+  }
 
-    setIsSaving(true); // ✅ start loadera
+  setIsSaving(true); // ✅ start loadera
 
-    try {
-      const { photoHashes, ...payload } = editData;
+  try {
+    const { photoHashes, ...payload } = editData;
 
-      const t = payload.theme || {};
-      const mappedTheme = {
-        variant: t.variant || 'system',
-        primary: t.primary || '#6f4ef2',
-        secondary: t.secondary || '#ff4081',
-      };
+    const t = payload.theme || {};
+    const mappedTheme = {
+      variant: t.variant || "system",
+      primary: t.primary || "#6f4ef2",
+      secondary: t.secondary || "#ff4081",
+    };
 
-      // 1) Zapis profilu
-      const c = payload.contact || {};
-      const builtAddressFull = [payload.location, c.postcode, c.street]
-        .filter(Boolean)
-        .join(', ')
-        .trim();
+    // 1) Zapis profilu
+    const c = payload.contact || {};
+    const builtAddressFull = [payload.location, c.postcode, c.street].filter(Boolean).join(", ").trim();
 
-      await axios.patch(`${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`, {
+    await axios.patch(
+      `${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`,
+      {
         ...payload,
         bookingBufferMin: Number(payload.bookingBufferMin ?? 0), // ✅ DODAJ
         theme: mappedTheme,
         contact: {
-          email: c.email || '',
-          phone: c.phone || '',
-          street: c.street || '',
-          postcode: c.postcode || '',
+          email: c.email || "",
+          phone: c.phone || "",
+          street: c.street || "",
+          postcode: c.postcode || "",
           addressFull: builtAddressFull,
         },
-        socials: payload.socials || { website: '', facebook: '', instagram: '', youtube: '', tiktok: '' },
+        socials: payload.socials || {
+          website: "",
+          facebook: "",
+          instagram: "",
+          youtube: "",
+          tiktok: "",
+        },
         showAvailableDates: !!payload.showAvailableDates,
-        tags: (payload.tags || []).filter(tag => tag.trim() !== ''),
-        quickAnswers: (payload.quickAnswers || []).filter(qa => qa.title?.trim() || qa.answer?.trim()),
-        team: payload.team || { enabled: false, assignmentMode: 'user-pick' },
-      });
-
-      // 2) avatar upload (jeśli wybrano nowy)
-      if (avatarFile) {
-        setAvatarUploading(true);
-        const fd = new FormData();
-        fd.append("file", avatarFile);
-
-        await axios.post(
-          `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/avatar`,
-          fd,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
-
-        setAvatarUploading(false);
-
-        // sprzątanie blob
-        if (avatarPreview) { try { URL.revokeObjectURL(avatarPreview); } catch { } }
-        setAvatarPreview("");
-        setAvatarFile(null);
+        tags: (payload.tags || []).filter((tag) => String(tag).trim() !== ""),
+        quickAnswers: (payload.quickAnswers || []).filter(
+          (qa) => qa.title?.trim() || qa.answer?.trim()
+        ),
+        team: payload.team || { enabled: false, assignmentMode: "user-pick" },
+      },
+      {
+        headers: await authHeaders({ "Content-Type": "application/json" }),
       }
+    );
 
-      // 3) galeria upload (jeśli są pending)
-      if (newPhotoFiles.length) {
-        setPhotosUploading(true);
-        const fd = new FormData();
-        newPhotoFiles.forEach((f) => fd.append("files", f));
+    // 2) avatar upload (jeśli wybrano nowy)
+    if (avatarFile) {
+      setAvatarUploading(true);
+      const fd = new FormData();
+      fd.append("file", avatarFile);
 
-        await axios.post(
-          `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
-          fd,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/avatar`,
+        fd,
+        { headers: await authHeaders({ "Content-Type": "multipart/form-data" }) }
+      );
 
-        // sprzątanie preview blobów
-        newPhotoPreviews.forEach((u) => { try { URL.revokeObjectURL(u); } catch { } });
-        setNewPhotoFiles([]);
-        setNewPhotoPreviews([]);
-        setNewPhotoHashes([]);
-        setPhotosUploading(false);
+      setAvatarUploading(false);
+
+      // sprzątanie blob
+      if (avatarPreview) {
+        try {
+          URL.revokeObjectURL(avatarPreview);
+        } catch {}
       }
-
-      // 4) Zbiorczy zapis pracowników (tylko zmienione)
-      const staffUpdateEntries = Object.entries(staffEdits);
-      if (staffUpdateEntries.length) {
-        await Promise.all(
-          staffUpdateEntries.map(([id, changes]) =>
-            axios.patch(`${process.env.REACT_APP_API_URL}/api/staff/${id}`, changes)
-          )
-        );
-      }
-
-      // 5) Odśwież + sprzątnij
-      await fetchProfile();
-      setStaffEdits({});
-      setIsEditing(false);
-      setFormErrors({});
-      showAlert('Zapisano zmiany!', 'success');
-    } catch (err) {
-      console.error('❌ Błąd zapisu profilu/pracowników:', err);
-      showAlert('Wystąpił błąd podczas zapisywania.', 'error');
-    } finally {
-      setIsSaving(false); // ✅ stop loadera zawsze
+      setAvatarPreview("");
+      setAvatarFile(null);
     }
-  };
+
+    // 3) galeria upload (jeśli są pending)
+    if (newPhotoFiles.length) {
+      setPhotosUploading(true);
+
+      const fd = new FormData();
+      newPhotoFiles.forEach((f) => fd.append("files", f));
+
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
+        fd,
+        { headers: await authHeaders({ "Content-Type": "multipart/form-data" }) }
+      );
+
+      // sprzątanie preview blobów
+      newPhotoPreviews.forEach((u) => {
+        try {
+          URL.revokeObjectURL(u);
+        } catch {}
+      });
+      setNewPhotoFiles([]);
+      setNewPhotoPreviews([]);
+      setNewPhotoHashes([]);
+      setPhotosUploading(false);
+    }
+
+    // 4) Zbiorczy zapis pracowników (tylko zmienione)
+    const staffUpdateEntries = Object.entries(staffEdits);
+    if (staffUpdateEntries.length) {
+      await Promise.all(
+        staffUpdateEntries.map(async ([id, changes]) =>
+          axios.patch(
+            `${process.env.REACT_APP_API_URL}/api/staff/${id}`,
+            changes,
+            { headers: await authHeaders({ "Content-Type": "application/json" }) }
+          )
+        )
+      );
+    }
+
+    // 5) Odśwież + sprzątnij
+    await fetchProfile();
+    setStaffEdits({});
+    setIsEditing(false);
+    setFormErrors({});
+    showAlert("Zapisano zmiany!", "success");
+  } catch (err) {
+    console.error("❌ Błąd zapisu profilu/pracowników:", err);
+    console.log("AUTH ERR:", err?.response?.status, err?.response?.data); // 🔍 mega pomocne
+    showAlert("Wystąpił błąd podczas zapisywania.", "error");
+  } finally {
+    setIsSaving(false); // ✅ stop loadera zawsze
+  }
+};
 
   // =========================
   // Misc helpers

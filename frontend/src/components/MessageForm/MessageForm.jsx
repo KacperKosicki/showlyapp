@@ -9,6 +9,9 @@ import LoadingButton from "../ui/LoadingButton/LoadingButton";
 import { FaArrowLeft, FaRegCommentDots, FaUserCircle } from "react-icons/fa";
 import { FaRegPaperPlane } from "react-icons/fa";
 
+// ✅ Firebase auth (dopasuj ścieżkę)
+import { auth } from "../../firebase";
+
 const CHANNEL = "account_to_profile"; // zawsze KONTO ➜ WIZYTÓWKA
 const API = process.env.REACT_APP_API_URL;
 const DEFAULT_AVATAR = "/images/other/no-image.png";
@@ -53,7 +56,34 @@ const MessageForm = ({ user }) => {
   const [receiverMeta, setReceiverMeta] = useState({ name: "", avatar: "" }); // avatar: string
   const [metaPending, setMetaPending] = useState(true);
 
-  // płynny scroll
+  // =========================================================
+  // ✅ AUTH HEADERS (JWT + uid fallback) — token z auth.currentUser
+  // =========================================================
+  const authHeaders = useCallback(async () => {
+    const firebaseUser = auth.currentUser;
+
+    // uid bierzemy z firebase (pewne), a fallback z propsa
+    const uid = firebaseUser?.uid || user?.uid || "";
+
+    // jeśli firebase user jeszcze nie gotowy, zwróć chociaż uid
+    if (!firebaseUser) return uid ? { uid } : {};
+
+    let token = "";
+    try {
+      token = await firebaseUser.getIdToken();
+    } catch {
+      token = "";
+    }
+
+    return {
+      ...(uid ? { uid } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }, [user?.uid]);
+
+  // =========================================================
+  // Płynny scroll
+  // =========================================================
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo) return;
@@ -72,95 +102,141 @@ const MessageForm = ({ user }) => {
     tryScroll();
   }, [location.state, location.pathname]);
 
-  const fetchReceiverMeta = useCallback(async (uid) => {
-    setMetaPending(true);
+  // =========================================================
+  // Meta odbiorcy (profil -> konto fallback)
+  // =========================================================
+  const fetchReceiverMeta = useCallback(
+    async (uid) => {
+      setMetaPending(true);
 
-    // 1) próbuj PROFIL
-    try {
-      const res = await axios.get(`${API}/api/profiles/by-user/${uid}`);
-      const prof = res.data;
+      // jeśli endpointy są chronione — lecimy z headers
+      const headers = await authHeaders();
 
-      const name = String(prof?.name || "").trim();
-      const avatar = normalizeAvatar(prof?.avatar) || "";
+      // 1) próbuj PROFIL
+      try {
+        const res = await axios.get(`${API}/api/profiles/by-user/${uid}`, { headers });
+        const prof = res.data;
 
-      if (name) {
-        setReceiverMeta({ name, avatar });
-        setMetaPending(false);
-        return;
+        const name = String(prof?.name || "").trim();
+        const avatar = normalizeAvatar(prof?.avatar) || "";
+
+        if (name) {
+          setReceiverMeta({ name, avatar });
+          setMetaPending(false);
+          return;
+        }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore
-    }
 
-    // 2) fallback na KONTO
-    try {
-      const res = await axios.get(`${API}/api/users/by-uid/${uid}`);
-      const u = res.data;
+      // 2) fallback na KONTO
+      try {
+        const res = await axios.get(`${API}/api/users/by-uid/${uid}`, { headers });
+        const u = res.data;
 
-      const name =
-        String(u?.displayName || "").trim() ||
-        String(u?.name || "").trim() ||
-        String(u?.email || "").trim() ||
-        "Użytkownik";
+        const name =
+          String(u?.displayName || "").trim() ||
+          String(u?.name || "").trim() ||
+          String(u?.email || "").trim() ||
+          "Użytkownik";
 
-      const avatar =
-        normalizeAvatar(u?.photoURL) ||
-        normalizeAvatar(u?.avatar) ||
-        normalizeAvatar(u?.photo) ||
-        "";
+        const avatar =
+          normalizeAvatar(u?.photoURL) ||
+          normalizeAvatar(u?.avatar) ||
+          normalizeAvatar(u?.photo) ||
+          "";
 
-      setReceiverMeta({ name, avatar });
-    } catch {
-      setReceiverMeta({ name: "Użytkownik", avatar: "" });
-    } finally {
-      setMetaPending(false);
-    }
-  }, []);
+        setReceiverMeta({ name, avatar });
+      } catch {
+        setReceiverMeta({ name: "Użytkownik", avatar: "" });
+      } finally {
+        setMetaPending(false);
+      }
+    },
+    [authHeaders]
+  );
 
-  // jeśli istnieje MÓJ wątek KONTO➜WIZYTÓWKA (starter = user.uid) → przekieruj
+  // =========================================================
+  // Jeśli istnieje MÓJ wątek KONTO➜WIZYTÓWKA (starter = user.uid) → przekieruj
+  // =========================================================
   const checkConversation = useCallback(async () => {
-    if (!user?.uid || !recipientId) return;
+    const myUid = auth.currentUser?.uid || user?.uid;
+
+    if (!myUid || !recipientId) return;
+
+    // 🔥 ważne: jeśli firebase user jeszcze nie gotowy, nie rób checka (bo wpadnie 401)
+    if (!auth.currentUser) return;
 
     try {
       // meta odbiorcy (odpal od razu)
       fetchReceiverMeta(recipientId);
 
+      const headers = await authHeaders();
+
       const res = await axios.get(
-        `${API}/api/conversations/check/${user.uid}/${recipientId}?channel=${CHANNEL}&starter=${user.uid}`
+        `${API}/api/conversations/check/${myUid}/${recipientId}?channel=${CHANNEL}&starter=${myUid}`,
+        { headers }
       );
 
-      if (res.data.exists && res.data.id) {
+      if (res.data?.exists && res.data?.id) {
         navigate(`/konwersacja/${res.data.id}`, {
           state: { scrollToId: "threadPageLayout" },
         });
         return;
       }
-    } catch (_) {
+    } catch {
+      // nawet jak check padnie, meta próbujemy pobrać
       fetchReceiverMeta(recipientId);
     } finally {
       setLoading(false);
     }
-  }, [user?.uid, recipientId, navigate, fetchReceiverMeta]);
+  }, [recipientId, navigate, fetchReceiverMeta, authHeaders, user?.uid]);
 
   useEffect(() => {
     checkConversation();
   }, [checkConversation]);
 
+  // =========================================================
+  // Send
+  // =========================================================
   const handleSend = async (e) => {
     e.preventDefault();
+
+    const myUid = auth.currentUser?.uid || user?.uid;
+
     if (!message.trim()) return;
     if (isSending) return;
+
+    if (!myUid) {
+      setAlert({ type: "error", message: "Musisz być zalogowany, aby wysłać wiadomość." });
+      return;
+    }
+
+    // 🔥 token jeszcze nie gotowy
+    if (!auth.currentUser) {
+      setAlert({
+        type: "error",
+        message: "Sesja jeszcze się ładuje. Odśwież stronę lub zaloguj się ponownie.",
+      });
+      return;
+    }
 
     setIsSending(true);
     setAlert(null);
 
     try {
-      const { data } = await axios.post(`${API}/api/conversations/send`, {
-        from: user.uid, // piszesz jako KONTO
-        to: recipientId, // do WŁAŚCICIELA PROFILU
-        content: message.trim(),
-        channel: CHANNEL, // KONTO ➜ WIZYTÓWKA
-      });
+      const headers = await authHeaders();
+
+      const { data } = await axios.post(
+        `${API}/api/conversations/send`,
+        {
+          from: myUid, // piszesz jako KONTO
+          to: recipientId, // do WŁAŚCICIELA PROFILU
+          content: message.trim(),
+          channel: CHANNEL, // KONTO ➜ WIZYTÓWKA
+        },
+        { headers }
+      );
 
       setMessage("");
       setAlert({ type: "success", message: "Wiadomość wysłana!" });
@@ -175,10 +251,15 @@ const MessageForm = ({ user }) => {
         setTimeout(() => navigate("/powiadomienia"), 800);
       }
     } catch (err) {
-      if (err.response?.status === 403) {
+      if (err.response?.status === 401) {
         setAlert({
           type: "error",
-          message: "Musisz poczekać na odpowiedź w tym wątku.",
+          message: "Brak autoryzacji (401). Token nie został zaakceptowany przez backend.",
+        });
+      } else if (err.response?.status === 403) {
+        setAlert({
+          type: "error",
+          message: err.response?.data?.message || "Brak dostępu (403).",
         });
       } else if (err.response?.data?.message) {
         setAlert({ type: "error", message: err.response.data.message });
@@ -194,13 +275,11 @@ const MessageForm = ({ user }) => {
   const receiverAvatar = useMemo(() => receiverMeta?.avatar || "", [receiverMeta]);
 
   const renderNameNode = (raw) =>
-    raw ? (
-      <span className={styles.receiverName}>{raw}</span>
-    ) : (
-      <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />
-    );
+    raw ? <span className={styles.receiverName}>{raw}</span> : <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />;
 
+  // =========================================================
   // SKELETON PAGE (jak ThreadView vibe)
+  // =========================================================
   if (loading) {
     return (
       <div id="messageFormContainer" className={styles.page}>
@@ -264,18 +343,15 @@ const MessageForm = ({ user }) => {
     );
   }
 
+  // =========================================================
+  // PAGE
+  // =========================================================
   return (
     <div id="messageFormContainer" className={styles.page}>
       <div className={styles.bgGlow} aria-hidden="true" />
 
       <div className={styles.shell}>
-        {alert && (
-          <AlertBox
-            type={alert.type}
-            message={alert.message}
-            onClose={() => setAlert(null)}
-          />
-        )}
+        {alert && <AlertBox type={alert.type} message={alert.message} onClose={() => setAlert(null)} />}
 
         <div className={styles.wrapper}>
           {/* ✅ BACK NAD HERO (jak w ThreadView) */}
@@ -286,7 +362,7 @@ const MessageForm = ({ user }) => {
             </button>
           </div>
 
-          {/* ✅ HERO (jak ThreadView: topBar tylko na badge) */}
+          {/* ✅ HERO */}
           <header className={styles.hero}>
             <div className={styles.heroTopBar}>
               <div className={styles.heroBadge} title="Kanał wiadomości">
@@ -300,9 +376,7 @@ const MessageForm = ({ user }) => {
             <div className={styles.heroInner}>
               <div className={styles.heroLeft}>
                 <div className={styles.titleRow}>
-                  <h2 className={styles.heroTitle}>
-                    Napisz do&nbsp;{renderNameNode(receiverName)}
-                  </h2>
+                  <h2 className={styles.heroTitle}>Napisz do&nbsp;{renderNameNode(receiverName)}</h2>
                   <span className={styles.titlePill}>NOWA WIADOMOŚĆ</span>
                 </div>
 
@@ -353,12 +427,7 @@ const MessageForm = ({ user }) => {
                 disabled={isSending}
               />
 
-              <LoadingButton
-                type="submit"
-                isLoading={isSending}
-                disabled={isSending}
-                className={styles.primaryBtn}
-              >
+              <LoadingButton type="submit" isLoading={isSending} disabled={isSending} className={styles.primaryBtn}>
                 <FaRegPaperPlane />
                 Wyślij wiadomość
               </LoadingButton>

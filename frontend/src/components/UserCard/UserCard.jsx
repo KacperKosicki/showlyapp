@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./UserCard.module.scss";
 import { FaStar, FaMapMarkerAlt, FaRegEye } from "react-icons/fa";
 import { FaHeart, FaRegHeart } from "react-icons/fa6";
 import AlertBox from "../AlertBox/AlertBox";
 import axios from "axios";
+
+// ✅ Firebase auth (dopasuj ścieżkę)
+import { auth } from "../../firebase";
 
 const DEFAULT_AVATAR = "/images/other/no-image.png";
 const API = process.env.REACT_APP_API_URL;
@@ -99,6 +102,30 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
 
   const navigate = useNavigate();
 
+  // =========================================================
+  // ✅ AUTH HEADERS (JWT + uid fallback) — token z auth.currentUser
+  // =========================================================
+  const authHeaders = useCallback(async () => {
+    const firebaseUser = auth.currentUser;
+
+    const uid = firebaseUser?.uid || currentUser?.uid || "";
+
+    // jeśli firebase jeszcze nie gotowy, zwróć chociaż uid (czasem backend i tak wymaga tokena)
+    if (!firebaseUser) return uid ? { uid } : {};
+
+    let token = "";
+    try {
+      token = await firebaseUser.getIdToken();
+    } catch {
+      token = "";
+    }
+
+    return {
+      ...(uid ? { uid } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }, [currentUser?.uid]);
+
   // ✅ avatar (fallback + normalizacja) — działa dla string i {url, publicId}
   const avatarSrc = normalizeAvatar(avatar) || DEFAULT_AVATAR;
 
@@ -184,24 +211,37 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
       return;
     }
 
+    // 🔥 jeżeli backend wymaga tokena, a firebase jeszcze nie gotowy
+    if (!auth.currentUser) {
+      showAlert("Sesja jeszcze się ładuje. Spróbuj ponownie za chwilę.", "info");
+      return;
+    }
+
     // OPTIMISTIC
     const next = !isFav;
     setIsFav(next);
     setFavCount((c) => Math.max(0, c + (next ? 1 : -1)));
 
     try {
+      const headers = await authHeaders();
+
       const { data } = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/favorites/toggle`,
+        `${API}/api/favorites/toggle`,
         { profileUserId: user.userId },
-        { headers: { uid: currentUser.uid } }
+        { headers }
       );
+
       if (typeof data?.isFav === "boolean") setIsFav(data.isFav);
       if (typeof data?.count === "number") setFavCount(data.count);
-    } catch {
+    } catch (e) {
       // REVERT on error
       setIsFav((v) => !v);
       setFavCount((c) => Math.max(0, c + (next ? -1 : +1)));
-      showAlert("Nie udało się zaktualizować ulubionych. Spróbuj ponownie.");
+      showAlert(
+        e?.response?.status === 401
+          ? "Brak autoryzacji (401). Token nie został zaakceptowany."
+          : "Nie udało się zaktualizować ulubionych. Spróbuj ponownie."
+      );
     }
   };
 
@@ -209,14 +249,21 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
   const handleViewProfile = async () => {
     try {
       if (user?.userId) {
+        // jeśli endpoint /visit jest chroniony, dawaj token
+        const headers = currentUser?.uid ? await authHeaders() : {};
+
         const { data } = await axios.patch(
-          `${process.env.REACT_APP_API_URL}/api/profiles/${user.userId}/visit`,
+          `${API}/api/profiles/${user.userId}/visit`,
           null,
-          { headers: currentUser?.uid ? { uid: currentUser.uid } : {} }
+          { headers }
         );
+
         if (typeof data?.visits === "number") setVisits(data.visits);
       }
-    } catch {}
+    } catch {
+      // ignore
+    }
+
     navigate(`/profil/${slug}`, { state: { scrollToId: "profileWrapper" } });
   };
 

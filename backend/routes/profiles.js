@@ -11,6 +11,9 @@ const upload = require("../middleware/upload"); // multer memoryStorage (buffer)
 const cloudinary = require("../utils/cloudinary");
 const { uploadBuffer } = require("../utils/cloudinaryUpload");
 
+const requireAuth = require("../middleware/requireAuth");
+const requireOwnerOrAdmin = require("../middleware/requireOwnerOrAdmin");
+
 // -----------------------------
 // Helpers: slug + public URLs
 // -----------------------------
@@ -136,7 +139,7 @@ async function canCountVisit(ownerUid, viewerKey) {
 // =========================================================
 
 // POST /api/profiles/:uid/avatar
-router.post("/:uid/avatar", upload.single("file"), async (req, res) => {
+router.post("/:uid/avatar", requireAuth, requireOwnerOrAdmin, upload.single("file"), async (req, res) => {
   try {
     const uid = req.params.uid;
     if (!req.file) return res.status(400).json({ message: "Brak pliku." });
@@ -174,7 +177,7 @@ router.post("/:uid/avatar", upload.single("file"), async (req, res) => {
 });
 
 // DELETE /api/profiles/:uid/avatar
-router.delete("/:uid/avatar", async (req, res) => {
+router.delete("/:uid/avatar", requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
     const uid = req.params.uid;
     const profile = await Profile.findOne({ userId: uid });
@@ -200,7 +203,7 @@ router.delete("/:uid/avatar", async (req, res) => {
 });
 
 // POST /api/profiles/:uid/photos (max 6 łącznie)
-router.post("/:uid/photos", upload.array("files", 6), async (req, res) => {
+router.post("/:uid/photos", requireAuth, requireOwnerOrAdmin, upload.array("files", 6), async (req, res) => {
   try {
     const uid = req.params.uid;
     const files = req.files || [];
@@ -245,7 +248,7 @@ router.post("/:uid/photos", upload.array("files", 6), async (req, res) => {
 });
 
 // DELETE /api/profiles/:uid/photos/:publicId
-router.delete("/:uid/photos/:publicId", async (req, res) => {
+router.delete("/:uid/photos/:publicId", requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
     const { uid, publicId } = req.params;
 
@@ -437,9 +440,12 @@ router.patch("/slug/:slug/visit", async (req, res) => {
 // -----------------------------------------
 // POST /api/profiles — tworzenie profilu
 // -----------------------------------------
-router.post("/", async (req, res) => {
-  // bezpieczne Stringi
-  const userId = String(req.body.userId || "");
+// ✅ WYMAGA: const requireAuth = require("../middleware/requireAuth");
+router.post("/", requireAuth, async (req, res) => {
+  // ✅ userId tylko z tokena (nie z body)
+  const userId = String(req.auth?.uid || "");
+
+  // bezpieczne Stringi z body
   const name = String(req.body.name || "");
   const role = String(req.body.role || "");
   const location = String(req.body.location || "");
@@ -449,9 +455,16 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    const existing = await Profile.findOne({ name: name.trim(), role: role.trim(), location: location.trim() });
+    const existing = await Profile.findOne({
+      name: name.trim(),
+      role: role.trim(),
+      location: location.trim(),
+    });
+
     if (existing) {
-      return res.status(409).json({ message: "Taka wizytówka już istnieje (imię + rola + lokalizacja)." });
+      return res
+        .status(409)
+        .json({ message: "Taka wizytówka już istnieje (imię + rola + lokalizacja)." });
     }
 
     const existingByUser = await Profile.findOne({ userId });
@@ -464,11 +477,17 @@ router.post("/", async (req, res) => {
       i = 1;
     while (await Profile.findOne({ slug: uniqueSlug })) uniqueSlug = `${baseSlug}-${i++}`;
 
+    // ✅ UWAGA: nie bierzemy userId z req.body (możesz też wyczyścić z body, jeśli ktoś go wyśle)
+    const { userId: _ignoredUserId, ...safeBody } = req.body || {};
+
     const newProfile = new Profile({
-      ...req.body,
+      ...safeBody,
+      userId, // ✅ wstrzyknięte z tokena
+
       name: name.trim(),
       role: role.trim(),
       location: location.trim(),
+
       slug: uniqueSlug,
       isVisible: true,
       visibleUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
@@ -481,7 +500,7 @@ router.post("/", async (req, res) => {
     queueMicrotask(async () => {
       try {
         const fromUid = "SYSTEM";
-        const toUid = userId;
+        const toUid = userId; // ✅ z tokena
         const pairKey = [fromUid, toUid].sort().join("|");
 
         const welcomeContent = [
@@ -509,6 +528,7 @@ router.post("/", async (req, res) => {
         ].join("\n");
 
         let convo = await Conversation.findOne({ channel: "system", pairKey }).exec();
+
         if (!convo) {
           convo = await Conversation.create({
             channel: "system",
@@ -523,7 +543,13 @@ router.post("/", async (req, res) => {
             isClosed: false,
           });
         } else {
-          convo.messages.push({ fromUid, toUid, content: welcomeContent, isSystem: true, createdAt: new Date() });
+          convo.messages.push({
+            fromUid,
+            toUid,
+            content: welcomeContent,
+            isSystem: true,
+            createdAt: new Date(),
+          });
           convo.updatedAt = new Date();
           await convo.save();
         }
@@ -540,7 +566,7 @@ router.post("/", async (req, res) => {
 // ------------------------------------------------------
 // PATCH /api/profiles/extend/:uid – +30 dni widoczności
 // ------------------------------------------------------
-router.patch("/extend/:uid", async (req, res) => {
+router.patch("/extend/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
     const profile = await Profile.findOne({ userId: req.params.uid });
     if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu do przedłużenia." });
@@ -584,7 +610,7 @@ const allowedFields = [
   "socials",
 ];
 
-router.patch("/update/:uid", async (req, res) => {
+router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
     const profile = await Profile.findOne({ userId: req.params.uid });
     if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
@@ -697,8 +723,12 @@ router.patch("/update/:uid", async (req, res) => {
 // -----------------------------------------------------------------
 // PATCH /api/profiles/rate/:slug – dodanie oceny + komentarza
 // -----------------------------------------------------------------
-router.patch("/rate/:slug", async (req, res) => {
-  const { userId, rating, comment, userName: bodyName, userAvatar: bodyAvatar } = req.body;
+// ✅ WYMAGA: const requireAuth = require("../middleware/requireAuth");
+router.patch("/rate/:slug", requireAuth, async (req, res) => {
+  // ✅ userId tylko z tokena (nie z body)
+  const userId = String(req.auth?.uid || "");
+
+  const { rating, comment, userName: bodyName, userAvatar: bodyAvatar } = req.body;
   const numericRating = Number(rating);
 
   if (
@@ -707,8 +737,8 @@ router.patch("/rate/:slug", async (req, res) => {
     numericRating < 1 ||
     numericRating > 5 ||
     !comment ||
-    comment.trim().length < 10 ||
-    comment.trim().length > 200
+    String(comment).trim().length < 10 ||
+    String(comment).trim().length > 200
   ) {
     return res.status(400).json({
       message: "Ocena musi być liczbą od 1 do 5, a komentarz musi mieć od 10 do 200 znaków.",
@@ -719,30 +749,37 @@ router.patch("/rate/:slug", async (req, res) => {
     const profile = await Profile.findOne({ slug: req.params.slug }).select("userId ratedBy rating reviews");
     if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
-    if (profile.userId === userId) return res.status(403).json({ message: "Nie możesz ocenić własnej wizytówki." });
+    if (profile.userId === userId) {
+      return res.status(403).json({ message: "Nie możesz ocenić własnej wizytówki." });
+    }
 
     if (!Array.isArray(profile.ratedBy)) profile.ratedBy = [];
     if (profile.ratedBy.find((r) => r.userId === userId)) {
       return res.status(400).json({ message: "Już oceniłeś ten profil." });
     }
 
-    let finalName = (bodyName || "").trim();
-    let rawAvatar = (bodyAvatar || "").trim();
+    let finalName = String(bodyName || "").trim();
+    let rawAvatar = String(bodyAvatar || "").trim();
 
+    // jeśli klient nie podał, albo podał puste → dociągamy z DB
     if (!finalName || !rawAvatar) {
       try {
-        const dbUser = await User.findOne({ firebaseUid: userId }).select("displayName name avatar").lean();
+        const dbUser = await User.findOne({ firebaseUid: userId })
+          .select("displayName name avatar")
+          .lean();
+
         if (!finalName) finalName = dbUser?.displayName || dbUser?.name || "Użytkownik";
         if (!rawAvatar) rawAvatar = dbUser?.avatar || "";
       } catch {}
     }
 
+    // zapis w profilu może trzymać "uploads/..." albo https — normalizujesz jak wcześniej
     const storedUserAvatar = normalizeUploadPath(rawAvatar);
 
     profile.ratedBy.push({
       userId,
       rating: numericRating,
-      comment: comment.trim(),
+      comment: String(comment).trim(),
       userName: finalName || "Użytkownik",
       userAvatar: storedUserAvatar,
       createdAt: new Date(),
@@ -773,7 +810,7 @@ router.patch("/rate/:slug", async (req, res) => {
 });
 
 // 🗑️ USUWANIE 1 zdjęcia z galerii (Cloudinary)
-router.delete("/:uid/photos", async (req, res) => {
+router.delete("/:uid/photos", requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
     const { uid } = req.params;
     const { publicId } = req.body;

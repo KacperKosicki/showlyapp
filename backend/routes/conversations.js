@@ -1,183 +1,189 @@
-const express = require('express');
+// routes/conversations.js
+const express = require("express");
 const router = express.Router();
-const Conversation = require('../models/Conversation');
-const User = require('../models/User');
 
-const CHANNELS = ['account_to_profile', 'profile_to_account', 'system'];
+const Conversation = require("../models/Conversation");
+const User = require("../models/User");
+
+const requireAuth = require("../middleware/requireAuth");
+
+const CHANNELS = ["account_to_profile", "profile_to_account", "system"];
 
 function makePairKey(a, b) {
-  return [a, b].sort().join('|');
+  return [String(a), String(b)].sort().join("|");
 }
 
 async function getUsersMapByFirebaseUid(uids = []) {
-  if (!uids.length) return new Map();
-  const users = await User.find({ firebaseUid: { $in: uids } })
-    .select('firebaseUid displayName name avatar email');
+  const clean = [...new Set((uids || []).map(String).filter(Boolean))];
+  if (!clean.length) return new Map();
+
+  const users = await User.find({ firebaseUid: { $in: clean } })
+    .select("firebaseUid displayName name avatar email")
+    .lean();
+
   const map = new Map();
-  users.forEach(u => {
+  users.forEach((u) => {
     map.set(u.firebaseUid, {
-      displayName: u.displayName || u.name || u.email || 'Użytkownik',
-      avatar: u.avatar || '',
-      email: u.email || ''
+      displayName: u.displayName || u.name || u.email || "Użytkownik",
+      avatar: u.avatar || "",
+      email: u.email || "",
     });
   });
+
   return map;
 }
 
+// opcjonalne: jeśli chcesz zachować auto-tworzenie usera w DB
 async function ensureUser(uid) {
-  let u = await User.findOne({ firebaseUid: uid }).select('_id firebaseUid');
-  if (!u) u = await User.create({ firebaseUid: uid });
+  const firebaseUid = String(uid || "");
+  if (!firebaseUid) return null;
+
+  let u = await User.findOne({ firebaseUid }).select("_id firebaseUid").lean();
+  if (!u) {
+    // minimalny zapis
+    u = await User.create({ firebaseUid });
+  }
   return u;
 }
 
 /**
  * POST /api/conversations/send
+ * 🔐 auth uid = from
  * body:
- *  - WĄTEK NOWY (start “ZADAJ PYTANIE”): { from, to, content, channel }
- *      • szukamy otwartego wątku pairKey+channel z firstFromUid === from
- *      • jeśli brak → tworzymy nowy (firstFromUid = from)
- *
- *  - Odpowiedź w ISTNIEJĄCYM wątku: { from, to, content, channel, conversationId }
- *      • dopinamy wiadomość po ID (nie tworzymy nowego wątku)
- *      • blokada dwóch wiadomości pod rząd od tej samej osoby
+ *  - START: { to, content, channel }
+ *  - REPLY: { conversationId, content }
  */
-router.post('/send', async (req, res) => {
-  const { from, to, content, channel, conversationId } = req.body;
+router.post("/send", requireAuth, async (req, res) => {
+  const from = String(req.auth?.uid || "");
+  const { to, content, channel, conversationId } = req.body || {};
 
-  if (!from || !to || !content) {
-    return res.status(400).json({ message: 'Brakuje danych: from, to, content' });
-  }
-  if (!conversationId) {
-    // tryb START lub kontynuacja własnego kanału startowego — potrzebny channel
-    if (!channel) return res.status(400).json({ message: 'Brakuje parametru channel' });
-    if (!CHANNELS.includes(channel)) {
-      return res.status(400).json({ message: 'Nieprawidłowy channel' });
-    }
-  }
-  if (from === to) {
-    return res.status(400).json({ message: 'Nadawca i odbiorca nie mogą być tacy sami' });
-  }
+  const text = String(content || "").trim();
+
+  if (!from) return res.status(401).json({ message: "Brak autoryzacji." });
+  if (!text) return res.status(400).json({ message: "Brakuje treści wiadomości." });
 
   try {
-    await Promise.all([ensureUser(from), ensureUser(to)]);
-    const pairKey = makePairKey(from, to);
-
-    // 🔹 ŚCIEŻKA 1: Odpowiedź w istniejącym wątku po ID (nie tworzymy nowego)
+    // Odpowiedź w istniejącym wątku po ID
     if (conversationId) {
       const convo = await Conversation.findById(conversationId);
-      if (!convo) {
-        return res.status(404).json({ message: 'Nie znaleziono konwersacji' });
-      }
-      if (convo.isClosed) {
-        return res.status(403).json({ message: 'Wątek jest zamknięty' });
-      }
-      // bezpieczeństwo: uczestnicy i pairKey muszą pasować
-      if (convo.pairKey !== pairKey) {
-        return res.status(403).json({ message: 'Niewłaściwi uczestnicy dla tego wątku' });
-      }
-      if (channel && convo.channel !== channel) {
-        return res.status(403).json({ message: 'Kanał nie zgadza się z wątkiem' });
-      }
-      const isParticipant = convo.participants.some(p => p.uid === from);
-      if (!isParticipant) {
-        return res.status(403).json({ message: 'Brak dostępu do tej konwersacji' });
-      }
+      if (!convo) return res.status(404).json({ message: "Nie znaleziono konwersacji" });
+      if (convo.isClosed) return res.status(403).json({ message: "Wątek jest zamknięty" });
 
-      const last = convo.messages[convo.messages.length - 1];
+      const isParticipant = convo.participants?.some((p) => p.uid === from);
+      if (!isParticipant) return res.status(403).json({ message: "Brak dostępu do tej konwersacji" });
+
+      const last = convo.messages?.[convo.messages.length - 1];
       if (last && last.fromUid === from) {
-        return res.status(403).json({ message: 'Poczekaj na odpowiedź drugiej osoby.' });
+        return res.status(403).json({ message: "Poczekaj na odpowiedź drugiej osoby." });
       }
 
-      // wyliczamy odbiorcę z wątku, żeby nie dało się "przekręcić" to
-      const other = convo.participants.find(p => p.uid !== from);
-      if (!other) {
-        return res.status(400).json({ message: 'Nie udało się ustalić odbiorcy' });
-      }
+      const other = convo.participants.find((p) => p.uid !== from);
+      if (!other?.uid) return res.status(400).json({ message: "Nie udało się ustalić odbiorcy." });
 
-      convo.messages.push({ fromUid: from, toUid: other.uid, content });
+      convo.messages.push({ fromUid: from, toUid: other.uid, content: text });
       convo.updatedAt = new Date();
       await convo.save();
 
       return res.status(200).json({ ok: true, id: convo._id });
     }
 
-    // 🔹 ŚCIEŻKA 2: Start/ciąg dalszy własnego “startowego” wątku (konto ➜ wizytówka)
-    if (!CHANNELS.includes(channel)) {
-      return res.status(400).json({ message: 'Nieprawidłowy channel' });
-    }
+    // START nowego / kontynuacja "startowego" — tu wymagamy to+channel
+    const toUid = String(to || "");
+    const ch = String(channel || "");
 
-    // Szukamy TYLKO wątku zaczętego przez "from" (firstFromUid === from)
+    if (!toUid) return res.status(400).json({ message: "Brakuje pola: to" });
+    if (!ch) return res.status(400).json({ message: "Brakuje parametru: channel" });
+    if (!CHANNELS.includes(ch)) return res.status(400).json({ message: "Nieprawidłowy channel" });
+    if (from === toUid) return res.status(400).json({ message: "Nie możesz pisać do siebie." });
+
+    await Promise.all([ensureUser(from), ensureUser(toUid)]);
+
+    const pairKey = makePairKey(from, toUid);
+
+    // Szukamy TYLKO wątku zaczętego przez "from"
     let convo = await Conversation.findOne({
       pairKey,
-      channel,
+      channel: ch,
       firstFromUid: from,
-      isClosed: { $ne: true }
+      isClosed: { $ne: true },
     }).sort({ updatedAt: -1 });
 
     if (!convo) {
-      // brak — tworzymy NOWY wątek
       convo = await Conversation.create({
-        channel,
+        channel: ch,
         pairKey,
-        participants: [{ uid: from }, { uid: to }],
+        participants: [{ uid: from }, { uid: toUid }],
         firstFromUid: from,
-        messages: []
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isClosed: false,
       });
     } else {
-      // wątek istnieje — pilnujemy, by nie wysłać dwóch msg pod rząd
-      const last = convo.messages[convo.messages.length - 1];
+      const last = convo.messages?.[convo.messages.length - 1];
       if (last && last.fromUid === from) {
-        return res.status(403).json({ message: 'Poczekaj na odpowiedź drugiej osoby.' });
+        return res.status(403).json({ message: "Poczekaj na odpowiedź drugiej osoby." });
       }
     }
 
-    convo.messages.push({ fromUid: from, toUid: to, content });
+    convo.messages.push({ fromUid: from, toUid: toUid, content: text });
     convo.updatedAt = new Date();
     await convo.save();
 
     return res.status(200).json({ ok: true, id: convo._id });
   } catch (err) {
-    console.error('❌ Błąd zapisu wiadomości:', err);
-    return res.status(500).json({ message: 'Błąd zapisu wiadomości' });
+    console.error("❌ /conversations/send error:", err);
+    return res.status(500).json({ message: "Błąd zapisu wiadomości" });
   }
 });
 
 /**
  * GET /api/conversations/by-uid/:uid
+ * 🔐 ignorujemy :uid jako źródło prawdy (możesz zostawić, ale musi == auth uid)
  * opcjonalnie ?channel=
  */
-router.get('/by-uid/:uid', async (req, res) => {
-  const uid = req.params.uid;
+router.get("/by-uid/:uid", requireAuth, async (req, res) => {
+  const authUid = String(req.auth?.uid || "");
+  const uidParam = String(req.params.uid || "");
+
+  if (!authUid) return res.status(401).json({ message: "Brak autoryzacji." });
+  if (uidParam && uidParam !== authUid) {
+    return res.status(403).json({ message: "Brak uprawnień." });
+  }
+
   const { channel } = req.query;
 
   try {
-    const findQuery = { 'participants.uid': uid };
+    const findQuery = { "participants.uid": authUid };
+
     if (channel) {
       if (!CHANNELS.includes(channel)) {
-        return res.status(400).json({ message: 'Nieprawidłowy channel' });
+        return res.status(400).json({ message: "Nieprawidłowy channel" });
       }
       findQuery.channel = channel;
     }
 
-    const conversations = await Conversation.find(findQuery).sort({ updatedAt: -1 });
+    const conversations = await Conversation.find(findQuery).sort({ updatedAt: -1 }).lean();
 
     const otherUids = [];
-    conversations.forEach(c => {
-      const other = c.participants.find(p => p.uid !== uid);
+    conversations.forEach((c) => {
+      const other = (c.participants || []).find((p) => p.uid !== authUid);
       if (other?.uid) otherUids.push(other.uid);
     });
 
     const usersMap = await getUsersMapByFirebaseUid(otherUids);
 
-    const result = conversations.map(c => {
-      const other = c.participants.find(p => p.uid !== uid);
-      const otherInfo = usersMap.get(other?.uid) || {
-        displayName: c.channel === 'system' ? 'Showly.app' : 'Użytkownik',
-        avatar: '',
-        email: ''
-      };
-      const lastMessage = c.messages[c.messages.length - 1] || null;
-      const unreadCount = c.messages.filter(m => m.toUid === uid && !m.read).length;
+    const result = conversations.map((c) => {
+      const other = (c.participants || []).find((p) => p.uid !== authUid);
+      const otherInfo =
+        usersMap.get(other?.uid) || {
+          displayName: c.channel === "system" ? "Showly.app" : "Użytkownik",
+          avatar: "",
+          email: "",
+        };
+
+      const lastMessage = (c.messages || [])[c.messages.length - 1] || null;
+      const unreadCount = (c.messages || []).filter((m) => m.toUid === authUid && !m.read).length;
 
       return {
         _id: c._id,
@@ -188,76 +194,74 @@ router.get('/by-uid/:uid', async (req, res) => {
         lastMessage,
         unreadCount,
         updatedAt: c.updatedAt,
-        firstFromUid: c.firstFromUid || (c.messages[0]?.fromUid ?? null),
+        firstFromUid: c.firstFromUid || (c.messages?.[0]?.fromUid ?? null),
       };
     });
 
     return res.json(result);
   } catch (err) {
-    console.error('❌ Błąd pobierania konwersacji:', err);
-    return res.status(500).json({ message: 'Błąd pobierania konwersacji' });
+    console.error("❌ /conversations/by-uid error:", err);
+    return res.status(500).json({ message: "Błąd pobierania konwersacji" });
   }
 });
 
 /**
  * GET /api/conversations/:id
- * HEADERS: { uid: <currentUserUid> }
+ * 🔐 auth uid musi być participant
  */
-router.get('/:id', async (req, res) => {
-  const requesterUid = req.headers['uid'];
+router.get("/:id", requireAuth, async (req, res) => {
+  const requesterUid = String(req.auth?.uid || "");
   const convoId = req.params.id;
 
+  if (!requesterUid) return res.status(401).json({ message: "Brak autoryzacji." });
+
   try {
-    const convo = await Conversation.findById(convoId);
-    if (!convo) return res.status(404).json({ message: 'Nie znaleziono konwersacji' });
+    const convo = await Conversation.findById(convoId).lean();
+    if (!convo) return res.status(404).json({ message: "Nie znaleziono konwersacji" });
 
-    const isParticipant = convo.participants.some(p => p.uid === requesterUid);
-    if (!isParticipant) {
-      return res.status(403).json({ message: 'Brak dostępu do tej konwersacji' });
-    }
+    const isParticipant = (convo.participants || []).some((p) => p.uid === requesterUid);
+    if (!isParticipant) return res.status(403).json({ message: "Brak dostępu do tej konwersacji" });
 
-    const participantUids = convo.participants.map(p => p.uid);
+    const participantUids = (convo.participants || []).map((p) => p.uid);
     const usersMap = await getUsersMapByFirebaseUid(participantUids);
 
-    const participants = convo.participants.map(p => ({
+    const participants = (convo.participants || []).map((p) => ({
       uid: p.uid,
-      displayName: usersMap.get(p.uid)?.displayName || 'Użytkownik',
-      avatar: usersMap.get(p.uid)?.avatar || ''
+      displayName: usersMap.get(p.uid)?.displayName || "Użytkownik",
+      avatar: usersMap.get(p.uid)?.avatar || "",
     }));
 
     return res.json({
       _id: convo._id,
       channel: convo.channel,
       participants,
-      messages: convo.messages,
+      messages: convo.messages || [],
       updatedAt: convo.updatedAt,
-      firstFromUid: convo.firstFromUid
+      firstFromUid: convo.firstFromUid,
     });
   } catch (err) {
-    console.error('❌ Błąd pobierania konwersacji:', err);
-    return res.status(500).json({ message: 'Błąd pobierania konwersacji' });
+    console.error("❌ /conversations/:id error:", err);
+    return res.status(500).json({ message: "Błąd pobierania konwersacji" });
   }
 });
 
 /**
  * PATCH /api/conversations/:id/read
- * HEADERS: { uid: <currentUserUid> }
+ * 🔐 auth uid musi być participant
  */
-router.patch('/:id/read', async (req, res) => {
-  const uid = req.headers['uid'];
-  if (!uid) return res.status(400).json({ message: 'Brakuje nagłówka uid' });
+router.patch("/:id/read", requireAuth, async (req, res) => {
+  const uid = String(req.auth?.uid || "");
+  if (!uid) return res.status(401).json({ message: "Brak autoryzacji." });
 
   try {
     const convo = await Conversation.findById(req.params.id);
-    if (!convo) return res.status(404).json({ message: 'Nie znaleziono' });
+    if (!convo) return res.status(404).json({ message: "Nie znaleziono" });
 
-    const isParticipant = convo.participants.some(p => p.uid === uid);
-    if (!isParticipant) {
-      return res.status(403).json({ message: 'Brak dostępu do tej konwersacji' });
-    }
+    const isParticipant = (convo.participants || []).some((p) => p.uid === uid);
+    if (!isParticipant) return res.status(403).json({ message: "Brak dostępu do tej konwersacji" });
 
     let changed = false;
-    convo.messages.forEach(m => {
+    (convo.messages || []).forEach((m) => {
       if (m.toUid === uid && !m.read) {
         m.read = true;
         changed = true;
@@ -267,39 +271,49 @@ router.patch('/:id/read', async (req, res) => {
     if (changed) await convo.save();
     return res.sendStatus(200);
   } catch (err) {
-    console.error('❌ Błąd oznaczania jako przeczytane:', err);
-    return res.status(500).json({ message: 'Błąd oznaczania jako przeczytane' });
+    console.error("❌ /conversations/:id/read error:", err);
+    return res.status(500).json({ message: "Błąd oznaczania jako przeczytane" });
   }
 });
 
 /**
  * GET /api/conversations/check/:uid1/:uid2?channel=...&starter=<uid>
- * - ostatni OTWARTY wątek (jeśli istnieje)
- * - jeżeli podasz starter → zawęża do wątków zaczętych przez startera
+ * 🔐 auth uid musi być jednym z uid1/uid2
+ * starter (opcjonalnie) MUSI == auth uid jeśli podany
  */
-router.get('/check/:uid1/:uid2', async (req, res) => {
-  const [uid1, uid2] = [req.params.uid1, req.params.uid2];
+router.get("/check/:uid1/:uid2", requireAuth, async (req, res) => {
+  const authUid = String(req.auth?.uid || "");
+  const uid1 = String(req.params.uid1 || "");
+  const uid2 = String(req.params.uid2 || "");
   const { channel, starter } = req.query;
 
-  if (!channel) {
-    return res.status(400).json({ message: 'Brakuje parametru channel' });
+  if (!authUid) return res.status(401).json({ message: "Brak autoryzacji." });
+  if (!channel) return res.status(400).json({ message: "Brakuje parametru channel" });
+  if (!CHANNELS.includes(channel)) return res.status(400).json({ message: "Nieprawidłowy channel" });
+
+  // ✅ nie pozwól sprawdzać cudzych par
+  if (authUid !== uid1 && authUid !== uid2) {
+    return res.status(403).json({ message: "Brak uprawnień." });
   }
-  if (!CHANNELS.includes(channel)) {
-    return res.status(400).json({ message: 'Nieprawidłowy channel' });
+
+  // ✅ starter tylko jeśli to Ty
+  if (starter && String(starter) !== authUid) {
+    return res.status(403).json({ message: "Brak uprawnień (starter)." });
   }
 
   try {
     const pairKey = makePairKey(uid1, uid2);
-    const query = { pairKey, channel, isClosed: { $ne: true } };
-    if (starter) query.firstFromUid = starter;
 
-    const convo = await Conversation.findOne(query).sort({ updatedAt: -1 });
+    const query = { pairKey, channel, isClosed: { $ne: true } };
+    if (starter) query.firstFromUid = authUid;
+
+    const convo = await Conversation.findOne(query).sort({ updatedAt: -1 }).lean();
 
     if (convo) return res.json({ exists: true, id: convo._id });
     return res.json({ exists: false });
   } catch (err) {
-    console.error('❌ Błąd sprawdzania konwersacji:', err);
-    return res.status(500).json({ message: 'Błąd sprawdzania konwersacji' });
+    console.error("❌ /conversations/check error:", err);
+    return res.status(500).json({ message: "Błąd sprawdzania konwersacji" });
   }
 });
 

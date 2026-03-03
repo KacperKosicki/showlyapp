@@ -1,31 +1,52 @@
-import { useEffect, useState, useMemo } from 'react';
-import styles from './Favorites.module.scss';
-import axios from 'axios';
-import UserCard from '../UserCard/UserCard';
-import { FiHeart } from 'react-icons/fi';
-import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useState, useMemo } from "react";
+import styles from "./Favorites.module.scss";
+import UserCard from "../UserCard/UserCard";
+import { FiHeart } from "react-icons/fi";
+import { Link, useLocation } from "react-router-dom";
+import { api } from "../../api/api"; // <-- dopasuj ścieżkę, jeśli masz inną
 
 export default function Favorites({ currentUser }) {
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState([]);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const location = useLocation();
 
   useEffect(() => {
+    let alive = true;
+
     const run = async () => {
+      setLoading(true);
+      setError("");
+
       try {
-        const { data } = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/favorites/my`,
-          { headers: { uid: currentUser?.uid } }
-        );
+        // ✅ token idzie z interceptora (Authorization)
+        // opcjonalnie możesz zostawić uid w headerze, jeśli backend nadal tego wymaga:
+        // { headers: { uid: currentUser?.uid } }
+
+        const { data } = await api.get("/api/favorites/my");
+
+        if (!alive) return;
         setProfiles(Array.isArray(data) ? data : []);
-      } catch {
-        setError('Nie udało się pobrać listy ulubionych.');
+      } catch (e) {
+        if (!alive) return;
+        setError("Nie udało się pobrać listy ulubionych.");
       } finally {
+        if (!alive) return;
         setLoading(false);
       }
     };
+
     if (currentUser?.uid) run();
+    else {
+      // jak user nie zalogowany — nie ładujemy
+      setProfiles([]);
+      setError("");
+      setLoading(false);
+    }
+
+    return () => {
+      alive = false;
+    };
   }, [currentUser?.uid]);
 
   useEffect(() => {
@@ -34,7 +55,7 @@ export default function Favorites({ currentUser }) {
 
     const el = document.getElementById(scrollTo);
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start'});
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
       window.history.replaceState({}, document.title, location.pathname);
     }
   }, [location.state, location.pathname, loading]);
@@ -105,7 +126,8 @@ export default function Favorites({ currentUser }) {
             <div>
               <h2 className={styles.sectionTitle}>Twoje ulubione</h2>
               <p className={styles.subTitle}>
-                Nie dodałeś/aś jeszcze do <strong>ulubionych</strong> żadnego profilu.
+                Nie dodałeś/aś jeszcze do <strong>ulubionych</strong> żadnego
+                profilu.
               </p>
             </div>
             <span className={styles.badge}>0</span>
@@ -114,7 +136,7 @@ export default function Favorites({ currentUser }) {
           <div className={styles.emptyBox}>
             <FiHeart className={styles.emptyIcon} />
             <p>Nic tu jeszcze nie ma.</p>
-            <Link className={styles.cta} to="/" state={{ scrollToId: 'scrollToId' }}>
+            <Link className={styles.cta} to="/" state={{ scrollToId: "scrollToId" }}>
               Przeglądaj specjalistów
             </Link>
           </div>
@@ -138,7 +160,7 @@ export default function Favorites({ currentUser }) {
 
         <div className={styles.grid}>
           {profiles.map((p) => (
-            <UserCard key={p.userId} user={p} currentUser={currentUser} />
+            <UserCard key={p.userId || p._id} user={p} currentUser={currentUser} />
           ))}
         </div>
       </div>

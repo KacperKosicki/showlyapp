@@ -1,5 +1,5 @@
 // BookingModeCalendar.jsx
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   startOfMonth,
   endOfMonth,
@@ -15,10 +15,10 @@ import {
   isBefore,
 } from 'date-fns';
 import { pl } from 'date-fns/locale';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styles from './BookingForm.module.scss';
 import LoadingButton from '../ui/LoadingButton/LoadingButton';
+import { api } from '../../api/api';
 
 // ✅ stała przerwa po usłudze (jak na backendzie)
 const SLOT_BREAK_MIN = 5;
@@ -88,50 +88,67 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     return SLOT_BREAK_MIN + bookingBufferMin;
   }, [bookingBufferMin]);
 
-  // Załaduj personel (gdy team.enabled)
+  // ✅ Załaduj personel (gdy team.enabled)
   useEffect(() => {
     if (!isTeamEnabled) return;
-    axios
-      .get(`${process.env.REACT_APP_API_URL}/api/staff`, { params: { profileId: provider._id } })
-      .then(({ data }) => setStaffList(Array.isArray(data) ? data : []))
-      .catch(() => setStaffList([]));
+    if (!provider?._id) return;
+
+    let alive = true;
+
+    (async () => {
+      try {
+        const { data } = await api.get(`/api/staff`, { params: { profileId: provider._id } });
+        if (!alive) return;
+        setStaffList(Array.isArray(data) ? data : []);
+      } catch {
+        if (!alive) return;
+        setStaffList([]);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
   }, [isTeamEnabled, provider?._id]);
 
-  // Pobierz rezerwacje (z opcjonalnym filtrem po staffId dla user-pick)
-  const fetchReservations = async () => {
-    const { data } = await axios.get(
-      `${process.env.REACT_APP_API_URL}/api/reservations/by-provider/${provider.userId}`
-    );
+  // ✅ Pobierz rezerwacje (z opcjonalnym filtrem po staffId dla user-pick)
+  const fetchReservations = useCallback(async () => {
+    if (!provider?.userId) return;
+
+    const { data } = await api.get(`/api/reservations/busy/${provider.userId}`);
 
     const filtered =
       isUserPick && selectedStaffId
-        ? data.filter((r) => r.staffId && String(r.staffId) === String(selectedStaffId))
-        : data;
+        ? (Array.isArray(data) ? data : []).filter(
+            (r) => r.staffId && String(r.staffId) === String(selectedStaffId)
+          )
+        : (Array.isArray(data) ? data : []);
 
     // RAW całego zespołu – potrzebne dla auto-assign
     setReservationsAll(Array.isArray(data) ? data : []);
 
-    const booked = (Array.isArray(filtered) ? filtered : [])
+    const booked = filtered
       .filter((r) => r.status === 'zaakceptowana')
       .map((r) => ({ date: r.date, fromTime: r.fromTime, toTime: r.toTime }));
 
-    const pending = (Array.isArray(filtered) ? filtered : [])
+    const pending = filtered
       .filter((r) => r.status === 'oczekująca' || r.status === 'tymczasowa')
       .map((r) => ({ date: r.date, fromTime: r.fromTime, toTime: r.toTime }));
 
     setReserved(booked);
     setPending(pending);
-  };
+  }, [provider?.userId, isUserPick, selectedStaffId]);
 
-  // Ładuj rezerwacje po wejściu
+  // ✅ Ładuj rezerwacje po wejściu (i przy zmianie provider)
   useEffect(() => {
-    fetchReservations(); // eslint-disable-line
-  }, []); // eslint-disable-line
+    fetchReservations().catch(() => {});
+  }, [fetchReservations]);
 
-  // Przeładuj przy zmianie pracownika w trybie user-pick
+  // ✅ Przeładuj przy zmianie pracownika w trybie user-pick
   useEffect(() => {
-    if (isUserPick) fetchReservations(); // eslint-disable-line
-  }, [selectedStaffId]); // eslint-disable-line
+    if (!isUserPick) return;
+    fetchReservations().catch(() => {});
+  }, [isUserPick, selectedStaffId, fetchReservations]);
 
   // Generowanie slotów (capacity-aware dla auto-assign)
   useEffect(() => {
@@ -171,10 +188,10 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     const eligibleStaff =
       isTeamEnabled && provider?.team?.enabled
         ? staffList.filter(
-          (s) =>
-            s.active &&
-            (s.serviceIds || []).some((id) => String(id) === String(selectedService?._id))
-        )
+            (s) =>
+              s.active &&
+              (s.serviceIds || []).some((id) => String(id) === String(selectedService?._id))
+          )
         : [];
 
     const eligibleIds = new Set(eligibleStaff.map((s) => String(s._id)));
@@ -191,44 +208,43 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     const dayBusy = (
       isAutoAssign
         ? reservationsAll
-          .filter((r) => r.date === dateStr)
-          .filter(
-            (r) =>
-              !r.dateOnly && ['zaakceptowana', 'oczekująca', 'tymczasowa'].includes(r.status)
-          )
-          .filter((r) => eligibleIds.has(String(r.staffId)))
-          .map((r) => {
-            const from = new Date(`${r.date}T${r.fromTime}`);
-            const toNoBuf = new Date(`${r.date}T${r.toTime}`); // ✅ koniec usługi
-            const toWithBuf = addMinutes(toNoBuf, buffer); // ✅ koniec usługi + bufor
+            .filter((r) => r.date === dateStr)
+            .filter(
+              (r) => !r.dateOnly && ['zaakceptowana', 'oczekująca', 'tymczasowa'].includes(r.status)
+            )
+            .filter((r) => eligibleIds.has(String(r.staffId)))
+            .map((r) => {
+              const from = new Date(`${r.date}T${r.fromTime}`);
+              const toNoBuf = new Date(`${r.date}T${r.toTime}`); // ✅ koniec usługi
+              const toWithBuf = addMinutes(toNoBuf, buffer); // ✅ koniec usługi + bufor
 
-            return {
-              fromMs: +from,
-              toMs: +toNoBuf,
-              toBufMs: +toWithBuf,
-              status: r.status === 'zaakceptowana' ? 'reserved' : 'pending',
-              staffId: String(r.staffId || ''),
-            };
-          })
+              return {
+                fromMs: +from,
+                toMs: +toNoBuf,
+                toBufMs: +toWithBuf,
+                status: r.status === 'zaakceptowana' ? 'reserved' : 'pending',
+                staffId: String(r.staffId || ''),
+              };
+            })
         : [...reservedSlots, ...pendingSlots]
-          .filter((s) => s.date === dateStr)
-          .map((s) => {
-            const from = new Date(`${s.date}T${s.fromTime}`);
-            const toNoBuf = new Date(`${s.date}T${s.toTime}`); // ✅ koniec usługi
-            const toWithBuf = addMinutes(toNoBuf, buffer); // ✅ koniec usługi + bufor
+            .filter((s) => s.date === dateStr)
+            .map((s) => {
+              const from = new Date(`${s.date}T${s.fromTime}`);
+              const toNoBuf = new Date(`${s.date}T${s.toTime}`); // ✅ koniec usługi
+              const toWithBuf = addMinutes(toNoBuf, buffer); // ✅ koniec usługi + bufor
 
-            const isRes = reservedSlots.some(
-              (r) => r.date === s.date && r.fromTime === s.fromTime && r.toTime === s.toTime
-            );
+              const isRes = reservedSlots.some(
+                (r) => r.date === s.date && r.fromTime === s.fromTime && r.toTime === s.toTime
+              );
 
-            return {
-              fromMs: +from,
-              toMs: +toNoBuf,
-              toBufMs: +toWithBuf,
-              status: isRes ? 'reserved' : 'pending',
-              staffId: '',
-            };
-          })
+              return {
+                fromMs: +from,
+                toMs: +toNoBuf,
+                toBufMs: +toWithBuf,
+                status: isRes ? 'reserved' : 'pending',
+                staffId: '',
+              };
+            })
     ).sort((a, b) => a.fromMs - b.fromMs);
 
     const slots = [];
@@ -277,17 +293,21 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
             const accepted = overlaps.filter((o) => o.status === 'reserved');
             const pendingOnly = overlaps.filter((o) => o.status === 'pending');
 
-            const startsInsideAccepted = accepted.some((o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs);
-            const startsInsidePending = pendingOnly.some((o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs);
+            const startsInsideAccepted = accepted.some(
+              (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+            );
+            const startsInsidePending = pendingOnly.some(
+              (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+            );
 
-            const startsInsideBuffer =
+            const startsInsideBuffer2 =
               !startsInsideAccepted &&
               !startsInsidePending &&
               overlaps.some((o) => slotStartMs > o.toMs && slotStartMs < o.toBufMs);
 
             if (startsInsideAccepted) status = 'reserved';
             else if (startsInsidePending) status = 'pending';
-            else if (startsInsideBuffer) status = 'disabled';
+            else if (startsInsideBuffer2) status = 'disabled';
             else status = 'disabled';
           }
         }
@@ -387,7 +407,8 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
         ...(isUserPick && selectedStaffId ? { staffId: selectedStaffId } : {}),
       };
 
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/reservations`, payload);
+      // ✅ zamiast axios -> api (Bearer token leci automatycznie)
+      await api.post(`/api/reservations`, payload);
 
       await fetchReservations();
 
@@ -420,8 +441,13 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
         setService(null);
         setSelectedStaffId('');
       }, 100);
-    } catch {
-      pushAlert?.({ show: true, type: 'error', message: 'Błąd przy wysyłaniu.' });
+    } catch (err) {
+      console.error('❌ BookingModeCalendar submit error:', err);
+      const msg =
+        err?.response?.data?.message ||
+        (err?.response?.status === 401 ? 'Brak autoryzacji (401). Zaloguj się ponownie.' : null) ||
+        'Błąd przy wysyłaniu.';
+      pushAlert?.({ show: true, type: 'error', message: msg });
     } finally {
       setIsSubmitting(false);
     }
@@ -460,10 +486,10 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
               {s.duration.unit === 'minutes'
                 ? 'min'
                 : s.duration.unit === 'hours'
-                  ? 'godzin'
-                  : s.duration.unit === 'days'
-                    ? 'dni'
-                    : s.duration.unit}
+                ? 'godzin'
+                : s.duration.unit === 'days'
+                ? 'dni'
+                : s.duration.unit}
             </option>
           ))}
         </select>
@@ -535,8 +561,9 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
                 <button
                   key={day.toISOString()}
                   type="button"
-                  className={`${styles.day} ${!active || isPast ? styles.disabledDay : ''} ${sel ? styles.selectedDay : ''
-                    }`}
+                  className={`${styles.day} ${!active || isPast ? styles.disabledDay : ''} ${
+                    sel ? styles.selectedDay : ''
+                  }`}
                   disabled={!active || isPast}
                   onClick={() => active && !isPast && setDate(day)}
                 >

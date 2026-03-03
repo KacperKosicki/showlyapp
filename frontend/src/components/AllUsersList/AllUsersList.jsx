@@ -3,6 +3,17 @@ import styles from './AllUsersList.module.scss';
 import UserCard from '../UserCard/UserCard';
 import axios from 'axios';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { auth } from '../../firebase';
+
+const API = process.env.REACT_APP_API_URL;
+
+// ✅ Bearer token header
+async function getAuthHeader() {
+  const u = auth.currentUser;
+  if (!u) return {};
+  const token = await u.getIdToken();
+  return { Authorization: `Bearer ${token}` };
+}
 
 const AllUsersList = ({ currentUser }) => {
   const [search, setSearch] = useState('');
@@ -16,21 +27,31 @@ const AllUsersList = ({ currentUser }) => {
   useEffect(() => {
     const run = async () => {
       try {
-        const { data: profiles } = await axios.get(`${process.env.REACT_APP_API_URL}/api/profiles`);
+        const { data: profiles } = await axios.get(`${API}/api/profiles`);
 
-        if (currentUser?.uid) {
-          const { data: favs } = await axios.get(
-            `${process.env.REACT_APP_API_URL}/api/favorites/my`,
-            { headers: { uid: currentUser.uid } }
+        if (currentUser?.uid && auth.currentUser) {
+          const authHeader = await getAuthHeader();
+
+          const { data: favProfiles } = await axios.get(`${API}/api/favorites/my`, {
+            headers: { ...authHeader },
+          });
+
+          // /favorites/my w Twoim backendzie zwraca listę profili (userId w obiekcie)
+          // robimy też fallback na profileUserId, jakby kiedyś zmieniło się API
+          const favSet = new Set(
+            (Array.isArray(favProfiles) ? favProfiles : [])
+              .map((p) => p?.userId || p?.profileUserId)
+              .filter(Boolean)
           );
-          const favSet = new Set(favs.map(f => f.userId));
-          const merged = profiles.map(p => ({
+
+          const merged = (Array.isArray(profiles) ? profiles : []).map((p) => ({
             ...p,
             isFavorite: favSet.has(p.userId),
           }));
+
           setUsers(merged);
         } else {
-          setUsers(profiles);
+          setUsers(Array.isArray(profiles) ? profiles : []);
         }
       } catch (err) {
         console.error('Błąd pobierania użytkowników:', err);
@@ -38,12 +59,13 @@ const AllUsersList = ({ currentUser }) => {
         setLoading(false);
       }
     };
+
     run();
   }, [currentUser?.uid]);
 
   const filteredUsers = useMemo(() => {
     const q = search.toLowerCase();
-    return users.filter(user =>
+    return users.filter((user) =>
       (user.name || '').toLowerCase().includes(q) ||
       (user.role || '').toLowerCase().includes(q) ||
       (user.location || '').toLowerCase().includes(q)

@@ -1,8 +1,10 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import styles from "./Notifications.module.scss";
 import axios from "axios";
 import { Link, useLocation } from "react-router-dom";
 import { FiInbox, FiSend, FiMail } from "react-icons/fi";
+
+import { auth } from "../../firebase"; // ✅ DOPASUJ ŚCIEŻKĘ jeśli masz inną
 
 const API = process.env.REACT_APP_API_URL;
 const DEFAULT_AVATAR = "/images/other/no-image.png";
@@ -27,7 +29,6 @@ const normalizeAvatar = (val) => {
   if (v.startsWith("/uploads/")) return `${API}${v}`;
   if (v.startsWith("uploads/")) return `${API}/${v}`;
 
-  // jeśli ktoś wrzucił "domena.pl/..." bez protokołu
   if (/^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(v)) return `https://${v}`;
 
   return v;
@@ -35,36 +36,72 @@ const normalizeAvatar = (val) => {
 
 const Notifications = ({ user, setUnreadCount }) => {
   const [conversations, setConversations] = useState([]);
-
-  // uid -> undefined (pending) | { name: string|null, avatar: string|null }
-  const [profileMetaMap, setProfileMetaMap] = useState({});
-
+  const [profileMetaMap, setProfileMetaMap] = useState({}); // uid -> undefined | {name,avatar}
   const [myProfile, setMyProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
+  // =========================================================
+  // ✅ AUTH HEADERS – token zawsze z Firebase auth.currentUser
+  // =========================================================
+  const authHeaders = useCallback(async () => {
+    const firebaseUser = auth.currentUser;
+    const uid = firebaseUser?.uid || user?.uid || "";
+
+    if (!firebaseUser) {
+      // firebase jeszcze nie gotowy -> brak tokena -> backend da 401
+      // lepiej tu zwrócić pusty obiekt i poczekać aż auth.currentUser będzie dostępny
+      return uid ? { uid } : {};
+    }
+
+    let token = "";
+    try {
+      token = await firebaseUser.getIdToken(); // możesz dać getIdToken(true) do "force refresh"
+    } catch {
+      token = "";
+    }
+
+    return {
+      ...(uid ? { uid } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }, [user?.uid]);
+
   // 0) Moja wizytówka (nazwa do nagłówka)
   useEffect(() => {
     const fetchMyProfile = async () => {
-      if (!user?.uid) return;
+      const firebaseUid = auth.currentUser?.uid || user?.uid;
+      if (!firebaseUid) return;
+
       try {
-        const r = await axios.get(`${API}/api/profiles/by-user/${user.uid}`);
+        const headers = await authHeaders();
+        const r = await axios.get(`${API}/api/profiles/by-user/${firebaseUid}`, { headers });
         if (r?.data?.name) setMyProfile(r.data);
         else setMyProfile(null);
       } catch {
         setMyProfile(null);
       }
     };
+
     fetchMyProfile();
-  }, [user?.uid]);
+  }, [user?.uid, authHeaders]);
 
   // 1) Konwersacje
   useEffect(() => {
     const fetchConversations = async () => {
-      if (!user?.uid) return;
+      const firebaseUid = auth.currentUser?.uid || user?.uid;
+      if (!firebaseUid) return;
+
+      // jeśli firebase user jeszcze nie jest gotowy, nie strzelaj do backendu
+      if (!auth.currentUser) return;
+
       setLoading(true);
+
       try {
-        const res = await axios.get(`${API}/api/conversations/by-uid/${user.uid}`);
+        const headers = await authHeaders();
+
+        const res = await axios.get(`${API}/api/conversations/by-uid/${firebaseUid}`, { headers });
+
         const list = Array.isArray(res.data) ? res.data : [];
         setConversations(list);
 
@@ -78,7 +115,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     };
 
     fetchConversations();
-  }, [user?.uid, setUnreadCount]);
+  }, [user?.uid, setUnreadCount, authHeaders]);
 
   // 2) Unikalne „drugie” uid-y
   const otherUids = useMemo(
@@ -93,12 +130,11 @@ const Notifications = ({ user, setUnreadCount }) => {
 
   const isProfileResolved = (uid) => profileMetaMap[uid] !== undefined;
 
-  // 3) Meta PROFILI drugiej strony (pending -> skeleton, potem {name,avatar})
+  // 3) Meta PROFILI drugiej strony
   useEffect(() => {
     const fetchProfiles = async () => {
       if (otherUids.length === 0) return;
 
-      // pending dla nowych UID
       setProfileMetaMap((prev) => {
         const draft = { ...prev };
         otherUids.forEach((uid) => {
@@ -113,6 +149,10 @@ const Notifications = ({ user, setUnreadCount }) => {
         const entries = await Promise.all(
           otherUids.map(async (uid) => {
             try {
+              // jeśli ten endpoint u Ciebie też jest chroniony -> dodaj headers:
+              // const headers = await authHeaders();
+              // const r = await axios.get(`${API}/api/profiles/by-user/${uid}`, { headers });
+
               const r = await axios.get(`${API}/api/profiles/by-user/${uid}`);
               const name = (r?.data?.name || "").trim() || null;
               const avatar = normalizeAvatar(r?.data?.avatar) || null;
@@ -138,11 +178,9 @@ const Notifications = ({ user, setUnreadCount }) => {
     fetchProfiles();
   }, [otherUids]);
 
-  // prefer="profile"  -> najpierw nazwa profilu; pending => skeleton
-  // prefer="account"  -> najpierw nazwa konta; profil tylko gdy konto puste
   const getName = (otherUid, fallback, prefer = "profile") => {
     const account = (fallback || "").trim();
-    const profileMeta = profileMetaMap[otherUid]; // undefined | {name,avatar}
+    const profileMeta = profileMetaMap[otherUid];
 
     if (prefer === "account") {
       return (
@@ -152,21 +190,18 @@ const Notifications = ({ user, setUnreadCount }) => {
       );
     }
 
-    if (!isProfileResolved(otherUid)) return ""; // pending => skeleton
+    if (!isProfileResolved(otherUid)) return "";
     if (typeof profileMeta?.name === "string" && profileMeta.name.trim()) return profileMeta.name.trim();
 
     return account || "Użytkownik";
   };
 
-  // avatar dla listy
   const getAvatarSrc = (convo, variant) => {
     const otherUid = convo.withUid;
-
     if (variant === "system") return "";
 
     if (variant === "inbox") {
-      const a = normalizeAvatar(convo.withAvatar) || "";
-      return a;
+      return normalizeAvatar(convo.withAvatar) || "";
     }
 
     const meta = profileMetaMap[otherUid];
@@ -174,25 +209,27 @@ const Notifications = ({ user, setUnreadCount }) => {
     return normalizeAvatar(meta?.avatar) || "";
   };
 
-  // 5) Podział na segmenty — tylko kanał account_to_profile
   const accountToProfile = useMemo(
     () => conversations.filter((c) => c.channel === "account_to_profile"),
     [conversations]
   );
 
-  const inboxToMyProfile = useMemo(
-    () => accountToProfile.filter((c) => c.firstFromUid && c.firstFromUid !== user?.uid),
-    [accountToProfile, user?.uid]
+  const inboxToMyProfile = useMemo(() => {
+    const myUid = auth.currentUser?.uid || user?.uid;
+    return accountToProfile.filter((c) => c.firstFromUid && c.firstFromUid !== myUid);
+  }, [accountToProfile, user?.uid]);
+
+  const myAccountToOtherProfiles = useMemo(() => {
+    const myUid = auth.currentUser?.uid || user?.uid;
+    return accountToProfile.filter((c) => c.firstFromUid && c.firstFromUid === myUid);
+  }, [accountToProfile, user?.uid]);
+
+  const systemConversations = useMemo(
+    () => conversations.filter((c) => c.channel === "system"),
+    [conversations]
   );
 
-  const myAccountToOtherProfiles = useMemo(
-    () => accountToProfile.filter((c) => c.firstFromUid && c.firstFromUid === user?.uid),
-    [accountToProfile, user?.uid]
-  );
-
-  const systemConversations = useMemo(() => conversations.filter((c) => c.channel === "system"), [conversations]);
   const systemUnread = systemConversations.reduce((a, c) => a + (c.unreadCount || 0), 0);
-
   const inboxUnread = inboxToMyProfile.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
   const outboxUnread = myAccountToOtherProfiles.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
 
@@ -279,7 +316,6 @@ const Notifications = ({ user, setUnreadCount }) => {
         }`}
       >
         <Link to={`/konwersacja/${convo._id}`} className={styles.link} state={{ scrollToId: "threadPageLayout" }}>
-          {/* ✅ NOWY UKŁAD: grid z obszarami */}
           <div className={styles.row}>
             <div className={styles.avatarWrap}>
               <AvatarNode src={avatarSrc || DEFAULT_AVATAR} variant={variant} />
@@ -334,7 +370,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     </li>
   );
 
-  // 4) Scroll po powrocie
+  // Scroll po powrocie
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo || loading) return;
@@ -394,7 +430,6 @@ const Notifications = ({ user, setUnreadCount }) => {
           </ul>
         ) : (
           <>
-            {/* SEGMENT 1 */}
             <div className={styles.sectionGroup}>
               <div className={styles.groupHeader}>
                 <h3 className={styles.groupTitle}>
@@ -412,7 +447,6 @@ const Notifications = ({ user, setUnreadCount }) => {
               )}
             </div>
 
-            {/* SEGMENT 2 */}
             <div className={styles.sectionGroup}>
               <div className={styles.groupHeader}>
                 <h3 className={styles.groupTitle}>Rozmowy z innymi profilami (Twoje konto → inne profile)</h3>
@@ -428,7 +462,6 @@ const Notifications = ({ user, setUnreadCount }) => {
               )}
             </div>
 
-            {/* SEGMENT 3 */}
             <div className={styles.sectionGroup}>
               <div className={styles.groupHeader}>
                 <h3 className={styles.groupTitle}>Wiadomości systemowe</h3>
