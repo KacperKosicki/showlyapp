@@ -256,9 +256,6 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
       const anyReservedHere = overlaps.some(
         (o) => o.status === 'reserved' && slotStartMs >= o.fromMs && slotStartMs <= o.toMs
       );
-      const anyPendingHere = overlaps.some(
-        (o) => o.status === 'pending' && slotStartMs >= o.fromMs && slotStartMs <= o.toMs
-      );
 
       if (isAutoAssign) {
         if (totalCapacity <= 0) {

@@ -424,10 +424,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
     const eligibleStaff = isAutoAssignTeam
       ? (providerMeta?.staff || []).filter(
-          (s) =>
-            s.active !== false &&
-            (s.serviceIds || []).some((id) => String(id) === String(offlineForm.serviceId))
-        )
+        (s) =>
+          s.active !== false &&
+          (s.serviceIds || []).some((id) => String(id) === String(offlineForm.serviceId))
+      )
       : [];
 
     const totalCapacity = isAutoAssignTeam
@@ -498,18 +498,18 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
             // dla koloru “reserved/pending” patrzymy tylko na realną usługę (doMs),
             // a bufor traktujemy jako “disabled”
-const startsInsideAccepted = accepted.some(
-  (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
-);
-const startsInsidePending = pendingOnly.some(
-  (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
-);
+            const startsInsideAccepted = accepted.some(
+              (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+            );
+            const startsInsidePending = pendingOnly.some(
+              (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+            );
 
             status = startsInsideAccepted
               ? "reserved"
               : startsInsidePending
-              ? "pending"
-              : "disabled";
+                ? "pending"
+                : "disabled";
           }
         }
       } else {
@@ -517,18 +517,18 @@ const startsInsidePending = pendingOnly.some(
           const accepted = overlaps.filter((o) => o.status === "reserved");
           const pendingOnly = overlaps.filter((o) => o.status === "pending");
 
-const startsInsideAccepted = accepted.some(
-  (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
-);
-const startsInsidePending = pendingOnly.some(
-  (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
-);
+          const startsInsideAccepted = accepted.some(
+            (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+          );
+          const startsInsidePending = pendingOnly.some(
+            (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+          );
 
           status = startsInsideAccepted
             ? "reserved"
             : startsInsidePending
-            ? "pending"
-            : "disabled";
+              ? "pending"
+              : "disabled";
         }
       }
 
@@ -640,7 +640,7 @@ const startsInsidePending = pendingOnly.some(
     if (!providerMeta) await fetchProviderMeta();
   };
 
-  const submitOffline = async () => {
+  const submitOffline = useCallback(async () => {
     if (!isLogged) return;
     if (!hasProviderProfile || !providerMeta?.providerProfileId) {
       setAlert({
@@ -663,7 +663,6 @@ const startsInsidePending = pendingOnly.some(
       return;
     }
 
-    // ✅ usługa wymagana
     if (!offlineForm.serviceId) {
       setAlert({
         show: true,
@@ -674,11 +673,9 @@ const startsInsidePending = pendingOnly.some(
       return;
     }
 
-    // ✅ request-blocking: wymuszamy dateOnly
     const effectiveDateOnly = isDayBlockingMode ? true : offlineForm.dateOnly;
 
     if (!effectiveDateOnly) {
-      // user-pick: pracownik wymagany
       if (isUserPickTeam && !offlineForm.staffId) {
         setAlert({
           show: true,
@@ -689,7 +686,6 @@ const startsInsidePending = pendingOnly.some(
         return;
       }
 
-      // slot start wymagany (tylko w slot mode)
       if (isSlotMode && !offlineForm.slotStart) {
         setAlert({
           show: true,
@@ -701,7 +697,6 @@ const startsInsidePending = pendingOnly.some(
       }
     }
 
-    // ✅ prewalidacja pod dynamiczny bufor
     const v = validateOfflineWithBreak();
     if (!v.ok) {
       setAlert({ show: true, type: "warning", message: v.reason, onClose: null });
@@ -756,7 +751,13 @@ const startsInsidePending = pendingOnly.some(
         dateOnly: false,
       }));
 
-      setAlert({ show: true, type: "success", message: "Dodano offline rezerwację.", onClose: null });
+      setAlert({
+        show: true,
+        type: "success",
+        message: "Dodano offline rezerwację.",
+        onClose: null,
+      });
+
       await refetch();
     } catch (e) {
       console.error("❌ submitOffline error:", e);
@@ -786,7 +787,19 @@ const startsInsidePending = pendingOnly.some(
         return n;
       });
     }
-  };
+  }, [
+    isLogged,
+    hasProviderProfile,
+    providerMeta,
+    user?.uid,
+    offlineForm,
+    isDayBlockingMode,
+    isUserPickTeam,
+    isSlotMode,
+    validateOfflineWithBreak,
+    refetch,
+    OFFLINE_BUFFER_MIN,
+  ]);
 
   const filteredStaff = useMemo(() => {
     const staff = providerMeta?.staff || [];
@@ -804,13 +817,16 @@ const startsInsidePending = pendingOnly.some(
     return Array.from(new Set(arr));
   }, [serviceReservations]);
 
-  const getAccountName = (uid, fallbackName) => {
-    if (!uid) return fallbackName?.trim() || "Użytkownik";
-    const name = accountNameMap[uid]; // undefined=pending | null=brak | string
-    if (name === undefined) return ""; // pending => skeleton
-    if (typeof name === "string" && name.trim()) return name.trim();
-    return fallbackName?.trim() || "Użytkownik";
-  };
+  const getAccountName = useCallback(
+    (uid, fallbackName) => {
+      if (!uid) return fallbackName?.trim() || "Użytkownik";
+      const name = accountNameMap[uid]; // undefined=pending | null=brak | string
+      if (name === undefined) return ""; // pending => skeleton
+      if (typeof name === "string" && name.trim()) return name.trim();
+      return fallbackName?.trim() || "Użytkownik";
+    },
+    [accountNameMap]
+  );
 
   useEffect(() => {
     if (!isLogged) return;
@@ -865,9 +881,8 @@ const startsInsidePending = pendingOnly.some(
     if (offlineForm.dateOnly || isDayBlockingMode) {
       return active.map((r) => ({
         id: r._id,
-        label: `${isWholeDay(r) ? "CAŁY DZIEŃ" : `${r.fromTime}–${r.toTime}`} • ${
-          r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
-        } • ${r.status}`,
+        label: `${isWholeDay(r) ? "CAŁY DZIEŃ" : `${r.fromTime}–${r.toTime}`} • ${r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
+          } • ${r.status}`,
       }));
     }
 
@@ -898,9 +913,8 @@ const startsInsidePending = pendingOnly.some(
       })
       .map((r) => ({
         id: r._id,
-        label: `${r.fromTime}–${r.toTime} (+${OFFLINE_BUFFER_MIN}m) • ${
-          r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
-        } • ${r.status}`,
+        label: `${r.fromTime}–${r.toTime} (+${OFFLINE_BUFFER_MIN}m) • ${r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
+          } • ${r.status}`,
       }));
   }, [
     offlineOpen,
@@ -1059,8 +1073,8 @@ const startsInsidePending = pendingOnly.some(
                     !teamEnabled
                       ? "Zespół wyłączony w profilu"
                       : isAutoAssignTeam
-                      ? "Auto-assign: pracownik dobierany automatycznie"
-                      : ""
+                        ? "Auto-assign: pracownik dobierany automatycznie"
+                        : ""
                   }
                 >
                   <option value="">
@@ -1356,13 +1370,12 @@ const startsInsidePending = pendingOnly.some(
       )}
 
       <span
-        className={`${styles.chip} ${
-          res.status === "zaakceptowana"
-            ? styles.chipAccepted
-            : res.status === "odrzucona" || res.status === "anulowana"
+        className={`${styles.chip} ${res.status === "zaakceptowana"
+          ? styles.chipAccepted
+          : res.status === "odrzucona" || res.status === "anulowana"
             ? styles.chipRejected
             : styles.chipPending
-        }`}
+          }`}
       >
         {statusIcon(res.status)}
         {res.status}
@@ -1415,8 +1428,8 @@ const startsInsidePending = pendingOnly.some(
       res.closedReason === "expired"
         ? "Rezerwacja wygasła (brak potwierdzenia w czasie)."
         : res.status === "anulowana"
-        ? "Klient anulował rezerwację."
-        : "Usługodawca odrzucił rezerwację.";
+          ? "Klient anulował rezerwację."
+          : "Usługodawca odrzucił rezerwację.";
 
     return (
       <div className={styles.closedInfo}>
@@ -1800,9 +1813,8 @@ const startsInsidePending = pendingOnly.some(
                                   </span>
                                 ) : (
                                   <span
-                                    className={`${styles.tlKind} ${
-                                      b.kind === "recv" ? styles.tlKindRecv : styles.tlKindSent
-                                    }`}
+                                    className={`${styles.tlKind} ${b.kind === "recv" ? styles.tlKindRecv : styles.tlKindSent
+                                      }`}
                                   >
                                     {b.kind === "recv" ? (
                                       <>
