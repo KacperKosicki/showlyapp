@@ -171,10 +171,10 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     const eligibleStaff =
       isTeamEnabled && provider?.team?.enabled
         ? staffList.filter(
-            (s) =>
-              s.active &&
-              (s.serviceIds || []).some((id) => String(id) === String(selectedService?._id))
-          )
+          (s) =>
+            s.active &&
+            (s.serviceIds || []).some((id) => String(id) === String(selectedService?._id))
+        )
         : [];
 
     const eligibleIds = new Set(eligibleStaff.map((s) => String(s._id)));
@@ -191,44 +191,44 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     const dayBusy = (
       isAutoAssign
         ? reservationsAll
-            .filter((r) => r.date === dateStr)
-            .filter(
-              (r) =>
-                !r.dateOnly && ['zaakceptowana', 'oczekująca', 'tymczasowa'].includes(r.status)
-            )
-            .filter((r) => eligibleIds.has(String(r.staffId)))
-            .map((r) => {
-              const from = new Date(`${r.date}T${r.fromTime}`);
-              const toNoBuf = new Date(`${r.date}T${r.toTime}`); // ✅ koniec usługi
-              const toWithBuf = addMinutes(toNoBuf, buffer); // ✅ koniec usługi + bufor
+          .filter((r) => r.date === dateStr)
+          .filter(
+            (r) =>
+              !r.dateOnly && ['zaakceptowana', 'oczekująca', 'tymczasowa'].includes(r.status)
+          )
+          .filter((r) => eligibleIds.has(String(r.staffId)))
+          .map((r) => {
+            const from = new Date(`${r.date}T${r.fromTime}`);
+            const toNoBuf = new Date(`${r.date}T${r.toTime}`); // ✅ koniec usługi
+            const toWithBuf = addMinutes(toNoBuf, buffer); // ✅ koniec usługi + bufor
 
-              return {
-                fromMs: +from,
-                toMs: +toNoBuf,
-                toBufMs: +toWithBuf,
-                status: r.status === 'zaakceptowana' ? 'reserved' : 'pending',
-                staffId: String(r.staffId || ''),
-              };
-            })
+            return {
+              fromMs: +from,
+              toMs: +toNoBuf,
+              toBufMs: +toWithBuf,
+              status: r.status === 'zaakceptowana' ? 'reserved' : 'pending',
+              staffId: String(r.staffId || ''),
+            };
+          })
         : [...reservedSlots, ...pendingSlots]
-            .filter((s) => s.date === dateStr)
-            .map((s) => {
-              const from = new Date(`${s.date}T${s.fromTime}`);
-              const toNoBuf = new Date(`${s.date}T${s.toTime}`); // ✅ koniec usługi
-              const toWithBuf = addMinutes(toNoBuf, buffer); // ✅ koniec usługi + bufor
+          .filter((s) => s.date === dateStr)
+          .map((s) => {
+            const from = new Date(`${s.date}T${s.fromTime}`);
+            const toNoBuf = new Date(`${s.date}T${s.toTime}`); // ✅ koniec usługi
+            const toWithBuf = addMinutes(toNoBuf, buffer); // ✅ koniec usługi + bufor
 
-              const isRes = reservedSlots.some(
-                (r) => r.date === s.date && r.fromTime === s.fromTime && r.toTime === s.toTime
-              );
+            const isRes = reservedSlots.some(
+              (r) => r.date === s.date && r.fromTime === s.fromTime && r.toTime === s.toTime
+            );
 
-              return {
-                fromMs: +from,
-                toMs: +toNoBuf,
-                toBufMs: +toWithBuf,
-                status: isRes ? 'reserved' : 'pending',
-                staffId: '',
-              };
-            })
+            return {
+              fromMs: +from,
+              toMs: +toNoBuf,
+              toBufMs: +toWithBuf,
+              status: isRes ? 'reserved' : 'pending',
+              staffId: '',
+            };
+          })
     ).sort((a, b) => a.fromMs - b.fromMs);
 
     const slots = [];
@@ -248,16 +248,16 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
       const overlaps = dayBusy.filter((b) => slotStartMs < b.toBufMs && slotEndMs > b.fromMs);
 
       // ✅ rozróżnienie: start wpada w usługę czy tylko w bufor
-      const startsInService = overlaps.some((o) => slotStartMs >= o.fromMs && slotStartMs < o.toMs);
+      const startsInService = overlaps.some((o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs);
       const startsInBuffer =
-        !startsInService && overlaps.some((o) => slotStartMs >= o.toMs && slotStartMs < o.toBufMs);
+        !startsInService && overlaps.some((o) => slotStartMs > o.toMs && slotStartMs < o.toBufMs);
 
       // dla nie-auto-assign: jaki kolor ma mieć "usługa" (reserved/pending)
       const anyReservedHere = overlaps.some(
-        (o) => o.status === 'reserved' && slotStartMs >= o.fromMs && slotStartMs < o.toMs
+        (o) => o.status === 'reserved' && slotStartMs >= o.fromMs && slotStartMs <= o.toMs
       );
       const anyPendingHere = overlaps.some(
-        (o) => o.status === 'pending' && slotStartMs >= o.fromMs && slotStartMs < o.toMs
+        (o) => o.status === 'pending' && slotStartMs >= o.fromMs && slotStartMs <= o.toMs
       );
 
       if (isAutoAssign) {
@@ -280,19 +280,13 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
             const accepted = overlaps.filter((o) => o.status === 'reserved');
             const pendingOnly = overlaps.filter((o) => o.status === 'pending');
 
-            // ✅ usługa (kolor)
-            const startsInsideAccepted = accepted.some(
-              (o) => slotStartMs >= o.fromMs && slotStartMs < o.toMs
-            );
-            const startsInsidePending = pendingOnly.some(
-              (o) => slotStartMs >= o.fromMs && slotStartMs < o.toMs
-            );
+            const startsInsideAccepted = accepted.some((o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs);
+            const startsInsidePending = pendingOnly.some((o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs);
 
-            // ✅ sam bufor (szary)
             const startsInsideBuffer =
               !startsInsideAccepted &&
               !startsInsidePending &&
-              overlaps.some((o) => slotStartMs >= o.toMs && slotStartMs < o.toBufMs);
+              overlaps.some((o) => slotStartMs > o.toMs && slotStartMs < o.toBufMs);
 
             if (startsInsideAccepted) status = 'reserved';
             else if (startsInsidePending) status = 'pending';
@@ -469,10 +463,10 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
               {s.duration.unit === 'minutes'
                 ? 'min'
                 : s.duration.unit === 'hours'
-                ? 'godzin'
-                : s.duration.unit === 'days'
-                ? 'dni'
-                : s.duration.unit}
+                  ? 'godzin'
+                  : s.duration.unit === 'days'
+                    ? 'dni'
+                    : s.duration.unit}
             </option>
           ))}
         </select>
@@ -544,9 +538,8 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
                 <button
                   key={day.toISOString()}
                   type="button"
-                  className={`${styles.day} ${!active || isPast ? styles.disabledDay : ''} ${
-                    sel ? styles.selectedDay : ''
-                  }`}
+                  className={`${styles.day} ${!active || isPast ? styles.disabledDay : ''} ${sel ? styles.selectedDay : ''
+                    }`}
                   disabled={!active || isPast}
                   onClick={() => active && !isPast && setDate(day)}
                 >

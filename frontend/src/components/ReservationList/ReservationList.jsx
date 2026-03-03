@@ -94,7 +94,8 @@ const minToTime = (mins) => {
 };
 
 /** czy cało-dniowa rezerwacja */
-const isWholeDay = (r) => r?.dateOnly || (r?.fromTime === "00:00" && r?.toTime === "23:59");
+const isWholeDay = (r) =>
+  r?.dateOnly || (r?.fromTime === "00:00" && r?.toTime === "23:59");
 
 const ReservationList = ({ user, resetPendingReservationsCount }) => {
   const location = useLocation();
@@ -159,7 +160,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
   // ✅ Kalendarz dostępny dla: calendar + request-blocking
   const canUseCalendar =
-    hasProviderProfile && (bookingMode === "calendar" || bookingMode === "request-blocking");
+    hasProviderProfile &&
+    (bookingMode === "calendar" || bookingMode === "request-blocking");
 
   const isSlotMode = bookingMode === "calendar";
   const isDayBlockingMode = bookingMode === "request-blocking";
@@ -177,7 +179,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
   // jeśli ktoś nie ma profilu albo nie ma trybu kalendarzowego, to nie pokazujemy widoku calendar
   useEffect(() => {
-    if ((!hasProviderProfile || !canUseCalendar) && viewMode === "calendar") setViewMode("list");
+    if ((!hasProviderProfile || !canUseCalendar) && viewMode === "calendar")
+      setViewMode("list");
   }, [hasProviderProfile, canUseCalendar, viewMode]);
 
   const fetchProviderMeta = useCallback(async () => {
@@ -289,13 +292,17 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
   const selectedService = useMemo(() => {
     if (!offlineForm.serviceId) return null;
-    return services.find((s) => String(s._id) === String(offlineForm.serviceId)) || null;
+    return (
+      services.find((s) => String(s._id) === String(offlineForm.serviceId)) ||
+      null
+    );
   }, [services, offlineForm.serviceId]);
 
   const getServiceDurationMinutes = useCallback((s) => {
     if (!s) return null;
 
-    if (Number.isFinite(s.durationMinutes)) return Math.max(1, Math.round(s.durationMinutes));
+    if (Number.isFinite(s.durationMinutes))
+      return Math.max(1, Math.round(s.durationMinutes));
 
     const durationObj = s.duration || s.time || null;
     const value =
@@ -389,8 +396,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   //  OFFLINE SLOTY (jak BookingModeCalendar)
   //  ✅ tylko w trybie slotowym (calendar)
   // =========================
-  const OFFLINE_STEP_MIN = GRID_STEP_MIN;         // ✅ 5
-  const OFFLINE_BUFFER_MIN = effectiveBufferMin;  // ✅ 5 + bookingBufferMin
+  const OFFLINE_STEP_MIN = GRID_STEP_MIN; // ✅ 5
+  const OFFLINE_BUFFER_MIN = effectiveBufferMin; // ✅ 5 + bookingBufferMin
 
   const offlineSlots = useMemo(() => {
     if (!offlineOpen) return [];
@@ -431,14 +438,16 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       eligibleStaff.map((s) => [String(s._id), Math.max(1, Number(s.capacity) || 1)])
     );
 
+    // ✅ busy: kończymy na toBufMs (czyli koniec usługi + bufor)
     const busy = (isAutoAssignTeam ? active : filtered)
       .map((r) => {
         const from = new Date(`${r.date}T${r.fromTime}`);
-        const to = new Date(`${r.date}T${r.toTime}`);
-        const toWithBuf = new Date(+to + OFFLINE_BUFFER_MIN * 60 * 1000);
+        const toNoBuf = new Date(`${r.date}T${r.toTime}`); // ✅ koniec usługi
+        const toWithBuf = new Date(+toNoBuf + OFFLINE_BUFFER_MIN * 60 * 1000); // ✅ + bufor
         return {
           fromMs: +from,
-          toMs: +toWithBuf,
+          toMs: +toNoBuf,
+          toBufMs: +toWithBuf,
           status: r.status === "zaakceptowana" ? "reserved" : "pending",
           staffId: String(r.staffId || ""),
         };
@@ -462,7 +471,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       const slotStartMs = +startDT;
       const slotEndMs = +endBufDT;
 
-      const overlaps = busy.filter((b) => slotStartMs < b.toMs && slotEndMs > b.fromMs);
+      // ✅ KLUCZOWA POPRAWKA:
+      // overlap liczymy z busy.toBufMs (czyli rezerwacja + bufor),
+      // dzięki temu np. slot 10:00 będzie zablokowany jeśli rezerwacja kończy się o 10:00 i bufor trwa dalej.
+      const overlaps = busy.filter((b) => slotStartMs < b.toBufMs && slotEndMs > b.fromMs);
 
       if (isAutoAssignTeam) {
         if (totalCapacity <= 0) {
@@ -484,10 +496,20 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
             const accepted = overlaps.filter((o) => o.status === "reserved");
             const pendingOnly = overlaps.filter((o) => o.status === "pending");
 
-            const startsInsideAccepted = accepted.some((o) => slotStartMs >= o.fromMs && slotStartMs < o.toMs);
-            const startsInsidePending = pendingOnly.some((o) => slotStartMs >= o.fromMs && slotStartMs < o.toMs);
+            // dla koloru “reserved/pending” patrzymy tylko na realną usługę (doMs),
+            // a bufor traktujemy jako “disabled”
+const startsInsideAccepted = accepted.some(
+  (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+);
+const startsInsidePending = pendingOnly.some(
+  (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+);
 
-            status = startsInsideAccepted ? "reserved" : startsInsidePending ? "pending" : "disabled";
+            status = startsInsideAccepted
+              ? "reserved"
+              : startsInsidePending
+              ? "pending"
+              : "disabled";
           }
         }
       } else {
@@ -495,10 +517,18 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
           const accepted = overlaps.filter((o) => o.status === "reserved");
           const pendingOnly = overlaps.filter((o) => o.status === "pending");
 
-          const startsInsideAccepted = accepted.some((o) => slotStartMs >= o.fromMs && slotStartMs < o.toMs);
-          const startsInsidePending = pendingOnly.some((o) => slotStartMs >= o.fromMs && slotStartMs < o.toMs);
+const startsInsideAccepted = accepted.some(
+  (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+);
+const startsInsidePending = pendingOnly.some(
+  (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+);
 
-          status = startsInsideAccepted ? "reserved" : startsInsidePending ? "pending" : "disabled";
+          status = startsInsideAccepted
+            ? "reserved"
+            : startsInsidePending
+            ? "pending"
+            : "disabled";
         }
       }
 
@@ -589,7 +619,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       setAlert({
         show: true,
         type: "warning",
-        message: "Aby dodawać rezerwacje offline, musisz mieć utworzony profil usługodawcy.",
+        message:
+          "Aby dodawać rezerwacje offline, musisz mieć utworzony profil usługodawcy.",
         onClose: null,
       });
       return;
@@ -623,7 +654,12 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
     const name = (offlineForm.offlineClientName || "").trim();
     if (!name) {
-      setAlert({ show: true, type: "warning", message: "Podaj nazwę klienta (offline).", onClose: null });
+      setAlert({
+        show: true,
+        type: "warning",
+        message: "Podaj nazwę klienta (offline).",
+        onClose: null,
+      });
       return;
     }
 
@@ -655,7 +691,12 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
       // slot start wymagany (tylko w slot mode)
       if (isSlotMode && !offlineForm.slotStart) {
-        setAlert({ show: true, type: "warning", message: "Wybierz godzinę startu (slot).", onClose: null });
+        setAlert({
+          show: true,
+          type: "warning",
+          message: "Wybierz godzinę startu (slot).",
+          onClose: null,
+        });
         return;
       }
     }
@@ -688,7 +729,12 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         const to = offlineForm.toTime;
 
         if (!from || !to) {
-          setAlert({ show: true, type: "warning", message: "Uzupełnij godziny od/do.", onClose: null });
+          setAlert({
+            show: true,
+            type: "warning",
+            message: "Uzupełnij godziny od/do.",
+            onClose: null,
+          });
           return;
         }
 
@@ -745,7 +791,9 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   const filteredStaff = useMemo(() => {
     const staff = providerMeta?.staff || [];
     if (!offlineForm.serviceId) return staff;
-    return staff.filter((s) => (s.serviceIds || []).some((id) => String(id) === String(offlineForm.serviceId)));
+    return staff.filter((s) =>
+      (s.serviceIds || []).some((id) => String(id) === String(offlineForm.serviceId))
+    );
   }, [providerMeta, offlineForm.serviceId]);
 
   // =========================
@@ -1200,7 +1248,9 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     try {
       setDisabledIds((prev) => new Set(prev).add(reservationId));
 
-      await axios.patch(`${API}/api/reservations/${reservationId}/status`, { status: newStatus });
+      await axios.patch(`${API}/api/reservations/${reservationId}/status`, {
+        status: newStatus,
+      });
 
       if (newStatus === "anulowana")
         return withToastAndRefresh("warning", "Rezerwacja anulowana – slot zwolniony.", reservationId);
@@ -1209,7 +1259,12 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         return withToastAndRefresh("warning", "Rezerwacja odrzucona – slot zwolniony.", reservationId);
 
       if (newStatus === "zaakceptowana") {
-        setAlert({ show: true, type: "success", message: "Pomyślnie potwierdzono rezerwację.", onClose: null });
+        setAlert({
+          show: true,
+          type: "success",
+          message: "Pomyślnie potwierdzono rezerwację.",
+          onClose: null,
+        });
         await refetch();
         setDisabledIds((prev) => {
           const n = new Set(prev);
@@ -1827,18 +1882,14 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                     ) : (
                       <div className={styles.wholeDayList}>
                         {dayTimeline.wholeDay.map((r) => {
-                          const whoName = r.offline
-                            ? r.offlineClientName || "OFFLINE"
-                            : getAccountName(r.userId, r.userName);
+                          const whoName = r.offline ? r.offlineClientName || "OFFLINE" : getAccountName(r.userId, r.userName);
 
                           return (
                             <div key={r._id || `${r.date}-whole`} className={styles.wholeDayItem}>
                               <span className={styles.wholeDayBadge}>CAŁY DZIEŃ</span>
 
                               <span className={styles.wholeDayName}>
-                                {whoName ? whoName : (
-                                  <span className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`} />
-                                )}
+                                {whoName ? whoName : <span className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`} />}
                               </span>
 
                               <span className={`${styles.wholeDayStatus} ${statusToTlClass(r.status)}`}>

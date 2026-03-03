@@ -1432,6 +1432,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           )}
         </div>
 
+        <div className={styles.subsection}></div>
+
         {/* BUFFER — przerwa między usługami */}
         <div className={styles.inputBlock}>
           <div className={styles.groupTitle}>
@@ -1469,8 +1471,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             Buffer doliczany jest po każdej usłudze (blokuje kolejne sloty, żebyś miał/a przerwę).
           </div>
         </div>
-
-        <div className={styles.subsection}></div>
 
         <div className={styles.subsection}></div>
 
