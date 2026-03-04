@@ -32,7 +32,7 @@ const pickAvatar = ({ dbAvatar, firebasePhotoURL }) =>
 async function getAuthHeader() {
   const u = auth.currentUser;
   if (!u) return {};
-  const token = await u.getIdToken();
+  const token = await u.getIdToken(true); // ✅ NEW: refresh token
   return { Authorization: `Bearer ${token}` };
 }
 
@@ -57,20 +57,26 @@ const UserDropdown = ({
   // avatar
   const [photoURL, setPhotoURL] = useState('');
 
+  // ✅ NEW: rola użytkownika z DB
+  const [userRole, setUserRole] = useState('user'); // user | mod | admin
+
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const location = useLocation();
 
-  // ✅ Avatar: bez drugiego listenera auth
+  // ✅ Avatar + rola: pobieramy raz z backendu
   useEffect(() => {
     const run = async () => {
       if (!user?.uid) {
         setPhotoURL('');
+        setUserRole('user'); // ✅ NEW
         return;
       }
 
       try {
         let dbAvatar = '';
+        let dbRole = 'user'; // ✅ NEW
+
         try {
           const authHeader = await getAuthHeader();
 
@@ -84,6 +90,7 @@ const UserDropdown = ({
           if (r.ok) {
             const db = await r.json();
             dbAvatar = db?.avatar || '';
+            dbRole = db?.role || 'user'; // ✅ NEW
           }
         } catch {}
 
@@ -95,8 +102,11 @@ const UserDropdown = ({
             firebasePhotoURL
           })
         );
+
+        setUserRole(dbRole); // ✅ NEW
       } catch {
         setPhotoURL('');
+        setUserRole('user'); // ✅ NEW
       }
     };
 
@@ -229,6 +239,9 @@ const UserDropdown = ({
   // ✅ gdy aplikacja jeszcze ładuje auth – nie pokazuj "stwórz profil"
   const showProfileActions = !loadingUser;
 
+  // ✅ NEW: dostęp do panelu admina dla admin/mod
+  const canSeeAdminPanel = userRole === 'admin' || userRole === 'mod';
+
   return (
     <div className={styles.dropdown} ref={dropdownRef}>
       <div className={styles.trigger} onClick={() => setOpen((prev) => !prev)}>
@@ -249,6 +262,13 @@ const UserDropdown = ({
 
       <div className={`${styles.menu} ${open ? styles.visible : ''}`}>
         <button onClick={() => handleNavigate('/konto', 'scrollToId')}>Twoje konto</button>
+
+        {/* ✅ NEW: Panel admina (tylko admin/mod) */}
+        {canSeeAdminPanel && (
+          <button onClick={() => handleNavigate('/admin', 'scrollToId')}>
+            Panel admina
+          </button>
+        )}
 
         {/* ✅ tylko jeśli auth już gotowy */}
         {showProfileActions && profileStatus === 'none' && (

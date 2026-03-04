@@ -1,3 +1,4 @@
+// src/components/PublicProfile/PublicProfile.jsx
 import { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import styles from "./PublicProfile.module.scss";
@@ -28,7 +29,18 @@ import {
 } from "react-icons/fa6";
 import { FaRegCalendarAlt, FaPaperPlane } from "react-icons/fa";
 
+import { FiFlag } from "react-icons/fi";
+import { reportApi } from "../../api/reportApi";
+
 import "react-calendar/dist/Calendar.css";
+
+const REPORT_REASONS = [
+  { v: "spam", label: "Spam / reklama" },
+  { v: "fake", label: "Fałszywe informacje" },
+  { v: "abuse", label: "Nękanie / obraźliwe treści" },
+  { v: "illegal", label: "Nielegalne treści" },
+  { v: "other", label: "Inne" },
+];
 
 const prettyUrl = (url) => {
   try {
@@ -183,10 +195,92 @@ export default function PublicProfile() {
 
   const [isRatingSending, setIsRatingSending] = useState(false);
 
+  // ===== REPORT (zgłoszenia) =====
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportType, setReportType] = useState("profile"); // "profile" | "review"
+  const [reportReviewId, setReportReviewId] = useState(null);
+  const [reportReason, setReportReason] = useState("spam");
+  const [reportMsg, setReportMsg] = useState("");
+  const [reportSending, setReportSending] = useState(false);
+
   const maxChars = 200;
 
   const openLightbox = (src) => setFullscreenImage(src);
   const closeLightbox = () => setFullscreenImage(null);
+
+  // ✅ nie zmieniamy: profil nadal nie do zgłoszenia na własnym
+  const openReportProfile = () => {
+    setReportType("profile");
+    setReportReviewId(null);
+    setReportReason("spam");
+    setReportMsg("");
+    setReportOpen(true);
+  };
+
+  // ✅ ALBO WŁASNY PROFIL ALBO CUDZY — opinię można zgłosić zawsze (ważne: nadal trzeba być zalogowanym)
+  const openReportReview = (reviewId) => {
+    setReportType("review");
+    setReportReviewId(reviewId);
+    setReportReason("abuse");
+    setReportMsg("");
+    setReportOpen(true);
+  };
+
+  const submitReport = async () => {
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      setAlert({ type: "error", message: "Aby zgłosić, musisz być zalogowany." });
+      return;
+    }
+
+    // ✅ ZMIANA: blokujemy TYLKO zgłoszenie profilu na własnym profilu.
+    // Zgłoszenie OPINII na własnym profilu ma działać.
+    if (reportType === "profile" && currentUser.uid === profile?.userId) {
+      setAlert({ type: "info", message: "Nie możesz zgłosić własnego profilu." });
+      return;
+    }
+
+    if (!profile?.userId) {
+      setAlert({ type: "error", message: "Brak danych profilu (userId)." });
+      return;
+    }
+
+    if (reportType === "review" && !reportReviewId) {
+      setAlert({ type: "error", message: "Brak identyfikatora opinii." });
+      return;
+    }
+
+    try {
+      setReportSending(true);
+
+      await reportApi.create({
+        type: reportType,
+        profileUserId: profile.userId,
+        reason: reportReason,
+        message: reportMsg,
+        reviewId: reportType === "review" ? reportReviewId : null,
+      });
+
+      setAlert({ type: "success", message: "Zgłoszenie wysłane. Dziękujemy!" });
+      setReportOpen(false);
+    } catch (e) {
+      setAlert({
+        type: "error",
+        message: e?.response?.data?.message || "Nie udało się wysłać zgłoszenia.",
+      });
+    } finally {
+      setReportSending(false);
+    }
+  };
+
+  // report modal scroll lock
+  useEffect(() => {
+    if (reportOpen) {
+      lockBodyScroll();
+      return () => unlockBodyScroll();
+    }
+  }, [reportOpen]);
 
   useEffect(() => {
     if (fullscreenImage) {
@@ -196,11 +290,15 @@ export default function PublicProfile() {
   }, [fullscreenImage]);
 
   useEffect(() => {
-    if (!fullscreenImage) return;
-    const onKey = (e) => e.key === "Escape" && closeLightbox();
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        if (fullscreenImage) closeLightbox();
+        if (reportOpen) setReportOpen(false);
+      }
+    };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [fullscreenImage]);
+  }, [fullscreenImage, reportOpen]);
 
   const mapUnit = (unit) => {
     switch (unit) {
@@ -329,7 +427,7 @@ export default function PublicProfile() {
         const dbUser = await r.json();
         userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || "";
       }
-    } catch { }
+    } catch {}
 
     try {
       const headers = await authHeaders({ "Content-Type": "application/json" });
@@ -479,17 +577,17 @@ export default function PublicProfile() {
     ratedByArr.length > 0
       ? ratedByArr.length
       : Array.isArray(reviews)
-        ? reviews.length
-        : Number.isFinite(Number(reviews))
-          ? Number(reviews)
-          : 0;
+      ? reviews.length
+      : Number.isFinite(Number(reviews))
+      ? Number(reviews)
+      : 0;
 
   const avgRating =
     ratedByArr.length > 0
       ? ratedByArr.reduce((sum, r) => sum + Number(r?.rating || 0), 0) / ratedByArr.length
       : Number.isFinite(Number(rating))
-        ? Number(rating)
-        : 0;
+      ? Number(rating)
+      : 0;
 
   const avgRatingLabel = avgRating > 0 ? avgRating.toFixed(1) : "0.0";
 
@@ -549,25 +647,22 @@ export default function PublicProfile() {
     profileType === "zawodowy"
       ? "Zawód"
       : profileType === "hobbystyczny"
-        ? "Hobby"
-        : profileType === "serwis"
-          ? "Serwis"
-          : profileType === "społeczność"
-            ? "Społeczność"
-            : "Profil";
+      ? "Hobby"
+      : profileType === "serwis"
+      ? "Serwis"
+      : profileType === "społeczność"
+      ? "Społeczność"
+      : "Profil";
 
   return (
     <div className={styles.page} style={cssVars}>
-      {/* top glow background */}
       <div className={styles.bgGlow} aria-hidden="true" />
 
       <div className={styles.shell} id="profileWrapper">
         {alert && <AlertBox type={alert.type} message={alert.message} onClose={() => setAlert(null)} />}
 
-        {/* ===== HERO ===== */}
         <header className={styles.hero}>
           <div className={styles.heroInner}>
-            {/* ✅ BADGE w prawym górnym rogu */}
             <div className={styles.heroBadge}>
               <div className={styles.badgeItem}>
                 <FaRegEye />
@@ -595,7 +690,6 @@ export default function PublicProfile() {
               </div>
             </div>
 
-            {/* ✅ LOKALIZACJA w lewym górnym rogu heroInner */}
             <div className={styles.heroTopLeft}>
               <span className={styles.locPill} title={location || "Brak lokalizacji"}>
                 <FaMapMarkerAlt />
@@ -604,14 +698,11 @@ export default function PublicProfile() {
             </div>
 
             <div className={styles.heroLeft}>
-              {/* ✅ NAZWA + TYP obok nazwy */}
               <div className={styles.titleRow}>
                 <h1 className={styles.heroTitle}>{name}</h1>
-
                 <span className={`${styles.titlePill} ${styles[`type_${profileType}`] || ""}`}>{typeLabel}</span>
               </div>
 
-              {/* ✅ ROLE + RATING pod nazwą */}
               <div className={styles.metaRow}>
                 {role?.trim() && (
                   <div className={styles.roleText} title={role}>
@@ -634,13 +725,25 @@ export default function PublicProfile() {
                   </span>
                 </button>
 
+                {/* ✅ ZGŁOSZENIE PROFILU: nadal TYLKO gdy NIE jesteś właścicielem */}
+                {!isOwner && (
+                  <button
+                    type="button"
+                    className={styles.reportBtn}
+                    onClick={openReportProfile}
+                    title="Zgłoś profil"
+                    aria-label="Zgłoś profil"
+                  >
+                    <FiFlag />
+                  </button>
+                )}
+
                 {hasServices && (
                   <a className={styles.ghostBtn} href="#services">
                     Zobacz usługi
                   </a>
                 )}
 
-                {/* ✅ NOWE CTA */}
                 <div className={styles.ctaRow}>
                   {showBookButton && (
                     <button type="button" className={styles.ctaPrimary} onClick={goToBooking}>
@@ -684,9 +787,7 @@ export default function PublicProfile() {
           <div className={styles.heroFade} aria-hidden="true" />
         </header>
 
-        {/* ===== GRID ===== */}
         <main className={styles.grid}>
-          {/* ===== LEFT / MAIN CARD ===== */}
           <section className={styles.mainCard}>
             <div className={styles.cardHeader}>
               <div className={styles.titleWrap}>
@@ -705,7 +806,11 @@ export default function PublicProfile() {
             </div>
 
             <div className={styles.cardBody}>
-              {description?.trim() ? <p className={styles.desc}>{description}</p> : <p className={styles.muted}>Użytkownik nie dodał jeszcze opisu.</p>}
+              {description?.trim() ? (
+                <p className={styles.desc}>{description}</p>
+              ) : (
+                <p className={styles.muted}>Użytkownik nie dodał jeszcze opisu.</p>
+              )}
 
               {tags?.length > 0 && (
                 <div className={styles.chips}>
@@ -719,7 +824,6 @@ export default function PublicProfile() {
 
               <div className={styles.splitLine} />
 
-              {/* LINKI */}
               <div className={styles.block}>
                 <h3 className={styles.blockTitle}>Linki</h3>
 
@@ -749,12 +853,13 @@ export default function PublicProfile() {
 
               <div className={styles.splitLine} />
 
-              {/* OCENA */}
               {!isOwner && (
                 <div className={styles.rateBox}>
                   <div className={styles.rateTop}>
                     <h3 className={styles.blockTitle}>{hasRated ? "Twoja ocena" : "Oceń profil"}</h3>
-                    <span className={styles.rateHint}>{hasRated ? "Dziękujemy!" : "Wybierz gwiazdki + dodaj komentarz"}</span>
+                    <span className={styles.rateHint}>
+                      {hasRated ? "Dziękujemy!" : "Wybierz gwiazdki + dodaj komentarz"}
+                    </span>
                   </div>
 
                   <div className={styles.starsRow}>
@@ -804,9 +909,7 @@ export default function PublicProfile() {
             </div>
           </section>
 
-          {/* ===== RIGHT / STICKY PANEL ===== */}
           <aside className={styles.side}>
-            {/* OPINIE */}
             <section className={styles.sideCard}>
               <div className={styles.sideHeader}>
                 <h2 className={styles.sectionTitle}>Opinie</h2>
@@ -817,19 +920,18 @@ export default function PublicProfile() {
                 <ul className={styles.reviewList}>
                   {profile.ratedBy.map((op, i) => {
                     const ratingVal = Number(op.rating);
-                    // ✅ avatary opinii zostają jak były (string z API) — normalizacja zostaje i wspiera cloudinary
                     const avatarSrc = normalizeAvatar(op.userAvatar) || "/images/other/no-image.png";
 
                     const dateLabel = op.createdAt
                       ? new Date(op.createdAt).toLocaleDateString("pl-PL", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
                       : "";
 
                     return (
-                      <li key={i} className={styles.review}>
+                      <li key={op?._id || i} className={styles.review}>
                         <div className={styles.reviewTop}>
                           <div className={styles.reviewUser}>
                             <img
@@ -850,12 +952,21 @@ export default function PublicProfile() {
 
                           <div className={styles.reviewStars}>
                             {[...Array(5)].map((_, idx) => (
-                              <FaStar
-                                key={idx}
-                                className={idx < ratingVal ? styles.starMiniOn : styles.starMiniOff}
-                              />
+                              <FaStar key={idx} className={idx < ratingVal ? styles.starMiniOn : styles.starMiniOff} />
                             ))}
                           </div>
+
+                          {/* ✅ ZGŁOSZENIE OPINII: TERAZ TAKŻE NA WŁASNYM PROFILU */}
+                          <button
+                            type="button"
+                            className={styles.reportMiniBtn}
+                            onClick={() => openReportReview(op?._id)}
+                            title="Zgłoś opinię"
+                            aria-label="Zgłoś opinię"
+                            disabled={!op?._id}
+                          >
+                            <FiFlag />
+                          </button>
                         </div>
 
                         <p className={styles.reviewText}>{op.comment}</p>
@@ -868,7 +979,6 @@ export default function PublicProfile() {
               )}
             </section>
 
-            {/* INFO / KONTAKT */}
             {hasInfoBox && (
               <section className={styles.sideCard}>
                 <div className={styles.sideHeader}>
@@ -948,7 +1058,6 @@ export default function PublicProfile() {
           </aside>
         </main>
 
-        {/* ===== GALLERY ===== */}
         {hasGallery && (
           <section className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
@@ -979,7 +1088,6 @@ export default function PublicProfile() {
           </section>
         )}
 
-        {/* ===== SERVICES ===== */}
         {(hasServices || hasInfoBox) && (
           <section className={styles.sectionCard} id="services">
             <div className={styles.sectionHeader}>
@@ -1005,13 +1113,84 @@ export default function PublicProfile() {
         )}
       </div>
 
-      {/* LIGHTBOX */}
       {fullscreenImage && (
         <div className={styles.lightbox} onClick={closeLightbox} role="dialog" aria-modal="true">
           <button type="button" className={styles.lightboxClose} onClick={closeLightbox} aria-label="Zamknij">
             ✕
           </button>
           <img src={fullscreenImage} alt="" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
+
+      {reportOpen && (
+        <div
+          className={styles.reportModalBackdrop}
+          onClick={() => setReportOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className={styles.reportModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.reportModalTop}>
+              <h3 className={styles.reportTitle}>
+                {reportType === "profile" ? "Zgłoś profil" : "Zgłoś opinię"}
+              </h3>
+              <button
+                type="button"
+                className={styles.reportClose}
+                onClick={() => setReportOpen(false)}
+                aria-label="Zamknij"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className={styles.reportRow}>
+              <label className={styles.reportLabel}>Powód</label>
+              <select
+                className={styles.reportSelect}
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+              >
+                {REPORT_REASONS.map((r) => (
+                  <option key={r.v} value={r.v}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.reportRow}>
+              <label className={styles.reportLabel}>Dodatkowe informacje (opcjonalnie)</label>
+              <textarea
+                className={styles.reportTextarea}
+                value={reportMsg}
+                onChange={(e) => setReportMsg(e.target.value.slice(0, 400))}
+                placeholder="Opisz krótko dlaczego zgłaszasz…"
+              />
+              <div className={styles.reportHint}>{reportMsg.length} / 400</div>
+            </div>
+
+            <div className={styles.reportActions}>
+              <button
+                type="button"
+                className={styles.reportGhost}
+                onClick={() => setReportOpen(false)}
+                disabled={reportSending}
+              >
+                Anuluj
+              </button>
+
+              <LoadingButton
+                type="button"
+                className={styles.reportPrimary}
+                isLoading={reportSending}
+                disabled={reportSending}
+                onClick={submitReport}
+              >
+                Wyślij zgłoszenie
+              </LoadingButton>
+            </div>
+          </div>
         </div>
       )}
     </div>

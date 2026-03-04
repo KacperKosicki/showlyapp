@@ -147,6 +147,16 @@ router.get('/public/:uid', requireAuth, async (req, res) => {
   }
 });
 
+router.get('/me', requireAuth, async (req, res) => {
+  try {
+    const user = await User.findOne({ firebaseUid: req.auth.uid }).lean();
+    if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
+    return res.json(user); // zawiera role
+  } catch (e) {
+    return res.status(500).json({ message: 'Błąd serwera', error: e.message });
+  }
+});
+
 /** GET /api/users/:uid
  * Zwraca dane usera (avatar to już https URL)
  */

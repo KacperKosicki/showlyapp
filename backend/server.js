@@ -53,6 +53,10 @@ app.use('/api/conversations', require('./routes/conversations'));
 // Rezerwacje
 app.use('/api/reservations', require('./routes/reservations'));
 
+app.use("/api/admin", require("./routes/admin"));
+
+app.use("/api/reports", require("./routes/reports"));
+
 // ==========================
 // ✅ DB CONNECT
 // ==========================
