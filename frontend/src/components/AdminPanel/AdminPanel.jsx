@@ -455,7 +455,7 @@ export default function AdminPanel() {
         <div className={styles.section}>
           <div className={styles.sectionTop}>
             <h2>Użytkownicy</h2>
-            <LoadingButton loading={loading} onClick={onQuickRefresh}>
+            <LoadingButton isLoading={loading} onClick={onQuickRefresh}>
               Odśwież
             </LoadingButton>
           </div>
@@ -537,7 +537,7 @@ export default function AdminPanel() {
         <div className={styles.section}>
           <div className={styles.sectionTop}>
             <h2>Profile</h2>
-            <LoadingButton loading={loading} onClick={onQuickRefresh}>
+            <LoadingButton isLoading={loading} onClick={onQuickRefresh}>
               Odśwież
             </LoadingButton>
           </div>
@@ -621,7 +621,7 @@ export default function AdminPanel() {
         <div className={styles.section}>
           <div className={styles.sectionTop}>
             <h2>Zgłoszenia</h2>
-            <LoadingButton loading={loading} onClick={onQuickRefresh}>
+            <LoadingButton isLoading={loading} onClick={onQuickRefresh}>
               Odśwież
             </LoadingButton>
           </div>
