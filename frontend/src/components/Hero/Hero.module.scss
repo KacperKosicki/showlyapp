@@ -1,208 +1,391 @@
-@import '../../styles/variables';
+@import "../../styles/variables";
 
+/* =========================================================
+   HERO
+========================================================= */
 .hero {
-  text-align: center;
-  padding: 1rem 1rem 200px;
-  background:
-    url('../../../public/images/hero/hero-bg.png') no-repeat center/cover;
-  color: white;
   position: relative;
   overflow: hidden;
+  color: #fff;
+  padding: 1rem 1rem 185px;
+  text-align: left;
 
-  h1 {
-    font-size: 2.8rem;
-    margin: 2rem 0 1rem;
-    font-weight: 800;
-  }
-
-  p {
-    font-family: $font-body;
-    font-size: 1.2rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .ctaButton {
-    background-color: $primary-color;
-    color: white;
-    padding: 0.9rem 2rem;
-    border-radius: 1.5rem;
-    text-decoration: none;
-    font-weight: bold;
-    font-family: $font-accent;
-    font-size: 1rem;
-    display: inline-block;
-    transition: background 0.3s;
-
-    &:hover {
-      background-color: darken($primary-color, 10%);
-    }
-  }
+  background: linear-gradient(180deg, #07080b 0%, #0a0b10 45%, #0b0c12 100%);
 }
 
+/* ===== background ===== */
+.bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.aurora {
+  position: absolute;
+  inset: -30% -20%;
+  background:
+    radial-gradient(820px 520px at 22% 24%, rgba(111, 78, 242, 0.30), transparent 62%),
+    radial-gradient(740px 520px at 84% 22%, rgba(255, 64, 129, 0.18), transparent 66%),
+    radial-gradient(900px 520px at 50% 55%, rgba(255, 255, 255, 0.06), transparent 72%);
+  filter: blur(22px);
+  opacity: 0.95;
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.10) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.10) 1px, transparent 1px);
+  background-size: 140px 140px;
+  mask-image: radial-gradient(circle at 36% 26%, #000 42%, transparent 80%);
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 42% 28%, transparent 38%, rgba(0,0,0,0.42) 82%);
+  opacity: 0.55;
+}
+
+/* ===== layout ===== */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(18px, 2.2vw, 30px);
+
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: clamp(18px, 3vw, 34px);
+  align-items: start;
+}
+
+.content {
+  padding-top: clamp(18px, 3vw, 28px);
+  max-width: 760px;
+}
+
+/* ===== kicker / typography ===== */
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: $font-body;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.kickerLine {
+  width: 42px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, $primary-color, $secondary-color);
+}
+
+.kickerText {
+  letter-spacing: 0.01em;
+}
+
+.title {
+  margin: 16px 0 10px;
+  font-family: $font-accent;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+  font-size: clamp(2.35rem, 4.8vw, 4.05rem);
+}
+
+.titleAccent {
+  background: linear-gradient(135deg, $primary-color, $secondary-color);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.subtitle {
+  font-family: $font-body;
+  font-size: clamp(1.02rem, 1.35vw, 1.18rem);
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 62ch;
+}
+
+/* ===== actions (nowe) ===== */
+.actions {
+  margin-top: 22px;
+}
+
+.searchWrap {
+  width: 100%;
+  max-width: 560px;
+
+  display: flex;
+  flex-direction: column;
+}
+
+/* hint pod search */
+.hint {
+  margin-top: 10px;
+  font-family: $font-body;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* proof pod hint */
+.proof {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+
+  font-family: $font-body;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.93rem;
+}
+
+.proofItem { white-space: nowrap; }
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* ===== CTA (hero gradient button) ===== */
+/* CTA ma być inline (nie full-width) */
+.cta {
+  margin-top: 18px;
+
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  width: auto !important;
+  max-width: 100%;
+  min-width: 210px;
+
+  height: 52px;
+  padding: 0 22px;
+
+  border-radius: 999px;
+  text-decoration: none;
+
+  font-family: $font-accent;
+  font-weight: 950;
+  letter-spacing: -0.01em;
+  font-size: 0.95rem;
+
+  color: rgba(255, 255, 255, 0.96) !important;
+
+  background: linear-gradient(
+    135deg,
+    rgba(111, 78, 242, 0.92),
+    rgba(255, 64, 129, 0.90)
+  );
+
+  box-shadow:
+    0 18px 55px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.10) inset;
+
+  white-space: nowrap;
+
+  /* 🔥 hover FX base */
+  position: relative;
+  overflow: hidden;                 /* potrzebne do shine */
+  transform: translateZ(0);         /* wygładza animacje */
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.cta::before {
+  content: "";
+  position: absolute;
+  inset: -2px; /* przykrywa cały button */
+  pointer-events: none;
+
+  /* przesuwający się blik */
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.22) 18%,
+    rgba(255, 255, 255, 0.08) 30%,
+    transparent 52%
+  );
+
+  transform: translateX(-120%);
+  transition: transform 0.55s ease;
+  mix-blend-mode: screen;
+  opacity: 0.85;
+}
+
+.cta:link,
+.cta:visited {
+  color: rgba(255, 255, 255, 0.96) !important;
+}
+
+.cta:hover {
+  transform: translateY(-2px) scale(1.01);
+  filter: brightness(1.04) saturate(1.05);
+
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.46),
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset,
+    0 0 24px rgba(111, 78, 242, 0.14),
+    0 0 18px rgba(255, 64, 129, 0.10);
+}
+
+.cta:hover::before {
+  transform: translateX(120%);
+}
+
+.cta:active {
+  transform: translateY(-1px) scale(0.995);
+}
+
+.cta:focus-visible {
+  outline: none;
+  box-shadow:
+    0 30px 82px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.14) inset,
+    0 0 0 6px rgba(111, 78, 242, 0.20);
+}
+
+/* tekst i ikonka też “w linii” */
+.ctaText {
+  position: relative; /* żeby tekst był zawsze nad shine */
+  z-index: 1;
+}
+
+/* ===== right side panel ===== */
+.side {
+  align-self: start;
+  margin-top: clamp(46px, 4.2vw, 76px);
+  padding: 18px;
+  border-radius: 18px;
+
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow:
+    0 22px 70px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.sideTitle {
+  font-family: $font-accent;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  font-size: 1.15rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.sideText {
+  margin-top: 10px;
+  font-family: $font-body;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.sideList {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.sideRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: $font-body;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.sideMark {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, $primary-color, $secondary-color);
+  opacity: 0.9;
+}
+
+/* ===== wave ===== */
 .wave {
   position: absolute;
-  bottom: -1px; // 🔧 kluczowe!
+  bottom: -1px;
   left: 0;
   width: 100%;
   overflow: hidden;
   line-height: 0;
+  z-index: 2;
 
   svg {
     display: block;
     width: 100%;
-    height: 100px;
-    position: relative;
-    transform: translateY(1px); // może być, ale `bottom: -1px` już wystarczy
+    height: 110px;
+    transform: translateY(1px);
   }
 }
 
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 2rem;
-
-  .searchWrapper {
-    flex: 1;
-    max-width: 400px;
-  }
-
-  .ctaButton {
-    flex-shrink: 0;
-    padding: 0.9rem 2rem;
-    font-size: 1rem;
-    border-radius: 1.5rem;
-    background: linear-gradient(135deg, $primary-color, $secondary-color);
-    color: white;
-    text-decoration: none;
-    font-family: $font-accent;
-    font-weight: bold;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15);
-    }
-  }
-}
-
+/* ===== responsive ===== */
 @media (max-width: 1024px) {
-  .hero {
-    padding: 1rem 1rem 180px;
-
-    h1 {
-      font-size: 2.4rem;
-      margin: 1.5rem 0 1rem;
-    }
-
-    p {
-      font-size: 1.1rem;
-    }
-
-    .ctaButton {
-      font-size: 0.95rem;
-      padding: 0.8rem 1.8rem;
-    }
-
-    .actions {
-      gap: 1.2rem;
-
-      .searchWrapper {
-        max-width: 350px;
-      }
-
-      .ctaButton {
-        padding: 0.8rem 1.8rem;
-      }
-    }
+  .container {
+    grid-template-columns: 1fr;
   }
 
-  .wave svg {
-    height: 80px;
+  .side {
+    margin-top: 18px;
   }
 }
 
 @media (max-width: 768px) {
   .hero {
-    padding: 1rem 1rem 160px;
+    padding: 1rem 1rem 170px;
+    text-align: center;
+  }
 
-    h1 {
-      font-size: 2rem;
-      margin: 1.5rem 0 1rem;
-    }
+  .searchWrap {
+    max-width: 100%;
+    align-items: center;
+  }
 
-    p {
-      font-size: 1rem;
-    }
+  .proof {
+    justify-content: center;
+  }
 
-    .ctaButton {
-      font-size: 0.9rem;
-      padding: 0.8rem 1.5rem;
-    }
+  .cta {
+    width: 100%;
+    max-width: 520px;
+    justify-content: space-between;
+  }
 
-    .actions {
-      flex-direction: column;
-      align-items: stretch;
-
-      .searchWrapper {
-        max-width: 100%;
-        width: 100%;
-      }
-
-      .ctaButton {
-        width: 50%;
-        max-width: 400px;
-        margin: 0 auto; // 🔧 wyśrodkowanie przycisku
-      }
-    }
+  .side {
+    text-align: left;
   }
 
   .wave svg {
-    height: 70px;
+    height: 78px;
   }
 }
 
 @media (max-width: 480px) {
   .hero {
-    padding: 1rem 1rem 140px;
+    padding: 0.8rem 0.8rem 150px;
+  }
 
-    h1 {
-      font-size: 1.6rem;
-      margin: 1.2rem 0 0.8rem;
-    }
-
-    p {
-      font-size: 0.95rem;
-      margin-bottom: 1.2rem;
-    }
-
-    .ctaButton {
-      font-size: 0.85rem;
-      padding: 0.7rem 1.4rem;
-    }
-
-    .actions {
-      gap: 1rem;
-
-      .searchWrapper {
-        width: 100%;
-      }
-
-      .ctaButton {
-        width: 50%;
-        max-width: 400px;
-        margin: 0 auto; // 🔧 wyśrodkowanie przycisku
-      }
-    }
+  .cta {
+    height: 50px;
   }
 
   .wave svg {
-    height: 60px;
+    height: 68px;
   }
 }

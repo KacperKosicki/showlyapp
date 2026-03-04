@@ -2,7 +2,6 @@
 @import "../../styles/variables";
 
 .page {
-  min-height: 100vh;
   padding: clamp(18px, 3vw, 28px) 0 70px;
   position: relative;
   color: $text-color;
@@ -22,10 +21,6 @@
   inset: -40px -10px auto -10px;
   height: 380px;
   pointer-events: none;
-  background:
-    radial-gradient(700px 260px at 15% 40%, rgba(111, 78, 242, 0.18), transparent 60%),
-    radial-gradient(520px 240px at 85% 30%, rgba(255, 64, 129, 0.16), transparent 62%),
-    radial-gradient(420px 220px at 50% 0%, rgba(0, 0, 0, 0.06), transparent 60%);
 }
 
 .shell {

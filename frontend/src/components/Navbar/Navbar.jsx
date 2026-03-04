@@ -17,7 +17,7 @@ const Navbar = ({
     <nav className={styles.navbar}>
       <div className={styles.left}>
         <Link to="/" className={styles.logoWrap}>
-          <span className={styles.logo}>LOOKLYAPP</span>
+          <span className={styles.logo}>Showly.app</span>
           <span className={styles.beta}>BETA</span>
         </Link>
       </div>
@@ -34,10 +34,14 @@ const Navbar = ({
               pendingReservationsCount={pendingReservationsCount}
             />
           ) : (
-            <div className={styles.loginPrompt} onClick={() => navigate('/login')}>
+            <button
+              type="button"
+              className={styles.loginPrompt}
+              onClick={() => navigate("/login")}
+            >
               <FaUser className={styles.icon} />
               <span>Zaloguj się / Zarejestruj się</span>
-            </div>
+            </button>
           )}
         </div>
       </div>

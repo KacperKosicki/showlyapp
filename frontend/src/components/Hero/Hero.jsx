@@ -1,7 +1,7 @@
-import styles from './Hero.module.scss';
-import Navbar from '../Navbar/Navbar';
-import SearchBar from '../SearchBar/SearchBar';
-import LoadingLink from '../ui/LoadingLink/LoadingLink';
+import styles from "./Hero.module.scss";
+import Navbar from "../Navbar/Navbar";
+import SearchBar from "../SearchBar/SearchBar";
+import LoadingLink from "../ui/LoadingLink/LoadingLink";
 
 const Hero = ({
   user,
@@ -10,7 +10,7 @@ const Hero = ({
   refreshTrigger,
   unreadCount,
   setUnreadCount,
-  pendingReservationsCount
+  pendingReservationsCount,
 }) => {
   return (
     <section className={styles.hero} id="hero">
@@ -24,35 +24,100 @@ const Hero = ({
         pendingReservationsCount={pendingReservationsCount}
       />
 
-      <div className={styles.heroContent}>
-        <h1>Promuj się<br />online!</h1>
-        <p>Stwórz swój profil i zaprezentuj swoje usługi</p>
+      <div className={styles.bg} aria-hidden="true">
+        <span className={styles.aurora} />
+        <span className={styles.grid} />
+        <span className={styles.vignette} />
+      </div>
 
-        <div className={styles.actions}>
-          <div className={styles.searchWrapper}>
-            <SearchBar variant="hero" />
+      <div className={styles.container}>
+        <div className={styles.content}>
+          <div className={styles.kicker}>
+            <span className={styles.kickerLine} />
+            <span className={styles.kickerText}>
+              Showly — profil w jednym linku
+            </span>
           </div>
 
-          {user ? (
-            <LoadingLink
-              to="/profil"
-              state={{ scrollToId: 'scrollToId' }}
-              className={styles.ctaButton}
-              aria-label="Przejdź do edycji profilu"
-            >
-              Przejdź do edycji profilu
-            </LoadingLink>
-          ) : (
-            <LoadingLink
-              to="/register"
-              state={{ scrollToId: 'registerContainer' }}
-              className={styles.ctaButton}
-              aria-label="Załóż konto"
-            >
-              Załóż konto
-            </LoadingLink>
-          )}
+          <h1 className={styles.title}>
+            Twoja oferta.
+            <br />
+            <span className={styles.titleAccent}>
+              Czytelnie i profesjonalnie.
+            </span>
+          </h1>
+
+          <p className={styles.subtitle}>
+            Zbuduj profil, dodaj usługi i zdjęcia realizacji. Udostępnij link
+            do profilu klientom — bez robienia strony od zera.
+          </p>
+
+          <div className={styles.actions}>
+            <div className={styles.searchWrap}>
+              <SearchBar variant="hero" />
+
+              <div className={styles.hint}>
+                Wyszukuj profile i usługi w Showly.
+              </div>
+
+              <div className={styles.proof}>
+                <span className={styles.proofItem}>Profil</span>
+                <span className={styles.dot} />
+                <span className={styles.proofItem}>Usługi</span>
+                <span className={styles.dot} />
+                <span className={styles.proofItem}>Zdjęcia</span>
+                <span className={styles.dot} />
+                <span className={styles.proofItem}>Cennik</span>
+              </div>
+
+{user ? (
+  <LoadingLink
+    to="/profil"
+    state={{ scrollToId: "scrollToId" }}
+    className={styles.cta}
+    aria-label="Przejdź do edycji profilu"
+  >
+    <span className={styles.ctaText}>Edytuj profil</span>
+  </LoadingLink>
+) : (
+  <LoadingLink
+    to="/register"
+    state={{ scrollToId: "registerContainer" }}
+    className={styles.cta}
+    aria-label="Załóż konto"
+  >
+    <span className={styles.ctaText}>Załóż konto</span>
+  </LoadingLink>
+)}
+            </div>
+          </div>
         </div>
+
+        <aside className={styles.side} aria-label="Dlaczego Showly">
+          <div className={styles.sideTitle}>Wyglądaj jak marka.</div>
+
+          <div className={styles.sideText}>
+            Zamiast wysyłać 20 wiadomości, masz jedno miejsce: opis, oferta,
+            realizacje i kontakt.
+          </div>
+
+          <div className={styles.sideList}>
+            <div className={styles.sideRow}>
+              <span className={styles.sideMark} />
+              Wszystko w jednym profilu
+            </div>
+
+            <div className={styles.sideRow}>
+              <span className={styles.sideMark} />
+              Czytelna prezentacja usług
+            </div>
+
+            <div className={styles.sideRow}>
+              <span className={styles.sideMark} />
+              Galeria realizacji i zaufanie
+            </div>
+          </div>
+        </aside>
       </div>
 
       <div className={styles.wave}>

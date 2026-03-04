@@ -1,76 +1,129 @@
 @import '../../styles/variables';
 
 .searchContainer {
+  width: 100%;
   display: flex;
   align-items: center;
-  max-width: 100%;
-  border-radius: 1.5rem;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.08);
+  gap: 10px;
+
+  padding: 10px 12px;
+  border-radius: 999px;
+
+  /* modern glass – bez “twardego” bordera */
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease, transform 0.2s ease;
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow:
+    0 18px 55px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 
   &:hover {
-    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15);
     transform: translateY(-1px);
+    filter: brightness(1.02);
+    box-shadow:
+      0 24px 70px rgba(0, 0, 0, 0.34),
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  }
+
+  &:focus-within {
+    box-shadow:
+      0 26px 80px rgba(0, 0, 0, 0.40),
+      0 0 0 1px rgba(255, 255, 255, 0.10) inset,
+      0 0 0 6px rgba(111, 78, 242, 0.18);
   }
 }
 
 .searchInput {
   flex: 1;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
+  min-width: 0;
+
   border: none;
   outline: none;
   background: transparent;
-  color: white;
+
+  color: rgba(255, 255, 255, 0.92);
+  font-family: $font-body;
+  font-size: 1rem;
+  line-height: 1;
+
+  padding: 10px 8px 10px 12px;
 
   &::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.58);
   }
 }
 
+/* przycisk jako “icon pill”, bez białego prostokąta */
 .searchButton {
-  background-color: white;
-  color: $primary-color;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+
   border: none;
-  padding: 0.6rem 1rem;
-  border-radius: 1.5rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+  display: grid;
+  place-items: center;
+
+  color: rgba(255, 255, 255, 0.92);
+
+  background: linear-gradient(
+    135deg,
+    rgba(111, 78, 242, 0.34),
+    rgba(255, 64, 129, 0.20)
+  );
+
+  box-shadow:
+    0 14px 40px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+
+  transition: transform 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
 
   &:hover {
-    background-color: $primary-color;
-    color: white;
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+    box-shadow:
+      0 18px 55px rgba(0, 0, 0, 0.34),
+      0 0 0 1px rgba(255, 255, 255, 0.10) inset;
+  }
+
+  &:active {
+    transform: translateY(0px);
+  }
+
+  svg {
+    font-size: 1rem;
   }
 }
 
+/* ukryta etykieta dla screen readerów */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* mobile: bez ręcznego marginów, bo Hero już ustawia layout */
 @media (max-width: 768px) {
   .searchContainer {
-    width: 90%;
-    max-width: 400px;
-    justify-content: center;
-    margin: 2rem auto;         // 🔧 wyśrodkowanie horyzontalne
-    padding: 0.5rem 1rem;
-    display: flex;             // upewnij się że jest flex
-    gap: 0.5rem;
+    padding: 10px 12px;
   }
 
   .searchInput {
-    font-size: 0.95rem;
-    padding: 0.5rem 1rem;
-    flex: 1;
+    font-size: 0.98rem;
+    padding: 10px 8px 10px 12px;
   }
 
   .searchButton {
-    padding: 0.5rem 1rem;
-    font-size: 0.95rem;
+    width: 42px;
+    height: 42px;
   }
 }
-

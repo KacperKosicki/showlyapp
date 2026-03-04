@@ -3,16 +3,22 @@ import { FaSearch } from 'react-icons/fa';
 
 const SearchBar = () => {
   return (
-    <div className={styles.searchContainer}>
+    <form className={styles.searchContainer} role="search" onSubmit={(e) => e.preventDefault()}>
+      <label className={styles.srOnly} htmlFor="searchInput">
+        Wyszukaj
+      </label>
+
       <input
+        id="searchInput"
         type="text"
-        placeholder="Czego szukasz?"
+        placeholder="Szukaj profili i usług…"
         className={styles.searchInput}
       />
-      <button className={styles.searchButton}>
+
+      <button type="submit" className={styles.searchButton} aria-label="Szukaj">
         <FaSearch />
       </button>
-    </div>
+    </form>
   );
 };
 
