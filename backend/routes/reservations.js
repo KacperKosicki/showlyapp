@@ -48,6 +48,16 @@ function mongoTimeCondition(startAt, endAt, bufferMin = SLOT_BREAK_MIN) {
   };
 }
 
+// ✅ admin helper (czyta rolę z DB — bezpieczne i proste)
+async function isAdminUid(uid) {
+  try {
+    const u = await User.findOne({ firebaseUid: uid }).select("role").lean();
+    return String(u?.role || "").toLowerCase() === "admin";
+  } catch {
+    return false;
+  }
+}
+
 // wybór osoby dla auto-assign (z buforem, capacity i preferencją faktycznie wolnych)
 async function pickAvailableStaffForProfile({
   providerProfileId,
@@ -186,7 +196,7 @@ router.post("/", requireAuth, async (req, res) => {
 
     if (!profile) return res.status(404).json({ message: "Profil usługodawcy nie istnieje" });
 
-    // 🔒 profil musi należeć do providerUserId (żeby nie wstrzyknąć obcego profileId)
+    // 🔒 profil musi należeć do providerUserId
     if (String(profile.userId) !== String(providerUserId)) {
       return res.status(403).json({ message: "Nieprawidłowy providerProfileId dla tego providerUserId" });
     }
@@ -790,7 +800,7 @@ router.post("/offline/day", requireAuth, async (req, res) => {
 
     return res.status(201).json({ message: "Offline day utworzony", reservation: created });
   } catch (e) {
-    console.error("POST /reservations/offline/day error", e);
+    console.error("POST /reservations/offline/day error:", e);
     return res.status(500).json({ message: "Nie udało się utworzyć offline day." });
   }
 });
@@ -798,7 +808,7 @@ router.post("/offline/day", requireAuth, async (req, res) => {
 /**
  * =====================
  * GET /api/reservations/by-user/:uid
- * AUTH: uid w URL musi być zalogowanym userem
+ * AUTH: uid w URL musi być zalogowanym userem (lub admin)
  * =====================
  */
 router.get("/by-user/:uid", requireAuth, async (req, res) => {
@@ -806,7 +816,8 @@ router.get("/by-user/:uid", requireAuth, async (req, res) => {
     const authUid = req.auth.uid;
     const uid = req.params.uid;
 
-    if (String(uid) !== String(authUid)) {
+    const admin = await isAdminUid(authUid);
+    if (String(uid) !== String(authUid) && !admin) {
       return res.status(403).json({ message: "Brak uprawnień" });
     }
 
@@ -832,7 +843,7 @@ router.get("/by-user/:uid", requireAuth, async (req, res) => {
 /**
  * =====================
  * GET /api/reservations/by-provider/:uid
- * AUTH: uid w URL musi być zalogowanym providerem
+ * AUTH: uid w URL musi być zalogowanym providerem (lub admin)
  * =====================
  */
 router.get("/by-provider/:uid", requireAuth, async (req, res) => {
@@ -840,7 +851,8 @@ router.get("/by-provider/:uid", requireAuth, async (req, res) => {
     const authUid = req.auth.uid;
     const uid = req.params.uid;
 
-    if (String(uid) !== String(authUid)) {
+    const admin = await isAdminUid(authUid);
+    if (String(uid) !== String(authUid) && !admin) {
       return res.status(403).json({ message: "Brak uprawnień" });
     }
 
@@ -865,8 +877,53 @@ router.get("/by-provider/:uid", requireAuth, async (req, res) => {
 
 /**
  * =====================
+ * ✅ NOWE / ZALECANE DO KALENDARZA
+ * GET /api/reservations/provider-busy/:providerUid
+ * AUTH: dowolny zalogowany – zwraca TYLKO zajętość (bez danych klienta)
+ * =====================
+ */
+router.get("/provider-busy/:providerUid", requireAuth, async (req, res) => {
+  try {
+    const { providerUid } = req.params;
+
+    await closeExpiredPending();
+    const now = new Date();
+
+    const busy = await Reservation.find(
+      {
+        providerUserId: providerUid,
+        dateOnly: false,
+        status: { $in: ALIVE_STATUSES },
+        $or: [
+          { status: "zaakceptowana" },
+          { status: "oczekująca", pendingExpiresAt: { $gt: now } },
+          { status: "tymczasowa", holdExpiresAt: { $gt: now } },
+        ],
+      },
+      {
+        _id: 1,
+        date: 1,
+        fromTime: 1,
+        toTime: 1,
+        status: 1,
+        staffId: 1,
+        dateOnly: 1,
+      }
+    )
+      .sort({ date: 1, fromTime: 1 })
+      .lean();
+
+    return res.json(busy || []);
+  } catch (err) {
+    console.error("❌ GET /reservations/provider-busy error:", err);
+    return res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+/**
+ * =====================
  * GET /api/reservations/busy/:providerUid
- * AUTH: dowolny zalogowany (do kalendarza) – zwraca tylko "zajętość"
+ * AUTH: dowolny zalogowany – zwraca tylko "zajętość"
  * =====================
  */
 router.get("/busy/:providerUid", requireAuth, async (req, res) => {
@@ -876,7 +933,6 @@ router.get("/busy/:providerUid", requireAuth, async (req, res) => {
     await closeExpiredPending();
     const now = new Date();
 
-    // tylko minimalne dane do kalendarza (bez danych klienta)
     const busy = await Reservation.find(
       {
         providerUserId: providerUid,
@@ -1132,7 +1188,7 @@ router.patch("/:id/seen", requireAuth, async (req, res) => {
     await reservation.save();
     return res.send("Seen updated");
   } catch (e) {
-    console.error("PATCH /reservations/:id/seen error", e);
+    console.error("PATCH /reservations/:id/seen error:", e);
     return res.status(500).send("Błąd serwera");
   }
 });

@@ -1,40 +1,239 @@
-@import '../../styles/variables';
+@import "../../styles/variables";
+
+/* =========================================================
+   USER DROPDOWN — premium glass jak Navbar.actionGroup
+   - menu zawsze nad hero
+   - mobile: ten sam kolor, ale SOLID (bez przezroczystości)
+========================================================= */
 
 .dropdown {
   position: relative;
   display: inline-block;
   font-family: $font-accent;
+  z-index: 40; /* kotwica dla menu */
 }
+
+/* =========================================================
+   TRIGGER (pill)
+========================================================= */
 
 .trigger {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 1rem;
-  border-radius: 1rem;
-  background-color: rgba(255, 255, 255, 0.9);
-  font-size: 0.95rem;
-  color: $text-color;
+  gap: 10px;
+
+  padding: 10px 14px;
+  border-radius: 999px;
+
   cursor: pointer;
-  transition: background 0.3s ease;
 
-  .icon {
-    font-size: 0.9rem;
-    color: $primary-color;
-  }
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 
-  span {
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow:
+    0 18px 55px rgba(0, 0, 0, 0.26),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+
+  transition:
+    box-shadow 0.18s ease,
+    filter 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
 }
 
+.trigger:hover {
+  filter: brightness(1.04);
+  background: rgba(255, 255, 255, 0.085);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 26px 78px rgba(0, 0, 0, 0.30),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+.trigger:active {
+  filter: brightness(0.98);
+}
+
+.trigger:focus-visible {
+  outline: none;
+  box-shadow:
+    0 26px 78px rgba(0, 0, 0, 0.30),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+    0 0 0 6px rgba(111, 78, 242, 0.18);
+}
+
+/* avatar */
+.miniAvatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
+
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+/* email */
+.trigger span {
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* chevron */
+.icon {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin-left: 2px;
+  opacity: 0.9;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+/* =========================================================
+   MENU (glass card)
+========================================================= */
+
+.menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+
+  z-index: 200;
+
+  min-width: 260px;
+  max-width: 290px;
+
+  border-radius: 18px;
+  padding: 10px 0;
+
+  background: rgba(20, 22, 30, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+
+  opacity: 0;
+  transform: translateY(-8px) scale(0.985);
+  pointer-events: none;
+
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+/* widoczne menu */
+.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* strzałka */
+.menu::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  right: 18px;
+  width: 14px;
+  height: 14px;
+  transform: rotate(45deg);
+
+  background: rgba(20, 22, 30, 0.78);
+  border-left: 1px solid rgba(255, 255, 255, 0.10);
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+/* =========================================================
+   MENU ITEMS
+========================================================= */
+
+.menu button {
+  width: 100%;
+  padding: 12px 16px;
+
+  background: transparent;
+  border: 0;
+
+  cursor: pointer;
+  text-align: left;
+
+  font-family: $font-accent;
+  font-size: 0.95rem;
+  font-weight: 850;
+
+  color: rgba(255, 255, 255, 0.92);
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+
+  transition: background 0.16s ease, filter 0.16s ease;
+}
+
+.menu button:hover {
+  background: rgba(255, 255, 255, 0.06);
+  filter: brightness(1.03);
+}
+
+.menu button:active {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+/* separatory */
+.menu button + button {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Dwuliniowa pozycja */
+.menuItemTwoLine {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.itemTitle {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.itemSub {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.statusActive {
+  color: #35d07f;
+  font-weight: 800;
+}
+
+.statusExpired {
+  color: #ff5a6a;
+  font-weight: 800;
+}
+
+/* =========================================================
+   NETWORK BANNER (error)
+========================================================= */
+
 .netBanner {
-  margin: 8px 10px 10px;
+  margin: 10px 12px 12px;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: 14px;
 
   display: flex;
   align-items: center;
@@ -42,16 +241,14 @@
 
   font-size: 12.5px;
   line-height: 1.25;
-  font-weight: 600;
+  font-weight: 800;
 
-  /* elegancki “error glass” */
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.14), rgba(0, 0, 0, 0.02));
-  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(20, 22, 30, 0.35));
+  border: 1px solid rgba(239, 68, 68, 0.35);
 
-  color: #7a0c13;
+  color: rgba(255, 255, 255, 0.92);
 
-  /* delikatna głębia, ale bez klocka */
-  box-shadow: 0 10px 25px rgba(17, 24, 39, 0.08);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.28);
 }
 
 .netDot {
@@ -64,106 +261,67 @@
 }
 
 .netText {
-  opacity: 0.95;
+  opacity: 0.92;
 }
 
-.miniAvatar {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 1px solid #ddd;
-  display: block;
+/* badge (np. rezerwacje) */
+.badge {
+  font-weight: 950;
+  color: rgba(255, 255, 255, 0.95);
 }
 
-.menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 1.3rem;
-  background: #fff;
-  border-radius: 1rem;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-  padding: 0.5rem 0;
-  display: flex;
-  flex-direction: column;
-  z-index: 100;
-  opacity: 0;
-  transform: translateY(-10px);
-  pointer-events: none;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+/* =========================================================
+   RESPONSIVE
+========================================================= */
 
-  /* Stała (niewielka) szerokość – menu się nie „rozpycha” */
-  min-width: 240px;
-  max-width: 260px;
-
-  &.visible {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
+@media (max-width: 768px) {
+  .trigger span {
+    max-width: 220px;
   }
 
-  /* Strzałka */
-  &::before {
-    content: '';
-    position: absolute;
-    top: -6px;
-    right: 16px;
-    width: 12px;
-    height: 12px;
-    background: #fff;
-    transform: rotate(45deg);
-    box-shadow: -2px -2px 5px rgba(0, 0, 0, 0.05);
-    z-index: -1;
+  .menu {
+    right: 0;
+    min-width: 260px;
+    max-width: 320px;
   }
 
-  button {
-    padding: 0.6rem 1.5rem;
-    background: none;
-    border: none;
-    font-size: 0.95rem;
-    text-align: left;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-family: $font-accent;
-    color: $text-color;
+  /* ✅ MOBILE: menu SOLID (ten sam kolor co desktop) */
+  .menu {
+    background: rgb(20, 22, 30);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .menu::before {
+    background: rgb(20, 22, 30);
+  }
+}
+
+@media (max-width: 480px) {
+  .trigger {
     width: 100%;
-
-    /* Każdy przycisk jako kolumna (dla tytuł + podtytuł) */
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    white-space: normal;
-    /* pozwól łamać wiersze */
+    justify-content: center;
   }
 
-  button:hover {
-    background: rgba(0, 0, 0, 0.04);
+  .trigger span {
+    max-width: 210px;
   }
-}
 
-/* Dwuliniowa pozycja – opcjonalny delikatny luz */
-.menuItemTwoLine {
-  padding-top: 0.7rem;
-  padding-bottom: 0.7rem;
-}
+  .menu {
+    width: 100%;
+    min-width: unset;
+    max-width: 520px;
 
-.itemTitle {
-  color: $text-color;
-}
+    right: 50%;
+    transform: translate(50%, -8px) scale(0.985);
+  }
 
-.itemSub {
-  color: $color-gray;
-}
+  .visible {
+    transform: translate(50%, 0) scale(1);
+  }
 
-.statusActive {
-  color: green;
-  font-weight: 600;
-}
-
-.statusExpired {
-  color: red;
-  font-weight: 600;
+  .menu::before {
+    right: 50%;
+    transform: translateX(50%) rotate(45deg);
+  }
 }

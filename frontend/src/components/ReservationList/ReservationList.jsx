@@ -22,7 +22,6 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
 import axios from "axios";
-
 import { api } from "../../api/api";
 
 // ✅ siatka slotów zawsze co 5 minut
@@ -161,7 +160,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   const bookingMode = providerMeta?.bookingMode; // "calendar" | "request-blocking" | "request-open"
 
   // ✅ Kalendarz dostępny dla: calendar + request-blocking
-  const canUseCalendar = hasProviderProfile && (bookingMode === "calendar" || bookingMode === "request-blocking");
+  const canUseCalendar =
+    hasProviderProfile && (bookingMode === "calendar" || bookingMode === "request-blocking");
 
   const isSlotMode = bookingMode === "calendar";
   const isDayBlockingMode = bookingMode === "request-blocking";
@@ -189,7 +189,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       setMetaLoading(true);
       const r = await api.get(`/api/reservations/meta/${user.uid}`);
       setProviderMeta(r?.data || null);
-    } catch (e) {
+    } catch {
       setProviderMeta(null);
     } finally {
       setMetaLoading(false);
@@ -393,12 +393,11 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
   const offlineSlots = useMemo(() => {
     if (!offlineOpen) return [];
-    if (isDayBlockingMode) return []; // ✅ request-blocking: brak slotów
+    if (isDayBlockingMode) return [];
     if (offlineForm.dateOnly) return [];
     if (!offlineForm.serviceId || !selectedDurationMin) return [];
     if (!isSlotMode) return [];
 
-    // jeśli user-pick: dopóki nie wybierze pracownika – nie pokazujemy slotów
     if (isUserPickTeam && !offlineForm.staffId) return [];
 
     const { startMin: dayStart, endMin: dayEnd } = getWorkHours();
@@ -416,10 +415,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
     const eligibleStaff = isAutoAssignTeam
       ? (providerMeta?.staff || []).filter(
-          (s) =>
-            s.active !== false &&
-            (s.serviceIds || []).some((id) => String(id) === String(offlineForm.serviceId))
-        )
+        (s) =>
+          s.active !== false &&
+          (s.serviceIds || []).some((id) => String(id) === String(offlineForm.serviceId))
+      )
       : [];
 
     const totalCapacity = isAutoAssignTeam
@@ -430,12 +429,11 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       eligibleStaff.map((s) => [String(s._id), Math.max(1, Number(s.capacity) || 1)])
     );
 
-    // ✅ busy: kończymy na toBufMs (czyli koniec usługi + bufor)
     const busy = (isAutoAssignTeam ? active : filtered)
       .map((r) => {
         const from = new Date(`${r.date}T${r.fromTime}`);
-        const toNoBuf = new Date(`${r.date}T${r.toTime}`); // ✅ koniec usługi
-        const toWithBuf = new Date(+toNoBuf + OFFLINE_BUFFER_MIN * 60 * 1000); // ✅ + bufor
+        const toNoBuf = new Date(`${r.date}T${r.toTime}`);
+        const toWithBuf = new Date(+toNoBuf + OFFLINE_BUFFER_MIN * 60 * 1000);
         return {
           fromMs: +from,
           toMs: +toNoBuf,
@@ -463,7 +461,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       const slotStartMs = +startDT;
       const slotEndMs = +endBufDT;
 
-      // overlap liczymy z busy.toBufMs (czyli rezerwacja + bufor)
       const overlaps = busy.filter((b) => slotStartMs < b.toBufMs && slotEndMs > b.fromMs);
 
       if (isAutoAssignTeam) {
@@ -527,7 +524,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     OFFLINE_STEP_MIN,
   ]);
 
-  // auto-ustawiaj from/to po kliknięciu slotu (tylko slot mode)
   useEffect(() => {
     if (!offlineOpen) return;
     if (!isSlotMode) return;
@@ -624,22 +620,12 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
     const name = (offlineForm.offlineClientName || "").trim();
     if (!name) {
-      setAlert({
-        show: true,
-        type: "warning",
-        message: "Podaj nazwę klienta (offline).",
-        onClose: null,
-      });
+      setAlert({ show: true, type: "warning", message: "Podaj nazwę klienta (offline).", onClose: null });
       return;
     }
 
     if (!offlineForm.serviceId) {
-      setAlert({
-        show: true,
-        type: "warning",
-        message: "Najpierw wybierz usługę.",
-        onClose: null,
-      });
+      setAlert({ show: true, type: "warning", message: "Najpierw wybierz usługę.", onClose: null });
       return;
     }
 
@@ -657,12 +643,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       }
 
       if (isSlotMode && !offlineForm.slotStart) {
-        setAlert({
-          show: true,
-          type: "warning",
-          message: "Wybierz godzinę startu (slot).",
-          onClose: null,
-        });
+        setAlert({ show: true, type: "warning", message: "Wybierz godzinę startu (slot).", onClose: null });
         return;
       }
     }
@@ -694,12 +675,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         const to = offlineForm.toTime;
 
         if (!from || !to) {
-          setAlert({
-            show: true,
-            type: "warning",
-            message: "Uzupełnij godziny od/do.",
-            onClose: null,
-          });
+          setAlert({ show: true, type: "warning", message: "Uzupełnij godziny od/do.", onClose: null });
           return;
         }
 
@@ -721,18 +697,14 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         dateOnly: false,
       }));
 
-      setAlert({
-        show: true,
-        type: "success",
-        message: "Dodano offline rezerwację.",
-        onClose: null,
-      });
+      setAlert({ show: true, type: "success", message: "Dodano offline rezerwację.", onClose: null });
 
       await refetch();
     } catch (e) {
       console.error("❌ submitOffline error:", e);
 
-      const msg = e?.response?.data?.message || e?.response?.data?.error || "Nie udało się dodać offline rezerwacji.";
+      const msg =
+        e?.response?.data?.message || e?.response?.data?.error || "Nie udało się dodać offline rezerwacji.";
 
       const looksLikeBreakIssue =
         String(msg).toLowerCase().includes("przerw") ||
@@ -805,21 +777,21 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       return next;
     });
 
-const fetchOne = async (uid) => {
-  try {
-    const r = await axios.get(`${API}/api/users/public/${uid}`);
-    const data = r?.data;
+    const fetchOne = async (uid) => {
+      try {
+        const r = await api.get(`/api/users/public/${uid}`); // ✅ ma token
+        const data = r?.data;
 
-    const dn =
-      (data?.displayName && String(data.displayName).trim()) ||
-      (data?.name && String(data.name).trim()) ||
-      null;
+        const dn =
+          (data?.displayName && String(data.displayName).trim()) ||
+          (data?.name && String(data.name).trim()) ||
+          null;
 
-    return dn;
-  } catch {
-    return null;
-  }
-};
+        return dn;
+      } catch {
+        return null;
+      }
+    };
 
     (async () => {
       const entries = await Promise.all(senderUids.map(async (uid) => [uid, await fetchOne(uid)]));
@@ -848,9 +820,8 @@ const fetchOne = async (uid) => {
     if (offlineForm.dateOnly || isDayBlockingMode) {
       return active.map((r) => ({
         id: r._id,
-        label: `${isWholeDay(r) ? "CAŁY DZIEŃ" : `${r.fromTime}–${r.toTime}`} • ${
-          r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
-        } • ${r.status}`,
+        label: `${isWholeDay(r) ? "CAŁY DZIEŃ" : `${r.fromTime}–${r.toTime}`} • ${r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
+          } • ${r.status}`,
       }));
     }
 
@@ -881,9 +852,8 @@ const fetchOne = async (uid) => {
       })
       .map((r) => ({
         id: r._id,
-        label: `${r.fromTime}–${r.toTime} (+${OFFLINE_BUFFER_MIN}m) • ${
-          r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
-        } • ${r.status}`,
+        label: `${r.fromTime}–${r.toTime} (+${OFFLINE_BUFFER_MIN}m) • ${r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
+          } • ${r.status}`,
       }));
   }, [
     offlineOpen,
@@ -1042,8 +1012,8 @@ const fetchOne = async (uid) => {
                     !teamEnabled
                       ? "Zespół wyłączony w profilu"
                       : isAutoAssignTeam
-                      ? "Auto-assign: pracownik dobierany automatycznie"
-                      : ""
+                        ? "Auto-assign: pracownik dobierany automatycznie"
+                        : ""
                   }
                 >
                   <option value="">{isUserPickTeam ? "— wybierz pracownika (wymagane) —" : "— opcjonalnie —"}</option>
@@ -1333,13 +1303,12 @@ const fetchOne = async (uid) => {
       )}
 
       <span
-        className={`${styles.chip} ${
-          res.status === "zaakceptowana"
+        className={`${styles.chip} ${res.status === "zaakceptowana"
             ? styles.chipAccepted
             : res.status === "odrzucona" || res.status === "anulowana"
-            ? styles.chipRejected
-            : styles.chipPending
-        }`}
+              ? styles.chipRejected
+              : styles.chipPending
+          }`}
       >
         {statusIcon(res.status)}
         {res.status}
@@ -1351,7 +1320,28 @@ const fetchOne = async (uid) => {
   const pendingReceived = serviceReservations.filter((r) => r.status === "oczekująca").length;
 
   const renderNameNode = (rawName) =>
-    rawName ? <span className={styles.name}>{rawName}</span> : <span className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`} />;
+    rawName ? (
+      <span className={styles.name}>{rawName}</span>
+    ) : (
+      <span className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`} />
+    );
+
+  const getAvatarVariant = (variant) => {
+    // inbox/outbox ikonka jak w Notifications (bez real avatarów)
+    if (variant === "sent") return "sent";
+    return "recv";
+  };
+
+  const AvatarNode = ({ variant, isOffline }) => {
+    const v = getAvatarVariant(variant);
+    const cls = `${styles.avatar} ${v === "sent" ? styles.avatarSent : styles.avatarRecv} ${isOffline ? styles.avatarOffline : ""
+      }`;
+    return (
+      <div className={cls} aria-hidden="true">
+        {v === "sent" ? <FiSend /> : <FiInbox />}
+      </div>
+    );
+  };
 
   const renderHeader = (res, variant) => {
     if (variant === "sent") {
@@ -1388,8 +1378,8 @@ const fetchOne = async (uid) => {
       res.closedReason === "expired"
         ? "Rezerwacja wygasła (brak potwierdzenia w czasie)."
         : res.status === "anulowana"
-        ? "Klient anulował rezerwację."
-        : "Usługodawca odrzucił rezerwację.";
+          ? "Klient anulował rezerwację."
+          : "Usługodawca odrzucił rezerwację.";
 
     return (
       <div className={styles.closedInfo}>
@@ -1421,16 +1411,21 @@ const fetchOne = async (uid) => {
   const renderItem = (res, variant) => {
     const isPending = res.status === "oczekująca";
     const created = res.createdAt || res.updatedAt || Date.now();
+    const isOffline = !!res.offline;
 
     return (
       <li key={res._id} className={`${styles.item} ${isPending ? styles.unread : styles.read}`}>
         <div className={styles.link}>
           <div className={styles.row}>
+            <div className={styles.avatarWrap}>
+              <AvatarNode variant={variant} isOffline={isOffline} />
+              {isPending && <span className={styles.badgeDot} aria-hidden="true" />}
+            </div>
+
             <div className={styles.head}>
               <div className={styles.meta}>{renderHeader(res, variant)}</div>
               <div className={styles.date}>
                 {new Date(created).toLocaleString()}
-                {isPending && <span className={styles.dot} aria-hidden="true" />}
               </div>
             </div>
 
@@ -1574,7 +1569,6 @@ const fetchOne = async (uid) => {
 
     const wholeDay = all.filter((r) => isWholeDay(r));
 
-    // ✅ request-blocking: nie generujemy planu godzinowego
     if (isDayBlockingMode) {
       return { wholeDay, blocks: [] };
     }
@@ -1738,10 +1732,6 @@ const fetchOne = async (uid) => {
             </div>
 
             <div className={styles.calendarRight}>
-              {/* reszta UI bez zmian */}
-              {/* ... */}
-              {/* U Ciebie dalej zostaje cała logika renderów z dayTimeline / listy itp. */}
-              {/* (nie ruszałem — tylko axios→api w requestach) */}
               <div className={styles.dayBox}>
                 <div className={styles.dayBoxHead}>
                   <FiCalendar />
@@ -1777,9 +1767,8 @@ const fetchOne = async (uid) => {
                                   </span>
                                 ) : (
                                   <span
-                                    className={`${styles.tlKind} ${
-                                      b.kind === "recv" ? styles.tlKindRecv : styles.tlKindSent
-                                    }`}
+                                    className={`${styles.tlKind} ${b.kind === "recv" ? styles.tlKindRecv : styles.tlKindSent
+                                      }`}
                                   >
                                     {b.kind === "recv" ? (
                                       <>
@@ -1911,14 +1900,20 @@ const fetchOne = async (uid) => {
               <li key={i} className={`${styles.item} ${styles.skeletonItem}`}>
                 <div className={styles.link}>
                   <div className={styles.row}>
+                    <div className={styles.avatarWrap}>
+                      <div className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`} />
+                    </div>
+
                     <div className={styles.head}>
                       <span className={`${styles.metaSkel} ${styles.shimmer}`} />
                       <span className={`${styles.dateSkel} ${styles.shimmer}`} />
                     </div>
+
                     <div className={styles.content}>
                       <span className={`${styles.blockSkel} ${styles.shimmer}`} />
                       <span className={`${styles.blockSkel} ${styles.shimmer}`} />
                     </div>
+
                     <div className={styles.bottomRow}>
                       <span className={`${styles.pillSkel} ${styles.shimmer}`} />
                       <span className={`${styles.pillSkel} ${styles.shimmer}`} />

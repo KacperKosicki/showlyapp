@@ -1,8 +1,14 @@
 @import "../../styles/variables";
 
+/* =========================================================
+   NAVBAR (safe z-index + premium glass)
+   - AlertBox ma być zawsze NAD navbar
+   - unikamy transform na wrapperach z backdrop-filter
+========================================================= */
+
 .navbar {
   position: relative;
-  z-index: 50;
+  z-index: 30; /* ✅ ważne: nie przykrywa AlertBox (z-index 9999) */
 
   display: flex;
   justify-content: space-between;
@@ -13,6 +19,9 @@
   background: transparent;
   border-bottom: none;
   box-shadow: none;
+
+  /* ✅ stabilizuje warstwy (mniej “dziwnych” konfliktów) */
+  isolation: isolate;
 }
 
 .left {
@@ -37,6 +46,7 @@
   background: linear-gradient(135deg, $primary-color, $secondary-color);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+
   text-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
 }
 
@@ -50,12 +60,11 @@
   font-family: $font-accent;
 
   color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.04);
-
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
 
   box-shadow:
-    0 16px 45px rgba(0, 0, 0, 0.22),
+    0 14px 44px rgba(0, 0, 0, 0.22),
     0 0 0 1px rgba(255, 255, 255, 0.06) inset;
 
   backdrop-filter: blur(10px);
@@ -71,7 +80,11 @@
   gap: 1rem;
 }
 
-/* 🔥 zamiast białego klocka: glass pill jak SearchBar */
+/* =========================================================
+   ACTION GROUP — glass pill
+   ✅ bez transform: żeby nie robić stacking-context przy blur
+========================================================= */
+
 .actionGroup {
   display: flex;
   align-items: center;
@@ -80,26 +93,32 @@
   padding: 10px 12px;
   border-radius: 999px;
 
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 
   box-shadow:
-    0 18px 55px rgba(0, 0, 0, 0.28),
+    0 18px 55px rgba(0, 0, 0, 0.26),
     0 0 0 1px rgba(255, 255, 255, 0.06) inset;
 
-  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  transition: box-shadow 0.18s ease, filter 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 }
 
 .actionGroup:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.02);
+  filter: brightness(1.03);
+  background: rgba(255, 255, 255, 0.085);
+  border-color: rgba(255, 255, 255, 0.16);
   box-shadow:
-    0 24px 70px rgba(0, 0, 0, 0.34),
+    0 26px 78px rgba(0, 0, 0, 0.30),
     0 0 0 1px rgba(255, 255, 255, 0.08) inset;
 }
 
-/* login button (gdy nie ma usera) */
+/* =========================================================
+   LOGIN button (gdy nie ma usera)
+========================================================= */
+
 .loginPrompt {
   display: inline-flex;
   align-items: center;
@@ -119,28 +138,25 @@
   background: transparent;
 
   border: 0;
-  /* jeśli używasz <button> */
   outline: 0;
   -webkit-appearance: none;
   appearance: none;
 
-  transition: transform 0.16s ease, filter 0.16s ease, background 0.16s ease;
+  transition: filter 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
 }
 
 .loginPrompt:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.03);
-  background: rgba(255, 255, 255, 0.05);
+  filter: brightness(1.04);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .loginPrompt:active {
-  transform: translateY(0px);
+  filter: brightness(0.98);
 }
 
 .loginPrompt:focus-visible {
   outline: none;
   box-shadow: 0 0 0 6px rgba(111, 78, 242, 0.18);
-  border-radius: 999px;
 }
 
 .icon {
@@ -151,6 +167,7 @@
 /* =========================================================
    MOBILE
 ========================================================= */
+
 @media (max-width: 768px) {
   .navbar {
     flex-direction: column;
@@ -194,8 +211,6 @@
     transform: translateY(-4px);
   }
 
-  /* na małych ekranach nie rób “kolumny” w actionGroup,
-     bo to psuje wygląd – zostaje pill */
   .actionGroup {
     width: 100%;
     max-width: 520px;
