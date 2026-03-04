@@ -1909,13 +1909,19 @@ $page-max: 1180px;
   gap: 8px;
   padding: 10px;
   border-radius: 12px;
-  border: 1px solid rgba(0,0,0,.10);
-  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(0, 0, 0, .10);
+  background: rgba(255, 255, 255, .85);
   cursor: pointer;
   transition: transform .12s ease, background .12s ease;
 }
-.reportBtn:hover { transform: translateY(-1px); }
-.reportBtn:active { transform: translateY(0); }
+
+.reportBtn:hover {
+  transform: translateY(-1px);
+}
+
+.reportBtn:active {
+  transform: translateY(0);
+}
 
 .reportMiniBtn {
   display: inline-flex;
@@ -1924,8 +1930,8 @@ $page-max: 1180px;
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  border: 1px solid rgba(0,0,0,.10);
-  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(0, 0, 0, .10);
+  background: rgba(255, 255, 255, .85);
   cursor: pointer;
 }
 
@@ -1933,7 +1939,7 @@ $page-max: 1180px;
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background: rgba(0,0,0,.55);
+  background: rgba(0, 0, 0, .55);
   display: grid;
   place-items: center;
   padding: 18px;
@@ -1942,9 +1948,9 @@ $page-max: 1180px;
 .reportModal {
   width: min(560px, 100%);
   border-radius: 18px;
-  background: rgba(255,255,255,.92);
-  border: 1px solid rgba(0,0,0,.10);
-  box-shadow: 0 24px 80px rgba(0,0,0,.18);
+  background: rgba(255, 255, 255, .92);
+  border: 1px solid rgba(0, 0, 0, .10);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .18);
   padding: 16px;
 }
 
@@ -1956,7 +1962,11 @@ $page-max: 1180px;
   margin-bottom: 12px;
 }
 
-.reportTitle { margin: 0; font-size: 18px; }
+.reportTitle {
+  margin: 0;
+  font-size: 18px;
+}
+
 .reportClose {
   border: 0;
   background: transparent;
@@ -1964,20 +1974,38 @@ $page-max: 1180px;
   cursor: pointer;
 }
 
-.reportRow { margin-top: 12px; }
-.reportLabel { display: block; font-size: 13px; opacity: .85; margin-bottom: 6px; }
+.reportRow {
+  margin-top: 12px;
+}
 
-.reportSelect, .reportTextarea {
+.reportLabel {
+  display: block;
+  font-size: 13px;
+  opacity: .85;
+  margin-bottom: 6px;
+}
+
+.reportSelect,
+.reportTextarea {
   width: 100%;
   border-radius: 12px;
-  border: 1px solid rgba(0,0,0,.12);
+  border: 1px solid rgba(0, 0, 0, .12);
   padding: 10px 12px;
-  background: rgba(255,255,255,.9);
+  background: rgba(255, 255, 255, .9);
   outline: none;
 }
 
-.reportTextarea { min-height: 110px; resize: vertical; }
-.reportHint { margin-top: 6px; font-size: 12px; opacity: .7; text-align: right; }
+.reportTextarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.reportHint {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: .7;
+  text-align: right;
+}
 
 .reportActions {
   display: flex;
@@ -1989,12 +2017,97 @@ $page-max: 1180px;
 .reportGhost {
   border-radius: 12px;
   padding: 10px 12px;
-  border: 1px solid rgba(0,0,0,.12);
+  border: 1px solid rgba(0, 0, 0, .12);
   background: transparent;
   cursor: pointer;
 }
 
-.reportPrimary { border-radius: 12px; }
+.reportPrimary {
+  border-radius: 12px;
+}
+
+.topLeftRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ikonka zgłoszenia obok lokalizacji — glass jak locPill */
+.reportPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 999px;
+
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.16);
+
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.2s ease, background 0.2s ease;
+
+  svg {
+    font-size: 1.08rem;
+    opacity: 0.95;
+  }
+
+  &:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  &:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
+  }
+}
+
+.reportText {
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0.95;
+}
+
+/* mobile: jak chcesz, możemy skrócić tekst albo ukryć */
+@media (max-width: 520px) {
+  .reportText {
+    display: none;
+  }
+
+  .reportPill {
+    width: 42px;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+/* mobile: ładnie się układa, bez nachodzenia */
+@media (max-width: 520px) {
+  .topLeftRow {
+    width: 100%;
+  }
+
+  .locPill {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .reportPill {
+    width: 40px;
+    height: 40px;
+  }
+}
 
 @media (max-width: 520px) {
   .hero {

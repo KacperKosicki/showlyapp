@@ -427,7 +427,7 @@ export default function PublicProfile() {
         const dbUser = await r.json();
         userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || "";
       }
-    } catch {}
+    } catch { }
 
     try {
       const headers = await authHeaders({ "Content-Type": "application/json" });
@@ -577,17 +577,17 @@ export default function PublicProfile() {
     ratedByArr.length > 0
       ? ratedByArr.length
       : Array.isArray(reviews)
-      ? reviews.length
-      : Number.isFinite(Number(reviews))
-      ? Number(reviews)
-      : 0;
+        ? reviews.length
+        : Number.isFinite(Number(reviews))
+          ? Number(reviews)
+          : 0;
 
   const avgRating =
     ratedByArr.length > 0
       ? ratedByArr.reduce((sum, r) => sum + Number(r?.rating || 0), 0) / ratedByArr.length
       : Number.isFinite(Number(rating))
-      ? Number(rating)
-      : 0;
+        ? Number(rating)
+        : 0;
 
   const avgRatingLabel = avgRating > 0 ? avgRating.toFixed(1) : "0.0";
 
@@ -647,12 +647,12 @@ export default function PublicProfile() {
     profileType === "zawodowy"
       ? "Zawód"
       : profileType === "hobbystyczny"
-      ? "Hobby"
-      : profileType === "serwis"
-      ? "Serwis"
-      : profileType === "społeczność"
-      ? "Społeczność"
-      : "Profil";
+        ? "Hobby"
+        : profileType === "serwis"
+          ? "Serwis"
+          : profileType === "społeczność"
+            ? "Społeczność"
+            : "Profil";
 
   return (
     <div className={styles.page} style={cssVars}>
@@ -691,10 +691,26 @@ export default function PublicProfile() {
             </div>
 
             <div className={styles.heroTopLeft}>
-              <span className={styles.locPill} title={location || "Brak lokalizacji"}>
-                <FaMapMarkerAlt />
-                <span className={styles.locText}>{location || "Brak lokalizacji"}</span>
-              </span>
+              <div className={styles.topLeftRow}>
+                <span className={styles.locPill} title={location || "Brak lokalizacji"}>
+                  <FaMapMarkerAlt />
+                  <span className={styles.locText}>{location || "Brak lokalizacji"}</span>
+                </span>
+
+                {/* ✅ ZGŁOSZENIE PROFILU: obok lokalizacji */}
+                {!isOwner && (
+                  <button
+                    type="button"
+                    className={styles.reportPill}
+                    onClick={openReportProfile}
+                    title="Zgłoś profil"
+                    aria-label="Zgłoś profil"
+                  >
+                    <FiFlag />
+                    <span className={styles.reportText}>ZGŁOŚ PROFIL</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className={styles.heroLeft}>
@@ -724,19 +740,6 @@ export default function PublicProfile() {
                     Ulubione: <strong>{favCount}</strong>
                   </span>
                 </button>
-
-                {/* ✅ ZGŁOSZENIE PROFILU: nadal TYLKO gdy NIE jesteś właścicielem */}
-                {!isOwner && (
-                  <button
-                    type="button"
-                    className={styles.reportBtn}
-                    onClick={openReportProfile}
-                    title="Zgłoś profil"
-                    aria-label="Zgłoś profil"
-                  >
-                    <FiFlag />
-                  </button>
-                )}
 
                 {hasServices && (
                   <a className={styles.ghostBtn} href="#services">
@@ -924,10 +927,10 @@ export default function PublicProfile() {
 
                     const dateLabel = op.createdAt
                       ? new Date(op.createdAt).toLocaleDateString("pl-PL", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })
                       : "";
 
                     return (

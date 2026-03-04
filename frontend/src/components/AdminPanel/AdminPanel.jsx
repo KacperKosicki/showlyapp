@@ -561,11 +561,10 @@ export default function AdminPanel() {
                     </td>
                     <td>
                       <span
-                        className={`${styles.pill} ${
-                          p.isVisible === false
+                        className={`${styles.pill} ${p.isVisible === false
                             ? styles.pillOff
                             : styles.pillOn
-                        }`}
+                          }`}
                       >
                         {p.isVisible === false ? "NIE" : "TAK"}
                       </span>
@@ -630,9 +629,8 @@ export default function AdminPanel() {
             {REPORT_TABS.map((t) => (
               <button
                 key={t.key}
-                className={`${styles.subTabBtn} ${
-                  reportTab === t.key ? styles.subActive : ""
-                }`}
+                className={`${styles.subTabBtn} ${reportTab === t.key ? styles.subActive : ""
+                  }`}
                 onClick={() => onChangeReportType(t.key)}
                 disabled={loading}
               >
@@ -774,11 +772,10 @@ export default function AdminPanel() {
 
                     <td>
                       <span
-                        className={`${styles.pill} ${
-                          r.status === "closed"
+                        className={`${styles.pill} ${r.status === "closed"
                             ? styles.pillOn
                             : styles.pillWarn
-                        }`}
+                          }`}
                       >
                         {r.status === "closed" ? "ZAMKNIĘTE" : "OTWARTE"}
                       </span>
