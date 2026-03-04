@@ -21,7 +21,6 @@ import {
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 
-import axios from "axios";
 import { api } from "../../api/api";
 
 // ✅ siatka slotów zawsze co 5 minut
@@ -32,8 +31,6 @@ const BASE_BREAK_MIN = 5;
 
 // ✅ (legacy) nie pokazujemy wolnych slotów krótszych niż to (np. 15-min wolne z bufora znikają)
 const MIN_VISIBLE_FREE_MIN = 30;
-
-const API = process.env.REACT_APP_API_URL;
 
 function Countdown({ until, onExpire }) {
   const [txt, setTxt] = useState("");
