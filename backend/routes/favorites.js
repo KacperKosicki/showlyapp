@@ -112,6 +112,14 @@ router.get("/my", requireAuth, async (req, res) => {
         profileType: 1,
         description: 1,
         links: 1,
+
+        // ✅ DODAJ TO:
+        theme: 1,
+
+        // (opcjonalnie, ale polecam żeby UserCard miał komplet danych jak wszędzie)
+        slug: 1,
+        bookingMode: 1,
+        availableDates: 1,
       }
     ).lean();
 

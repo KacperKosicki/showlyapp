@@ -3,7 +3,7 @@ import styles from "./Favorites.module.scss";
 import UserCard from "../UserCard/UserCard";
 import { FiHeart } from "react-icons/fi";
 import { Link, useLocation } from "react-router-dom";
-import { api } from "../../api/api"; // <-- dopasuj ścieżkę, jeśli masz inną
+import { api } from "../../api/api";
 
 export default function Favorites({ currentUser }) {
   const [loading, setLoading] = useState(true);
@@ -19,14 +19,44 @@ export default function Favorites({ currentUser }) {
       setError("");
 
       try {
-        // ✅ token idzie z interceptora (Authorization)
-        // opcjonalnie możesz zostawić uid w headerze, jeśli backend nadal tego wymaga:
-        // { headers: { uid: currentUser?.uid } }
-
         const { data } = await api.get("/api/favorites/my");
-
         if (!alive) return;
-        setProfiles(Array.isArray(data) ? data : []);
+
+        const list = Array.isArray(data) ? data : [];
+
+        // ✅ Normalizacja (na wypadek nested profile / theme jako string)
+        const normalized = list.map((it) => {
+          const p = it?.profile || it?.profileData || it?.profileDoc || it;
+
+          // theme może być obiektem albo JSON string
+          const rawTheme = p?.theme ?? it?.theme ?? it?.profileTheme ?? it?.themeConfig;
+          let theme = rawTheme;
+
+          if (typeof rawTheme === "string") {
+            try {
+              theme = JSON.parse(rawTheme);
+            } catch {
+              theme = undefined;
+            }
+          }
+
+          // userId powinien już przyjść z backendu, ale zostawiam fallbacki
+          const userId =
+            p?.userId ||
+            it?.userId ||
+            it?.profileUserId ||
+            it?.profileId ||
+            p?._id ||
+            it?._id;
+
+          return {
+            ...p,
+            ...(theme ? { theme } : {}),
+            ...(userId ? { userId } : {}),
+          };
+        });
+
+        setProfiles(normalized);
       } catch (e) {
         if (!alive) return;
         setError("Nie udało się pobrać listy ulubionych.");
@@ -38,7 +68,6 @@ export default function Favorites({ currentUser }) {
 
     if (currentUser?.uid) run();
     else {
-      // jak user nie zalogowany — nie ładujemy
       setProfiles([]);
       setError("");
       setLoading(false);
@@ -136,7 +165,11 @@ export default function Favorites({ currentUser }) {
           <div className={styles.emptyBox}>
             <FiHeart className={styles.emptyIcon} />
             <p>Nic tu jeszcze nie ma.</p>
-            <Link className={styles.cta} to="/" state={{ scrollToId: "scrollToId" }}>
+            <Link
+              className={styles.cta}
+              to="/"
+              state={{ scrollToId: "scrollToId" }}
+            >
               Przeglądaj specjalistów
             </Link>
           </div>
@@ -160,7 +193,11 @@ export default function Favorites({ currentUser }) {
 
         <div className={styles.grid}>
           {profiles.map((p) => (
-            <UserCard key={p.userId || p._id} user={p} currentUser={currentUser} />
+            <UserCard
+              key={p.userId || p._id}
+              user={p}
+              currentUser={currentUser}
+            />
           ))}
         </div>
       </div>
