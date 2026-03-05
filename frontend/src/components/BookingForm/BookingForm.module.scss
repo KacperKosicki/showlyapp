@@ -1,8 +1,7 @@
 @import "../../styles/variables";
 
 /* =========================================================
-   BookingForm — styl jak UserCard (glass + gradient)
-   CSS vars: --bf-primary, --bf-secondary, --bf-banner
+   BookingForm (Wrapper + Card + Hero)
 ========================================================= */
 
 .pageWrap {
@@ -12,40 +11,31 @@
     padding: 0 1rem;
     box-sizing: border-box;
   }
-
-  @media (max-width: 420px) {
-    padding: 0 1rem;
-  }
 }
 
 .card {
   width: 100%;
-  max-width: 720px;
+  max-width: 860px;
   margin: 2rem auto;
 
-  border-radius: 22px;
+  border-radius: 24px;
   overflow: hidden;
 
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.08);
 
   font-family: $font-body;
 
-  /* fallbacki */
   --bf-primary: var(--bf-primary, #6f4ef2);
   --bf-secondary: var(--bf-secondary, #ff4081);
   --bf-banner: var(--bf-banner, linear-gradient(135deg, #6f4ef2, #ff4081));
 }
 
-/* =========================================================
-   HERO
-========================================================= */
 .hero {
   position: relative;
   background: var(--bf-banner);
   border-bottom: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.12);
   isolation: isolate;
 }
 
@@ -56,7 +46,7 @@
   background:
     radial-gradient(900px 260px at 15% 15%, rgba(255, 255, 255, 0.22), transparent 55%),
     radial-gradient(900px 320px at 90% 25%, rgba(255, 255, 255, 0.18), transparent 58%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.22) 100%);
+    linear-gradient(180deg, rgba(0, 0, 0, 0.06) 0%, rgba(0, 0, 0, 0.22) 100%);
   pointer-events: none;
 }
 
@@ -74,7 +64,7 @@
 .modePill {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
 
   padding: 8px 10px;
   border-radius: 999px;
@@ -83,7 +73,7 @@
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.22);
   backdrop-filter: blur(10px);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16);
 
   font-family: $font-accent;
   font-weight: 900;
@@ -92,7 +82,7 @@
 
 .locText,
 .modeText {
-  max-width: 310px;
+  max-width: 320px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -112,8 +102,8 @@
 
 .avatarWrap {
   position: relative;
-  width: 110px;
-  height: 110px;
+  width: 112px;
+  height: 112px;
   border-radius: 22px;
   padding: 10px;
 
@@ -146,29 +136,18 @@
 .heroInfo {
   min-width: 0;
   color: #fff;
-  text-align: left;
-  width: 100%;
-
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.titleRow {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
 }
 
 .title {
   margin: 0;
   font-family: $font-heading;
-  font-size: 1.15rem;
+  font-size: 1.18rem;
   line-height: 1.15;
   text-shadow: 0 10px 30px rgba(0, 0, 0, 0.24);
 
-  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -183,415 +162,31 @@
   font-family: $font-accent;
   font-weight: 900;
   opacity: 0.92;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   line-height: 1.2;
 
-  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* =========================================================
-   BODY (formularz + kalendarze)
-========================================================= */
 .body {
-  padding: 16px;
-
+  padding: 18px;
   background:
-    radial-gradient(700px 240px at 20% 0%, var(--bf-p-06), transparent 55%),
-    radial-gradient(700px 260px at 80% 10%, var(--bf-s-10), transparent 58%),
-    rgba(255, 255, 255, 0.55);
+    radial-gradient(800px 280px at 20% 0%, var(--bf-p-06), transparent 55%),
+    radial-gradient(800px 300px at 85% 10%, var(--bf-s-10), transparent 58%),
+    rgba(255, 255, 255, 0.58);
 }
 
-/* =========================================================
-   FORM FIELDS
-========================================================= */
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.44rem;
-  margin-bottom: 1.2rem;
-  font-size: 1.02rem;
-  font-family: $font-body;
-
-  .fieldTitle {
-    margin-top: 0.9rem;
-    font-size: 0.92rem;
-    color: var(--bf-primary);
-    font-family: $font-heading;
-    border-left: 4px solid var(--bf-primary);
-    padding-left: 0.8rem;
-  }
-
-  input[type="text"],
-  input[type="tel"],
-  input[type="email"],
-  input[type="number"],
-  input[type="url"],
-  textarea,
-  input[type="date"],
-  select {
-    margin-top: 0.04rem;
-    padding: 0.72rem 1.06rem;
-    border: 1px solid rgba(0, 0, 0, 0.12);
-    border-radius: 16px;
-
-    background:
-      radial-gradient(600px 200px at 20% 20%, var(--bf-p-10), transparent 60%),
-      radial-gradient(500px 220px at 90% 30%, var(--bf-s-10), transparent 55%),
-      #fff;
-
-    font-size: 1.05rem;
-    font-family: $font-body;
-    color: $text-color;
-
-    transition: border 0.2s, box-shadow 0.16s, transform 0.12s;
-    width: 100%;
-    box-sizing: border-box;
-    outline: none;
-
-    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
-
-    &:focus {
-      border-color: color-mix(in srgb, var(--bf-primary) 55%, #0000);
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--bf-primary) 18%, transparent);
-      transform: translateY(-1px);
-    }
-
-    &::placeholder {
-      color: #8f92a7;
-      opacity: 1;
-    }
-  }
-
-  select {
-    appearance: none;
-    padding-right: 2.3rem;
-    cursor: pointer;
-    font-weight: 600;
-    letter-spacing: -0.1px;
-  }
-
-  textarea {
-    resize: vertical;
-    min-height: 56px;
-    max-height: 180px;
-    font-size: 1.02rem;
-  }
-}
-
-/* =========================================================
-   MONTH NAV
-========================================================= */
-.monthNav {
-  display: flex;
-  padding: 0 0.4rem;
-  justify-content: space-between;
-  align-items: center;
-  margin: 1.2rem 0 0.8rem;
-
-  font-size: 1.02rem;
-  color: var(--bf-primary);
-  font-family: $font-heading;
-
-  span {
-    font-weight: 900;
-  }
-
-  button {
-    background: rgba(255, 255, 255, 0.16);
-    border: 1px solid rgba(0, 0, 0, 0.10);
-    backdrop-filter: blur(10px);
-
-    font-size: 1.25rem;
-    cursor: pointer;
-    color: var(--bf-primary);
-    font-weight: 900;
-
-    padding: 0.25rem 0.8rem;
-    border-radius: 999px;
-
-    transition: transform 0.15s ease, filter 0.2s ease;
-
-    &:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.02);
-    }
-
-    &:disabled {
-      opacity: 0.65;
-      cursor: not-allowed;
-    }
-  }
-}
-
-/* =========================================================
-   CALENDAR GRID
-========================================================= */
-.calendarGrid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.28rem;
-  margin-bottom: 1rem;
-}
-
-.weekday {
-  text-align: center;
-  font-weight: 900;
-  color: rgba(0, 0, 0, 0.55);
-  font-family: $font-accent;
-  padding: 0.45rem 0;
-  font-size: 0.92rem;
-}
-
-.day {
-  padding: 0.62rem 0;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  border-radius: 16px;
-  cursor: pointer;
-  text-align: center;
-  font-weight: 800;
-  background: rgba(255, 255, 255, 0.85);
-
-  transition: transform 0.15s ease, background 0.18s, color 0.18s, border-color 0.18s;
-
-  &:hover:not(.disabledDay) {
-    transform: translateY(-1px);
-    background: color-mix(in srgb, var(--bf-primary) 16%, #fff);
-    border-color: color-mix(in srgb, var(--bf-primary) 30%, #0000);
-    color: var(--bf-primary);
-  }
-}
-
-.disabledDay {
-  background: rgba(255, 255, 255, 0.55);
-  color: rgba(0, 0, 0, 0.35);
-  cursor: not-allowed;
-  border-color: rgba(0, 0, 0, 0.06);
-}
-
-.selectedDay {
-  background: linear-gradient(135deg, var(--bf-primary), var(--bf-secondary));
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.25);
-}
-
-/* =========================================================
-   SLOTS
-========================================================= */
-.slotsForm {
-  margin-bottom: 1.2rem;
-}
-
-.slotsTitle {
-  margin: 1.2rem 0 1.0rem;
-  font-size: 0.92rem;
-  color: var(--bf-primary);
-  font-family: $font-heading;
-  border-left: 4px solid var(--bf-primary);
-  padding-left: 0.8rem;
-}
-
-.slotsGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-  gap: 0.5rem;
-}
-
-.slot {
-  padding: 0.58rem 0.2rem;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.9);
-  cursor: pointer;
-
-  font-size: 0.98rem;
-  text-align: center;
-  transition: transform 0.15s ease, border 0.2s, filter 0.2s;
-
-  color: rgba(0, 0, 0, 0.70);
-
-  &:hover:not(.slotDisabled):not(.slotReserved):not(.slotPending) {
-    transform: translateY(-1px);
-    border-color: color-mix(in srgb, var(--bf-primary) 35%, #0000);
-    filter: brightness(1.01);
-  }
-}
-
-.slotDisabled {
-  background: rgba(255, 255, 255, 0.55) !important;
-  color: rgba(0, 0, 0, 0.35) !important;
-  border-color: rgba(0, 0, 0, 0.06);
-  cursor: not-allowed;
-}
-
-.slotReserved {
-  background: #ffe5e5 !important;
-  color: #d0293b !important;
-  border-color: #ffd4d4;
-}
-
-.slotPending {
-  background: #fffbe5 !important;
-  color: #bfa400 !important;
-  border-color: #faefb1;
-}
-
-.slotSelected {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--bf-primary) 18%, transparent);
-  background: color-mix(in srgb, var(--bf-primary) 10%, #fff) !important;
-  color: var(--bf-primary) !important;
-}
-
-/* =========================================================
-   BUTTON
-========================================================= */
-.submit {
-  display: block;
-  width: 100%;
-
-  padding: 0.95rem 0;
-  border: none;
-  border-radius: 16px;
-
-  color: #fff;
-  background: linear-gradient(135deg, var(--bf-primary), var(--bf-secondary));
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.14);
-
-  font-size: 0.95rem;
-  font-family: $font-accent;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-
-  cursor: pointer;
-  margin-top: 1.2rem;
-
-  transition: transform 0.15s ease, filter 0.2s ease;
-
-  &:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.02);
-  }
-
-  &:active {
-    transform: translateY(0);
-    filter: brightness(0.98);
-  }
-}
-
-/* Disabled podczas wysyłki */
-.submit[disabled],
-.submit[aria-busy="true"] {
-  opacity: 0.7;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-/* =========================================================
-   LEGEND / INFO / WARN / TOGGLE
-========================================================= */
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.6rem 1rem;
-  margin: 1rem 0 0;
-
-  font-size: 0.92rem;
-  color: rgba(0, 0, 0, 0.55);
-  font-family: $font-body;
-
-  span {
-    display: flex;
-    align-items: center;
-    gap: 0.36em;
-    font-weight: 600;
-    margin: 0;
-    padding: 0;
-  }
-}
-
-.legendBox {
-  width: 0.9em;
-  height: 0.9em;
-  border-radius: 6px;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  display: inline-block;
-}
-
-.legendReserved { background: #ffe5e5; border-color: #ffd4d4; }
-.legendPending  { background: #fffbe5; border-color: #faefb1; }
-.legendDisabled { background: #f5f5f5; border-color: #e0e0e0; }
-.legendFree     { background: #fafbfc; border-color: #ececec; }
-
-.legendInfo {
-  font-family: $font-accent;
-  font-size: 0.9em;
-  flex-basis: 100%;
-  font-weight: 900;
-}
-
-.infoBox {
-  margin: 0.6rem 0 0.9rem;
-  padding: 0.8rem 1rem;
-
-  border-left: 4px solid var(--bf-primary);
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 14px;
-
-  color: rgba(0, 0, 0, 0.70);
-  font-family: $font-body;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.warnBox {
-  margin-top: 0.6rem;
-  padding: 0.75rem 1rem;
-
-  border-left: 4px solid #cc6600;
-  background: #fff6ed;
-  border-radius: 14px;
-
-  color: #8a4d00;
-  font-family: $font-body;
-  border: 1px solid #ffd9b2;
-}
-
-.toggleRow {
-  margin: 0.4rem 0 0.6rem;
-}
-
-.toggleLabel {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-
-  font-size: 0.95rem;
-  color: rgba(0, 0, 0, 0.62);
-  user-select: none;
-
-  input {
-    transform: translateY(1px);
-  }
-}
-
-/* =========================================================
-   LOADING
-========================================================= */
 .loading {
   text-align: center;
   padding: 2rem;
   font-size: 1rem;
 }
 
-/* =========================================================
-   MOBILE
-========================================================= */
+/* Mobile */
 @media (max-width: 520px) {
-  .card {
-    border-radius: 18px;
-  }
+  .card { border-radius: 18px; }
 
   .heroTop {
     flex-direction: column;
@@ -622,21 +217,8 @@
 
   .title {
     white-space: normal;
-    overflow: visible;
-    text-overflow: unset;
     text-align: center;
   }
 
-  .heroInfo {
-    text-align: center;
-  }
-
-  .slotsGrid {
-    gap: 0.4rem;
-  }
-
-  .legend {
-    font-size: 0.9rem;
-    gap: 0.4rem 0.7rem;
-  }
+  .heroInfo { text-align: center; }
 }

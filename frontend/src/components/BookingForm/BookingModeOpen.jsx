@@ -1,53 +1,52 @@
 // BookingModeOpen.jsx — czyste zapytanie (bez kalendarza)
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styles from './BookingForm.module.scss';
-import LoadingButton from '../ui/LoadingButton/LoadingButton';
-import { api } from '../../api/api';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import styles from "./BookingModeOpen.module.scss";
+import LoadingButton from "../ui/LoadingButton/LoadingButton";
+import { api } from "../../api/api";
 
-const CHANNEL = 'account_to_profile';
+const CHANNEL = "account_to_profile";
 
 export default function BookingModeOpen({ user, provider, pushAlert }) {
-  const [subject, setSubject] = useState('Zapytanie o usługę');
-  const [message, setMessage] = useState('');
-  const [phone, setPhone] = useState('');
+  const [subject, setSubject] = useState("Zapytanie o usługę");
+  const [message, setMessage] = useState("");
+  const [phone, setPhone] = useState("");
   const [sending, setSending] = useState(false);
 
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e?.preventDefault?.();
-
     if (sending) return; // ✅ blokada podwójnego kliku
     setSending(true);
 
     try {
       if (!user?.uid) {
-        pushAlert?.({ show: true, type: 'error', message: 'Musisz być zalogowany.' });
+        pushAlert?.({ show: true, type: "error", message: "Musisz być zalogowany." });
         return;
       }
 
       if (!provider?.userId) {
-        pushAlert?.({ show: true, type: 'error', message: 'Brak danych usługodawcy.' });
+        pushAlert?.({ show: true, type: "error", message: "Brak danych usługodawcy." });
         return;
       }
 
-      const body = (message || '').trim();
+      const body = (message || "").trim();
       if (!body) {
-        pushAlert?.({ show: true, type: 'error', message: 'Napisz krótką wiadomość.' });
+        pushAlert?.({ show: true, type: "error", message: "Napisz krótką wiadomość." });
         return;
       }
 
       const content = [
         subject?.trim() ? `Temat: ${subject.trim()}` : null,
         phone?.trim() ? `Telefon: ${phone.trim()}` : null,
-        '',
+        "",
         body,
       ]
         .filter(Boolean)
-        .join('\n');
+        .join("\n");
 
-      const { data } = await api.post('/api/conversations/send', {
+      const { data } = await api.post("/api/conversations/send", {
         from: user.uid,
         to: provider.userId,
         channel: CHANNEL,
@@ -56,17 +55,17 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
 
       if (data?.id) {
         sessionStorage.setItem(
-          'flash',
+          "flash",
           JSON.stringify({
-            type: 'success',
-            message: 'Twoje zapytanie zostało wysłane.',
+            type: "success",
+            message: "Twoje zapytanie zostało wysłane.",
             ttl: 6000,
             ts: Date.now(),
           })
         );
 
         sessionStorage.setItem(
-          'optimisticMessage',
+          "optimisticMessage",
           JSON.stringify({
             _id: `temp-${Date.now()}`,
             from: user.uid,
@@ -78,14 +77,14 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
           })
         );
 
-        navigate(`/konwersacja/${data.id}`, { state: { scrollToId: 'threadPageLayout' } });
+        navigate(`/konwersacja/${data.id}`, { state: { scrollToId: "threadPageLayout" } });
         return;
       }
 
       // fallback (gdyby API nie zwróciło id)
-      pushAlert?.({ show: true, type: 'success', message: 'Zapytanie wysłane.' });
-      setMessage('');
-      setPhone('');
+      pushAlert?.({ show: true, type: "success", message: "Zapytanie wysłane." });
+      setMessage("");
+      setPhone("");
     } catch (err) {
       // typowy przypadek: backend mówi "masz już konwersację"
       if (err?.response?.status === 403) {
@@ -94,69 +93,87 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
         const draftContent = [
           subject?.trim() ? `Temat: ${subject.trim()}` : null,
           phone?.trim() ? `Telefon: ${phone.trim()}` : null,
-          '',
-          (message || '').trim(),
+          "",
+          (message || "").trim(),
         ]
           .filter(Boolean)
-          .join('\n');
+          .join("\n");
 
         sessionStorage.setItem(
-          'flash',
+          "flash",
           JSON.stringify({
-            type: 'info',
-            message: 'Masz już otwartą rozmowę z tym użytkownikiem. Kontynuuj w istniejącym wątku.',
+            type: "info",
+            message:
+              "Masz już otwartą rozmowę z tym użytkownikiem. Kontynuuj w istniejącym wątku.",
             ttl: 6000,
             ts: Date.now(),
           })
         );
 
-        sessionStorage.setItem('draft', draftContent);
+        sessionStorage.setItem("draft", draftContent);
 
         navigate(existingId ? `/konwersacja/${existingId}` : `/wiadomosc/${provider.userId}`, {
-          state: { scrollToId: 'threadPageLayout' },
+          state: { scrollToId: "threadPageLayout" },
         });
         return;
       }
 
       const msg =
         err?.response?.data?.message ||
-        (err?.response?.status === 401 ? 'Brak autoryzacji (401). Zaloguj się ponownie.' : null) ||
-        'Nie udało się wysłać zapytania.';
+        (err?.response?.status === 401 ? "Brak autoryzacji (401). Zaloguj się ponownie." : null) ||
+        "Nie udało się wysłać zapytania.";
 
-      pushAlert?.({ show: true, type: 'error', message: msg });
+      pushAlert?.({ show: true, type: "error", message: msg });
     } finally {
       setSending(false); // ✅ zawsze odblokuje
     }
   };
 
   return (
-    <>
-      <label className={styles.field}>
-        <h3 className={styles.fieldTitle}>Temat (opcjonalnie):</h3>
-        <input
-          type="text"
-          value={subject}
-          onChange={(e) => setSubject(e.target.value)}
-          placeholder="Np. Wycena strony internetowej"
-          disabled={sending}
-        />
-      </label>
+    <form className={styles.form} onSubmit={handleSubmit}>
+      <div className={styles.topGrid}>
+        <label className={styles.field}>
+          <div className={styles.fieldHeader}>
+            <h3 className={styles.fieldTitle}>Temat</h3>
+            <span className={styles.fieldHint}>opcjonalnie</span>
+          </div>
+
+          <input
+            className={styles.input}
+            type="text"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="Np. Wycena strony internetowej"
+            disabled={sending}
+          />
+        </label>
+
+        <label className={styles.field}>
+          <div className={styles.fieldHeader}>
+            <h3 className={styles.fieldTitle}>Telefon</h3>
+            <span className={styles.fieldHint}>opcjonalnie</span>
+          </div>
+
+          <input
+            className={styles.input}
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Np. 500 600 700"
+            disabled={sending}
+          />
+        </label>
+      </div>
 
       <label className={styles.field}>
-        <h3 className={styles.fieldTitle}>Telefon (opcjonalnie):</h3>
-        <input
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="Np. 500 600 700"
-          disabled={sending}
-        />
-      </label>
+        <div className={styles.fieldHeader}>
+          <h3 className={styles.fieldTitle}>Wiadomość</h3>
+          <span className={styles.fieldHint}>wymagane</span>
+        </div>
 
-      <label className={styles.field}>
-        <h3 className={styles.fieldTitle}>Wiadomość:</h3>
         <textarea
-          rows="5"
+          className={styles.textarea}
+          rows="6"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Opisz krótko czego potrzebujesz, budżet, termin orientacyjny itp."
@@ -164,14 +181,20 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
         />
       </label>
 
-      <LoadingButton
-        onClick={handleSubmit}
-        isLoading={sending}
-        disabled={sending || !(message || '').trim()}
-        className={styles.submit}
-      >
-        Wyślij zapytanie
-      </LoadingButton>
-    </>
+      <div className={styles.submitBar}>
+        <LoadingButton
+          type="submit"
+          isLoading={sending}
+          disabled={sending || !(message || "").trim()}
+          className={styles.submit}
+        >
+          Wyślij zapytanie
+        </LoadingButton>
+
+        <div className={styles.submitHint}>
+          Po wysłaniu zostaniesz przeniesiony do konwersacji z usługodawcą.
+        </div>
+      </div>
+    </form>
   );
 }

@@ -1,0 +1,562 @@
+@import "../../styles/variables";
+
+/* =========================================================
+   BookingModeDay — clean layout (calendar + info + legend)
+   Korzysta z CSS vars z BookingForm: --bf-primary/secondary/banner
+========================================================= */
+
+.topGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+
+  @media (max-width: 820px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field,
+.toggleField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin: 0;
+
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  padding: 12px 12px 14px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.06);
+}
+
+.fieldHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fieldTitle {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--bf-primary);
+  font-family: $font-heading;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+}
+
+.fieldHint {
+  font-family: $font-accent;
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.48);
+  background: rgba(0, 0, 0, 0.04);
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+.textarea,
+.select {
+  width: 100%;
+  box-sizing: border-box;
+
+  padding: 0.78rem 1.02rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+
+  background:
+    radial-gradient(600px 220px at 20% 20%,
+      color-mix(in srgb, var(--bf-primary) 10%, transparent),
+      transparent 60%),
+    radial-gradient(520px 240px at 90% 30%,
+      color-mix(in srgb, var(--bf-secondary) 10%, transparent),
+      transparent 55%),
+    #fff;
+
+  font-size: 1.03rem;
+  font-family: $font-body;
+  color: $text-color;
+
+  outline: none;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.06);
+  transition: border 0.2s, box-shadow 0.16s, transform 0.12s;
+
+  &:focus {
+    border-color: color-mix(in srgb, var(--bf-primary) 55%, #0000);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--bf-primary) 18%, transparent);
+    transform: translateY(-1px);
+  }
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 78px;
+  max-height: 220px;
+}
+
+.selectWrap {
+  position: relative;
+}
+
+.select {
+  appearance: none;
+  padding-right: 2.4rem;
+  cursor: pointer;
+  font-weight: 650;
+  letter-spacing: -0.1px;
+}
+
+.selectChevron {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+/* =========================================================
+   TOGGLE
+========================================================= */
+
+.toggleRow {
+  display: grid;
+  gap: 8px;
+}
+
+.toggleLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: $font-accent;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.72);
+
+  input {
+    transform: translateY(1px);
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.toggleHint {
+  font-family: $font-body;
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+/* =========================================================
+   MAIN GRID
+========================================================= */
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 14px;
+  align-items: start;
+
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.calendarCard,
+.infoCard {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.06);
+}
+
+.calendarCard { padding: 12px; }
+.infoCard { padding: 12px; }
+
+/* =========================================================
+   MONTH NAV
+========================================================= */
+
+.monthNav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+
+  padding: 4px 6px 10px;
+}
+
+.monthLabel {
+  font-family: $font-heading;
+  font-weight: 900;
+  color: var(--bf-primary);
+  letter-spacing: -0.2px;
+  text-transform: capitalize;
+}
+
+.monthNav button {
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(0, 0, 0, 0.10);
+
+  font-size: 1.15rem;
+  cursor: pointer;
+  color: var(--bf-primary);
+  font-weight: 900;
+
+  padding: 0.25rem 0.8rem;
+  border-radius: 999px;
+
+  transition: transform 0.15s ease, filter 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.02);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+/* =========================================================
+   CALENDAR GRID
+========================================================= */
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.32rem;
+}
+
+.weekday {
+  text-align: center;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.52);
+  font-family: $font-accent;
+  padding: 0.44rem 0;
+  font-size: 0.9rem;
+}
+
+.blankDay {
+  height: 42px;
+  border-radius: 14px;
+  background: transparent;
+}
+
+.day {
+  padding: 0.66rem 0;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: center;
+  font-weight: 900;
+  background: rgba(255, 255, 255, 0.88);
+
+  transition: transform 0.15s ease, background 0.18s, color 0.18s, border-color 0.18s;
+
+  &:hover {
+    transform: translateY(-1px);
+    background: color-mix(in srgb, var(--bf-primary) 14%, #fff);
+    border-color: color-mix(in srgb, var(--bf-primary) 26%, #0000);
+    color: var(--bf-primary);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+/* stany */
+.dayUnavailable {
+  background: #ffe5e5 !important;
+  color: #d0293b !important;
+  border-color: #ffd4d4 !important;
+
+  &:hover { transform: none; }
+}
+
+.dayPast {
+  background: rgba(255, 255, 255, 0.55) !important;
+  color: rgba(0, 0, 0, 0.35) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+
+  &:hover { transform: none; }
+}
+
+.dayLocked {
+  background: rgba(255, 255, 255, 0.60) !important;
+  color: rgba(0, 0, 0, 0.42) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+
+  &:hover { transform: none; }
+}
+
+.selectedDay {
+  background: linear-gradient(135deg, var(--bf-primary), var(--bf-secondary)) !important;
+  color: #fff !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* =========================================================
+   INFO CARD
+========================================================= */
+
+.infoHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+
+  @media (max-width: 520px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.infoTitle {
+  margin: 0;
+  font-family: $font-heading;
+  font-weight: 900;
+  color: var(--bf-primary);
+  letter-spacing: -0.2px;
+}
+
+.infoSub {
+  margin: 4px 0 0;
+  font-family: $font-body;
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 0.95rem;
+}
+
+.modePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px 12px;
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+
+  font-family: $font-accent;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.62);
+}
+
+.modeDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--bf-primary), var(--bf-secondary));
+}
+
+.summaryRow {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 10px;
+
+  margin-top: 10px;
+  padding: 10px;
+
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 16px;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summaryLabel {
+  font-family: $font-accent;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.58);
+}
+
+.summaryValue {
+  font-family: $font-body;
+  color: rgba(0, 0, 0, 0.72);
+  word-break: break-word;
+}
+
+.muted { opacity: 0.7; }
+
+/* empty state */
+.emptyState {
+  text-align: center;
+  padding: 18px 12px;
+
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+}
+
+.emptyIcon { font-size: 1.6rem; margin-bottom: 6px; }
+.emptyTitle {
+  font-family: $font-heading;
+  font-weight: 900;
+  color: rgba(0, 0, 0, 0.75);
+  margin-bottom: 4px;
+}
+.emptyText {
+  font-family: $font-body;
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 0.95rem;
+}
+
+/* =========================================================
+   WARN / INFO
+========================================================= */
+
+.warnBox {
+  margin: 0 0 12px;
+  padding: 0.85rem 1rem;
+
+  border-left: 4px solid var(--bf-primary);
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 14px;
+
+  color: rgba(0, 0, 0, 0.70);
+  font-family: $font-body;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================================
+   LEGEND FULL WIDTH (JEDNA BELKA)
+========================================================= */
+
+.fullLegendBar {
+  margin-top: 12px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 12px;
+
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 16px;
+
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.05);
+
+  @media (max-width: 820px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+}
+
+.legendBadges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.85rem;
+
+  @media (max-width: 820px) {
+    justify-content: center;
+  }
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.36em;
+
+  font-family: $font-body;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.58);
+}
+
+.legendBox {
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  display: inline-block;
+}
+
+.legendFree       { background: #fafbfc; border-color: #ececec; }
+.legendSelected   { background: linear-gradient(135deg, var(--bf-primary), var(--bf-secondary)); border-color: rgba(0,0,0,0.08); }
+.legendUnavailable{ background: #ffe5e5; border-color: #ffd4d4; }
+.legendLocked     { background: #f5f5f5; border-color: #e0e0e0; }
+
+.legendMetaFull {
+  font-family: $font-accent;
+  font-weight: 900;
+  font-size: 0.88rem;
+  color: rgba(0, 0, 0, 0.55);
+  text-align: right;
+
+  @media (max-width: 820px) {
+    text-align: center;
+  }
+}
+
+/* =========================================================
+   SUBMIT BAR (sticky on mobile)
+========================================================= */
+
+.submitBar {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+
+  @media (max-width: 520px) {
+    position: sticky;
+    bottom: 10px;
+    z-index: 5;
+
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 18px;
+    padding: 10px;
+    box-shadow: 0 20px 55px rgba(0, 0, 0, 0.10);
+    backdrop-filter: blur(10px);
+  }
+}
+
+.submit {
+  display: block;
+  width: 100%;
+
+  padding: 0.95rem 0;
+  border: none;
+  border-radius: 16px;
+
+  color: #fff;
+  background: linear-gradient(135deg, var(--bf-primary), var(--bf-secondary));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.14);
+
+  font-size: 0.95rem;
+  font-family: $font-accent;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+
+  cursor: pointer;
+
+  transition: transform 0.15s ease, filter 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.02);
+  }
+
+  &:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
+  }
+}
+
+.submitHint {
+  font-family: $font-body;
+  font-size: 0.92rem;
+  color: rgba(0, 0, 0, 0.55);
+}

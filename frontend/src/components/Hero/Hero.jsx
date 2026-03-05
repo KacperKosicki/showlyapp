@@ -24,102 +24,178 @@ const Hero = ({
         pendingReservationsCount={pendingReservationsCount}
       />
 
+      {/* ✨ background layers */}
       <div className={styles.bg} aria-hidden="true">
         <span className={styles.aurora} />
+        <span className={styles.aurora2} />
         <span className={styles.grid} />
         <span className={styles.vignette} />
+        <span className={styles.grain} />
       </div>
 
-      <div className={styles.container}>
-        <div className={styles.content}>
-          <div className={styles.kicker}>
-            <span className={styles.kickerLine} />
-            <span className={styles.kickerText}>
-              Showly — profil w jednym linku
-            </span>
+      <div className={styles.wrap}>
+        {/* LEFT */}
+        <div className={styles.left}>
+          <div className={styles.labelRow}>
+            <span className={styles.label}>Showly</span>
+            <span className={styles.labelDot} />
+            <span className={styles.labelDesc}>Profil w jednym linku</span>
+            <span className={styles.labelLine} />
+            <span className={styles.pill}>Mobile-first</span>
           </div>
 
-          <h1 className={styles.title}>
-            Twoja oferta.
+          <h1 className={styles.h1}>
+            Zrób wrażenie
             <br />
-            <span className={styles.titleAccent}>
-              Czytelnie i profesjonalnie.
-            </span>
+            <span className={styles.h1Accent}>jednym profilem.</span>
           </h1>
 
-          <p className={styles.subtitle}>
-            Zbuduj profil, dodaj usługi i zdjęcia realizacji. Udostępnij link
-            do profilu klientom — bez robienia strony od zera.
+          <p className={styles.p}>
+            Usługi, cennik, galeria i kontakt — ułożone w gotowy układ, który wygląda profesjonalnie na telefonie i
+            desktopie.
           </p>
 
           <div className={styles.actions}>
-            <div className={styles.searchWrap}>
+            <div className={styles.searchBlock}>
+              <div className={styles.searchTop}>
+                <div className={styles.searchTitle}>Szukaj profili</div>
+                <div className={styles.searchKicker}>po usługach, roli i lokalizacji</div>
+              </div>
+
               <SearchBar variant="hero" />
 
-              <div className={styles.hint}>
-                Wyszukuj profile i usługi w Showly.
+              <div className={styles.searchHint}>
+                Tip: wpisz np. <b>“DJ Poznań”</b> albo <b>“fryzjer Piła”</b>.
               </div>
+            </div>
 
-              <div className={styles.proof}>
-                <span className={styles.proofItem}>Profil</span>
-                <span className={styles.dot} />
-                <span className={styles.proofItem}>Usługi</span>
-                <span className={styles.dot} />
-                <span className={styles.proofItem}>Zdjęcia</span>
-                <span className={styles.dot} />
-                <span className={styles.proofItem}>Cennik</span>
-              </div>
+            <div className={styles.buttons}>
+              {user ? (
+                <LoadingLink
+                  to="/profil"
+                  state={{ scrollToId: "scrollToId" }}
+                  className={styles.primaryBtn}
+                  aria-label="Przejdź do edycji profilu"
+                >
+                  <span className={styles.btnGlow} aria-hidden="true" />
+                  Edytuj profil <span aria-hidden="true">→</span>
+                </LoadingLink>
+              ) : (
+                <LoadingLink
+                  to="/register"
+                  state={{ scrollToId: "registerContainer" }}
+                  className={styles.primaryBtn}
+                  aria-label="Załóż konto"
+                >
+                  <span className={styles.btnGlow} aria-hidden="true" />
+                  Załóż konto <span aria-hidden="true">→</span>
+                </LoadingLink>
+              )}
 
-{user ? (
-  <LoadingLink
-    to="/profil"
-    state={{ scrollToId: "scrollToId" }}
-    className={styles.cta}
-    aria-label="Przejdź do edycji profilu"
-  >
-    <span className={styles.ctaText}>Edytuj profil</span>
-  </LoadingLink>
-) : (
-  <LoadingLink
-    to="/register"
-    state={{ scrollToId: "registerContainer" }}
-    className={styles.cta}
-    aria-label="Załóż konto"
-  >
-    <span className={styles.ctaText}>Załóż konto</span>
-  </LoadingLink>
-)}
+              <a href="#how" className={styles.secondaryBtn}>
+                Zobacz jak działa
+              </a>
+            </div>
+
+            <div className={styles.quick}>
+              <span className={styles.quickItem}>
+                <span className={styles.tick} aria-hidden="true" />
+                bez kodowania
+              </span>
+              <span className={styles.quickItem}>
+                <span className={styles.tick} aria-hidden="true" />
+                jeden link
+              </span>
+              <span className={styles.quickItem}>
+                <span className={styles.tick} aria-hidden="true" />
+                wygląda premium
+              </span>
             </div>
           </div>
         </div>
 
-        <aside className={styles.side} aria-label="Dlaczego Showly">
-          <div className={styles.sideTitle}>Wyglądaj jak marka.</div>
+        {/* RIGHT */}
+        <aside className={styles.right} aria-label="Podgląd profilu">
+          <div className={styles.browser}>
+            <div className={styles.browserTop}>
+              <div className={styles.dots} aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </div>
 
-          <div className={styles.sideText}>
-            Zamiast wysyłać 20 wiadomości, masz jedno miejsce: opis, oferta,
-            realizacje i kontakt.
+              <div className={styles.url}>
+                showly.app/<span className={styles.urlAccent}>twoj-profil</span>
+              </div>
+
+              <div className={styles.badge}>PREVIEW</div>
+            </div>
+
+            <div className={styles.browserBody}>
+              <div className={styles.previewHeader}>
+                <div className={styles.avatar} />
+                <div className={styles.headText}>
+                  <div className={styles.name}>Twoja Nazwa / Firma</div>
+                  <div className={styles.sub}>DJ • Piła • dostępność: szybka</div>
+
+                  <div className={styles.chips}>
+                    <span className={styles.chip}>Rezerwacje</span>
+                    <span className={styles.chip}>Opinie</span>
+                    <span className={styles.chip}>Galeria</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.previewGrid}>
+                <div className={styles.tile}>
+                  <div className={styles.tileKey}>USŁUGI</div>
+                  <div className={styles.tileVal}>czytelna lista</div>
+                </div>
+                <div className={styles.tile}>
+                  <div className={styles.tileKey}>CENNIK</div>
+                  <div className={styles.tileVal}>od–do / pakiety</div>
+                </div>
+                <div className={styles.tile}>
+                  <div className={styles.tileKey}>GALERIA</div>
+                  <div className={styles.tileVal}>realizacje</div>
+                </div>
+                <div className={styles.tile}>
+                  <div className={styles.tileKey}>KONTAKT</div>
+                  <div className={styles.tileVal}>tel / linki</div>
+                </div>
+              </div>
+
+              <div className={styles.previewBar}>
+                <div className={styles.barLine} />
+                <div className={styles.barText}>Układ gotowy do wysłania klientowi.</div>
+              </div>
+            </div>
           </div>
 
-          <div className={styles.sideList}>
-            <div className={styles.sideRow}>
-              <span className={styles.sideMark} />
-              Wszystko w jednym profilu
+          <div className={styles.sideFacts}>
+            <div className={styles.fact}>
+              <span className={styles.factIcon} aria-hidden="true">
+                ⚡
+              </span>
+              Minimalny wysiłek, maksymalny efekt wizualny.
             </div>
-
-            <div className={styles.sideRow}>
-              <span className={styles.sideMark} />
-              Czytelna prezentacja usług
+            <div className={styles.fact}>
+              <span className={styles.factIcon} aria-hidden="true">
+                📱
+              </span>
+              Stabilne na mobile — bez “rozjeżdżania” sekcji.
             </div>
-
-            <div className={styles.sideRow}>
-              <span className={styles.sideMark} />
-              Galeria realizacji i zaufanie
+            <div className={styles.fact}>
+              <span className={styles.factIcon} aria-hidden="true">
+                🔗
+              </span>
+              Jeden link do wszystkiego — jak nowoczesna wizytówka.
             </div>
           </div>
         </aside>
       </div>
 
+      {/* wave */}
       <div className={styles.wave}>
         <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
           <path
