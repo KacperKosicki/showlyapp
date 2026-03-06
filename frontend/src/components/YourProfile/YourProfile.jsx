@@ -43,8 +43,14 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const [newService, setNewService] = useState({
     name: '',
+    shortDescription: '',
+    category: 'service',
+    priceMode: 'fixed',
+    priceValue: '',
     durationValue: '',
-    durationUnit: 'minutes'
+    durationUnit: 'minutes',
+    isActive: true,
+    featured: false,
   });
 
   const MAX_PHOTOS = 6;
@@ -65,6 +71,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState("");
+  const [serviceImageUploadingIds, setServiceImageUploadingIds] = useState([]);
 
   const [newPhotoFiles, setNewPhotoFiles] = useState([]); // File[]
   const [newPhotoPreviews, setNewPhotoPreviews] = useState([]); // string[] blob
@@ -92,23 +99,23 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   // Utils
   // =========================
   const authHeaders = async (extra = {}) => {
-  const firebaseUser = auth.currentUser;
+    const firebaseUser = auth.currentUser;
 
-  const uid = firebaseUser?.uid || user?.uid || "";
-  let token = "";
+    const uid = firebaseUser?.uid || user?.uid || "";
+    let token = "";
 
-  try {
-    token = firebaseUser?.getIdToken ? await firebaseUser.getIdToken() : "";
-  } catch {
-    token = "";
-  }
+    try {
+      token = firebaseUser?.getIdToken ? await firebaseUser.getIdToken() : "";
+    } catch {
+      token = "";
+    }
 
-  return {
-    ...(uid ? { uid } : {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...extra,
+    return {
+      ...(uid ? { uid } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...extra,
+    };
   };
-};
 
   const showAlert = (message, type = 'info') => {
     setAlert({ message, type });
@@ -139,9 +146,9 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const fetchProfile = async () => {
     try {
       const res = await axios.get(
-  `${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`,
-  { headers: await authHeaders() }
-);
+        `${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`,
+        { headers: await authHeaders() }
+      );
       const p = res.data;
       const now = new Date();
       const until = new Date(p.visibleUntil);
@@ -176,7 +183,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
       setEditData({
         ...p,
-        services: p.services || [],
+        services: (p.services || []).map((s, index) => normalizeServiceForEdit(s, index)),
         photos,
         photoHashes,
         quickAnswers: p.quickAnswers || [
@@ -195,7 +202,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
       setInitialEditData({
         ...p,
-        services: p.services || [],
+        services: (p.services || []).map((s, index) => normalizeServiceForEdit(s, index)),
         photos,
         photoHashes,
         quickAnswers: p.quickAnswers || [{ title: '', answer: '' }, { title: '', answer: '' }, { title: '', answer: '' }],
@@ -244,10 +251,10 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     try {
       setStaffLoading(true);
       // API: GET /api/staff?profileId=...
-const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/staff`, {
-  params: { profileId },
-  headers: await authHeaders(),
-});
+      const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/staff`, {
+        params: { profileId },
+        headers: await authHeaders(),
+      });
       setStaff(data || []);
     } catch (e) {
       console.error('Nie udało się pobrać pracowników', e);
@@ -277,10 +284,10 @@ const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/staff`, {
       };
 
       await axios.post(
-  `${process.env.REACT_APP_API_URL}/api/staff`,
-  payload,
-  { headers: await authHeaders({ "Content-Type": "application/json" }) }
-);
+        `${process.env.REACT_APP_API_URL}/api/staff`,
+        payload,
+        { headers: await authHeaders({ "Content-Type": "application/json" }) }
+      );
 
       setNewStaff({ name: '', capacity: 1, active: true, serviceIds: [] });
       await fetchStaff(profile._id);
@@ -305,9 +312,9 @@ const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/staff`, {
 
     try {
       await axios.delete(
-  `${process.env.REACT_APP_API_URL}/api/staff/${id}`,
-  { headers: await authHeaders() }
-);
+        `${process.env.REACT_APP_API_URL}/api/staff/${id}`,
+        { headers: await authHeaders() }
+      );
       showAlert('Usunięto pracownika.', 'success');
     } catch (e) {
       console.error('Błąd usuwania pracownika', e);
@@ -357,6 +364,41 @@ const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/staff`, {
     return "";
   };
 
+  const getServiceImageUrl = (service) => {
+    if (!service) return '';
+    if (typeof service.image === 'string') return service.image;
+    if (service.image?.url) return service.image.url;
+    return '';
+  };
+
+  const markServiceImageUploading = (serviceId, add = true) => {
+    setServiceImageUploadingIds((prev) =>
+      add ? [...new Set([...prev, serviceId])] : prev.filter((id) => id !== serviceId)
+    );
+  };
+
+  const uploadServiceImage = async (serviceId, file) => {
+    if (!serviceId || !file) return;
+
+    const fd = new FormData();
+    fd.append('file', file);
+
+    await axios.post(
+      `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/services/${serviceId}/image`,
+      fd,
+      { headers: await authHeaders({ 'Content-Type': 'multipart/form-data' }) }
+    );
+  };
+
+  const removeServiceImage = async (serviceId) => {
+    if (!serviceId) return;
+
+    await axios.delete(
+      `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/services/${serviceId}/image`,
+      { headers: await authHeaders() }
+    );
+  };
+
   // =========================
   // Handlery obrazów
   // =========================
@@ -399,9 +441,9 @@ const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/staff`, {
       setAvatarFile(null);
 
       await axios.delete(
-  `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/avatar`,
-  { headers: await authHeaders() }
-);
+        `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/avatar`,
+        { headers: await authHeaders() }
+      );
       await fetchProfile();
       setRefreshTrigger(Date.now());
       showAlert("Usunięto avatar.", "success");
@@ -488,6 +530,45 @@ const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/staff`, {
       const v = socials[k]?.trim();
       if (v && !isUrlish(v)) errors[`social_${k}`] = 'Nieprawidłowy link';
     });
+
+    const invalidServices = (data.services || []).some((s) => {
+      const nameOk = !!s.name?.trim();
+      const shortOk = !s.shortDescription || s.shortDescription.trim().length <= 160;
+
+      const value = Number(s?.duration?.value);
+      const unit = s?.duration?.unit;
+
+      const durationOk =
+        Number.isFinite(value) &&
+        (
+          (unit === 'minutes' && value >= 15) ||
+          (unit === 'hours' && value >= 1) ||
+          (unit === 'days' && value >= 1) ||
+          (unit === 'weeks' && value >= 1)
+        );
+
+      const priceMode = s?.price?.mode || 'contact';
+
+      let priceOk = true;
+      if (priceMode === 'fixed') {
+        priceOk = Number.isFinite(Number(s?.price?.amount)) && Number(s.price.amount) >= 0;
+      }
+      if (priceMode === 'from') {
+        priceOk = Number.isFinite(Number(s?.price?.from)) && Number(s.price.from) >= 0;
+      }
+      if (priceMode === 'range') {
+        priceOk =
+          Number.isFinite(Number(s?.price?.from)) &&
+          Number.isFinite(Number(s?.price?.to)) &&
+          Number(s.price.to) >= Number(s.price.from);
+      }
+
+      return !nameOk || !shortOk || !durationOk || !priceOk;
+    });
+
+    if (invalidServices) {
+      errors.services = 'Każda usługa musi mieć nazwę, poprawny czas i poprawnie ustawioną cenę.';
+    }
 
     return errors;
   };
@@ -585,13 +666,13 @@ const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/staff`, {
   const removeSavedPhoto = async (publicId) => {
     try {
       setPhotosUploading(true);
-await axios.delete(
-  `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
-  {
-    data: { publicId },
-    headers: await authHeaders({ "Content-Type": "application/json" }),
-  }
-);
+      await axios.delete(
+        `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
+        {
+          data: { publicId },
+          headers: await authHeaders({ "Content-Type": "application/json" }),
+        }
+      );
       await fetchProfile();
       setRefreshTrigger(Date.now());
       showAlert("Usunięto zdjęcie.", "success");
@@ -622,23 +703,23 @@ await axios.delete(
       setPhotosUploading(true);
 
       // 1) usuń stare z backendu (Cloud + DB)
-await axios.delete(
-  `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
-  {
-    data: { publicId },
-    headers: await authHeaders({ "Content-Type": "application/json" }),
-  }
-);
+      await axios.delete(
+        `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
+        {
+          data: { publicId },
+          headers: await authHeaders({ "Content-Type": "application/json" }),
+        }
+      );
 
       // 2) wrzuć nowe
       const fd = new FormData();
       fd.append("files", file);
 
-await axios.post(
-  `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
-  fd,
-  { headers: await authHeaders({ "Content-Type": "multipart/form-data" }) }
-);
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
+        fd,
+        { headers: await authHeaders({ "Content-Type": "multipart/form-data" }) }
+      );
 
       // 3) odśwież
       await fetchProfile();
@@ -653,16 +734,64 @@ await axios.post(
     }
   };
 
+  const handleServiceImageChange = async (e, serviceId) => {
+    const file = e.target.files?.[0];
+    if (!file || !serviceId) return;
+
+    if (!file.type.startsWith('image/')) {
+      showAlert('Nieprawidłowy format. Wybierz obraz.', 'warning');
+      e.target.value = '';
+      return;
+    }
+
+    if (file.size > 3 * 1024 * 1024) {
+      showAlert('Zdjęcie usługi jest za duże (maks. 3MB).', 'warning');
+      e.target.value = '';
+      return;
+    }
+
+    try {
+      markServiceImageUploading(serviceId, true);
+      await uploadServiceImage(serviceId, file);
+      await fetchProfile();
+      setRefreshTrigger(Date.now());
+      showAlert('Zdjęcie usługi zapisane.', 'success');
+    } catch (err) {
+      console.error(err);
+      showAlert('Nie udało się zapisać zdjęcia usługi.', 'error');
+    } finally {
+      markServiceImageUploading(serviceId, false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveServiceImage = async (serviceId) => {
+    if (!serviceId) return;
+
+    try {
+      markServiceImageUploading(serviceId, true);
+      await removeServiceImage(serviceId);
+      await fetchProfile();
+      setRefreshTrigger(Date.now());
+      showAlert('Usunięto zdjęcie usługi.', 'success');
+    } catch (err) {
+      console.error(err);
+      showAlert('Nie udało się usunąć zdjęcia usługi.', 'error');
+    } finally {
+      markServiceImageUploading(serviceId, false);
+    }
+  };
+
   const handleExtendVisibility = async () => {
     if (isExtending) return;
 
     setIsExtending(true);
     try {
-const { data } = await axios.post(
-  `${process.env.REACT_APP_API_URL}/api/billing/checkout-extension`,
-  { uid: user.uid },
-  { headers: await authHeaders({ "Content-Type": "application/json" }) }
-);
+      const { data } = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/billing/checkout-extension`,
+        { uid: user.uid },
+        { headers: await authHeaders({ "Content-Type": "application/json" }) }
+      );
 
       if (!data?.url) {
         showAlert("Nie udało się rozpocząć płatności (brak URL).", "error");
@@ -685,153 +814,141 @@ const { data } = await axios.post(
   };
 
   const handleSaveChanges = async () => {
-  if (isSaving) return; // ✅ blokada podwójnego kliknięcia
+    if (isSaving) return; // ✅ blokada podwójnego kliknięcia
 
-  const errors = validateEditData(editData);
+    const errors = validateEditData(editData);
 
-  // Walidacja czasu usług
-  if (
-    (editData.services || []).some(
-      (s) =>
-        (s.duration.unit === "minutes" && s.duration.value < 15) ||
-        (s.duration.unit === "hours" && s.duration.value < 1) ||
-        (s.duration.unit === "days" && s.duration.value < 1)
-    )
-  ) {
-    errors.services = "Każda usługa musi mieć minimum 15 minut, 1 godzinę lub 1 dzień!";
-  }
-
-  setFormErrors(errors);
-  if (Object.keys(errors).length > 0) {
-    showAlert("Uzupełnij poprawnie wszystkie wymagane pola.", "warning");
-    return;
-  }
-
-  setIsSaving(true); // ✅ start loadera
-
-  try {
-    const { photoHashes, ...payload } = editData;
-
-    const t = payload.theme || {};
-    const mappedTheme = {
-      variant: t.variant || "system",
-      primary: t.primary || "#6f4ef2",
-      secondary: t.secondary || "#ff4081",
-    };
-
-    // 1) Zapis profilu
-    const c = payload.contact || {};
-    const builtAddressFull = [payload.location, c.postcode, c.street].filter(Boolean).join(", ").trim();
-
-    await axios.patch(
-      `${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`,
-      {
-        ...payload,
-        bookingBufferMin: Number(payload.bookingBufferMin ?? 0), // ✅ DODAJ
-        theme: mappedTheme,
-        contact: {
-          email: c.email || "",
-          phone: c.phone || "",
-          street: c.street || "",
-          postcode: c.postcode || "",
-          addressFull: builtAddressFull,
-        },
-        socials: payload.socials || {
-          website: "",
-          facebook: "",
-          instagram: "",
-          youtube: "",
-          tiktok: "",
-        },
-        showAvailableDates: !!payload.showAvailableDates,
-        tags: (payload.tags || []).filter((tag) => String(tag).trim() !== ""),
-        quickAnswers: (payload.quickAnswers || []).filter(
-          (qa) => qa.title?.trim() || qa.answer?.trim()
-        ),
-        team: payload.team || { enabled: false, assignmentMode: "user-pick" },
-      },
-      {
-        headers: await authHeaders({ "Content-Type": "application/json" }),
-      }
-    );
-
-    // 2) avatar upload (jeśli wybrano nowy)
-    if (avatarFile) {
-      setAvatarUploading(true);
-      const fd = new FormData();
-      fd.append("file", avatarFile);
-
-      await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/avatar`,
-        fd,
-        { headers: await authHeaders({ "Content-Type": "multipart/form-data" }) }
-      );
-
-      setAvatarUploading(false);
-
-      // sprzątanie blob
-      if (avatarPreview) {
-        try {
-          URL.revokeObjectURL(avatarPreview);
-        } catch {}
-      }
-      setAvatarPreview("");
-      setAvatarFile(null);
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      showAlert("Uzupełnij poprawnie wszystkie wymagane pola.", "warning");
+      return;
     }
 
-    // 3) galeria upload (jeśli są pending)
-    if (newPhotoFiles.length) {
-      setPhotosUploading(true);
+    setIsSaving(true); // ✅ start loadera
 
-      const fd = new FormData();
-      newPhotoFiles.forEach((f) => fd.append("files", f));
+    try {
+      const { photoHashes, ...payload } = editData;
 
-      await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
-        fd,
-        { headers: await authHeaders({ "Content-Type": "multipart/form-data" }) }
+      const t = payload.theme || {};
+      const mappedTheme = {
+        variant: t.variant || "system",
+        primary: t.primary || "#6f4ef2",
+        secondary: t.secondary || "#ff4081",
+      };
+
+      // 1) Zapis profilu
+      const c = payload.contact || {};
+      const builtAddressFull = [payload.location, c.postcode, c.street].filter(Boolean).join(", ").trim();
+
+      await axios.patch(
+        `${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`,
+        {
+          ...payload,
+          bookingBufferMin: Number(payload.bookingBufferMin ?? 0), // ✅ DODAJ
+          theme: mappedTheme,
+          contact: {
+            email: c.email || "",
+            phone: c.phone || "",
+            street: c.street || "",
+            postcode: c.postcode || "",
+            addressFull: builtAddressFull,
+          },
+          socials: payload.socials || {
+            website: "",
+            facebook: "",
+            instagram: "",
+            youtube: "",
+            tiktok: "",
+          },
+          showAvailableDates: !!payload.showAvailableDates,
+          tags: (payload.tags || []).filter((tag) => String(tag).trim() !== ""),
+          quickAnswers: (payload.quickAnswers || []).filter(
+            (qa) => qa.title?.trim() || qa.answer?.trim()
+          ),
+          team: payload.team || { enabled: false, assignmentMode: "user-pick" },
+        },
+        {
+          headers: await authHeaders({ "Content-Type": "application/json" }),
+        }
       );
 
-      // sprzątanie preview blobów
-      newPhotoPreviews.forEach((u) => {
-        try {
-          URL.revokeObjectURL(u);
-        } catch {}
-      });
-      setNewPhotoFiles([]);
-      setNewPhotoPreviews([]);
-      setNewPhotoHashes([]);
-      setPhotosUploading(false);
-    }
+      // 2) avatar upload (jeśli wybrano nowy)
+      if (avatarFile) {
+        setAvatarUploading(true);
+        const fd = new FormData();
+        fd.append("file", avatarFile);
 
-    // 4) Zbiorczy zapis pracowników (tylko zmienione)
-    const staffUpdateEntries = Object.entries(staffEdits);
-    if (staffUpdateEntries.length) {
-      await Promise.all(
-        staffUpdateEntries.map(async ([id, changes]) =>
-          axios.patch(
-            `${process.env.REACT_APP_API_URL}/api/staff/${id}`,
-            changes,
-            { headers: await authHeaders({ "Content-Type": "application/json" }) }
+        await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/avatar`,
+          fd,
+          { headers: await authHeaders({ "Content-Type": "multipart/form-data" }) }
+        );
+
+        setAvatarUploading(false);
+
+        // sprzątanie blob
+        if (avatarPreview) {
+          try {
+            URL.revokeObjectURL(avatarPreview);
+          } catch { }
+        }
+        setAvatarPreview("");
+        setAvatarFile(null);
+      }
+
+      // 3) galeria upload (jeśli są pending)
+      if (newPhotoFiles.length) {
+        setPhotosUploading(true);
+
+        const fd = new FormData();
+        newPhotoFiles.forEach((f) => fd.append("files", f));
+
+        await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/photos`,
+          fd,
+          { headers: await authHeaders({ "Content-Type": "multipart/form-data" }) }
+        );
+
+        // sprzątanie preview blobów
+        newPhotoPreviews.forEach((u) => {
+          try {
+            URL.revokeObjectURL(u);
+          } catch { }
+        });
+        setNewPhotoFiles([]);
+        setNewPhotoPreviews([]);
+        setNewPhotoHashes([]);
+        setPhotosUploading(false);
+      }
+
+      // 4) Zbiorczy zapis pracowników (tylko zmienione)
+      const staffUpdateEntries = Object.entries(staffEdits);
+      if (staffUpdateEntries.length) {
+        await Promise.all(
+          staffUpdateEntries.map(async ([id, changes]) =>
+            axios.patch(
+              `${process.env.REACT_APP_API_URL}/api/staff/${id}`,
+              changes,
+              { headers: await authHeaders({ "Content-Type": "application/json" }) }
+            )
           )
-        )
-      );
-    }
+        );
+      }
 
-    // 5) Odśwież + sprzątnij
-    await fetchProfile();
-    setStaffEdits({});
-    setIsEditing(false);
-    setFormErrors({});
-    showAlert("Zapisano zmiany!", "success");
-  } catch (err) {
-    console.error("❌ Błąd zapisu profilu/pracowników:", err);
-    console.log("AUTH ERR:", err?.response?.status, err?.response?.data); // 🔍 mega pomocne
-    showAlert("Wystąpił błąd podczas zapisywania.", "error");
-  } finally {
-    setIsSaving(false); // ✅ stop loadera zawsze
-  }
-};
+      // 5) Odśwież + sprzątnij
+      await fetchProfile();
+      setStaffEdits({});
+      setIsEditing(false);
+      setFormErrors({});
+      showAlert("Zapisano zmiany!", "success");
+    } catch (err) {
+      console.error("❌ Błąd zapisu profilu/pracowników:", err);
+      console.log("AUTH ERR:", err?.response?.status, err?.response?.data); // 🔍 mega pomocne
+      showAlert("Wystąpił błąd podczas zapisywania.", "error");
+    } finally {
+      setIsSaving(false); // ✅ stop loadera zawsze
+    }
+  };
 
   // =========================
   // Misc helpers
@@ -844,6 +961,89 @@ const { data } = await axios.post(
       default: return '';
     }
   };
+
+  const mapServiceCategory = (cat) => {
+    switch (cat) {
+      case 'service':
+        return 'Usługa';
+      case 'product':
+        return 'Produkt';
+      case 'project':
+        return 'Projekt';
+      case 'artwork':
+        return 'Obraz / dzieło';
+      case 'handmade':
+        return 'Rękodzieło';
+      case 'lesson':
+        return 'Lekcja';
+      case 'consultation':
+        return 'Konsultacja';
+      case 'event':
+        return 'Event';
+      case 'custom':
+        return 'Inne';
+      default:
+        return 'Oferta';
+    }
+  };
+
+  const formatServicePrice = (service) => {
+    const mode = service?.price?.mode;
+    const currency = service?.price?.currency || 'PLN';
+
+    if (mode === 'fixed' && service?.price?.amount != null) {
+      return `${service.price.amount} ${currency}`;
+    }
+
+    if (mode === 'from' && service?.price?.from != null) {
+      return `od ${service.price.from} ${currency}`;
+    }
+
+    if (mode === 'range' && service?.price?.from != null && service?.price?.to != null) {
+      return `${service.price.from}–${service.price.to} ${currency}`;
+    }
+
+    if (mode === 'free') return 'Darmowe';
+    if (mode === 'contact') return 'Wycena indywidualna';
+
+    return 'Brak ceny';
+  };
+
+  const normalizeServiceForEdit = (service = {}, index = 0) => ({
+    _id: service?._id,
+    name: service?.name || '',
+    shortDescription: service?.shortDescription || '',
+    description: service?.description || '',
+    category: service?.category || 'service',
+    image: service?.image || { url: '', publicId: '' },
+    gallery: Array.isArray(service?.gallery) ? service.gallery : [],
+    price: {
+      mode: service?.price?.mode || 'contact',
+      amount: service?.price?.amount ?? null,
+      from: service?.price?.from ?? null,
+      to: service?.price?.to ?? null,
+      currency: service?.price?.currency || 'PLN',
+      unitLabel: service?.price?.unitLabel || '',
+      note: service?.price?.note || '',
+    },
+    duration: {
+      value: service?.duration?.value ?? '',
+      unit: service?.duration?.unit || 'minutes',
+      label: service?.duration?.label || '',
+    },
+    booking: {
+      enabled: !!service?.booking?.enabled,
+      type: service?.booking?.type || 'none',
+    },
+    delivery: {
+      mode: service?.delivery?.mode || 'none',
+      turnaroundText: service?.delivery?.turnaroundText || '',
+    },
+    tags: Array.isArray(service?.tags) ? service.tags : [],
+    featured: !!service?.featured,
+    isActive: typeof service?.isActive === 'boolean' ? service.isActive : true,
+    order: Number.isFinite(Number(service?.order)) ? Number(service.order) : index,
+  });
 
   const prettyUrl = (url) => {
     try {
@@ -1342,132 +1542,497 @@ const { data } = await axios.post(
 
           {isEditing ? (
             <>
-              {editData.services.map((s, i) => (
-                <div key={i} className={styles.serviceEditRow}>
-                  <input
-                    className={styles.formInput}
-                    type="text"
-                    value={s.name}
-                    placeholder="Nazwa usługi"
-                    onChange={e => {
-                      const arr = [...editData.services];
-                      arr[i].name = e.target.value;
-                      setEditData(prev => ({ ...prev, services: arr }));
-                    }}
-                  />
-                  <div className={styles.inline}>
-                    <input
-                      className={styles.formInput}
-                      type="number"
-                      min="1"
-                      value={s.duration.value}
-                      placeholder="Czas"
-                      onChange={e => {
-                        const arr = [...editData.services];
-                        arr[i].duration.value = parseInt(e.target.value || '0', 10);
-                        setEditData(prev => ({ ...prev, services: arr }));
-                      }}
-                    />
-                    <select
-                      className={styles.formInput}
-                      value={s.duration.unit}
-                      onChange={e => {
-                        const arr = [...editData.services];
-                        arr[i].duration.unit = e.target.value;
-                        setEditData(prev => ({ ...prev, services: arr }));
-                      }}
-                    >
-                      <option value="minutes">minuty</option>
-                      <option value="hours">godziny</option>
-                      <option value="days">dni</option>
-                    </select>
+              {(editData.services || []).map((s, i) => (
+                <div key={s._id || i} className={styles.serviceCardEdit}>
+                  <div className={styles.serviceCardTop}>
+                    <strong>Usługa #{i + 1}</strong>
+
                     <button
                       type="button"
                       className={styles.ghost}
                       onClick={() =>
-                        setEditData(prev => ({
+                        setEditData((prev) => ({
                           ...prev,
-                          services: prev.services.filter((_, idx) => idx !== i)
+                          services: prev.services.filter((_, idx) => idx !== i),
                         }))
                       }
                     >
                       Usuń
                     </button>
                   </div>
+
+                  <div className={styles.serviceImageEditor}>
+                    {getServiceImageUrl(s) ? (
+                      <img
+                        src={getServiceImageUrl(s)}
+                        alt={s.name || `Usługa ${i + 1}`}
+                        className={styles.serviceImageThumb}
+                      />
+                    ) : (
+                      <div className={styles.serviceImagePlaceholder}>
+                        Brak zdjęcia usługi
+                      </div>
+                    )}
+
+                    <div className={styles.serviceImageActions}>
+                      {s._id ? (
+                        <>
+                          <label className={styles.fileBtn}>
+                            <input
+                              type="file"
+                              accept="image/*,.heic,.heif"
+                              onChange={(e) => handleServiceImageChange(e, s._id)}
+                            />
+                            {getServiceImageUrl(s) ? 'Zmień zdjęcie' : 'Dodaj zdjęcie'}
+                          </label>
+
+                          {getServiceImageUrl(s) && (
+                            <button
+                              type="button"
+                              className={styles.ghost}
+                              disabled={serviceImageUploadingIds.includes(String(s._id))}
+                              onClick={() => handleRemoveServiceImage(s._id)}
+                            >
+                              Usuń zdjęcie
+                            </button>
+                          )}
+
+                          {serviceImageUploadingIds.includes(String(s._id)) && (
+                            <small className={styles.hint}>Trwa upload zdjęcia…</small>
+                          )}
+                        </>
+                      ) : (
+                        <small className={styles.hint}>
+                          Najpierw zapisz profil, aby dodać zdjęcie tej usługi.
+                        </small>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className={styles.serviceGridEdit}>
+                    <input
+                      className={styles.formInput}
+                      type="text"
+                      placeholder="Nazwa usługi"
+                      value={s.name || ''}
+                      onChange={(e) => {
+                        const arr = [...editData.services];
+                        arr[i].name = e.target.value;
+                        setEditData((prev) => ({ ...prev, services: arr }));
+                      }}
+                    />
+
+                    <select
+                      className={styles.formInput}
+                      value={s.category || 'service'}
+                      onChange={(e) => {
+                        const arr = [...editData.services];
+                        arr[i].category = e.target.value;
+                        setEditData((prev) => ({ ...prev, services: arr }));
+                      }}
+                    >
+                      <option value="service">Usługa</option>
+                      <option value="product">Produkt</option>
+                      <option value="project">Projekt</option>
+                      <option value="artwork">Obraz / dzieło</option>
+                      <option value="handmade">Rękodzieło</option>
+                      <option value="lesson">Lekcja</option>
+                      <option value="consultation">Konsultacja</option>
+                      <option value="event">Event</option>
+                      <option value="custom">Inne</option>
+                    </select>
+
+                    <input
+                      className={styles.formInput}
+                      type="text"
+                      placeholder="Krótki opis"
+                      maxLength={160}
+                      value={s.shortDescription || ''}
+                      onChange={(e) => {
+                        const arr = [...editData.services];
+                        arr[i].shortDescription = e.target.value;
+                        setEditData((prev) => ({ ...prev, services: arr }));
+                      }}
+                    />
+
+                    <select
+                      className={styles.formInput}
+                      value={s.price?.mode || 'contact'}
+                      onChange={(e) => {
+                        const arr = [...editData.services];
+                        arr[i].price = {
+                          ...(arr[i].price || {}),
+                          mode: e.target.value,
+                          amount: null,
+                          from: null,
+                          to: null,
+                          currency: 'PLN',
+                        };
+                        setEditData((prev) => ({ ...prev, services: arr }));
+                      }}
+                    >
+                      <option value="fixed">Cena stała</option>
+                      <option value="from">Cena od</option>
+                      <option value="range">Przedział cenowy</option>
+                      <option value="contact">Wycena indywidualna</option>
+                      <option value="free">Darmowe</option>
+                    </select>
+
+                    {s.price?.mode === 'fixed' && (
+                      <input
+                        className={styles.formInput}
+                        type="number"
+                        min="0"
+                        placeholder="Cena"
+                        value={s.price?.amount ?? ''}
+                        onChange={(e) => {
+                          const arr = [...editData.services];
+                          arr[i].price.amount = e.target.value === '' ? null : Number(e.target.value);
+                          setEditData((prev) => ({ ...prev, services: arr }));
+                        }}
+                      />
+                    )}
+
+                    {s.price?.mode === 'from' && (
+                      <input
+                        className={styles.formInput}
+                        type="number"
+                        min="0"
+                        placeholder="Cena od"
+                        value={s.price?.from ?? ''}
+                        onChange={(e) => {
+                          const arr = [...editData.services];
+                          arr[i].price.from = e.target.value === '' ? null : Number(e.target.value);
+                          setEditData((prev) => ({ ...prev, services: arr }));
+                        }}
+                      />
+                    )}
+
+                    {s.price?.mode === 'range' && (
+                      <>
+                        <input
+                          className={styles.formInput}
+                          type="number"
+                          min="0"
+                          placeholder="Cena od"
+                          value={s.price?.from ?? ''}
+                          onChange={(e) => {
+                            const arr = [...editData.services];
+                            arr[i].price.from = e.target.value === '' ? null : Number(e.target.value);
+                            setEditData((prev) => ({ ...prev, services: arr }));
+                          }}
+                        />
+                        <input
+                          className={styles.formInput}
+                          type="number"
+                          min="0"
+                          placeholder="Cena do"
+                          value={s.price?.to ?? ''}
+                          onChange={(e) => {
+                            const arr = [...editData.services];
+                            arr[i].price.to = e.target.value === '' ? null : Number(e.target.value);
+                            setEditData((prev) => ({ ...prev, services: arr }));
+                          }}
+                        />
+                      </>
+                    )}
+
+                    <input
+                      className={styles.formInput}
+                      type="number"
+                      min="1"
+                      placeholder="Czas"
+                      value={s.duration?.value ?? ''}
+                      onChange={(e) => {
+                        const arr = [...editData.services];
+                        arr[i].duration.value = e.target.value === '' ? '' : Number(e.target.value);
+                        setEditData((prev) => ({ ...prev, services: arr }));
+                      }}
+                    />
+
+                    <select
+                      className={styles.formInput}
+                      value={s.duration?.unit || 'minutes'}
+                      onChange={(e) => {
+                        const arr = [...editData.services];
+                        arr[i].duration.unit = e.target.value;
+                        setEditData((prev) => ({ ...prev, services: arr }));
+                      }}
+                    >
+                      <option value="minutes">minuty</option>
+                      <option value="hours">godziny</option>
+                      <option value="days">dni</option>
+                      <option value="weeks">tygodnie</option>
+                    </select>
+                  </div>
+
+                  <div className={styles.serviceToggles}>
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={!!s.isActive}
+                        onChange={(e) => {
+                          const arr = [...editData.services];
+                          arr[i].isActive = e.target.checked;
+                          setEditData((prev) => ({ ...prev, services: arr }));
+                        }}
+                      />
+                      Aktywna
+                    </label>
+
+                    <label className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={!!s.featured}
+                        onChange={(e) => {
+                          const arr = [...editData.services];
+                          arr[i].featured = e.target.checked;
+                          setEditData((prev) => ({ ...prev, services: arr }));
+                        }}
+                      />
+                      Wyróżniona
+                    </label>
+                  </div>
                 </div>
               ))}
 
               <div className={styles.separator} />
 
-              {/* Nowa usługa */}
-              <div className={styles.serviceEditRow}>
-                <input
-                  className={styles.formInput}
-                  type="text"
-                  placeholder="Nowa nazwa usługi"
-                  value={newService.name}
-                  onChange={e => setNewService(prev => ({ ...prev, name: e.target.value }))}
-                />
-                <div className={styles.inline}>
+              <div className={styles.serviceCardEdit}>
+                <div className={styles.serviceCardTop}>
+                  <strong>Dodaj nową usługę</strong>
+                </div>
+
+                <div className={styles.serviceGridEdit}>
+                  <input
+                    className={styles.formInput}
+                    type="text"
+                    placeholder="Nazwa usługi"
+                    value={newService.name}
+                    onChange={(e) => setNewService((prev) => ({ ...prev, name: e.target.value }))}
+                  />
+
+                  <select
+                    className={styles.formInput}
+                    value={newService.category}
+                    onChange={(e) => setNewService((prev) => ({ ...prev, category: e.target.value }))}
+                  >
+                    <option value="service">Usługa</option>
+                    <option value="product">Produkt</option>
+                    <option value="project">Projekt</option>
+                    <option value="artwork">Obraz / dzieło</option>
+                    <option value="handmade">Rękodzieło</option>
+                    <option value="lesson">Lekcja</option>
+                    <option value="consultation">Konsultacja</option>
+                    <option value="event">Event</option>
+                    <option value="custom">Inne</option>
+                  </select>
+
+                  <input
+                    className={styles.formInput}
+                    type="text"
+                    placeholder="Krótki opis"
+                    maxLength={160}
+                    value={newService.shortDescription}
+                    onChange={(e) => setNewService((prev) => ({ ...prev, shortDescription: e.target.value }))}
+                  />
+
+                  <select
+                    className={styles.formInput}
+                    value={newService.priceMode}
+                    onChange={(e) => setNewService((prev) => ({ ...prev, priceMode: e.target.value, priceValue: '' }))}
+                  >
+                    <option value="fixed">Cena stała</option>
+                    <option value="from">Cena od</option>
+                    <option value="contact">Wycena indywidualna</option>
+                    <option value="free">Darmowe</option>
+                  </select>
+
+                  {(newService.priceMode === 'fixed' || newService.priceMode === 'from') && (
+                    <input
+                      className={styles.formInput}
+                      type="number"
+                      min="0"
+                      placeholder={newService.priceMode === 'fixed' ? 'Cena' : 'Cena od'}
+                      value={newService.priceValue}
+                      onChange={(e) => setNewService((prev) => ({ ...prev, priceValue: e.target.value }))}
+                    />
+                  )}
+
                   <input
                     className={styles.formInput}
                     type="number"
                     min="1"
                     placeholder="Czas"
                     value={newService.durationValue}
-                    onChange={e => setNewService(prev => ({ ...prev, durationValue: e.target.value }))}
+                    onChange={(e) => setNewService((prev) => ({ ...prev, durationValue: e.target.value }))}
                   />
+
                   <select
                     className={styles.formInput}
                     value={newService.durationUnit}
-                    onChange={e => setNewService(prev => ({ ...prev, durationUnit: e.target.value }))}
+                    onChange={(e) => setNewService((prev) => ({ ...prev, durationUnit: e.target.value }))}
                   >
                     <option value="minutes">minuty</option>
                     <option value="hours">godziny</option>
                     <option value="days">dni</option>
+                    <option value="weeks">tygodnie</option>
                   </select>
-                  <button
-                    type="button"
-                    className={styles.primary}
-                    onClick={() => {
-                      if (newService.name.trim() && Number(newService.durationValue) > 0) {
-                        setEditData(prev => ({
-                          ...prev,
-                          services: [
-                            ...prev.services,
-                            {
-                              name: newService.name.trim(),
-                              duration: {
-                                value: parseInt(newService.durationValue, 10),
-                                unit: newService.durationUnit
-                              }
-                            }
-                          ]
-                        }));
-                        setNewService({ name: '', durationValue: '', durationUnit: 'minutes' });
-                      }
-                    }}
-                  >
-                    Dodaj usługę
-                  </button>
                 </div>
+
+                <div className={styles.serviceToggles}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={newService.isActive}
+                      onChange={(e) => setNewService((prev) => ({ ...prev, isActive: e.target.checked }))}
+                    />
+                    Aktywna
+                  </label>
+
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={newService.featured}
+                      onChange={(e) => setNewService((prev) => ({ ...prev, featured: e.target.checked }))}
+                    />
+                    Wyróżniona
+                  </label>
+                </div>
+
+                <div className={styles.infoMuted} style={{ marginBottom: '0.75rem' }}>
+                  Zdjęcie do nowej usługi dodasz po zapisaniu profilu.
+                </div>
+
+                <button
+                  type="button"
+                  className={styles.primary}
+                  onClick={() => {
+                    const value = Number(newService.durationValue);
+                    const unit = newService.durationUnit;
+
+                    const durationOk =
+                      Number.isFinite(value) &&
+                      (
+                        (unit === 'minutes' && value >= 15) ||
+                        (unit === 'hours' && value >= 1) ||
+                        (unit === 'days' && value >= 1) ||
+                        (unit === 'weeks' && value >= 1)
+                      );
+
+                    if (!newService.name.trim() || !durationOk) {
+                      showAlert('Podaj nazwę usługi i poprawny czas.', 'warning');
+                      return;
+                    }
+
+                    let price = {
+                      mode: newService.priceMode,
+                      amount: null,
+                      from: null,
+                      to: null,
+                      currency: 'PLN',
+                      unitLabel: '',
+                      note: '',
+                    };
+
+                    if (newService.priceMode === 'fixed') {
+                      price.amount = newService.priceValue === '' ? null : Number(newService.priceValue);
+                    }
+
+                    if (newService.priceMode === 'from') {
+                      price.from = newService.priceValue === '' ? null : Number(newService.priceValue);
+                    }
+
+                    setEditData((prev) => ({
+                      ...prev,
+                      services: [
+                        ...(prev.services || []),
+                        {
+                          name: newService.name.trim(),
+                          shortDescription: newService.shortDescription.trim(),
+                          description: '',
+                          category: newService.category,
+                          image: { url: '', publicId: '' },
+                          gallery: [],
+                          price,
+                          duration: {
+                            value: Number(newService.durationValue),
+                            unit: newService.durationUnit,
+                            label:
+                              newService.durationUnit === 'minutes' || newService.durationUnit === 'hours'
+                                ? 'czas wizyty'
+                                : 'czas realizacji',
+                          },
+                          booking: { enabled: false, type: 'none' },
+                          delivery: { mode: 'none', turnaroundText: '' },
+                          tags: [],
+                          featured: !!newService.featured,
+                          isActive: !!newService.isActive,
+                          order: (prev.services || []).length,
+                        },
+                      ],
+                    }));
+
+                    setNewService({
+                      name: '',
+                      shortDescription: '',
+                      category: 'service',
+                      priceMode: 'fixed',
+                      priceValue: '',
+                      durationValue: '',
+                      durationUnit: 'minutes',
+                      isActive: true,
+                      featured: false,
+                    });
+                  }}
+                >
+                  Dodaj usługę
+                </button>
               </div>
 
               {formErrors.services && <small className={styles.error}>{formErrors.services}</small>}
             </>
           ) : profile.services?.length > 0 ? (
-            <ul className={styles.serviceList}>
+            <div className={styles.servicesViewGrid}>
               {profile.services.map((s, i) => (
-                <li key={i}>
-                  <strong>{s.name}</strong>
-                  <span className={styles.durationBadge}>
-                    {s.duration.value} {mapUnit(s.duration.unit)}
-                  </span>
-                </li>
+                <div key={s._id || i} className={styles.servicePreviewCard}>
+                  {getServiceImageUrl(s) && (
+                    <img
+                      src={getServiceImageUrl(s)}
+                      alt={s.name || `Usługa ${i + 1}`}
+                      className={styles.servicePreviewImage}
+                    />
+                  )}
+
+                  <div className={styles.servicePreviewTop}>
+                    <strong>{s.name}</strong>
+                    <span className={styles.durationBadge}>
+                      {mapServiceCategory(s.category)}
+                    </span>
+                  </div>
+
+                  {s.shortDescription && (
+                    <p className={styles.serviceShortDesc}>{s.shortDescription}</p>
+                  )}
+
+                  <div className={styles.servicePreviewMeta}>
+                    <span>{formatServicePrice(s)}</span>
+                    <span>
+                      {s.duration?.value} {mapUnit(s.duration?.unit)}
+                    </span>
+                  </div>
+
+                  <div className={styles.servicePreviewFlags}>
+                    {!s.isActive && <span className={styles.mutedBadge}>Nieaktywna</span>}
+                    {s.featured && <span className={styles.featuredBadge}>Wyróżniona</span>}
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
-            <p className={styles.noInfo}><span>❔</span> Nie dodałeś/aś jeszcze żadnych usług.</p>
+            <p className={styles.noInfo}>
+              <span>❔</span> Nie dodałeś/aś jeszcze żadnych usług.
+            </p>
           )}
         </div>
 

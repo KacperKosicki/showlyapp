@@ -7,7 +7,7 @@ const Conversation = require("../models/Conversation");
 const Favorite = require("../models/Favorite");
 const VisitLock = require("../models/VisitLock");
 
-const upload = require("../middleware/upload"); // multer memoryStorage (buffer)
+const upload = require("../middleware/upload");
 const cloudinary = require("../utils/cloudinary");
 const { uploadBuffer } = require("../utils/cloudinaryUpload");
 
@@ -17,7 +17,7 @@ const requireOwnerOrAdmin = require("../middleware/requireOwnerOrAdmin");
 // -----------------------------
 // Helpers: slug + public URLs
 // -----------------------------
-const slugify = (text) =>
+const slugify = (text = "") =>
   text
     .toLowerCase()
     .normalize("NFD")
@@ -27,7 +27,6 @@ const slugify = (text) =>
     .replace(/[^\w\-]+/g, "")
     .replace(/\-\-+/g, "-");
 
-// 🔧 pełne https URL-e (Render/Vercel za proxy)
 function getProto(req) {
   const xf = req.headers["x-forwarded-proto"];
   if (xf) return String(xf).split(",")[0].trim();
@@ -47,7 +46,6 @@ function absoluteUrl(req, relative) {
   return `${proto}://${host}${relative.startsWith("/") ? "" : "/"}${relative}`;
 }
 
-// --- doprowadza wszystkie warianty "uploads" do /uploads/...
 function normalizeUploadPath(p = "") {
   if (!p) return "";
   if (p.startsWith("uploads/")) return `/${p}`;
@@ -57,7 +55,6 @@ function normalizeUploadPath(p = "") {
   return p;
 }
 
-// akceptuj /uploads, http i https
 function toPublicUrl(req, val = "") {
   if (!val) return "";
   const v = normalizeUploadPath(val);
@@ -72,9 +69,8 @@ function toPublicUrl(req, val = "") {
   return v;
 }
 
-// ======= Cloudinary field helpers (kompatybilność string/obiekt) =======
+// ======= Cloudinary field helpers =======
 function pickUrlField(val) {
-  // avatar / photo może być: string lub {url, publicId}
   if (!val) return "";
   if (typeof val === "string") return val;
   if (typeof val === "object" && typeof val.url === "string") return val.url;
@@ -87,29 +83,47 @@ function pickPublicIdField(val) {
   return "";
 }
 
-function normalizeAvatarOut(req, avatar, updatedAt) {
-  const rawUrl = pickUrlField(avatar);
+function normalizeImageOut(req, img, updatedAt) {
+  const rawUrl = pickUrlField(img);
   const base = rawUrl ? toPublicUrl(req, rawUrl) : "";
   const v = updatedAt ? new Date(updatedAt).getTime() : Date.now();
   const url = base ? withCacheBust(base, v) : "";
-  const publicId = pickPublicIdField(avatar);
-  // zwracamy obiekt – front ma jasno
+  const publicId = pickPublicIdField(img);
   return { url, publicId };
 }
 
-function normalizePhotosOut(req, photos = []) {
+function normalizeAvatarOut(req, avatar, updatedAt) {
+  return normalizeImageOut(req, avatar, updatedAt);
+}
+
+function normalizePhotosOut(req, photos = [], updatedAt) {
   if (!Array.isArray(photos)) return [];
   return photos
     .map((p) => {
       if (typeof p === "string") {
-        return { url: toPublicUrl(req, p), publicId: "" };
+        return normalizeImageOut(req, { url: p, publicId: "" }, updatedAt);
       }
       if (p && typeof p === "object") {
-        return { url: toPublicUrl(req, p.url || ""), publicId: p.publicId || "" };
+        return normalizeImageOut(req, p, updatedAt);
       }
       return null;
     })
     .filter(Boolean);
+}
+
+function normalizeServiceOut(req, service = {}, updatedAt) {
+  const raw = service?.toObject ? service.toObject() : service;
+
+  return {
+    ...raw,
+    image: normalizeImageOut(req, raw.image, updatedAt),
+    gallery: normalizePhotosOut(req, raw.gallery || [], updatedAt),
+  };
+}
+
+function normalizeServicesOut(req, services = [], updatedAt) {
+  if (!Array.isArray(services)) return [];
+  return services.map((service) => normalizeServiceOut(req, service, updatedAt));
 }
 
 // Odwiedziny – identyfikacja oglądającego
@@ -134,6 +148,118 @@ async function canCountVisit(ownerUid, viewerKey) {
   }
 }
 
+// -----------------------------
+// Validators / sanitizers
+// -----------------------------
+const isDataImage = (s) => typeof s === "string" && s.trim().startsWith("data:image/");
+const isBlobUrl = (s) => typeof s === "string" && s.trim().startsWith("blob:");
+const clean = (v) => (v ?? "").toString().trim();
+
+function sanitizeStringArray(arr = [], max = 20) {
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map((v) => clean(v))
+    .filter(Boolean)
+    .slice(0, max);
+}
+
+function sanitizeImageObject(img = {}) {
+  return {
+    url: clean(img?.url),
+    publicId: clean(img?.publicId),
+  };
+}
+
+function rejectIfInvalidImageValue(value, label = "Obraz") {
+  const rawUrl = typeof value === "string" ? value : value?.url;
+
+  if (isDataImage(rawUrl)) {
+    throw new Error(`${label} nie może być base64. Wgraj plik przez upload.`);
+  }
+
+  if (isBlobUrl(rawUrl)) {
+    throw new Error(`${label} nie może być blob URL.`);
+  }
+}
+
+function sanitizeServicesInput(services = [], existingProfile) {
+  if (!Array.isArray(services)) {
+    throw new Error("Pole services musi być tablicą.");
+  }
+
+  return services.map((s, index) => {
+    const image = s?.image || {};
+    const gallery = Array.isArray(s?.gallery) ? s.gallery : [];
+
+    rejectIfInvalidImageValue(image, `Zdjęcie główne usługi #${index + 1}`);
+    gallery.forEach((g, i) =>
+      rejectIfInvalidImageValue(g, `Zdjęcie galerii #${i + 1} usługi #${index + 1}`)
+    );
+
+    const service = {
+      ...(s?._id ? { _id: s._id } : {}),
+
+      name: clean(s?.name),
+      shortDescription: clean(s?.shortDescription),
+      description: clean(s?.description),
+      category: clean(s?.category) || "service",
+
+      image: sanitizeImageObject(image),
+
+      gallery: gallery
+        .map((g) => sanitizeImageObject(g))
+        .filter((g) => g.url),
+
+      price: {
+        mode: clean(s?.price?.mode) || "contact",
+        amount:
+          s?.price?.amount === null || s?.price?.amount === undefined || s?.price?.amount === ""
+            ? null
+            : Number(s.price.amount),
+        from:
+          s?.price?.from === null || s?.price?.from === undefined || s?.price?.from === ""
+            ? null
+            : Number(s.price.from),
+        to:
+          s?.price?.to === null || s?.price?.to === undefined || s?.price?.to === ""
+            ? null
+            : Number(s.price.to),
+        currency: clean(s?.price?.currency || "PLN").toUpperCase(),
+        unitLabel: clean(s?.price?.unitLabel),
+        note: clean(s?.price?.note),
+      },
+
+      duration: {
+        value:
+          s?.duration?.value === null ||
+          s?.duration?.value === undefined ||
+          s?.duration?.value === ""
+            ? null
+            : Number(s.duration.value),
+        unit: clean(s?.duration?.unit || "minutes"),
+        label: clean(s?.duration?.label),
+      },
+
+      booking: {
+        enabled: !!s?.booking?.enabled,
+        type: clean(s?.booking?.type || "none"),
+      },
+
+      delivery: {
+        mode: clean(s?.delivery?.mode || "none"),
+        turnaroundText: clean(s?.delivery?.turnaroundText),
+      },
+
+      tags: sanitizeStringArray(s?.tags, 10),
+      featured: !!s?.featured,
+      isActive: typeof s?.isActive === "boolean" ? s.isActive : true,
+      order: Number.isFinite(Number(s?.order)) ? Number(s.order) : index,
+    };
+
+    return service;
+  });
+}
+
 // =========================================================
 // ✅ CLOUDINARY: AVATAR + PHOTOS
 // =========================================================
@@ -147,7 +273,6 @@ router.post("/:uid/avatar", requireAuth, requireOwnerOrAdmin, upload.single("fil
     const profile = await Profile.findOne({ userId: uid });
     if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
-    // usuń stary avatar (jeśli był w Cloudinary)
     const oldPublicId = pickPublicIdField(profile.avatar);
     if (oldPublicId) {
       await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => {});
@@ -162,7 +287,6 @@ router.post("/:uid/avatar", requireAuth, requireOwnerOrAdmin, upload.single("fil
       ],
     });
 
-    // zapisuj jako obiekt
     profile.avatar = { url: result.secure_url, publicId: result.public_id };
     await profile.save();
 
@@ -188,7 +312,6 @@ router.delete("/:uid/avatar", requireAuth, requireOwnerOrAdmin, async (req, res)
       await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => {});
     }
 
-    // czyścimy (obiekt)
     profile.avatar = { url: "", publicId: "" };
     await profile.save();
 
@@ -202,7 +325,7 @@ router.delete("/:uid/avatar", requireAuth, requireOwnerOrAdmin, async (req, res)
   }
 });
 
-// POST /api/profiles/:uid/photos (max 6 łącznie)
+// POST /api/profiles/:uid/photos
 router.post("/:uid/photos", requireAuth, requireOwnerOrAdmin, upload.array("files", 6), async (req, res) => {
   try {
     const uid = req.params.uid;
@@ -231,7 +354,6 @@ router.post("/:uid/photos", requireAuth, requireOwnerOrAdmin, upload.array("file
       uploaded.push({ url: r.secure_url, publicId: r.public_id });
     }
 
-    // zapewnij tablicę
     profile.photos = Array.isArray(profile.photos) ? profile.photos : [];
     profile.photos = [...profile.photos, ...uploaded];
 
@@ -239,7 +361,7 @@ router.post("/:uid/photos", requireAuth, requireOwnerOrAdmin, upload.array("file
 
     return res.json({
       message: "Zdjęcia dodane.",
-      photos: normalizePhotosOut(req, profile.photos),
+      photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
     });
   } catch (e) {
     console.error("❌ upload photos:", e);
@@ -261,7 +383,7 @@ router.delete("/:uid/photos/:publicId", requireAuth, requireOwnerOrAdmin, async 
 
     profile.photos = Array.isArray(profile.photos) ? profile.photos : [];
     profile.photos = profile.photos.filter((p) => {
-      if (typeof p === "string") return true; // stary typ (nie umiemy usunąć po publicId)
+      if (typeof p === "string") return true;
       return p?.publicId !== decoded;
     });
 
@@ -269,7 +391,7 @@ router.delete("/:uid/photos/:publicId", requireAuth, requireOwnerOrAdmin, async 
 
     return res.json({
       message: "Zdjęcie usunięte.",
-      photos: normalizePhotosOut(req, profile.photos),
+      photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
     });
   } catch (e) {
     console.error("❌ delete photo:", e);
@@ -277,17 +399,236 @@ router.delete("/:uid/photos/:publicId", requireAuth, requireOwnerOrAdmin, async 
   }
 });
 
+// =========================================================
+// ✅ CLOUDINARY: SERVICE IMAGE + SERVICE GALLERY
+// =========================================================
+
+// POST /api/profiles/:uid/services/:serviceId/image
+router.post(
+  "/:uid/services/:serviceId/image",
+  requireAuth,
+  requireOwnerOrAdmin,
+  upload.single("file"),
+  async (req, res) => {
+    try {
+      const { uid, serviceId } = req.params;
+
+      if (!req.file) {
+        return res.status(400).json({ message: "Brak pliku." });
+      }
+
+      const profile = await Profile.findOne({ userId: uid });
+      if (!profile) {
+        return res.status(404).json({ message: "Nie znaleziono profilu." });
+      }
+
+      const service = profile.services.id(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Nie znaleziono usługi." });
+      }
+
+      const oldPublicId = pickPublicIdField(service.image);
+      if (oldPublicId) {
+        await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => {});
+      }
+
+      const result = await uploadBuffer(req.file.buffer, {
+        folder: `showly/profiles/${uid}/services/${serviceId}/cover`,
+        resource_type: "image",
+        transformation: [
+          { width: 1400, height: 1400, crop: "limit" },
+          { quality: "auto", fetch_format: "auto" },
+        ],
+      });
+
+      service.image = {
+        url: result.secure_url,
+        publicId: result.public_id,
+      };
+
+      await profile.save();
+
+      return res.json({
+        message: "Zdjęcie usługi zapisane.",
+        image: normalizeImageOut(req, service.image, profile.updatedAt),
+        services: normalizeServicesOut(req, profile.services, profile.updatedAt),
+      });
+    } catch (e) {
+      console.error("❌ upload service image:", e);
+      return res.status(500).json({ message: "Błąd uploadu zdjęcia usługi." });
+    }
+  }
+);
+
+// DELETE /api/profiles/:uid/services/:serviceId/image
+router.delete(
+  "/:uid/services/:serviceId/image",
+  requireAuth,
+  requireOwnerOrAdmin,
+  async (req, res) => {
+    try {
+      const { uid, serviceId } = req.params;
+
+      const profile = await Profile.findOne({ userId: uid });
+      if (!profile) {
+        return res.status(404).json({ message: "Nie znaleziono profilu." });
+      }
+
+      const service = profile.services.id(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Nie znaleziono usługi." });
+      }
+
+      const oldPublicId = pickPublicIdField(service.image);
+      if (oldPublicId) {
+        await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => {});
+      }
+
+      service.image = { url: "", publicId: "" };
+      await profile.save();
+
+      return res.json({
+        message: "Zdjęcie usługi usunięte.",
+        services: normalizeServicesOut(req, profile.services, profile.updatedAt),
+      });
+    } catch (e) {
+      console.error("❌ delete service image:", e);
+      return res.status(500).json({ message: "Błąd usuwania zdjęcia usługi." });
+    }
+  }
+);
+
+// POST /api/profiles/:uid/services/:serviceId/gallery
+router.post(
+  "/:uid/services/:serviceId/gallery",
+  requireAuth,
+  requireOwnerOrAdmin,
+  upload.array("files", 6),
+  async (req, res) => {
+    try {
+      const { uid, serviceId } = req.params;
+      const files = req.files || [];
+
+      if (!files.length) {
+        return res.status(400).json({ message: "Brak plików." });
+      }
+
+      const profile = await Profile.findOne({ userId: uid });
+      if (!profile) {
+        return res.status(404).json({ message: "Nie znaleziono profilu." });
+      }
+
+      const service = profile.services.id(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Nie znaleziono usługi." });
+      }
+
+      const MAX = 6;
+      const currentCount = Array.isArray(service.gallery) ? service.gallery.length : 0;
+      if (currentCount + files.length > MAX) {
+        return res.status(400).json({ message: `Maksymalnie ${MAX} zdjęć w galerii usługi.` });
+      }
+
+      const uploaded = [];
+      for (const f of files) {
+        const r = await uploadBuffer(f.buffer, {
+          folder: `showly/profiles/${uid}/services/${serviceId}/gallery`,
+          resource_type: "image",
+          transformation: [
+            { width: 1600, height: 1600, crop: "limit" },
+            { quality: "auto", fetch_format: "auto" },
+          ],
+        });
+
+        uploaded.push({
+          url: r.secure_url,
+          publicId: r.public_id,
+        });
+      }
+
+      service.gallery = Array.isArray(service.gallery) ? service.gallery : [];
+      service.gallery = [...service.gallery, ...uploaded];
+
+      await profile.save();
+
+      return res.json({
+        message: "Zdjęcia galerii usługi dodane.",
+        service: normalizeServiceOut(req, service, profile.updatedAt),
+        services: normalizeServicesOut(req, profile.services, profile.updatedAt),
+      });
+    } catch (e) {
+      console.error("❌ upload service gallery:", e);
+      return res.status(500).json({ message: "Błąd uploadu galerii usługi." });
+    }
+  }
+);
+
+// DELETE /api/profiles/:uid/services/:serviceId/gallery/:publicId
+router.delete(
+  "/:uid/services/:serviceId/gallery/:publicId",
+  requireAuth,
+  requireOwnerOrAdmin,
+  async (req, res) => {
+    try {
+      const { uid, serviceId, publicId } = req.params;
+
+      const profile = await Profile.findOne({ userId: uid });
+      if (!profile) {
+        return res.status(404).json({ message: "Nie znaleziono profilu." });
+      }
+
+      const service = profile.services.id(serviceId);
+      if (!service) {
+        return res.status(404).json({ message: "Nie znaleziono usługi." });
+      }
+
+      const decoded = decodeURIComponent(publicId);
+
+      await cloudinary.uploader.destroy(decoded, { resource_type: "image" }).catch(() => {});
+
+      service.gallery = Array.isArray(service.gallery) ? service.gallery : [];
+      service.gallery = service.gallery.filter((img) => img?.publicId !== decoded);
+
+      await profile.save();
+
+      return res.json({
+        message: "Zdjęcie z galerii usługi usunięte.",
+        service: normalizeServiceOut(req, service, profile.updatedAt),
+        services: normalizeServicesOut(req, profile.services, profile.updatedAt),
+      });
+    } catch (e) {
+      console.error("❌ delete service gallery image:", e);
+      return res.status(500).json({ message: "Błąd usuwania zdjęcia z galerii usługi." });
+    }
+  }
+);
+
 // ======================================
 // GET /api/profiles – aktywne i ważne
 // ======================================
 router.get("/", async (req, res) => {
   try {
     const now = new Date();
-    await Profile.updateMany({ isVisible: true, visibleUntil: { $lt: now } }, { $set: { isVisible: false } });
+    await Profile.updateMany(
+      { isVisible: true, visibleUntil: { $lt: now } },
+      { $set: { isVisible: false } }
+    );
 
-    const visible = await Profile.find({ isVisible: true, visibleUntil: { $gte: now } });
-    res.json(visible);
+    const visible = await Profile.find({
+      isVisible: true,
+      visibleUntil: { $gte: now },
+    }).lean();
+
+    const normalized = visible.map((profile) => ({
+      ...profile,
+      avatar: normalizeAvatarOut(req, profile.avatar, profile.updatedAt),
+      photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
+      services: normalizeServicesOut(req, profile.services, profile.updatedAt),
+    }));
+
+    res.json(normalized);
   } catch (e) {
+    console.error("❌ Błąd GET /profiles:", e);
     res.status(500).json({ message: "Błąd pobierania profili" });
   }
 });
@@ -298,12 +639,15 @@ router.get("/", async (req, res) => {
 router.get("/by-user/:uid", async (req, res) => {
   try {
     const profile = await Profile.findOne({ userId: req.params.uid }).lean();
-    if (!profile) return res.status(404).json({ message: "Brak wizytówki dla tego użytkownika." });
+    if (!profile) {
+      return res.status(404).json({ message: "Brak wizytówki dla tego użytkownika." });
+    }
 
     const avatar = normalizeAvatarOut(req, profile.avatar, profile.updatedAt);
-    const photos = normalizePhotosOut(req, profile.photos);
+    const photos = normalizePhotosOut(req, profile.photos, profile.updatedAt);
+    const services = normalizeServicesOut(req, profile.services, profile.updatedAt);
 
-    return res.json({ ...profile, avatar, photos });
+    return res.json({ ...profile, avatar, photos, services });
   } catch (err) {
     console.error("❌ Błąd w GET /by-user/:uid:", err);
     res.status(500).json({ message: "Błąd serwera." });
@@ -325,13 +669,15 @@ router.get("/slug/:slug", async (req, res) => {
 
     const viewerUid = req.headers.uid || null;
 
-    // ratedBy – jak masz (nie tykamy logiki, tylko normalizacja avatara w odpowiedzi)
     let ratedBy = Array.isArray(profile.ratedBy) ? profile.ratedBy : [];
     const ids = [...new Set(ratedBy.map((r) => r.userId).filter(Boolean))];
 
     let usersMap = {};
     if (ids.length) {
-      const users = await User.find({ firebaseUid: { $in: ids } }).select("firebaseUid avatar updatedAt").lean();
+      const users = await User.find({ firebaseUid: { $in: ids } })
+        .select("firebaseUid avatar updatedAt")
+        .lean();
+
       usersMap = users.reduce((acc, u) => {
         acc[u.firebaseUid] = { avatar: u.avatar || "", updatedAt: u.updatedAt || null };
         return acc;
@@ -348,14 +694,17 @@ router.get("/slug/:slug", async (req, res) => {
     });
 
     const avatar = normalizeAvatarOut(req, profile.avatar, profile.updatedAt);
-    const photos = normalizePhotosOut(req, profile.photos);
+    const photos = normalizePhotosOut(req, profile.photos, profile.updatedAt);
+    const services = normalizeServicesOut(req, profile.services, profile.updatedAt);
 
-    // Ulubione: flaga + liczba
     let isFavorite = false;
-    let favoritesCount = profile.favoritesCount;
+    const favoritesCount = profile.favoritesCount;
 
     if (viewerUid) {
-      const favExists = await Favorite.exists({ ownerUid: viewerUid, profileUserId: profile.userId });
+      const favExists = await Favorite.exists({
+        ownerUid: viewerUid,
+        profileUserId: profile.userId,
+      });
       isFavorite = !!favExists;
     }
 
@@ -364,6 +713,7 @@ router.get("/slug/:slug", async (req, res) => {
       ratedBy,
       avatar,
       photos,
+      services,
       isFavorite,
       favoritesCount,
     });
@@ -381,7 +731,10 @@ router.patch("/:uid/visit", async (req, res) => {
     const ownerUid = req.params.uid;
     const viewerUid = req.headers.uid || null;
 
-    const profile = await Profile.findOne({ userId: ownerUid }).select("visits isVisible visibleUntil userId");
+    const profile = await Profile.findOne({ userId: ownerUid }).select(
+      "visits isVisible visibleUntil userId"
+    );
+
     if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
     const now = new Date();
@@ -397,7 +750,12 @@ router.patch("/:uid/visit", async (req, res) => {
     const ok = await canCountVisit(ownerUid, viewerKey);
     if (!ok) return res.json({ visits: profile.visits, throttled: true });
 
-    const updated = await Profile.findOneAndUpdate({ userId: ownerUid }, { $inc: { visits: 1 } }, { new: true, select: "visits" });
+    const updated = await Profile.findOneAndUpdate(
+      { userId: ownerUid },
+      { $inc: { visits: 1 } },
+      { new: true, select: "visits" }
+    );
+
     return res.json({ visits: updated.visits });
   } catch (e) {
     console.error("❌ Błąd /:uid/visit:", e);
@@ -413,7 +771,10 @@ router.patch("/slug/:slug/visit", async (req, res) => {
     const { slug } = req.params;
     const viewerUid = req.headers.uid || null;
 
-    const profile = await Profile.findOne({ slug }).select("userId visits isVisible visibleUntil");
+    const profile = await Profile.findOne({ slug }).select(
+      "userId visits isVisible visibleUntil"
+    );
+
     if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
     const now = new Date();
@@ -429,7 +790,12 @@ router.patch("/slug/:slug/visit", async (req, res) => {
     const ok = await canCountVisit(profile.userId, viewerKey);
     if (!ok) return res.json({ visits: profile.visits, throttled: true });
 
-    const updated = await Profile.findOneAndUpdate({ slug }, { $inc: { visits: 1 } }, { new: true, select: "visits" });
+    const updated = await Profile.findOneAndUpdate(
+      { slug },
+      { $inc: { visits: 1 } },
+      { new: true, select: "visits" }
+    );
+
     return res.json({ visits: updated.visits });
   } catch (e) {
     console.error("❌ Błąd /slug/:slug/visit:", e);
@@ -440,12 +806,9 @@ router.patch("/slug/:slug/visit", async (req, res) => {
 // -----------------------------------------
 // POST /api/profiles — tworzenie profilu
 // -----------------------------------------
-// ✅ WYMAGA: const requireAuth = require("../middleware/requireAuth");
 router.post("/", requireAuth, async (req, res) => {
-  // ✅ userId tylko z tokena (nie z body)
   const userId = String(req.auth?.uid || "");
 
-  // bezpieczne Stringi z body
   const name = String(req.body.name || "");
   const role = String(req.body.role || "");
   const location = String(req.body.location || "");
@@ -462,9 +825,9 @@ router.post("/", requireAuth, async (req, res) => {
     });
 
     if (existing) {
-      return res
-        .status(409)
-        .json({ message: "Taka wizytówka już istnieje (imię + rola + lokalizacja)." });
+      return res.status(409).json({
+        message: "Taka wizytówka już istnieje (imię + rola + lokalizacja).",
+      });
     }
 
     const existingByUser = await Profile.findOne({ userId });
@@ -472,35 +835,46 @@ router.post("/", requireAuth, async (req, res) => {
       return res.status(409).json({ message: "Ten użytkownik już posiada wizytówkę." });
     }
 
-    const baseSlug = slugify(`${name}-${role}`);
-    let uniqueSlug = baseSlug,
-      i = 1;
-    while (await Profile.findOne({ slug: uniqueSlug })) uniqueSlug = `${baseSlug}-${i++}`;
+    const baseSlug = slugify(`${name}-${role || "profil"}`);
+    let uniqueSlug = baseSlug || `profil-${Date.now()}`;
+    let i = 1;
 
-    // ✅ UWAGA: nie bierzemy userId z req.body (możesz też wyczyścić z body, jeśli ktoś go wyśle)
-    const { userId: _ignoredUserId, ...safeBody } = req.body || {};
+    while (await Profile.findOne({ slug: uniqueSlug })) {
+      uniqueSlug = `${baseSlug || "profil"}-${i++}`;
+    }
+
+    const { userId: _ignoredUserId, services, ...safeBody } = req.body || {};
+
+    const safeServices = services ? sanitizeServicesInput(services) : [];
 
     const newProfile = new Profile({
       ...safeBody,
-      userId, // ✅ wstrzyknięte z tokena
-
+      services: safeServices,
+      userId,
       name: name.trim(),
       role: role.trim(),
       location: location.trim(),
-
       slug: uniqueSlug,
       isVisible: true,
       visibleUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     });
 
     await newProfile.save();
-    res.status(201).json({ message: "Profil utworzony", profile: newProfile });
 
-    // 🔔 fire-and-forget: systemowa wiadomość powitalna
+    res.status(201).json({
+      message: "Profil utworzony",
+      profile: {
+        ...newProfile.toObject(),
+        avatar: normalizeAvatarOut(req, newProfile.avatar, newProfile.updatedAt),
+        photos: normalizePhotosOut(req, newProfile.photos, newProfile.updatedAt),
+        services: normalizeServicesOut(req, newProfile.services, newProfile.updatedAt),
+      },
+    });
+
     queueMicrotask(async () => {
       try {
         const fromUid = "SYSTEM";
-        const toUid = userId; // ✅ z tokena
+        const toUid = userId;
         const pairKey = [fromUid, toUid].sort().join("|");
 
         const welcomeContent = [
@@ -511,18 +885,18 @@ router.post("/", requireAuth, async (req, res) => {
           "• Domyślny tryb rezerwacji: „Zapytanie bez blokowania” — możesz zmienić w każdej chwili.",
           "",
           "👉 Uzupełnij podstawowe informacje:",
-          "• avatar i krótki opis (max 500 znaków),",
+          "• avatar i krótki opis,",
           "• rola / specjalizacja i lokalizacja,",
-          "• 1–3 tagi,",
-          "• widełki cenowe: „od–do”.",
+          "• tagi i widełki cenowe.",
           "",
-          "🧰 Dodaj usługi (z czasem trwania/realizacji):",
-          "• każda usługa ma nazwę i czas trwania,",
-          "• jednostki: minuty / godziny / dni,",
-          "• minimum: 15 min / 1 h / 1 dzień,",
+          "🧰 Dodaj ofertę / usługi:",
+          "• nazwa, krótki opis i pełny opis,",
+          "• cena lub wycena indywidualna,",
+          "• czas trwania lub czas realizacji,",
+          "• zdjęcie główne i galeria.",
           "",
           "🔗 Linki i media:",
-          "• do 3 linków i 6 zdjęć (ok. 3 MB).",
+          "• dodaj zdjęcia, social media i dane kontaktowe.",
           "",
           "ℹ️ Wszystko edytujesz w zakładce „Twój profil”. Powodzenia! 👊",
         ].join("\n");
@@ -559,6 +933,18 @@ router.post("/", requireAuth, async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Błąd w POST /api/profiles:", err);
+
+    if (err?.message?.includes("Usługa") || err?.message?.includes("services")) {
+      return res.status(400).json({ message: err.message });
+    }
+
+    if (err?.name === "ValidationError") {
+      return res.status(400).json({
+        message: "Błąd walidacji danych.",
+        details: Object.values(err.errors || {}).map((e) => e.message),
+      });
+    }
+
     return res.status(500).json({ message: "Błąd tworzenia profilu" });
   }
 });
@@ -569,13 +955,23 @@ router.post("/", requireAuth, async (req, res) => {
 router.patch("/extend/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
     const profile = await Profile.findOne({ userId: req.params.uid });
-    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu do przedłużenia." });
+    if (!profile) {
+      return res.status(404).json({ message: "Nie znaleziono profilu do przedłużenia." });
+    }
 
     profile.isVisible = true;
     profile.visibleUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await profile.save();
 
-    res.json({ message: "Widoczność przedłużona o 30 dni.", profile });
+    res.json({
+      message: "Widoczność przedłużona o 30 dni.",
+      profile: {
+        ...profile.toObject(),
+        avatar: normalizeAvatarOut(req, profile.avatar, profile.updatedAt),
+        photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
+        services: normalizeServicesOut(req, profile.services, profile.updatedAt),
+      },
+    });
   } catch (error) {
     console.error("❌ Błąd w PATCH /extend:", error);
     res.status(500).json({ message: "Błąd podczas przedłużania widoczności", error });
@@ -608,6 +1004,10 @@ const allowedFields = [
   "theme",
   "contact",
   "socials",
+  "blockedDays",
+  "name",
+  "hasBusiness",
+  "nip",
 ];
 
 router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) => {
@@ -617,33 +1017,48 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
 
     const updates = { ...req.body };
 
-    const isDataImage = (s) => typeof s === "string" && s.trim().startsWith("data:image/");
-    const isBlobUrl = (s) => typeof s === "string" && s.trim().startsWith("blob:");
+    if (updates.avatar) {
+      const avatarUrl = typeof updates.avatar === "string" ? updates.avatar : updates.avatar?.url;
+      if (isDataImage(avatarUrl)) {
+        return res.status(400).json({
+          message: "Avatar nie może być base64. Wgraj przez upload i zapisz URL.",
+        });
+      }
+      if (isBlobUrl(avatarUrl)) {
+        updates.avatar = profile.avatar || { url: "", publicId: "" };
+      }
+    }
 
-    // blokuj base64
-    if (updates.avatar && typeof updates.avatar === "string" && isDataImage(updates.avatar)) {
-      return res.status(400).json({ message: "Avatar nie może być base64. Wgraj przez upload i zapisz URL." });
-    }
-    if (Array.isArray(updates.photos) && updates.photos.some((p) => typeof p === "string" && isDataImage(p))) {
-      return res.status(400).json({ message: "Zdjęcia nie mogą być base64. Wgrywaj przez upload i zapisuj URL-e." });
-    }
-
-    // blob url out
-    if (typeof updates.avatar === "string" && isBlobUrl(updates.avatar)) {
-      updates.avatar = profile.avatar || "";
-    }
     if (Array.isArray(updates.photos)) {
-      updates.photos = updates.photos.filter((p) => p && !(typeof p === "string" && isBlobUrl(p)));
+      if (
+        updates.photos.some((p) => {
+          const u = typeof p === "string" ? p : p?.url;
+          return isDataImage(u);
+        })
+      ) {
+        return res.status(400).json({
+          message: "Zdjęcia nie mogą być base64. Wgrywaj przez upload i zapisuj URL-e.",
+        });
+      }
+
+      updates.photos = updates.photos.filter((p) => {
+        const u = typeof p === "string" ? p : p?.url;
+        return p && !isBlobUrl(u);
+      });
     }
 
-    // normalizacja kontaktu
+    if (updates.services !== undefined) {
+      updates.services = sanitizeServicesInput(updates.services, profile);
+    }
+
     if (updates.contact) {
-      const clean = (v) => (v ?? "").toString().trim();
       const prev = profile.contact?.toObject ? profile.contact.toObject() : profile.contact || {};
 
       const street = clean(updates.contact.street);
       const postcode = clean(updates.contact.postcode);
-      const locationForAddress = clean(typeof updates.location !== "undefined" ? updates.location : profile.location);
+      const locationForAddress = clean(
+        typeof updates.location !== "undefined" ? updates.location : profile.location
+      );
 
       let addressFull = clean(updates.contact.addressFull);
       if (!addressFull) {
@@ -663,9 +1078,7 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
       profile.set("contact", updates.contact);
     }
 
-    // normalizacja socials
     if (updates.socials) {
-      const clean = (v) => (v ?? "").toString().trim();
       const prev = profile.socials?.toObject ? profile.socials.toObject() : profile.socials || {};
 
       updates.socials = {
@@ -682,32 +1095,123 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
       profile.set("socials", updates.socials);
     }
 
-    // zwykłe pola
+    if (updates.quickAnswers) {
+      updates.quickAnswers = Array.isArray(updates.quickAnswers)
+        ? updates.quickAnswers
+            .map((qa) => ({
+              title: clean(qa?.title),
+              answer: clean(qa?.answer),
+            }))
+            .filter((qa) => qa.title || qa.answer)
+            .slice(0, 3)
+        : [];
+    }
+
+    if (updates.tags) {
+      updates.tags = sanitizeStringArray(updates.tags, 20);
+    }
+
+    if (updates.links) {
+      updates.links = sanitizeStringArray(updates.links, 10);
+    }
+
+    if (updates.blockedDays) {
+      updates.blockedDays = sanitizeStringArray(updates.blockedDays, 365);
+    }
+
+    if (updates.availableDates) {
+      updates.availableDates = Array.isArray(updates.availableDates)
+        ? updates.availableDates
+            .map((item) => ({
+              date: clean(item?.date),
+              fromTime: clean(item?.fromTime),
+              toTime: clean(item?.toTime),
+            }))
+            .filter((item) => item.date && item.fromTime && item.toTime)
+        : [];
+    }
+
+    if (updates.workingHours) {
+      updates.workingHours = {
+        from: clean(updates.workingHours.from || profile.workingHours?.from || "08:00"),
+        to: clean(updates.workingHours.to || profile.workingHours?.to || "20:00"),
+      };
+    }
+
+    if (updates.workingDays) {
+      updates.workingDays = Array.isArray(updates.workingDays)
+        ? updates.workingDays
+            .map((n) => Number(n))
+            .filter((n) => Number.isInteger(n) && n >= 0 && n <= 6)
+        : profile.workingDays;
+    }
+
+    if (updates.priceFrom !== undefined) {
+      updates.priceFrom =
+        updates.priceFrom === null || updates.priceFrom === ""
+          ? null
+          : Number(updates.priceFrom);
+    }
+
+    if (updates.priceTo !== undefined) {
+      updates.priceTo =
+        updates.priceTo === null || updates.priceTo === ""
+          ? null
+          : Number(updates.priceTo);
+    }
+
     for (const field of allowedFields) {
       if (field !== "team" && field !== "theme" && updates[field] !== undefined) {
         profile[field] = updates[field];
       }
     }
 
-    // theme
     if (updates.theme) {
-      if (typeof updates.theme.variant !== "undefined") profile.set("theme.variant", updates.theme.variant);
-      if (typeof updates.theme.primary !== "undefined") profile.set("theme.primary", updates.theme.primary);
-      if (typeof updates.theme.secondary !== "undefined") profile.set("theme.secondary", updates.theme.secondary);
+      if (typeof updates.theme.variant !== "undefined") {
+        profile.set("theme.variant", updates.theme.variant);
+      }
+      if (typeof updates.theme.primary !== "undefined") {
+        profile.set("theme.primary", clean(updates.theme.primary));
+      }
+      if (typeof updates.theme.secondary !== "undefined") {
+        profile.set("theme.secondary", clean(updates.theme.secondary));
+      }
     }
 
-    // team
     if (updates.team) {
-      if (typeof updates.team.enabled !== "undefined") profile.set("team.enabled", !!updates.team.enabled);
+      if (typeof updates.team.enabled !== "undefined") {
+        profile.set("team.enabled", !!updates.team.enabled);
+      }
       if (updates.team.assignmentMode) {
-        profile.set("team.assignmentMode", updates.team.assignmentMode === "auto-assign" ? "auto-assign" : "user-pick");
+        profile.set(
+          "team.assignmentMode",
+          updates.team.assignmentMode === "auto-assign" ? "auto-assign" : "user-pick"
+        );
       }
     }
 
     await profile.save();
-    return res.json({ message: "Profil zaktualizowany", profile });
+
+    return res.json({
+      message: "Profil zaktualizowany",
+      profile: {
+        ...profile.toObject(),
+        avatar: normalizeAvatarOut(req, profile.avatar, profile.updatedAt),
+        photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
+        services: normalizeServicesOut(req, profile.services, profile.updatedAt),
+      },
+    });
   } catch (err) {
     console.error("❌ Błąd aktualizacji profilu:", err);
+
+    if (
+      err?.message?.includes("Usługa") ||
+      err?.message?.includes("services") ||
+      err?.message?.includes("base64") ||
+      err?.message?.includes("blob")
+    ) {
+      return res.status(400).json({ message: err.message });
+    }
 
     if (err?.name === "ValidationError") {
       return res.status(400).json({
@@ -723,9 +1227,7 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
 // -----------------------------------------------------------------
 // PATCH /api/profiles/rate/:slug – dodanie oceny + komentarza
 // -----------------------------------------------------------------
-// ✅ WYMAGA: const requireAuth = require("../middleware/requireAuth");
 router.patch("/rate/:slug", requireAuth, async (req, res) => {
-  // ✅ userId tylko z tokena (nie z body)
   const userId = String(req.auth?.uid || "");
 
   const { rating, comment, userName: bodyName, userAvatar: bodyAvatar } = req.body;
@@ -746,7 +1248,10 @@ router.patch("/rate/:slug", requireAuth, async (req, res) => {
   }
 
   try {
-    const profile = await Profile.findOne({ slug: req.params.slug }).select("userId ratedBy rating reviews");
+    const profile = await Profile.findOne({ slug: req.params.slug }).select(
+      "userId ratedBy rating reviews"
+    );
+
     if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
     if (profile.userId === userId) {
@@ -761,7 +1266,6 @@ router.patch("/rate/:slug", requireAuth, async (req, res) => {
     let finalName = String(bodyName || "").trim();
     let rawAvatar = String(bodyAvatar || "").trim();
 
-    // jeśli klient nie podał, albo podał puste → dociągamy z DB
     if (!finalName || !rawAvatar) {
       try {
         const dbUser = await User.findOne({ firebaseUid: userId })
@@ -773,7 +1277,6 @@ router.patch("/rate/:slug", requireAuth, async (req, res) => {
       } catch {}
     }
 
-    // zapis w profilu może trzymać "uploads/..." albo https — normalizujesz jak wcześniej
     const storedUserAvatar = normalizeUploadPath(rawAvatar);
 
     profile.ratedBy.push({
@@ -806,39 +1309,6 @@ router.patch("/rate/:slug", requireAuth, async (req, res) => {
   } catch (err) {
     console.error("❌ Błąd oceniania:", err);
     return res.status(500).json({ message: "Błąd serwera.", error: err.message });
-  }
-});
-
-// 🗑️ USUWANIE 1 zdjęcia z galerii (Cloudinary)
-router.delete("/:uid/photos", requireAuth, requireOwnerOrAdmin, async (req, res) => {
-  try {
-    const { uid } = req.params;
-    const { publicId } = req.body;
-
-    if (!publicId) {
-      return res.status(400).json({ message: "Brak publicId zdjęcia" });
-    }
-
-    const profile = await Profile.findOne({ userId: uid });
-    if (!profile) {
-      return res.status(404).json({ message: "Profil nie istnieje" });
-    }
-
-    // usuń z cloudinary
-    try {
-      await cloudinary.uploader.destroy(publicId);
-    } catch (err) {
-      console.log("Cloudinary destroy error:", err.message);
-    }
-
-    // usuń z tablicy
-    profile.photos = (profile.photos || []).filter(p => p.publicId !== publicId);
-    await profile.save();
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error("DELETE PHOTO ERROR:", err);
-    res.status(500).json({ message: "Błąd usuwania zdjęcia" });
   }
 });
 

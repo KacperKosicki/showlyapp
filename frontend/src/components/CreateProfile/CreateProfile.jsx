@@ -3,14 +3,14 @@ import styles from "./CreateProfile.module.scss";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import UserCard from "../UserCard/UserCard";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
-import { api } from "../../api/api"; // <-- dopasuj ścieżkę, jeśli masz inną
+import { api } from "../../api/api";
 
 const DEFAULT_AVATAR = "/images/other/no-image.png";
 
 const CreateProfile = ({ user, setRefreshTrigger }) => {
   const [form, setForm] = useState({
     name: "",
-    avatar: DEFAULT_AVATAR, // ✅ podgląd: blob lub default
+    avatar: DEFAULT_AVATAR,
     role: "",
     location: "",
     priceFrom: "",
@@ -31,8 +31,14 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
   const [newService, setNewService] = useState({
     name: "",
+    shortDescription: "",
+    category: "service",
+    priceMode: "fixed",
+    priceValue: "",
     durationValue: "",
     durationUnit: "minutes",
+    bookingEnabled: false,
+    bookingType: "none",
   });
 
   const locationHook = useLocation();
@@ -45,7 +51,6 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
   const [loading, setLoading] = useState(false);
 
-  // ✅ avatar: plik + blob preview (pokazuj od razu, zapisuj dopiero po "Utwórz")
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [resetAvatarLoading, setResetAvatarLoading] = useState(false);
@@ -67,13 +72,12 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     requestAnimationFrame(tryScroll);
   }, [locationHook.state, locationHook.pathname]);
 
-  // ✅ sprzątanie blob URL
   useEffect(() => {
     return () => {
       if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
         try {
           URL.revokeObjectURL(form.avatar);
-        } catch {}
+        } catch { }
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,20 +85,13 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
   if (!user) return <Navigate to="/login" replace />;
 
-  // ✅ trzymaj zawsze firebase UID (spójność + autoryzacja)
   const uid = user?.uid;
 
-  // =========================================================
-  // ✅ Upload avatara dopiero po utworzeniu profilu
-  // POST /api/profiles/:uid/avatar (FormData: file)
-  // =========================================================
   const uploadAvatarAfterCreate = async (file) => {
     if (!file) return;
 
     const fd = new FormData();
     fd.append("file", file);
-
-    // ✅ ważne: nie ustawiamy ręcznie Content-Type, żeby axios dodał boundary
     await api.post(`/api/profiles/${uid}/avatar`, fd);
   };
 
@@ -104,11 +101,10 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     setResetAvatarLoading(true);
     setFormErrors((p) => ({ ...p, avatar: "" }));
 
-    // zwolnij poprzedni blob
     if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
       try {
         URL.revokeObjectURL(form.avatar);
-      } catch {}
+      } catch { }
     }
 
     setAvatarFile(null);
@@ -119,9 +115,6 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     setTimeout(() => setResetAvatarLoading(false), 250);
   };
 
-  // =========================================================
-  // ✅ Form handlers
-  // =========================================================
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -175,14 +168,165 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
         return "h";
       case "days":
         return "dni";
+      case "weeks":
+        return "tyg";
       default:
         return "";
     }
   };
 
-  // =========================================================
-  // ✅ Submit
-  // =========================================================
+  const mapCategory = (cat) => {
+    switch (cat) {
+      case "service":
+        return "Usługa";
+      case "product":
+        return "Produkt";
+      case "project":
+        return "Projekt";
+      case "artwork":
+        return "Obraz / dzieło";
+      case "handmade":
+        return "Rękodzieło";
+      case "lesson":
+        return "Lekcja";
+      case "consultation":
+        return "Konsultacja";
+      default:
+        return "Oferta";
+    }
+  };
+
+  const formatServicePrice = (service) => {
+    const mode = service?.price?.mode;
+    const amount = service?.price?.amount;
+    const from = service?.price?.from;
+    const currency = service?.price?.currency || "PLN";
+
+    if (mode === "fixed" && amount) return `${amount} ${currency}`;
+    if (mode === "from" && from) return `od ${from} ${currency}`;
+    if (mode === "contact") return "wycena indywidualna";
+    if (mode === "free") return "darmowe";
+    return "bez ceny";
+  };
+
+  const handleAddService = () => {
+    const name = newService.name.trim();
+    const shortDescription = newService.shortDescription.trim();
+    const category = newService.category;
+    const priceMode = newService.priceMode;
+    const durationValue = Number(newService.durationValue);
+    const durationUnit = newService.durationUnit;
+
+    const hasValidDuration =
+      Number.isFinite(durationValue) &&
+      ((durationUnit === "minutes" && durationValue >= 15) ||
+        (durationUnit === "hours" && durationValue >= 1) ||
+        (durationUnit === "days" && durationValue >= 1));
+
+    if (!name || name.length < 2) {
+      setServiceError("Podaj nazwę usługi (minimum 2 znaki).");
+      return;
+    }
+
+    if (shortDescription.length > 120) {
+      setServiceError("Krótki opis usługi może mieć maksymalnie 120 znaków.");
+      return;
+    }
+
+    if (!hasValidDuration) {
+      setServiceError("Czas usługi: minimum 15 minut, 1 godzina lub 1 dzień.");
+      return;
+    }
+
+    let price = {
+      mode: priceMode,
+      amount: null,
+      from: null,
+      to: null,
+      currency: "PLN",
+      unitLabel: "",
+      note: "",
+    };
+
+    if (priceMode === "fixed") {
+      const amount = Number(newService.priceValue);
+      if (!Number.isFinite(amount) || amount < 0) {
+        setServiceError("Podaj poprawną cenę stałą usługi.");
+        return;
+      }
+      price.amount = amount;
+    }
+
+    if (priceMode === "from") {
+      const from = Number(newService.priceValue);
+      if (!Number.isFinite(from) || from < 0) {
+        setServiceError("Podaj poprawną cenę 'od'.");
+        return;
+      }
+      price.from = from;
+    }
+
+    if (priceMode === "contact" || priceMode === "free") {
+      price.amount = null;
+      price.from = null;
+      price.to = null;
+    }
+
+    const bookingEnabled = !!newService.bookingEnabled;
+    const bookingType = bookingEnabled
+      ? newService.bookingType === "calendar"
+        ? "calendar"
+        : "request"
+      : "none";
+
+    setForm((prev) => ({
+      ...prev,
+      services: [
+        ...prev.services,
+        {
+          name,
+          shortDescription,
+          description: "",
+          category,
+          image: { url: "", publicId: "" },
+          gallery: [],
+          price,
+          duration: {
+            value: parseInt(String(durationValue), 10),
+            unit: durationUnit,
+            label: durationUnit === "minutes" || durationUnit === "hours" ? "czas wizyty" : "czas realizacji",
+          },
+          booking: {
+            enabled: bookingEnabled,
+            type: bookingType,
+          },
+          delivery: {
+            mode: "none",
+            turnaroundText: "",
+          },
+          tags: [],
+          featured: false,
+          isActive: true,
+          order: prev.services.length,
+        },
+      ],
+    }));
+
+    setNewService({
+      name: "",
+      shortDescription: "",
+      category: "service",
+      priceMode: "fixed",
+      priceValue: "",
+      durationValue: "",
+      durationUnit: "minutes",
+      bookingEnabled: false,
+      bookingType: "none",
+    });
+
+    setServiceError("");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
@@ -234,12 +378,13 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     if (
       (form.services || []).some(
         (s) =>
-          (s.duration.unit === "minutes" && s.duration.value < 15) ||
-          (s.duration.unit === "hours" && s.duration.value < 1) ||
-          (s.duration.unit === "days" && s.duration.value < 1)
+          !s.name?.trim() ||
+          ((s.duration.unit === "minutes" && s.duration.value < 15) ||
+            (s.duration.unit === "hours" && s.duration.value < 1) ||
+            (s.duration.unit === "days" && s.duration.value < 1))
       )
     ) {
-      errors.services = "Każda usługa musi mieć minimum 15 minut, 1 godzinę lub 1 dzień!";
+      errors.services = "Każda usługa musi mieć poprawną nazwę i czas trwania/realizacji.";
     }
 
     setFormErrors(errors);
@@ -247,10 +392,9 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
     setLoading(true);
 
-    // ✅ NIE wysyłamy blob: do backendu.
     const payload = {
       ...form,
-      avatar: { url: "", publicId: "" }, // zgodnie z Twoim modelem
+      avatar: { url: "", publicId: "" },
       priceFrom: priceFromNum,
       priceTo: priceToNum,
       rating: 0,
@@ -263,10 +407,8 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     };
 
     try {
-      // 1) create profile
       await api.post(`/api/profiles`, payload);
 
-      // 2) upload avatar dopiero po create
       if (avatarFile) {
         setAvatarUploading(true);
         await uploadAvatarAfterCreate(avatarFile);
@@ -338,7 +480,6 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
 
-                // walidacja
                 if (!file.type?.startsWith("image/")) {
                   setFormErrors((p) => ({ ...p, avatar: "Plik musi być obrazkiem." }));
                   return;
@@ -350,16 +491,15 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
                 setFormErrors((p) => ({ ...p, avatar: "" }));
 
-                // zwolnij poprzedni blob, jeśli był
                 if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
                   try {
                     URL.revokeObjectURL(form.avatar);
-                  } catch {}
+                  } catch { }
                 }
 
                 const previewUrl = URL.createObjectURL(file);
                 setAvatarFile(file);
-                setForm((prev) => ({ ...prev, avatar: previewUrl })); // ✅ UserCard pokaże od razu
+                setForm((prev) => ({ ...prev, avatar: previewUrl }));
               }}
             />
             {(avatarUploading || loading) && <small>Przetwarzanie...</small>}
@@ -423,10 +563,25 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
           {form.services.length > 0 && (
             <ul className={styles.serviceList}>
               {form.services.map((s, i) => (
-                <li key={i}>
-                  <strong>{s.name}</strong> – {s.duration.value} {mapUnit(s.duration.unit)}
+                <li key={i} className={styles.serviceItem}>
+                  <div className={styles.serviceItemTop}>
+                    <strong>{s.name}</strong>
+                    <span className={styles.serviceBadge}>{mapCategory(s.category)}</span>
+                  </div>
+
+                  {s.shortDescription && <p className={styles.serviceDesc}>{s.shortDescription}</p>}
+
+                  <div className={styles.serviceMeta}>
+                    <span>{formatServicePrice(s)}</span>
+                    <span>
+                      {s.duration.value} {mapUnit(s.duration.unit)}
+                    </span>
+                    <span>{s.booking?.enabled ? (s.booking.type === "calendar" ? "rezerwacja" : "zapytanie") : "bez rezerwacji"}</span>
+                  </div>
+
                   <button
                     type="button"
+                    className={styles.removeServiceBtn}
                     onClick={() =>
                       setForm((prev) => ({
                         ...prev,
@@ -442,68 +597,108 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
           )}
 
           <label>
-            Dodaj usługę:
-            <div className={styles.serviceForm}>
-              <input
-                type="text"
-                placeholder="Nazwa usługi (np. Strzyżenie)"
-                value={newService.name}
-                onChange={(e) => setNewService({ ...newService, name: e.target.value })}
-              />
-              <input
-                type="number"
-                placeholder="Czas"
-                min="1"
-                value={newService.durationValue}
-                onChange={(e) => setNewService({ ...newService, durationValue: e.target.value })}
-              />
-              <select
-                value={newService.durationUnit}
-                onChange={(e) => setNewService({ ...newService, durationUnit: e.target.value })}
-              >
-                <option value="minutes">minuty</option>
-                <option value="hours">godziny</option>
-                <option value="days">dni</option>
-              </select>
+            Dodaj usługę / ofertę:
+            <div className={styles.serviceCard}>
+              <div className={styles.serviceGrid}>
+                <input
+                  type="text"
+                  placeholder="Nazwa (np. Strzyżenie męskie)"
+                  value={newService.name}
+                  maxLength={80}
+                  onChange={(e) => setNewService({ ...newService, name: e.target.value })}
+                />
 
-              <button
-                type="button"
-                onClick={() => {
-                  const name = newService.name.trim();
-                  const value = Number(newService.durationValue);
-                  const unit = newService.durationUnit;
+                <select
+                  value={newService.category}
+                  onChange={(e) => setNewService({ ...newService, category: e.target.value })}
+                >
+                  <option value="service">Usługa</option>
+                  <option value="product">Produkt</option>
+                  <option value="project">Projekt</option>
+                  <option value="artwork">Obraz / dzieło</option>
+                  <option value="handmade">Rękodzieło</option>
+                  <option value="lesson">Lekcja</option>
+                  <option value="consultation">Konsultacja</option>
+                </select>
 
-                  const ok =
-                    name &&
-                    Number.isFinite(value) &&
-                    ((unit === "minutes" && value >= 15) ||
-                      (unit === "hours" && value >= 1) ||
-                      (unit === "days" && value >= 1)) &&
-                    ["minutes", "hours", "days"].includes(unit);
+                <input
+                  type="text"
+                  placeholder="Krótki opis (opcjonalnie)"
+                  value={newService.shortDescription}
+                  maxLength={120}
+                  onChange={(e) => setNewService({ ...newService, shortDescription: e.target.value })}
+                />
 
-                  if (!ok) {
-                    setServiceError("Podaj nazwę usługi oraz czas: minimum 15 minut, 1 godzinę lub 1 dzień!");
-                    return;
-                  }
+                <select
+                  value={newService.priceMode}
+                  onChange={(e) => setNewService({ ...newService, priceMode: e.target.value, priceValue: "" })}
+                >
+                  <option value="fixed">Cena stała</option>
+                  <option value="from">Cena od</option>
+                  <option value="contact">Wycena indywidualna</option>
+                  <option value="free">Darmowe</option>
+                </select>
 
-                  setForm((prev) => ({
-                    ...prev,
-                    services: [
-                      ...prev.services,
-                      {
-                        name,
-                        duration: { value: parseInt(String(value), 10), unit },
-                      },
-                    ],
-                  }));
+                {(newService.priceMode === "fixed" || newService.priceMode === "from") && (
+                  <input
+                    type="number"
+                    placeholder={newService.priceMode === "fixed" ? "Cena" : "Cena od"}
+                    min="0"
+                    value={newService.priceValue}
+                    onChange={(e) => setNewService({ ...newService, priceValue: e.target.value })}
+                  />
+                )}
 
-                  setNewService({ name: "", durationValue: "", durationUnit: "minutes" });
-                  setServiceError("");
-                }}
-              >
-                Dodaj
+                <input
+                  type="number"
+                  placeholder="Czas"
+                  min="1"
+                  value={newService.durationValue}
+                  onChange={(e) => setNewService({ ...newService, durationValue: e.target.value })}
+                />
+
+                <select
+                  value={newService.durationUnit}
+                  onChange={(e) => setNewService({ ...newService, durationUnit: e.target.value })}
+                >
+                  <option value="minutes">Minuty</option>
+                  <option value="hours">Godziny</option>
+                  <option value="days">Dni</option>
+                </select>
+              </div>
+
+              <div className={styles.serviceOptions}>
+                <label className={styles.checkboxInline}>
+                  <input
+                    type="checkbox"
+                    checked={newService.bookingEnabled}
+                    onChange={(e) =>
+                      setNewService((prev) => ({
+                        ...prev,
+                        bookingEnabled: e.target.checked,
+                        bookingType: e.target.checked ? "request" : "none",
+                      }))
+                    }
+                  />
+                  Umożliw rezerwację / zapytanie
+                </label>
+
+                {newService.bookingEnabled && (
+                  <select
+                    value={newService.bookingType}
+                    onChange={(e) => setNewService({ ...newService, bookingType: e.target.value })}
+                  >
+                    <option value="request">Zapytanie</option>
+                    <option value="calendar">Kalendarz</option>
+                  </select>
+                )}
+              </div>
+
+              <button type="button" className={styles.addServiceBtn} onClick={handleAddService}>
+                Dodaj usługę
               </button>
             </div>
+
             {serviceError && <small className={styles.error}>{serviceError}</small>}
           </label>
 

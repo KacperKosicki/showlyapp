@@ -410,3 +410,136 @@
     padding-right: 0;
   }
 }
+
+.serviceCard {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 1.2rem;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.serviceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+
+  input,
+  select {
+    width: 100%;
+  }
+}
+
+.serviceOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.checkboxInline {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.92rem;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    accent-color: $primary-color;
+  }
+}
+
+.addServiceBtn {
+  align-self: flex-start;
+  padding: 0.7rem 1.2rem;
+  border-radius: 999px;
+  background: $primary-color;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: 0.25s ease;
+
+  &:hover {
+    background: darken($primary-color, 10%);
+  }
+}
+
+.serviceItem {
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 1rem;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.serviceItemTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.serviceBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba($primary-color, 0.12);
+  color: $primary-color;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.serviceDesc {
+  margin: 0;
+  font-size: 0.88rem;
+  color: rgba(0, 0, 0, 0.72);
+  line-height: 1.45;
+}
+
+.serviceMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.75rem;
+  font-size: 0.82rem;
+  color: rgba(0, 0, 0, 0.68);
+
+  span {
+    padding: 0.25rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.05);
+  }
+}
+
+.removeServiceBtn {
+  align-self: flex-start;
+  background: transparent !important;
+  color: #d83b3b !important;
+  border: none;
+  padding: 0 !important;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .serviceGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .serviceItemTop {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .addServiceBtn {
+    width: 100%;
+    text-align: center;
+  }
+}

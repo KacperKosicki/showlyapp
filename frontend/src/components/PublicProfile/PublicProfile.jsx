@@ -313,6 +313,64 @@ export default function PublicProfile() {
     }
   };
 
+  const mapServiceCategory = (cat) => {
+  switch (cat) {
+    case "service":
+      return "Usługa";
+    case "product":
+      return "Produkt";
+    case "project":
+      return "Projekt";
+    case "artwork":
+      return "Obraz / dzieło";
+    case "handmade":
+      return "Rękodzieło";
+    case "lesson":
+      return "Lekcja";
+    case "consultation":
+      return "Konsultacja";
+    case "event":
+      return "Event";
+    case "custom":
+      return "Inne";
+    default:
+      return "Oferta";
+  }
+};
+
+const getServiceImageUrl = (service) => {
+  if (!service) return "";
+  if (typeof service.image === "string") return normalizeAvatar(service.image);
+  if (service.image?.url) return normalizeAvatar(service.image.url);
+  return "";
+};
+
+const formatServicePrice = (service) => {
+  const mode = service?.price?.mode;
+  const currency = service?.price?.currency || "PLN";
+
+  if (mode === "fixed" && service?.price?.amount != null) {
+    return `${service.price.amount} ${currency}`;
+  }
+
+  if (mode === "from" && service?.price?.from != null) {
+    return `od ${service.price.from} ${currency}`;
+  }
+
+  if (
+    mode === "range" &&
+    service?.price?.from != null &&
+    service?.price?.to != null
+  ) {
+    return `${service.price.from}–${service.price.to} ${currency}`;
+  }
+
+  if (mode === "free") return "Darmowe";
+  if (mode === "contact") return "Wycena indywidualna";
+
+  return "Brak ceny";
+};
+
   const [favCount, setFavCount] = useState(0);
   const [isFav, setIsFav] = useState(false);
 
@@ -598,7 +656,14 @@ export default function PublicProfile() {
     "--pp-banner": themeVars.banner,
   };
 
-  const hasServices = Array.isArray(profile.services) && profile.services.length > 0;
+ const visibleServices =
+  Array.isArray(profile.services)
+    ? profile.services
+        .filter((s) => s?.isActive !== false)
+        .sort((a, b) => Number(a?.order ?? 0) - Number(b?.order ?? 0))
+    : [];
+
+const hasServices = visibleServices.length > 0;
 
   const bookingMode = String(profile?.bookingMode || "off").toLowerCase();
   const bookingEnabled = !["off", "none", "disabled", ""].includes(bookingMode);
@@ -1091,29 +1156,94 @@ export default function PublicProfile() {
           </section>
         )}
 
-        {(hasServices || hasInfoBox) && (
-          <section className={styles.sectionCard} id="services">
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Usługi</h2>
-              <span className={styles.mutedSmall}>Nazwa + czas realizacji</span>
-            </div>
+{(hasServices || hasInfoBox) && (
+  <section className={styles.sectionCard} id="services">
+    <div className={styles.sectionHeader}>
+      <h2 className={styles.sectionTitle}>Usługi</h2>
+      <span className={styles.mutedSmall}>
+        Oferta, ceny i czas realizacji
+      </span>
+    </div>
 
-            {hasServices ? (
-              <ul className={styles.services}>
-                {profile.services.map((s, i) => (
-                  <li key={i} className={styles.serviceRow}>
-                    <span className={styles.serviceName}>{s.name}</span>
-                    <span className={styles.serviceTime}>
-                      {s.duration.value} {mapUnit(s.duration.unit)}
+    {hasServices ? (
+      <div className={styles.servicesGrid}>
+        {visibleServices.map((s, i) => {
+          const img = getServiceImageUrl(s);
+          const categoryLabel = mapServiceCategory(s.category);
+          const priceLabel = formatServicePrice(s);
+          const durationLabel =
+            s?.duration?.value && s?.duration?.unit
+              ? `${s.duration.value} ${mapUnit(s.duration.unit)}`
+              : "Brak czasu";
+
+          return (
+            <article key={s._id || i} className={styles.serviceCard}>
+              <div className={styles.serviceMedia}>
+                {img ? (
+                  <img
+                    src={img}
+                    alt={s.name || `Usługa ${i + 1}`}
+                    className={styles.serviceImage}
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/other/no-image.png";
+                    }}
+                  />
+                ) : (
+                  <div className={styles.serviceImagePlaceholder}>
+                    <FaRegCalendarAlt />
+                    <span>Bez zdjęcia</span>
+                  </div>
+                )}
+
+                <div className={styles.serviceBadges}>
+                  <span className={styles.serviceCategoryBadge}>
+                    {categoryLabel}
+                  </span>
+
+                  {s.featured && (
+                    <span className={styles.serviceFeaturedBadge}>
+                      Wyróżniona
                     </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className={styles.muted}>Brak usług do wyświetlenia.</p>
-            )}
-          </section>
-        )}
+                  )}
+                </div>
+              </div>
+
+              <div className={styles.serviceContent}>
+                <div className={styles.serviceTop}>
+                  <h3 className={styles.serviceCardTitle}>{s.name}</h3>
+                </div>
+
+                {s.shortDescription?.trim() ? (
+                  <p className={styles.serviceDescription}>
+                    {s.shortDescription}
+                  </p>
+                ) : (
+                  <p className={styles.serviceDescriptionMuted}>
+                    Użytkownik nie dodał krótkiego opisu tej usługi.
+                  </p>
+                )}
+
+                <div className={styles.serviceMetaGrid}>
+                  <div className={styles.serviceMetaItem}>
+                    <span className={styles.serviceMetaLabel}>Cena</span>
+                    <span className={styles.serviceMetaValue}>{priceLabel}</span>
+                  </div>
+
+                  <div className={styles.serviceMetaItem}>
+                    <span className={styles.serviceMetaLabel}>Czas</span>
+                    <span className={styles.serviceMetaValue}>{durationLabel}</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    ) : (
+      <p className={styles.muted}>Brak usług do wyświetlenia.</p>
+    )}
+  </section>
+)}
       </div>
 
       {fullscreenImage && (

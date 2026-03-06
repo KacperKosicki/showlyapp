@@ -2403,7 +2403,9 @@
   gap: .45rem;
   font-weight: 800;
 
-  svg { color: $primary-color; }
+  svg {
+    color: $primary-color;
+  }
 }
 
 .contactValue {
@@ -2429,4 +2431,202 @@
   flex-wrap: wrap;
   gap: .5rem;
   margin-top: .35rem;
+}
+
+.serviceCardEdit {
+  border: 1px solid #e9ecf1;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #fafbfd 0%, #f6f7f9 100%);
+  padding: 0.9rem;
+  margin-bottom: 0.9rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.serviceCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.8rem;
+}
+
+.serviceGridEdit {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 0.8rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.serviceToggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.servicesViewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.35rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.servicePreviewCard {
+  border: 1px solid #e9ecf1;
+  border-radius: 1rem;
+  background: #fff;
+  padding: 0.85rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+.servicePreviewTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+
+  strong {
+    color: $text-color;
+    font-size: 1rem;
+  }
+}
+
+.serviceShortDesc {
+  margin: 0 0 0.65rem;
+  color: #5f6b7a;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.servicePreviewMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.6rem;
+  margin-bottom: 0.55rem;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    background: rgba($primary-color, 0.08);
+    border: 1px solid rgba($primary-color, 0.15);
+    color: $primary-color;
+    font-size: 0.82rem;
+    font-weight: 700;
+  }
+}
+
+.servicePreviewFlags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.mutedBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  background: #f2f4f7;
+  border: 1px solid #e0e0e0;
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.featuredBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 193, 7, 0.12);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: #a46b00;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.serviceImageEditor {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  margin-bottom: 0.9rem;
+  padding: 0.75rem;
+  border: 1px dashed #d9e0ea;
+  border-radius: 0.9rem;
+  background: #fff;
+  flex-wrap: wrap;
+}
+
+.serviceImageThumb {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 0.8rem;
+  border: 1px solid #e9ecf1;
+  background: #f7f8fb;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+}
+
+.serviceImagePlaceholder {
+  width: 120px;
+  height: 90px;
+  border-radius: 0.8rem;
+  border: 1px dashed #cfd8e3;
+  background: #f8fafc;
+  color: #6b7280;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.4rem;
+}
+
+.serviceImageActions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 220px;
+}
+
+.servicePreviewImage {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 0.9rem;
+  border: 1px solid #e9ecf1;
+  background: #f7f8fb;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 560px) {
+  .serviceImageEditor {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .serviceImageThumb,
+  .serviceImagePlaceholder {
+    width: 100%;
+    max-width: 240px;
+    height: 140px;
+  }
+
+  .serviceImageActions {
+    min-width: 100%;
+  }
 }

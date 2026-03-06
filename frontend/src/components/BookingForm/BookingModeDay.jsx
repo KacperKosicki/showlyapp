@@ -31,9 +31,28 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
 
   const navigate = useNavigate();
 
-  // ✅ logika: jeśli profil ma usługi i NIE jest to "Tylko zapytanie" → usługa wymagana
-  const hasServices = Array.isArray(provider?.services) && provider.services.length > 0;
+  // ✅ tylko aktywne usługi
+  const activeServices = useMemo(() => {
+    return (provider?.services || []).filter((s) => s?.isActive !== false);
+  }, [provider?.services]);
+
+  // ✅ logika: jeśli profil ma aktywne usługi i NIE jest to "Tylko zapytanie" → usługa wymagana
+  const hasServices = activeServices.length > 0;
   const serviceRequiredForBooking = hasServices && !onlyInquiry;
+
+  // ✅ jeśli wybrana usługa została wyłączona/usunięta → reset
+  useEffect(() => {
+    if (!selectedService?._id) return;
+
+    const stillExists = activeServices.some(
+      (s) => String(s._id) === String(selectedService._id)
+    );
+
+    if (!stillExists) {
+      setService(null);
+      setDate(null);
+    }
+  }, [activeServices, selectedService]);
 
   // Dni niedostępne (PUBLIC endpoint)
   useEffect(() => {
@@ -102,6 +121,22 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
       }
 
       const dateStr = format(selectedDate, "yyyy-MM-dd");
+
+      // ✅ jeśli wybrana usługa już nie jest aktywna → blokada
+      if (selectedService?._id) {
+        const isServiceStillActive = activeServices.some(
+          (s) => String(s._id) === String(selectedService._id)
+        );
+
+        if (!isServiceStillActive) {
+          pushAlert?.({
+            show: true,
+            type: "error",
+            message: "Ta usługa jest obecnie wyłączona.",
+          });
+          return;
+        }
+      }
 
       // A) Tylko zapytanie → rozmowa (usługa opcjonalna)
       if (onlyInquiry) {
@@ -271,9 +306,7 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
         {hasServices && (
           <label className={styles.field}>
             <div className={styles.fieldHeader}>
-              <h3 className={styles.fieldTitle}>
-                {onlyInquiry ? "Wybierz usługę" : "Wybierz usługę"}
-              </h3>
+              <h3 className={styles.fieldTitle}>Wybierz usługę</h3>
               <span className={styles.fieldHint}>
                 {onlyInquiry ? "opcjonalnie" : "wymagane"}
               </span>
@@ -284,7 +317,7 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
                 className={styles.select}
                 value={selectedService?._id || ""}
                 onChange={(e) => {
-                  const svc = (provider.services || []).find(
+                  const svc = activeServices.find(
                     (s) => String(s._id) === String(e.target.value)
                   );
                   setService(svc || null);
@@ -293,7 +326,7 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
               >
                 <option value="">{onlyInquiry ? "– bez wyboru –" : "— wybierz usługę —"}</option>
 
-                {(provider.services || []).map((s) => (
+                {activeServices.map((s) => (
                   <option key={s._id} value={s._id}>
                     {s.name}
                     {s.duration?.value
@@ -455,9 +488,7 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
 
                 <div className={styles.modePill} title="Wybrany tryb">
                   <span className={styles.modeDot} />
-                  <span>
-                    {onlyInquiry ? "Tylko zapytanie" : "Blokada dnia"}
-                  </span>
+                  <span>{onlyInquiry ? "Tylko zapytanie" : "Blokada dnia"}</span>
                 </div>
               </div>
 

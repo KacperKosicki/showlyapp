@@ -1310,47 +1310,229 @@ $page-max: 1180px;
   }
 }
 
-/* services list */
-.services {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+/* ========= SERVICES GRID / CARDS ========= */
+.servicesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
 
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.serviceRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-
-  padding: 12px 14px;
-  border-radius: 16px;
-  background:
-    radial-gradient(600px 200px at 20% 20%, var(--pp-p-10), transparent 60%),
-    radial-gradient(500px 220px at 90% 30%, var(--pp-s-10), transparent 55%),
-    #fff;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  transition: transform 0.15s ease;
-
-  &:hover {
-    transform: translateY(-1px);
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr;
   }
 }
 
-.serviceName {
-  font-family: $font-heading;
-  color: var(--pp-primary);
+.serviceCard {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 20px;
+  background:
+    radial-gradient(600px 220px at 20% 20%, var(--pp-p-10), transparent 60%),
+    radial-gradient(500px 220px at 90% 30%, var(--pp-s-10), transparent 55%),
+    #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.07);
+  transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.1);
+    border-color: var(--pp-p-22);
+  }
 }
 
-.serviceTime {
+.serviceMedia {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f7f8fb, #eef1f6);
+}
+
+.serviceImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.25s ease;
+}
+
+.serviceCard:hover .serviceImage {
+  transform: scale(1.03);
+}
+
+.serviceImagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  color: rgba(0, 0, 0, 0.45);
+  font-family: $font-accent;
+  font-weight: 800;
+  text-align: center;
+
+  svg {
+    font-size: 1.5rem;
+    color: var(--pp-primary);
+    opacity: 0.75;
+  }
+
+  span {
+    font-size: 0.9rem;
+  }
+}
+
+.serviceBadges {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.serviceCategoryBadge,
+.serviceFeaturedBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  backdrop-filter: blur(10px);
   font-family: $font-accent;
   font-weight: 900;
-  color: var(--pp-secondary);
-  white-space: nowrap;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+}
+
+.serviceCategoryBadge {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.serviceFeaturedBadge {
+  color: #fff;
+  background: linear-gradient(135deg, var(--pp-primary), var(--pp-secondary));
+  border: 1px solid rgba(255, 255, 255, 0.24);
+}
+
+.serviceContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+
+.serviceTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.serviceCardTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  color: #121826;
+  font-family: $font-heading;
+}
+
+.serviceDescription {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.72);
+  line-height: 1.55;
+  font-size: 0.95rem;
+  min-height: 48px;
+}
+
+.serviceDescriptionMuted {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.45);
+  line-height: 1.5;
+  font-size: 0.93rem;
+  min-height: 48px;
+}
+
+.serviceMetaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.serviceMetaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.serviceMetaLabel {
+  font-size: 0.78rem;
+  font-family: $font-accent;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.serviceMetaValue {
+  font-family: $font-heading;
+  font-size: 0.98rem;
+  color: var(--pp-primary);
+  font-weight: 800;
+  word-break: break-word;
+}
+
+/* ========= MOBILE SERVICES ========= */
+@media (max-width: 520px) {
+  .servicesGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .serviceCard {
+    border-radius: 18px;
+  }
+
+  .serviceContent {
+    padding: 12px;
+  }
+
+  .serviceCardTitle {
+    font-size: 1rem;
+  }
+
+  .serviceDescription,
+  .serviceDescriptionMuted {
+    min-height: unset;
+    font-size: 0.93rem;
+  }
+
+  .serviceBadges {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+  }
+
+  .serviceCategoryBadge,
+  .serviceFeaturedBadge {
+    font-size: 0.7rem;
+    padding: 6px 9px;
+  }
 }
 
 /* ========= LIGHTBOX ========= */

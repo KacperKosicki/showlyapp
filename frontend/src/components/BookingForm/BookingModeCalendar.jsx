@@ -80,6 +80,11 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
   const isUserPick = isTeamEnabled && provider?.team?.assignmentMode === "user-pick";
   const isAutoAssign = isTeamEnabled && provider?.team?.assignmentMode === "auto-assign";
 
+  // ✅ TYLKO aktywne usługi
+  const activeServices = useMemo(() => {
+    return (provider?.services || []).filter((s) => s?.isActive !== false);
+  }, [provider?.services]);
+
   // ✅ BUFFER z profilu (0/5/10/15), fallback 0
   const bookingBufferMin = useMemo(() => {
     const b = Number(provider?.bookingBufferMin);
@@ -88,6 +93,22 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
 
   // ✅ EFFECTIVE = 5 + bookingBufferMin (czyli 5/10/15/20)
   const effectiveBufferMin = useMemo(() => SLOT_BREAK_MIN + bookingBufferMin, [bookingBufferMin]);
+
+  // ✅ jeśli wybrana usługa została wyłączona/usunięta → reset
+  useEffect(() => {
+    if (!selectedService?._id) return;
+
+    const stillExists = activeServices.some(
+      (s) => String(s._id) === String(selectedService._id)
+    );
+
+    if (!stillExists) {
+      setService(null);
+      setSlot("");
+      setDate(null);
+      setSelectedStaffId("");
+    }
+  }, [activeServices, selectedService]);
 
   // ✅ Załaduj personel (gdy team.enabled)
   useEffect(() => {
@@ -194,7 +215,10 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     const eligibleIds = new Set(eligibleStaff.map((s) => String(s._id)));
 
     const totalCapacity = isAutoAssign
-      ? Math.max(0, eligibleStaff.reduce((sum, s) => sum + Math.max(1, Number(s.capacity) || 1), 0))
+      ? Math.max(
+          0,
+          eligibleStaff.reduce((sum, s) => sum + Math.max(1, Number(s.capacity) || 1), 0)
+        )
       : 0;
 
     const capacityMap = new Map(
@@ -356,12 +380,27 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
         pushAlert?.({ show: true, type: "error", message: "Musisz być zalogowany." });
         return;
       }
+
       if (!selectedDate || !selectedService || !selectedSlot) {
         pushAlert?.({ show: true, type: "error", message: "Wybierz dzień, usługę i godzinę." });
         return;
       }
+
       if (isUserPick && !selectedStaffId) {
         pushAlert?.({ show: true, type: "error", message: "Wybierz pracownika." });
+        return;
+      }
+
+      const isServiceStillActive = activeServices.some(
+        (s) => String(s._id) === String(selectedService?._id)
+      );
+
+      if (!isServiceStillActive) {
+        pushAlert?.({
+          show: true,
+          type: "error",
+          message: "Ta usługa jest obecnie wyłączona.",
+        });
         return;
       }
 
@@ -469,7 +508,7 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
               className={styles.select}
               value={selectedService?._id || ""}
               onChange={(e) => {
-                const svc = (provider.services || []).find((s) => s._id === e.target.value);
+                const svc = activeServices.find((s) => String(s._id) === String(e.target.value));
                 setService(svc || null);
                 setSlot("");
                 setDate(null);
@@ -477,16 +516,16 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
               }}
             >
               <option value="">– wybierz –</option>
-              {(provider.services || []).map((s) => (
+              {activeServices.map((s) => (
                 <option key={s._id} value={s._id}>
-                  {s.name} {s.duration.value}{" "}
-                  {s.duration.unit === "minutes"
+                  {s.name} {s.duration?.value}{" "}
+                  {s.duration?.unit === "minutes"
                     ? "min"
-                    : s.duration.unit === "hours"
+                    : s.duration?.unit === "hours"
                     ? "godzin"
-                    : s.duration.unit === "days"
+                    : s.duration?.unit === "days"
                     ? "dni"
-                    : s.duration.unit}
+                    : s.duration?.unit}
                 </option>
               ))}
             </select>
@@ -517,8 +556,10 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
               >
                 <option value="">– wybierz –</option>
                 {staffList
-                  .filter((s) =>
-                    (s.serviceIds || []).some((id) => String(id) === String(selectedService?._id))
+                  .filter(
+                    (s) =>
+                      s.active &&
+                      (s.serviceIds || []).some((id) => String(id) === String(selectedService?._id))
                   )
                   .map((s) => (
                     <option key={s._id} value={s._id}>
@@ -629,7 +670,6 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
                   </div>
                 </div>
 
-                {/* ✅ BELKA POD "WOLNE TERMINY" (FULL WIDTH) */}
                 <div className={styles.fullLegendBar}>
                   <div className={styles.legendBadges}>
                     <span className={styles.legendItem}>

@@ -27,6 +27,38 @@ const getEffectiveBufferMin = (profile) => {
   return SLOT_BREAK_MIN + profileBuf;
 };
 
+// ✅ helpery usług
+const findProfileService = (profile, serviceId) => {
+  if (!profile || !Array.isArray(profile.services) || !serviceId) return null;
+  return profile.services.find((s) => String(s._id) === String(serviceId)) || null;
+};
+
+const ensureServiceIsBookable = (profile, serviceId) => {
+  if (!serviceId) {
+    return { ok: true, service: null };
+  }
+
+  const service = findProfileService(profile, serviceId);
+
+  if (!service) {
+    return {
+      ok: false,
+      status: 404,
+      message: "Wybrana usługa nie istnieje.",
+    };
+  }
+
+  if (service.isActive === false) {
+    return {
+      ok: false,
+      status: 400,
+      message: "Ta usługa jest obecnie wyłączona i nie można jej zarezerwować.",
+    };
+  }
+
+  return { ok: true, service };
+};
+
 // helpery
 const toMin = (hhmm) => {
   const [h, m] = String(hhmm).split(":").map(Number);
@@ -203,8 +235,13 @@ router.post("/", requireAuth, async (req, res) => {
 
     const effectiveBufferMin = getEffectiveBufferMin(profile);
 
-    const serviceName =
-      profile?.services?.find((s) => String(s._id) === String(serviceId))?.name || null;
+    const serviceCheck = ensureServiceIsBookable(profile, serviceId);
+    if (!serviceCheck.ok) {
+      return res.status(serviceCheck.status).json({ message: serviceCheck.message });
+    }
+
+    const serviceDoc = serviceCheck.service;
+    const serviceName = serviceDoc?.name || null;
 
     const isCalendarTeam = profile.bookingMode === "calendar" && profile.team?.enabled === true;
 
@@ -425,10 +462,13 @@ router.post("/offline", requireAuth, async (req, res) => {
     const effectiveBufferMin = getEffectiveBufferMin(profile);
     const isCalendarTeam = profile.bookingMode === "calendar" && profile.team?.enabled === true;
 
-    const serviceName =
-      serviceNameFromClient ||
-      profile?.services?.find((s) => String(s._id) === String(serviceId))?.name ||
-      null;
+    const serviceCheck = ensureServiceIsBookable(profile, serviceId);
+    if (!serviceCheck.ok) {
+      return res.status(serviceCheck.status).json({ message: serviceCheck.message });
+    }
+
+    const serviceDoc = serviceCheck.service;
+    const serviceName = serviceNameFromClient || serviceDoc?.name || null;
 
     let staffDocFinal = null;
     let staffAutoAssigned = false;
@@ -645,10 +685,16 @@ router.post("/day", requireAuth, async (req, res) => {
     }).lean();
     if (dupPending) return res.status(409).json({ message: "Masz już oczekującą prośbę na ten dzień." });
 
+    const serviceCheck = ensureServiceIsBookable(profile, serviceId);
+    if (!serviceCheck.ok) {
+      return res.status(serviceCheck.status).json({ message: serviceCheck.message });
+    }
+
+    const serviceDoc = serviceCheck.service;
+
     let serviceName = svcNameFromClient || null;
-    if (!serviceName && serviceId && Array.isArray(profile?.services)) {
-      const svc = profile.services.find((s) => String(s._id) === String(serviceId));
-      if (svc) serviceName = svc.name;
+    if (!serviceName && serviceDoc) {
+      serviceName = serviceDoc.name;
     }
 
     const pendingExpiresAt = new Date(Date.now() + PENDING_MINUTES * 60 * 1000);
@@ -756,10 +802,16 @@ router.post("/offline/day", requireAuth, async (req, res) => {
     }).lean();
     if (existsAccepted) return res.status(409).json({ message: "Ten dzień jest już zajęty." });
 
+    const serviceCheck = ensureServiceIsBookable(fullProfile, serviceId);
+    if (!serviceCheck.ok) {
+      return res.status(serviceCheck.status).json({ message: serviceCheck.message });
+    }
+
+    const serviceDoc = serviceCheck.service;
+
     let serviceName = svcNameFromClient || null;
-    if (!serviceName && serviceId && Array.isArray(fullProfile?.services)) {
-      const svc = fullProfile.services.find((s) => String(s._id) === String(serviceId));
-      if (svc) serviceName = svc.name;
+    if (!serviceName && serviceDoc) {
+      serviceName = serviceDoc.name;
     }
 
     const created = await Reservation.create({
@@ -1126,10 +1178,27 @@ router.get("/meta/:providerUid", async (req, res) => {
 
     if (!profile) return res.status(404).json({ message: "Profil nie istnieje" });
 
+    const activeServices = Array.isArray(profile.services)
+      ? profile.services.filter((s) => s?.isActive !== false)
+      : [];
+
+    const activeServiceIds = new Set(activeServices.map((s) => String(s._id)));
+
     const staff = await Staff.find(
       { profileId: profile._id, active: true },
       { _id: 1, name: 1, capacity: 1, serviceIds: 1 }
     ).lean();
+
+    const normalizedStaff = Array.isArray(staff)
+      ? staff
+          .map((s) => ({
+            ...s,
+            serviceIds: Array.isArray(s.serviceIds)
+              ? s.serviceIds.filter((id) => activeServiceIds.has(String(id)))
+              : [],
+          }))
+          .filter((s) => (s.serviceIds || []).length > 0 || !activeServices.length)
+      : [];
 
     return res.json({
       providerProfileId: profile._id,
@@ -1138,8 +1207,8 @@ router.get("/meta/:providerUid", async (req, res) => {
 
       bookingMode: profile.bookingMode,
       team: profile.team || { enabled: false },
-      services: profile.services || [],
-      staff: staff || [],
+      services: activeServices,
+      staff: normalizedStaff,
 
       bookingBufferMin: normalizeBuffer(profile.bookingBufferMin),
 
