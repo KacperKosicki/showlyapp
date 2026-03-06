@@ -1,84 +1,147 @@
-@import '../../styles/variables';
+@import "../../styles/variables";
+
+/* =========================================================
+   FOOTER — aurora + glass columns (premium)
+========================================================= */
 
 .footer {
-  background-color: #111;
-  color: #ddd;
-  padding: 3rem 1rem 1rem;
-  font-family: $font-body;
-
-  a {
-    color: #ccc;
-    text-decoration: none;
-    transition: color 0.2s;
-
-    &:hover {
-      color: $primary-color;
-    }
-  }
+  position: relative;
+  overflow: hidden;
+  padding: 3.2rem 1rem 1.4rem;
+  background: #07080b;
+  color: rgba(255, 255, 255, 0.86);
+  isolation: isolate;
 }
 
-.container {
-  max-width: 1200px;
+/* ===== background layers ===== */
+.bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.aurora,
+.aurora2 {
+  position: absolute;
+  inset: -24%;
+  filter: blur(28px);
+  opacity: 0.9;
+  transform: translate3d(0, 0, 0);
+  animation: floaty 12s ease-in-out infinite;
+}
+
+.aurora {
+  background:
+    radial-gradient(600px 320px at 18% 28%, rgba(111, 78, 242, 0.34), transparent 62%),
+    radial-gradient(540px 300px at 45% 65%, rgba(255, 64, 129, 0.22), transparent 60%),
+    radial-gradient(520px 320px at 85% 35%, rgba(77, 214, 255, 0.14), transparent 62%);
+}
+
+.aurora2 {
+  opacity: 0.7;
+  animation-duration: 15s;
+  animation-direction: reverse;
+  background:
+    radial-gradient(560px 320px at 72% 28%, rgba(111, 78, 242, 0.20), transparent 62%),
+    radial-gradient(520px 320px at 22% 72%, rgba(255, 64, 129, 0.14), transparent 62%);
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+  background-size: 140px 140px;
+  mask-image: radial-gradient(circle at 35% 5%, #000 0%, #000 40%, transparent 72%);
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(1200px 700px at 30% 15%, transparent 40%, rgba(0, 0, 0, 0.78) 84%);
+  opacity: 0.92;
+}
+
+.grain {
+  position: absolute;
+  inset: -30%;
+  opacity: 0.22;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+  transform: rotate(2deg);
+}
+
+/* ===== content ===== */
+.wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 1180px;
   margin: 0 auto;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3rem;
-  justify-content: space-between;
+  padding: 0 clamp(12px, 1.8vw, 24px);
 }
 
-.column {
-  flex: 1;
-  min-width: 200px;
-
-  h4 {
-    color: white;
-    font-size: 1.1rem;
-    margin-bottom: 1rem;
-  }
-
-  p {
-    font-size: 0.9rem;
-    margin: 0.3rem 0;
-    color: #aaa;
-  }
-
-  ul {
-    list-style: none;
-    padding: 0;
-
-    li {
-      margin: 0.4rem 0;
-    }
-  }
-}
-
-.socialBtn {
-  background: transparent;
-  border: 0;
-  padding: 0;
-  cursor: not-allowed;
-  opacity: 0.75;
+.top {
   display: grid;
-  place-items: center;
+  grid-template-columns: 1.3fr 0.9fr 1.05fr;
+  gap: 14px;
+  align-items: start;
+}
+
+/* brand column */
+.brand {
+  padding: 18px;
+  border-radius: 18px;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
+  box-shadow:
+    0 26px 90px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.brandTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logoMark {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(111, 78, 242, 0.9), rgba(255, 64, 129, 0.85));
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
 }
 
 .footerLogo {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 10px;
+  margin: 0;
+
+  font-family: $font-accent;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 1.1rem;
 }
 
 .beta {
-  font-size: 0.55rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  padding: 0.2rem 0.45rem;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  padding: 0.22rem 0.5rem;
   border-radius: 999px;
   text-transform: uppercase;
   font-family: $font-accent;
 
   background: transparent;
-  color: white;
+  color: rgba(255, 255, 255, 0.9);
 
   border: 1px solid transparent;
   background-image:
@@ -87,150 +150,309 @@
   background-origin: border-box;
   background-clip: padding-box, border-box;
 
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
-.socials {
-  margin-top: 1rem;
+.brandText {
+  margin: 12px 0 14px;
+  font-family: $font-body;
+  color: rgba(255, 255, 255, 0.78);
+  line-height: 1.65;
+  max-width: 60ch;
+}
+
+.pills {
   display: flex;
-  gap: 0.8rem;
-
-  a {
-    background-color: #222;
-    padding: 0.5rem;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    svg {
-      color: #ccc;
-      font-size: 1rem;
-    }
-
-    &:hover svg {
-      color: $primary-color;
-    }
-  }
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
+.pill {
+  font-family: $font-accent;
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 9px;
+  border-radius: 999px;
+
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* glass card */
+.card {
+  padding: 18px;
+  border-radius: 18px;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.028));
+  box-shadow:
+    0 26px 90px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.cardTitle {
+  margin: 0 0 12px;
+  font-family: $font-accent;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 1.02rem;
+}
+
+/* nav links */
+.links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+
+  display: grid;
+  gap: 10px;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 10px 12px;
+  border-radius: 14px;
+  text-decoration: none;
+
+  font-family: $font-body;
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+
+.link svg {
+  opacity: 0.8;
+}
+
+.link:hover {
+  transform: translateY(-1px);
+  color: rgba(255, 255, 255, 0.92);
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* contact */
+.contact {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.contactRow {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.contactIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.contactText {
+  font-family: $font-body;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* socials */
+.socials {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.socialBtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.78);
+
+  cursor: not-allowed;
+  opacity: 0.8;
+
+  transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+.socialBtn svg {
+  font-size: 1.05rem;
+}
+
+.note {
+  margin-top: 12px;
+  font-family: $font-body;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+/* bottom */
 .bottom {
-  text-align: center;
-  border-top: 1px solid #333;
-  padding-top: 1rem;
-  margin-top: 2rem;
+  margin-top: 16px;
+  padding-top: 14px;
 
-  p {
-    margin: 0;
-    font-size: 0.8rem;
-    color: #777;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
 }
 
+.bottomLeft {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.copy {
+  font-family: $font-body;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.92rem;
+}
+
+.sep {
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(111, 78, 242, 0.55), rgba(255, 64, 129, 0.45));
+  opacity: 0.9;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.smallLink {
+  font-family: $font-body;
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+
+  transition: color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.smallLink:hover {
+  color: rgba(255, 255, 255, 0.90);
+  border-color: rgba(255, 255, 255, 0.32);
+  transform: translateY(-1px);
+}
+
+.toTop {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 14px;
+  text-decoration: none;
+
+  font-family: $font-accent;
+  font-weight: 950;
+
+  color: rgba(255, 255, 255, 0.86);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+}
+
+.toTop:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* responsive */
 @media (max-width: 1024px) {
-  .footer {
-    padding: 3rem 1rem;
-  }
-
-  .container {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 2rem;
-    justify-content: space-between;
-  }
-
-  .column {
-    flex: 1 1 45%;
-  }
-
-  .bottom {
-    padding-top: 1rem;
-    margin-top: 2rem;
-
-    p {
-      font-size: 0.8rem;
-    }
+  .top {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
   .footer {
-    padding: 2.5rem 1rem;
+    padding: 2.6rem 0.9rem 1.2rem;
   }
 
-  .container {
-    flex-direction: column;
-    align-items: center;
+  .brand,
+  .card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .bottom {
+    justify-content: center;
     text-align: center;
-    gap: 2.5rem;
   }
 
-  .column {
-    flex: 1 1 100%;
-    min-width: 100%;
-
-    h4 {
-      font-size: 1rem;
-    }
-
-    p,
-    li {
-      font-size: 0.9rem;
-    }
-  }
-
-  .socials {
+  .bottomLeft {
     justify-content: center;
   }
 
-  .bottom {
-    padding-top: 1rem;
-    margin-top: 2rem;
-
-    p {
-      font-size: 0.75rem;
-    }
+  .toTop {
+    width: 100%;
+    justify-content: center;
+    max-width: 520px;
   }
 }
 
-@media (max-width: 480px) {
-  .footer {
-    padding: 2rem 1rem;
+@media (prefers-reduced-motion: reduce) {
+  .aurora,
+  .aurora2 {
+    animation: none;
   }
 
-  .container {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 2rem;
+  .link,
+  .smallLink,
+  .toTop,
+  .socialBtn {
+    transition: none;
   }
+}
 
-  .column {
-    h4 {
-      font-size: 0.95rem;
-    }
-
-    p,
-    li {
-      font-size: 0.85rem;
-    }
+/* animations */
+@keyframes floaty {
+  0% {
+    transform: translate3d(-1%, -1%, 0) scale(1.02);
   }
-
-  .socials {
-    gap: 0.6rem;
-
-    a {
-      padding: 0.4rem;
-
-      svg {
-        font-size: 0.9rem;
-      }
-    }
+  50% {
+    transform: translate3d(1.4%, 1.2%, 0) scale(1.03);
   }
-
-  .bottom {
-    p {
-      font-size: 0.7rem;
-    }
+  100% {
+    transform: translate3d(-1%, -1%, 0) scale(1.02);
   }
 }
