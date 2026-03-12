@@ -411,4 +411,49 @@ profileSchema.pre("validate", function (next) {
   next();
 });
 
+// =========================
+// INDEKSY POD WYSZUKIWARKĘ
+// =========================
+
+// główny text search
+profileSchema.index(
+  {
+    name: "text",
+    role: "text",
+    location: "text",
+    tags: "text",
+    description: "text",
+    profileType: "text",
+    "services.name": "text",
+    "services.shortDescription": "text",
+    "services.description": "text",
+    "services.tags": "text",
+  },
+  {
+    name: "profile_text_search_idx",
+    default_language: "none",
+    weights: {
+      name: 12,
+      role: 10,
+      "services.name": 11,
+      location: 8,
+      tags: 7,
+      profileType: 6,
+      "services.tags": 6,
+      "services.shortDescription": 5,
+      description: 4,
+      "services.description": 3,
+    },
+  }
+);
+
+// pomocnicze indeksy do filtrowania i sortowania
+profileSchema.index({ isVisible: 1, visibleUntil: 1 });
+profileSchema.index({ rating: -1, reviews: -1 });
+profileSchema.index({ location: 1 });
+profileSchema.index({ bookingMode: 1 });
+profileSchema.index({ favoritesCount: -1 });
+profileSchema.index({ visits: -1 });
+profileSchema.index({ createdAt: -1 });
+
 module.exports = mongoose.model("Profile", profileSchema);

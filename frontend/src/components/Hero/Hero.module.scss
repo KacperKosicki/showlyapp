@@ -172,13 +172,17 @@
   margin: 0 0 18px;
 }
 
-/* actions */
 .actions {
   margin-top: 14px;
+  position: relative;
+  z-index: 5;
 }
 
 /* glass card for search */
 .searchBlock {
+  position: relative;
+  z-index: 30;
+
   max-width: 760px;
   padding: 16px;
   border-radius: 16px;
@@ -231,6 +235,9 @@
   gap: 12px;
   flex-wrap: wrap;
   align-items: center;
+
+  position: relative;
+  z-index: 1;
 }
 
 /* CTA */

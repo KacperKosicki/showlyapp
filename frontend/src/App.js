@@ -27,6 +27,7 @@ import AccountSettings from "./components/AccountSettings/AccountSettings";
 import Favorites from "./components/Favorites/Favorites";
 import BillingSuccess from "./components/BillingSuccess/BillingSuccess";
 import BillingCancel from "./components/BillingCancel/BillingCancel";
+import SearchResults from "./components/SearchResults/SearchResults";
 
 // ✅ NEW: admin
 import AdminPanel from "./components/AdminPanel/AdminPanel";
@@ -304,6 +305,17 @@ function App() {
         />
 
         <Route path="/verify-success" element={<VerifySuccess />} />
+
+        <Route
+  path="/szukaj"
+  element={
+    <>
+      <Hero {...heroProps} />
+      <SearchResults currentUser={safeUser} />
+      <Footer />
+    </>
+  }
+/>
 
         <Route
           path="/billing/success"

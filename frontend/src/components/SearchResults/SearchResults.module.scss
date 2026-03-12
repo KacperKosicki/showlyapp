@@ -1,0 +1,225 @@
+@import "../../styles/variables";
+
+.page {
+  min-height: 100vh;
+  padding: clamp(24px, 4vw, 48px) 16px 70px;
+  position: relative;
+  overflow-x: clip;
+}
+
+.inner {
+  width: min(1400px, 100%);
+  margin: 0 auto;
+}
+
+.top {
+  text-align: center;
+  margin-bottom: 26px;
+}
+
+.title {
+  font-family: $font-heading;
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: $text-color;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  font-family: $font-body;
+  color: rgba(0, 0, 0, 0.62);
+  font-size: 1rem;
+  margin-bottom: 24px;
+}
+
+.searchForm {
+  width: min(760px, 100%);
+  margin: 0 auto;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.03) inset;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: $font-body;
+  font-size: 1rem;
+  color: $text-color;
+  padding: 12px 14px;
+
+  &::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+  }
+}
+
+.button {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+
+  display: grid;
+  place-items: center;
+
+  color: #fff;
+  background: linear-gradient(135deg, #6f4ef2, #ff4081);
+  box-shadow: 0 16px 32px rgba(111, 78, 242, 0.24);
+
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease,
+    box-shadow 0.18s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+    box-shadow: 0 20px 36px rgba(111, 78, 242, 0.28);
+  }
+}
+
+.infoBar {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  margin-bottom: 22px;
+  padding: 14px 18px;
+  border-radius: 20px;
+
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(0, 0, 0, 0.03) inset;
+
+  span {
+    font-family: $font-body;
+    color: $text-color;
+    font-size: 0.95rem;
+  }
+}
+
+.empty {
+  text-align: center;
+  padding: 38px 18px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.8);
+  color: rgba(0, 0, 0, 0.65);
+  font-family: $font-body;
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(0, 0, 0, 0.03) inset;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.cardWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.matchedBox {
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(0, 0, 0, 0.03) inset;
+}
+
+.matchedLabel {
+  font-family: $font-heading;
+  font-size: 0.92rem;
+  color: $text-color;
+  margin-bottom: 10px;
+}
+
+.matchedServices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.matchedService {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+
+  background: rgba(111, 78, 242, 0.08);
+  color: $primary-color;
+  font-family: $font-body;
+  font-size: 0.84rem;
+  font-weight: 600;
+  border: 1px solid rgba(111, 78, 242, 0.12);
+}
+
+@media (max-width: 1100px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding: 22px 14px 60px;
+  }
+
+  .searchForm {
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .input {
+    font-size: 0.96rem;
+    padding: 10px 12px;
+  }
+
+  .button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .infoBar {
+    padding: 12px 14px;
+  }
+
+  .matchedBox {
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .matchedLabel {
+    font-size: 0.88rem;
+  }
+
+  .matchedService {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 0.78rem;
+  }
+}

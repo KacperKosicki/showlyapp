@@ -17,15 +17,40 @@ const requireOwnerOrAdmin = require("../middleware/requireOwnerOrAdmin");
 // -----------------------------
 // Helpers: slug + public URLs
 // -----------------------------
+const polishMap = {
+  ą: "a",
+  ć: "c",
+  ę: "e",
+  ł: "l",
+  ń: "n",
+  ó: "o",
+  ś: "s",
+  ż: "z",
+  ź: "z",
+  Ą: "a",
+  Ć: "c",
+  Ę: "e",
+  Ł: "l",
+  Ń: "n",
+  Ó: "o",
+  Ś: "s",
+  Ż: "z",
+  Ź: "z",
+};
+
 const slugify = (text = "") =>
-  text
+  String(text)
+    .split("")
+    .map((char) => polishMap[char] || char)
+    .join("")
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .replace(/\s+/g, "-")
-    .replace(/[^\w\-]+/g, "")
-    .replace(/\-\-+/g, "-");
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 function getProto(req) {
   const xf = req.headers["x-forwarded-proto"];
@@ -232,8 +257,8 @@ function sanitizeServicesInput(services = [], existingProfile) {
       duration: {
         value:
           s?.duration?.value === null ||
-          s?.duration?.value === undefined ||
-          s?.duration?.value === ""
+            s?.duration?.value === undefined ||
+            s?.duration?.value === ""
             ? null
             : Number(s.duration.value),
         unit: clean(s?.duration?.unit || "minutes"),
@@ -260,6 +285,251 @@ function sanitizeServicesInput(services = [], existingProfile) {
   });
 }
 
+const escapeRegex = (value = "") =>
+  String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const normalizeSearch = (value = "") =>
+  String(value)
+    .split("")
+    .map((char) => polishMap[char] || char)
+    .join("")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+const includesNormalized = (source = "", query = "") =>
+  normalizeSearch(source).includes(normalizeSearch(query));
+
+function getMatchedServices(services = [], query = "") {
+  if (!Array.isArray(services)) return [];
+
+  return services.filter((service) => {
+    if (service?.isActive === false) return false;
+
+    return (
+      includesNormalized(service?.name, query) ||
+      includesNormalized(service?.shortDescription, query) ||
+      includesNormalized(service?.description, query) ||
+      (Array.isArray(service?.tags) &&
+        service.tags.some((tag) => includesNormalized(tag, query)))
+    );
+  });
+}
+
+function scoreProfile(profile, query) {
+  let score = 0;
+  const q = normalizeSearch(query);
+
+  if (!q) return score;
+
+  const exact = (value, points) => {
+    if (normalizeSearch(value) === q) score += points;
+  };
+
+  const partial = (value, points) => {
+    if (includesNormalized(value, q)) score += points;
+  };
+
+  exact(profile?.name, 120);
+  partial(profile?.name, 80);
+
+  exact(profile?.role, 90);
+  partial(profile?.role, 60);
+
+  exact(profile?.location, 55);
+  partial(profile?.location, 35);
+
+  exact(profile?.profileType, 45);
+  partial(profile?.profileType, 25);
+
+  partial(profile?.description, 18);
+
+  if (Array.isArray(profile?.tags)) {
+    profile.tags.forEach((tag) => {
+      if (normalizeSearch(tag) === q) score += 35;
+      else if (includesNormalized(tag, q)) score += 18;
+    });
+  }
+
+  if (Array.isArray(profile?.services)) {
+    profile.services.forEach((service) => {
+      if (service?.isActive === false) return;
+
+      if (normalizeSearch(service?.name) === q) score += 95;
+      else if (includesNormalized(service?.name, q)) score += 55;
+
+      if (includesNormalized(service?.shortDescription, q)) score += 22;
+      if (includesNormalized(service?.description, q)) score += 12;
+
+      if (Array.isArray(service?.tags)) {
+        service.tags.forEach((tag) => {
+          if (normalizeSearch(tag) === q) score += 20;
+          else if (includesNormalized(tag, q)) score += 10;
+        });
+      }
+    });
+  }
+
+  score += Number(profile?.rating || 0) * 2;
+  score += Math.min(Number(profile?.reviews || 0), 50) * 0.4;
+  score += Math.min(Number(profile?.visits || 0), 500) * 0.03;
+
+  return score;
+}
+
+// ------------------------------------------------------
+// GET /api/profiles/search?q=... – wyszukiwanie profili
+// ------------------------------------------------------
+router.get("/search", async (req, res) => {
+  try {
+    const q = String(req.query.q || "").trim();
+    const limit = Math.min(Math.max(parseInt(req.query.limit || "12", 10), 1), 50);
+
+    if (!q || q.length < 2) {
+      return res.json([]);
+    }
+
+    const now = new Date();
+
+    // opcjonalnie automatyczne wygaszenie starych profili
+    await Profile.updateMany(
+      { isVisible: true, visibleUntil: { $lt: now } },
+      { $set: { isVisible: false } }
+    );
+
+    const baseMatch = {
+      isVisible: true,
+      visibleUntil: { $gte: now },
+    };
+
+    const selectFields = {
+      name: 1,
+      slug: 1,
+      role: 1,
+      location: 1,
+      tags: 1,
+      rating: 1,
+      reviews: 1,
+      visits: 1,
+      priceFrom: 1,
+      priceTo: 1,
+      avatar: 1,
+      photos: 1,
+      profileType: 1,
+      description: 1,
+      bookingMode: 1,
+      services: 1,
+      favoritesCount: 1,
+      theme: 1,
+      updatedAt: 1,
+      createdAt: 1,
+    };
+
+    let results = [];
+
+    // 1) TEXT SEARCH (jeśli indeks istnieje)
+    try {
+      const textResults = await Profile.find(
+        {
+          ...baseMatch,
+          $text: { $search: q },
+        },
+        {
+          ...selectFields,
+          score: { $meta: "textScore" },
+        }
+      )
+        .sort({
+          score: { $meta: "textScore" },
+          rating: -1,
+          reviews: -1,
+          visits: -1,
+        })
+        .limit(limit)
+        .lean();
+
+      results = textResults.map((item) => ({
+        ...item,
+        _searchScore: (item.score || 0) * 10 + scoreProfile(item, q),
+      }));
+    } catch (err) {
+      console.warn("⚠️ Text search fallback:", err.message);
+    }
+
+    // 2) fallback regex, jeśli mało wyników albo brak indeksu
+    if (results.length < limit) {
+      const regex = new RegExp(escapeRegex(q), "i");
+
+      const fallback = await Profile.find(
+        {
+          ...baseMatch,
+          $or: [
+            { name: regex },
+            { role: regex },
+            { location: regex },
+            { profileType: regex },
+            { description: regex },
+            { tags: regex },
+            { "services.name": regex },
+            { "services.shortDescription": regex },
+            { "services.description": regex },
+            { "services.tags": regex },
+          ],
+        },
+        selectFields
+      )
+        .limit(limit * 3)
+        .lean();
+
+      const seen = new Set(results.map((item) => String(item._id)));
+
+      for (const item of fallback) {
+        const id = String(item._id);
+        if (seen.has(id)) continue;
+
+        results.push({
+          ...item,
+          _searchScore: scoreProfile(item, q),
+        });
+
+        seen.add(id);
+      }
+    }
+
+    const finalResults = results
+      .map((profile) => {
+        const matchedServices = getMatchedServices(profile.services, q)
+          .slice(0, 3)
+          .map((service) => ({
+            _id: service._id,
+            name: service.name,
+            shortDescription: service.shortDescription,
+            category: service.category,
+            price: service.price,
+            duration: service.duration,
+            tags: service.tags || [],
+            image: normalizeImageOut(req, service.image, profile.updatedAt),
+          }));
+
+        return {
+          ...profile,
+          avatar: normalizeAvatarOut(req, profile.avatar, profile.updatedAt),
+          photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
+          services: normalizeServicesOut(req, profile.services, profile.updatedAt),
+          matchedServices,
+        };
+      })
+      .sort((a, b) => (b._searchScore || 0) - (a._searchScore || 0))
+      .slice(0, limit);
+
+    return res.json(finalResults);
+  } catch (error) {
+    console.error("❌ Błąd wyszukiwania profili:", error);
+    return res.status(500).json({ message: "Błąd wyszukiwania profili." });
+  }
+});
+
 // =========================================================
 // ✅ CLOUDINARY: AVATAR + PHOTOS
 // =========================================================
@@ -275,7 +545,7 @@ router.post("/:uid/avatar", requireAuth, requireOwnerOrAdmin, upload.single("fil
 
     const oldPublicId = pickPublicIdField(profile.avatar);
     if (oldPublicId) {
-      await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => {});
+      await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => { });
     }
 
     const result = await uploadBuffer(req.file.buffer, {
@@ -309,7 +579,7 @@ router.delete("/:uid/avatar", requireAuth, requireOwnerOrAdmin, async (req, res)
 
     const oldPublicId = pickPublicIdField(profile.avatar);
     if (oldPublicId) {
-      await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => {});
+      await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => { });
     }
 
     profile.avatar = { url: "", publicId: "" };
@@ -379,7 +649,7 @@ router.delete("/:uid/photos/:publicId", requireAuth, requireOwnerOrAdmin, async 
 
     const decoded = decodeURIComponent(publicId);
 
-    await cloudinary.uploader.destroy(decoded, { resource_type: "image" }).catch(() => {});
+    await cloudinary.uploader.destroy(decoded, { resource_type: "image" }).catch(() => { });
 
     profile.photos = Array.isArray(profile.photos) ? profile.photos : [];
     profile.photos = profile.photos.filter((p) => {
@@ -429,7 +699,7 @@ router.post(
 
       const oldPublicId = pickPublicIdField(service.image);
       if (oldPublicId) {
-        await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => {});
+        await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => { });
       }
 
       const result = await uploadBuffer(req.file.buffer, {
@@ -481,7 +751,7 @@ router.delete(
 
       const oldPublicId = pickPublicIdField(service.image);
       if (oldPublicId) {
-        await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => {});
+        await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => { });
       }
 
       service.image = { url: "", publicId: "" };
@@ -584,7 +854,7 @@ router.delete(
 
       const decoded = decodeURIComponent(publicId);
 
-      await cloudinary.uploader.destroy(decoded, { resource_type: "image" }).catch(() => {});
+      await cloudinary.uploader.destroy(decoded, { resource_type: "image" }).catch(() => { });
 
       service.gallery = Array.isArray(service.gallery) ? service.gallery : [];
       service.gallery = service.gallery.filter((img) => img?.publicId !== decoded);
@@ -1098,12 +1368,12 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
     if (updates.quickAnswers) {
       updates.quickAnswers = Array.isArray(updates.quickAnswers)
         ? updates.quickAnswers
-            .map((qa) => ({
-              title: clean(qa?.title),
-              answer: clean(qa?.answer),
-            }))
-            .filter((qa) => qa.title || qa.answer)
-            .slice(0, 3)
+          .map((qa) => ({
+            title: clean(qa?.title),
+            answer: clean(qa?.answer),
+          }))
+          .filter((qa) => qa.title || qa.answer)
+          .slice(0, 3)
         : [];
     }
 
@@ -1122,12 +1392,12 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
     if (updates.availableDates) {
       updates.availableDates = Array.isArray(updates.availableDates)
         ? updates.availableDates
-            .map((item) => ({
-              date: clean(item?.date),
-              fromTime: clean(item?.fromTime),
-              toTime: clean(item?.toTime),
-            }))
-            .filter((item) => item.date && item.fromTime && item.toTime)
+          .map((item) => ({
+            date: clean(item?.date),
+            fromTime: clean(item?.fromTime),
+            toTime: clean(item?.toTime),
+          }))
+          .filter((item) => item.date && item.fromTime && item.toTime)
         : [];
     }
 
@@ -1141,8 +1411,8 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
     if (updates.workingDays) {
       updates.workingDays = Array.isArray(updates.workingDays)
         ? updates.workingDays
-            .map((n) => Number(n))
-            .filter((n) => Number.isInteger(n) && n >= 0 && n <= 6)
+          .map((n) => Number(n))
+          .filter((n) => Number.isInteger(n) && n >= 0 && n <= 6)
         : profile.workingDays;
     }
 
@@ -1274,7 +1544,7 @@ router.patch("/rate/:slug", requireAuth, async (req, res) => {
 
         if (!finalName) finalName = dbUser?.displayName || dbUser?.name || "Użytkownik";
         if (!rawAvatar) rawAvatar = dbUser?.avatar || "";
-      } catch {}
+      } catch { }
     }
 
     const storedUserAvatar = normalizeUploadPath(rawAvatar);

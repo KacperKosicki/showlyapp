@@ -194,7 +194,7 @@ router.patch('/:uid', requireAuth, requireOwnerOrAdmin, async (req, res) => {
         // jeżeli zmieniasz avatar ręcznie url-em, usuń stary z cloudinary jeśli był
         const oldPublicId = getCloudinaryPublicId(user.avatar);
         if (oldPublicId) {
-          try { await cloudinary.uploader.destroy(oldPublicId); } catch {}
+          try { await cloudinary.uploader.destroy(oldPublicId); } catch { }
         }
         user.avatar = a;
       }
@@ -221,7 +221,7 @@ router.post('/:uid/avatar', requireAuth, requireOwnerOrAdmin, upload.single('fil
     // usuń stary avatar z Cloudinary (jeśli był)
     const oldPublicId = getCloudinaryPublicId(user.avatar);
     if (oldPublicId) {
-      try { await cloudinary.uploader.destroy(oldPublicId); } catch {}
+      try { await cloudinary.uploader.destroy(oldPublicId); } catch { }
     }
 
     // upload do Cloudinary z bufora
@@ -275,7 +275,7 @@ router.patch('/:uid/avatar-url', requireAuth, requireOwnerOrAdmin, async (req, r
 
     const oldPublicId = getCloudinaryPublicId(user.avatar);
     if (oldPublicId) {
-      try { await cloudinary.uploader.destroy(oldPublicId); } catch {}
+      try { await cloudinary.uploader.destroy(oldPublicId); } catch { }
     }
 
     user.avatar = next;
@@ -297,7 +297,7 @@ router.delete('/:uid/avatar', requireAuth, requireOwnerOrAdmin, async (req, res)
 
     const publicId = getCloudinaryPublicId(user.avatar);
     if (publicId) {
-      try { await cloudinary.uploader.destroy(publicId); } catch {}
+      try { await cloudinary.uploader.destroy(publicId); } catch { }
     }
 
     user.avatar = '';
