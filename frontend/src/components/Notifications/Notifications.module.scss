@@ -75,10 +75,13 @@ $page-max: 820px;
 /* ✅ pills: zawsze w kolumnie, równa szerokość */
 .headerPills {
   display: flex;
-  flex-direction: column;   /* ✅ jedna pod drugą */
+  flex-direction: column;
+  /* ✅ jedna pod drugą */
   gap: 10px;
-  align-items: stretch;     /* ✅ każda ma tę samą szerokość */
-  min-width: 240px;         /* ✅ żeby wyglądało „panelowo” na desktop */
+  align-items: stretch;
+  /* ✅ każda ma tę samą szerokość */
+  min-width: 240px;
+  /* ✅ żeby wyglądało „panelowo” na desktop */
 
   @media (max-width: 640px) {
     width: 100%;
@@ -87,14 +90,18 @@ $page-max: 820px;
 }
 
 .headerPill {
-  display: flex;            /* zamiast inline-flex */
+  display: flex;
+  /* zamiast inline-flex */
   align-items: center;
-  justify-content: space-between; /* ✅ label lewo / liczba prawo */
+  justify-content: space-between;
+  /* ✅ label lewo / liczba prawo */
   gap: 10px;
 
-  width: 100%;              /* ✅ zawsze ta sama szerokość */
+  width: 100%;
+  /* ✅ zawsze ta sama szerokość */
   padding: 10px 12px;
-  border-radius: 14px;      /* bardziej „panel” niż „chip” */
+  border-radius: 14px;
+  /* bardziej „panel” niż „chip” */
   white-space: nowrap;
 
   background: rgba(255, 255, 255, 0.85);
@@ -112,7 +119,8 @@ $page-max: 820px;
   }
 
   @media (max-width: 640px) {
-    white-space: normal; /* na mobile może się łamać */
+    white-space: normal;
+    /* na mobile może się łamać */
   }
 }
 
@@ -462,12 +470,10 @@ $page-max: 820px;
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0),
-      rgba(255, 255, 255, 0.55),
-      rgba(255, 255, 255, 0)
-    );
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0),
+        rgba(255, 255, 255, 0.55),
+        rgba(255, 255, 255, 0));
     animation: shimmer 1.2s infinite;
   }
 }
@@ -530,12 +536,14 @@ $page-max: 820px;
   .metaText {
     font-size: 0.92rem;
   }
+
   .date {
     font-size: 0.82rem;
   }
 }
 
 @media (max-width: 360px) {
+
   .unreadPill,
   .readPill,
   .openPill {

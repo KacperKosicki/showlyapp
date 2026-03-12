@@ -8,7 +8,8 @@
 
 .navbar {
   position: relative;
-  z-index: 30; /* ✅ ważne: nie przykrywa AlertBox (z-index 9999) */
+  z-index: 30;
+  /* ✅ ważne: nie przykrywa AlertBox (z-index 9999) */
 
   display: flex;
   justify-content: space-between;

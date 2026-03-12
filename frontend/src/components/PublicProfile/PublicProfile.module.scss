@@ -156,12 +156,10 @@ $page-max: 1240px;
 .splitLine {
   height: 1px;
   margin: 26px 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(15, 23, 42, 0.09),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(15, 23, 42, 0.09),
+      transparent);
 }
 
 /* =========================
@@ -1573,6 +1571,7 @@ $page-max: 1240px;
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -1583,6 +1582,7 @@ $page-max: 1240px;
     opacity: 0;
     transform: scale(0.975);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -1806,6 +1806,7 @@ $page-max: 1240px;
 }
 
 @media (max-width: 760px) {
+
   .metricRow,
   .ctaRow {
     grid-template-columns: 1fr;
@@ -1954,6 +1955,7 @@ $page-max: 1240px;
     letter-spacing: -0.03em;
     max-width: 100%;
     text-wrap: balance;
+    margin: 8px 0 10px;
   }
 
   .heroLead {
@@ -2103,6 +2105,7 @@ $page-max: 1240px;
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .reportPill,
   .favBtn,
   .ghostBtn,

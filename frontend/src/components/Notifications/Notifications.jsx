@@ -311,9 +311,8 @@ const Notifications = ({ user, setUnreadCount }) => {
     return (
       <li
         key={convo._id}
-        className={`${styles.item} ${isUnread ? styles.unread : styles.read} ${
-          variant === "system" ? styles.itemSystem : ""
-        }`}
+        className={`${styles.item} ${isUnread ? styles.unread : styles.read} ${variant === "system" ? styles.itemSystem : ""
+          }`}
       >
         <Link to={`/konwersacja/${convo._id}`} className={styles.link} state={{ scrollToId: "threadPageLayout" }}>
           <div className={styles.row}>

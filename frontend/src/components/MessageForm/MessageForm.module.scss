@@ -27,8 +27,13 @@ $page-max: 1180px;
   padding: 2rem 0 70px;
 }
 
-.page :is(h1, h2, h3) { font-family: $font-heading; }
-.page :is(button, input, textarea, a) { font-family: inherit; }
+.page :is(h1, h2, h3) {
+  font-family: $font-heading;
+}
+
+.page :is(button, input, textarea, a) {
+  font-family: inherit;
+}
 
 /* top glow background */
 .bgGlow {
@@ -63,7 +68,8 @@ $page-max: 1180px;
 /* ✅ back nad hero (jak ThreadView) */
 .backRow {
   padding: 12px;
-  padding-bottom: 14px; /* 🔥 DODAJE ODDECH NA DOLE */
+  padding-bottom: 14px;
+  /* 🔥 DODAJE ODDECH NA DOLE */
   background: transparent;
 }
 
@@ -176,7 +182,9 @@ $page-max: 1180px;
   font-weight: 900;
   font-size: 0.9rem;
 
-  svg { opacity: 0.95; }
+  svg {
+    opacity: 0.95;
+  }
 }
 
 .heroInner {
@@ -434,8 +442,14 @@ $page-max: 1180px;
   border: 1px solid #ffddcc;
   color: #cc6600;
 
-  .icon { font-size: 1.3rem; line-height: 1; }
-  p { margin: 0; }
+  .icon {
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+
+  p {
+    margin: 0;
+  }
 }
 
 /* =========================================================
@@ -460,32 +474,45 @@ $page-max: 1180px;
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0),
-      rgba(255, 255, 255, 0.55),
-      rgba(255, 255, 255, 0)
-    );
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0),
+        rgba(255, 255, 255, 0.55),
+        rgba(255, 255, 255, 0));
     animation: shimmer 1.2s infinite;
   }
 }
 
 @keyframes shimmer {
-  100% { transform: translateX(100%); }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* =========================================================
    MOBILE — jak ThreadView (brak nachodzenia)
 ========================================================= */
 @media (max-width: 520px) {
-  .page { padding: 2rem 0 54px; }
-  .shell { width: calc(100% - 2rem); }
+  .page {
+    padding: 2rem 0 54px;
+  }
 
-  .wrapper { border-radius: 18px; }
-  .hero { border-radius: 18px; }
+  .shell {
+    width: calc(100% - 2rem);
+  }
+
+  .wrapper {
+    border-radius: 18px;
+  }
+
+  .hero {
+    border-radius: 18px;
+  }
 
   /* ✅ FIX: zostaw oddech na dole na mobile */
-  .backRow { padding: 12px; padding-bottom: 14px; }
+  .backRow {
+    padding: 12px;
+    padding-bottom: 14px;
+  }
 
   .heroInner {
     display: flex;
@@ -495,7 +522,10 @@ $page-max: 1180px;
     padding: 14px;
   }
 
-  .heroRight { order: -1; place-items: center; }
+  .heroRight {
+    order: -1;
+    place-items: center;
+  }
 
   .avatarWrap {
     width: 118px;
@@ -506,9 +536,13 @@ $page-max: 1180px;
   }
 
   .avatar,
-  .avatarSkeleton { border-radius: 14px; }
+  .avatarSkeleton {
+    border-radius: 14px;
+  }
 
-  .avatarRing { inset: -14px; }
+  .avatarRing {
+    inset: -14px;
+  }
 
   .titleRow {
     width: 100%;
@@ -519,13 +553,25 @@ $page-max: 1180px;
     gap: 8px;
   }
 
-  .heroTitle { text-align: center; }
-  .titlePill { margin: 0 auto; }
+  .heroTitle {
+    text-align: center;
+  }
 
-  .metaRow { justify-content: center; }
-  .dot { display: none; }
+  .titlePill {
+    margin: 0 auto;
+  }
 
-  .body { padding: 12px; }
+  .metaRow {
+    justify-content: center;
+  }
+
+  .dot {
+    display: none;
+  }
+
+  .body {
+    padding: 12px;
+  }
 
   .senderHint {
     width: 100%;
@@ -545,5 +591,8 @@ $page-max: 1180px;
     min-height: 44px;
   }
 
-  .infoBox { border-radius: 14px; padding: 12px; }
+  .infoBox {
+    border-radius: 14px;
+    padding: 12px;
+  }
 }
