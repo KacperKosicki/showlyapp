@@ -361,7 +361,7 @@ export default function PublicProfile() {
     return "Brak ceny";
   };
 
-  const [favCount, setFavCount] = useState(0);
+  const [, setFavCount] = useState(0);
   const [isFav, setIsFav] = useState(false);
 
   useEffect(() => {
@@ -651,7 +651,6 @@ export default function PublicProfile() {
   const allowBookingUI = bookingEnabled && profile?.showAvailableDates !== false;
 
   const showBookButton = !isOwner && allowBookingUI;
-  const showNoBookingInfo = !isOwner && bookingEnabled && !allowBookingUI;
   const bookBtnLabel = isCalendar ? "ZAREZERWUJ TERMIN" : "WYŚLIJ ZAPYTANIE";
 
   const cleanLinks = (links || []).map((l) => (l || "").trim()).filter(Boolean);
@@ -694,10 +693,6 @@ export default function PublicProfile() {
           : profileType === "społeczność"
             ? "Społeczność"
             : "Profil";
-
-  const heroIntro =
-    description?.trim()?.slice(0, 180) ||
-    "Nowoczesna wizytówka online z usługami, galerią, opiniami i szybkim kontaktem.";
 
   return (
     <div className={styles.page} style={cssVars}>
