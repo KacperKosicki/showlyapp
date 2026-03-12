@@ -90,7 +90,6 @@ const authHeaders = async (extra = {}) => {
   };
 };
 
-// ✅ avatar/photos mogą być: string albo { url, publicId }
 const pickUrl = (val) => {
   if (!val) return "";
   if (typeof val === "string") return val;
@@ -98,7 +97,6 @@ const pickUrl = (val) => {
   return "";
 };
 
-// ✅ ujednolicone (uploads / http / data / blob) + obsługa obiektu {url,publicId}
 const normalizeAvatar = (val) => {
   const raw = pickUrl(val);
   const v = String(raw || "").trim();
@@ -116,7 +114,6 @@ const normalizeAvatar = (val) => {
   return v;
 };
 
-// ✅ normalizacja galerii: wspiera nowy typ [{url, publicId}] i stary [string]
 const normalizePhotos = (photos) => {
   if (!Array.isArray(photos)) return [];
   return photos
@@ -125,7 +122,6 @@ const normalizePhotos = (photos) => {
     .filter(Boolean);
 };
 
-// === blokada body bez „skoku” strony ===
 const lockBodyScroll = () => {
   const y = window.scrollY || document.documentElement.scrollTop;
   document.body.dataset.scrollY = String(y);
@@ -195,9 +191,8 @@ export default function PublicProfile() {
 
   const [isRatingSending, setIsRatingSending] = useState(false);
 
-  // ===== REPORT (zgłoszenia) =====
   const [reportOpen, setReportOpen] = useState(false);
-  const [reportType, setReportType] = useState("profile"); // "profile" | "review"
+  const [reportType, setReportType] = useState("profile");
   const [reportReviewId, setReportReviewId] = useState(null);
   const [reportReason, setReportReason] = useState("spam");
   const [reportMsg, setReportMsg] = useState("");
@@ -208,7 +203,6 @@ export default function PublicProfile() {
   const openLightbox = (src) => setFullscreenImage(src);
   const closeLightbox = () => setFullscreenImage(null);
 
-  // ✅ nie zmieniamy: profil nadal nie do zgłoszenia na własnym
   const openReportProfile = () => {
     setReportType("profile");
     setReportReviewId(null);
@@ -217,7 +211,6 @@ export default function PublicProfile() {
     setReportOpen(true);
   };
 
-  // ✅ ALBO WŁASNY PROFIL ALBO CUDZY — opinię można zgłosić zawsze (ważne: nadal trzeba być zalogowanym)
   const openReportReview = (reviewId) => {
     setReportType("review");
     setReportReviewId(reviewId);
@@ -234,8 +227,6 @@ export default function PublicProfile() {
       return;
     }
 
-    // ✅ ZMIANA: blokujemy TYLKO zgłoszenie profilu na własnym profilu.
-    // Zgłoszenie OPINII na własnym profilu ma działać.
     if (reportType === "profile" && currentUser.uid === profile?.userId) {
       setAlert({ type: "info", message: "Nie możesz zgłosić własnego profilu." });
       return;
@@ -274,7 +265,6 @@ export default function PublicProfile() {
     }
   };
 
-  // report modal scroll lock
   useEffect(() => {
     if (reportOpen) {
       lockBodyScroll();
@@ -314,62 +304,62 @@ export default function PublicProfile() {
   };
 
   const mapServiceCategory = (cat) => {
-  switch (cat) {
-    case "service":
-      return "Usługa";
-    case "product":
-      return "Produkt";
-    case "project":
-      return "Projekt";
-    case "artwork":
-      return "Obraz / dzieło";
-    case "handmade":
-      return "Rękodzieło";
-    case "lesson":
-      return "Lekcja";
-    case "consultation":
-      return "Konsultacja";
-    case "event":
-      return "Event";
-    case "custom":
-      return "Inne";
-    default:
-      return "Oferta";
-  }
-};
+    switch (cat) {
+      case "service":
+        return "Usługa";
+      case "product":
+        return "Produkt";
+      case "project":
+        return "Projekt";
+      case "artwork":
+        return "Obraz / dzieło";
+      case "handmade":
+        return "Rękodzieło";
+      case "lesson":
+        return "Lekcja";
+      case "consultation":
+        return "Konsultacja";
+      case "event":
+        return "Event";
+      case "custom":
+        return "Inne";
+      default:
+        return "Oferta";
+    }
+  };
 
-const getServiceImageUrl = (service) => {
-  if (!service) return "";
-  if (typeof service.image === "string") return normalizeAvatar(service.image);
-  if (service.image?.url) return normalizeAvatar(service.image.url);
-  return "";
-};
+  const getServiceImageUrl = (service) => {
+    if (!service) return "";
+    if (typeof service.image === "string") return normalizeAvatar(service.image);
+    if (service.image?.url) return normalizeAvatar(service.image.url);
+    return "";
+  };
 
-const formatServicePrice = (service) => {
-  const mode = service?.price?.mode;
-  const currency = service?.price?.currency || "PLN";
+  const formatServicePrice = (service) => {
+    const mode = service?.price?.mode;
+    const currency = service?.price?.currency || "PLN";
 
-  if (mode === "fixed" && service?.price?.amount != null) {
-    return `${service.price.amount} ${currency}`;
-  }
+    if (mode === "fixed" && service?.price?.amount != null) {
+      return `${service.price.amount} ${currency}`;
+    }
 
-  if (mode === "from" && service?.price?.from != null) {
-    return `od ${service.price.from} ${currency}`;
-  }
+    if (mode === "from" && service?.price?.from != null) {
+      return `od ${service.price.from} ${currency}`;
+    }
 
-  if (
-    mode === "range" &&
-    service?.price?.from != null &&
-    service?.price?.to != null
-  ) {
-    return `${service.price.from}–${service.price.to} ${currency}`;
-  }
+    if (
+      mode === "range" &&
+      service?.price?.from != null &&
+      service?.price?.to != null
+    ) {
+      return `${service.price.from}–${service.price.to} ${currency}`;
+    }
 
-  if (mode === "free") return "Darmowe";
-  if (mode === "contact") return "Wycena indywidualna";
+    if (mode === "free") return "Darmowe";
+    if (mode === "contact") return "Wycena indywidualna";
 
-  return "Brak ceny";
-};
+    return "Brak ceny";
+  };
 
   const [favCount, setFavCount] = useState(0);
   const [isFav, setIsFav] = useState(false);
@@ -385,7 +375,6 @@ const formatServicePrice = (service) => {
     return unsub;
   }, []);
 
-  // scroll do sekcji po wejściu
   useEffect(() => {
     const scrollTo = routerLocation.state?.scrollToId;
     if (!scrollTo || loading) return;
@@ -403,7 +392,6 @@ const formatServicePrice = (service) => {
     requestAnimationFrame(tryScroll);
   }, [routerLocation.state, loading, routerLocation.pathname]);
 
-  // fetch profilu
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -434,7 +422,6 @@ const formatServicePrice = (service) => {
     fetchProfile();
   }, [slug, uid]);
 
-  // wykryj czy już oceniał
   useEffect(() => {
     const currentUserId = auth.currentUser?.uid;
     if (!currentUserId || !profile?.ratedBy) return;
@@ -446,7 +433,6 @@ const formatServicePrice = (service) => {
     }
   }, [profile]);
 
-  // owner / rated
   useEffect(() => {
     const currentUserId = auth.currentUser?.uid;
     if (!currentUserId || !profile?.userId) return;
@@ -523,7 +509,6 @@ const formatServicePrice = (service) => {
       return;
     }
 
-    // ✅ jedyna blokada: showAvailableDates
     if (profile?.showAvailableDates === false) {
       setAlert({
         type: "info",
@@ -581,7 +566,6 @@ const formatServicePrice = (service) => {
     }
   };
 
-  // ====== UI states ======
   if (loading) return <div className={styles.state}>⏳ Wczytywanie wizytówki...</div>;
 
   if (!profile) {
@@ -616,19 +600,15 @@ const formatServicePrice = (service) => {
     socials = {},
   } = profile;
 
-  // ✅ ceny: obsługa stringów z API
   const pf = Number(priceFrom);
   const pt = Number(priceTo);
   const hasPrice = Number.isFinite(pf) && Number.isFinite(pt) && pf > 0 && pt >= pf;
 
-  // ✅ avatar profilu: nowy typ {url,publicId} + fallback
   const profileAvatarSrc = normalizeAvatar(avatar) || "/images/other/no-image.png";
 
-  // ✅ galeria: nowy typ [{url,publicId}] + stary [string]
   const gallery = normalizePhotos(profile.photos);
   const hasGallery = gallery.length > 0;
 
-  // ===== rating/reviews (ładnie + bezpiecznie) =====
   const ratedByArr = Array.isArray(profile?.ratedBy) ? profile.ratedBy : [];
 
   const reviewsCount =
@@ -656,26 +636,22 @@ const formatServicePrice = (service) => {
     "--pp-banner": themeVars.banner,
   };
 
- const visibleServices =
-  Array.isArray(profile.services)
+  const visibleServices = Array.isArray(profile.services)
     ? profile.services
-        .filter((s) => s?.isActive !== false)
-        .sort((a, b) => Number(a?.order ?? 0) - Number(b?.order ?? 0))
+      .filter((s) => s?.isActive !== false)
+      .sort((a, b) => Number(a?.order ?? 0) - Number(b?.order ?? 0))
     : [];
 
-const hasServices = visibleServices.length > 0;
+  const hasServices = visibleServices.length > 0;
 
   const bookingMode = String(profile?.bookingMode || "off").toLowerCase();
   const bookingEnabled = !["off", "none", "disabled", ""].includes(bookingMode);
-
   const isCalendar = bookingMode === "calendar";
 
-  // ✅ jedyne źródło prawdy (bez dat)
   const allowBookingUI = bookingEnabled && profile?.showAvailableDates !== false;
 
   const showBookButton = !isOwner && allowBookingUI;
   const showNoBookingInfo = !isOwner && bookingEnabled && !allowBookingUI;
-
   const bookBtnLabel = isCalendar ? "ZAREZERWUJ TERMIN" : "WYŚLIJ ZAPYTANIE";
 
   const cleanLinks = (links || []).map((l) => (l || "").trim()).filter(Boolean);
@@ -719,6 +695,10 @@ const hasServices = visibleServices.length > 0;
             ? "Społeczność"
             : "Profil";
 
+  const heroIntro =
+    description?.trim()?.slice(0, 180) ||
+    "Nowoczesna wizytówka online z usługami, galerią, opiniami i szybkim kontaktem.";
+
   return (
     <div className={styles.page} style={cssVars}>
       <div className={styles.bgGlow} aria-hidden="true" />
@@ -727,260 +707,424 @@ const hasServices = visibleServices.length > 0;
         {alert && <AlertBox type={alert.type} message={alert.message} onClose={() => setAlert(null)} />}
 
         <header className={styles.hero}>
+          <div className={styles.heroDecor} aria-hidden="true">
+            <span className={styles.heroGlowA} />
+            <span className={styles.heroGlowB} />
+            <span className={styles.heroGrid} />
+          </div>
+
           <div className={styles.heroInner}>
-            <div className={styles.heroBadge}>
-              <div className={styles.badgeItem}>
-                <FaRegEye />
-                <span>
-                  <span>
-                    <strong>{Number(profile?.visits ?? 0).toLocaleString("pl-PL")}</strong>&nbsp;odwiedzin
-                  </span>
-                </span>
-              </div>
-
-              <div
-                className={styles.badgeItem}
-                title={`Ocena: ${avgRatingLabel} (${reviewsCount} opinii)`}
-                aria-label={`Ocena ${avgRatingLabel}, liczba opinii ${reviewsCount}`}
-              >
-                <FaStar />
-                <span>
-                  <strong>{avgRatingLabel}</strong>
-                  <span className={styles.badgeDot} />
-                  <span>
-                    {reviewsCount}{" "}
-                    {reviewsCount === 1 ? "opinia" : reviewsCount > 1 && reviewsCount < 5 ? "opinie" : "opinii"}
-                  </span>
-                </span>
-              </div>
-            </div>
-
-            <div className={styles.heroTopLeft}>
-              <div className={styles.topLeftRow}>
+            {/* TOP BAR */}
+            <div className={styles.heroTopbar}>
+              <div className={styles.heroTopbarLeft}>
                 <span className={styles.locPill} title={location || "Brak lokalizacji"}>
                   <FaMapMarkerAlt />
-                  <span className={styles.locText}>{location || "Brak lokalizacji"}</span>
+                  <span className={styles.locText}>
+                    {location || "Brak lokalizacji"}
+                  </span>
                 </span>
 
-                {/* ✅ ZGŁOSZENIE PROFILU: obok lokalizacji */}
-                {!isOwner && (
-                  <button
-                    type="button"
-                    className={styles.reportPill}
-                    onClick={openReportProfile}
-                    title="Zgłoś profil"
-                    aria-label="Zgłoś profil"
-                  >
-                    <FiFlag />
-                    <span className={styles.reportText}>ZGŁOŚ PROFIL</span>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className={styles.heroLeft}>
-              <div className={styles.titleRow}>
-                <h1 className={styles.heroTitle}>{name}</h1>
-                <span className={`${styles.titlePill} ${styles[`type_${profileType}`] || ""}`}>{typeLabel}</span>
+                <span
+                  className={`${styles.titlePill} ${styles[`type_${profileType}`] || ""
+                    }`}
+                >
+                  {typeLabel}
+                </span>
               </div>
 
-              <div className={styles.metaRow}>
-                {role?.trim() && (
-                  <div className={styles.roleText} title={role}>
-                    {role}
-                  </div>
-                )}
-              </div>
-
-              <div className={styles.heroActions}>
+              {!isOwner && (
                 <button
                   type="button"
-                  className={`${styles.favBtn} ${isFav ? styles.favActive : ""}`}
-                  onClick={toggleFavorite}
-                  aria-label={isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
-                  title={isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
+                  className={styles.reportPill}
+                  onClick={openReportProfile}
                 >
-                  {isFav ? <FaHeart /> : <FaRegHeart />}
-                  <span>
-                    Ulubione: <strong>{favCount}</strong>
-                  </span>
+                  <FiFlag />
+                  <span className={styles.reportText}>ZGŁOŚ PROFIL</span>
                 </button>
+              )}
+            </div>
 
-                {hasServices && (
-                  <a className={styles.ghostBtn} href="#services">
-                    Zobacz usługi
-                  </a>
+            {/* MAIN HERO */}
+            <div className={styles.heroMain}>
+              <div className={styles.heroContent}>
+                {role?.trim() && (
+                  <div className={styles.kickerRow}>
+                    <span className={styles.roleBadge}>{role}</span>
+                  </div>
                 )}
 
+                <h1 className={styles.heroTitle}>{name}</h1>
+
+                {/* METRYKI — tylko 2 */}
+                <div className={styles.metricRow}>
+                  <div className={styles.metricCard}>
+                    <span className={styles.metricIcon}>
+                      <FaRegEye />
+                    </span>
+                    <div className={styles.metricContent}>
+                      <strong>
+                        {Number(profile?.visits ?? 0).toLocaleString("pl-PL")}
+                      </strong>
+                      <span>Odwiedzin</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.metricCard}>
+                    <span className={styles.metricIcon}>
+                      <FaStar />
+                    </span>
+                    <div className={styles.metricContent}>
+                      <strong>{avgRatingLabel}</strong>
+                      <span>
+                        {reviewsCount}{" "}
+                        {reviewsCount === 1
+                          ? "opinia"
+                          : reviewsCount > 1 && reviewsCount < 5
+                            ? "opinie"
+                            : "opinii"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ACTIONS */}
+                <div className={styles.heroActions}>
+                  <button
+                    type="button"
+                    className={`${styles.favBtn} ${isFav ? styles.favActive : ""
+                      }`}
+                    onClick={toggleFavorite}
+                  >
+                    {isFav ? <FaHeart /> : <FaRegHeart />}
+                    <span>
+                      {isFav ? "W ulubionych" : "Dodaj do ulubionych"}
+                    </span>
+                  </button>
+
+                  {hasServices && (
+                    <a className={styles.ghostBtn} href="#services">
+                      Zobacz usługi
+                    </a>
+                  )}
+                </div>
+
+                {/* CTA */}
                 <div className={styles.ctaRow}>
                   {showBookButton && (
-                    <button type="button" className={styles.ctaPrimary} onClick={goToBooking}>
+                    <button
+                      type="button"
+                      className={styles.ctaPrimary}
+                      onClick={goToBooking}
+                    >
                       <FaRegCalendarAlt />
                       {bookBtnLabel}
                     </button>
                   )}
 
-                  {showNoBookingInfo && (
-                    <div className={styles.reservationInfo}>
-                      Ten profil nie udostępnia wolnych terminów – możesz tylko napisać wiadomość.
-                    </div>
-                  )}
-
                   {!isOwner && (
-                    <button type="button" className={styles.ctaSecondary} onClick={startMessage}>
+                    <button
+                      type="button"
+                      className={styles.ctaSecondary}
+                      onClick={startMessage}
+                    >
                       <FaPaperPlane />
                       ZADAJ PYTANIE
                     </button>
                   )}
                 </div>
               </div>
-            </div>
 
-            <div className={styles.heroRight}>
-              <div className={styles.avatarWrap}>
-                <img
-                  src={profileAvatarSrc}
-                  alt={name}
-                  className={styles.avatar}
-                  decoding="async"
-                  onError={(e) => {
-                    e.currentTarget.src = "/images/other/no-image.png";
-                  }}
-                />
-                <div className={styles.avatarRing} aria-hidden="true" />
+              {/* AVATAR */}
+              <div className={styles.heroVisual}>
+                <div className={styles.avatarStage}>
+                  <div className={styles.avatarHalo} />
+
+                  <div className={styles.avatarWrap}>
+                    <img
+                      src={profileAvatarSrc}
+                      alt={name}
+                      className={styles.avatar}
+                      onError={(e) => {
+                        e.currentTarget.src =
+                          "/images/other/no-image.png";
+                      }}
+                    />
+                    <div className={styles.avatarRing} />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className={styles.heroFade} aria-hidden="true" />
+          <div className={styles.heroFade} />
         </header>
 
         <main className={styles.grid}>
-          <section className={styles.mainCard}>
-            <div className={styles.cardHeader}>
-              <div className={styles.titleWrap}>
-                <h2 className={styles.sectionTitle}>O profilu</h2>
+          <section className={styles.mainCol}>
+            <section className={styles.mainCard}>
+              <div className={styles.cardHeader}>
+                <div className={styles.titleWrap}>
+                  <h2 className={styles.sectionTitle}>O profilu</h2>
+                  <p className={styles.sectionSub}>Najważniejsze informacje o działalności i ofercie.</p>
+                </div>
+
+                <div className={styles.pricePill}>
+                  {hasPrice ? (
+                    <>
+                      Cennik: <span>od</span> <strong>{pf} zł</strong> <span>do</span> <strong>{pt} zł</strong>
+                    </>
+                  ) : (
+                    <em>Cennik: brak danych</em>
+                  )}
+                </div>
               </div>
 
-              <div className={styles.pricePill}>
-                {hasPrice ? (
-                  <>
-                    Cennik: <span>od</span> <strong>{pf} zł</strong> <span>do</span> <strong>{pt} zł</strong>
-                  </>
+              <div className={styles.cardBody}>
+                {description?.trim() ? (
+                  <div className={styles.descBox}>
+                    <p className={styles.desc}>{description}</p>
+                  </div>
                 ) : (
-                  <em>Cennik: brak danych</em>
+                  <p className={styles.muted}>Użytkownik nie dodał jeszcze opisu.</p>
+                )}
+
+                {tags?.length > 0 && (
+                  <div className={styles.chips}>
+                    {tags.map((tag) => (
+                      <span key={tag} className={styles.chip}>
+                        {String(tag).toUpperCase()}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <div className={styles.splitLine} />
+
+                <div className={styles.block}>
+                  <div className={styles.blockHeader}>
+                    <h3 className={styles.blockTitle}>Linki</h3>
+                    <span className={styles.blockHint}>
+                      {cleanLinks.length > 0 ? `${cleanLinks.length} ${cleanLinks.length === 1 ? "link" : "linki"}` : ""}
+                    </span>
+                  </div>
+
+                  {cleanLinks.length > 0 ? (
+                    <div className={styles.linkGrid}>
+                      {cleanLinks.map((link, i) => {
+                        const href = ensureUrl(link);
+                        return (
+                          <a
+                            key={`${href}-${i}`}
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.linkTile}
+                            title={href}
+                          >
+                            <div className={styles.linkTileLeft}>
+                              <span className={styles.linkBadge}>
+                                <FaGlobe />
+                              </span>
+                              <span className={styles.linkDomain}>{prettyUrl(href)}</span>
+                            </div>
+                            <span className={styles.linkHint}>Otwórz</span>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className={styles.muted}>Użytkownik nie dodał jeszcze żadnych linków.</p>
+                  )}
+                </div>
+
+                <div className={styles.splitLine} />
+
+                {!isOwner && (
+                  <div className={styles.rateBox}>
+                    <div className={styles.rateTop}>
+                      <div>
+                        <h3 className={styles.blockTitle}>{hasRated ? "Twoja ocena" : "Oceń profil"}</h3>
+                        <span className={styles.rateHint}>
+                          {hasRated ? "Dziękujemy za opinię!" : "Wybierz gwiazdki i dodaj krótki komentarz."}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.starsRow}>
+                      {[1, 2, 3, 4, 5].map((val) => (
+                        <FaStar
+                          key={val}
+                          className={val <= (hoveredRating || selectedRating) ? styles.starOn : styles.starOff}
+                          onClick={!hasRated ? () => setSelectedRating(val) : undefined}
+                          onMouseEnter={!hasRated ? () => setHoveredRating(val) : undefined}
+                          onMouseLeave={!hasRated ? () => setHoveredRating(0) : undefined}
+                        />
+                      ))}
+                    </div>
+
+                    {!hasRated && (
+                      <>
+                        <textarea
+                          className={styles.textarea}
+                          placeholder="Napisz krótko, co było na plus / co można poprawić (min. 10 znaków)"
+                          value={comment}
+                          onChange={(e) => {
+                            const text = e.target.value;
+                            if (text.length <= maxChars) setComment(text);
+                          }}
+                        />
+
+                        <div className={styles.textareaMeta}>
+                          <span className={styles.mutedSmall}>Bądź konkretny/a — to pomaga.</span>
+                          <span className={styles.counter}>
+                            {comment.length} / {maxChars}
+                          </span>
+                        </div>
+
+                        <LoadingButton
+                          type="button"
+                          isLoading={isRatingSending}
+                          disabled={isRatingSending}
+                          className={styles.primaryBtn}
+                          onClick={handleRate}
+                        >
+                          Wyślij opinię
+                        </LoadingButton>
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
-            </div>
+            </section>
 
-            <div className={styles.cardBody}>
-              {description?.trim() ? (
-                <p className={styles.desc}>{description}</p>
-              ) : (
-                <p className={styles.muted}>Użytkownik nie dodał jeszcze opisu.</p>
-              )}
+            {hasGallery && (
+              <section className={styles.sectionCard}>
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <h2 className={styles.sectionTitle}>Galeria</h2>
+                    <p className={styles.sectionSub}>Zdjęcia profilu i realizacji.</p>
+                  </div>
+                  <span className={styles.badgeCount}>{gallery.length}</span>
+                </div>
 
-              {tags?.length > 0 && (
-                <div className={styles.chips}>
-                  {tags.map((tag) => (
-                    <span key={tag} className={styles.chip}>
-                      {String(tag).toUpperCase()}
-                    </span>
+                <div className={styles.gallery}>
+                  {gallery.map((src, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={styles.galleryItem}
+                      onClick={() => openLightbox(src)}
+                      aria-label={`Otwórz zdjęcie ${i + 1}`}
+                      title="Otwórz"
+                    >
+                      <img
+                        src={src}
+                        alt={`Zdjęcie ${i + 1}`}
+                        onError={(e) => {
+                          e.currentTarget.src = "/images/other/no-image.png";
+                        }}
+                      />
+                      <span className={styles.galleryOverlay}>Podgląd</span>
+                    </button>
                   ))}
                 </div>
-              )}
+              </section>
+            )}
 
-              <div className={styles.splitLine} />
+            {(hasServices || hasInfoBox) && (
+              <section className={styles.sectionCard} id="services">
+                <div className={styles.sectionHeader}>
+                  <div>
+                    <h2 className={styles.sectionTitle}>Usługi</h2>
+                    <p className={styles.sectionSub}>Oferta, ceny i czas realizacji.</p>
+                  </div>
+                  <span className={styles.badgeCount}>{visibleServices.length}</span>
+                </div>
 
-              <div className={styles.block}>
-                <h3 className={styles.blockTitle}>Linki</h3>
+                {hasServices ? (
+                  <div className={styles.servicesGrid}>
+                    {visibleServices.map((s, i) => {
+                      const img = getServiceImageUrl(s);
+                      const categoryLabel = mapServiceCategory(s.category);
+                      const priceLabel = formatServicePrice(s);
+                      const durationLabel =
+                        s?.duration?.value && s?.duration?.unit
+                          ? `${s.duration.value} ${mapUnit(s.duration.unit)}`
+                          : "Brak czasu";
 
-                {cleanLinks.length > 0 ? (
-                  <div className={styles.linkGrid}>
-                    {cleanLinks.map((link, i) => {
-                      const href = ensureUrl(link);
                       return (
-                        <a
-                          key={`${href}-${i}`}
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.linkTile}
-                          title={href}
-                        >
-                          <span className={styles.linkDomain}>{prettyUrl(href)}</span>
-                          <span className={styles.linkHint}>Otwórz</span>
-                        </a>
+                        <article key={s._id || i} className={styles.serviceCard}>
+                          <div className={styles.serviceMedia}>
+                            {img ? (
+                              <img
+                                src={img}
+                                alt={s.name || `Usługa ${i + 1}`}
+                                className={styles.serviceImage}
+                                onError={(e) => {
+                                  e.currentTarget.src = "/images/other/no-image.png";
+                                }}
+                              />
+                            ) : (
+                              <div className={styles.serviceImagePlaceholder}>
+                                <FaRegCalendarAlt />
+                                <span>Bez zdjęcia</span>
+                              </div>
+                            )}
+
+                            <div className={styles.serviceBadges}>
+                              <span className={styles.serviceCategoryBadge}>{categoryLabel}</span>
+
+                              {s.featured && (
+                                <span className={styles.serviceFeaturedBadge}>
+                                  Wyróżniona
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className={styles.serviceContent}>
+                            <div className={styles.serviceTop}>
+                              <h3 className={styles.serviceCardTitle}>{s.name}</h3>
+                            </div>
+
+                            {s.shortDescription?.trim() ? (
+                              <p className={styles.serviceDescription}>{s.shortDescription}</p>
+                            ) : (
+                              <p className={styles.serviceDescriptionMuted}>
+                                Użytkownik nie dodał krótkiego opisu tej usługi.
+                              </p>
+                            )}
+
+                            <div className={styles.serviceMetaGrid}>
+                              <div className={styles.serviceMetaItem}>
+                                <span className={styles.serviceMetaLabel}>Cena</span>
+                                <span className={styles.serviceMetaValue}>{priceLabel}</span>
+                              </div>
+
+                              <div className={styles.serviceMetaItem}>
+                                <span className={styles.serviceMetaLabel}>Czas</span>
+                                <span className={styles.serviceMetaValue}>{durationLabel}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </article>
                       );
                     })}
                   </div>
                 ) : (
-                  <p className={styles.muted}>Użytkownik nie dodał jeszcze żadnych linków.</p>
+                  <p className={styles.muted}>Brak usług do wyświetlenia.</p>
                 )}
-              </div>
-
-              <div className={styles.splitLine} />
-
-              {!isOwner && (
-                <div className={styles.rateBox}>
-                  <div className={styles.rateTop}>
-                    <h3 className={styles.blockTitle}>{hasRated ? "Twoja ocena" : "Oceń profil"}</h3>
-                    <span className={styles.rateHint}>
-                      {hasRated ? "Dziękujemy!" : "Wybierz gwiazdki + dodaj komentarz"}
-                    </span>
-                  </div>
-
-                  <div className={styles.starsRow}>
-                    {[1, 2, 3, 4, 5].map((val) => (
-                      <FaStar
-                        key={val}
-                        className={val <= (hoveredRating || selectedRating) ? styles.starOn : styles.starOff}
-                        onClick={!hasRated ? () => setSelectedRating(val) : undefined}
-                        onMouseEnter={!hasRated ? () => setHoveredRating(val) : undefined}
-                        onMouseLeave={!hasRated ? () => setHoveredRating(0) : undefined}
-                      />
-                    ))}
-                  </div>
-
-                  {!hasRated && (
-                    <>
-                      <textarea
-                        className={styles.textarea}
-                        placeholder="Napisz krótko, co było na plus / co można poprawić (min. 10 znaków)"
-                        value={comment}
-                        onChange={(e) => {
-                          const text = e.target.value;
-                          if (text.length <= maxChars) setComment(text);
-                        }}
-                      />
-
-                      <div className={styles.textareaMeta}>
-                        <span className={styles.mutedSmall}>Bądź konkretny/a — to pomaga.</span>
-                        <span className={styles.counter}>
-                          {comment.length} / {maxChars}
-                        </span>
-                      </div>
-
-                      <LoadingButton
-                        type="button"
-                        isLoading={isRatingSending}
-                        disabled={isRatingSending}
-                        className={styles.primaryBtn}
-                        onClick={handleRate}
-                      >
-                        Wyślij opinię
-                      </LoadingButton>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+              </section>
+            )}
           </section>
 
           <aside className={styles.side}>
             <section className={styles.sideCard}>
               <div className={styles.sideHeader}>
-                <h2 className={styles.sectionTitle}>Opinie</h2>
+                <div>
+                  <h2 className={styles.sectionTitle}>Opinie</h2>
+                  <p className={styles.sectionSub}>Oceny i komentarze użytkowników.</p>
+                </div>
                 <span className={styles.badgeCount}>{profile.ratedBy?.length || 0}</span>
               </div>
 
@@ -1018,23 +1162,24 @@ const hasServices = visibleServices.length > 0;
                             </div>
                           </div>
 
-                          <div className={styles.reviewStars}>
-                            {[...Array(5)].map((_, idx) => (
-                              <FaStar key={idx} className={idx < ratingVal ? styles.starMiniOn : styles.starMiniOff} />
-                            ))}
-                          </div>
+                          <div className={styles.reviewRight}>
+                            <div className={styles.reviewStars}>
+                              {[...Array(5)].map((_, idx) => (
+                                <FaStar key={idx} className={idx < ratingVal ? styles.starMiniOn : styles.starMiniOff} />
+                              ))}
+                            </div>
 
-                          {/* ✅ ZGŁOSZENIE OPINII: TERAZ TAKŻE NA WŁASNYM PROFILU */}
-                          <button
-                            type="button"
-                            className={styles.reportMiniBtn}
-                            onClick={() => openReportReview(op?._id)}
-                            title="Zgłoś opinię"
-                            aria-label="Zgłoś opinię"
-                            disabled={!op?._id}
-                          >
-                            <FiFlag />
-                          </button>
+                            <button
+                              type="button"
+                              className={styles.reportMiniBtn}
+                              onClick={() => openReportReview(op?._id)}
+                              title="Zgłoś opinię"
+                              aria-label="Zgłoś opinię"
+                              disabled={!op?._id}
+                            >
+                              <FiFlag />
+                            </button>
+                          </div>
                         </div>
 
                         <p className={styles.reviewText}>{op.comment}</p>
@@ -1050,13 +1195,18 @@ const hasServices = visibleServices.length > 0;
             {hasInfoBox && (
               <section className={styles.sideCard}>
                 <div className={styles.sideHeader}>
-                  <h2 className={styles.sectionTitle}>Kontakt i social media</h2>
+                  <div>
+                    <h2 className={styles.sectionTitle}>Kontakt i social media</h2>
+                    <p className={styles.sectionSub}>Najważniejsze kanały kontaktu w jednym miejscu.</p>
+                  </div>
                 </div>
 
                 <div className={styles.infoList}>
                   <div className={styles.infoRow}>
                     <span className={styles.infoLeft}>
-                      <FaMapMarkedAlt />
+                      <span className={styles.infoIcon}>
+                        <FaMapMarkedAlt />
+                      </span>
                       <span>Adres</span>
                     </span>
 
@@ -1071,7 +1221,9 @@ const hasServices = visibleServices.length > 0;
 
                   <div className={styles.infoRow}>
                     <span className={styles.infoLeft}>
-                      <FaPhoneAlt />
+                      <span className={styles.infoIcon}>
+                        <FaPhoneAlt />
+                      </span>
                       <span>Telefon</span>
                     </span>
 
@@ -1086,7 +1238,9 @@ const hasServices = visibleServices.length > 0;
 
                   <div className={styles.infoRow}>
                     <span className={styles.infoLeft}>
-                      <FaEnvelope />
+                      <span className={styles.infoIcon}>
+                        <FaEnvelope />
+                      </span>
                       <span>E-mail</span>
                     </span>
 
@@ -1125,125 +1279,6 @@ const hasServices = visibleServices.length > 0;
             )}
           </aside>
         </main>
-
-        {hasGallery && (
-          <section className={styles.sectionCard}>
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Galeria</h2>
-              <span className={styles.mutedSmall}>Kliknij zdjęcie, aby powiększyć</span>
-            </div>
-
-            <div className={styles.gallery}>
-              {gallery.map((src, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className={styles.galleryItem}
-                  onClick={() => openLightbox(src)}
-                  aria-label={`Otwórz zdjęcie ${i + 1}`}
-                  title="Otwórz"
-                >
-                  <img
-                    src={src}
-                    alt={`Zdjęcie ${i + 1}`}
-                    onError={(e) => {
-                      e.currentTarget.src = "/images/other/no-image.png";
-                    }}
-                  />
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-
-{(hasServices || hasInfoBox) && (
-  <section className={styles.sectionCard} id="services">
-    <div className={styles.sectionHeader}>
-      <h2 className={styles.sectionTitle}>Usługi</h2>
-      <span className={styles.mutedSmall}>
-        Oferta, ceny i czas realizacji
-      </span>
-    </div>
-
-    {hasServices ? (
-      <div className={styles.servicesGrid}>
-        {visibleServices.map((s, i) => {
-          const img = getServiceImageUrl(s);
-          const categoryLabel = mapServiceCategory(s.category);
-          const priceLabel = formatServicePrice(s);
-          const durationLabel =
-            s?.duration?.value && s?.duration?.unit
-              ? `${s.duration.value} ${mapUnit(s.duration.unit)}`
-              : "Brak czasu";
-
-          return (
-            <article key={s._id || i} className={styles.serviceCard}>
-              <div className={styles.serviceMedia}>
-                {img ? (
-                  <img
-                    src={img}
-                    alt={s.name || `Usługa ${i + 1}`}
-                    className={styles.serviceImage}
-                    onError={(e) => {
-                      e.currentTarget.src = "/images/other/no-image.png";
-                    }}
-                  />
-                ) : (
-                  <div className={styles.serviceImagePlaceholder}>
-                    <FaRegCalendarAlt />
-                    <span>Bez zdjęcia</span>
-                  </div>
-                )}
-
-                <div className={styles.serviceBadges}>
-                  <span className={styles.serviceCategoryBadge}>
-                    {categoryLabel}
-                  </span>
-
-                  {s.featured && (
-                    <span className={styles.serviceFeaturedBadge}>
-                      Wyróżniona
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className={styles.serviceContent}>
-                <div className={styles.serviceTop}>
-                  <h3 className={styles.serviceCardTitle}>{s.name}</h3>
-                </div>
-
-                {s.shortDescription?.trim() ? (
-                  <p className={styles.serviceDescription}>
-                    {s.shortDescription}
-                  </p>
-                ) : (
-                  <p className={styles.serviceDescriptionMuted}>
-                    Użytkownik nie dodał krótkiego opisu tej usługi.
-                  </p>
-                )}
-
-                <div className={styles.serviceMetaGrid}>
-                  <div className={styles.serviceMetaItem}>
-                    <span className={styles.serviceMetaLabel}>Cena</span>
-                    <span className={styles.serviceMetaValue}>{priceLabel}</span>
-                  </div>
-
-                  <div className={styles.serviceMetaItem}>
-                    <span className={styles.serviceMetaLabel}>Czas</span>
-                    <span className={styles.serviceMetaValue}>{durationLabel}</span>
-                  </div>
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-    ) : (
-      <p className={styles.muted}>Brak usług do wyświetlenia.</p>
-    )}
-  </section>
-)}
       </div>
 
       {fullscreenImage && (
