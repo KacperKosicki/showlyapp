@@ -16,7 +16,7 @@ export const reportApi = {
   create: (payload) => api.post("/api/reports", payload),
 
   /**
-   * Lista zgłoszeń (admin/mod) — pod admin routerem
+   * Lista zgłoszeń (admin/mod)
    * opts: { page, limit, type, status, q }
    */
   list: (opts = {}) => {
@@ -39,13 +39,14 @@ export const reportApi = {
   },
 
   /**
-   * Zmiana statusu zgłoszenia (admin/mod)
-   * status: "resolved" | "rejected" | "open"
+   * Zamknięcie zgłoszenia (admin/mod)
    */
-  setStatus: (id, status) => api.patch(`/api/admin/reports/${id}/status`, { status }),
+  close: (id, adminNote = "Zamknięto w panelu.") =>
+    api.patch(`/api/admin/reports/${id}/close`, { adminNote }),
 
   /**
-   * Usunięcie zgłoszenia (admin/mod)
+   * Usunięcie zgłoszonej opinii z poziomu zgłoszenia (admin/mod)
    */
-  remove: (id) => api.delete(`/api/admin/reports/${id}`),
+  removeReview: (id) =>
+    api.delete(`/api/admin/reports/${id}/remove-review`),
 };
