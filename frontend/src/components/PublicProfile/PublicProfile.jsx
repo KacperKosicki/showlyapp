@@ -1,4 +1,3 @@
-// src/components/PublicProfile/PublicProfile.jsx
 import { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import styles from "./PublicProfile.module.scss";
@@ -168,6 +167,41 @@ const resolveProfileTheme = (theme) => {
     primary,
     secondary,
     banner: `linear-gradient(135deg, ${primary}, ${secondary})`,
+  };
+};
+
+const PARTNER_COLORS = {
+  partner: "#59d0ff",
+  verified: "#22c55e",
+  ambassador: "#a855f7",
+  "founding-partner": "#7dd3fc",
+};
+
+const resolvePartnerData = (partnership = {}) => {
+  const isPartner = !!partnership?.isPartner;
+  const tier = String(partnership?.tier || "none").toLowerCase();
+
+  const baseColor =
+    (partnership?.color || "").trim() ||
+    PARTNER_COLORS[tier] ||
+    "#59d0ff";
+
+  const label =
+    (partnership?.badgeText || "").trim() ||
+    (partnership?.label || "").trim() ||
+    (tier === "verified"
+      ? "ZWERYFIKOWANY"
+      : tier === "ambassador"
+        ? "AMBASADOR SHOWLY"
+        : tier === "founding-partner"
+          ? "FOUNDING PARTNER"
+          : "PARTNER SHOWLY");
+
+  return {
+    isPartner,
+    tier,
+    color: baseColor,
+    label,
   };
 };
 
@@ -599,6 +633,7 @@ export default function PublicProfile() {
     profileType,
     contact = {},
     socials = {},
+    partnership = {},
   } = profile;
 
   const pf = Number(priceFrom);
@@ -631,10 +666,16 @@ export default function PublicProfile() {
   const avgRatingLabel = avgRating > 0 ? avgRating.toFixed(1) : "0.0";
 
   const themeVars = resolveProfileTheme(profile.theme);
+  const partner = resolvePartnerData(partnership);
+
   const cssVars = {
     "--pp-primary": themeVars.primary,
     "--pp-secondary": themeVars.secondary,
     "--pp-banner": themeVars.banner,
+    "--pp-partner": partner.color,
+    "--pp-partner-soft": `color-mix(in srgb, ${partner.color} 16%, white)`,
+    "--pp-partner-border": `color-mix(in srgb, ${partner.color} 42%, rgba(15, 23, 42, 0.12))`,
+    "--pp-partner-glow": `color-mix(in srgb, ${partner.color} 28%, transparent)`,
   };
 
   const visibleServices = Array.isArray(profile.services)
@@ -686,20 +727,23 @@ export default function PublicProfile() {
 
   const typeLabel =
     profileType === "zawodowy"
-      ? "Zawód"
+      ? "ZAWODOWY"
       : profileType === "hobbystyczny"
-        ? "Hobby"
+        ? "HOBBY"
         : profileType === "serwis"
-          ? "Serwis"
+          ? "SERWIS"
           : profileType === "społeczność"
-            ? "Społeczność"
-            : "Profil";
+            ? "SPOŁECZNOŚĆ"
+            : "PROFIL";
 
   return (
     <div className={styles.page} style={cssVars}>
       <div className={styles.bgGlow} aria-hidden="true" />
 
-      <div className={styles.shell} id="profileWrapper">
+      <div
+        className={`${styles.shell} ${partner.isPartner ? styles.partnerShell : ""}`}
+        id="profileWrapper"
+      >
         {alert && <AlertBox type={alert.type} message={alert.message} onClose={() => setAlert(null)} />}
 
         <header className={styles.hero}>
@@ -709,148 +753,134 @@ export default function PublicProfile() {
             <span className={styles.heroGrid} />
           </div>
 
-          <div className={styles.heroInner}>
-            {/* TOP BAR */}
-            <div className={styles.heroTopbar}>
-              <div className={styles.heroTopbarLeft}>
-                <span className={styles.locPill} title={location || "Brak lokalizacji"}>
-                  <FaMapMarkerAlt />
-                  <span className={styles.locText}>
-                    {location || "Brak lokalizacji"}
-                  </span>
-                </span>
+          <div className={styles.heroFade} aria-hidden="true" />
 
-                <span
-                  className={`${styles.titlePill} ${styles[`type_${profileType}`] || ""
-                    }`}
-                >
-                  {typeLabel}
-                </span>
+          <div className={styles.heroTop}>
+            <span className={styles.locPill} title={location || "Brak lokalizacji"}>
+              <FaMapMarkerAlt />
+              <span className={styles.locText}>{location || "Brak lokalizacji"}</span>
+            </span>
+
+            <span className={styles.ratingPill} title={`Ocena: ${avgRatingLabel} (${reviewsCount})`}>
+              <FaStar />
+              <span>
+                <strong>{avgRatingLabel}</strong>
+                <span className={styles.dot} />
+                <span>{reviewsCount} opinii</span>
+              </span>
+            </span>
+          </div>
+
+          <div className={styles.heroInner}>
+            <div className={styles.heroIdentity}>
+              <div className={styles.avatarWrap}>
+                <img
+                  src={profileAvatarSrc}
+                  alt={name}
+                  className={styles.avatar}
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/other/no-image.png";
+                  }}
+                />
+                <div className={styles.avatarRing} aria-hidden="true" />
               </div>
 
-              {!isOwner && (
-                <button
-                  type="button"
-                  className={styles.reportPill}
-                  onClick={openReportProfile}
-                >
-                  <FiFlag />
-                  <span className={styles.reportText}>ZGŁOŚ PROFIL</span>
-                </button>
-              )}
+              <div className={styles.heroInfo}>
+                <div className={styles.titleRow}>
+                  <h1 className={styles.heroTitle}>{name}</h1>
+
+                  <div className={styles.badgesRow}>
+                    {partner.isPartner && (
+                      <span
+                        className={`${styles.partnerBadge} ${styles[`partner_${partner.tier}`] || ""
+                          }`}
+                      >
+                        {partner.label}
+                      </span>
+                    )}
+
+                    {role?.trim() && <span className={styles.roleBadge}>{role}</span>}
+
+                    <span className={`${styles.titlePill} ${styles[`type_${profileType}`] || ""}`}>
+                      {typeLabel}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* MAIN HERO */}
-            <div className={styles.heroMain}>
-              <div className={styles.heroContent}>
-                {role?.trim() && (
-                  <div className={styles.kickerRow}>
-                    <span className={styles.roleBadge}>{role}</span>
-                  </div>
-                )}
-
-                <h1 className={styles.heroTitle}>{name}</h1>
-
-                {/* METRYKI — tylko 2 */}
-                <div className={styles.metricRow}>
-                  <div className={styles.metricCard}>
-                    <span className={styles.metricIcon}>
-                      <FaRegEye />
-                    </span>
-                    <div className={styles.metricContent}>
-                      <strong>
-                        {Number(profile?.visits ?? 0).toLocaleString("pl-PL")}
-                      </strong>
-                      <span>Odwiedzin</span>
-                    </div>
-                  </div>
-
-                  <div className={styles.metricCard}>
-                    <span className={styles.metricIcon}>
-                      <FaStar />
-                    </span>
-                    <div className={styles.metricContent}>
-                      <strong>{avgRatingLabel}</strong>
-                      <span>
-                        {reviewsCount}{" "}
-                        {reviewsCount === 1
-                          ? "opinia"
-                          : reviewsCount > 1 && reviewsCount < 5
-                            ? "opinie"
-                            : "opinii"}
-                      </span>
-                    </div>
+            <div className={styles.heroBottom}>
+              <div className={styles.metricRow}>
+                <div className={styles.metricCard}>
+                  <span className={styles.metricIcon}>
+                    <FaRegEye />
+                  </span>
+                  <div className={styles.metricContent}>
+                    <strong>{Number(profile?.visits ?? 0).toLocaleString("pl-PL")}</strong>
+                    <span>Odwiedzin</span>
                   </div>
                 </div>
 
-                {/* ACTIONS */}
-                <div className={styles.heroActions}>
-                  <button
-                    type="button"
-                    className={`${styles.favBtn} ${isFav ? styles.favActive : ""}`}
-                    onClick={toggleFavorite}
-                  >
+                <button
+                  type="button"
+                  className={`${styles.metricCard} ${styles.favoriteMetric} ${isFav ? styles.favActive : ""}`}
+                  onClick={toggleFavorite}
+                >
+                  <span className={styles.metricIcon}>
                     {isFav ? <FaHeart /> : <FaRegHeart />}
-                    <span>{isFav ? "W ulubionych" : "Dodaj do ulubionych"}</span>
-                  </button>
-
-                  {hasServices && (
-                    <a className={styles.ghostBtn} href="#services">
-                      <FaListUl />
-                      <span>Zobacz usługi</span>
-                    </a>
-                  )}
-                </div>
-
-                {/* CTA */}
-                <div className={styles.ctaRow}>
-                  {showBookButton && (
-                    <button
-                      type="button"
-                      className={styles.ctaPrimary}
-                      onClick={goToBooking}
-                    >
-                      <FaRegCalendarAlt />
-                      {bookBtnLabel}
-                    </button>
-                  )}
-
-                  {!isOwner && (
-                    <button
-                      type="button"
-                      className={styles.ctaSecondary}
-                      onClick={startMessage}
-                    >
-                      <FaPaperPlane />
-                      ZADAJ PYTANIE
-                    </button>
-                  )}
-                </div>
+                  </span>
+                  <div className={styles.metricContent}>
+                    <strong>{isFav ? "W ulubionych" : "Dodaj"}</strong>
+                    <span>Ulubione</span>
+                  </div>
+                </button>
               </div>
 
-              {/* AVATAR */}
-              <div className={styles.heroVisual}>
-                <div className={styles.avatarStage}>
-                  <div className={styles.avatarHalo} />
+              <div className={styles.heroActions}>
+                {hasServices && (
+                  <a className={styles.ghostBtn} href="#services">
+                    <FaListUl />
+                    <span>Zobacz usługi</span>
+                  </a>
+                )}
 
-                  <div className={styles.avatarWrap}>
-                    <img
-                      src={profileAvatarSrc}
-                      alt={name}
-                      className={styles.avatar}
-                      onError={(e) => {
-                        e.currentTarget.src =
-                          "/images/other/no-image.png";
-                      }}
-                    />
-                    <div className={styles.avatarRing} />
-                  </div>
-                </div>
+                {!isOwner && (
+                  <button
+                    type="button"
+                    className={styles.reportPill}
+                    onClick={openReportProfile}
+                  >
+                    <FiFlag />
+                    <span className={styles.reportText}>Zgłoś profil</span>
+                  </button>
+                )}
+              </div>
+
+              <div className={styles.ctaRow}>
+                {showBookButton && (
+                  <button
+                    type="button"
+                    className={styles.ctaPrimary}
+                    onClick={goToBooking}
+                  >
+                    <FaRegCalendarAlt />
+                    {bookBtnLabel}
+                  </button>
+                )}
+
+                {!isOwner && (
+                  <button
+                    type="button"
+                    className={styles.ctaSecondary}
+                    onClick={startMessage}
+                  >
+                    <FaPaperPlane />
+                    ZADAJ PYTANIE
+                  </button>
+                )}
               </div>
             </div>
           </div>
-
-          <div className={styles.heroFade} />
         </header>
 
         <main className={styles.grid}>
@@ -931,62 +961,64 @@ export default function PublicProfile() {
                   )}
                 </div>
 
-                <div className={styles.splitLine} />
-
                 {!isOwner && (
-                  <div className={styles.rateBox}>
-                    <div className={styles.rateTop}>
-                      <div>
-                        <h3 className={styles.blockTitle}>{hasRated ? "Twoja ocena" : "Oceń profil"}</h3>
-                        <span className={styles.rateHint}>
-                          {hasRated ? "Dziękujemy za opinię!" : "Wybierz gwiazdki i dodaj krótki komentarz."}
-                        </span>
-                      </div>
-                    </div>
+                  <>
+                    <div className={styles.splitLine} />
 
-                    <div className={styles.starsRow}>
-                      {[1, 2, 3, 4, 5].map((val) => (
-                        <FaStar
-                          key={val}
-                          className={val <= (hoveredRating || selectedRating) ? styles.starOn : styles.starOff}
-                          onClick={!hasRated ? () => setSelectedRating(val) : undefined}
-                          onMouseEnter={!hasRated ? () => setHoveredRating(val) : undefined}
-                          onMouseLeave={!hasRated ? () => setHoveredRating(0) : undefined}
-                        />
-                      ))}
-                    </div>
-
-                    {!hasRated && (
-                      <>
-                        <textarea
-                          className={styles.textarea}
-                          placeholder="Napisz krótko, co było na plus / co można poprawić (min. 10 znaków)"
-                          value={comment}
-                          onChange={(e) => {
-                            const text = e.target.value;
-                            if (text.length <= maxChars) setComment(text);
-                          }}
-                        />
-
-                        <div className={styles.textareaMeta}>
-                          <span className={styles.mutedSmall}>Bądź konkretny/a — to pomaga.</span>
-                          <span className={styles.counter}>
-                            {comment.length} / {maxChars}
+                    <div className={styles.rateBox}>
+                      <div className={styles.rateTop}>
+                        <div>
+                          <h3 className={styles.blockTitle}>{hasRated ? "Twoja ocena" : "Oceń profil"}</h3>
+                          <span className={styles.rateHint}>
+                            {hasRated ? "Dziękujemy za opinię!" : "Wybierz gwiazdki i dodaj krótki komentarz."}
                           </span>
                         </div>
+                      </div>
 
-                        <LoadingButton
-                          type="button"
-                          isLoading={isRatingSending}
-                          disabled={isRatingSending}
-                          className={styles.primaryBtn}
-                          onClick={handleRate}
-                        >
-                          Wyślij opinię
-                        </LoadingButton>
-                      </>
-                    )}
-                  </div>
+                      <div className={styles.starsRow}>
+                        {[1, 2, 3, 4, 5].map((val) => (
+                          <FaStar
+                            key={val}
+                            className={val <= (hoveredRating || selectedRating) ? styles.starOn : styles.starOff}
+                            onClick={!hasRated ? () => setSelectedRating(val) : undefined}
+                            onMouseEnter={!hasRated ? () => setHoveredRating(val) : undefined}
+                            onMouseLeave={!hasRated ? () => setHoveredRating(0) : undefined}
+                          />
+                        ))}
+                      </div>
+
+                      {!hasRated && (
+                        <>
+                          <textarea
+                            className={styles.textarea}
+                            placeholder="Napisz krótko, co było na plus / co można poprawić (min. 10 znaków)"
+                            value={comment}
+                            onChange={(e) => {
+                              const text = e.target.value;
+                              if (text.length <= maxChars) setComment(text);
+                            }}
+                          />
+
+                          <div className={styles.textareaMeta}>
+                            <span className={styles.mutedSmall}>Bądź konkretny/a — to pomaga.</span>
+                            <span className={styles.counter}>
+                              {comment.length} / {maxChars}
+                            </span>
+                          </div>
+
+                          <LoadingButton
+                            type="button"
+                            isLoading={isRatingSending}
+                            disabled={isRatingSending}
+                            className={styles.primaryBtn}
+                            onClick={handleRate}
+                          >
+                            Wyślij opinię
+                          </LoadingButton>
+                        </>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             </section>
@@ -1035,79 +1067,75 @@ export default function PublicProfile() {
                   <span className={styles.badgeCount}>{visibleServices.length}</span>
                 </div>
 
-                {hasServices ? (
-                  <div className={styles.servicesGrid}>
-                    {visibleServices.map((s, i) => {
-                      const img = getServiceImageUrl(s);
-                      const categoryLabel = mapServiceCategory(s.category);
-                      const priceLabel = formatServicePrice(s);
-                      const durationLabel =
-                        s?.duration?.value && s?.duration?.unit
-                          ? `${s.duration.value} ${mapUnit(s.duration.unit)}`
-                          : "Brak czasu";
+                <div className={styles.servicesGrid}>
+                  {visibleServices.map((s, i) => {
+                    const img = getServiceImageUrl(s);
+                    const categoryLabel = mapServiceCategory(s.category);
+                    const priceLabel = formatServicePrice(s);
+                    const durationLabel =
+                      s?.duration?.value && s?.duration?.unit
+                        ? `${s.duration.value} ${mapUnit(s.duration.unit)}`
+                        : "Brak czasu";
 
-                      return (
-                        <article key={s._id || i} className={styles.serviceCard}>
-                          <div className={styles.serviceMedia}>
-                            {img ? (
-                              <img
-                                src={img}
-                                alt={s.name || `Usługa ${i + 1}`}
-                                className={styles.serviceImage}
-                                onError={(e) => {
-                                  e.currentTarget.src = "/images/other/no-image.png";
-                                }}
-                              />
-                            ) : (
-                              <div className={styles.serviceImagePlaceholder}>
-                                <FaRegCalendarAlt />
-                                <span>Bez zdjęcia</span>
-                              </div>
-                            )}
-
-                            <div className={styles.serviceBadges}>
-                              <span className={styles.serviceCategoryBadge}>{categoryLabel}</span>
-
-                              {s.featured && (
-                                <span className={styles.serviceFeaturedBadge}>
-                                  Wyróżniona
-                                </span>
-                              )}
+                    return (
+                      <article key={s._id || i} className={styles.serviceCard}>
+                        <div className={styles.serviceMedia}>
+                          {img ? (
+                            <img
+                              src={img}
+                              alt={s.name || `Usługa ${i + 1}`}
+                              className={styles.serviceImage}
+                              onError={(e) => {
+                                e.currentTarget.src = "/images/other/no-image.png";
+                              }}
+                            />
+                          ) : (
+                            <div className={styles.serviceImagePlaceholder}>
+                              <FaRegCalendarAlt />
+                              <span>Bez zdjęcia</span>
                             </div>
+                          )}
+
+                          <div className={styles.serviceBadges}>
+                            <span className={styles.serviceCategoryBadge}>{categoryLabel}</span>
+
+                            {s.featured && (
+                              <span className={styles.serviceFeaturedBadge}>
+                                Wyróżniona
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className={styles.serviceContent}>
+                          <div className={styles.serviceTop}>
+                            <h3 className={styles.serviceCardTitle}>{s.name}</h3>
                           </div>
 
-                          <div className={styles.serviceContent}>
-                            <div className={styles.serviceTop}>
-                              <h3 className={styles.serviceCardTitle}>{s.name}</h3>
+                          {s.shortDescription?.trim() ? (
+                            <p className={styles.serviceDescription}>{s.shortDescription}</p>
+                          ) : (
+                            <p className={styles.serviceDescriptionMuted}>
+                              Użytkownik nie dodał krótkiego opisu tej usługi.
+                            </p>
+                          )}
+
+                          <div className={styles.serviceMetaGrid}>
+                            <div className={styles.serviceMetaItem}>
+                              <span className={styles.serviceMetaLabel}>Cena</span>
+                              <span className={styles.serviceMetaValue}>{priceLabel}</span>
                             </div>
 
-                            {s.shortDescription?.trim() ? (
-                              <p className={styles.serviceDescription}>{s.shortDescription}</p>
-                            ) : (
-                              <p className={styles.serviceDescriptionMuted}>
-                                Użytkownik nie dodał krótkiego opisu tej usługi.
-                              </p>
-                            )}
-
-                            <div className={styles.serviceMetaGrid}>
-                              <div className={styles.serviceMetaItem}>
-                                <span className={styles.serviceMetaLabel}>Cena</span>
-                                <span className={styles.serviceMetaValue}>{priceLabel}</span>
-                              </div>
-
-                              <div className={styles.serviceMetaItem}>
-                                <span className={styles.serviceMetaLabel}>Czas</span>
-                                <span className={styles.serviceMetaValue}>{durationLabel}</span>
-                              </div>
+                            <div className={styles.serviceMetaItem}>
+                              <span className={styles.serviceMetaLabel}>Czas</span>
+                              <span className={styles.serviceMetaValue}>{durationLabel}</span>
                             </div>
                           </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className={styles.muted}>Brak usług do wyświetlenia.</p>
-                )}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
               </section>
             )}
           </section>
