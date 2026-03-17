@@ -26,6 +26,10 @@
   --uc-primary: #6f4ef2;
   --uc-secondary: #ff4081;
   --uc-banner: linear-gradient(135deg, #6f4ef2, #ff4081);
+  --uc-partner: #59d0ff;
+  --uc-partner-soft: rgba(89, 208, 255, 0.14);
+  --uc-partner-border: rgba(89, 208, 255, 0.38);
+  --uc-partner-glow: rgba(89, 208, 255, 0.22);
 
   --uc-text-strong: #111827;
   --uc-text-main: #2f3440;
@@ -41,6 +45,15 @@
   :is(button, a, input, textarea) {
     font-family: inherit;
   }
+}
+
+.partnerCard {
+  border-color: var(--uc-partner-border);
+  box-shadow:
+    0 26px 80px rgba(15, 23, 42, 0.08),
+    0 0 0 1px var(--uc-partner-border),
+    0 0 0 6px var(--uc-partner-soft),
+    0 24px 46px var(--uc-partner-glow);
 }
 
 .bgGlow {
@@ -290,6 +303,54 @@
   background: rgba(17, 24, 39, 0.24);
   border: 1px solid rgba(255, 255, 255, 0.16);
   backdrop-filter: blur(10px);
+}
+
+.badgesRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.partnerBadge {
+  width: fit-content;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family: $font-accent;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  color: #06243a;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.88), color-mix(in srgb, var(--uc-partner) 22%, white));
+  border: 1px solid var(--uc-partner-border);
+  box-shadow:
+    0 10px 24px var(--uc-partner-glow),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  backdrop-filter: blur(10px);
+}
+
+.partner_partner {
+  color: #08324f;
+}
+
+.partner_verified {
+  color: #0f3c22;
+}
+
+.partner_ambassador {
+  color: #3d155f;
+}
+
+.partner_founding-partner {
+  color: #0b3756;
 }
 
 .type_zawodowy {
@@ -948,6 +1009,17 @@
     font-size: 0.64rem;
   }
 
+  .badgesRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .partnerBadge,
+  .profileBadge {
+    margin: 0;
+  }
+
   .role {
     white-space: nowrap;
     overflow: hidden;
@@ -971,6 +1043,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .tag,
   .linkTile,
   .calendarToggle,

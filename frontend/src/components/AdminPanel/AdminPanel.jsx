@@ -17,6 +17,33 @@ const REPORT_TABS = [
   { key: "review", label: "Zgłoszenia opinii" },
 ];
 
+const PARTNER_TIER_OPTIONS = [
+  { value: "none", label: "Brak" },
+  { value: "partner", label: "Partner" },
+  { value: "verified", label: "Verified" },
+  { value: "ambassador", label: "Ambassador" },
+  { value: "founding-partner", label: "Founding Partner" },
+];
+
+const PARTNER_DEFAULTS = {
+  partner: {
+    badgeText: "PARTNER SHOWLY",
+    color: "#59d0ff",
+  },
+  verified: {
+    badgeText: "ZWERYFIKOWANY",
+    color: "#22c55e",
+  },
+  ambassador: {
+    badgeText: "AMBASADOR SHOWLY",
+    color: "#a855f7",
+  },
+  "founding-partner": {
+    badgeText: "FOUNDING PARTNER",
+    color: "#7dd3fc",
+  },
+};
+
 const reasonLabel = (v) => {
   switch (String(v || "").toLowerCase()) {
     case "spam":
@@ -47,7 +74,6 @@ const formatDate = (iso) => {
   });
 };
 
-// ✅ normalizacja raportu – DOPASOWANA do Twojego backendu (snapshot + stare pola)
 const normalizeReport = (r) => {
   const profileName =
     r?.snapshot?.profileName ||
@@ -109,6 +135,18 @@ const normalizeReport = (r) => {
   };
 };
 
+const normalizePartnerDraft = (profile) => {
+  const p = profile?.partnership || {};
+  const tier = String(p?.tier || (p?.isPartner ? "partner" : "none"));
+
+  return {
+    isPartner: !!p?.isPartner,
+    tier,
+    badgeText: p?.badgeText || "",
+    color: p?.color || "",
+  };
+};
+
 export default function AdminPanel() {
   const [tab, setTab] = useState("dashboard");
 
@@ -130,6 +168,9 @@ export default function AdminPanel() {
   const [profilesPage, setProfilesPage] = useState(1);
   const profilesLimit = 25;
 
+  // drafts partnerstwa dla admina
+  const [partnerDrafts, setPartnerDrafts] = useState({});
+
   // reports
   const [reportTab, setReportTab] = useState("profile");
   const [reports, setReports] = useState([]);
@@ -137,7 +178,6 @@ export default function AdminPanel() {
   const [reportsPage, setReportsPage] = useState(1);
   const reportsLimit = 25;
 
-  // ✅ dopasowane do Twojego backendu: open / closed / all
   const [reportsStatus, setReportsStatus] = useState("open");
   const [reportsQ, setReportsQ] = useState("");
 
@@ -157,9 +197,17 @@ export default function AdminPanel() {
 
   const fetchProfiles = async (page = profilesPage) => {
     const res = await adminApi.profiles(page, profilesLimit);
-    setProfiles(res.data.items || []);
+    const items = res.data.items || [];
+
+    setProfiles(items);
     setProfilesTotal(res.data.total || 0);
     setProfilesPage(res.data.page || page);
+
+    const nextDrafts = {};
+    items.forEach((p) => {
+      nextDrafts[p._id] = normalizePartnerDraft(p);
+    });
+    setPartnerDrafts(nextDrafts);
   };
 
   const fetchReports = async (page = reportsPage, opts = {}) => {
@@ -167,8 +215,6 @@ export default function AdminPanel() {
     const nextStatus = opts.status ?? reportsStatus;
     const nextQ = opts.q ?? reportsQ;
 
-    // ✅ backend /admin/reports ma tylko status, bez type/q
-    // => filtrujemy po stronie frontu, a do backendu wysyłamy tylko status/pagination
     const res = await adminApi.reports({
       page,
       limit: reportsLimit,
@@ -177,10 +223,8 @@ export default function AdminPanel() {
 
     let items = (res.data.items || []).map(normalizeReport);
 
-    // filtr typu (profile/review)
     items = items.filter((r) => (nextType ? r.type === nextType : true));
 
-    // filtr "q" (uid/email/slug/id/opinia/nazwa)
     if (String(nextQ || "").trim()) {
       const qq = String(nextQ).trim().toLowerCase();
       items = items.filter((r) => {
@@ -208,8 +252,6 @@ export default function AdminPanel() {
     }
 
     setReports(items);
-    // ❗ UWAGA: total z backendu dotyczy wszystkich, a po filtrach frontowych to już inny wynik
-    // dlatego total ustawiamy jako długość po filtrze (dla prawidłowej paginacji w UI)
     setReportsTotal(items.length);
     setReportsPage(res.data.page || page);
   };
@@ -317,15 +359,112 @@ export default function AdminPanel() {
       setAlert({
         type: "error",
         message:
-          e?.response?.data?.message ||
-          "Nie udało się zmienić widoczności profilu.",
+          e?.response?.data?.message || "Nie udało się zmienić widoczności profilu.",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  // reports (dopasowane do backendu: status = open/closed, endpoint close)
+  const onPartnerDraftChange = (profileId, field, value) => {
+    setPartnerDrafts((prev) => {
+      const current = prev[profileId] || {
+        isPartner: false,
+        tier: "none",
+        badgeText: "",
+        color: "",
+      };
+
+      let next = {
+        ...current,
+        [field]: value,
+      };
+
+      if (field === "isPartner") {
+        const enabled = !!value;
+        next.isPartner = enabled;
+
+        if (!enabled) {
+          next.tier = "none";
+        } else if (!next.tier || next.tier === "none") {
+          next.tier = "partner";
+          next.badgeText = next.badgeText || PARTNER_DEFAULTS.partner.badgeText;
+          next.color = next.color || PARTNER_DEFAULTS.partner.color;
+        }
+      }
+
+      if (field === "tier") {
+        if (value === "none") {
+          next.isPartner = false;
+        } else {
+          next.isPartner = true;
+          const defaults = PARTNER_DEFAULTS[value];
+          if (defaults) {
+            if (!current.badgeText || current.badgeText === PARTNER_DEFAULTS[current.tier]?.badgeText) {
+              next.badgeText = defaults.badgeText;
+            }
+            if (!current.color || current.color === PARTNER_DEFAULTS[current.tier]?.color) {
+              next.color = defaults.color;
+            }
+          }
+        }
+      }
+
+      return {
+        ...prev,
+        [profileId]: next,
+      };
+    });
+  };
+
+const onSavePartnership = async (profile) => {
+  const profileId = profile?._id;
+
+  if (!profileId) {
+    setAlert({
+      type: "error",
+      message: "Brak identyfikatora profilu.",
+    });
+    return;
+  }
+
+  const draft = partnerDrafts[profileId] || {
+    isPartner: false,
+    tier: "none",
+    badgeText: "",
+    color: "",
+  };
+
+  const partnership = {
+    isPartner: !!draft.isPartner,
+    tier: draft.isPartner ? draft.tier || "partner" : "none",
+    badgeText: draft.isPartner ? String(draft.badgeText || "").trim() : "",
+    color: draft.isPartner ? String(draft.color || "").trim() : "#59d0ff",
+  };
+
+  try {
+    setLoading(true);
+
+    await adminApi.setProfilePartnership(profileId, partnership);
+
+    setAlert({
+      type: "success",
+      message: `Partnerstwo zapisane dla profilu: ${profile?.name || "—"}.`,
+    });
+
+    await fetchProfiles(profilesPage);
+  } catch (e) {
+    setAlert({
+      type: "error",
+      message:
+        e?.response?.data?.message || "Nie udało się zapisać partnerstwa.",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // reports
   const onSetReportStatus = async (reportId, status) => {
     try {
       setLoading(true);
@@ -333,7 +472,6 @@ export default function AdminPanel() {
       if (status === "closed") {
         await adminApi.closeReport(reportId, "Zamknięto w panelu.");
       } else if (status === "open") {
-        // opcjonalnie: jeśli nie masz endpointu "reopen", to pokaż info
         setAlert({
           type: "error",
           message: "Brak endpointu do ponownego otwarcia zgłoszenia (reopen).",
@@ -400,7 +538,6 @@ export default function AdminPanel() {
     }
   };
 
-  // lokalna paginacja dla przefiltrowanych wyników
   const pagedReports = useMemo(() => {
     const start = (reportsPage - 1) * reportsLimit;
     return reports.slice(start, start + reportsLimit);
@@ -426,11 +563,7 @@ export default function AdminPanel() {
 
       {alert && (
         <div className={styles.alertWrap}>
-          <AlertBox
-            type={alert.type}
-            message={alert.message}
-            onClose={closeAlert}
-          />
+          <AlertBox type={alert.type} message={alert.message} onClose={closeAlert} />
         </div>
       )}
 
@@ -543,48 +676,136 @@ export default function AdminPanel() {
           </div>
 
           <div className={styles.tableWrap}>
-            <table className={styles.table}>
+            <table className={`${styles.table} ${styles.profilesTable}`}>
               <thead>
                 <tr>
                   <th>Nazwa</th>
                   <th>UID</th>
                   <th>Widoczny</th>
+                  <th>Partner</th>
+                  <th>Tier</th>
+                  <th>Badge</th>
+                  <th>Kolor</th>
                   <th>Akcje</th>
                 </tr>
               </thead>
               <tbody>
-                {profiles.map((p) => (
-                  <tr key={p._id}>
-                    <td>{p.name || "—"}</td>
-                    <td className={styles.mono}>
-                      {p.uid || p.userId || p.firebaseUid || "—"}
-                    </td>
-                    <td>
-                      <span
-                        className={`${styles.pill} ${p.isVisible === false
-                            ? styles.pillOff
-                            : styles.pillOn
+                {profiles.map((p) => {
+                  const draft = partnerDrafts[p._id] || {
+                    isPartner: false,
+                    tier: "none",
+                    badgeText: "",
+                    color: "",
+                  };
+
+                  return (
+                    <tr key={p._id}>
+                      <td>{p.name || "—"}</td>
+
+                      <td className={styles.mono}>
+                        {p.uid || p.userId || p.firebaseUid || "—"}
+                      </td>
+
+                      <td>
+                        <span
+                          className={`${styles.pill} ${
+                            p.isVisible === false ? styles.pillOff : styles.pillOn
                           }`}
-                      >
-                        {p.isVisible === false ? "NIE" : "TAK"}
-                      </span>
-                    </td>
-                    <td className={styles.actions}>
-                      <button
-                        className={styles.btn}
-                        onClick={() =>
-                          onToggleProfileVisible(p._id, p.isVisible !== false)
-                        }
-                        disabled={loading}
-                      >
-                        {p.isVisible === false ? "Włącz" : "Wyłącz"}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                        >
+                          {p.isVisible === false ? "NIE" : "TAK"}
+                        </span>
+                      </td>
+
+                      <td>
+                        <label className={styles.switchWrap}>
+                          <input
+                            type="checkbox"
+                            checked={!!draft.isPartner}
+                            onChange={(e) =>
+                              onPartnerDraftChange(p._id, "isPartner", e.target.checked)
+                            }
+                            disabled={loading}
+                          />
+                          <span>{draft.isPartner ? "TAK" : "NIE"}</span>
+                        </label>
+                      </td>
+
+                      <td>
+                        <select
+                          className={styles.select}
+                          value={draft.tier || "none"}
+                          onChange={(e) =>
+                            onPartnerDraftChange(p._id, "tier", e.target.value)
+                          }
+                          disabled={loading}
+                        >
+                          {PARTNER_TIER_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+
+                      <td>
+                        <input
+                          className={styles.input}
+                          value={draft.badgeText}
+                          onChange={(e) =>
+                            onPartnerDraftChange(p._id, "badgeText", e.target.value)
+                          }
+                          placeholder="np. PARTNER SHOWLY"
+                          disabled={loading || !draft.isPartner}
+                        />
+                      </td>
+
+                      <td>
+                        <div className={styles.colorField}>
+                          <input
+                            type="color"
+                            className={styles.colorInput}
+                            value={draft.color || "#59d0ff"}
+                            onChange={(e) =>
+                              onPartnerDraftChange(p._id, "color", e.target.value)
+                            }
+                            disabled={loading || !draft.isPartner}
+                          />
+                          <input
+                            className={`${styles.input} ${styles.colorText}`}
+                            value={draft.color || ""}
+                            onChange={(e) =>
+                              onPartnerDraftChange(p._id, "color", e.target.value)
+                            }
+                            placeholder="#59d0ff"
+                            disabled={loading || !draft.isPartner}
+                          />
+                        </div>
+                      </td>
+
+                      <td className={styles.actions}>
+                        <button
+                          className={styles.btn}
+                          onClick={() => onToggleProfileVisible(p._id, p.isVisible !== false)}
+                          disabled={loading}
+                        >
+                          {p.isVisible === false ? "Włącz" : "Wyłącz"}
+                        </button>
+
+                        <button
+                          className={styles.btnPrimary}
+                          onClick={() => onSavePartnership(p)}
+                          disabled={loading}
+                        >
+                          Zapisz partnera
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+
                 {profiles.length === 0 && (
                   <tr>
-                    <td colSpan={4} className={styles.empty}>
+                    <td colSpan={8} className={styles.empty}>
                       Brak danych
                     </td>
                   </tr>
@@ -615,7 +836,6 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* ✅ REPORTS */}
       {tab === "reports" && (
         <div className={styles.section}>
           <div className={styles.sectionTop}>
@@ -629,8 +849,7 @@ export default function AdminPanel() {
             {REPORT_TABS.map((t) => (
               <button
                 key={t.key}
-                className={`${styles.subTabBtn} ${reportTab === t.key ? styles.subActive : ""
-                  }`}
+                className={`${styles.subTabBtn} ${reportTab === t.key ? styles.subActive : ""}`}
                 onClick={() => onChangeReportType(t.key)}
                 disabled={loading}
               >
@@ -665,11 +884,7 @@ export default function AdminPanel() {
               />
             </div>
 
-            <button
-              className={styles.btn}
-              onClick={onApplyReportFilters}
-              disabled={loading}
-            >
+            <button className={styles.btn} onClick={onApplyReportFilters} disabled={loading}>
               Filtruj
             </button>
           </div>
@@ -682,7 +897,6 @@ export default function AdminPanel() {
                   <th>Powód</th>
                   <th>Opis zgłoszenia</th>
                   <th>Zgłaszający</th>
-
                   <th>Nazwa profilu</th>
                   <th>Profil (UID)</th>
 
@@ -716,10 +930,7 @@ export default function AdminPanel() {
                     </td>
 
                     <td className={styles.profileCell}>
-                      <div
-                        className={styles.profileName}
-                        title={r._profileName}
-                      >
+                      <div className={styles.profileName} title={r._profileName}>
                         {r._profileName}
                       </div>
 
@@ -751,17 +962,11 @@ export default function AdminPanel() {
                             <>
                               {(r._reviewUserName || r._reviewRating != null) && (
                                 <div className={styles.reviewMeta}>
-                                  {r._reviewUserName
-                                    ? r._reviewUserName
-                                    : "—"}
-                                  {r._reviewRating != null
-                                    ? ` • ★${r._reviewRating}`
-                                    : ""}
+                                  {r._reviewUserName ? r._reviewUserName : "—"}
+                                  {r._reviewRating != null ? ` • ★${r._reviewRating}` : ""}
                                 </div>
                               )}
-                              <div className={styles.reviewBody}>
-                                {r._reviewText}
-                              </div>
+                              <div className={styles.reviewBody}>{r._reviewText}</div>
                             </>
                           ) : (
                             "—"
@@ -772,10 +977,9 @@ export default function AdminPanel() {
 
                     <td>
                       <span
-                        className={`${styles.pill} ${r.status === "closed"
-                            ? styles.pillOn
-                            : styles.pillWarn
-                          }`}
+                        className={`${styles.pill} ${
+                          r.status === "closed" ? styles.pillOn : styles.pillWarn
+                        }`}
                       >
                         {r.status === "closed" ? "ZAMKNIĘTE" : "OTWARTE"}
                       </span>
@@ -806,10 +1010,7 @@ export default function AdminPanel() {
 
                 {pagedReports.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={reportTab === "review" ? 10 : 8}
-                      className={styles.empty}
-                    >
+                    <td colSpan={reportTab === "review" ? 10 : 8} className={styles.empty}>
                       Brak zgłoszeń do wyświetlenia
                     </td>
                   </tr>
@@ -832,9 +1033,7 @@ export default function AdminPanel() {
             <button
               className={styles.pageBtn}
               disabled={loading || reportsPage >= reportsPages}
-              onClick={() =>
-                setReportsPage((p) => Math.min(reportsPages, p + 1))
-              }
+              onClick={() => setReportsPage((p) => Math.min(reportsPages, p + 1))}
             >
               ▶
             </button>

@@ -6,7 +6,7 @@ import { FaHeart, FaRegHeart } from "react-icons/fa6";
 import AlertBox from "../AlertBox/AlertBox";
 import axios from "axios";
 
-// ✅ Firebase auth (dopasuj ścieżkę)
+// ✅ Firebase auth
 import { auth } from "../../firebase";
 
 const DEFAULT_AVATAR = "/images/other/no-image.png";
@@ -83,6 +83,41 @@ const resolveUserCardTheme = (theme) => {
   };
 };
 
+const PARTNER_COLORS = {
+  partner: "#59d0ff",
+  verified: "#22c55e",
+  ambassador: "#a855f7",
+  "founding-partner": "#7dd3fc",
+};
+
+const resolvePartnerData = (partnership = {}) => {
+  const isPartner = !!partnership?.isPartner;
+  const tier = String(partnership?.tier || "none").toLowerCase();
+
+  const baseColor =
+    (partnership?.color || "").trim() ||
+    PARTNER_COLORS[tier] ||
+    "#59d0ff";
+
+  const label =
+    (partnership?.badgeText || "").trim() ||
+    (partnership?.label || "").trim() ||
+    (tier === "verified"
+      ? "ZWERYFIKOWANY"
+      : tier === "ambassador"
+      ? "AMBASADOR SHOWLY"
+      : tier === "founding-partner"
+      ? "FOUNDING PARTNER"
+      : "PARTNER SHOWLY");
+
+  return {
+    isPartner,
+    tier,
+    color: baseColor,
+    label,
+  };
+};
+
 const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) => {
   const {
     name,
@@ -98,19 +133,18 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
     profileType,
     description,
     links = [],
+    partnership = {},
   } = user;
 
   const navigate = useNavigate();
 
   // =========================================================
-  // ✅ AUTH HEADERS (JWT + uid fallback) — token z auth.currentUser
+  // ✅ AUTH HEADERS (JWT + uid fallback)
   // =========================================================
   const authHeaders = useCallback(async () => {
     const firebaseUser = auth.currentUser;
-
     const uid = firebaseUser?.uid || currentUser?.uid || "";
 
-    // jeśli firebase jeszcze nie gotowy, zwróć chociaż uid (czasem backend i tak wymaga tokena)
     if (!firebaseUser) return uid ? { uid } : {};
 
     let token = "";
@@ -126,10 +160,10 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
     };
   }, [currentUser?.uid]);
 
-  // ✅ avatar (fallback + normalizacja) — działa dla string i {url, publicId}
+  // ✅ avatar
   const avatarSrc = normalizeAvatar(avatar) || DEFAULT_AVATAR;
 
-  // ✅ ceny — czasem z API przychodzą jako stringi
+  // ✅ ceny
   const pf = Number(priceFrom);
   const pt = Number(priceTo);
   const hasPrice = Number.isFinite(pf) && Number.isFinite(pt) && pf > 0 && pt >= pf;
@@ -137,12 +171,14 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
   const [isExpanded, setIsExpanded] = useState(false);
   const [visits, setVisits] = useState(typeof user.visits === "number" ? user.visits : 0);
 
-  // 🔔 centralny alert z dowolnym komunikatem
+  // 🔔 alert
   const [alertBox, setAlertBox] = useState({ show: false, type: "error", message: "" });
   const showAlert = (message, type = "error", ttl = 4000) => {
     setAlertBox({ show: true, type, message });
     window.clearTimeout(showAlert._t);
-    showAlert._t = window.setTimeout(() => setAlertBox((a) => ({ ...a, show: false })), ttl);
+    showAlert._t = window.setTimeout(() => {
+      setAlertBox((a) => ({ ...a, show: false }));
+    }, ttl);
   };
 
   const blockIfPreview = (e, msg) => {
@@ -160,7 +196,6 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
   );
   const [isFav, setIsFav] = useState(!!user.isFavorite);
 
-  // SYNC po refetch/odświeżeniu listy
   useEffect(() => {
     setIsFav(!!user.isFavorite);
   }, [user.userId, user.isFavorite]);
@@ -169,7 +204,7 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
     if (typeof user.favoritesCount === "number") setFavCount(user.favoritesCount);
   }, [user.userId, user.favoritesCount]);
 
-  // slugify (fallback tylko jeśli nie ma slug z API)
+  // slugify
   const slugify = (text = "") =>
     String(text || "")
       .toLowerCase()
@@ -190,7 +225,6 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
   const isCalendar = bookingMode === "calendar";
   const isRequest = bookingMode === "request-open" || bookingMode === "request-blocking";
 
-  // ✅ jedyne źródło prawdy dla UI: blokada tylko gdy === false
   const allowBookingUI = bookingEnabled && user?.showAvailableDates !== false;
   const showNoBookingInfo = bookingEnabled && user?.showAvailableDates === false;
 
@@ -206,18 +240,17 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
       showAlert("Aby dodać do ulubionych, musisz być zalogowany.");
       return;
     }
+
     if (currentUser.uid === user.userId) {
       showAlert("Nie możesz dodać własnego profilu do ulubionych.");
       return;
     }
 
-    // 🔥 jeżeli backend wymaga tokena, a firebase jeszcze nie gotowy
     if (!auth.currentUser) {
       showAlert("Sesja jeszcze się ładuje. Spróbuj ponownie za chwilę.", "info");
       return;
     }
 
-    // OPTIMISTIC
     const next = !isFav;
     setIsFav(next);
     setFavCount((c) => Math.max(0, c + (next ? 1 : -1)));
@@ -234,9 +267,9 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
       if (typeof data?.isFav === "boolean") setIsFav(data.isFav);
       if (typeof data?.count === "number") setFavCount(data.count);
     } catch (e) {
-      // REVERT on error
       setIsFav((v) => !v);
       setFavCount((c) => Math.max(0, c + (next ? -1 : +1)));
+
       showAlert(
         e?.response?.status === 401
           ? "Brak autoryzacji (401). Token nie został zaakceptowany."
@@ -245,11 +278,10 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
     }
   };
 
-  // === Profil (wejście) ===
+  // === Profil ===
   const handleViewProfile = async () => {
     try {
       if (user?.userId) {
-        // jeśli endpoint /visit jest chroniony, dawaj token
         const headers = currentUser?.uid ? await authHeaders() : {};
 
         const { data } = await axios.patch(
@@ -273,11 +305,15 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
       showAlert("Aby wysłać wiadomość, musisz być zalogowany.");
       return;
     }
+
     if (currentUser.uid === user.userId) {
       showAlert("Nie możesz wysłać wiadomości do własnego profilu.");
       return;
     }
-    navigate(`/wiadomosc/${user.userId}`, { state: { scrollToId: "messageFormContainer" } });
+
+    navigate(`/wiadomosc/${user.userId}`, {
+      state: { scrollToId: "messageFormContainer" },
+    });
   };
 
   // === Rezerwacja / Zapytanie ===
@@ -286,24 +322,33 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
       showAlert("Aby skorzystać z rezerwacji/zapytania, musisz być zalogowany.");
       return;
     }
+
     if (currentUser.uid === user.userId) {
       showAlert("Nie możesz wykonać rezerwacji/zapytania na własnym profilu.");
       return;
     }
 
-    // ✅ jedyna blokada: showAvailableDates === false
     if (user?.showAvailableDates === false) {
-      showAlert("Ten profil nie udostępnia wolnych terminów — możesz tylko napisać wiadomość.", "info");
+      showAlert(
+        "Ten profil nie udostępnia wolnych terminów — możesz tylko napisać wiadomość.",
+        "info"
+      );
       return;
     }
 
-    navigate(`/rezerwacja/${slug}`, { state: { userId: user.userId, availableDates } });
+    navigate(`/rezerwacja/${slug}`, {
+      state: { userId: user.userId, availableDates },
+    });
   };
 
-  // ✅ linki: normalizacja + filtr
-  const cleanLinks = (links || []).map((l) => ensureUrl((l || "").trim())).filter(Boolean);
+  // ✅ linki
+  const cleanLinks = (links || [])
+    .map((l) => ensureUrl((l || "").trim()))
+    .filter(Boolean);
 
   const t = resolveUserCardTheme(user?.theme);
+  const partner = resolvePartnerData(partnership);
+
   const cssVars = {
     "--uc-primary": t.primary,
     "--uc-secondary": t.secondary,
@@ -312,12 +357,18 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
     "--uc-p-10": `color-mix(in srgb, ${t.primary} 10%, transparent)`,
     "--uc-p-22": `color-mix(in srgb, ${t.primary} 22%, transparent)`,
     "--uc-s-10": `color-mix(in srgb, ${t.secondary} 10%, transparent)`,
+    "--uc-partner": partner.color,
+    "--uc-partner-soft": `color-mix(in srgb, ${partner.color} 16%, white)`,
+    "--uc-partner-border": `color-mix(in srgb, ${partner.color} 42%, rgba(15, 23, 42, 0.12))`,
+    "--uc-partner-glow": `color-mix(in srgb, ${partner.color} 28%, transparent)`,
   };
 
   return (
     <>
-      <article className={styles.card} style={cssVars}>
-        {/* ===== HERO / BANNER ===== */}
+      <article
+        className={`${styles.card} ${partner.isPartner ? styles.partnerCard : ""}`}
+        style={cssVars}
+      >
         <header className={styles.hero}>
           <div className={styles.heroFade} aria-hidden="true" />
 
@@ -360,13 +411,31 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
                   <span className={styles.receiverName}>{name}</span>
                 </h3>
 
-                <span className={`${styles.profileBadge} ${styles[`type_${profileType}`] || ""}`}>
-                  {profileType === "zawodowy" && "ZAWODOWY"}
-                  {profileType === "hobbystyczny" && "HOBBY"}
-                  {profileType === "serwis" && "SERWIS"}
-                  {profileType === "społeczność" && "SPOŁECZNOŚĆ"}
-                  {!["zawodowy", "hobbystyczny", "serwis", "społeczność"].includes(profileType) && "PROFIL"}
-                </span>
+                <div className={styles.badgesRow}>
+                  {partner.isPartner && (
+                    <span
+                      className={`${styles.partnerBadge} ${
+                        styles[`partner_${partner.tier}`] || ""
+                      }`}
+                    >
+                      {partner.label}
+                    </span>
+                  )}
+
+                  <span
+                    className={`${styles.profileBadge} ${
+                      styles[`type_${profileType}`] || ""
+                    }`}
+                  >
+                    {profileType === "zawodowy" && "ZAWODOWY"}
+                    {profileType === "hobbystyczny" && "HOBBY"}
+                    {profileType === "serwis" && "SERWIS"}
+                    {profileType === "społeczność" && "SPOŁECZNOŚĆ"}
+                    {!["zawodowy", "hobbystyczny", "serwis", "społeczność"].includes(
+                      profileType
+                    ) && "PROFIL"}
+                  </span>
+                </div>
               </div>
 
               <p className={styles.role} title={role || ""}>
@@ -376,13 +445,19 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
           </div>
         </header>
 
-        {/* ===== BODY ===== */}
         <section className={styles.body}>
           {description?.trim() ? (
             <>
-              <p className={`${styles.description} ${isExpanded ? styles.expanded : ""}`}>{description}</p>
+              <p className={`${styles.description} ${isExpanded ? styles.expanded : ""}`}>
+                {description}
+              </p>
+
               {description.length > 120 && (
-                <button className={styles.toggleButton} onClick={() => setIsExpanded((p) => !p)} type="button">
+                <button
+                  className={styles.toggleButton}
+                  onClick={() => setIsExpanded((p) => !p)}
+                  type="button"
+                >
                   {isExpanded ? "Zwiń" : "Pokaż więcej"}
                 </button>
               )}
@@ -406,7 +481,8 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
           <div className={styles.details}>
             {hasPrice ? (
               <p className={styles.price}>
-                Cennik: <span>od</span> <strong>{pf} zł</strong> <span>do</span> <strong>{pt} zł</strong>
+                Cennik: <span>od</span> <strong>{pf} zł</strong> <span>do</span>{" "}
+                <strong>{pt} zł</strong>
               </p>
             ) : (
               <p className={styles.price}>
@@ -424,13 +500,18 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
                       <span
                         key={`${link}-${i}`}
                         className={styles.linkDisabled}
-                        onClick={(e) => blockIfPreview(e, "Linki są aktywne dopiero po utworzeniu profilu.")}
+                        onClick={(e) =>
+                          blockIfPreview(e, "Linki są aktywne dopiero po utworzeniu profilu.")
+                        }
                         title="Podgląd — link nieaktywny"
                         role="button"
                         tabIndex={0}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
-                            blockIfPreview(e, "Linki są aktywne dopiero po utworzeniu profilu.");
+                            blockIfPreview(
+                              e,
+                              "Linki są aktywne dopiero po utworzeniu profilu."
+                            );
                           }
                         }}
                       >
@@ -456,7 +537,9 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
                 })}
               </div>
             ) : (
-              <p className={styles.noDescription}>Użytkownik nie dodał jeszcze żadnych linków.</p>
+              <p className={styles.noDescription}>
+                Użytkownik nie dodał jeszcze żadnych linków.
+              </p>
             )}
           </div>
 
@@ -473,7 +556,14 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
                 className={styles.calendarToggle}
                 disabled={isPreview}
                 onClick={(e) => {
-                  if (blockIfPreview(e, "Rezerwacje są dostępne dopiero po utworzeniu profilu.")) return;
+                  if (
+                    blockIfPreview(
+                      e,
+                      "Rezerwacje są dostępne dopiero po utworzeniu profilu."
+                    )
+                  ) {
+                    return;
+                  }
                   goToBooking();
                 }}
                 title={isPreview ? "Podgląd — rezerwacje wyłączone" : "Rezerwacja / zapytanie"}
@@ -486,7 +576,14 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
               type="button"
               className={styles.buttonSecondary}
               onClick={(e) => {
-                if (blockIfPreview(e, "To tylko podgląd — profil będzie dostępny po utworzeniu.")) return;
+                if (
+                  blockIfPreview(
+                    e,
+                    "To tylko podgląd — profil będzie dostępny po utworzeniu."
+                  )
+                ) {
+                  return;
+                }
                 handleViewProfile();
               }}
               title={isPreview ? "Podgląd — po utworzeniu profilu" : "Zobacz profil"}
@@ -495,13 +592,16 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
             </button>
 
             {!isPreview && currentUser && currentUser.uid !== user.userId && (
-              <button type="button" className={styles.buttonSecondary} onClick={startAccountToProfile}>
+              <button
+                type="button"
+                className={styles.buttonSecondary}
+                onClick={startAccountToProfile}
+              >
                 ZADAJ PYTANIE
               </button>
             )}
           </div>
 
-          {/* ===== BOTTOM META ===== */}
           <div className={styles.bottomMeta}>
             <div className={styles.visits}>
               <FaRegEye />
@@ -529,7 +629,11 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
               <span className={styles.favLabel}>
                 Ulubione: <strong>{favCount}</strong>
               </span>
-              {isFav ? <FaHeart className={styles.heartFilled} /> : <FaRegHeart className={styles.heart} />}
+              {isFav ? (
+                <FaHeart className={styles.heartFilled} />
+              ) : (
+                <FaRegHeart className={styles.heart} />
+              )}
             </button>
           </div>
         </section>

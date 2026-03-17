@@ -6,24 +6,27 @@ export const adminApi = {
   stats: () => api.get("/api/admin/stats"),
 
   // ===== users =====
-  users: (page = 1, limit = 50) => api.get(`/api/admin/users?page=${page}&limit=${limit}`),
+  users: (page = 1, limit = 50) =>
+    api.get(`/api/admin/users?page=${page}&limit=${limit}`),
 
-  setUserRole: (id, role) => api.patch(`/api/admin/users/${id}/role`, { role }),
+  setUserRole: (id, role) =>
+    api.patch(`/api/admin/users/${id}/role`, { role }),
 
-  deleteUser: (id) => api.delete(`/api/admin/users/${id}`),
+  deleteUser: (id) =>
+    api.delete(`/api/admin/users/${id}`),
 
   // ===== profiles =====
-  profiles: (page = 1, limit = 50) => api.get(`/api/admin/profiles?page=${page}&limit=${limit}`),
+  profiles: (page = 1, limit = 50) =>
+    api.get(`/api/admin/profiles?page=${page}&limit=${limit}`),
 
-  // UWAGA: u Ciebie endpoint jest /visible (tak masz w routes/admin.js)
-  setProfileVisible: (id, isVisible) => api.patch(`/api/admin/profiles/${id}/visible`, { isVisible }),
+  setProfileVisible: (id, isVisible) =>
+    api.patch(`/api/admin/profiles/${id}/visible`, { isVisible }),
 
-  // ===== reports (NOWE) =====
-  /**
-   * opts: { page, limit, type, status, q }
-   * type: "profile" | "review"
-   * status: "open" | "resolved" | "rejected" | "all"
-   */
+  // ✅ partnerstwo profilu (admin/mod)
+  setProfilePartnership: (id, partnership) =>
+    api.patch(`/api/admin/profiles/${id}/partnership`, { partnership }),
+
+  // ===== reports =====
   reports: (opts = {}) => {
     const {
       page = 1,
@@ -43,10 +46,20 @@ export const adminApi = {
     return api.get(`/api/admin/reports?${qs.toString()}`);
   },
 
-  /**
-   * status: "resolved" | "rejected" | "open"
-   */
-  setReportStatus: (id, status) => api.patch(`/api/admin/reports/${id}/status`, { status }),
+  // jeśli kiedyś dodasz /status
+  setReportStatus: (id, status) =>
+    api.patch(`/api/admin/reports/${id}/status`, { status }),
 
-  deleteReport: (id) => api.delete(`/api/admin/reports/${id}`),
+  // ✅ zgodne z backendem /close
+  closeReport: (id, adminNote = "Zamknięto w panelu.") =>
+    api.patch(`/api/admin/reports/${id}/close`, {
+      adminNote,
+    }),
+
+  deleteReport: (id) =>
+    api.delete(`/api/admin/reports/${id}`),
+
+  // ✅ zgodne z backendem /remove-review
+  removeReviewFromReport: (id) =>
+    api.delete(`/api/admin/reports/${id}/remove-review`),
 };

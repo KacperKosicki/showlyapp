@@ -1278,6 +1278,7 @@ const allowedFields = [
   "name",
   "hasBusiness",
   "nip",
+  "partnership",
 ];
 
 router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) => {
@@ -1428,6 +1429,27 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
         updates.priceTo === null || updates.priceTo === ""
           ? null
           : Number(updates.priceTo);
+    }
+
+    if (updates.partnership) {
+      const prev =
+        profile.partnership?.toObject ? profile.partnership.toObject() : profile.partnership || {};
+
+      const isPartner = !!updates.partnership.isPartner;
+      const tier = clean(updates.partnership.tier || prev.tier || "none");
+
+      updates.partnership = {
+        ...prev,
+        isPartner,
+        tier: isPartner ? tier || "partner" : "none",
+        label: clean(updates.partnership.label || prev.label || ""),
+        badgeText: clean(updates.partnership.badgeText || prev.badgeText || ""),
+        color: clean(updates.partnership.color || prev.color || "#59d0ff"),
+        priority: Number.isFinite(Number(updates.partnership.priority))
+          ? Number(updates.partnership.priority)
+          : Number(prev.priority || 0),
+        since: updates.partnership.since || prev.since || null,
+      };
     }
 
     for (const field of allowedFields) {

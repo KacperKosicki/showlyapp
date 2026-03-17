@@ -327,6 +327,51 @@ const profileSchema = new mongoose.Schema(
       },
     },
 
+    partnership: {
+      isPartner: { type: Boolean, default: false },
+
+      tier: {
+        type: String,
+        enum: ["none", "partner", "verified", "ambassador", "founding-partner"],
+        default: "none",
+      },
+
+      label: {
+        type: String,
+        default: "",
+        trim: true,
+        maxlength: 40,
+      },
+
+      badgeText: {
+        type: String,
+        default: "",
+        trim: true,
+        maxlength: 60,
+      },
+
+      color: {
+        type: String,
+        default: "#59d0ff",
+        validate: {
+          validator: (v) => !v || hex.test(v),
+          message: "partnership.color musi być HEX (#RGB lub #RRGGBB)",
+        },
+      },
+
+      priority: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 10,
+      },
+
+      since: {
+        type: Date,
+        default: null,
+      },
+    },
+
     favoritesCount: { type: Number, default: 0 },
 
     isVisible: { type: Boolean, default: true },
@@ -406,6 +451,14 @@ profileSchema.pre("validate", function (next) {
     this.priceTo < this.priceFrom
   ) {
     return next(new Error("priceTo nie może być mniejsze niż priceFrom."));
+  }
+
+  if (this?.partnership?.isPartner && this?.partnership?.tier === "none") {
+    this.partnership.tier = "partner";
+  }
+
+  if (!this?.partnership?.isPartner) {
+    this.partnership.tier = "none";
   }
 
   next();

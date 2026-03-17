@@ -338,3 +338,59 @@
     min-width: 200px;
   }
 }
+
+.profilesTable {
+  min-width: 1320px;
+}
+
+.switchWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  span {
+    font-size: 13px;
+    font-weight: 700;
+  }
+}
+
+.colorField {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 180px;
+}
+
+.colorInput {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.colorText {
+  min-width: 110px;
+}
+
+.btnPrimary {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(80, 160, 255, 0.28);
+  background: rgba(225, 241, 255, 0.95);
+  color: #0f3f73;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
