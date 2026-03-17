@@ -501,6 +501,7 @@ $page-max: 1240px;
   font-family: $font-accent;
   font-weight: 950;
   letter-spacing: 0.01em;
+  white-space: nowrap;
   transition:
     transform 0.16s ease,
     box-shadow 0.16s ease,
@@ -510,6 +511,20 @@ $page-max: 1240px;
 
   svg {
     font-size: 1.02rem;
+    flex: 0 0 auto;
+  }
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 4px var(--pp-p-10),
+      0 14px 30px rgba(17, 24, 39, 0.06);
   }
 }
 
@@ -519,6 +534,7 @@ $page-max: 1240px;
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.84);
   box-shadow: 0 14px 30px rgba(17, 24, 39, 0.05);
+  backdrop-filter: blur(12px);
 
   &:hover {
     transform: translateY(-1px);
@@ -530,10 +546,37 @@ $page-max: 1240px;
   }
 }
 
+.ghostBtn {
+  color: var(--pp-primary);
+  background: linear-gradient(135deg, var(--pp-p-06), var(--pp-s-06));
+  border: 1px solid var(--pp-p-18);
+
+  svg {
+    color: var(--pp-primary);
+  }
+
+  &:hover {
+    background: linear-gradient(135deg, var(--pp-p-10), var(--pp-s-10));
+    border-color: var(--pp-p-22);
+    box-shadow:
+      0 16px 34px rgba(17, 24, 39, 0.06),
+      0 0 0 1px rgba(255, 255, 255, 0.32) inset;
+  }
+}
+
 .favActive {
   color: #be123c;
   background: linear-gradient(135deg, rgba(255, 228, 236, 0.94), rgba(255, 255, 255, 0.88));
   border-color: rgba(244, 114, 182, 0.24);
+
+  svg {
+    color: #be123c;
+  }
+
+  &:hover {
+    background: linear-gradient(135deg, rgba(255, 221, 232, 0.98), rgba(255, 255, 255, 0.9));
+    border-color: rgba(244, 114, 182, 0.32);
+  }
 }
 
 .ctaRow {

@@ -26,6 +26,7 @@ import {
   FaTiktok,
   FaLinkedin,
   FaXTwitter,
+  FaListUl,
 } from "react-icons/fa6";
 import { FaRegCalendarAlt, FaPaperPlane } from "react-icons/fa";
 
@@ -786,19 +787,17 @@ export default function PublicProfile() {
                 <div className={styles.heroActions}>
                   <button
                     type="button"
-                    className={`${styles.favBtn} ${isFav ? styles.favActive : ""
-                      }`}
+                    className={`${styles.favBtn} ${isFav ? styles.favActive : ""}`}
                     onClick={toggleFavorite}
                   >
                     {isFav ? <FaHeart /> : <FaRegHeart />}
-                    <span>
-                      {isFav ? "W ulubionych" : "Dodaj do ulubionych"}
-                    </span>
+                    <span>{isFav ? "W ulubionych" : "Dodaj do ulubionych"}</span>
                   </button>
 
                   {hasServices && (
                     <a className={styles.ghostBtn} href="#services">
-                      Zobacz usługi
+                      <FaListUl />
+                      <span>Zobacz usługi</span>
                     </a>
                   )}
                 </div>
@@ -1026,7 +1025,7 @@ export default function PublicProfile() {
               </section>
             )}
 
-            {(hasServices || hasInfoBox) && (
+            {hasServices && (
               <section className={styles.sectionCard} id="services">
                 <div className={styles.sectionHeader}>
                   <div>

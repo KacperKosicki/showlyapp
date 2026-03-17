@@ -9,7 +9,7 @@
   text-align: center;
 
   --cardW: 400px;
-  --gap: 1.5rem;
+  --gap: 1.2rem;
   --peek: 0.35;
   --sidePad: 72px;
 
@@ -21,19 +21,20 @@
   font-size: 2rem;
   font-family: $font-heading;
   color: $text-color;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .search {
   padding: 0.8rem 1.2rem;
   border-radius: 1.5rem;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(15, 23, 42, 0.12);
   font-size: 1rem;
   width: 100%;
   max-width: 420px;
   margin: 0 auto 2rem;
   font-family: $font-body;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  background: #fff;
 
   &:focus {
     outline: none;
@@ -80,6 +81,7 @@
   flex-wrap: nowrap;
   gap: var(--gap);
   justify-content: flex-start;
+  align-items: flex-start; /* ✅ KLUCZ */
 
   overflow-x: auto;
   overflow-y: visible;
@@ -88,7 +90,6 @@
 
   scroll-snap-type: x mandatory;
   scroll-padding-left: 0.25rem;
-  /* desktop start */
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
 
@@ -107,6 +108,15 @@
 
   display: flex;
   justify-content: center;
+  align-items: flex-start; /* ✅ KLUCZ */
+  height: auto; /* ✅ */
+}
+
+/* ✅ każda karta żyje własną wysokością */
+.cardWrap > * {
+  width: 100%;
+  height: auto;
+  align-self: flex-start;
 }
 
 /* ===== strzałki ===== */
@@ -199,19 +209,15 @@
     max-width: 100%;
   }
 
-  /* mobile: palec, więc strzałki out */
   .navBtn {
     display: none;
   }
 
-  /* ❗ KLUCZ: na mobile NIE dodajemy sidePad na carousel,
-     bo centrowanie robimy paddingiem samego scroller'a (.grid) */
   .carousel {
     padding-left: 0;
     padding-right: 0;
   }
 
-  /* fade na mobile najlepiej wyłączyć, bo daje wrażenie “ucięcia” */
   .carousel::before,
   .carousel::after {
     display: none;
@@ -221,11 +227,11 @@
     display: flex;
     flex-wrap: nowrap;
     gap: 1.1rem;
+    align-items: flex-start; /* ✅ */
 
     overflow-x: auto;
     overflow-y: visible;
 
-    /* ✅ to jest jedyne centrowanie */
     padding-left: calc((100vw - var(--cardMobileW)) / 2);
     padding-right: calc((100vw - var(--cardMobileW)) / 2);
     padding-top: 0.5rem;
@@ -238,8 +244,6 @@
 
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
-
-    /* mniej “dziwnych” bounce na mobile */
     overscroll-behavior-x: contain;
 
     scrollbar-width: none;
@@ -256,9 +260,14 @@
 
     display: flex;
     justify-content: center;
+    align-items: flex-start;
+  }
+
+  .cardWrap > * {
+    width: 100%;
+    height: auto;
   }
 }
-
 
 @media (max-width: 480px) {
   .section {

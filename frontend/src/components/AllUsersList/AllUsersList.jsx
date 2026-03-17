@@ -7,7 +7,6 @@ import { auth } from '../../firebase';
 
 const API = process.env.REACT_APP_API_URL;
 
-// ✅ Bearer token header
 async function getAuthHeader() {
   const u = auth.currentUser;
   if (!u) return {};
@@ -36,8 +35,6 @@ const AllUsersList = ({ currentUser }) => {
             headers: { ...authHeader },
           });
 
-          // /favorites/my w Twoim backendzie zwraca listę profili (userId w obiekcie)
-          // robimy też fallback na profileUserId, jakby kiedyś zmieniło się API
           const favSet = new Set(
             (Array.isArray(favProfiles) ? favProfiles : [])
               .map((p) => p?.userId || p?.profileUserId)
@@ -72,7 +69,6 @@ const AllUsersList = ({ currentUser }) => {
     );
   }, [users, search]);
 
-  // sprawdza, czy można przewijać lewo/prawo (dla strzałek)
   const updateArrows = () => {
     const el = scrollerRef.current;
     if (!el) return;
@@ -106,18 +102,21 @@ const AllUsersList = ({ currentUser }) => {
     const el = scrollerRef.current;
     if (!el) return;
 
-    // bierzemy szerokość pierwszej karty + gap
     const first = el.querySelector(':scope > *');
     const cardW = first?.getBoundingClientRect().width || 400;
-
-    // gap: próbujemy wziąć z CSS (zwykle 24px dla 1.5rem), fallback 24
     const gap = parseFloat(getComputedStyle(el).columnGap || getComputedStyle(el).gap) || 24;
 
-    const step = (cardW + gap) * 1.02; // lekko więcej niż 1 karta
+    const step = (cardW + gap) * 1.02;
     el.scrollBy({ left: dir * step, behavior: 'smooth' });
   };
 
-  if (loading) return <section className={styles.section}><p>Ładowanie…</p></section>;
+  if (loading) {
+    return (
+      <section className={styles.section}>
+        <p>Ładowanie…</p>
+      </section>
+    );
+  }
 
   return (
     <section className={styles.section}>
