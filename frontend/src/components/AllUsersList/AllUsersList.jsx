@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import styles from './AllUsersList.module.scss';
-import UserCard from '../UserCard/UserCard';
-import axios from 'axios';
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import { auth } from '../../firebase';
+import { useEffect, useMemo, useRef, useState } from "react";
+import styles from "./AllUsersList.module.scss";
+import UserCard from "../UserCard/UserCard";
+import axios from "axios";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { auth } from "../../firebase";
 
 const API = process.env.REACT_APP_API_URL;
 
@@ -15,7 +15,7 @@ async function getAuthHeader() {
 }
 
 const AllUsersList = ({ currentUser }) => {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,7 +51,7 @@ const AllUsersList = ({ currentUser }) => {
           setUsers(Array.isArray(profiles) ? profiles : []);
         }
       } catch (err) {
-        console.error('Błąd pobierania użytkowników:', err);
+        console.error("Błąd pobierania użytkowników:", err);
       } finally {
         setLoading(false);
       }
@@ -61,12 +61,15 @@ const AllUsersList = ({ currentUser }) => {
   }, [currentUser?.uid]);
 
   const filteredUsers = useMemo(() => {
-    const q = search.toLowerCase();
-    return users.filter((user) =>
-      (user.name || '').toLowerCase().includes(q) ||
-      (user.role || '').toLowerCase().includes(q) ||
-      (user.location || '').toLowerCase().includes(q)
-    );
+    const q = search.toLowerCase().trim();
+
+    return users.filter((user) => {
+      return (
+        (user.name || "").toLowerCase().includes(q) ||
+        (user.role || "").toLowerCase().includes(q) ||
+        (user.location || "").toLowerCase().includes(q)
+      );
+    });
   }, [users, search]);
 
   const updateArrows = () => {
@@ -87,13 +90,13 @@ const AllUsersList = ({ currentUser }) => {
     if (!el) return;
 
     const onScroll = () => updateArrows();
-    el.addEventListener('scroll', onScroll, { passive: true });
+    el.addEventListener("scroll", onScroll, { passive: true });
 
     const ro = new ResizeObserver(() => updateArrows());
     ro.observe(el);
 
     return () => {
-      el.removeEventListener('scroll', onScroll);
+      el.removeEventListener("scroll", onScroll);
       ro.disconnect();
     };
   }, [filteredUsers.length]);
@@ -102,64 +105,104 @@ const AllUsersList = ({ currentUser }) => {
     const el = scrollerRef.current;
     if (!el) return;
 
-    const first = el.querySelector(':scope > *');
+    const first = el.querySelector(":scope > *");
     const cardW = first?.getBoundingClientRect().width || 400;
-    const gap = parseFloat(getComputedStyle(el).columnGap || getComputedStyle(el).gap) || 24;
+    const gap =
+      parseFloat(getComputedStyle(el).columnGap || getComputedStyle(el).gap) || 24;
 
     const step = (cardW + gap) * 1.02;
-    el.scrollBy({ left: dir * step, behavior: 'smooth' });
+    el.scrollBy({ left: dir * step, behavior: "smooth" });
   };
 
   if (loading) {
     return (
       <section className={styles.section}>
-        <p>Ładowanie…</p>
+        <p className={styles.loading}>Ładowanie specjalistów...</p>
       </section>
     );
   }
 
   return (
     <section className={styles.section}>
-      <h2 className={styles.heading}>Wszyscy specjaliści 👀</h2>
+      <div className={styles.sectionBackground} aria-hidden="true" />
 
-      <input
-        type="text"
-        placeholder="Szukaj po nazwie, roli lub lokalizacji..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className={styles.search}
-      />
+      <div className={styles.inner}>
+        <div className={styles.head}>
+          <div className={styles.labelRow}>
+            <span className={styles.label}>Showly Directory</span>
+            <span className={styles.labelDot} />
+            <span className={styles.labelDesc}>Wszyscy specjaliści</span>
+            <span className={styles.labelLine} />
+            <span className={styles.pill}>Szukaj • Porównuj • Wybieraj</span>
+          </div>
 
-      <div className={styles.carousel}>
-        <button
-          type="button"
-          className={`${styles.navBtn} ${styles.left} ${!canLeft ? styles.disabled : ''}`}
-          onClick={() => scrollByCard(-1)}
-          disabled={!canLeft}
-          aria-label="Przewiń w lewo"
-          title="Przewiń w lewo"
-        >
-          <FaChevronLeft />
-        </button>
+          <h2 className={styles.heading}>
+            Wszyscy <span className={styles.headingAccent}>specjaliści</span> 👀
+          </h2>
 
-        <div className={styles.grid} ref={scrollerRef}>
-          {filteredUsers.map((user, index) => (
-            <div className={styles.cardWrap} key={user._id || user.userId || index}>
-              <UserCard user={user} currentUser={currentUser} />
+          <p className={styles.description}>
+            Przeglądaj profile usługodawców, twórców i specjalistów dostępnych w Showly.
+            Szukaj po nazwie, roli lub lokalizacji i znajdź osoby najlepiej dopasowane
+            do swoich potrzeb.
+          </p>
+
+          <div className={styles.metaRow}>
+            <div className={styles.metaCard}>
+              <strong>{users.length}</strong>
+              <span>wszystkich profili</span>
             </div>
-          ))}
+            <div className={styles.metaCard}>
+              <strong>{filteredUsers.length}</strong>
+              <span>wyników wyszukiwania</span>
+            </div>
+            <div className={styles.metaCard}>
+              <strong>Showly</strong>
+              <span>pełna baza specjalistów</span>
+            </div>
+          </div>
+
+          <div className={styles.searchWrap}>
+            <input
+              type="text"
+              placeholder="Szukaj po nazwie, roli lub lokalizacji..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={styles.search}
+            />
+          </div>
         </div>
 
-        <button
-          type="button"
-          className={`${styles.navBtn} ${styles.right} ${!canRight ? styles.disabled : ''}`}
-          onClick={() => scrollByCard(1)}
-          disabled={!canRight}
-          aria-label="Przewiń w prawo"
-          title="Przewiń w prawo"
-        >
-          <FaChevronRight />
-        </button>
+        <div className={styles.carousel}>
+          <button
+            type="button"
+            className={`${styles.navBtn} ${styles.left} ${!canLeft ? styles.disabled : ""}`}
+            onClick={() => scrollByCard(-1)}
+            disabled={!canLeft}
+            aria-label="Przewiń w lewo"
+            title="Przewiń w lewo"
+          >
+            <FaChevronLeft />
+          </button>
+
+          <div className={styles.grid} ref={scrollerRef}>
+            {filteredUsers.map((user, index) => (
+              <div className={styles.cardWrap} key={user._id || user.userId || index}>
+                <UserCard user={user} currentUser={currentUser} />
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            className={`${styles.navBtn} ${styles.right} ${!canRight ? styles.disabled : ""}`}
+            onClick={() => scrollByCard(1)}
+            disabled={!canRight}
+            aria-label="Przewiń w prawo"
+            title="Przewiń w prawo"
+          >
+            <FaChevronRight />
+          </button>
+        </div>
       </div>
     </section>
   );

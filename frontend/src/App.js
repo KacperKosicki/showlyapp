@@ -7,7 +7,6 @@ import { auth } from "./firebase";
 import Hero from "./components/Hero/Hero";
 import UserCardList from "./components/UserCardList/UserCardList";
 import WhyUs from "./components/WhyUs/WhyUs";
-import CategoryFilter from "./components/CategoryFilter/CategoryFilter";
 import AllUsersList from "./components/AllUsersList/AllUsersList";
 import Footer from "./components/Footer/Footer";
 import Register from "./components/Register/Register";
@@ -30,6 +29,7 @@ import BillingCancel from "./components/BillingCancel/BillingCancel";
 import SearchResults from "./components/SearchResults/SearchResults";
 import PartnersShowcase from "./components/PartnersShowcase/PartnersShowcase";
 import HowShowlyWorks from "./components/HowShowlyWorks/HowShowlyWorks";
+import DiscoverShowly from "./components/DiscoverShowly/DiscoverShowly";
 
 // ✅ NEW: admin
 import AdminPanel from "./components/AdminPanel/AdminPanel";
@@ -270,12 +270,12 @@ function App() {
           element={
             <>
               <Hero {...heroProps} />
-<AboutApp user={safeUser} />
-<HowShowlyWorks />
-<PartnersShowcase currentUser={safeUser} />
+              <AboutApp user={safeUser} />
+              <HowShowlyWorks />
+              <PartnersShowcase currentUser={safeUser} />
+              <DiscoverShowly />
               <UserCardList currentUser={safeUser} />
               <WhyUs />
-              <CategoryFilter />
               <AllUsersList currentUser={safeUser} />
               <Footer />
             </>

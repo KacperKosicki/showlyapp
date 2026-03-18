@@ -1,0 +1,387 @@
+@import "../../styles/variables";
+
+/* =========================================================
+   DISCOVER SHOWLY — premium section before cards
+========================================================= */
+
+.section {
+  position: relative;
+  overflow: hidden;
+  padding: 6.25rem 1rem;
+  color: #fff;
+  background: linear-gradient(180deg, #08090d 0%, #0b0d13 45%, #090b10 100%);
+  isolation: isolate;
+}
+
+.bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.aurora,
+.aurora2 {
+  position: absolute;
+  inset: -20%;
+  filter: blur(30px);
+  transform: translate3d(0, 0, 0);
+}
+
+.aurora {
+  opacity: 0.88;
+  animation: floaty 12s ease-in-out infinite;
+  background:
+    radial-gradient(620px 320px at 18% 26%, rgba(111, 78, 242, 0.32), transparent 62%),
+    radial-gradient(540px 300px at 75% 28%, rgba(255, 64, 129, 0.18), transparent 60%),
+    radial-gradient(520px 300px at 52% 76%, rgba(77, 214, 255, 0.12), transparent 62%);
+}
+
+.aurora2 {
+  opacity: 0.62;
+  animation: floaty 15s ease-in-out infinite reverse;
+  background:
+    radial-gradient(560px 300px at 80% 36%, rgba(111, 78, 242, 0.18), transparent 62%),
+    radial-gradient(520px 320px at 22% 76%, rgba(255, 64, 129, 0.14), transparent 62%);
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 115px 115px;
+  mask-image: radial-gradient(circle at 50% 35%, #000 0%, #000 44%, transparent 78%);
+}
+
+.glow {
+  position: absolute;
+  width: 760px;
+  height: 760px;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.05), transparent 62%);
+  filter: blur(10px);
+  opacity: 0.7;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(1200px 700px at 50% 20%, transparent 38%, rgba(0, 0, 0, 0.74) 82%);
+  opacity: 0.96;
+}
+
+.grain {
+  position: absolute;
+  inset: -30%;
+  opacity: 0.18;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+}
+
+.wrap {
+  position: relative;
+  z-index: 1;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(18px, 2vw, 30px);
+}
+
+.head {
+  text-align: center;
+  max-width: 860px;
+  margin: 0 auto 2rem;
+}
+
+.labelRow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: rgba(255, 255, 255, 0.74);
+  font-family: $font-body;
+}
+
+.label {
+  font-family: $font-accent;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.labelDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.labelDesc {
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+.labelLine {
+  width: 46px;
+  height: 2px;
+  background: linear-gradient(135deg, $primary-color, $secondary-color);
+  opacity: 0.92;
+}
+
+.pill {
+  font-family: $font-accent;
+  font-weight: 900;
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 7px 11px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.title {
+  margin: 16px 0 10px;
+  font-family: $font-accent;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  font-size: clamp(2.05rem, 4.2vw, 3.1rem);
+}
+
+.titleAccent {
+  background: linear-gradient(135deg, $primary-color, $secondary-color);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.subtitle {
+  font-family: $font-body;
+  font-size: clamp(1rem, 1.3vw, 1.1rem);
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 72ch;
+  margin: 0 auto;
+}
+
+.gridCards {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.card {
+  position: relative;
+  border-radius: 22px;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
+  box-shadow:
+    0 24px 90px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(255, 255, 255, 0.07) inset;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+
+  svg {
+    font-size: 1.2rem;
+  }
+}
+
+.cardTitle {
+  margin: 0;
+  font-family: $font-accent;
+  font-weight: 950;
+  letter-spacing: -0.02em;
+  font-size: 1.04rem;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.cardText {
+  margin: 0 0 14px;
+  font-family: $font-body;
+  font-size: 0.97rem;
+  line-height: 1.68;
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badge {
+  font-family: $font-accent;
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 9px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.bottomPanel {
+  margin-top: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.bottomLine {
+  flex: 1;
+  min-width: 90px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(111, 78, 242, 0.55), rgba(255, 64, 129, 0.3));
+  opacity: 0.9;
+}
+
+.bottomText {
+  margin: 0;
+  text-align: center;
+  font-family: $font-body;
+  font-size: 0.96rem;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 620px;
+}
+
+/* responsive */
+
+@media (max-width: 1100px) {
+  .gridCards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 5.8rem 1rem;
+  }
+
+  .wrap {
+    padding: 0;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .bottomPanel {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .bottomLine {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .section {
+    padding: 5.2rem 0.95rem;
+  }
+
+  .gridCards {
+    grid-template-columns: 1fr;
+  }
+
+  .labelRow {
+    gap: 10px;
+  }
+
+  .title {
+    font-size: clamp(1.85rem, 8.8vw, 2.4rem);
+  }
+
+  .subtitle {
+    font-size: 0.97rem;
+    line-height: 1.68;
+  }
+
+  .icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+
+    svg {
+      font-size: 1.08rem;
+    }
+  }
+
+  .cardTitle {
+    font-size: 1rem;
+  }
+
+  .cardText {
+    font-size: 0.94rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora,
+  .aurora2 {
+    animation: none;
+  }
+
+  .card {
+    transition: none;
+  }
+}
+
+@keyframes floaty {
+  0% {
+    transform: translate3d(-1%, -1%, 0) scale(1.02);
+  }
+  50% {
+    transform: translate3d(1.4%, 1.2%, 0) scale(1.04);
+  }
+  100% {
+    transform: translate3d(-1%, -1%, 0) scale(1.02);
+  }
+}
