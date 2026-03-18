@@ -571,16 +571,20 @@ export default function PublicProfile() {
 
   const toggleFavorite = async () => {
     const currentUser = auth.currentUser;
+
     if (!currentUser) {
       setAlert({ type: "error", message: "Aby dodać do ulubionych, musisz być zalogowany." });
       return;
     }
+
     if (currentUser.uid === profile?.userId) {
       setAlert({ type: "error", message: "Nie możesz dodać własnego profilu do ulubionych." });
       return;
     }
 
-    const next = !isFav;
+    const prevIsFav = isFav;
+    const next = !prevIsFav;
+
     setIsFav(next);
     setFavCount((c) => Math.max(0, c + (next ? 1 : -1)));
 
@@ -592,12 +596,30 @@ export default function PublicProfile() {
       });
 
       const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.message || "Nie udało się zaktualizować ulubionych.");
+      }
+
+      const finalIsFav = typeof data?.isFav === "boolean" ? data.isFav : next;
+
       if (typeof data?.isFav === "boolean") setIsFav(data.isFav);
       if (typeof data?.count === "number") setFavCount(data.count);
+
+      setAlert({
+        type: "info",
+        message: finalIsFav
+          ? "Profil został dodany do ulubionych."
+          : "Profil został usunięty z ulubionych.",
+      });
     } catch {
-      setIsFav((v) => !v);
-      setFavCount((c) => Math.max(0, c + (next ? -1 : +1)));
-      setAlert({ type: "error", message: "Nie udało się zaktualizować ulubionych. Spróbuj ponownie." });
+      setIsFav(prevIsFav);
+      setFavCount((c) => Math.max(0, c + (prevIsFav ? 1 : -1)));
+
+      setAlert({
+        type: "error",
+        message: "Nie udało się zaktualizować ulubionych. Spróbuj ponownie.",
+      });
     }
   };
 

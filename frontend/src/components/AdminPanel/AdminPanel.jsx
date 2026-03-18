@@ -23,6 +23,7 @@ const PARTNER_TIER_OPTIONS = [
   { value: "verified", label: "Verified" },
   { value: "ambassador", label: "Ambassador" },
   { value: "founding-partner", label: "Founding Partner" },
+  { value: "owner", label: "Owner" },
 ];
 
 const PARTNER_DEFAULTS = {
@@ -41,6 +42,10 @@ const PARTNER_DEFAULTS = {
   "founding-partner": {
     badgeText: "FOUNDING PARTNER",
     color: "#7dd3fc",
+  },
+  "owner": {
+    badgeText: "WŁAŚCICIEL",
+    color: "#FFD700",
   },
 };
 

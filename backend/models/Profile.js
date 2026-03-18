@@ -332,7 +332,7 @@ const profileSchema = new mongoose.Schema(
 
       tier: {
         type: String,
-        enum: ["none", "partner", "verified", "ambassador", "founding-partner"],
+        enum: ["none", "partner", "verified", "ambassador", "founding-partner", "owner"],
         default: "none",
       },
 

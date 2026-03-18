@@ -38,9 +38,9 @@ $page-max: 1240px;
   --pp-border: rgba(15, 23, 42, 0.08);
   --pp-border-strong: rgba(15, 23, 42, 0.12);
   --pp-card-bg: rgba(255, 255, 255, 0.84);
-  --pp-shadow:
-    0 26px 90px rgba(15, 23, 42, 0.07),
-    0 12px 28px rgba(15, 23, 42, 0.04);
+--pp-shadow:
+  0 12px 36px rgba(15, 23, 42, 0.05),
+  0 4px 14px rgba(15, 23, 42, 0.035);
 
   :is(h1, h2, h3, h4) {
     font-family: $font-heading;
@@ -77,11 +77,11 @@ $page-max: 1240px;
   .sideCard,
   .sectionCard {
     border-color: var(--pp-partner-border);
-    box-shadow:
-      0 26px 80px rgba(15, 23, 42, 0.08),
-      0 0 0 1px var(--pp-partner-border),
-      0 0 0 6px var(--pp-partner-soft),
-      0 24px 46px var(--pp-partner-glow);
+box-shadow:
+  0 16px 44px rgba(15, 23, 42, 0.07),
+  0 0 0 1px var(--pp-partner-border),
+  0 0 0 4px var(--pp-partner-soft),
+  0 22px 48px rgba(15, 23, 42, 0.045);
   }
 }
 
@@ -458,6 +458,7 @@ $page-max: 1240px;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  margin-top: 5px;
 }
 
 .roleBadge {
@@ -530,7 +531,6 @@ $page-max: 1240px;
 }
 
 .favoriteMetric {
-  border: none;
   cursor: pointer;
   text-align: left;
   transition: transform 0.16s ease, background 0.16s ease, filter 0.16s ease;
@@ -586,6 +586,7 @@ $page-max: 1240px;
   flex-wrap: wrap;
   gap: 10px;
   width: 100%;
+  justify-content: space-around;
 }
 
 .reportPill,
@@ -1843,11 +1844,6 @@ $page-max: 1240px;
 
 @media (max-width: 760px) {
 
-  .metricRow,
-  .ctaRow {
-    grid-template-columns: 1fr;
-  }
-
   .linkGrid {
     grid-template-columns: 1fr;
   }
@@ -1922,15 +1918,15 @@ $page-max: 1240px;
 
   .heroIdentity {
     display: grid;
-    grid-template-columns: 88px minmax(0, 1fr);
+    grid-template-columns: 124px minmax(0, 1fr);
     gap: 12px;
     align-items: center;
     width: 100%;
   }
 
   .avatarWrap {
-    width: 88px;
-    height: 88px;
+    width: 124px;
+    height: 124px;
     border-radius: 20px;
     padding: 6px;
     justify-self: start;
@@ -2001,7 +1997,6 @@ $page-max: 1240px;
   }
 
   .metricRow {
-    grid-template-columns: 1fr;
     gap: 8px;
     width: 100%;
   }

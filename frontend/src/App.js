@@ -28,6 +28,8 @@ import Favorites from "./components/Favorites/Favorites";
 import BillingSuccess from "./components/BillingSuccess/BillingSuccess";
 import BillingCancel from "./components/BillingCancel/BillingCancel";
 import SearchResults from "./components/SearchResults/SearchResults";
+import PartnersShowcase from "./components/PartnersShowcase/PartnersShowcase";
+import HowShowlyWorks from "./components/HowShowlyWorks/HowShowlyWorks";
 
 // ✅ NEW: admin
 import AdminPanel from "./components/AdminPanel/AdminPanel";
@@ -268,7 +270,9 @@ function App() {
           element={
             <>
               <Hero {...heroProps} />
-              <AboutApp user={safeUser} />
+<AboutApp user={safeUser} />
+<HowShowlyWorks />
+<PartnersShowcase currentUser={safeUser} />
               <UserCardList currentUser={safeUser} />
               <WhyUs />
               <CategoryFilter />
@@ -307,15 +311,15 @@ function App() {
         <Route path="/verify-success" element={<VerifySuccess />} />
 
         <Route
-  path="/szukaj"
-  element={
-    <>
-      <Hero {...heroProps} />
-      <SearchResults currentUser={safeUser} />
-      <Footer />
-    </>
-  }
-/>
+          path="/szukaj"
+          element={
+            <>
+              <Hero {...heroProps} />
+              <SearchResults currentUser={safeUser} />
+              <Footer />
+            </>
+          }
+        />
 
         <Route
           path="/billing/success"
