@@ -144,11 +144,40 @@ const PartnersShowcase = ({ currentUser }) => {
             <div className={styles.sectionBackground} aria-hidden="true" />
 
             <div className={styles.inner}>
-                <h2 className={styles.heading}>Partnerzy premium ✨</h2>
-                <p className={styles.description}>
-                    Wyróżnione profile, które aktywnie rozwijają swoją obecność w Showly i
-                    budują zaufanie użytkowników.
-                </p>
+<div className={styles.head}>
+    <div className={styles.labelRow}>
+        <span className={styles.label}>Showly Premium</span>
+        <span className={styles.labelDot} />
+        <span className={styles.labelDesc}>Wyróżnione profile</span>
+        <span className={styles.labelLine} />
+        <span className={styles.pill}>Zaufanie • Jakość • Widoczność</span>
+    </div>
+
+    <h2 className={styles.heading}>
+        Partnerzy <span className={styles.headingAccent}>premium</span> ✨
+    </h2>
+
+    <p className={styles.description}>
+        Poznaj profile, które aktywnie rozwijają swoją markę w Showly, dbają o
+        jakość prezentacji i budują większe zaufanie użytkowników dzięki swojej
+        widoczności, aktywności i profesjonalnemu wizerunkowi.
+    </p>
+
+    <div className={styles.metaRow}>
+        <div className={styles.metaCard}>
+            <strong>{partners.length}+</strong>
+            <span>wyróżnionych profili</span>
+        </div>
+        <div className={styles.metaCard}>
+            <strong>Top</strong>
+            <span>najbardziej aktywni partnerzy</span>
+        </div>
+        <div className={styles.metaCard}>
+            <strong>Showly</strong>
+            <span>lepsza widoczność i zaufanie</span>
+        </div>
+    </div>
+</div>
 
                 <div className={styles.carousel}>
                     <button
