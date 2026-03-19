@@ -13,7 +13,7 @@ async function getAuthHeader() {
   return { Authorization: `Bearer ${token}` };
 }
 
-const UserCardList = ({ currentUser }) => {
+const UserCardList = ({ currentUser, setAlert }) => {
   const [topRatedUsers, setTopRatedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -113,7 +113,11 @@ const UserCardList = ({ currentUser }) => {
         <div className={styles.list}>
           {topRatedUsers.map((user, index) => (
             <div className={styles.cardWrap} key={user._id || user.userId || index}>
-              <UserCard user={user} currentUser={currentUser} />
+              <UserCard
+                user={user}
+                currentUser={currentUser}
+                setAlert={setAlert}
+              />
             </div>
           ))}
         </div>

@@ -14,7 +14,7 @@ async function getAuthHeader() {
   return { Authorization: `Bearer ${token}` };
 }
 
-const AllUsersList = ({ currentUser }) => {
+const AllUsersList = ({ currentUser, setAlert }) => {
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -187,7 +187,11 @@ const AllUsersList = ({ currentUser }) => {
           <div className={styles.grid} ref={scrollerRef}>
             {filteredUsers.map((user, index) => (
               <div className={styles.cardWrap} key={user._id || user.userId || index}>
-                <UserCard user={user} currentUser={currentUser} />
+                <UserCard
+  user={user}
+  currentUser={currentUser}
+  setAlert={setAlert}
+/>
               </div>
             ))}
           </div>

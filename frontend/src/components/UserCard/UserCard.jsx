@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import styles from "./UserCard.module.scss";
 import { FaStar, FaMapMarkerAlt, FaRegEye } from "react-icons/fa";
 import { FaHeart, FaRegHeart } from "react-icons/fa6";
-import AlertBox from "../AlertBox/AlertBox";
 import axios from "axios";
 
 // ✅ Firebase auth
@@ -118,7 +117,13 @@ const resolvePartnerData = (partnership = {}) => {
   };
 };
 
-const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) => {
+const UserCard = ({
+  user,
+  currentUser,
+  setAlert,
+  isPreview = false,
+  onPreviewBlocked,
+}) => {
   const {
     name,
     avatar,
@@ -171,15 +176,16 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
   const [isExpanded, setIsExpanded] = useState(false);
   const [visits, setVisits] = useState(typeof user.visits === "number" ? user.visits : 0);
 
-  // 🔔 alert
-  const [alertBox, setAlertBox] = useState({ show: false, type: "error", message: "" });
-  const showAlert = (message, type = "error", ttl = 4000) => {
-    setAlertBox({ show: true, type, message });
+  const showAlert = (message, type = "error") => {
+  if (typeof setAlert === "function") {
+    setAlert({ message, type });
+
     window.clearTimeout(showAlert._t);
     showAlert._t = window.setTimeout(() => {
-      setAlertBox((a) => ({ ...a, show: false }));
-    }, ttl);
-  };
+      setAlert(null);
+    }, 4000);
+  }
+};
 
   const blockIfPreview = (e, msg) => {
     if (!isPreview) return false;
@@ -638,14 +644,6 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
           </div>
         </section>
       </article>
-
-      {alertBox.show && (
-        <AlertBox
-          type={alertBox.type}
-          message={alertBox.message}
-          onClose={() => setAlertBox((a) => ({ ...a, show: false }))}
-        />
-      )}
     </>
   );
 };

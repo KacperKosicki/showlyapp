@@ -285,11 +285,11 @@ function App() {
               <Hero {...heroProps} />
               <AboutApp user={safeUser} />
               <HowShowlyWorks />
-              <PartnersShowcase currentUser={safeUser} />
+              <PartnersShowcase currentUser={safeUser} setAlert={setAlert} />
               <DiscoverShowly />
-              <UserCardList currentUser={safeUser} />
+              <UserCardList currentUser={safeUser} setAlert={setAlert} />
               <WhyUs />
-              <AllUsersList currentUser={safeUser} />
+              <AllUsersList currentUser={safeUser} setAlert={setAlert} />
               <Footer />
             </>
           }
