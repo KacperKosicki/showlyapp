@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
+import { initForegroundPushListener } from "./services/pushNotifications";
 
 import Hero from "./components/Hero/Hero";
 import UserCardList from "./components/UserCardList/UserCardList";
@@ -76,6 +77,10 @@ function App() {
     },
     [token]
   );
+
+  useEffect(() => {
+    initForegroundPushListener();
+  }, []);
 
   // ✅ ważne: wykryj flow logowania/rejestracji (żeby nie “zabić” Login/Register ekranem loading)
   const isAuthFlow = sessionStorage.getItem("authFlow") === "1";

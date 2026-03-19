@@ -125,6 +125,39 @@ router.get('/check-email', async (req, res) => {
   return res.status(200).json({ exists: false });
 });
 
+router.post("/save-push-token", requireAuth, async (req, res) => {
+  try {
+    const authUid = req.auth.uid;
+    const { uid, token } = req.body || {};
+
+    if (!uid || !token) {
+      return res.status(400).json({ message: "Brakuje uid lub token" });
+    }
+
+    if (String(uid) !== String(authUid)) {
+      return res.status(403).json({ message: "Brak uprawnień" });
+    }
+
+    const user = await User.findOneAndUpdate(
+      { firebaseUid: uid },
+      { $addToSet: { pushTokens: String(token).trim() } },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "Nie znaleziono użytkownika" });
+    }
+
+    return res.json({
+      ok: true,
+      pushTokensCount: Array.isArray(user.pushTokens) ? user.pushTokens.length : 0,
+    });
+  } catch (e) {
+    console.error("❌ save-push-token error:", e);
+    return res.status(500).json({ message: "Błąd serwera", error: e.message });
+  }
+});
+
 /** GET /api/users/public/:uid
  * Publiczny (dla zalogowanych) "basic view" – tylko nazwa do UI (bez wrażliwych danych)
  * ✅ używane w ReservationList do mapowania uid -> displayName
@@ -307,6 +340,44 @@ router.delete('/:uid/avatar', requireAuth, requireOwnerOrAdmin, async (req, res)
   } catch (e) {
     console.error('Delete avatar (cloudinary) error:', e);
     res.status(500).json({ message: 'Błąd usuwania', error: e.message });
+  }
+});
+
+router.post("/test-push", requireAuth, async (req, res) => {
+  try {
+    const { sendPushToUserUid } = require("../utils/sendPushNotification");
+    const uid = req.auth.uid;
+
+    console.log("📤 TEST PUSH dla uid:", uid);
+
+    const result = await sendPushToUserUid(uid, {
+      title: "Test push",
+      body: "Jeśli to widzisz, push działa 🚀",
+      url: "/powiadomienia",
+    });
+
+    console.log("📨 TEST PUSH RESULT:", result);
+
+    if (!result?.ok) {
+      return res.status(500).json({
+        ok: false,
+        message: "Push nie został wysłany",
+        result,
+      });
+    }
+
+    return res.json({
+      ok: true,
+      message: "Test push wysłany",
+      result,
+    });
+  } catch (e) {
+    console.error("❌ test-push error:", e);
+    return res.status(500).json({
+      ok: false,
+      message: "Błąd test push",
+      error: e.message,
+    });
   }
 });
 

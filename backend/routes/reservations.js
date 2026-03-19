@@ -1,4 +1,3 @@
-// routes/reservations.js
 const express = require("express");
 const router = express.Router();
 
@@ -6,8 +5,11 @@ const Reservation = require("../models/Reservation");
 const User = require("../models/User");
 const Profile = require("../models/Profile");
 const Staff = require("../models/Staff");
+const { sendPushToUserUid } = require("../utils/sendPushNotification");
 
 const requireAuth = require("../middleware/requireAuth");
+
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 // === USTAWIENIA ===
 const PENDING_MINUTES = Number(process.env.PENDING_MINUTES ?? 60);
@@ -398,6 +400,12 @@ router.post("/", requireAuth, async (req, res) => {
       providerSeen: false,
     });
 
+    await sendPushToUserUid(providerUserId, {
+      title: "Nowa rezerwacja",
+      body: `${user?.name || "Klient"} wysłał rezerwację na ${date} o ${fromTime}`,
+      url: `${FRONTEND_URL}/rezerwacje`,
+    });
+
     return res.status(201).json({ message: "Rezerwacja utworzona", reservation: newReservation });
   } catch (err) {
     console.error("❌ POST /reservations error:", err);
@@ -729,6 +737,12 @@ router.post("/day", requireAuth, async (req, res) => {
       closedReason: null,
       clientSeen: false,
       providerSeen: false,
+    });
+
+    await sendPushToUserUid(providerUserId, {
+      title: "Nowa rezerwacja",
+      body: `${userName || "Klient"} wysłał rezerwację na dzień ${date}`,
+      url: `${FRONTEND_URL}/rezerwacje`,
     });
 
     return res.json(created);
@@ -1082,6 +1096,13 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
       reservation.providerSeen = false;
 
       await reservation.save();
+
+      await sendPushToUserUid(reservation.providerUserId, {
+        title: "Rezerwacja anulowana",
+        body: `${reservation.userName || "Klient"} anulował rezerwację ${reservation.date}${reservation.dateOnly ? "" : ` o ${reservation.fromTime}`}`,
+        url: `${FRONTEND_URL}/rezerwacje`,
+      });
+
       return res.send("Reservation closed by client");
     }
 
@@ -1099,6 +1120,15 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
       reservation.providerSeen = true;
 
       await reservation.save();
+
+      if (reservation.userId) {
+        await sendPushToUserUid(reservation.userId, {
+          title: "Rezerwacja odrzucona",
+          body: `Twoja rezerwacja z dnia ${reservation.date}${reservation.dateOnly ? "" : ` o ${reservation.fromTime}`} została odrzucona`,
+          url: `${FRONTEND_URL}/rezerwacje`,
+        });
+      }
+
       return res.send("Reservation closed by provider");
     }
 
@@ -1129,6 +1159,14 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
           );
           await profile.save();
         }
+      }
+
+      if (reservation.userId) {
+        await sendPushToUserUid(reservation.userId, {
+          title: "Rezerwacja zaakceptowana",
+          body: `Twoja rezerwacja z dnia ${reservation.date}${reservation.dateOnly ? "" : ` o ${reservation.fromTime}`} została zaakceptowana`,
+          url: `${FRONTEND_URL}/rezerwacje`,
+        });
       }
 
       return res.send("Status updated to accepted");
@@ -1191,13 +1229,13 @@ router.get("/meta/:providerUid", async (req, res) => {
 
     const normalizedStaff = Array.isArray(staff)
       ? staff
-        .map((s) => ({
-          ...s,
-          serviceIds: Array.isArray(s.serviceIds)
-            ? s.serviceIds.filter((id) => activeServiceIds.has(String(id)))
-            : [],
-        }))
-        .filter((s) => (s.serviceIds || []).length > 0 || !activeServices.length)
+          .map((s) => ({
+            ...s,
+            serviceIds: Array.isArray(s.serviceIds)
+              ? s.serviceIds.filter((id) => activeServiceIds.has(String(id)))
+              : [],
+          }))
+          .filter((s) => (s.serviceIds || []).length > 0 || !activeServices.length)
       : [];
 
     return res.json({

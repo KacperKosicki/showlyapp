@@ -1,4 +1,3 @@
-// models/User.js
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -9,8 +8,9 @@ const userSchema = new mongoose.Schema({
   avatar:       { type: String, default: '' },
   provider:     { type: String, enum: ['google', 'password'], required: true },
 
-  // ✅ NOWE
   role:         { type: String, enum: ['user', 'mod', 'admin'], default: 'user' },
+
+  pushTokens:   { type: [String], default: [] }, // 👈 NOWE
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

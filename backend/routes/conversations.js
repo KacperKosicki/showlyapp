@@ -1,11 +1,13 @@
-// routes/conversations.js
 const express = require("express");
 const router = express.Router();
 
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
+const { sendPushToUserUid } = require("../utils/sendPushNotification");
 
 const requireAuth = require("../middleware/requireAuth");
+
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 const CHANNELS = ["account_to_profile", "profile_to_account", "system"];
 
@@ -40,7 +42,6 @@ async function ensureUser(uid) {
 
   let u = await User.findOne({ firebaseUid }).select("_id firebaseUid").lean();
   if (!u) {
-    // minimalny zapis
     u = await User.create({ firebaseUid });
   }
   return u;
@@ -83,6 +84,19 @@ router.post("/send", requireAuth, async (req, res) => {
       convo.messages.push({ fromUid: from, toUid: other.uid, content: text });
       convo.updatedAt = new Date();
       await convo.save();
+
+      const senderUser = await User.findOne({ firebaseUid: from })
+        .select("displayName name email")
+        .lean();
+
+      const senderName =
+        senderUser?.displayName || senderUser?.name || senderUser?.email || "Użytkownik";
+
+      await sendPushToUserUid(other.uid, {
+        title: "Nowa wiadomość",
+        body: `${senderName} napisał do Ciebie wiadomość`,
+        url: `${FRONTEND_URL}/powiadomienia`,
+      });
 
       return res.status(200).json({ ok: true, id: convo._id });
     }
@@ -129,6 +143,19 @@ router.post("/send", requireAuth, async (req, res) => {
     convo.messages.push({ fromUid: from, toUid: toUid, content: text });
     convo.updatedAt = new Date();
     await convo.save();
+
+    const senderUser = await User.findOne({ firebaseUid: from })
+      .select("displayName name email")
+      .lean();
+
+    const senderName =
+      senderUser?.displayName || senderUser?.name || senderUser?.email || "Użytkownik";
+
+    await sendPushToUserUid(toUid, {
+      title: "Nowa wiadomość",
+      body: `${senderName} napisał do Ciebie wiadomość`,
+      url: `${FRONTEND_URL}/powiadomienia`,
+    });
 
     return res.status(200).json({ ok: true, id: convo._id });
   } catch (err) {

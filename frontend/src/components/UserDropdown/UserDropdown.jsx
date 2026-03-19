@@ -15,6 +15,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase";
+import {
+  enablePushNotifications,
+  getBrowserNotificationState,
+} from "../../services/pushNotifications";
 
 const API = process.env.REACT_APP_API_URL;
 
@@ -39,7 +43,7 @@ const pickAvatar = ({ dbAvatar, firebasePhotoURL }) =>
 async function getAuthHeader() {
   const u = auth.currentUser;
   if (!u) return {};
-  const token = await u.getIdToken(true);
+  const token = await u.getIdToken();
   return { Authorization: `Bearer ${token}` };
 }
 
@@ -56,16 +60,16 @@ const UserDropdown = ({
 }) => {
   const [open, setOpen] = useState(false);
 
-  // profile state
   const [profileStatus, setProfileStatus] = useState("loading"); // loading | has | none | error
   const [remainingDays, setRemainingDays] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
 
-  // avatar
   const [photoURL, setPhotoURL] = useState("");
-
-  // role
   const [userRole, setUserRole] = useState("user"); // user | mod | admin
+
+  const [pushState, setPushState] = useState("default"); // default | granted | denied | unsupported
+  const [pushLoading, setPushLoading] = useState(false);
+  const [pushSaved, setPushSaved] = useState(false);
 
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
@@ -83,12 +87,18 @@ const UserDropdown = ({
     return "";
   }, [userRole]);
 
-  // ✅ Avatar + rola: pobieramy raz z backendu
+  useEffect(() => {
+    setPushState(getBrowserNotificationState());
+  }, []);
+
+  // Avatar + rola + stan push
   useEffect(() => {
     const run = async () => {
       if (!user?.uid) {
         setPhotoURL("");
         setUserRole("user");
+        setPushSaved(false);
+        setPushState(getBrowserNotificationState());
         return;
       }
 
@@ -108,10 +118,20 @@ const UserDropdown = ({
 
           if (r.ok) {
             const db = await r.json();
+
             dbAvatar = db?.avatar || "";
             dbRole = db?.role || "user";
+
+            const hasSavedPush =
+              Array.isArray(db?.pushTokens) && db.pushTokens.length > 0;
+
+            setPushSaved(hasSavedPush);
+
+            if (hasSavedPush && getBrowserNotificationState() === "granted") {
+              setPushState("granted");
+            }
           }
-        } catch {}
+        } catch { }
 
         const firebasePhotoURL = auth.currentUser?.photoURL || "";
 
@@ -132,7 +152,7 @@ const UserDropdown = ({
     run();
   }, [user?.uid]);
 
-  // ✅ Status wizytówki: Abort + nie pokazuj "stwórz profil" przy błędzie sieci
+  // Status wizytówki
   useEffect(() => {
     if (!user?.uid) {
       setProfileStatus("none");
@@ -196,7 +216,7 @@ const UserDropdown = ({
     return () => controller.abort();
   }, [user?.uid, refreshTrigger]);
 
-  // 🔔 Unread
+  // Unread
   useEffect(() => {
     const fetchUnread = async () => {
       if (!user?.uid || !setUnreadCount) return;
@@ -223,16 +243,18 @@ const UserDropdown = ({
     fetchUnread();
   }, [user?.uid, refreshTrigger, location.pathname, setUnreadCount]);
 
-  // 👋 Zamknięcie dropdown po kliknięciu poza
+  // Zamknięcie dropdown po kliknięciu poza
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // ✅ Escape to close
+  // Escape to close
   useEffect(() => {
     const onKey = (e) => {
       if (!open) return;
@@ -253,6 +275,47 @@ const UserDropdown = ({
       if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 100);
     } else {
       navigate(path, { state: { scrollToId } });
+    }
+  };
+
+  const handleEnablePush = async () => {
+    if (!user?.uid || pushLoading || pushState === "unsupported" || pushSaved) return;
+
+    try {
+      setPushLoading(true);
+
+      const result = await enablePushNotifications(user.uid);
+
+      if (result?.success) {
+        setPushState("granted");
+        setPushSaved(true);
+      } else {
+        setPushState(getBrowserNotificationState());
+      }
+    } catch (err) {
+      console.error("❌ Błąd aktywacji push:", err);
+      setPushState(getBrowserNotificationState());
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
+  const handleTestPush = async () => {
+    try {
+      const authHeader = await getAuthHeader();
+
+      const res = await fetch(`${API}/api/users/test-push`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeader,
+        },
+      });
+
+      const data = await res.json();
+      console.log("✅ TEST PUSH RESPONSE:", data);
+    } catch (err) {
+      console.error("❌ TEST PUSH ERROR:", err);
     }
   };
 
@@ -298,7 +361,10 @@ const UserDropdown = ({
           <span className={styles.dotPulse} aria-hidden="true" />
         )}
 
-        <FaChevronDown className={`${styles.icon} ${open ? styles.iconOpen : ""}`} aria-hidden="true" />
+        <FaChevronDown
+          className={`${styles.icon} ${open ? styles.iconOpen : ""}`}
+          aria-hidden="true"
+        />
       </button>
 
       <div className={`${styles.menu} ${open ? styles.visible : ""}`} role="menu">
@@ -308,7 +374,12 @@ const UserDropdown = ({
         </div>
 
         <div className={styles.group}>
-          <button type="button" className={styles.item} role="menuitem" onClick={() => handleNavigate("/konto", "scrollToId")}>
+          <button
+            type="button"
+            className={styles.item}
+            role="menuitem"
+            onClick={() => handleNavigate("/konto", "scrollToId")}
+          >
             <span className={styles.itemLeft}>
               <FiSettings className={styles.itemIcon} aria-hidden="true" />
               <span className={styles.itemText}>Twoje konto</span>
@@ -316,7 +387,12 @@ const UserDropdown = ({
           </button>
 
           {canSeeAdminPanel && (
-            <button type="button" className={styles.item} role="menuitem" onClick={() => handleNavigate("/admin", "scrollToId")}>
+            <button
+              type="button"
+              className={styles.item}
+              role="menuitem"
+              onClick={() => handleNavigate("/admin", "scrollToId")}
+            >
               <span className={styles.itemLeft}>
                 <FiShield className={styles.itemIcon} aria-hidden="true" />
                 <span className={styles.itemText}>Panel admina</span>
@@ -361,7 +437,9 @@ const UserDropdown = ({
                       Pozostało <b>{remainingDays}</b> dni
                     </span>
                   ) : (
-                    <span className={`${styles.itemSub} ${styles.statusExpired}`}>Wygasła</span>
+                    <span className={`${styles.itemSub} ${styles.statusExpired}`}>
+                      Wygasła
+                    </span>
                   )}
                 </span>
               </span>
@@ -371,7 +449,9 @@ const UserDropdown = ({
           {showProfileActions && profileStatus === "error" && (
             <div className={styles.netBanner} role="status" aria-live="polite">
               <FiAlertTriangle className={styles.netIcon} aria-hidden="true" />
-              <span className={styles.netText}>Problem z połączeniem… Spróbuj odświeżyć.</span>
+              <span className={styles.netText}>
+                Problem z połączeniem… Spróbuj odświeżyć.
+              </span>
             </div>
           )}
         </div>
@@ -379,6 +459,66 @@ const UserDropdown = ({
         <div className={styles.sep} role="separator" />
 
         <div className={styles.group}>
+          <button
+            type="button"
+            className={`${styles.item} ${styles.itemNotify}`}
+            role="menuitem"
+            onClick={handleEnablePush}
+            disabled={pushLoading || pushState === "unsupported" || pushSaved}
+          >
+            <span className={styles.itemLeft}>
+              <FiBell className={styles.itemIcon} aria-hidden="true" />
+              <span className={styles.twoLine}>
+                <span className={styles.itemText}>
+                  {pushLoading
+                    ? "Zapisywanie..."
+                    : pushSaved
+                      ? "Powiadomienia aktywne"
+                      : pushState === "granted"
+                        ? "Aktywuj na tym koncie"
+                        : "Włącz powiadomienia"}
+                </span>
+
+                <span
+                  className={`${styles.itemSub} ${pushSaved || pushState === "granted"
+                      ? styles.statusActive
+                      : pushState === "denied"
+                        ? styles.statusExpired
+                        : ""
+                    }`}
+                >
+                  {pushSaved &&
+                    "To urządzenie jest już zapisane do powiadomień dla tego konta"}
+                  {!pushSaved &&
+                    pushState === "granted" &&
+                    "Przeglądarka ma zgodę — kliknij, aby zapisać dla tego konta"}
+                  {pushState === "default" &&
+                    "Kliknij, aby otrzymywać powiadomienia na urządzeniu"}
+                  {pushState === "denied" &&
+                    "Powiadomienia są zablokowane w przeglądarce"}
+                  {pushState === "unsupported" &&
+                    "Ta przeglądarka nie obsługuje powiadomień"}
+                </span>
+              </span>
+            </span>
+
+            <span className={styles.rightPill}>
+              {pushSaved ? "aktywne" : pushState === "granted" ? "ready" : "push"}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            className={styles.item}
+            role="menuitem"
+            onClick={handleTestPush}
+          >
+            <span className={styles.itemLeft}>
+              <FiBell className={styles.itemIcon} aria-hidden="true" />
+              <span className={styles.itemText}>Test push</span>
+            </span>
+          </button>
+
           <button
             type="button"
             className={styles.item}
@@ -390,7 +530,9 @@ const UserDropdown = ({
               <span className={styles.itemText}>Powiadomienia</span>
             </span>
 
-            {Number(unreadCount) > 0 && <span className={styles.countBadge}>{unreadCount}</span>}
+            {Number(unreadCount) > 0 && (
+              <span className={styles.countBadge}>{unreadCount}</span>
+            )}
           </button>
 
           <button
@@ -424,7 +566,12 @@ const UserDropdown = ({
 
         <div className={styles.sep} role="separator" />
 
-        <button type="button" className={`${styles.item} ${styles.itemDanger}`} role="menuitem" onClick={handleLogout}>
+        <button
+          type="button"
+          className={`${styles.item} ${styles.itemDanger}`}
+          role="menuitem"
+          onClick={handleLogout}
+        >
           <span className={styles.itemLeft}>
             <FiLogOut className={styles.itemIcon} aria-hidden="true" />
             <span className={styles.itemText}>Wyloguj</span>

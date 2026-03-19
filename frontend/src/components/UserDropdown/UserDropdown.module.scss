@@ -47,7 +47,7 @@
     border-color 0.18s ease,
     transform 0.18s ease;
 
-  border: 0; /* bo to button */
+  border: 0;
   outline: none;
 }
 
@@ -272,6 +272,13 @@
   background: rgba(255, 255, 255, 0.045);
 }
 
+.item:disabled {
+  cursor: default;
+  opacity: 0.82;
+  transform: none;
+  filter: none;
+}
+
 .itemLeft {
   display: inline-flex;
   align-items: center;
@@ -300,6 +307,16 @@
 
 .itemPrimary:hover {
   background: rgba(111, 78, 242, 0.16);
+}
+
+/* push item */
+.itemNotify {
+  background: rgba(59, 130, 246, 0.10);
+  border: 1px solid rgba(59, 130, 246, 0.22);
+}
+
+.itemNotify:hover {
+  background: rgba(59, 130, 246, 0.14);
 }
 
 /* danger logout */
@@ -425,7 +442,6 @@
     max-width: 220px;
   }
 
-  /* MOBILE: menu solid */
   .menu {
     background: rgb(20, 22, 30);
     backdrop-filter: none;

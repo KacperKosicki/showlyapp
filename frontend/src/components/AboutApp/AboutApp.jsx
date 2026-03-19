@@ -6,7 +6,6 @@ import {
   FiGlobe,
   FiSmartphone,
   FiUsers,
-  FiArrowRight,
 } from "react-icons/fi";
 
 const AboutApp = ({ user }) => {
@@ -158,7 +157,6 @@ const AboutApp = ({ user }) => {
             <div className={styles.buttons}>
               <LoadingLink to="/wizytowki" className={styles.primary}>
                 Zobacz wizytówki
-                <FiArrowRight />
               </LoadingLink>
 
               {user ? (

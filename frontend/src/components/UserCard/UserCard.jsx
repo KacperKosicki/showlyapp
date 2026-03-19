@@ -490,8 +490,6 @@ const UserCard = ({ user, currentUser, isPreview = false, onPreviewBlocked }) =>
               </p>
             )}
 
-            <div className={styles.splitLine} />
-
             {cleanLinks.length > 0 ? (
               <div className={styles.linkGrid}>
                 {cleanLinks.slice(0, 4).map((link, i) => {
