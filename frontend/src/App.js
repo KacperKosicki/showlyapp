@@ -31,6 +31,7 @@ import SearchResults from "./components/SearchResults/SearchResults";
 import PartnersShowcase from "./components/PartnersShowcase/PartnersShowcase";
 import HowShowlyWorks from "./components/HowShowlyWorks/HowShowlyWorks";
 import DiscoverShowly from "./components/DiscoverShowly/DiscoverShowly";
+import AlertBox from "./components/AlertBox/AlertBox";
 
 // ✅ NEW: admin
 import AdminPanel from "./components/AdminPanel/AdminPanel";
@@ -54,13 +55,16 @@ function App() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingReservationsCount, setPendingReservationsCount] = useState(0);
 
+  // ✅ globalny alert
+  const [alert, setAlert] = useState(null);
+
   const resetPendingReservationsCount = () => setPendingReservationsCount(0);
 
   const triggerRefresh = useCallback(() => {
     setRefreshTrigger(Date.now());
   }, []);
 
-  // ✅ stabilne user object (żeby nie powodować zbędnych re-renderów)
+  // ✅ stabilne user object
   const safeUser = useMemo(() => {
     if (!user?.uid) return null;
     return { uid: user.uid, email: user.email || "" };
@@ -82,7 +86,7 @@ function App() {
     initForegroundPushListener();
   }, []);
 
-  // ✅ ważne: wykryj flow logowania/rejestracji (żeby nie “zabić” Login/Register ekranem loading)
+  // ✅ ważne: wykryj flow logowania/rejestracji
   const isAuthFlow = sessionStorage.getItem("authFlow") === "1";
 
   useEffect(() => {
@@ -100,7 +104,7 @@ function App() {
           setUser(safe);
 
           // ✅ pobierz token do backendu
-          const idToken = await firebaseUser.getIdToken(true);
+          const idToken = await firebaseUser.getIdToken();
           setToken(idToken);
         } else {
           setUser(null);
@@ -117,14 +121,13 @@ function App() {
       } finally {
         setLoadingUser(false);
         setLoadingToken(false);
-        // loadingRole ustawimy w osobnym effect po tokenie
       }
     });
 
     return () => unsubscribe();
   }, []);
 
-  // ✅ NEW: pobierz rolę z backendu (po tokenie)
+  // ✅ pobierz rolę z backendu
   useEffect(() => {
     if (!safeUser?.uid || !token) {
       setUserRole("user");
@@ -138,12 +141,10 @@ function App() {
       try {
         setLoadingRole(true);
 
-        // ✅ preferowane: /api/users/me
         let res = await authFetch(`${API}/api/users/me`, {
           signal: controller.signal,
         });
 
-        // fallback jeśli jeszcze nie dodałeś /me:
         if (res.status === 404 || res.status === 405) {
           res = await authFetch(`${API}/api/users/${safeUser.uid}`, {
             signal: controller.signal,
@@ -243,7 +244,6 @@ function App() {
     return () => controller.abort();
   }, [safeUser?.uid, token, refreshTrigger, authFetch]);
 
-  // ✅ FIX: nie blokuj UI ekranem “loading” w trakcie logowania/rejestracji
   if (!isAuthFlow && (loadingUser || loadingToken || loadingRole)) {
     return (
       <p style={{ padding: "2rem", textAlign: "center" }}>
@@ -261,14 +261,22 @@ function App() {
     unreadCount,
     setUnreadCount,
     pendingReservationsCount,
-
-    // ✅ NEW: rola do UI (np. dropdown / badge)
     userRole,
+    setAlert,
   };
 
   return (
     <Router>
       <ScrollToTop />
+
+      {alert?.message && (
+        <AlertBox
+          type={alert.type || "info"}
+          message={alert.message}
+          onClose={() => setAlert(null)}
+        />
+      )}
+
       <Routes>
         <Route
           path="/"
@@ -348,7 +356,6 @@ function App() {
           }
         />
 
-        {/* ✅ NEW: admin route */}
         <Route
           path="/admin"
           element={

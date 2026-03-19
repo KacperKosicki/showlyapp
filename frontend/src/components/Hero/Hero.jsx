@@ -11,6 +11,7 @@ const Hero = ({
   unreadCount,
   setUnreadCount,
   pendingReservationsCount,
+  setAlert, // 👈 NOWE
 }) => {
   return (
     <section className={styles.hero} id="hero">
@@ -22,9 +23,9 @@ const Hero = ({
         unreadCount={unreadCount}
         setUnreadCount={setUnreadCount}
         pendingReservationsCount={pendingReservationsCount}
+        setAlert={setAlert} // 👈 NOWE
       />
 
-      {/* ✨ background layers */}
       <div className={styles.bg} aria-hidden="true">
         <span className={styles.aurora} />
         <span className={styles.aurora2} />
@@ -34,7 +35,6 @@ const Hero = ({
       </div>
 
       <div className={styles.wrap}>
-        {/* LEFT */}
         <div className={styles.left}>
           <div className={styles.labelRow}>
             <span className={styles.label}>Showly</span>
@@ -114,7 +114,6 @@ const Hero = ({
           </div>
         </div>
 
-        {/* RIGHT */}
         <aside className={styles.right} aria-label="Podgląd profilu">
           <div className={styles.browser}>
             <div className={styles.browserTop}>
@@ -195,7 +194,6 @@ const Hero = ({
         </aside>
       </div>
 
-      {/* wave */}
       <div className={styles.wave}>
         <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
           <path

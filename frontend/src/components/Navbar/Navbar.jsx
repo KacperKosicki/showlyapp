@@ -1,7 +1,7 @@
-import { FaUser } from 'react-icons/fa';
-import styles from './Navbar.module.scss';
-import { Link, useNavigate } from 'react-router-dom';
-import UserDropdown from '../UserDropdown/UserDropdown';
+import { FaUser } from "react-icons/fa";
+import styles from "./Navbar.module.scss";
+import { Link, useNavigate } from "react-router-dom";
+import UserDropdown from "../UserDropdown/UserDropdown";
 
 const Navbar = ({
   user,
@@ -9,7 +9,8 @@ const Navbar = ({
   refreshTrigger,
   unreadCount,
   setUnreadCount,
-  pendingReservationsCount
+  pendingReservationsCount,
+  setAlert, // 👈 NOWE
 }) => {
   const navigate = useNavigate();
 
@@ -32,6 +33,7 @@ const Navbar = ({
               unreadCount={unreadCount}
               setUnreadCount={setUnreadCount}
               pendingReservationsCount={pendingReservationsCount}
+              setAlert={setAlert} // 👈 NOWE
             />
           ) : (
             <button

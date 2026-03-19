@@ -58,6 +58,7 @@ const UserDropdown = ({
   unreadCount,
   setUnreadCount,
   pendingReservationsCount,
+  setAlert, // 👈 NOWE
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -87,6 +88,12 @@ const UserDropdown = ({
     if (userRole === "mod") return "MOD";
     return "";
   }, [userRole]);
+
+  const showAlert = (type, message) => {
+    if (typeof setAlert === "function") {
+      setAlert({ type, message });
+    }
+  };
 
   useEffect(() => {
     setPushState(getBrowserNotificationState());
@@ -290,12 +297,23 @@ const UserDropdown = ({
       if (result?.success) {
         setPushState("granted");
         setPushSaved(true);
+        showAlert("success", "Powiadomienia zostały włączone na tym urządzeniu.");
       } else {
-        setPushState(getBrowserNotificationState());
+        const currentState = getBrowserNotificationState();
+        setPushState(currentState);
+
+        if (result?.reason === "denied") {
+          showAlert("error", "Powiadomienia są zablokowane w przeglądarce.");
+        } else if (result?.reason === "unsupported") {
+          showAlert("error", "Ta przeglądarka nie obsługuje powiadomień.");
+        } else {
+          showAlert("error", "Nie udało się włączyć powiadomień.");
+        }
       }
     } catch (err) {
       console.error("❌ Błąd aktywacji push:", err);
       setPushState(getBrowserNotificationState());
+      showAlert("error", "Wystąpił błąd podczas włączania powiadomień.");
     } finally {
       setPushLoading(false);
     }
@@ -312,9 +330,13 @@ const UserDropdown = ({
       if (result?.success) {
         setPushSaved(false);
         setPushState(getBrowserNotificationState());
+        showAlert("success", "Powiadomienia zostały wyłączone na tym urządzeniu.");
+      } else {
+        showAlert("error", "Nie udało się wyłączyć powiadomień.");
       }
     } catch (err) {
       console.error("❌ Błąd wyłączania push:", err);
+      showAlert("error", "Wystąpił błąd podczas wyłączania powiadomień.");
     } finally {
       setPushLoading(false);
     }
@@ -327,6 +349,7 @@ const UserDropdown = ({
       navigate("/");
     } catch (err) {
       console.error("❌ Błąd wylogowania:", err);
+      showAlert("error", "Nie udało się wylogować.");
     }
   };
 
