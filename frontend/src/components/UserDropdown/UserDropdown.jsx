@@ -511,18 +511,6 @@ const UserDropdown = ({
             type="button"
             className={styles.item}
             role="menuitem"
-            onClick={handleTestPush}
-          >
-            <span className={styles.itemLeft}>
-              <FiBell className={styles.itemIcon} aria-hidden="true" />
-              <span className={styles.itemText}>Test push</span>
-            </span>
-          </button>
-
-          <button
-            type="button"
-            className={styles.item}
-            role="menuitem"
             onClick={() => handleNavigate("/powiadomienia", "scrollToId")}
           >
             <span className={styles.itemLeft}>

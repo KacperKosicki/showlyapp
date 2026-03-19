@@ -343,42 +343,4 @@ router.delete('/:uid/avatar', requireAuth, requireOwnerOrAdmin, async (req, res)
   }
 });
 
-router.post("/test-push", requireAuth, async (req, res) => {
-  try {
-    const { sendPushToUserUid } = require("../utils/sendPushNotification");
-    const uid = req.auth.uid;
-
-    console.log("📤 TEST PUSH dla uid:", uid);
-
-    const result = await sendPushToUserUid(uid, {
-      title: "Test push",
-      body: "Jeśli to widzisz, push działa 🚀",
-      url: "/powiadomienia",
-    });
-
-    console.log("📨 TEST PUSH RESULT:", result);
-
-    if (!result?.ok) {
-      return res.status(500).json({
-        ok: false,
-        message: "Push nie został wysłany",
-        result,
-      });
-    }
-
-    return res.json({
-      ok: true,
-      message: "Test push wysłany",
-      result,
-    });
-  } catch (e) {
-    console.error("❌ test-push error:", e);
-    return res.status(500).json({
-      ok: false,
-      message: "Błąd test push",
-      error: e.message,
-    });
-  }
-});
-
 module.exports = router;
