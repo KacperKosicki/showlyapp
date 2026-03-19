@@ -257,7 +257,9 @@ const UserCard = ({
       return;
     }
 
-    const next = !isFav;
+    const prevIsFav = isFav;
+    const next = !prevIsFav;
+
     setIsFav(next);
     setFavCount((c) => Math.max(0, c + (next ? 1 : -1)));
 
@@ -270,11 +272,20 @@ const UserCard = ({
         { headers }
       );
 
+      const finalIsFav = typeof data?.isFav === "boolean" ? data.isFav : next;
+
       if (typeof data?.isFav === "boolean") setIsFav(data.isFav);
       if (typeof data?.count === "number") setFavCount(data.count);
+
+      showAlert(
+        finalIsFav
+          ? "Profil został dodany do ulubionych."
+          : "Profil został usunięty z ulubionych.",
+        finalIsFav ? "info" : "info"
+      );
     } catch (e) {
-      setIsFav((v) => !v);
-      setFavCount((c) => Math.max(0, c + (next ? -1 : +1)));
+      setIsFav(prevIsFav);
+      setFavCount((c) => Math.max(0, c + (prevIsFav ? 1 : -1)));
 
       showAlert(
         e?.response?.status === 401
