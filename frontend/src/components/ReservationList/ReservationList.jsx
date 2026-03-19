@@ -313,8 +313,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     if (!value) return null;
 
     if (unit.includes("min")) return Math.max(1, Math.round(value));
-    if (unit.includes("godz") || unit.includes("hour") || unit === "h") return Math.max(1, Math.round(value * 60));
-    if (unit.includes("dzie") || unit.includes("day")) return Math.max(1, Math.round(value * 1440));
+    if (unit.includes("godz") || unit.includes("hour") || unit === "h")
+      return Math.max(1, Math.round(value * 60));
+    if (unit.includes("dzie") || unit.includes("day"))
+      return Math.max(1, Math.round(value * 1440));
 
     return Math.max(1, Math.round(value));
   }, []);
@@ -412,10 +414,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
     const eligibleStaff = isAutoAssignTeam
       ? (providerMeta?.staff || []).filter(
-        (s) =>
-          s.active !== false &&
-          (s.serviceIds || []).some((id) => String(id) === String(offlineForm.serviceId))
-      )
+          (s) =>
+            s.active !== false &&
+            (s.serviceIds || []).some((id) => String(id) === String(offlineForm.serviceId))
+        )
       : [];
 
     const totalCapacity = isAutoAssignTeam
@@ -480,8 +482,12 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
             const accepted = overlaps.filter((o) => o.status === "reserved");
             const pendingOnly = overlaps.filter((o) => o.status === "pending");
 
-            const startsInsideAccepted = accepted.some((o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs);
-            const startsInsidePending = pendingOnly.some((o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs);
+            const startsInsideAccepted = accepted.some(
+              (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+            );
+            const startsInsidePending = pendingOnly.some(
+              (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+            );
 
             status = startsInsideAccepted ? "reserved" : startsInsidePending ? "pending" : "disabled";
           }
@@ -491,8 +497,12 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
           const accepted = overlaps.filter((o) => o.status === "reserved");
           const pendingOnly = overlaps.filter((o) => o.status === "pending");
 
-          const startsInsideAccepted = accepted.some((o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs);
-          const startsInsidePending = pendingOnly.some((o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs);
+          const startsInsideAccepted = accepted.some(
+            (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+          );
+          const startsInsidePending = pendingOnly.some(
+            (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
+          );
 
           status = startsInsideAccepted ? "reserved" : startsInsidePending ? "pending" : "disabled";
         }
@@ -776,7 +786,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
     const fetchOne = async (uid) => {
       try {
-        const r = await api.get(`/api/users/public/${uid}`); // ✅ ma token
+        const r = await api.get(`/api/users/public/${uid}`);
         const data = r?.data;
 
         const dn =
@@ -817,8 +827,9 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     if (offlineForm.dateOnly || isDayBlockingMode) {
       return active.map((r) => ({
         id: r._id,
-        label: `${isWholeDay(r) ? "CAŁY DZIEŃ" : `${r.fromTime}–${r.toTime}`} • ${r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
-          } • ${r.status}`,
+        label: `${isWholeDay(r) ? "CAŁY DZIEŃ" : `${r.fromTime}–${r.toTime}`} • ${
+          r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
+        } • ${r.status}`,
       }));
     }
 
@@ -828,7 +839,9 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         .filter((r) => isWholeDay(r))
         .map((r) => ({
           id: r._id,
-          label: `CAŁY DZIEŃ • ${r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"} • ${r.status}`,
+          label: `CAŁY DZIEŃ • ${
+            r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
+          } • ${r.status}`,
         }));
     }
 
@@ -849,8 +862,9 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       })
       .map((r) => ({
         id: r._id,
-        label: `${r.fromTime}–${r.toTime} (+${OFFLINE_BUFFER_MIN}m) • ${r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
-          } • ${r.status}`,
+        label: `${r.fromTime}–${r.toTime} (+${OFFLINE_BUFFER_MIN}m) • ${
+          r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
+        } • ${r.status}`,
       }));
   }, [
     offlineOpen,
@@ -971,10 +985,9 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                   <option value="">— wybierz usługę —</option>
                   {servicesLocal.map((s) => {
                     const mins = getServiceDurationMinutes(s);
-                    const label =
-                      mins
-                        ? `${s.name} (${mins % 60 === 0 && mins >= 60 ? `${mins / 60} godz.` : `${mins} min`})`
-                        : s.name;
+                    const label = mins
+                      ? `${s.name} (${mins % 60 === 0 && mins >= 60 ? `${mins / 60} godz.` : `${mins} min`})`
+                      : s.name;
 
                     return (
                       <option key={String(s._id)} value={String(s._id)}>
@@ -1009,8 +1022,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                     !teamEnabled
                       ? "Zespół wyłączony w profilu"
                       : isAutoAssignTeam
-                        ? "Auto-assign: pracownik dobierany automatycznie"
-                        : ""
+                      ? "Auto-assign: pracownik dobierany automatycznie"
+                      : ""
                   }
                 >
                   <option value="">{isUserPickTeam ? "— wybierz pracownika (wymagane) —" : "— opcjonalnie —"}</option>
@@ -1300,12 +1313,13 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       )}
 
       <span
-        className={`${styles.chip} ${res.status === "zaakceptowana"
-          ? styles.chipAccepted
-          : res.status === "odrzucona" || res.status === "anulowana"
+        className={`${styles.chip} ${
+          res.status === "zaakceptowana"
+            ? styles.chipAccepted
+            : res.status === "odrzucona" || res.status === "anulowana"
             ? styles.chipRejected
             : styles.chipPending
-          }`}
+        }`}
       >
         {statusIcon(res.status)}
         {res.status}
@@ -1324,15 +1338,15 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     );
 
   const getAvatarVariant = (variant) => {
-    // inbox/outbox ikonka jak w Notifications (bez real avatarów)
     if (variant === "sent") return "sent";
     return "recv";
   };
 
   const AvatarNode = ({ variant, isOffline }) => {
     const v = getAvatarVariant(variant);
-    const cls = `${styles.avatar} ${v === "sent" ? styles.avatarSent : styles.avatarRecv} ${isOffline ? styles.avatarOffline : ""
-      }`;
+    const cls = `${styles.avatar} ${v === "sent" ? styles.avatarSent : styles.avatarRecv} ${
+      isOffline ? styles.avatarOffline : ""
+    }`;
     return (
       <div className={cls} aria-hidden="true">
         {v === "sent" ? <FiSend /> : <FiInbox />}
@@ -1375,8 +1389,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       res.closedReason === "expired"
         ? "Rezerwacja wygasła (brak potwierdzenia w czasie)."
         : res.status === "anulowana"
-          ? "Klient anulował rezerwację."
-          : "Usługodawca odrzucił rezerwację.";
+        ? "Klient anulował rezerwację."
+        : "Usługodawca odrzucił rezerwację.";
 
     return (
       <div className={styles.closedInfo}>
@@ -1421,9 +1435,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
             <div className={styles.head}>
               <div className={styles.meta}>{renderHeader(res, variant)}</div>
-              <div className={styles.date}>
-                {new Date(created).toLocaleString()}
-              </div>
+              <div className={styles.date}>{new Date(created).toLocaleString()}</div>
             </div>
 
             <div className={styles.content}>
@@ -1764,8 +1776,9 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                                   </span>
                                 ) : (
                                   <span
-                                    className={`${styles.tlKind} ${b.kind === "recv" ? styles.tlKindRecv : styles.tlKindSent
-                                      }`}
+                                    className={`${styles.tlKind} ${
+                                      b.kind === "recv" ? styles.tlKindRecv : styles.tlKindSent
+                                    }`}
                                   >
                                     {b.kind === "recv" ? (
                                       <>
@@ -1834,6 +1847,15 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                   </div>
                 )}
 
+                {isDayBlockingMode && (
+                  <div className={styles.daySection}>
+                    <div className={styles.daySectionTitle}>Blokowanie dnia</div>
+                    <div className={styles.timelineEmpty}>
+                      W tym trybie możesz dodać offline rezerwację na cały dzień dla wybranej daty.
+                    </div>
+                  </div>
+                )}
+
                 {hasProviderProfile && (
                   <div className={styles.daySection}>
                     <div className={styles.daySectionTitle}>
@@ -1861,10 +1883,11 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                 </div>
               </div>
 
-              {hasProviderProfile && isSlotMode && (
+              {hasProviderProfile && (isSlotMode || isDayBlockingMode) && (
                 <div className={styles.dayActions}>
                   <button className={styles.addOfflineBtn} type="button" onClick={() => openOfflineForDay(selectedIso)}>
-                    <FiPlus /> Dodaj offline
+                    <FiPlus />
+                    {isDayBlockingMode ? " Zablokuj dzień offline" : " Dodaj offline"}
                   </button>
                 </div>
               )}
