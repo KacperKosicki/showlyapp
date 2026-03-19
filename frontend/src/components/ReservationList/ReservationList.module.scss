@@ -78,9 +78,8 @@ $page-max: 1180px;
 
 .subTitle {
   margin: 0;
-  opacity: 0.9;
-  line-height: 1.45;
   color: $color-gray;
+  line-height: 1.5;
   font-size: 0.95rem;
 }
 
@@ -410,7 +409,7 @@ $page-max: 1180px;
   gap: 7px;
   padding: 7px 10px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 0.82rem;
   font-weight: 800;
   font-family: $font-accent;
   background: rgba(255, 255, 255, 0.85);
@@ -568,7 +567,7 @@ $page-max: 1180px;
   border: 1px solid var(--rs-p-18);
   font-weight: 900;
   font-family: $font-accent;
-  font-size: 12px;
+  font-size: 0.82rem;
   color: rgba(0, 0, 0, 0.65);
 }
 
@@ -1483,27 +1482,147 @@ $page-max: 1180px;
 }
 
 @media (max-width: 640px) {
-  .wholeDayTop {
-    flex-wrap: wrap;
-    gap: 8px;
+  .sectionTitle {
+    margin: 0 0 0.25rem;
+    font-size: 1.55rem;
+  }
+
+  .subTitle {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .hintPill {
+    font-size: 0.85rem;
+    padding: 7px 10px;
+  }
+
+  .toggleBtn {
+    font-size: 0.9rem;
+    padding: 9px 12px;
+  }
+
+  .groupTitle {
+    font-size: 1.02rem;
+  }
+
+  .badge {
+    font-size: 0.85rem;
+    padding: 0.28rem 0.65rem;
+    min-width: 44px;
+  }
+
+  .metaText {
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+
+  .date {
+    font-size: 0.82rem;
+  }
+
+  .chip {
+    font-size: 0.82rem;
+    padding: 7px 9px;
+  }
+
+  .noteHeader {
+    font-size: 0.82rem;
+  }
+
+  .noteBody {
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .countdown {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .closedInfo {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .seenBtn {
+    font-size: 0.84rem;
+  }
+
+  .actionBtn {
+    font-size: 0.9rem;
+    padding: 10px 14px;
+  }
+
+  .statePill {
+    font-size: 0.82rem;
+    padding: 8px 11px;
+  }
+
+  .calendarTitle {
+    font-size: 1.02rem;
+  }
+
+  .calendarSub {
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .calendarPill {
+    font-size: 0.82rem;
+  }
+
+  .daySectionTitle {
+    font-size: 0.95rem;
+  }
+
+  .dayEmpty,
+  .timelineEmpty {
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .tlTimeTxt {
+    font-size: 0.82rem;
+  }
+
+  .tlKind {
+    font-size: 0.82rem;
+  }
+
+  .tlStatus {
+    font-size: 0.82rem;
+    padding: 6px 10px;
+  }
+
+  .tlTitle {
+    font-size: 0.95rem;
+    line-height: 1.4;
+  }
+
+  .tlChip {
+    font-size: 0.82rem;
+    padding: 6px 10px;
+  }
+
+  .tlDesc {
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .wholeDayService,
+  .wholeDayDesc {
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .wholeDayBadge {
+    font-size: 0.78rem;
+    padding: 6px 10px;
   }
 
   .wholeDayStatus {
-    margin-left: 0;
-    width: 100%;
-    justify-content: center;
-  }
-
-  .wholeDayName {
-    flex: 1 0 100%;
-    width: 100%;
-    overflow-wrap: normal;
-    word-break: break-word;
-  }
-
-  .wholeDayDesc,
-  .wholeDayService {
-    overflow-wrap: normal;
-    word-break: break-word;
+    font-size: 0.82rem;
+    padding: 6px 10px;
   }
 }
