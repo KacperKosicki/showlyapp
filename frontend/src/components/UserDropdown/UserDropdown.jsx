@@ -300,25 +300,6 @@ const UserDropdown = ({
     }
   };
 
-  const handleTestPush = async () => {
-    try {
-      const authHeader = await getAuthHeader();
-
-      const res = await fetch(`${API}/api/users/test-push`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...authHeader,
-        },
-      });
-
-      const data = await res.json();
-      console.log("✅ TEST PUSH RESPONSE:", data);
-    } catch (err) {
-      console.error("❌ TEST PUSH ERROR:", err);
-    }
-  };
-
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -481,10 +462,10 @@ const UserDropdown = ({
 
                 <span
                   className={`${styles.itemSub} ${pushSaved || pushState === "granted"
-                      ? styles.statusActive
-                      : pushState === "denied"
-                        ? styles.statusExpired
-                        : ""
+                    ? styles.statusActive
+                    : pushState === "denied"
+                      ? styles.statusExpired
+                      : ""
                     }`}
                 >
                   {pushSaved &&
