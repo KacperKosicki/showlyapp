@@ -171,8 +171,13 @@
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.06);
 }
 
-.calendarCard { padding: 12px; }
-.infoCard { padding: 12px; }
+.calendarCard {
+  padding: 12px;
+}
+
+.infoCard {
+  padding: 12px;
+}
 
 /* =========================================================
    MONTH NAV
@@ -275,7 +280,9 @@
   color: #d0293b !important;
   border-color: #ffd4d4 !important;
 
-  &:hover { transform: none; }
+  &:hover {
+    transform: none;
+  }
 }
 
 .dayPast {
@@ -283,7 +290,9 @@
   color: rgba(0, 0, 0, 0.35) !important;
   border-color: rgba(0, 0, 0, 0.06) !important;
 
-  &:hover { transform: none; }
+  &:hover {
+    transform: none;
+  }
 }
 
 .dayLocked {
@@ -291,7 +300,9 @@
   color: rgba(0, 0, 0, 0.42) !important;
   border-color: rgba(0, 0, 0, 0.06) !important;
 
-  &:hover { transform: none; }
+  &:hover {
+    transform: none;
+  }
 }
 
 .selectedDay {
@@ -384,7 +395,9 @@
   word-break: break-word;
 }
 
-.muted { opacity: 0.7; }
+.muted {
+  opacity: 0.7;
+}
 
 /* empty state */
 .emptyState {
@@ -396,13 +409,18 @@
   border-radius: 18px;
 }
 
-.emptyIcon { font-size: 1.6rem; margin-bottom: 6px; }
+.emptyIcon {
+  font-size: 1.6rem;
+  margin-bottom: 6px;
+}
+
 .emptyTitle {
   font-family: $font-heading;
   font-weight: 900;
   color: rgba(0, 0, 0, 0.75);
   margin-bottom: 4px;
 }
+
 .emptyText {
   font-family: $font-body;
   color: rgba(0, 0, 0, 0.55);
@@ -483,10 +501,25 @@
   display: inline-block;
 }
 
-.legendFree       { background: #fafbfc; border-color: #ececec; }
-.legendSelected   { background: linear-gradient(135deg, var(--bf-primary), var(--bf-secondary)); border-color: rgba(0,0,0,0.08); }
-.legendUnavailable{ background: #ffe5e5; border-color: #ffd4d4; }
-.legendLocked     { background: #f5f5f5; border-color: #e0e0e0; }
+.legendFree {
+  background: #fafbfc;
+  border-color: #ececec;
+}
+
+.legendSelected {
+  background: linear-gradient(135deg, var(--bf-primary), var(--bf-secondary));
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.legendUnavailable {
+  background: #ffe5e5;
+  border-color: #ffd4d4;
+}
+
+.legendLocked {
+  background: #f5f5f5;
+  border-color: #e0e0e0;
+}
 
 .legendMetaFull {
   font-family: $font-accent;

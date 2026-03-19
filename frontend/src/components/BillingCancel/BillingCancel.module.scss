@@ -22,12 +22,10 @@
     content: "";
     position: absolute;
     inset: -2px;
-    background: linear-gradient(
-      135deg,
-      rgba(245, 158, 11, 0.30),
-      rgba(239, 68, 68, 0.18),
-      rgba(168, 85, 247, 0.16)
-    );
+    background: linear-gradient(135deg,
+        rgba(245, 158, 11, 0.30),
+        rgba(239, 68, 68, 0.18),
+        rgba(168, 85, 247, 0.16));
     filter: blur(22px);
     opacity: 0.55;
     pointer-events: none;
@@ -86,8 +84,14 @@
   color: #fff;
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(239, 68, 68, 0.85));
 
-  &:hover { transform: translateY(-1px); filter: brightness(1.05); }
-  &:active { transform: translateY(0); }
+  &:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 .ghost {
@@ -95,6 +99,12 @@
   color: $text-color;
   border: 1px solid rgba(255, 255, 255, 0.16);
 
-  &:hover { transform: translateY(-1px); background: rgba(255, 255, 255, 0.06); }
-  &:active { transform: translateY(0); }
+  &:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 }

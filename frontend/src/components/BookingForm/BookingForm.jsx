@@ -97,15 +97,15 @@ export default function BookingForm({ user }) {
     }
   }, [provider, navigate]);
 
-// ✅ BEZPIECZNIE: provider może być null
-const mode = String(provider?.bookingMode || "off").toLowerCase();
-const avatarSrc = normalizeAvatar(provider?.avatar) || DEFAULT_AVATAR;
+  // ✅ BEZPIECZNIE: provider może być null
+  const mode = String(provider?.bookingMode || "off").toLowerCase();
+  const avatarSrc = normalizeAvatar(provider?.avatar) || DEFAULT_AVATAR;
 
-// ✅ useMemo OK — provider?.theme też OK
-const t = useMemo(() => resolveTheme(provider?.theme), [provider?.theme]);
+  // ✅ useMemo OK — provider?.theme też OK
+  const t = useMemo(() => resolveTheme(provider?.theme), [provider?.theme]);
 
-// ✅ dopiero teraz return, bo wcześniej nie dotykasz provider.bookingMode bez ?
-if (!provider) return <div className={styles.loading}>🔄 Ładowanie…</div>;
+  // ✅ dopiero teraz return, bo wcześniej nie dotykasz provider.bookingMode bez ?
+  if (!provider) return <div className={styles.loading}>🔄 Ładowanie…</div>;
 
   const cssVars = {
     "--bf-primary": t.primary,

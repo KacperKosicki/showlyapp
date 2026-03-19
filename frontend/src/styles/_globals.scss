@@ -4,14 +4,18 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
 }
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   font-family: $font-heading;
 }
 
@@ -24,23 +28,29 @@ button,
 /* --- Hairline fix pod stopką (nie zmienia wyglądu reszty) --- */
 footer {
   position: relative;
-  transform: translateZ(0);       /* zabija artefakt subpikseli */
+  transform: translateZ(0);
+  /* zabija artefakt subpikseli */
   backface-visibility: hidden;
 }
 
 footer::after {
   content: '';
-  position: fixed;                /* przyklejone do dołu ekranu */
+  position: fixed;
+  /* przyklejone do dołu ekranu */
   left: 0;
   right: 0;
   bottom: 0;
-  height: 2px;                    /* cienki „korek” */
-  background: #0e0f13;            /* KOLOR TWOJEJ STOPKI */
+  height: 2px;
+  /* cienki „korek” */
+  background: #0e0f13;
+  /* KOLOR TWOJEJ STOPKI */
   pointer-events: none;
   z-index: 1;
 }
 
 /* Na ekranach o gęstych pikselach 1px wystarczy */
 @media (min-resolution: 2dppx) {
-  footer::after { height: 1px; }
+  footer::after {
+    height: 1px;
+  }
 }

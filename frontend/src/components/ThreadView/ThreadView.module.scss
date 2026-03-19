@@ -33,8 +33,13 @@ $page-max: 1180px;
   padding: 2rem 0 70px;
 }
 
-.page :is(h1, h2, h3) { font-family: $font-heading; }
-.page :is(button, input, textarea, a) { font-family: inherit; }
+.page :is(h1, h2, h3) {
+  font-family: $font-heading;
+}
+
+.page :is(button, input, textarea, a) {
+  font-family: inherit;
+}
 
 /* top glow background */
 .bgGlow {
@@ -223,8 +228,13 @@ $page-max: 1180px;
   font-weight: 900;
   font-size: 0.9rem;
 
-  svg { opacity: 0.95; }
-  strong { font-weight: 900; }
+  svg {
+    opacity: 0.95;
+  }
+
+  strong {
+    font-weight: 900;
+  }
 }
 
 .heroLeft {
@@ -380,11 +390,18 @@ $page-max: 1180px;
   gap: 10px;
   min-width: 0;
 
-  &.systemRow { display: block; }
+  &.systemRow {
+    display: block;
+  }
 }
 
-.other { justify-content: flex-start; }
-.me { justify-content: flex-end; }
+.other {
+  justify-content: flex-start;
+}
+
+.me {
+  justify-content: flex-end;
+}
 
 /* avatar obok bąbelka */
 .msgAvatarWrap {
@@ -497,8 +514,14 @@ $page-max: 1180px;
   box-shadow: none;
 }
 
-.systemContent { white-space: pre-line; }
-.pending { font-style: italic; opacity: 0.9; }
+.systemContent {
+  white-space: pre-line;
+}
+
+.pending {
+  font-style: italic;
+  opacity: 0.9;
+}
 
 /* =========================================================
    STOPKA / FORM
@@ -598,7 +621,9 @@ $page-max: 1180px;
     line-height: 1;
   }
 
-  p { margin: 0; }
+  p {
+    margin: 0;
+  }
 }
 
 .error {
@@ -611,7 +636,9 @@ $page-max: 1180px;
 /* =========================================================
    FAQ (prawy panel) — MOCNIEJSZY KONTRAST
 ========================================================= */
-.faqBoxWrapper { min-width: 0; }
+.faqBoxWrapper {
+  min-width: 0;
+}
 
 .faqBox {
   display: flex;
@@ -789,8 +816,14 @@ $page-max: 1180px;
   width: 70%;
 }
 
-.left { align-self: flex-start; }
-.right { align-self: flex-end; width: 58%; }
+.left {
+  align-self: flex-start;
+}
+
+.right {
+  align-self: flex-end;
+  width: 58%;
+}
 
 .skeletonMeta {
   height: 10px;
@@ -858,26 +891,31 @@ $page-max: 1180px;
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0),
-      rgba(255, 255, 255, 0.55),
-      rgba(255, 255, 255, 0)
-    );
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0),
+        rgba(255, 255, 255, 0.55),
+        rgba(255, 255, 255, 0));
     animation: shimmer 1.2s infinite;
   }
 }
 
 @keyframes shimmer {
-  100% { transform: translateX(100%); }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* =========================================================
    MOBILE — lepszy układ hero
 ========================================================= */
 @media (max-width: 520px) {
-  .page { padding: 2rem 0 54px; }
-  .shell { width: calc(100% - 2rem); }
+  .page {
+    padding: 2rem 0 54px;
+  }
+
+  .shell {
+    width: calc(100% - 2rem);
+  }
 
   .heroInner {
     display: flex;
@@ -887,7 +925,10 @@ $page-max: 1180px;
   }
 
   /* ✅ avatar na górę heroInner */
-  .heroRight { order: -1; place-items: center; }
+  .heroRight {
+    order: -1;
+    place-items: center;
+  }
 
   .avatarWrap {
     width: 118px;
@@ -897,8 +938,13 @@ $page-max: 1180px;
     margin: 0 auto;
   }
 
-  .avatar { border-radius: 14px; }
-  .avatarRing { inset: -14px; }
+  .avatar {
+    border-radius: 14px;
+  }
+
+  .avatarRing {
+    inset: -14px;
+  }
 
   .titleRow {
     width: 100%;
@@ -909,13 +955,32 @@ $page-max: 1180px;
     gap: 8px;
   }
 
-  .heroTitle { text-align: center; }
-  .titlePill { margin: 0 auto; }
+  .heroTitle {
+    text-align: center;
+  }
 
-  .metaRow { justify-content: center; }
+  .titlePill {
+    margin: 0 auto;
+  }
 
-  .skeletonTitle { width: 220px; max-width: 55%; }
-  .skeletonBtn { width: 150px; }
-  .skeletonBubble { width: 85%; }
-  .right { width: 70%; }
+  .metaRow {
+    justify-content: center;
+  }
+
+  .skeletonTitle {
+    width: 220px;
+    max-width: 55%;
+  }
+
+  .skeletonBtn {
+    width: 150px;
+  }
+
+  .skeletonBubble {
+    width: 85%;
+  }
+
+  .right {
+    width: 70%;
+  }
 }

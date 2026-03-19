@@ -70,16 +70,12 @@
   border-radius: 16px;
 
   background:
-    radial-gradient(
-      600px 220px at 20% 20%,
+    radial-gradient(600px 220px at 20% 20%,
       color-mix(in srgb, var(--bf-primary) 10%, transparent),
-      transparent 60%
-    ),
-    radial-gradient(
-      520px 240px at 90% 30%,
+      transparent 60%),
+    radial-gradient(520px 240px at 90% 30%,
       color-mix(in srgb, var(--bf-secondary) 10%, transparent),
-      transparent 55%
-    ),
+      transparent 55%),
     #fff;
 
   font-size: 1.03rem;

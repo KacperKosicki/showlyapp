@@ -1851,7 +1851,8 @@ $panel-max: 820px;
   transform: translateY(6px);
   transition: opacity .18s ease, transform .18s ease;
 
-  @media (hover: none), (max-width: 560px) {
+  @media (hover: none),
+  (max-width: 560px) {
     opacity: 1;
     transform: none;
   }
@@ -1911,6 +1912,7 @@ $panel-max: 820px;
 }
 
 @media (max-width: 480px) {
+
   .galleryEditor,
   .galleryView {
     gap: .65rem;
@@ -2249,6 +2251,7 @@ $panel-max: 820px;
 }
 
 @media (max-width: 480px) {
+
   .formInput,
   .formTextarea {
     font-size: .9rem;

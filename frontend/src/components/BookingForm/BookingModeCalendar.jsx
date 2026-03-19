@@ -142,8 +142,8 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     const filtered =
       isUserPick && selectedStaffId
         ? (Array.isArray(data) ? data : []).filter(
-            (r) => r.staffId && String(r.staffId) === String(selectedStaffId)
-          )
+          (r) => r.staffId && String(r.staffId) === String(selectedStaffId)
+        )
         : (Array.isArray(data) ? data : []);
 
     // RAW całego zespołu – potrzebne dla auto-assign
@@ -163,13 +163,13 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
 
   // ✅ Ładuj rezerwacje po wejściu (i przy zmianie provider)
   useEffect(() => {
-    fetchReservations().catch(() => {});
+    fetchReservations().catch(() => { });
   }, [fetchReservations]);
 
   // ✅ Przeładuj przy zmianie pracownika w trybie user-pick
   useEffect(() => {
     if (!isUserPick) return;
-    fetchReservations().catch(() => {});
+    fetchReservations().catch(() => { });
   }, [isUserPick, selectedStaffId, fetchReservations]);
 
   // Generowanie slotów (capacity-aware dla auto-assign)
@@ -206,19 +206,19 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     const eligibleStaff =
       isTeamEnabled && provider?.team?.enabled
         ? staffList.filter(
-            (s) =>
-              s.active &&
-              (s.serviceIds || []).some((id) => String(id) === String(selectedService?._id))
-          )
+          (s) =>
+            s.active &&
+            (s.serviceIds || []).some((id) => String(id) === String(selectedService?._id))
+        )
         : [];
 
     const eligibleIds = new Set(eligibleStaff.map((s) => String(s._id)));
 
     const totalCapacity = isAutoAssign
       ? Math.max(
-          0,
-          eligibleStaff.reduce((sum, s) => sum + Math.max(1, Number(s.capacity) || 1), 0)
-        )
+        0,
+        eligibleStaff.reduce((sum, s) => sum + Math.max(1, Number(s.capacity) || 1), 0)
+      )
       : 0;
 
     const capacityMap = new Map(
@@ -229,43 +229,43 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
     const dayBusy = (
       isAutoAssign
         ? reservationsAll
-            .filter((r) => r.date === dateStr)
-            .filter(
-              (r) => !r.dateOnly && ["zaakceptowana", "oczekująca", "tymczasowa"].includes(r.status)
-            )
-            .filter((r) => eligibleIds.has(String(r.staffId)))
-            .map((r) => {
-              const from = new Date(`${r.date}T${r.fromTime}`);
-              const toNoBuf = new Date(`${r.date}T${r.toTime}`);
-              const toWithBuf = addMinutes(toNoBuf, buffer);
+          .filter((r) => r.date === dateStr)
+          .filter(
+            (r) => !r.dateOnly && ["zaakceptowana", "oczekująca", "tymczasowa"].includes(r.status)
+          )
+          .filter((r) => eligibleIds.has(String(r.staffId)))
+          .map((r) => {
+            const from = new Date(`${r.date}T${r.fromTime}`);
+            const toNoBuf = new Date(`${r.date}T${r.toTime}`);
+            const toWithBuf = addMinutes(toNoBuf, buffer);
 
-              return {
-                fromMs: +from,
-                toMs: +toNoBuf,
-                toBufMs: +toWithBuf,
-                status: r.status === "zaakceptowana" ? "reserved" : "pending",
-                staffId: String(r.staffId || ""),
-              };
-            })
+            return {
+              fromMs: +from,
+              toMs: +toNoBuf,
+              toBufMs: +toWithBuf,
+              status: r.status === "zaakceptowana" ? "reserved" : "pending",
+              staffId: String(r.staffId || ""),
+            };
+          })
         : [...reservedSlots, ...pendingSlots]
-            .filter((s) => s.date === dateStr)
-            .map((s) => {
-              const from = new Date(`${s.date}T${s.fromTime}`);
-              const toNoBuf = new Date(`${s.date}T${s.toTime}`);
-              const toWithBuf = addMinutes(toNoBuf, buffer);
+          .filter((s) => s.date === dateStr)
+          .map((s) => {
+            const from = new Date(`${s.date}T${s.fromTime}`);
+            const toNoBuf = new Date(`${s.date}T${s.toTime}`);
+            const toWithBuf = addMinutes(toNoBuf, buffer);
 
-              const isRes = reservedSlots.some(
-                (r) => r.date === s.date && r.fromTime === s.fromTime && r.toTime === s.toTime
-              );
+            const isRes = reservedSlots.some(
+              (r) => r.date === s.date && r.fromTime === s.fromTime && r.toTime === s.toTime
+            );
 
-              return {
-                fromMs: +from,
-                toMs: +toNoBuf,
-                toBufMs: +toWithBuf,
-                status: isRes ? "reserved" : "pending",
-                staffId: "",
-              };
-            })
+            return {
+              fromMs: +from,
+              toMs: +toNoBuf,
+              toBufMs: +toWithBuf,
+              status: isRes ? "reserved" : "pending",
+              staffId: "",
+            };
+          })
     ).sort((a, b) => a.fromMs - b.fromMs);
 
     const slots = [];
@@ -522,10 +522,10 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
                   {s.duration?.unit === "minutes"
                     ? "min"
                     : s.duration?.unit === "hours"
-                    ? "godzin"
-                    : s.duration?.unit === "days"
-                    ? "dni"
-                    : s.duration?.unit}
+                      ? "godzin"
+                      : s.duration?.unit === "days"
+                        ? "dni"
+                        : s.duration?.unit}
                 </option>
               ))}
             </select>
@@ -623,9 +623,8 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
                   <button
                     key={day.toISOString()}
                     type="button"
-                    className={`${styles.day} ${!active || isPast ? styles.disabledDay : ""} ${
-                      sel ? styles.selectedDay : ""
-                    }`}
+                    className={`${styles.day} ${!active || isPast ? styles.disabledDay : ""} ${sel ? styles.selectedDay : ""
+                      }`}
                     disabled={!active || isPast}
                     onClick={() => active && !isPast && setDate(day)}
                   >

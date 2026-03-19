@@ -329,7 +329,7 @@ $page-max: 1180px;
 }
 
 .avatarOffline {
-  color: color-mix(in srgb, var(--rs-primary) 65%, rgba(0,0,0,0.55));
+  color: color-mix(in srgb, var(--rs-primary) 65%, rgba(0, 0, 0, 0.55));
 }
 
 .badgeDot {
@@ -898,10 +898,21 @@ $page-max: 1180px;
   vertical-align: -1px;
 }
 
-.legReserved { background: rgba(231, 76, 60, 0.75); }
-.legPending  { background: rgba(241, 196, 15, 0.85); }
-.legDisabled { background: rgba(0, 0, 0, 0.25); }
-.legFree     { background: rgba(46, 204, 113, 0.70); }
+.legReserved {
+  background: rgba(231, 76, 60, 0.75);
+}
+
+.legPending {
+  background: rgba(241, 196, 15, 0.85);
+}
+
+.legDisabled {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.legFree {
+  background: rgba(46, 204, 113, 0.70);
+}
 
 .slotSummary {
   margin-top: 10px;
@@ -911,7 +922,10 @@ $page-max: 1180px;
 }
 
 /* ===== CALENDAR (Twoje, lekko dopięte) ===== */
-.calendarWrap { margin-top: 14px; overflow: hidden; }
+.calendarWrap {
+  margin-top: 14px;
+  overflow: hidden;
+}
 
 .calendarCard {
   border-radius: 18px;
@@ -939,8 +953,16 @@ $page-max: 1180px;
   }
 }
 
-.calendarTitle { font-family: $font-heading; font-size: 18px; margin-bottom: 4px; }
-.calendarSub { font-size: 13px; opacity: 0.75; }
+.calendarTitle {
+  font-family: $font-heading;
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.calendarSub {
+  font-size: 13px;
+  opacity: 0.75;
+}
 
 .calendarPills {
   display: flex;
@@ -1008,10 +1030,23 @@ $page-max: 1180px;
   gap: 6px;
 }
 
-.dotMini { width: 7px; height: 7px; border-radius: 999px; }
-.dotPending  { background: rgba(241, 196, 15, 0.95); }
-.dotAccepted { background: rgba(46, 204, 113, 0.95); }
-.dotRejected { background: rgba(231, 76, 60, 0.95); }
+.dotMini {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+}
+
+.dotPending {
+  background: rgba(241, 196, 15, 0.95);
+}
+
+.dotAccepted {
+  background: rgba(46, 204, 113, 0.95);
+}
+
+.dotRejected {
+  background: rgba(231, 76, 60, 0.95);
+}
 
 .tileCount {
   font-size: 11px;
@@ -1038,7 +1073,10 @@ $page-max: 1180px;
   min-width: 0;
 }
 
-.daySection { margin-top: 12px; min-width: 0; }
+.daySection {
+  margin-top: 12px;
+  min-width: 0;
+}
 
 .daySectionTitle {
   display: flex;
@@ -1092,7 +1130,11 @@ $page-max: 1180px;
 }
 
 /* ===== Timeline ===== */
-.timeline { display: grid; gap: 10px; min-width: 0; }
+.timeline {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
 
 .tlRow {
   display: grid;
@@ -1119,13 +1161,33 @@ $page-max: 1180px;
   }
 }
 
-.tlTimeTxt { font-size: 12px; font-weight: 900; opacity: 0.8; }
+.tlTimeTxt {
+  font-size: 12px;
+  font-weight: 900;
+  opacity: 0.8;
+}
 
-.tlDot { width: 10px; height: 10px; border-radius: 999px; }
-.tlDotFree { background: rgba(0, 0, 0, 0.22); }
-.tlDotPending { background: rgba(241, 196, 15, 0.95); }
-.tlDotAccepted { background: rgba(46, 204, 113, 0.95); }
-.tlDotRejected { background: rgba(231, 76, 60, 0.95); }
+.tlDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.tlDotFree {
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.tlDotPending {
+  background: rgba(241, 196, 15, 0.95);
+}
+
+.tlDotAccepted {
+  background: rgba(46, 204, 113, 0.95);
+}
+
+.tlDotRejected {
+  background: rgba(231, 76, 60, 0.95);
+}
 
 .tlCard {
   border-radius: 16px;
@@ -1183,13 +1245,32 @@ $page-max: 1180px;
   font-family: $font-accent;
 }
 
-.tlAccepted { background: rgba(46, 204, 113, 0.12); border: 1px solid rgba(46, 204, 113, 0.26); }
-.tlRejected { background: rgba(231, 76, 60, 0.12); border: 1px solid rgba(231, 76, 60, 0.26); }
-.tlPending { background: rgba(241, 196, 15, 0.14); border: 1px solid rgba(241, 196, 15, 0.28); }
+.tlAccepted {
+  background: rgba(46, 204, 113, 0.12);
+  border: 1px solid rgba(46, 204, 113, 0.26);
+}
 
-.tlTitle { font-weight: 1000; margin: 4px 0 6px; overflow-wrap: anywhere; }
+.tlRejected {
+  background: rgba(231, 76, 60, 0.12);
+  border: 1px solid rgba(231, 76, 60, 0.26);
+}
 
-.tlMeta { display: flex; flex-wrap: wrap; gap: 8px; }
+.tlPending {
+  background: rgba(241, 196, 15, 0.14);
+  border: 1px solid rgba(241, 196, 15, 0.28);
+}
+
+.tlTitle {
+  font-weight: 1000;
+  margin: 4px 0 6px;
+  overflow-wrap: anywhere;
+}
+
+.tlMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 
 .tlChip {
   display: inline-flex;
@@ -1213,7 +1294,11 @@ $page-max: 1180px;
   overflow-wrap: anywhere;
 }
 
-.tlActions { margin-top: 10px; display: flex; justify-content: flex-end; }
+.tlActions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
 
 .tlAddBtn {
   border: 0;
@@ -1229,7 +1314,9 @@ $page-max: 1180px;
 }
 
 /* ===== Skeleton ===== */
-.skeletonItem { pointer-events: none; }
+.skeletonItem {
+  pointer-events: none;
+}
 
 .shimmer {
   background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.06));
@@ -1239,8 +1326,13 @@ $page-max: 1180px;
 }
 
 @keyframes shimmer {
-  0% { background-position: 0% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: 0% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .metaSkel {
@@ -1277,18 +1369,26 @@ $page-max: 1180px;
   display: inline-block;
 }
 
-.avatarSkeleton { background: rgba(0,0,0,0.06); }
+.avatarSkeleton {
+  background: rgba(0, 0, 0, 0.06);
+}
 
 /* ===== Responsive micro ===== */
 @media (max-width: 640px) {
-  .date { font-size: 0.82rem; }
+  .date {
+    font-size: 0.82rem;
+  }
 }
 
 /* =========================================================
    DAY-BLOCKING — Twoje brakujące klasy (zostawiłem)
 ========================================================= */
 
-.wholeDayList { display: grid; gap: 10px; min-width: 0; }
+.wholeDayList {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
 
 .wholeDayItem {
   display: flex;
@@ -1322,11 +1422,29 @@ $page-max: 1180px;
   border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.wholeDayNoteIcon { margin-top: 2px; opacity: 0.75; flex: 0 0 auto; }
-.wholeDayNoteText { min-width: 0; }
+.wholeDayNoteIcon {
+  margin-top: 2px;
+  opacity: 0.75;
+  flex: 0 0 auto;
+}
 
-.wholeDayService { font-weight: 700; font-size: 13px; opacity: 0.95; margin-bottom: 2px; }
-.wholeDayDesc { font-size: 13px; opacity: 0.9; line-height: 1.35; word-break: break-word; }
+.wholeDayNoteText {
+  min-width: 0;
+}
+
+.wholeDayService {
+  font-weight: 700;
+  font-size: 13px;
+  opacity: 0.95;
+  margin-bottom: 2px;
+}
+
+.wholeDayDesc {
+  font-size: 13px;
+  opacity: 0.9;
+  line-height: 1.35;
+  word-break: break-word;
+}
 
 .wholeDayBadge {
   display: inline-flex;
@@ -1365,8 +1483,27 @@ $page-max: 1180px;
 }
 
 @media (max-width: 640px) {
-  .wholeDayTop { flex-wrap: wrap; gap: 8px; }
-  .wholeDayStatus { margin-left: 0; width: 100%; justify-content: center; }
-  .wholeDayName { flex: 1 0 100%; width: 100%; overflow-wrap: normal; word-break: break-word; }
-  .wholeDayDesc, .wholeDayService { overflow-wrap: normal; word-break: break-word; }
+  .wholeDayTop {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .wholeDayStatus {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .wholeDayName {
+    flex: 1 0 100%;
+    width: 100%;
+    overflow-wrap: normal;
+    word-break: break-word;
+  }
+
+  .wholeDayDesc,
+  .wholeDayService {
+    overflow-wrap: normal;
+    word-break: break-word;
+  }
 }

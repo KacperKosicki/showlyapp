@@ -234,11 +234,9 @@
   width: 2px;
   margin-top: 10px;
   border-radius: 999px;
-  background: linear-gradient(
-    180deg,
-    rgba(111, 78, 242, 0.75),
-    rgba(255, 64, 129, 0.2)
-  );
+  background: linear-gradient(180deg,
+      rgba(111, 78, 242, 0.75),
+      rgba(255, 64, 129, 0.2));
   opacity: 0.8;
 }
 
@@ -486,6 +484,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .aurora,
   .aurora2 {
     animation: none;
@@ -500,9 +499,11 @@
   0% {
     transform: translate3d(-1%, -1%, 0) scale(1.02);
   }
+
   50% {
     transform: translate3d(1.4%, 1.2%, 0) scale(1.04);
   }
+
   100% {
     transform: translate3d(-1%, -1%, 0) scale(1.02);
   }

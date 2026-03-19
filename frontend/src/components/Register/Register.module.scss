@@ -55,8 +55,8 @@
 
   .error {
     @extend .messageBox;
-    background-color: #ffebee; 
-    color: #f44336; 
+    background-color: #ffebee;
+    color: #f44336;
     border: 1px solid #ffcdd2;
     font-family: $font-body;
   }
@@ -64,7 +64,7 @@
   .success {
     @extend .messageBox;
     background-color: #e8f5e9; // 💚 jasnozielone tło
-    color: #2e7d32;            // 💚 ciemna zieleń do tekstu (czytelność)
+    color: #2e7d32; // 💚 ciemna zieleń do tekstu (czytelność)
     border: 1px solid #a5d6a7; // 💚 delikatna zielona ramka
     font-family: $font-body;
   }
@@ -93,6 +93,7 @@
     opacity: 0;
     transform: translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

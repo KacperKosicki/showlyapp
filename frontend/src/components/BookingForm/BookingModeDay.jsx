@@ -330,15 +330,14 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
                   <option key={s._id} value={s._id}>
                     {s.name}
                     {s.duration?.value
-                      ? ` • ${s.duration.value} ${
-                          s.duration.unit === "minutes"
-                            ? "min"
-                            : s.duration.unit === "hours"
-                            ? "godz."
-                            : s.duration.unit === "days"
+                      ? ` • ${s.duration.value} ${s.duration.unit === "minutes"
+                        ? "min"
+                        : s.duration.unit === "hours"
+                          ? "godz."
+                          : s.duration.unit === "days"
                             ? "dni"
                             : s.duration.unit
-                        }`
+                      }`
                       : ""}
                   </option>
                 ))}
@@ -435,12 +434,12 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
                 state === "unavailable"
                   ? "Dzień niedostępny"
                   : state === "past"
-                  ? "Dzień w przeszłości"
-                  : state === "locked"
-                  ? serviceRequiredForBooking && !selectedService
-                    ? "Najpierw wybierz usługę"
-                    : "Dzień poza harmonogramem (workingDays)"
-                  : "";
+                    ? "Dzień w przeszłości"
+                    : state === "locked"
+                      ? serviceRequiredForBooking && !selectedService
+                        ? "Najpierw wybierz usługę"
+                        : "Dzień poza harmonogramem (workingDays)"
+                      : "";
 
               return (
                 <button

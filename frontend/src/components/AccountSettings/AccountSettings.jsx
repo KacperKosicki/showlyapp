@@ -75,7 +75,7 @@ export default function AccountSettings() {
 
         try {
           await u.reload();
-        } catch {}
+        } catch { }
 
         setUser(auth.currentUser);
         setDisplayName(auth.currentUser?.displayName || "");
@@ -164,7 +164,7 @@ export default function AccountSettings() {
       try {
         await updateProfile(user, { photoURL: url });
         await user.reload();
-      } catch {}
+      } catch { }
 
       setPreview(normalizeAvatar(url));
       setFile(null);
@@ -197,7 +197,7 @@ export default function AccountSettings() {
       try {
         await updateProfile(user, { photoURL: "" });
         await user.reload();
-      } catch {}
+      } catch { }
 
       setPreview(fallbackImg);
       setFile(null);
@@ -225,7 +225,7 @@ export default function AccountSettings() {
         method: "PATCH",
         headers,
         body: JSON.stringify({ displayName: clean }),
-      }).catch(() => {});
+      }).catch(() => { });
 
       showAlert("success", "Zaktualizowano nazwę wyświetlaną.");
     } catch (e) {

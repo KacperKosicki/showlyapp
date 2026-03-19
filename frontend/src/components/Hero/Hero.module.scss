@@ -10,7 +10,8 @@
   padding: 1rem 1rem 185px;
   color: #fff;
   background: #07080b;
-  isolation: isolate; /* ważne: poprawia warstwy */
+  isolation: isolate;
+  /* ważne: poprawia warstwy */
 }
 
 /* ===== background layers ===== */
@@ -639,6 +640,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .aurora,
   .aurora2 {
     animation: none;
@@ -655,9 +657,11 @@
   0% {
     transform: translate3d(-1%, -1%, 0) scale(1.02);
   }
+
   50% {
     transform: translate3d(1.5%, 1.2%, 0) scale(1.03);
   }
+
   100% {
     transform: translate3d(-1%, -1%, 0) scale(1.02);
   }

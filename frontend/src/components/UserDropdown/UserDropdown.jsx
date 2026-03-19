@@ -145,7 +145,7 @@ const UserDropdown = ({
               setPushState(getBrowserNotificationState());
             }
           }
-        } catch {}
+        } catch { }
 
         const firebasePhotoURL = auth.currentUser?.photoURL || "";
 
@@ -504,20 +504,19 @@ const UserDropdown = ({
                   {pushLoading
                     ? "Zapisywanie..."
                     : pushSaved
-                    ? "Wyłącz powiadomienia"
-                    : pushState === "granted"
-                    ? "Aktywuj na tym koncie"
-                    : "Włącz powiadomienia"}
+                      ? "Wyłącz powiadomienia"
+                      : pushState === "granted"
+                        ? "Aktywuj na tym koncie"
+                        : "Włącz powiadomienia"}
                 </span>
 
                 <span
-                  className={`${styles.itemSub} ${
-                    pushSaved || pushState === "granted"
-                      ? styles.statusActive
-                      : pushState === "denied"
+                  className={`${styles.itemSub} ${pushSaved || pushState === "granted"
+                    ? styles.statusActive
+                    : pushState === "denied"
                       ? styles.statusExpired
                       : ""
-                  }`}
+                    }`}
                 >
                   {pushSaved &&
                     "Kliknij, aby wyłączyć powiadomienia na tym urządzeniu"}

@@ -316,9 +316,10 @@ $page-max: 820px;
 /* wspólny “feeling” (bez zmian kolorów!) */
 @mixin btnMotion {
   position: relative;
-  isolation: isolate; /* żeby pseudo-elementy nie wychodziły */
+  isolation: isolate;
+  /* żeby pseudo-elementy nie wychodziły */
   transition:
-    transform 260ms cubic-bezier(.2,.9,.2,1),
+    transform 260ms cubic-bezier(.2, .9, .2, 1),
     box-shadow 340ms ease,
     filter 340ms ease;
 
@@ -331,15 +332,15 @@ $page-max: 820px;
     pointer-events: none;
     opacity: 0;
     background:
-      radial-gradient(320px 90px at 30% 20%, rgba(255,255,255,.55), transparent 60%),
-      radial-gradient(260px 110px at 70% 0%, rgba(255,255,255,.38), transparent 55%);
+      radial-gradient(320px 90px at 30% 20%, rgba(255, 255, 255, .55), transparent 60%),
+      radial-gradient(260px 110px at 70% 0%, rgba(255, 255, 255, .38), transparent 55%);
     filter: blur(10px);
     transition: opacity 420ms ease;
     z-index: 0;
   }
 
   /* ważne: treść nad shine */
-  > * {
+  >* {
     position: relative;
     z-index: 1;
   }
@@ -369,7 +370,10 @@ $page-max: 820px;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
-    &::after { opacity: 0 !important; }
+
+    &::after {
+      opacity: 0 !important;
+    }
   }
 }
 
@@ -392,7 +396,9 @@ $page-max: 820px;
   font-weight: 900;
   color: rgba(0, 0, 0, 0.68);
 
-  input { display: none; }
+  input {
+    display: none;
+  }
 
   @include btnMotion;
 }
@@ -438,6 +444,7 @@ $page-max: 820px;
 
 /* Mobile */
 @media (max-width: 520px) {
+
   .primary,
   .secondary,
   .ghost,

@@ -321,13 +321,14 @@
   .section {
     padding: 6rem 0.8rem;
   }
-  
+
   .card {
     border-radius: 16px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .aurora,
   .aurora2 {
     animation: none;
@@ -343,9 +344,11 @@
   0% {
     transform: translate3d(-1%, -1%, 0) scale(1.02);
   }
+
   50% {
     transform: translate3d(1.5%, 1.2%, 0) scale(1.03);
   }
+
   100% {
     transform: translate3d(-1%, -1%, 0) scale(1.02);
   }

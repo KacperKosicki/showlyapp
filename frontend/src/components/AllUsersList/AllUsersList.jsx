@@ -188,10 +188,10 @@ const AllUsersList = ({ currentUser, setAlert }) => {
             {filteredUsers.map((user, index) => (
               <div className={styles.cardWrap} key={user._id || user.userId || index}>
                 <UserCard
-  user={user}
-  currentUser={currentUser}
-  setAlert={setAlert}
-/>
+                  user={user}
+                  currentUser={currentUser}
+                  setAlert={setAlert}
+                />
               </div>
             ))}
           </div>

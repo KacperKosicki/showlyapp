@@ -1301,10 +1301,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
       <span
         className={`${styles.chip} ${res.status === "zaakceptowana"
-            ? styles.chipAccepted
-            : res.status === "odrzucona" || res.status === "anulowana"
-              ? styles.chipRejected
-              : styles.chipPending
+          ? styles.chipAccepted
+          : res.status === "odrzucona" || res.status === "anulowana"
+            ? styles.chipRejected
+            : styles.chipPending
           }`}
       >
         {statusIcon(res.status)}

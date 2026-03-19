@@ -422,52 +422,52 @@ export default function AdminPanel() {
     });
   };
 
-const onSavePartnership = async (profile) => {
-  const profileId = profile?._id;
+  const onSavePartnership = async (profile) => {
+    const profileId = profile?._id;
 
-  if (!profileId) {
-    setAlert({
-      type: "error",
-      message: "Brak identyfikatora profilu.",
-    });
-    return;
-  }
+    if (!profileId) {
+      setAlert({
+        type: "error",
+        message: "Brak identyfikatora profilu.",
+      });
+      return;
+    }
 
-  const draft = partnerDrafts[profileId] || {
-    isPartner: false,
-    tier: "none",
-    badgeText: "",
-    color: "",
+    const draft = partnerDrafts[profileId] || {
+      isPartner: false,
+      tier: "none",
+      badgeText: "",
+      color: "",
+    };
+
+    const partnership = {
+      isPartner: !!draft.isPartner,
+      tier: draft.isPartner ? draft.tier || "partner" : "none",
+      badgeText: draft.isPartner ? String(draft.badgeText || "").trim() : "",
+      color: draft.isPartner ? String(draft.color || "").trim() : "#59d0ff",
+    };
+
+    try {
+      setLoading(true);
+
+      await adminApi.setProfilePartnership(profileId, partnership);
+
+      setAlert({
+        type: "success",
+        message: `Partnerstwo zapisane dla profilu: ${profile?.name || "—"}.`,
+      });
+
+      await fetchProfiles(profilesPage);
+    } catch (e) {
+      setAlert({
+        type: "error",
+        message:
+          e?.response?.data?.message || "Nie udało się zapisać partnerstwa.",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const partnership = {
-    isPartner: !!draft.isPartner,
-    tier: draft.isPartner ? draft.tier || "partner" : "none",
-    badgeText: draft.isPartner ? String(draft.badgeText || "").trim() : "",
-    color: draft.isPartner ? String(draft.color || "").trim() : "#59d0ff",
-  };
-
-  try {
-    setLoading(true);
-
-    await adminApi.setProfilePartnership(profileId, partnership);
-
-    setAlert({
-      type: "success",
-      message: `Partnerstwo zapisane dla profilu: ${profile?.name || "—"}.`,
-    });
-
-    await fetchProfiles(profilesPage);
-  } catch (e) {
-    setAlert({
-      type: "error",
-      message:
-        e?.response?.data?.message || "Nie udało się zapisać partnerstwa.",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
 
   // reports
   const onSetReportStatus = async (reportId, status) => {
@@ -713,9 +713,8 @@ const onSavePartnership = async (profile) => {
 
                       <td>
                         <span
-                          className={`${styles.pill} ${
-                            p.isVisible === false ? styles.pillOff : styles.pillOn
-                          }`}
+                          className={`${styles.pill} ${p.isVisible === false ? styles.pillOff : styles.pillOn
+                            }`}
                         >
                           {p.isVisible === false ? "NIE" : "TAK"}
                         </span>
@@ -982,9 +981,8 @@ const onSavePartnership = async (profile) => {
 
                     <td>
                       <span
-                        className={`${styles.pill} ${
-                          r.status === "closed" ? styles.pillOn : styles.pillWarn
-                        }`}
+                        className={`${styles.pill} ${r.status === "closed" ? styles.pillOn : styles.pillWarn
+                          }`}
                       >
                         {r.status === "closed" ? "ZAMKNIĘTE" : "OTWARTE"}
                       </span>

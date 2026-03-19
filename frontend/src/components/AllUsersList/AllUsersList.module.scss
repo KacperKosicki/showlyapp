@@ -59,11 +59,7 @@
 .inner {
   position: relative;
   z-index: 1;
-  max-width: calc(
-    (3 + var(--peek)) * var(--cardW) +
-    (3 + var(--peek) - 1) * var(--gap) +
-    (2 * var(--sidePad))
-  );
+  max-width: calc((3 + var(--peek)) * var(--cardW) + (3 + var(--peek) - 1) * var(--gap) + (2 * var(--sidePad)));
   margin: 0 auto;
 }
 
@@ -293,7 +289,7 @@
   height: auto;
 }
 
-.cardWrap > * {
+.cardWrap>* {
   width: 100%;
   height: auto;
   align-self: flex-start;
@@ -367,21 +363,13 @@
 
 @media (max-width: 1200px) {
   .inner {
-    max-width: calc(
-      (2 + var(--peek)) * var(--cardW) +
-      (2 + var(--peek) - 1) * var(--gap) +
-      (2 * var(--sidePad))
-    );
+    max-width: calc((2 + var(--peek)) * var(--cardW) + (2 + var(--peek) - 1) * var(--gap) + (2 * var(--sidePad)));
   }
 }
 
 @media (max-width: 900px) {
   .inner {
-    max-width: calc(
-      (1 + var(--peek)) * var(--cardW) +
-      (1 + var(--peek) - 1) * var(--gap) +
-      (2 * var(--sidePad))
-    );
+    max-width: calc((1 + var(--peek)) * var(--cardW) + (1 + var(--peek) - 1) * var(--gap) + (2 * var(--sidePad)));
   }
 
   .navBtn {
@@ -478,7 +466,7 @@
     scroll-snap-align: center;
   }
 
-  .cardWrap > * {
+  .cardWrap>* {
     width: 100%;
     height: auto;
   }

@@ -186,7 +186,9 @@
 
 /* Mobile */
 @media (max-width: 520px) {
-  .card { border-radius: 18px; }
+  .card {
+    border-radius: 18px;
+  }
 
   .heroTop {
     flex-direction: column;
@@ -220,5 +222,7 @@
     text-align: center;
   }
 
-  .heroInfo { text-align: center; }
+  .heroInfo {
+    text-align: center;
+  }
 }

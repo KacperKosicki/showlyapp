@@ -104,10 +104,10 @@ const resolvePartnerData = (partnership = {}) => {
     (tier === "verified"
       ? "ZWERYFIKOWANY"
       : tier === "ambassador"
-      ? "AMBASADOR SHOWLY"
-      : tier === "founding-partner"
-      ? "FOUNDING PARTNER"
-      : "PARTNER SHOWLY");
+        ? "AMBASADOR SHOWLY"
+        : tier === "founding-partner"
+          ? "FOUNDING PARTNER"
+          : "PARTNER SHOWLY");
 
   return {
     isPartner,
@@ -177,15 +177,15 @@ const UserCard = ({
   const [visits, setVisits] = useState(typeof user.visits === "number" ? user.visits : 0);
 
   const showAlert = (message, type = "error") => {
-  if (typeof setAlert === "function") {
-    setAlert({ message, type });
+    if (typeof setAlert === "function") {
+      setAlert({ message, type });
 
-    window.clearTimeout(showAlert._t);
-    showAlert._t = window.setTimeout(() => {
-      setAlert(null);
-    }, 4000);
-  }
-};
+      window.clearTimeout(showAlert._t);
+      showAlert._t = window.setTimeout(() => {
+        setAlert(null);
+      }, 4000);
+    }
+  };
 
   const blockIfPreview = (e, msg) => {
     if (!isPreview) return false;
@@ -237,8 +237,8 @@ const UserCard = ({
   const bookBtnLabel = isCalendar
     ? "ZAREZERWUJ TERMIN"
     : isRequest
-    ? "WYŚLIJ ZAPYTANIE"
-    : "ZAREZERWUJ TERMIN";
+      ? "WYŚLIJ ZAPYTANIE"
+      : "ZAREZERWUJ TERMIN";
 
   // === Ulubione ===
   const toggleFavorite = async () => {
@@ -420,18 +420,16 @@ const UserCard = ({
                 <div className={styles.badgesRow}>
                   {partner.isPartner && (
                     <span
-                      className={`${styles.partnerBadge} ${
-                        styles[`partner_${partner.tier}`] || ""
-                      }`}
+                      className={`${styles.partnerBadge} ${styles[`partner_${partner.tier}`] || ""
+                        }`}
                     >
                       {partner.label}
                     </span>
                   )}
 
                   <span
-                    className={`${styles.profileBadge} ${
-                      styles[`type_${profileType}`] || ""
-                    }`}
+                    className={`${styles.profileBadge} ${styles[`type_${profileType}`] || ""
+                      }`}
                   >
                     {profileType === "zawodowy" && "ZAWODOWY"}
                     {profileType === "hobbystyczny" && "HOBBY"}
@@ -628,8 +626,8 @@ const UserCard = ({
                 isPreview
                   ? "Podgląd — ulubione wyłączone"
                   : isFav
-                  ? "Usuń z ulubionych"
-                  : "Dodaj do ulubionych"
+                    ? "Usuń z ulubionych"
+                    : "Dodaj do ulubionych"
               }
             >
               <span className={styles.favLabel}>

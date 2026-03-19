@@ -183,7 +183,7 @@ const SearchBar = () => {
                         </div>
 
                         {Array.isArray(item.matchedServices) &&
-                        item.matchedServices.length > 0 ? (
+                          item.matchedServices.length > 0 ? (
                           <div className={styles.serviceHits}>
                             {item.matchedServices.slice(0, 2).map((service) => (
                               <span

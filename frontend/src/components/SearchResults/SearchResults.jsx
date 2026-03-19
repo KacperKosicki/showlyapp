@@ -106,7 +106,7 @@ const SearchResults = ({ currentUser }) => {
                 <UserCard user={user} currentUser={currentUser} />
 
                 {Array.isArray(user.matchedServices) &&
-                user.matchedServices.length > 0 ? (
+                  user.matchedServices.length > 0 ? (
                   <div className={styles.matchedBox}>
                     <div className={styles.matchedLabel}>Pasujące usługi:</div>
 
