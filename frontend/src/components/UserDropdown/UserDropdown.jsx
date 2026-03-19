@@ -19,6 +19,7 @@ import {
   enablePushNotifications,
   disablePushNotifications,
   getBrowserNotificationState,
+  getCurrentPushToken,
 } from "../../services/pushNotifications";
 
 const API = process.env.REACT_APP_API_URL;
@@ -58,7 +59,7 @@ const UserDropdown = ({
   unreadCount,
   setUnreadCount,
   pendingReservationsCount,
-  setAlert, // 👈 NOWE
+  setAlert,
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -99,7 +100,7 @@ const UserDropdown = ({
     setPushState(getBrowserNotificationState());
   }, []);
 
-  // Avatar + rola + stan push
+  // Avatar + rola + stan push PER AKTUALNE URZĄDZENIE
   useEffect(() => {
     const run = async () => {
       if (!user?.uid) {
@@ -130,13 +131,18 @@ const UserDropdown = ({
             dbAvatar = db?.avatar || "";
             dbRole = db?.role || "user";
 
-            const hasSavedPush =
-              Array.isArray(db?.pushTokens) && db.pushTokens.length > 0;
+            const dbTokens = Array.isArray(db?.pushTokens) ? db.pushTokens : [];
+            const currentDeviceToken = await getCurrentPushToken();
 
-            setPushSaved(hasSavedPush);
+            const isThisDeviceSaved =
+              !!currentDeviceToken && dbTokens.includes(currentDeviceToken);
 
-            if (hasSavedPush && getBrowserNotificationState() === "granted") {
+            setPushSaved(isThisDeviceSaved);
+
+            if (isThisDeviceSaved && getBrowserNotificationState() === "granted") {
               setPushState("granted");
+            } else {
+              setPushState(getBrowserNotificationState());
             }
           }
         } catch {}
@@ -154,11 +160,12 @@ const UserDropdown = ({
       } catch {
         setPhotoURL("");
         setUserRole("user");
+        setPushSaved(false);
       }
     };
 
     run();
-  }, [user?.uid]);
+  }, [user?.uid, refreshTrigger]);
 
   // Status wizytówki
   useEffect(() => {

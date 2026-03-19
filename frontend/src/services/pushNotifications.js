@@ -53,6 +53,43 @@ export async function registerPushServiceWorker() {
   }
 }
 
+/**
+ * ✅ Pobiera AKTUALNY token tego urządzenia / tej przeglądarki
+ * Nie zapisuje go do DB — tylko zwraca
+ */
+export const getCurrentPushToken = async () => {
+  try {
+    if (!("Notification" in window)) {
+      return null;
+    }
+
+    const messaging = await getMessagingSafe();
+    if (!messaging) {
+      return null;
+    }
+
+    const registration = await registerPushServiceWorker();
+    if (!registration) {
+      return null;
+    }
+
+    // jeśli browser nie ma jeszcze zgody, nie próbujemy pobierać tokena
+    if (Notification.permission !== "granted") {
+      return null;
+    }
+
+    const currentToken = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: registration,
+    });
+
+    return currentToken || null;
+  } catch (error) {
+    console.error("❌ getCurrentPushToken error:", error);
+    return null;
+  }
+};
+
 export const enablePushNotifications = async (uid) => {
   try {
     if (!uid) {
@@ -183,7 +220,7 @@ export const disablePushNotifications = async (uid) => {
     console.log("✅ Push wyłączony dla urządzenia:", currentToken);
     console.log("✅ remove-push-token response:", data);
 
-    return { success: true };
+    return { success: true, token: currentToken };
   } catch (error) {
     console.error("❌ Błąd wyłączania powiadomień:", error);
     return { success: false, reason: "error", error };
