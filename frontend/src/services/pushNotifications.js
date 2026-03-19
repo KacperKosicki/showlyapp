@@ -133,8 +133,8 @@ export async function initForegroundPushListener() {
     onMessage(messaging, (payload) => {
       console.log("📩 Foreground message:", payload);
 
-      const title = payload?.notification?.title || payload?.data?.title || "Nowe powiadomienie";
-      const body = payload?.notification?.body || payload?.data?.body || "Masz nowe zdarzenie";
+      const title = payload?.data?.title || "Nowe powiadomienie";
+      const body = payload?.data?.body || "Masz nowe zdarzenie";
       const url = payload?.data?.url || "/";
 
       if (Notification.permission === "granted") {

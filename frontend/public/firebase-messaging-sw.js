@@ -16,16 +16,8 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage(function (payload) {
   console.log("[firebase-messaging-sw.js] Background message:", payload);
 
-  const title =
-    payload?.notification?.title ||
-    payload?.data?.title ||
-    "Nowe powiadomienie";
-
-  const body =
-    payload?.notification?.body ||
-    payload?.data?.body ||
-    "Masz nowe zdarzenie w aplikacji";
-
+  const title = payload?.data?.title || "Nowe powiadomienie";
+  const body = payload?.data?.body || "Masz nowe zdarzenie w aplikacji";
   const url = payload?.data?.url || "/";
   const icon = payload?.data?.icon || "/logo192.png";
 

@@ -21,19 +21,10 @@ async function sendPushToUserUid(userUid, { title, body, url = "/" }) {
 
   const message = {
     tokens,
-    notification: {
-      title: String(title || "Nowe powiadomienie"),
-      body: String(body || ""),
-    },
     data: {
       title: String(title || "Nowe powiadomienie"),
       body: String(body || ""),
       url: String(url || "/"),
-    },
-    webpush: {
-      fcmOptions: {
-        link: String(url || "/"),
-      },
     },
   };
 
