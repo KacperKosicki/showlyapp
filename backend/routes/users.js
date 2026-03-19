@@ -158,6 +158,39 @@ router.post("/save-push-token", requireAuth, async (req, res) => {
   }
 });
 
+router.post("/remove-push-token", requireAuth, async (req, res) => {
+  try {
+    const authUid = req.auth.uid;
+    const { uid, token } = req.body || {};
+
+    if (!uid || !token) {
+      return res.status(400).json({ message: "Brakuje uid lub token" });
+    }
+
+    if (String(uid) !== String(authUid)) {
+      return res.status(403).json({ message: "Brak uprawnień" });
+    }
+
+    const user = await User.findOneAndUpdate(
+      { firebaseUid: uid },
+      { $pull: { pushTokens: String(token).trim() } },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "Nie znaleziono użytkownika" });
+    }
+
+    return res.json({
+      ok: true,
+      pushTokensCount: Array.isArray(user.pushTokens) ? user.pushTokens.length : 0,
+    });
+  } catch (e) {
+    console.error("❌ remove-push-token error:", e);
+    return res.status(500).json({ message: "Błąd serwera", error: e.message });
+  }
+});
+
 /** GET /api/users/public/:uid
  * Publiczny (dla zalogowanych) "basic view" – tylko nazwa do UI (bez wrażliwych danych)
  * ✅ używane w ReservationList do mapowania uid -> displayName

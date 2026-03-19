@@ -1,4 +1,10 @@
-import { getMessaging, getToken, onMessage, isSupported } from "firebase/messaging";
+import {
+  getMessaging,
+  getToken,
+  deleteToken,
+  onMessage,
+  isSupported,
+} from "firebase/messaging";
 import { auth, app } from "../firebase";
 
 const API = process.env.REACT_APP_API_URL;
@@ -119,6 +125,67 @@ export const enablePushNotifications = async (uid) => {
     return { success: true, token: fcmToken };
   } catch (error) {
     console.error("❌ Błąd włączania powiadomień:", error);
+    return { success: false, reason: "error", error };
+  }
+};
+
+export const disablePushNotifications = async (uid) => {
+  try {
+    if (!uid) {
+      return { success: false, reason: "no-uid" };
+    }
+
+    const messaging = await getMessagingSafe();
+    if (!messaging) {
+      return { success: false, reason: "unsupported" };
+    }
+
+    const registration = await registerPushServiceWorker();
+    if (!registration) {
+      return { success: false, reason: "sw-register-failed" };
+    }
+
+    const currentToken = await getToken(messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: registration,
+    });
+
+    if (!currentToken) {
+      return { success: false, reason: "no-token" };
+    }
+
+    const authHeader = await getAuthHeader();
+
+    const res = await fetch(`${API}/api/users/remove-push-token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...authHeader,
+      },
+      body: JSON.stringify({ uid, token: currentToken }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      console.error("❌ remove-push-token response:", data);
+      return {
+        success: false,
+        reason: "remove-token-failed",
+        error: data,
+      };
+    }
+
+    await deleteToken(messaging).catch((err) => {
+      console.warn("⚠️ deleteToken warning:", err);
+    });
+
+    console.log("✅ Push wyłączony dla urządzenia:", currentToken);
+    console.log("✅ remove-push-token response:", data);
+
+    return { success: true };
+  } catch (error) {
+    console.error("❌ Błąd wyłączania powiadomień:", error);
     return { success: false, reason: "error", error };
   }
 };

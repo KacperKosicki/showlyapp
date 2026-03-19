@@ -17,6 +17,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 import {
   enablePushNotifications,
+  disablePushNotifications,
   getBrowserNotificationState,
 } from "../../services/pushNotifications";
 
@@ -131,7 +132,7 @@ const UserDropdown = ({
               setPushState("granted");
             }
           }
-        } catch { }
+        } catch {}
 
         const firebasePhotoURL = auth.currentUser?.photoURL || "";
 
@@ -300,6 +301,25 @@ const UserDropdown = ({
     }
   };
 
+  const handleDisablePush = async () => {
+    if (!user?.uid || pushLoading || pushState === "unsupported" || !pushSaved) return;
+
+    try {
+      setPushLoading(true);
+
+      const result = await disablePushNotifications(user.uid);
+
+      if (result?.success) {
+        setPushSaved(false);
+        setPushState(getBrowserNotificationState());
+      }
+    } catch (err) {
+      console.error("❌ Błąd wyłączania push:", err);
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -444,8 +464,8 @@ const UserDropdown = ({
             type="button"
             className={`${styles.item} ${styles.itemNotify}`}
             role="menuitem"
-            onClick={handleEnablePush}
-            disabled={pushLoading || pushState === "unsupported" || pushSaved}
+            onClick={pushSaved ? handleDisablePush : handleEnablePush}
+            disabled={pushLoading || pushState === "unsupported"}
           >
             <span className={styles.itemLeft}>
               <FiBell className={styles.itemIcon} aria-hidden="true" />
@@ -454,22 +474,23 @@ const UserDropdown = ({
                   {pushLoading
                     ? "Zapisywanie..."
                     : pushSaved
-                      ? "Powiadomienia aktywne"
-                      : pushState === "granted"
-                        ? "Aktywuj na tym koncie"
-                        : "Włącz powiadomienia"}
+                    ? "Wyłącz powiadomienia"
+                    : pushState === "granted"
+                    ? "Aktywuj na tym koncie"
+                    : "Włącz powiadomienia"}
                 </span>
 
                 <span
-                  className={`${styles.itemSub} ${pushSaved || pushState === "granted"
-                    ? styles.statusActive
-                    : pushState === "denied"
+                  className={`${styles.itemSub} ${
+                    pushSaved || pushState === "granted"
+                      ? styles.statusActive
+                      : pushState === "denied"
                       ? styles.statusExpired
                       : ""
-                    }`}
+                  }`}
                 >
                   {pushSaved &&
-                    "To urządzenie jest już zapisane do powiadomień dla tego konta"}
+                    "Kliknij, aby wyłączyć powiadomienia na tym urządzeniu"}
                   {!pushSaved &&
                     pushState === "granted" &&
                     "Przeglądarka ma zgodę — kliknij, aby zapisać dla tego konta"}
@@ -484,7 +505,7 @@ const UserDropdown = ({
             </span>
 
             <span className={styles.rightPill}>
-              {pushSaved ? "aktywne" : pushState === "granted" ? "ready" : "push"}
+              {pushSaved ? "włączone" : pushState === "granted" ? "ready" : "push"}
             </span>
           </button>
 
