@@ -19,7 +19,7 @@ const ratedBySchema = new mongoose.Schema(
     userAvatar: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now },
   },
-  { _id: false }
+  { _id: true }
 );
 
 const availableDateSchema = new mongoose.Schema(

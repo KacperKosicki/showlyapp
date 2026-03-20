@@ -9,6 +9,7 @@ const User = require("../models/User");
 const Profile = require("../models/Profile");
 const Reservation = require("../models/Reservation");
 const Report = require("../models/Report");
+const { sendSystemMessage } = require("../utils/systemMessages");
 
 // ✅ Statystyki (admin only)
 router.get("/stats", requireAuth, requireRole(["admin"]), async (req, res) => {
@@ -210,37 +211,111 @@ router.patch("/reports/:id/close", requireAuth, requireRole(["admin", "mod"]), a
   return res.json(updated);
 });
 
-// ✅ moderacja: usuń opinię z profilu (admin + mod)
+// ✅ moderacja: usuń opinię z profilu (admin + mod) + wyślij wiadomość systemową
 router.delete(
   "/reports/:id/remove-review",
   requireAuth,
   requireRole(["admin", "mod"]),
   async (req, res) => {
-    const rep = await Report.findById(req.params.id).lean();
+    try {
+      const { adminNote = "" } = req.body || {};
 
-    if (!rep) {
-      return res.status(404).json({ message: "Nie znaleziono zgłoszenia." });
+      const rep = await Report.findById(req.params.id);
+      if (!rep) {
+        return res.status(404).json({ message: "Nie znaleziono zgłoszenia." });
+      }
+
+      if (rep.type !== "review" || !rep.reviewId) {
+        return res.status(400).json({ message: "To nie jest zgłoszenie opinii." });
+      }
+
+      const profile = await Profile.findOne({ userId: rep.profileUserId });
+      if (!profile) {
+        return res.status(404).json({ message: "Nie znaleziono profilu." });
+      }
+
+      const review = Array.isArray(profile.ratedBy)
+        ? profile.ratedBy.find((r) => String(r._id) === String(rep.reviewId))
+        : null;
+
+      if (!review) {
+        await Report.findByIdAndUpdate(rep._id, {
+          $set: {
+            status: "closed",
+            adminNote: "Opinia nie istniała już w profilu.",
+          },
+        });
+
+        return res.status(404).json({ message: "Nie znaleziono opinii w profilu." });
+      }
+
+      const reviewAuthorUid = String(review.userId || "").trim();
+      const reviewComment = String(review.comment || "").trim();
+      const profileName = String(profile.name || "ten profil").trim();
+
+      profile.ratedBy = profile.ratedBy.filter(
+        (r) => String(r._id) !== String(rep.reviewId)
+      );
+
+      const total = profile.ratedBy.reduce(
+        (sum, r) => sum + Number(r.rating || 0),
+        0
+      );
+
+      profile.reviews = profile.ratedBy.length;
+      profile.rating =
+        profile.reviews > 0
+          ? Number((total / profile.reviews).toFixed(2))
+          : 0;
+
+      await profile.save();
+
+      const finalAdminNote = String(adminNote || "").trim().slice(0, 400);
+
+      await Report.updateMany(
+        {
+          type: "review",
+          profileUserId: rep.profileUserId,
+          reviewId: rep.reviewId,
+          status: "open",
+        },
+        {
+          $set: {
+            status: "closed",
+            adminNote: finalAdminNote || "Usunięto opinię.",
+          },
+        }
+      );
+
+      if (reviewAuthorUid) {
+        const safeSnippet =
+          reviewComment.length > 180
+            ? `${reviewComment.slice(0, 180)}...`
+            : reviewComment;
+
+        const messageLines = [
+          `🛡️ Administrator Showly usunął Twoją opinię z profilu „${profileName}”.`,
+          "",
+          `Powód: ${finalAdminNote || "naruszenie zasad publikacji opinii."}`,
+          "",
+          "Usunięta treść:",
+          `„${safeSnippet || "Brak treści"}”`,
+          "",
+          "Możesz dodać nową opinię, jeśli będzie zgodna z zasadami serwisu.",
+        ];
+
+        await sendSystemMessage(reviewAuthorUid, messageLines.join("\n"));
+      }
+
+      return res.json({
+        ok: true,
+        message: "Opinia została usunięta, zgłoszenia zamknięte, autor poinformowany.",
+        profile,
+      });
+    } catch (err) {
+      console.error("❌ admin remove-review error:", err);
+      return res.status(500).json({ message: "Błąd podczas usuwania opinii." });
     }
-
-    if (rep.type !== "review" || !rep.reviewId) {
-      return res.status(400).json({ message: "To nie jest zgłoszenie opinii." });
-    }
-
-    const prof = await Profile.findOneAndUpdate(
-      { userId: rep.profileUserId },
-      { $pull: { ratedBy: { _id: rep.reviewId } } },
-      { new: true }
-    ).lean();
-
-    // zamknij zgłoszenie
-    await Report.findByIdAndUpdate(rep._id, {
-      $set: {
-        status: "closed",
-        adminNote: "Usunięto opinię.",
-      },
-    });
-
-    return res.json({ ok: true, profile: prof });
   }
 );
 

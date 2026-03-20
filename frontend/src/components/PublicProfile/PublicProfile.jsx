@@ -246,13 +246,30 @@ export default function PublicProfile() {
     setReportOpen(true);
   };
 
-  const openReportReview = (reviewId) => {
-    setReportType("review");
-    setReportReviewId(reviewId);
-    setReportReason("abuse");
-    setReportMsg("");
-    setReportOpen(true);
-  };
+const openReportReview = (reviewId, reviewUserId = null) => {
+  const currentUser = auth.currentUser;
+
+  if (!currentUser) {
+    setAlert({ type: "error", message: "Aby zgłosić opinię, musisz być zalogowany." });
+    return;
+  }
+
+  if (!reviewId) {
+    setAlert({ type: "error", message: "Brak identyfikatora opinii." });
+    return;
+  }
+
+  if (reviewUserId && currentUser.uid === reviewUserId) {
+    setAlert({ type: "info", message: "Nie możesz zgłosić własnej opinii." });
+    return;
+  }
+
+  setReportType("review");
+  setReportReviewId(reviewId);
+  setReportReason("abuse");
+  setReportMsg("");
+  setReportOpen(true);
+};
 
   const submitReport = async () => {
     const currentUser = auth.currentUser;
@@ -1216,7 +1233,7 @@ export default function PublicProfile() {
                             <button
                               type="button"
                               className={styles.reportMiniBtn}
-                              onClick={() => openReportReview(op?._id)}
+                              onClick={() => openReportReview(op?._id, op?.userId)}
                               title="Zgłoś opinię"
                               aria-label="Zgłoś opinię"
                               disabled={!op?._id}
