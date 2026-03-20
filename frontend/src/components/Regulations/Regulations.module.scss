@@ -1,0 +1,728 @@
+@import "../../styles/variables";
+
+/* =========================
+   Regulations – premium light / style like Notifications + Contact
+   ========================= */
+
+.regulationsSection {
+  position: relative;
+  width: 100%;
+  padding: 3.25rem 1rem 4rem;
+  overflow: hidden;
+  text-align: center;
+  font-family: $font-body;
+  background: linear-gradient(180deg, #fcfcff 0%, #f8faff 46%, #ffffff 100%);
+
+  --rg-primary: var(--pp-primary, #6f4ef2);
+  --rg-secondary: var(--pp-secondary, #ff4081);
+
+  --rg-p-06: color-mix(in srgb, var(--rg-primary) 6%, transparent);
+  --rg-p-10: color-mix(in srgb, var(--rg-primary) 10%, transparent);
+  --rg-p-16: color-mix(in srgb, var(--rg-primary) 16%, transparent);
+  --rg-p-24: color-mix(in srgb, var(--rg-primary) 24%, transparent);
+
+  --rg-s-08: color-mix(in srgb, var(--rg-secondary) 8%, transparent);
+  --rg-s-10: color-mix(in srgb, var(--rg-secondary) 10%, transparent);
+  --rg-s-16: color-mix(in srgb, var(--rg-secondary) 16%, transparent);
+
+  --rg-dark: rgba(15, 23, 42, 0.92);
+  --rg-text: rgba(15, 23, 42, 0.72);
+  --rg-muted: rgba(15, 23, 42, 0.56);
+  --rg-line: rgba(15, 23, 42, 0.08);
+  --rg-line-strong: rgba(15, 23, 42, 0.12);
+}
+
+.regulationsSection::before,
+.regulationsSection::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(72px);
+  opacity: 0.95;
+  z-index: 0;
+}
+
+.regulationsSection::before {
+  width: 430px;
+  height: 430px;
+  top: -140px;
+  left: -140px;
+  background: rgba(111, 78, 242, 0.11);
+}
+
+.regulationsSection::after {
+  width: 480px;
+  height: 480px;
+  right: -150px;
+  top: 10px;
+  background: rgba(255, 64, 129, 0.08);
+}
+
+.bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.blur1,
+.blur2 {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(90px);
+  opacity: 0.85;
+}
+
+.blur1 {
+  width: 340px;
+  height: 340px;
+  left: -80px;
+  top: 12%;
+  background: rgba(111, 78, 242, 0.09);
+}
+
+.blur2 {
+  width: 380px;
+  height: 380px;
+  right: -90px;
+  bottom: 0;
+  background: rgba(255, 64, 129, 0.06);
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.028) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.78), transparent 100%);
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(800px 300px at 10% 18%, rgba(111, 78, 242, 0.08), transparent 62%),
+    radial-gradient(760px 260px at 90% 12%, rgba(255, 64, 129, 0.07), transparent 64%),
+    radial-gradient(900px 320px at 50% 100%, rgba(111, 78, 242, 0.04), transparent 68%);
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* =========================
+   Heading
+   ========================= */
+
+.heading {
+  position: relative;
+  z-index: 1;
+  max-width: 920px;
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+.labelRow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  color: rgba(20, 24, 35, 0.7);
+  font-family: $font-body;
+}
+
+.label {
+  font-family: $font-accent;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.76rem;
+  color: $primary-color;
+  padding: 0.48rem 0.82rem;
+  border-radius: 999px;
+  background: rgba(111, 78, 242, 0.08);
+  border: 1px solid rgba(111, 78, 242, 0.14);
+}
+
+.labelDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(20, 24, 35, 0.2);
+}
+
+.labelDesc {
+  font-size: 0.95rem;
+  color: rgba(20, 24, 35, 0.68);
+  font-family: $font-body;
+}
+
+.labelLine {
+  width: 48px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, $primary-color, $secondary-color);
+  opacity: 0.9;
+}
+
+.pill {
+  font-family: $font-accent;
+  font-weight: 900;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.5rem 0.82rem;
+  border-radius: 999px;
+  color: rgba(20, 24, 35, 0.76);
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(20, 24, 35, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.title {
+  margin: 0 0 0.65rem;
+  font-size: clamp(2rem, 4.2vw, 3.35rem);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+  font-family: $font-heading;
+  font-weight: 800;
+  color: $text-color;
+}
+
+.titleAccent {
+  background: linear-gradient(135deg, $primary-color, $secondary-color);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.subtitle {
+  max-width: 820px;
+  margin: 0 auto;
+  color: $color-gray;
+  font-size: 1rem;
+  line-height: 1.75;
+  font-family: $font-body;
+  font-weight: 500;
+}
+
+.metaRow {
+  margin: 1.4rem auto 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.metaCard {
+  min-width: 190px;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(20, 24, 35, 0.08);
+  box-shadow: 0 12px 34px rgba(16, 24, 38, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  strong {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-family: $font-accent;
+    font-size: 1.02rem;
+    font-weight: 950;
+    color: $text-color;
+    line-height: 1.1;
+  }
+
+  span {
+    display: block;
+    font-family: $font-body;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: rgba(20, 24, 35, 0.62);
+  }
+}
+
+/* =========================
+   Notice
+   ========================= */
+
+.noticeBox {
+  max-width: 1120px;
+  margin: 0 auto 1.35rem;
+  padding: 1rem 1.1rem;
+  border-radius: 22px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.95rem;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(245, 158, 11, 0.18);
+  box-shadow: 0 18px 45px rgba(16, 24, 38, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.noticeIcon {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.16);
+  color: #d97706;
+  font-size: 1.05rem;
+}
+
+.noticeTitle {
+  margin: 0 0 0.25rem;
+  color: $text-color;
+  font-size: 0.96rem;
+  font-family: $font-accent;
+  font-weight: 900;
+}
+
+.noticeText {
+  margin: 0;
+  color: rgba(20, 24, 35, 0.66);
+  line-height: 1.65;
+  font-size: 0.94rem;
+}
+
+/* =========================
+   Layout
+   ========================= */
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) 340px;
+  gap: 1.35rem;
+  align-items: start;
+  max-width: 1120px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.mainColumn {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.sideColumn {
+  display: grid;
+  gap: 1.1rem;
+}
+
+/* =========================
+   Shared cards
+   ========================= */
+
+.sectionCard,
+.sideCard {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid var(--rg-line);
+  box-shadow:
+    0 18px 45px rgba(16, 24, 38, 0.06),
+    0 8px 24px rgba(16, 24, 38, 0.035);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.sectionCard::before,
+.sideCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(700px 220px at 18% 18%, var(--rg-p-10), transparent 60%),
+    radial-gradient(620px 240px at 86% 26%, var(--rg-s-10), transparent 55%);
+  opacity: 0.9;
+}
+
+.sectionCard > *,
+.sideCard > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sectionCard {
+  padding: 1.35rem;
+}
+
+.sideCard {
+  padding: 1.2rem;
+}
+
+/* =========================
+   Sections
+   ========================= */
+
+.sectionTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.sectionIcon {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(120% 120% at 20% 20%, rgba(111, 78, 242, 0.14), transparent 50%),
+    radial-gradient(140% 140% at 80% 30%, rgba(255, 64, 129, 0.1), transparent 55%),
+    #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 14px 26px rgba(16, 24, 38, 0.06);
+  color: $primary-color;
+  font-size: 1.05rem;
+}
+
+.sectionTitle {
+  margin: 0 0 0.2rem;
+  color: $text-color;
+  font-size: 1.08rem;
+  font-weight: 900;
+  line-height: 1.3;
+  font-family: $font-heading;
+  letter-spacing: -0.02em;
+}
+
+.sectionLead {
+  margin: 0;
+  color: rgba(20, 24, 35, 0.56);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  font-family: $font-body;
+}
+
+.textBlock {
+  display: grid;
+  gap: 0.85rem;
+
+  p {
+    margin: 0;
+    color: rgba(20, 24, 35, 0.72);
+    font-size: 0.97rem;
+    line-height: 1.8;
+    font-family: $font-body;
+
+    strong {
+      color: $text-color;
+      font-family: $font-accent;
+      font-weight: 900;
+    }
+  }
+}
+
+.listBlock {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.definitionItem {
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.03);
+
+  strong {
+    display: block;
+    margin: 0 0 0.24rem;
+    color: $text-color;
+    font-size: 0.96rem;
+    font-weight: 900;
+    line-height: 1.35;
+    font-family: $font-accent;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    margin: 0;
+    color: rgba(20, 24, 35, 0.64);
+    font-size: 0.93rem;
+    font-weight: 500;
+    line-height: 1.65;
+    font-family: $font-body;
+  }
+}
+
+/* =========================
+   Side
+   ========================= */
+
+.sideTitle {
+  margin: 0 0 1rem;
+  color: $text-color;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.3;
+  font-family: $font-heading;
+  letter-spacing: -0.02em;
+}
+
+.sideList {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.sideItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 0.85rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.03);
+
+  > div:last-child {
+    min-width: 0;
+  }
+
+  strong {
+    display: block;
+    margin: 0 0 0.2rem;
+    color: $text-color;
+    font-size: 0.93rem;
+    font-weight: 900;
+    line-height: 1.35;
+    font-family: $font-accent;
+  }
+
+  p {
+    margin: 0;
+    color: rgba(20, 24, 35, 0.62);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    font-family: $font-body;
+  }
+}
+
+.sideItemIcon {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 120% at 20% 20%, rgba(111, 78, 242, 0.14), transparent 50%),
+    radial-gradient(140% 140% at 80% 30%, rgba(255, 64, 129, 0.1), transparent 55%),
+    #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  color: $primary-color;
+  font-size: 1rem;
+  box-shadow: 0 10px 22px rgba(16, 24, 38, 0.05);
+}
+
+.companyBox {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.03);
+
+  p {
+    margin: 0;
+    color: rgba(20, 24, 35, 0.72);
+    line-height: 1.65;
+    font-size: 0.94rem;
+    font-family: $font-body;
+  }
+
+  strong {
+    color: $text-color;
+    font-family: $font-accent;
+    font-weight: 900;
+  }
+}
+
+.statusPill {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  background: rgba(111, 78, 242, 0.08);
+  border: 1px solid rgba(111, 78, 242, 0.14);
+  color: $text-color;
+
+  svg {
+    flex-shrink: 0;
+    font-size: 1rem;
+    color: $primary-color;
+  }
+
+  span {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    font-family: $font-body;
+    font-weight: 700;
+  }
+}
+
+/* =========================
+   RWD
+   ========================= */
+
+@media (max-width: 1080px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sideColumn {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .regulationsSection {
+    padding: 2.6rem 1rem 3.2rem;
+  }
+
+  .heading {
+    margin-bottom: 1.6rem;
+  }
+
+  .title {
+    font-size: 1.8rem;
+    line-height: 1.08;
+  }
+
+  .subtitle {
+    font-size: 0.95rem;
+    line-height: 1.72;
+  }
+
+  .metaRow {
+    gap: 0.75rem;
+    margin-top: 1.15rem;
+  }
+
+  .metaCard {
+    min-width: calc(50% - 0.5rem);
+  }
+
+  .noticeBox {
+    border-radius: 20px;
+    padding: 0.95rem 1rem;
+  }
+
+  .sectionCard,
+  .sideCard {
+    padding: 1.1rem;
+    border-radius: 20px;
+  }
+
+  .sectionTop {
+    gap: 0.8rem;
+  }
+
+  .sectionIcon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+  }
+
+  .sideColumn {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .regulationsSection {
+    padding: 2rem 0.95rem 2.8rem;
+  }
+
+  .labelRow {
+    gap: 8px;
+  }
+
+  .labelDesc {
+    font-size: 0.88rem;
+  }
+
+  .pill {
+    font-size: 0.68rem;
+    padding: 0.45rem 0.72rem;
+  }
+
+  .title {
+    font-size: 1.55rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .metaRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .metaCard {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .noticeBox {
+    flex-direction: column;
+  }
+
+  .noticeIcon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .sectionTitle,
+  .sideTitle {
+    font-size: 0.98rem;
+  }
+
+  .textBlock p {
+    font-size: 0.94rem;
+  }
+
+  .definitionItem {
+    strong {
+      font-size: 0.92rem;
+    }
+
+    p {
+      font-size: 0.9rem;
+    }
+  }
+
+  .sideItem {
+    strong {
+      font-size: 0.91rem;
+    }
+
+    p {
+      font-size: 0.88rem;
+    }
+  }
+}

@@ -33,6 +33,7 @@ import HowShowlyWorks from "./components/HowShowlyWorks/HowShowlyWorks";
 import DiscoverShowly from "./components/DiscoverShowly/DiscoverShowly";
 import AlertBox from "./components/AlertBox/AlertBox";
 import Contact from "./components/Contact/Contact";
+import Regulations from "./components/Regulations/Regulations";
 
 // ✅ NEW: admin
 import AdminPanel from "./components/AdminPanel/AdminPanel";
@@ -527,6 +528,17 @@ function App() {
             <>
               <Hero {...heroProps} />
               <Contact />
+              <Footer />
+            </>
+          }
+        />
+
+        <Route
+          path="/regulamin"
+          element={
+            <>
+              <Hero {...heroProps} />
+              <Regulations />
               <Footer />
             </>
           }

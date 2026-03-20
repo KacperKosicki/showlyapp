@@ -118,6 +118,10 @@ const Footer = () => {
           <div className={styles.bottomLeft}>
             <span className={styles.copy}>© {year} Showly.app. Wszelkie prawa zastrzeżone.</span>
             <span className={styles.sep} aria-hidden="true" />
+            <a className={styles.smallLink} href="/regulamin">
+              Regulamin
+            </a>
+            <span className={styles.dot} aria-hidden="true" />
             <a className={styles.smallLink} href="/polityka-prywatnosci">
               Polityka prywatności
             </a>
