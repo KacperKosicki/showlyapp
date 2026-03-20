@@ -10,12 +10,10 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import {
-  FiUser,
   FiImage,
   FiSave,
   FiTrash2,
   FiLock,
-  FiMail,
 } from "react-icons/fi";
 
 const API = process.env.REACT_APP_API_URL;

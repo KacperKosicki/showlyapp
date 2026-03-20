@@ -903,8 +903,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
   const pendingSent = clientReservations.filter((r) => r.status === "oczekująca").length;
   const pendingReceived = serviceReservations.filter((r) => r.status === "oczekująca").length;
-  const acceptedSent = clientReservations.filter((r) => r.status === "zaakceptowana").length;
-  const acceptedReceived = serviceReservations.filter((r) => r.status === "zaakceptowana").length;
 
   const renderNameNode = (rawName) =>
     rawName ? (
