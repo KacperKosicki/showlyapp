@@ -4,7 +4,8 @@ import {
   signInWithPopup,
   sendEmailVerification,
   fetchSignInMethodsForEmail,
-  signOut
+  sendPasswordResetEmail,
+  signOut,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../../firebase';
 import { useNavigate, Link } from 'react-router-dom';
@@ -17,16 +18,16 @@ import LoadingButton from '../ui/LoadingButton/LoadingButton';
 const Login = ({ setUser, setRefreshTrigger }) => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
-  const [message, setMessage] = useState(''); // 👈 komunikat sukcesu
+  const [message, setMessage] = useState('');
 
-  // 🔥 nasze loadery (kropki)
+  // 🔥 loadery
   const [isLoggingEmail, setIsLoggingEmail] = useState(false);
   const [isLoggingGoogle, setIsLoggingGoogle] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    // safety: wyczyść authFlow, gdyby został po jakimś craszu/nawigacji
     return () => sessionStorage.removeItem('authFlow');
   }, []);
 
@@ -37,18 +38,17 @@ const Login = ({ setUser, setRefreshTrigger }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // blokada podwójnych klików
-    if (isLoggingEmail || isLoggingGoogle) return;
+    if (isLoggingEmail || isLoggingGoogle || isResettingPassword) return;
 
     setError('');
     setMessage('');
     setIsLoggingEmail(true);
 
-    // ⬇️ sygnalizujemy, że trwa logowanie (żeby guard w App.jsx nie zablokował /login)
     sessionStorage.setItem('authFlow', '1');
 
     try {
       const methods = await fetchSignInMethodsForEmail(auth, form.email);
+
       if (methods.includes('google.com')) {
         setError('Ten e-mail jest powiązany z kontem Google. Zaloguj się przez Google.');
         sessionStorage.removeItem('authFlow');
@@ -57,6 +57,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
 
       await signInWithEmailAndPassword(auth, form.email, form.password);
       await auth.currentUser.reload();
+
       const refreshedUser = auth.currentUser;
 
       if (!refreshedUser?.emailVerified) {
@@ -69,13 +70,13 @@ const Login = ({ setUser, setRefreshTrigger }) => {
 
       const email = refreshedUser.email;
       const uid = refreshedUser.uid;
+
       if (!email || !uid) {
         setError('Nie udało się pobrać danych logowania (e-mail lub UID).');
         sessionStorage.removeItem('authFlow');
         return;
       }
 
-      // ✅ TOKEN DO BACKENDU
       const idToken = await refreshedUser.getIdToken();
 
       await axios.post(
@@ -84,12 +85,12 @@ const Login = ({ setUser, setRefreshTrigger }) => {
           email,
           name: refreshedUser.displayName || '',
           firebaseUid: uid,
-          provider: 'password'
+          provider: 'password',
         },
         {
           headers: {
             Authorization: `Bearer ${idToken}`,
-          }
+          },
         }
       );
 
@@ -97,35 +98,38 @@ const Login = ({ setUser, setRefreshTrigger }) => {
       setUser({ email, uid });
       setRefreshTrigger(Date.now());
 
-      // ✅ komunikat + opóźnione przekierowanie na stronę główną
       setMessage('Pomyślnie zalogowano. Przekierowuję…');
+
       setTimeout(() => {
-        sessionStorage.removeItem('authFlow'); // ⬅️ stop
+        sessionStorage.removeItem('authFlow');
         navigate('/', { replace: true });
       }, 1500);
     } catch (err) {
       console.error(err);
+
       if (err.code === 'auth/user-not-found') {
         setError('Konto o podanym e-mailu nie istnieje.');
       } else if (err.code === 'auth/wrong-password') {
         setError('Nieprawidłowe hasło.');
+      } else if (err.code === 'auth/invalid-credential') {
+        setError('Nieprawidłowy e-mail lub hasło.');
       } else {
         setError('Błąd logowania.');
       }
-      sessionStorage.removeItem('authFlow'); // ⬅️ stop przy błędzie
+
+      sessionStorage.removeItem('authFlow');
     } finally {
       setIsLoggingEmail(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    // blokada podwójnych klików
-    if (isLoggingEmail || isLoggingGoogle) return;
+    if (isLoggingEmail || isLoggingGoogle || isResettingPassword) return;
 
     setError('');
     setMessage('');
     setIsLoggingGoogle(true);
-    sessionStorage.setItem('authFlow', '1'); // ⬅️ start
+    sessionStorage.setItem('authFlow', '1');
 
     try {
       const provider = googleProvider;
@@ -138,13 +142,13 @@ const Login = ({ setUser, setRefreshTrigger }) => {
 
       const email = user.email ?? user.providerData?.[0]?.email ?? null;
       const uid = user.uid;
+
       if (!email || !uid) {
         setError('Nie udało się pobrać danych użytkownika (brak e-maila lub UID).');
         sessionStorage.removeItem('authFlow');
         return;
       }
 
-      // ✅ TOKEN DO BACKENDU
       const idToken = await user.getIdToken();
 
       try {
@@ -154,17 +158,17 @@ const Login = ({ setUser, setRefreshTrigger }) => {
             email,
             name: user.displayName || '',
             firebaseUid: uid,
-            provider: 'google'
+            provider: 'google',
           },
           {
             headers: {
               Authorization: `Bearer ${idToken}`,
-            }
+            },
           }
         );
       } catch (err) {
         if (err.response?.status === 409) {
-          setError('Ten e-mail jest już przypisany do innego konta. Zaloguj się metodą, którą wcześniej użyłeś.');
+          setError('Ten e-mail jest już przypisany do innego konta. Zaloguj się metodą, której wcześniej użyłeś.');
           sessionStorage.removeItem('authFlow');
           return;
         }
@@ -176,29 +180,76 @@ const Login = ({ setUser, setRefreshTrigger }) => {
       setRefreshTrigger(Date.now());
 
       setMessage('Pomyślnie zalogowano przez Google. Przekierowuję…');
+
       setTimeout(() => {
-        sessionStorage.removeItem('authFlow'); // ⬅️ stop
+        sessionStorage.removeItem('authFlow');
         navigate('/', { replace: true });
       }, 1500);
     } catch (err) {
       console.error('❌ Błąd podczas logowania przez Google:', err);
+
       if (err.code === 'auth/account-exists-with-different-credential') {
         const email = err.customData?.email;
         setError(`Konto o adresie ${email} zostało już utworzone inną metodą. Zaloguj się tą metodą.`);
       } else {
         setError('Błąd podczas logowania przez Google.');
       }
-      sessionStorage.removeItem('authFlow'); // ⬅️ stop przy błędzie
+
+      sessionStorage.removeItem('authFlow');
     } finally {
       setIsLoggingGoogle(false);
     }
   };
 
-  const isBusy = isLoggingEmail || isLoggingGoogle;
+  const handlePasswordReset = async () => {
+    if (isLoggingEmail || isLoggingGoogle || isResettingPassword) return;
+
+    setError('');
+    setMessage('');
+
+    const email = form.email.trim();
+
+    if (!email) {
+      setError('Najpierw wpisz swój adres e-mail, aby odzyskać hasło.');
+      return;
+    }
+
+    setIsResettingPassword(true);
+
+    try {
+      const methods = await fetchSignInMethodsForEmail(auth, email);
+
+      if (methods.includes('google.com') && !methods.includes('password')) {
+        setError('Ten e-mail jest powiązany wyłącznie z logowaniem przez Google. Użyj przycisku logowania przez Google.');
+        return;
+      }
+
+      await sendPasswordResetEmail(auth, email);
+
+      setMessage('Wysłaliśmy link do resetu hasła na podany adres e-mail.');
+    } catch (err) {
+      console.error('❌ Błąd resetu hasła:', err);
+
+      if (err.code === 'auth/user-not-found') {
+        setError('Nie znaleziono konta przypisanego do tego adresu e-mail.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Podany adres e-mail jest nieprawidłowy.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Wykonano zbyt wiele prób. Spróbuj ponownie za chwilę.');
+      } else {
+        setError('Nie udało się wysłać wiadomości resetującej hasło.');
+      }
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
+  const isBusy = isLoggingEmail || isLoggingGoogle || isResettingPassword;
 
   return (
     <>
       <Hero />
+
       <div className={styles.container}>
         <h2 className={styles.loginTitle}>Zaloguj się</h2>
 
@@ -208,17 +259,31 @@ const Login = ({ setUser, setRefreshTrigger }) => {
             type="email"
             placeholder="Email"
             required
+            value={form.email}
             onChange={handleChange}
             disabled={isBusy}
           />
+
           <input
             name="password"
             type="password"
             placeholder="Hasło"
             required
+            value={form.password}
             onChange={handleChange}
             disabled={isBusy}
           />
+
+          <div className={styles.actionsRow}>
+            <button
+              type="button"
+              className={styles.forgotPassword}
+              onClick={handlePasswordReset}
+              disabled={isBusy}
+            >
+              {isResettingPassword ? 'Wysyłanie linku...' : 'Nie pamiętasz hasła?'}
+            </button>
+          </div>
 
           <LoadingButton
             type="submit"
@@ -252,6 +317,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
           </Link>
         </p>
       </div>
+
       <Footer />
     </>
   );

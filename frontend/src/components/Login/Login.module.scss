@@ -41,6 +41,33 @@
   }
 }
 
+.actionsRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -0.35rem;
+}
+
+.forgotPassword {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #ff4e92;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease, opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    color: #ff267f;
+    text-decoration: underline;
+  }
+
+  &:disabled {
+    opacity: 0.65;
+    cursor: wait;
+  }
+}
+
 .messageBox {
   margin: 1.5rem auto;
   padding: 1rem 1.5rem;
@@ -62,7 +89,6 @@
   font-family: $font-body;
 }
 
-/* ✅ nowa klasa – identyczna estetyka jak w Register */
 .success {
   @extend .messageBox;
   background-color: #e8f5e9;
@@ -207,7 +233,8 @@
 
   .registerLink,
   .orSeparator,
-  .linkButton {
+  .linkButton,
+  .forgotPassword {
     font-size: 0.9rem;
   }
 }
@@ -245,7 +272,8 @@
 
   .registerLink,
   .orSeparator,
-  .linkButton {
+  .linkButton,
+  .forgotPassword {
     font-size: 0.85rem;
   }
 
