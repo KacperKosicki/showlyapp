@@ -4,6 +4,22 @@ import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import UserCard from "../UserCard/UserCard";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
 import { api } from "../../api/api";
+import {
+  FiUser,
+  FiMapPin,
+  FiTag,
+  FiBriefcase,
+  FiImage,
+  FiFileText,
+  FiDollarSign,
+  FiClock,
+  FiLink,
+  FiCheckCircle,
+  FiGrid,
+  FiCalendar,
+  FiPlus,
+  FiTrash2,
+} from "react-icons/fi";
 
 const DEFAULT_AVATAR = "/images/other/no-image.png";
 
@@ -77,7 +93,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
       if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
         try {
           URL.revokeObjectURL(form.avatar);
-        } catch { }
+        } catch {}
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -104,7 +120,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
       try {
         URL.revokeObjectURL(form.avatar);
-      } catch { }
+      } catch {}
     }
 
     setAvatarFile(null);
@@ -294,7 +310,10 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
           duration: {
             value: parseInt(String(durationValue), 10),
             unit: durationUnit,
-            label: durationUnit === "minutes" || durationUnit === "hours" ? "czas wizyty" : "czas realizacji",
+            label:
+              durationUnit === "minutes" || durationUnit === "hours"
+                ? "czas wizyty"
+                : "czas realizacji",
           },
           booking: {
             enabled: bookingEnabled,
@@ -384,7 +403,8 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
             (s.duration.unit === "days" && s.duration.value < 1))
       )
     ) {
-      errors.services = "Każda usługa musi mieć poprawną nazwę i czas trwania/realizacji.";
+      errors.services =
+        "Każda usługa musi mieć poprawną nazwę i czas trwania/realizacji.";
     }
 
     setFormErrors(errors);
@@ -419,7 +439,8 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
       setTimeout(() => navigate("/profil"), 300);
     } catch (err) {
       setFormErrors({
-        general: err.response?.data?.message || "Wystąpił błąd podczas tworzenia wizytówki",
+        general:
+          err.response?.data?.message || "Wystąpił błąd podczas tworzenia wizytówki",
       });
     } finally {
       setLoading(false);
@@ -427,407 +448,709 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     }
   };
 
+  const activeTagsCount = form.tags.filter((tag) => tag.trim() !== "").length;
+  const servicesCount = form.services.length;
+
   return (
-    <div id="scrollToId" className={styles.container}>
-      <h2 className={styles.formMainHeading}>Stwórz swój profil</h2>
+    <section id="scrollToId" className={styles.section}>
+      <div className={styles.sectionBackground} aria-hidden="true" />
 
-      <div className={styles.wrapper}>
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <h3 className={styles.sectionTitle}>1. Dane podstawowe</h3>
+      <div className={styles.inner}>
+        <div className={styles.head}>
+          <div className={styles.labelRow}>
+            <span className={styles.label}>Showly Create Profile</span>
+            <span className={styles.labelDot} />
+            <span className={styles.labelDesc}>Budujesz swoją publiczną wizytówkę</span>
+            <span className={styles.labelLine} />
+            <span className={styles.pill}>Profil • Usługi • Podgląd</span>
+          </div>
 
-          <label>
-            Nazwa Twojego profilu:
-            <input type="text" name="name" value={form.name} onChange={handleChange} maxLength={30} />
-            {formErrors.name && <small className={styles.error}>{formErrors.name}</small>}
-          </label>
+          <h2 className={styles.heading}>
+            Stwórz swój <span className={styles.headingAccent}>profil</span> i pokaż się
+            światu 🚀
+          </h2>
 
-          <label>
-            Rola / Zawód / Tematyka:
-            <input type="text" name="role" value={form.role} onChange={handleChange} maxLength={40} />
-            {formErrors.role && <small className={styles.error}>{formErrors.role}</small>}
-          </label>
+          <p className={styles.description}>
+            Uzupełnij podstawowe informacje, dodaj usługi, linki oraz opis działalności.
+            Po prawej stronie od razu widzisz podgląd swojej wizytówki.
+          </p>
 
-          <label>
-            Typ profilu:
-            <select name="profileType" value={form.profileType} onChange={handleChange}>
-              <option value="" disabled>
-                -- Wybierz typ profilu --
-              </option>
-              <option value="zawodowy">Zawodowy</option>
-              <option value="hobbystyczny">Hobbystyczny</option>
-              <option value="serwis">Serwis</option>
-              <option value="społeczność">Społeczność / serwer / blog</option>
-            </select>
-            {formErrors.profileType && <small className={styles.error}>{formErrors.profileType}</small>}
-          </label>
-
-          <label>
-            Lokalizacja (miasto):
-            <input type="text" name="location" value={form.location} onChange={handleChange} maxLength={30} />
-            {formErrors.location && <small className={styles.error}>{formErrors.location}</small>}
-          </label>
-
-          <h3 className={styles.sectionTitle}>2. Wygląd i opis</h3>
-
-          <label>
-            Avatar (podgląd od razu, zapis po Utwórz):
-            <input
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              disabled={avatarUploading || loading}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-
-                if (!file.type?.startsWith("image/")) {
-                  setFormErrors((p) => ({ ...p, avatar: "Plik musi być obrazkiem." }));
-                  return;
-                }
-                if (file.size > 3 * 1024 * 1024) {
-                  setFormErrors((p) => ({ ...p, avatar: "Maksymalny rozmiar avatara to 3MB." }));
-                  return;
-                }
-
-                setFormErrors((p) => ({ ...p, avatar: "" }));
-
-                if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
-                  try {
-                    URL.revokeObjectURL(form.avatar);
-                  } catch { }
-                }
-
-                const previewUrl = URL.createObjectURL(file);
-                setAvatarFile(file);
-                setForm((prev) => ({ ...prev, avatar: previewUrl }));
-              }}
-            />
-            {(avatarUploading || loading) && <small>Przetwarzanie...</small>}
-            {formErrors.avatar && <small className={styles.error}>{formErrors.avatar}</small>}
-          </label>
-
-          <LoadingButton
-            type="button"
-            isLoading={resetAvatarLoading}
-            disabled={resetAvatarLoading || avatarUploading || loading}
-            className={styles.resetAvatar}
-            onClick={resetAvatarLocal}
-          >
-            Przywróć domyślny avatar
-          </LoadingButton>
-
-          <label>
-            Opis działalności / O mnie:
-            <textarea name="description" value={form.description} onChange={handleChange} maxLength={500} />
-            <small>{form.description.length}/500 znaków</small>
-            {formErrors.description && <small className={styles.error}>{formErrors.description}</small>}
-          </label>
-
-          <label>
-            Tagi (maksymalnie 3):
-            {form.tags.map((tag, index) => (
-              <div key={index} className={styles.tagInputWrapper}>
-                <input
-                  type="text"
-                  placeholder={`Tag ${index + 1}`}
-                  value={tag}
-                  maxLength={20}
-                  onChange={(e) => handleTagChange(index, e.target.value)}
-                />
-              </div>
-            ))}
-            {formErrors.tags && <small className={styles.error}>{formErrors.tags}</small>}
-          </label>
-
-          <h3 className={styles.sectionTitle}>3. Dostępność i usługi</h3>
-
-          <label>
-            Cennik od:
-            <input type="number" name="priceFrom" value={form.priceFrom} onChange={handleChange} min={1} max={100000} />
-            {formErrors.priceFrom && <small className={styles.error}>{formErrors.priceFrom}</small>}
-          </label>
-
-          <label>
-            Cennik do:
-            <input
-              type="number"
-              name="priceTo"
-              value={form.priceTo}
-              onChange={handleChange}
-              min={form.priceFrom ? Number(form.priceFrom) : 1}
-              max={1000000}
-            />
-            {formErrors.priceTo && <small className={styles.error}>{formErrors.priceTo}</small>}
-          </label>
-
-          {form.services.length > 0 && (
-            <ul className={styles.serviceList}>
-              {form.services.map((s, i) => (
-                <li key={i} className={styles.serviceItem}>
-                  <div className={styles.serviceItemTop}>
-                    <strong>{s.name}</strong>
-                    <span className={styles.serviceBadge}>{mapCategory(s.category)}</span>
-                  </div>
-
-                  {s.shortDescription && <p className={styles.serviceDesc}>{s.shortDescription}</p>}
-
-                  <div className={styles.serviceMeta}>
-                    <span>{formatServicePrice(s)}</span>
-                    <span>
-                      {s.duration.value} {mapUnit(s.duration.unit)}
-                    </span>
-                    <span>{s.booking?.enabled ? (s.booking.type === "calendar" ? "rezerwacja" : "zapytanie") : "bez rezerwacji"}</span>
-                  </div>
-
-                  <button
-                    type="button"
-                    className={styles.removeServiceBtn}
-                    onClick={() =>
-                      setForm((prev) => ({
-                        ...prev,
-                        services: prev.services.filter((_, idx) => idx !== i),
-                      }))
-                    }
-                  >
-                    Usuń
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          <label>
-            Dodaj usługę / ofertę:
-            <div className={styles.serviceCard}>
-              <div className={styles.serviceGrid}>
-                <input
-                  type="text"
-                  placeholder="Nazwa (np. Strzyżenie męskie)"
-                  value={newService.name}
-                  maxLength={80}
-                  onChange={(e) => setNewService({ ...newService, name: e.target.value })}
-                />
-
-                <select
-                  value={newService.category}
-                  onChange={(e) => setNewService({ ...newService, category: e.target.value })}
-                >
-                  <option value="service">Usługa</option>
-                  <option value="product">Produkt</option>
-                  <option value="project">Projekt</option>
-                  <option value="artwork">Obraz / dzieło</option>
-                  <option value="handmade">Rękodzieło</option>
-                  <option value="lesson">Lekcja</option>
-                  <option value="consultation">Konsultacja</option>
-                </select>
-
-                <input
-                  type="text"
-                  placeholder="Krótki opis (opcjonalnie)"
-                  value={newService.shortDescription}
-                  maxLength={120}
-                  onChange={(e) => setNewService({ ...newService, shortDescription: e.target.value })}
-                />
-
-                <select
-                  value={newService.priceMode}
-                  onChange={(e) => setNewService({ ...newService, priceMode: e.target.value, priceValue: "" })}
-                >
-                  <option value="fixed">Cena stała</option>
-                  <option value="from">Cena od</option>
-                  <option value="contact">Wycena indywidualna</option>
-                  <option value="free">Darmowe</option>
-                </select>
-
-                {(newService.priceMode === "fixed" || newService.priceMode === "from") && (
-                  <input
-                    type="number"
-                    placeholder={newService.priceMode === "fixed" ? "Cena" : "Cena od"}
-                    min="0"
-                    value={newService.priceValue}
-                    onChange={(e) => setNewService({ ...newService, priceValue: e.target.value })}
-                  />
-                )}
-
-                <input
-                  type="number"
-                  placeholder="Czas"
-                  min="1"
-                  value={newService.durationValue}
-                  onChange={(e) => setNewService({ ...newService, durationValue: e.target.value })}
-                />
-
-                <select
-                  value={newService.durationUnit}
-                  onChange={(e) => setNewService({ ...newService, durationUnit: e.target.value })}
-                >
-                  <option value="minutes">Minuty</option>
-                  <option value="hours">Godziny</option>
-                  <option value="days">Dni</option>
-                </select>
-              </div>
-
-              <div className={styles.serviceOptions}>
-                <label className={styles.checkboxInline}>
-                  <input
-                    type="checkbox"
-                    checked={newService.bookingEnabled}
-                    onChange={(e) =>
-                      setNewService((prev) => ({
-                        ...prev,
-                        bookingEnabled: e.target.checked,
-                        bookingType: e.target.checked ? "request" : "none",
-                      }))
-                    }
-                  />
-                  Umożliw rezerwację / zapytanie
-                </label>
-
-                {newService.bookingEnabled && (
-                  <select
-                    value={newService.bookingType}
-                    onChange={(e) => setNewService({ ...newService, bookingType: e.target.value })}
-                  >
-                    <option value="request">Zapytanie</option>
-                    <option value="calendar">Kalendarz</option>
-                  </select>
-                )}
-              </div>
-
-              <button type="button" className={styles.addServiceBtn} onClick={handleAddService}>
-                Dodaj usługę
-              </button>
+          <div className={styles.metaRow}>
+            <div className={styles.metaCard}>
+              <strong>{activeTagsCount}/3</strong>
+              <span>aktywnych tagów</span>
             </div>
 
-            {serviceError && <small className={styles.error}>{serviceError}</small>}
-          </label>
+            <div className={styles.metaCard}>
+              <strong>{servicesCount}</strong>
+              <span>dodanych usług</span>
+            </div>
 
-          <label>
-            Tryb działania rezerwacji:
-            <select name="bookingMode" value={form.bookingMode} onChange={handleChange}>
-              <option value="calendar">Kalendarz godzinowy (np. fryzjer, korepetytor)</option>
-              <option value="request-blocking">Zablokuj dzień (np. DJ, cukiernik)</option>
-              <option value="request-open">Zapytanie bez blokowania (np. programista)</option>
-            </select>
-          </label>
+            <div className={styles.metaCard}>
+              <strong>{form.bookingMode === "calendar" ? "Kalendarz" : "Zapytania"}</strong>
+              <span>wybrany tryb działania</span>
+            </div>
+          </div>
+        </div>
 
-          {form.bookingMode === "calendar" && (
-            <>
-              <h4 className={styles.sectionTitle}>Godziny pracy</h4>
+        <div className={styles.layout}>
+          <form onSubmit={handleSubmit} className={styles.formColumn}>
+            <div className={styles.contentBox}>
+              <div className={styles.contentHeader}>
+                <h3 className={styles.contentTitle}>1. Dane podstawowe</h3>
+                <span className={styles.badge}>
+                  <FiUser />
+                  Start
+                </span>
+              </div>
 
-              <label className={styles.inputBlock}>
-                Od:
-                <input
-                  type="time"
-                  value={form.workingHours.from}
-                  onChange={(e) => {
-                    const from = e.target.value;
-                    setForm((f) => ({ ...f, workingHours: { ...f.workingHours, from } }));
-                  }}
-                />
-              </label>
+              <div className={styles.fieldGrid}>
+                <label className={styles.formField}>
+                  <span className={styles.fieldLabel}>
+                    <FiUser className={styles.fieldIcon} />
+                    Nazwa Twojego profilu
+                  </span>
+                  <input
+                    className={styles.formInput}
+                    type="text"
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    maxLength={30}
+                    placeholder="Np. TYGA-TECH"
+                  />
+                  {formErrors.name && <small className={styles.error}>{formErrors.name}</small>}
+                </label>
 
-              <label className={styles.inputBlock}>
-                Do:
-                <input
-                  type="time"
-                  value={form.workingHours.to}
-                  onChange={(e) => {
-                    const to = e.target.value;
-                    setForm((f) => ({ ...f, workingHours: { ...f.workingHours, to } }));
-                  }}
-                />
-              </label>
+                <label className={styles.formField}>
+                  <span className={styles.fieldLabel}>
+                    <FiBriefcase className={styles.fieldIcon} />
+                    Rola / Zawód / Tematyka
+                  </span>
+                  <input
+                    className={styles.formInput}
+                    type="text"
+                    name="role"
+                    value={form.role}
+                    onChange={handleChange}
+                    maxLength={40}
+                    placeholder="Np. Serwis laserów / DJ / Grafik"
+                  />
+                  {formErrors.role && <small className={styles.error}>{formErrors.role}</small>}
+                </label>
 
-              <h4 className={styles.sectionTitle}>Dni pracy</h4>
-              <fieldset className={styles.fieldset}>
-                {[1, 2, 3, 4, 5, 6, 0].map((d) => (
-                  <label key={d} className={styles.checkboxLabel}>
+                <label className={styles.formField}>
+                  <span className={styles.fieldLabel}>
+                    <FiGrid className={styles.fieldIcon} />
+                    Typ profilu
+                  </span>
+                  <select
+                    className={styles.formSelect}
+                    name="profileType"
+                    value={form.profileType}
+                    onChange={handleChange}
+                  >
+                    <option value="" disabled>
+                      -- Wybierz typ profilu --
+                    </option>
+                    <option value="zawodowy">Zawodowy</option>
+                    <option value="hobbystyczny">Hobbystyczny</option>
+                    <option value="serwis">Serwis</option>
+                    <option value="społeczność">Społeczność / serwer / blog</option>
+                  </select>
+                  {formErrors.profileType && (
+                    <small className={styles.error}>{formErrors.profileType}</small>
+                  )}
+                </label>
+
+                <label className={styles.formField}>
+                  <span className={styles.fieldLabel}>
+                    <FiMapPin className={styles.fieldIcon} />
+                    Lokalizacja
+                  </span>
+                  <input
+                    className={styles.formInput}
+                    type="text"
+                    name="location"
+                    value={form.location}
+                    onChange={handleChange}
+                    maxLength={30}
+                    placeholder="Np. Piła / cała Polska"
+                  />
+                  {formErrors.location && (
+                    <small className={styles.error}>{formErrors.location}</small>
+                  )}
+                </label>
+              </div>
+            </div>
+
+            <div className={styles.contentBox}>
+              <div className={styles.contentHeader}>
+                <h3 className={styles.contentTitle}>2. Wygląd i opis</h3>
+                <span className={styles.badge}>
+                  <FiImage />
+                  Design
+                </span>
+              </div>
+
+              <div className={styles.formStack}>
+                <label className={styles.formField}>
+                  <span className={styles.fieldLabel}>
+                    <FiImage className={styles.fieldIcon} />
+                    Avatar
+                  </span>
+
+                  <div className={styles.avatarUploader}>
+                    <div className={styles.avatarPreviewBox}>
+                      <img
+                        src={form.avatar || DEFAULT_AVATAR}
+                        alt="Podgląd avatara"
+                        className={styles.avatarPreview}
+                      />
+                    </div>
+
+                    <div className={styles.avatarActions}>
+                      <input
+                        className={styles.formFile}
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        disabled={avatarUploading || loading}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+
+                          if (!file.type?.startsWith("image/")) {
+                            setFormErrors((p) => ({
+                              ...p,
+                              avatar: "Plik musi być obrazkiem.",
+                            }));
+                            return;
+                          }
+
+                          if (file.size > 3 * 1024 * 1024) {
+                            setFormErrors((p) => ({
+                              ...p,
+                              avatar: "Maksymalny rozmiar avatara to 3MB.",
+                            }));
+                            return;
+                          }
+
+                          setFormErrors((p) => ({ ...p, avatar: "" }));
+
+                          if (
+                            typeof form.avatar === "string" &&
+                            form.avatar.startsWith("blob:")
+                          ) {
+                            try {
+                              URL.revokeObjectURL(form.avatar);
+                            } catch {}
+                          }
+
+                          const previewUrl = URL.createObjectURL(file);
+                          setAvatarFile(file);
+                          setForm((prev) => ({ ...prev, avatar: previewUrl }));
+                        }}
+                      />
+
+                      <LoadingButton
+                        type="button"
+                        isLoading={resetAvatarLoading}
+                        disabled={resetAvatarLoading || avatarUploading || loading}
+                        className={styles.secondaryButton}
+                        onClick={resetAvatarLocal}
+                      >
+                        Przywróć domyślny avatar
+                      </LoadingButton>
+
+                      {(avatarUploading || loading) && (
+                        <small className={styles.helperText}>Przetwarzanie avatara...</small>
+                      )}
+                      {formErrors.avatar && (
+                        <small className={styles.error}>{formErrors.avatar}</small>
+                      )}
+                    </div>
+                  </div>
+                </label>
+
+                <label className={styles.formField}>
+                  <span className={styles.fieldLabel}>
+                    <FiFileText className={styles.fieldIcon} />
+                    Opis działalności / O mnie
+                  </span>
+                  <textarea
+                    className={styles.formTextarea}
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
+                    maxLength={500}
+                    placeholder="Napisz kilka zdań o sobie, swojej działalności i tym, co oferujesz..."
+                  />
+                  <small className={styles.counterText}>
+                    {form.description.length}/500 znaków
+                  </small>
+                  {formErrors.description && (
+                    <small className={styles.error}>{formErrors.description}</small>
+                  )}
+                </label>
+
+                <label className={styles.formField}>
+                  <span className={styles.fieldLabel}>
+                    <FiTag className={styles.fieldIcon} />
+                    Tagi (maksymalnie 3)
+                  </span>
+
+                  <div className={styles.inlineGrid}>
+                    {form.tags.map((tag, index) => (
+                      <div key={index} className={styles.tagInputWrapper}>
+                        <input
+                          className={styles.formInput}
+                          type="text"
+                          placeholder={`Tag ${index + 1}`}
+                          value={tag}
+                          maxLength={20}
+                          onChange={(e) => handleTagChange(index, e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {formErrors.tags && <small className={styles.error}>{formErrors.tags}</small>}
+                </label>
+              </div>
+            </div>
+
+            <div className={styles.contentBox}>
+              <div className={styles.contentHeader}>
+                <h3 className={styles.contentTitle}>3. Dostępność i usługi</h3>
+                <span className={styles.badge}>
+                  <FiCalendar />
+                  Oferta
+                </span>
+              </div>
+
+              <div className={styles.fieldGrid}>
+                <label className={styles.formField}>
+                  <span className={styles.fieldLabel}>
+                    <FiDollarSign className={styles.fieldIcon} />
+                    Cennik od
+                  </span>
+                  <input
+                    className={styles.formInput}
+                    type="number"
+                    name="priceFrom"
+                    value={form.priceFrom}
+                    onChange={handleChange}
+                    min={1}
+                    max={100000}
+                    placeholder="Np. 100"
+                  />
+                  {formErrors.priceFrom && (
+                    <small className={styles.error}>{formErrors.priceFrom}</small>
+                  )}
+                </label>
+
+                <label className={styles.formField}>
+                  <span className={styles.fieldLabel}>
+                    <FiDollarSign className={styles.fieldIcon} />
+                    Cennik do
+                  </span>
+                  <input
+                    className={styles.formInput}
+                    type="number"
+                    name="priceTo"
+                    value={form.priceTo}
+                    onChange={handleChange}
+                    min={form.priceFrom ? Number(form.priceFrom) : 1}
+                    max={1000000}
+                    placeholder="Np. 1000"
+                  />
+                  {formErrors.priceTo && (
+                    <small className={styles.error}>{formErrors.priceTo}</small>
+                  )}
+                </label>
+              </div>
+
+              {form.services.length > 0 && (
+                <ul className={styles.serviceList}>
+                  {form.services.map((s, i) => (
+                    <li key={i} className={styles.serviceItem}>
+                      <div className={styles.serviceItemTop}>
+                        <div>
+                          <strong className={styles.serviceName}>{s.name}</strong>
+                          {s.shortDescription && (
+                            <p className={styles.serviceDesc}>{s.shortDescription}</p>
+                          )}
+                        </div>
+
+                        <span className={styles.serviceBadge}>{mapCategory(s.category)}</span>
+                      </div>
+
+                      <div className={styles.serviceMeta}>
+                        <span>{formatServicePrice(s)}</span>
+                        <span>
+                          {s.duration.value} {mapUnit(s.duration.unit)}
+                        </span>
+                        <span>
+                          {s.booking?.enabled
+                            ? s.booking.type === "calendar"
+                              ? "rezerwacja"
+                              : "zapytanie"
+                            : "bez rezerwacji"}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        className={styles.removeServiceBtn}
+                        onClick={() =>
+                          setForm((prev) => ({
+                            ...prev,
+                            services: prev.services.filter((_, idx) => idx !== i),
+                          }))
+                        }
+                      >
+                        <FiTrash2 />
+                        Usuń usługę
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className={styles.serviceCard}>
+                <div className={styles.serviceCardHead}>
+                  <h4 className={styles.serviceCardTitle}>Dodaj usługę / ofertę</h4>
+                  <span className={styles.serviceCardPill}>Nowa pozycja</span>
+                </div>
+
+                <div className={styles.serviceGrid}>
+                  <input
+                    className={styles.formInput}
+                    type="text"
+                    placeholder="Nazwa (np. Strzyżenie męskie)"
+                    value={newService.name}
+                    maxLength={80}
+                    onChange={(e) => setNewService({ ...newService, name: e.target.value })}
+                  />
+
+                  <select
+                    className={styles.formSelect}
+                    value={newService.category}
+                    onChange={(e) => setNewService({ ...newService, category: e.target.value })}
+                  >
+                    <option value="service">Usługa</option>
+                    <option value="product">Produkt</option>
+                    <option value="project">Projekt</option>
+                    <option value="artwork">Obraz / dzieło</option>
+                    <option value="handmade">Rękodzieło</option>
+                    <option value="lesson">Lekcja</option>
+                    <option value="consultation">Konsultacja</option>
+                  </select>
+
+                  <input
+                    className={styles.formInput}
+                    type="text"
+                    placeholder="Krótki opis (opcjonalnie)"
+                    value={newService.shortDescription}
+                    maxLength={120}
+                    onChange={(e) =>
+                      setNewService({ ...newService, shortDescription: e.target.value })
+                    }
+                  />
+
+                  <select
+                    className={styles.formSelect}
+                    value={newService.priceMode}
+                    onChange={(e) =>
+                      setNewService({
+                        ...newService,
+                        priceMode: e.target.value,
+                        priceValue: "",
+                      })
+                    }
+                  >
+                    <option value="fixed">Cena stała</option>
+                    <option value="from">Cena od</option>
+                    <option value="contact">Wycena indywidualna</option>
+                    <option value="free">Darmowe</option>
+                  </select>
+
+                  {(newService.priceMode === "fixed" || newService.priceMode === "from") && (
+                    <input
+                      className={styles.formInput}
+                      type="number"
+                      placeholder={newService.priceMode === "fixed" ? "Cena" : "Cena od"}
+                      min="0"
+                      value={newService.priceValue}
+                      onChange={(e) =>
+                        setNewService({ ...newService, priceValue: e.target.value })
+                      }
+                    />
+                  )}
+
+                  <input
+                    className={styles.formInput}
+                    type="number"
+                    placeholder="Czas"
+                    min="1"
+                    value={newService.durationValue}
+                    onChange={(e) =>
+                      setNewService({ ...newService, durationValue: e.target.value })
+                    }
+                  />
+
+                  <select
+                    className={styles.formSelect}
+                    value={newService.durationUnit}
+                    onChange={(e) =>
+                      setNewService({ ...newService, durationUnit: e.target.value })
+                    }
+                  >
+                    <option value="minutes">Minuty</option>
+                    <option value="hours">Godziny</option>
+                    <option value="days">Dni</option>
+                  </select>
+                </div>
+
+                <div className={styles.serviceOptions}>
+                  <label className={styles.checkboxInline}>
                     <input
                       type="checkbox"
-                      value={d}
-                      checked={form.workingDays.includes(d)}
-                      onChange={(e) => {
-                        const day = Number(e.target.value);
-                        setForm((f) => {
-                          const days = f.workingDays.includes(day)
-                            ? f.workingDays.filter((x) => x !== day)
-                            : [...f.workingDays, day];
-                          return { ...f, workingDays: days };
-                        });
-                      }}
+                      checked={newService.bookingEnabled}
+                      onChange={(e) =>
+                        setNewService((prev) => ({
+                          ...prev,
+                          bookingEnabled: e.target.checked,
+                          bookingType: e.target.checked ? "request" : "none",
+                        }))
+                      }
                     />
-                    {["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "Sb"][d]}
+                    Umożliw rezerwację / zapytanie
+                  </label>
+
+                  {newService.bookingEnabled && (
+                    <select
+                      className={styles.formSelect}
+                      value={newService.bookingType}
+                      onChange={(e) =>
+                        setNewService({ ...newService, bookingType: e.target.value })
+                      }
+                    >
+                      <option value="request">Zapytanie</option>
+                      <option value="calendar">Kalendarz</option>
+                    </select>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className={styles.addServiceBtn}
+                  onClick={handleAddService}
+                >
+                  <FiPlus />
+                  Dodaj usługę
+                </button>
+
+                {serviceError && <small className={styles.error}>{serviceError}</small>}
+              </div>
+
+              <label className={styles.formField}>
+                <span className={styles.fieldLabel}>
+                  <FiClock className={styles.fieldIcon} />
+                  Tryb działania rezerwacji
+                </span>
+                <select
+                  className={styles.formSelect}
+                  name="bookingMode"
+                  value={form.bookingMode}
+                  onChange={handleChange}
+                >
+                  <option value="calendar">
+                    Kalendarz godzinowy (np. fryzjer, korepetytor)
+                  </option>
+                  <option value="request-blocking">
+                    Zablokuj dzień (np. DJ, cukiernik)
+                  </option>
+                  <option value="request-open">
+                    Zapytanie bez blokowania (np. programista)
+                  </option>
+                </select>
+              </label>
+
+              {form.bookingMode === "calendar" && (
+                <div className={styles.scheduleBox}>
+                  <h4 className={styles.subSectionTitle}>Godziny i dni pracy</h4>
+
+                  <div className={styles.fieldGrid}>
+                    <label className={styles.formField}>
+                      <span className={styles.fieldLabel}>Od</span>
+                      <input
+                        className={styles.formInput}
+                        type="time"
+                        value={form.workingHours.from}
+                        onChange={(e) => {
+                          const from = e.target.value;
+                          setForm((f) => ({
+                            ...f,
+                            workingHours: { ...f.workingHours, from },
+                          }));
+                        }}
+                      />
+                    </label>
+
+                    <label className={styles.formField}>
+                      <span className={styles.fieldLabel}>Do</span>
+                      <input
+                        className={styles.formInput}
+                        type="time"
+                        value={form.workingHours.to}
+                        onChange={(e) => {
+                          const to = e.target.value;
+                          setForm((f) => ({
+                            ...f,
+                            workingHours: { ...f.workingHours, to },
+                          }));
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  <fieldset className={styles.fieldset}>
+                    {[1, 2, 3, 4, 5, 6, 0].map((d) => (
+                      <label key={d} className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          value={d}
+                          checked={form.workingDays.includes(d)}
+                          onChange={(e) => {
+                            const day = Number(e.target.value);
+                            setForm((f) => {
+                              const days = f.workingDays.includes(day)
+                                ? f.workingDays.filter((x) => x !== day)
+                                : [...f.workingDays, day];
+                              return { ...f, workingDays: days };
+                            });
+                          }}
+                        />
+                        {["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "Sb"][d]}
+                      </label>
+                    ))}
+                  </fieldset>
+                </div>
+              )}
+
+              {formErrors.services && <small className={styles.error}>{formErrors.services}</small>}
+            </div>
+
+            <div className={styles.contentBox}>
+              <div className={styles.contentHeader}>
+                <h3 className={styles.contentTitle}>4. Linki i media</h3>
+                <span className={styles.badge}>
+                  <FiLink />
+                  Media
+                </span>
+              </div>
+
+              <div className={styles.inlineGrid}>
+                {form.links.map((link, index) => (
+                  <label key={index} className={styles.formField}>
+                    <span className={styles.fieldLabel}>Link {index + 1}</span>
+                    <input
+                      className={styles.formInput}
+                      type="url"
+                      placeholder={`https://...`}
+                      value={link}
+                      onChange={(e) => handleLinkChange(index, e.target.value)}
+                    />
                   </label>
                 ))}
-              </fieldset>
-            </>
-          )}
+              </div>
+            </div>
 
-          {formErrors.services && <small className={styles.error}>{formErrors.services}</small>}
+            <div className={styles.contentBox}>
+              <div className={styles.contentHeader}>
+                <h3 className={styles.contentTitle}>5. Informacje dodatkowe</h3>
+                <span className={styles.badge}>
+                  <FiCheckCircle />
+                  Final
+                </span>
+              </div>
 
-          <h3 className={styles.sectionTitle}>4. Linki i media</h3>
+              <div className={styles.formStack}>
+                <label className={`${styles.formField} ${styles.checkboxBox}`}>
+                  <span className={styles.checkboxInline}>
+                    <input
+                      type="checkbox"
+                      name="hasBusiness"
+                      checked={form.hasBusiness}
+                      onChange={handleChange}
+                    />
+                    Posiadam działalność gospodarczą
+                  </span>
+                </label>
 
-          <label>
-            Linki zewnętrzne:
-            {form.links.map((link, index) => (
-              <input
-                key={index}
-                type="url"
-                placeholder={`Link ${index + 1}`}
-                value={link}
-                onChange={(e) => handleLinkChange(index, e.target.value)}
-              />
-            ))}
-          </label>
+                {form.hasBusiness && (
+                  <label className={styles.formField}>
+                    <span className={styles.fieldLabel}>NIP (opcjonalnie)</span>
+                    <input
+                      className={styles.formInput}
+                      type="text"
+                      name="nip"
+                      value={form.nip}
+                      onChange={handleChange}
+                      placeholder="Np. 1234567890"
+                    />
+                  </label>
+                )}
 
-          <h3 className={styles.sectionTitle}>5. Informacje dodatkowe</h3>
+                <LoadingButton
+                  type="submit"
+                  isLoading={loading}
+                  disabled={loading || avatarUploading}
+                  className={styles.submitButton}
+                >
+                  Utwórz profil
+                </LoadingButton>
 
-          <label className={styles.checkbox}>
-            <input type="checkbox" name="hasBusiness" checked={form.hasBusiness} onChange={handleChange} />
-            Posiadam działalność gospodarczą
-          </label>
+                {formErrors.general && <p className={styles.error}>{formErrors.general}</p>}
+              </div>
+            </div>
+          </form>
 
-          {form.hasBusiness && (
-            <label>
-              NIP (opcjonalnie):
-              <input type="text" name="nip" value={form.nip} onChange={handleChange} />
-            </label>
-          )}
+          <aside className={styles.previewColumn}>
+            <div className={styles.previewSticky}>
+              <div className={styles.contentBox}>
+                <div className={styles.contentHeader}>
+                  <h3 className={styles.contentTitle}>Podgląd tworzonego profilu</h3>
+                  <span className={styles.badge}>Live</span>
+                </div>
 
-          <LoadingButton
-            type="submit"
-            isLoading={loading}
-            disabled={loading || avatarUploading}
-            className={styles.submitButton}
-          >
-            Utwórz profil
-          </LoadingButton>
+                <div className={styles.previewCardWrap}>
+                  <UserCard
+                    user={{
+                      ...form,
+                      tags: form.tags.filter(
+                        (tag) => tag.trim() !== "" && tag.length <= 20
+                      ),
+                      rating: 0,
+                      reviews: 0,
+                      availableDates: [],
+                      userId: uid,
+                    }}
+                    currentUser={user}
+                    isPreview={true}
+                    onPreviewBlocked={(msg) => setPreviewMsg(msg)}
+                  />
+                </div>
 
-          {formErrors.general && <p className={styles.error}>{formErrors.general}</p>}
-        </form>
-
-        <div className={styles.preview}>
-          <h3 className={styles.previewTitle}>Podgląd tworzonego profilu</h3>
-
-          <UserCard
-            user={{
-              ...form,
-              tags: form.tags.filter((tag) => tag.trim() !== "" && tag.length <= 20),
-              rating: 0,
-              reviews: 0,
-              availableDates: [],
-              userId: uid,
-            }}
-            currentUser={user}
-            isPreview={true}
-            onPreviewBlocked={(msg) => setPreviewMsg(msg)}
-          />
-
-          {previewMsg && <p className={styles.error}>{previewMsg}</p>}
+                {previewMsg && <p className={styles.error}>{previewMsg}</p>}
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
