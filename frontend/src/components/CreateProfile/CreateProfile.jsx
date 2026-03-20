@@ -517,7 +517,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     value={form.name}
                     onChange={handleChange}
                     maxLength={30}
-                    placeholder="Np. TYGA-TECH"
+                    placeholder="Np. Twoja Nazwa"
                   />
                   {formErrors.name && <small className={styles.error}>{formErrors.name}</small>}
                 </label>
@@ -534,7 +534,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     value={form.role}
                     onChange={handleChange}
                     maxLength={40}
-                    placeholder="Np. Serwis laserów / DJ / Grafik"
+                    placeholder="Np. Korepetytor / DJ / Grafik"
                   />
                   {formErrors.role && <small className={styles.error}>{formErrors.role}</small>}
                 </label>
@@ -575,7 +575,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     value={form.location}
                     onChange={handleChange}
                     maxLength={30}
-                    placeholder="Np. Piła / cała Polska"
+                    placeholder="Np. Poznań / cała Polska"
                   />
                   {formErrors.location && (
                     <small className={styles.error}>{formErrors.location}</small>
