@@ -1,11 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
 import styles from "./Favorites.module.scss";
 import UserCard from "../UserCard/UserCard";
-import { FiHeart, FiBookmark, FiSearch, FiUser } from "react-icons/fi";
+import { FiHeart } from "react-icons/fi";
 import { Link, useLocation } from "react-router-dom";
 import { api } from "../../api/api";
 
-export default function Favorites({ currentUser }) {
+export default function Favorites({ currentUser, setAlert }) {
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState([]);
   const [error, setError] = useState("");
@@ -31,7 +31,6 @@ export default function Favorites({ currentUser }) {
             p?.theme ?? it?.theme ?? it?.profileTheme ?? it?.themeConfig;
 
           let theme = rawTheme;
-
           if (typeof rawTheme === "string") {
             try {
               theme = JSON.parse(rawTheme);
@@ -39,6 +38,63 @@ export default function Favorites({ currentUser }) {
               theme = undefined;
             }
           }
+
+          const rawPartnership =
+            p?.partnership ??
+            it?.partnership ??
+            it?.partnerData ??
+            it?.profilePartnership;
+
+          let parsedPartnership = rawPartnership;
+          if (typeof rawPartnership === "string") {
+            try {
+              parsedPartnership = JSON.parse(rawPartnership);
+            } catch {
+              parsedPartnership = undefined;
+            }
+          }
+
+          const derivedIsPartner =
+            parsedPartnership?.isPartner ??
+            p?.isPartner ??
+            it?.isPartner ??
+            p?.partner ??
+            it?.partner ??
+            false;
+
+          const derivedTier =
+            parsedPartnership?.tier ??
+            p?.partnerTier ??
+            it?.partnerTier ??
+            p?.tier ??
+            it?.tier ??
+            "partner";
+
+          const derivedBadgeText =
+            parsedPartnership?.badgeText ??
+            parsedPartnership?.label ??
+            p?.partnerLabel ??
+            it?.partnerLabel ??
+            p?.badgeText ??
+            it?.badgeText ??
+            "PARTNER SHOWLY";
+
+          const derivedColor =
+            parsedPartnership?.color ??
+            p?.partnerColor ??
+            it?.partnerColor ??
+            p?.color ??
+            it?.color ??
+            "";
+
+          const partnership = derivedIsPartner
+            ? {
+              isPartner: true,
+              tier: String(derivedTier || "partner").toLowerCase(),
+              badgeText: String(derivedBadgeText || "PARTNER SHOWLY"),
+              ...(derivedColor ? { color: derivedColor } : {}),
+            }
+            : parsedPartnership || {};
 
           const userId =
             p?.userId ||
@@ -49,9 +105,12 @@ export default function Favorites({ currentUser }) {
             it?._id;
 
           return {
+            ...it,
             ...p,
             ...(theme ? { theme } : {}),
+            partnership,
             ...(userId ? { userId } : {}),
+            isFavorite: true,
           };
         });
 
@@ -108,33 +167,46 @@ export default function Favorites({ currentUser }) {
 
   if (!currentUser?.uid) {
     return (
-      <section id="scrollToId" className={styles.page}>
-        <div className={styles.bgGlow} aria-hidden="true" />
+      <section id="scrollToId" className={styles.section}>
+        <div className={styles.sectionBackground} aria-hidden="true" />
 
-        <div className={styles.shell}>
-          <div className={styles.headerRow}>
-            <div>
-              <h2 className={styles.sectionTitle}>Twoje ulubione</h2>
-              <p className={styles.subTitle}>
-                Zapisane wizytówki specjalistów, do których chcesz szybko wracać.
-              </p>
+        <div className={styles.inner}>
+          <div className={styles.head}>
+            <div className={styles.labelRow}>
+              <span className={styles.label}>Showly Favorites</span>
+              <span className={styles.labelDot} />
+              <span className={styles.labelDesc}>Twoja prywatna lista</span>
+              <span className={styles.labelLine} />
+              <span className={styles.pill}>Zapisuj • Wracaj • Wybieraj</span>
             </div>
 
-            <div className={styles.headerPills}>
-              <span className={styles.headerPill}>
-                <FiUser />
-                Status: <strong>gość</strong>
-              </span>
-              <span className={styles.headerPill}>
-                <FiBookmark />
-                Zapisane profile: <strong>0</strong>
-              </span>
+            <h2 className={styles.heading}>
+              Twoje <span className={styles.headingAccent}>ulubione</span> profile ❤️
+            </h2>
+
+            <p className={styles.description}>
+              Zapisane wizytówki specjalistów, do których chcesz szybko wracać.
+            </p>
+
+            <div className={styles.metaRow}>
+              <div className={styles.metaCard}>
+                <strong>Gość</strong>
+                <span>zaloguj się, aby zobaczyć zapisane profile</span>
+              </div>
+              <div className={styles.metaCard}>
+                <strong>0</strong>
+                <span>zapisanych wizytówek</span>
+              </div>
+              <div className={styles.metaCard}>
+                <strong>Showly</strong>
+                <span>Twoja osobista lista ulubionych</span>
+              </div>
             </div>
           </div>
 
-          <div className={styles.sectionGroup}>
-            <div className={styles.groupHeader}>
-              <h3 className={styles.groupTitle}>Dostęp do ulubionych</h3>
+          <div className={styles.contentBox}>
+            <div className={styles.contentHeader}>
+              <h3 className={styles.contentTitle}>Dostęp do ulubionych</h3>
               <span className={styles.badge}>—</span>
             </div>
 
@@ -156,39 +228,54 @@ export default function Favorites({ currentUser }) {
 
   if (loading) {
     return (
-      <section id="scrollToId" className={styles.page}>
-        <div className={styles.bgGlow} aria-hidden="true" />
+      <section id="scrollToId" className={styles.section}>
+        <div className={styles.sectionBackground} aria-hidden="true" />
 
-        <div className={styles.shell}>
-          <div className={styles.headerRow}>
-            <div>
-              <h2 className={styles.sectionTitle}>Twoje ulubione profile</h2>
-              <p className={styles.subTitle}>
-                Zapisane wizytówki specjalistów, do których chcesz szybko wracać.
-              </p>
+        <div className={styles.inner}>
+          <div className={styles.head}>
+            <div className={styles.labelRow}>
+              <span className={styles.label}>Showly Favorites</span>
+              <span className={styles.labelDot} />
+              <span className={styles.labelDesc}>Zapisane profile</span>
+              <span className={styles.labelLine} />
+              <span className={styles.pill}>Lista • Powroty • Wygoda</span>
             </div>
 
-            <div className={styles.headerPills}>
-              <span className={styles.headerPill}>
-                <FiHeart />
-                Ładowanie: <strong>trwa</strong>
-              </span>
-              <span className={styles.headerPill}>
-                <FiBookmark />
-                Zapisane profile: <strong>—</strong>
-              </span>
+            <h2 className={styles.heading}>
+              Twoje <span className={styles.headingAccent}>ulubione</span> profile ❤️
+            </h2>
+
+            <p className={styles.description}>
+              Zapisane wizytówki specjalistów, do których chcesz szybko wracać.
+            </p>
+
+            <div className={styles.metaRow}>
+              <div className={styles.metaCard}>
+                <strong>Ładowanie</strong>
+                <span>trwa pobieranie listy</span>
+              </div>
+              <div className={styles.metaCard}>
+                <strong>—</strong>
+                <span>zapisanych wizytówek</span>
+              </div>
+              <div className={styles.metaCard}>
+                <strong>Showly</strong>
+                <span>Twoja prywatna lista ulubionych</span>
+              </div>
             </div>
           </div>
 
-          <div className={styles.sectionGroup}>
-            <div className={styles.groupHeader}>
-              <h3 className={styles.groupTitle}>Lista zapisanych profili</h3>
+          <div className={styles.contentBox}>
+            <div className={styles.contentHeader}>
+              <h3 className={styles.contentTitle}>Lista zapisanych profili</h3>
               <span className={styles.badge}>—</span>
             </div>
 
-            <div className={styles.grid}>
+            <div className={styles.list}>
               {Array.from({ length: 4 }).map((_, i) => (
-                <SkeletonCard key={i} />
+                <div className={styles.cardWrap} key={i}>
+                  <SkeletonCard />
+                </div>
               ))}
             </div>
           </div>
@@ -199,33 +286,46 @@ export default function Favorites({ currentUser }) {
 
   if (error) {
     return (
-      <section id="scrollToId" className={styles.page}>
-        <div className={styles.bgGlow} aria-hidden="true" />
+      <section id="scrollToId" className={styles.section}>
+        <div className={styles.sectionBackground} aria-hidden="true" />
 
-        <div className={styles.shell}>
-          <div className={styles.headerRow}>
-            <div>
-              <h2 className={styles.sectionTitle}>Twoje ulubione profile</h2>
-              <p className={styles.subTitle}>
-                Zapisane wizytówki specjalistów, do których chcesz szybko wracać.
-              </p>
+        <div className={styles.inner}>
+          <div className={styles.head}>
+            <div className={styles.labelRow}>
+              <span className={styles.label}>Showly Favorites</span>
+              <span className={styles.labelDot} />
+              <span className={styles.labelDesc}>Błąd pobierania</span>
+              <span className={styles.labelLine} />
+              <span className={styles.pill}>Ulubione • Problem • Spróbuj ponownie</span>
             </div>
 
-            <div className={styles.headerPills}>
-              <span className={styles.headerPill}>
-                <FiHeart />
-                Zapisane profile: <strong>—</strong>
-              </span>
-              <span className={styles.headerPill}>
-                <FiBookmark />
-                Status: <strong>błąd</strong>
-              </span>
+            <h2 className={styles.heading}>
+              Twoje <span className={styles.headingAccent}>ulubione</span> profile ❤️
+            </h2>
+
+            <p className={styles.description}>
+              Zapisane wizytówki specjalistów, do których chcesz szybko wracać.
+            </p>
+
+            <div className={styles.metaRow}>
+              <div className={styles.metaCard}>
+                <strong>Błąd</strong>
+                <span>nie udało się pobrać danych</span>
+              </div>
+              <div className={styles.metaCard}>
+                <strong>—</strong>
+                <span>zapisanych wizytówek</span>
+              </div>
+              <div className={styles.metaCard}>
+                <strong>Showly</strong>
+                <span>Twoja prywatna lista ulubionych</span>
+              </div>
             </div>
           </div>
 
-          <div className={styles.sectionGroup}>
-            <div className={styles.groupHeader}>
-              <h3 className={styles.groupTitle}>Błąd pobierania danych</h3>
+          <div className={styles.contentBox}>
+            <div className={styles.contentHeader}>
+              <h3 className={styles.contentTitle}>Błąd pobierania danych</h3>
               <span className={styles.badge}>!</span>
             </div>
 
@@ -238,34 +338,46 @@ export default function Favorites({ currentUser }) {
 
   if (count === 0) {
     return (
-      <section id="scrollToId" className={styles.page}>
-        <div className={styles.bgGlow} aria-hidden="true" />
+      <section id="scrollToId" className={styles.section}>
+        <div className={styles.sectionBackground} aria-hidden="true" />
 
-        <div className={styles.shell}>
-          <div className={styles.headerRow}>
-            <div>
-              <h2 className={styles.sectionTitle}>Twoje ulubione profile</h2>
-              <p className={styles.subTitle}>
-                Nie dodałeś/aś jeszcze do <strong>ulubionych</strong> żadnego
-                profilu.
-              </p>
+        <div className={styles.inner}>
+          <div className={styles.head}>
+            <div className={styles.labelRow}>
+              <span className={styles.label}>Showly Favorites</span>
+              <span className={styles.labelDot} />
+              <span className={styles.labelDesc}>Twoja prywatna lista</span>
+              <span className={styles.labelLine} />
+              <span className={styles.pill}>Zapisuj • Wracaj • Wybieraj</span>
             </div>
 
-            <div className={styles.headerPills}>
-              <span className={styles.headerPill}>
-                <FiHeart />
-                Zapisane profile: <strong>0</strong>
-              </span>
-              <span className={styles.headerPill}>
-                <FiSearch />
-                Gotowe do odkrywania
-              </span>
+            <h2 className={styles.heading}>
+              Twoje <span className={styles.headingAccent}>ulubione</span> profile ❤️
+            </h2>
+
+            <p className={styles.description}>
+              Nie dodałeś/aś jeszcze do ulubionych żadnego profilu.
+            </p>
+
+            <div className={styles.metaRow}>
+              <div className={styles.metaCard}>
+                <strong>0</strong>
+                <span>zapisanych wizytówek</span>
+              </div>
+              <div className={styles.metaCard}>
+                <strong>Gotowe</strong>
+                <span>czas odkrywać specjalistów</span>
+              </div>
+              <div className={styles.metaCard}>
+                <strong>Showly</strong>
+                <span>Twoja prywatna lista ulubionych</span>
+              </div>
             </div>
           </div>
 
-          <div className={styles.sectionGroup}>
-            <div className={styles.groupHeader}>
-              <h3 className={styles.groupTitle}>Twoja lista jest jeszcze pusta</h3>
+          <div className={styles.contentBox}>
+            <div className={styles.contentHeader}>
+              <h3 className={styles.contentTitle}>Twoja lista jest jeszcze pusta</h3>
               <span className={styles.badge}>0</span>
             </div>
 
@@ -294,43 +406,58 @@ export default function Favorites({ currentUser }) {
   }
 
   return (
-    <section id="scrollToId" className={styles.page}>
-      <div className={styles.bgGlow} aria-hidden="true" />
+    <section id="scrollToId" className={styles.section}>
+      <div className={styles.sectionBackground} aria-hidden="true" />
 
-      <div className={styles.shell}>
-        <div className={styles.headerRow}>
-          <div>
-            <h2 className={styles.sectionTitle}>Twoje ulubione profile</h2>
-            <p className={styles.subTitle}>
-              Zapisane wizytówki specjalistów, do których chcesz szybko wracać.
-            </p>
+      <div className={styles.inner}>
+        <div className={styles.head}>
+          <div className={styles.labelRow}>
+            <span className={styles.label}>Showly Favorites</span>
+            <span className={styles.labelDot} />
+            <span className={styles.labelDesc}>Twoja prywatna lista</span>
+            <span className={styles.labelLine} />
+            <span className={styles.pill}>Zapisane • Szybki powrót • Wybór</span>
           </div>
 
-          <div className={styles.headerPills}>
-            <span className={styles.headerPill}>
-              <FiHeart />
-              Zapisane profile: <strong>{count}</strong>
-            </span>
-            <span className={styles.headerPill}>
-              <FiBookmark />
-              Twoja prywatna lista
-            </span>
+          <h2 className={styles.heading}>
+            Twoje <span className={styles.headingAccent}>ulubione</span> profile ❤️
+          </h2>
+
+          <p className={styles.description}>
+            Zapisane wizytówki specjalistów, do których chcesz szybko wracać.
+          </p>
+
+          <div className={styles.metaRow}>
+            <div className={styles.metaCard}>
+              <strong>{count}</strong>
+              <span>zapisanych wizytówek</span>
+            </div>
+            <div className={styles.metaCard}>
+              <strong>Prywatne</strong>
+              <span>tylko dla Twojego konta</span>
+            </div>
+            <div className={styles.metaCard}>
+              <strong>Showly</strong>
+              <span>szybki dostęp do najlepszych profili</span>
+            </div>
           </div>
         </div>
 
-        <div className={styles.sectionGroup}>
-          <div className={styles.groupHeader}>
-            <h3 className={styles.groupTitle}>Wszystkie zapisane wizytówki</h3>
+        <div className={styles.contentBox}>
+          <div className={styles.contentHeader}>
+            <h3 className={styles.contentTitle}>Wszystkie zapisane wizytówki</h3>
             <span className={styles.badge}>{count}</span>
           </div>
 
-          <div className={styles.grid}>
-            {profiles.map((p) => (
-              <UserCard
-                key={p.userId || p._id}
-                user={p}
-                currentUser={currentUser}
-              />
+          <div className={styles.list}>
+            {profiles.map((p, index) => (
+              <div className={styles.cardWrap} key={p.userId || p._id || index}>
+                <UserCard
+                  user={p}
+                  currentUser={currentUser}
+                  setAlert={setAlert}
+                />
+              </div>
             ))}
           </div>
         </div>

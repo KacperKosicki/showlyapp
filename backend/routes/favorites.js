@@ -84,7 +84,7 @@ router.post("/toggle", requireAuth, async (req, res) => {
  */
 router.get("/my", requireAuth, async (req, res) => {
   try {
-    const ownerUid = req.auth.uid; // ✅ tylko z tokena
+    const ownerUid = req.auth.uid;
 
     const favs = await Favorite.find({ ownerUid })
       .select({ profileUserId: 1, _id: 0 })
@@ -112,11 +112,8 @@ router.get("/my", requireAuth, async (req, res) => {
         profileType: 1,
         description: 1,
         links: 1,
-
-        // ✅ DODAJ TO:
         theme: 1,
-
-        // (opcjonalnie, ale polecam żeby UserCard miał komplet danych jak wszędzie)
+        partnership: 1,
         slug: 1,
         bookingMode: 1,
         availableDates: 1,
