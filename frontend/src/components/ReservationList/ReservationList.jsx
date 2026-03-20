@@ -1,4 +1,3 @@
-// ReservationList.jsx
 import { useEffect, useState, useCallback, useMemo } from "react";
 import styles from "./ReservationList.module.scss";
 import AlertBox from "../AlertBox/AlertBox";
@@ -29,7 +28,7 @@ const GRID_STEP_MIN = 5;
 // ✅ stała przerwa "systemowa" po usłudze (bazowa)
 const BASE_BREAK_MIN = 5;
 
-// ✅ (legacy) nie pokazujemy wolnych slotów krótszych niż to (np. 15-min wolne z bufora znikają)
+// ✅ (legacy) nie pokazujemy wolnych slotów krótszych niż to
 const MIN_VISIBLE_FREE_MIN = 30;
 
 function Countdown({ until, onExpire }) {
@@ -103,25 +102,20 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   const [serviceReservations, setServiceReservations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ widok: lista vs kalendarz
-  const [viewMode, setViewMode] = useState("list"); // "list" | "calendar"
+  const [viewMode, setViewMode] = useState("list");
   const [selectedDay, setSelectedDay] = useState(() => new Date());
 
-  // ✅ meta profilu (workingHours + providerProfileId + usługi + staff + bookingMode + team)
   const [metaLoading, setMetaLoading] = useState(false);
   const [providerMeta, setProviderMeta] = useState(null);
 
-  // ✅ OFFLINE modal
   const [offlineOpen, setOfflineOpen] = useState(false);
 
-  // formularz offline
   const [offlineForm, setOfflineForm] = useState({
     dateOnly: false,
     date: toISODate(new Date()),
     fromTime: "10:00",
     toTime: "11:00",
     slotStart: "",
-
     offlineClientName: "",
     description: "",
     serviceId: "",
@@ -136,8 +130,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   });
 
   const [disabledIds, setDisabledIds] = useState(new Set());
-
-  // uid -> undefined(pending) | null(brak) | string(nazwa)
   const [accountNameMap, setAccountNameMap] = useState({});
 
   const safeParse = (str) => {
@@ -148,35 +140,27 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     }
   };
 
-  // =========================
-  //  META: czy user ma profil usługodawcy
-  // =========================
   const hasProviderProfile = !!providerMeta?.providerProfileId;
-
-  // ✅ tryb rezerwacji profilu
-  const bookingMode = providerMeta?.bookingMode; // "calendar" | "request-blocking" | "request-open"
-
-  // ✅ Kalendarz dostępny dla: calendar + request-blocking
+  const bookingMode = providerMeta?.bookingMode;
   const canUseCalendar =
     hasProviderProfile && (bookingMode === "calendar" || bookingMode === "request-blocking");
 
   const isSlotMode = bookingMode === "calendar";
   const isDayBlockingMode = bookingMode === "request-blocking";
 
-  // ✅ buffer z profilu (0/5/10/15) + bazowe 5 min
   const bookingBufferMin = useMemo(() => {
     const b = Number(providerMeta?.bookingBufferMin);
     return [0, 5, 10, 15].includes(b) ? b : 0;
   }, [providerMeta?.bookingBufferMin]);
 
-  // ✅ to jest ten bufor, który ma blokować kolejne sloty po usłudze
   const effectiveBufferMin = useMemo(() => {
-    return BASE_BREAK_MIN + bookingBufferMin; // 5 / 10 / 15 / 20
+    return BASE_BREAK_MIN + bookingBufferMin;
   }, [bookingBufferMin]);
 
-  // jeśli ktoś nie ma profilu albo nie ma trybu kalendarzowego, to nie pokazujemy widoku calendar
   useEffect(() => {
-    if ((!hasProviderProfile || !canUseCalendar) && viewMode === "calendar") setViewMode("list");
+    if ((!hasProviderProfile || !canUseCalendar) && viewMode === "calendar") {
+      setViewMode("list");
+    }
   }, [hasProviderProfile, canUseCalendar, viewMode]);
 
   const fetchProviderMeta = useCallback(async () => {
@@ -225,7 +209,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     })();
   }, [isLogged, fetchProviderMeta, refetch]);
 
-  // ESC zamyka modal
   useEffect(() => {
     if (!offlineOpen) return;
 
@@ -237,7 +220,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     return () => window.removeEventListener("keydown", onKey);
   }, [offlineOpen]);
 
-  // blokada scrolla strony pod modalem
   useEffect(() => {
     if (!offlineOpen) return;
 
@@ -258,7 +240,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     if (!loading && resetPendingReservationsCount) resetPendingReservationsCount();
   }, [loading, resetPendingReservationsCount]);
 
-  // 〰️ scroll po wejściu / powrocie
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo || loading) return;
@@ -272,20 +253,15 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         requestAnimationFrame(tryScroll);
       }
     };
+
     requestAnimationFrame(tryScroll);
   }, [location.state, loading, location.pathname]);
 
-  // =========================
-  //  TEAM / assignment mode
-  // =========================
   const teamEnabled = providerMeta?.team?.enabled === true;
-  const assignmentMode = providerMeta?.team?.assignmentMode; // 'user-pick' | 'auto-assign'
+  const assignmentMode = providerMeta?.team?.assignmentMode;
   const isUserPickTeam = teamEnabled && assignmentMode === "user-pick";
   const isAutoAssignTeam = teamEnabled && assignmentMode === "auto-assign";
 
-  // =========================
-  //  DURATION: odczyt trwania usługi
-  // =========================
   const services = useMemo(() => providerMeta?.services || [], [providerMeta]);
 
   const selectedService = useMemo(() => {
@@ -339,9 +315,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     return `${selectedDurationMin} min`;
   }, [selectedDurationMin]);
 
-  // =========================
-  //  WORK HOURS z profilu (meta)
-  // =========================
   const getWorkHours = useCallback(() => {
     const m = providerMeta || {};
 
@@ -381,14 +354,13 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     return { startMin, endMin, from: minToTime(startMin), to: minToTime(endMin) };
   }, [providerMeta]);
 
-  const { startMin: DAY_START_MIN, endMin: DAY_END_MIN } = useMemo(() => getWorkHours(), [getWorkHours]);
+  const { startMin: DAY_START_MIN, endMin: DAY_END_MIN } = useMemo(
+    () => getWorkHours(),
+    [getWorkHours]
+  );
 
-  // =========================
-  //  OFFLINE SLOTY (jak BookingModeCalendar)
-  //  ✅ tylko w trybie slotowym (calendar)
-  // =========================
-  const OFFLINE_STEP_MIN = GRID_STEP_MIN; // ✅ 5
-  const OFFLINE_BUFFER_MIN = effectiveBufferMin; // ✅ 5 + bookingBufferMin
+  const OFFLINE_STEP_MIN = GRID_STEP_MIN;
+  const OFFLINE_BUFFER_MIN = effectiveBufferMin;
 
   const offlineSlots = useMemo(() => {
     if (!offlineOpen) return [];
@@ -396,11 +368,13 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     if (offlineForm.dateOnly) return [];
     if (!offlineForm.serviceId || !selectedDurationMin) return [];
     if (!isSlotMode) return [];
-
     if (isUserPickTeam && !offlineForm.staffId) return [];
 
     const { startMin: dayStart, endMin: dayEnd } = getWorkHours();
     const dateStr = offlineForm.date;
+    const todayIso = toISODate(new Date());
+    const nowMs = Date.now();
+    const isToday = dateStr === todayIso;
 
     const active = (serviceReservations || [])
       .filter((r) => r.date === dateStr)
@@ -414,10 +388,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
     const eligibleStaff = isAutoAssignTeam
       ? (providerMeta?.staff || []).filter(
-          (s) =>
-            s.active !== false &&
-            (s.serviceIds || []).some((id) => String(id) === String(offlineForm.serviceId))
-        )
+        (s) =>
+          s.active !== false &&
+          (s.serviceIds || []).some((id) => String(id) === String(offlineForm.serviceId))
+      )
       : [];
 
     const totalCapacity = isAutoAssignTeam
@@ -433,6 +407,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         const from = new Date(`${r.date}T${r.fromTime}`);
         const toNoBuf = new Date(`${r.date}T${r.toTime}`);
         const toWithBuf = new Date(+toNoBuf + OFFLINE_BUFFER_MIN * 60 * 1000);
+
         return {
           fromMs: +from,
           toMs: +toNoBuf,
@@ -452,13 +427,22 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       const endWithBuf = end + OFFLINE_BUFFER_MIN;
 
       let status = "free";
-      if (endWithBuf > dayEnd) status = "disabled";
 
       const startDT = new Date(`${dateStr}T${minToTime(start)}`);
       const endBufDT = new Date(`${dateStr}T${minToTime(endWithBuf)}`);
 
       const slotStartMs = +startDT;
       const slotEndMs = +endBufDT;
+
+      // 1. slot nie mieści się w godzinach pracy + buforze
+      if (endWithBuf > dayEnd) {
+        status = "disabled";
+      }
+
+      // 2. slot jest już w przeszłości dla dzisiejszego dnia
+      if (isToday && slotStartMs <= nowMs) {
+        status = "disabled";
+      }
 
       const overlaps = busy.filter((b) => slotStartMs < b.toBufMs && slotEndMs > b.fromMs);
 
@@ -467,6 +451,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
           status = "disabled";
         } else {
           const perStaffCounts = new Map();
+
           for (const o of overlaps) {
             if (!o.staffId) continue;
             perStaffCounts.set(o.staffId, (perStaffCounts.get(o.staffId) || 0) + 1);
@@ -489,7 +474,11 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
               (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
             );
 
-            status = startsInsideAccepted ? "reserved" : startsInsidePending ? "pending" : "disabled";
+            status = startsInsideAccepted
+              ? "reserved"
+              : startsInsidePending
+                ? "pending"
+                : "disabled";
           }
         }
       } else {
@@ -504,7 +493,11 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
             (o) => slotStartMs >= o.fromMs && slotStartMs <= o.toMs
           );
 
-          status = startsInsideAccepted ? "reserved" : startsInsidePending ? "pending" : "disabled";
+          status = startsInsideAccepted
+            ? "reserved"
+            : startsInsidePending
+              ? "pending"
+              : "disabled";
         }
       }
 
@@ -548,9 +541,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     }));
   }, [offlineOpen, isSlotMode, offlineForm.dateOnly, offlineForm.slotStart, selectedDurationMin]);
 
-  // =========================
-  //  Prewalidacja OFFLINE z dynamicznym buforem
-  // =========================
   const validateOfflineWithBreak = useCallback(() => {
     if (offlineForm.dateOnly || isDayBlockingMode) return { ok: true, reason: null };
 
@@ -585,9 +575,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     };
   }, [offlineForm, serviceReservations, OFFLINE_BUFFER_MIN, isDayBlockingMode]);
 
-  // =========================
-  //  OFFLINE: otwieranie modala
-  // =========================
   const openOfflineForDay = async (isoDate) => {
     if (!isLogged) return;
     if (!hasProviderProfile) {
@@ -627,12 +614,22 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
     const name = (offlineForm.offlineClientName || "").trim();
     if (!name) {
-      setAlert({ show: true, type: "warning", message: "Podaj nazwę klienta (offline).", onClose: null });
+      setAlert({
+        show: true,
+        type: "warning",
+        message: "Podaj nazwę klienta (offline).",
+        onClose: null,
+      });
       return;
     }
 
     if (!offlineForm.serviceId) {
-      setAlert({ show: true, type: "warning", message: "Najpierw wybierz usługę.", onClose: null });
+      setAlert({
+        show: true,
+        type: "warning",
+        message: "Najpierw wybierz usługę.",
+        onClose: null,
+      });
       return;
     }
 
@@ -650,7 +647,26 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       }
 
       if (isSlotMode && !offlineForm.slotStart) {
-        setAlert({ show: true, type: "warning", message: "Wybierz godzinę startu (slot).", onClose: null });
+        setAlert({
+          show: true,
+          type: "warning",
+          message: "Wybierz godzinę startu (slot).",
+          onClose: null,
+        });
+        return;
+      }
+    }
+
+    const todayIso = toISODate(new Date());
+    if (!effectiveDateOnly && offlineForm.date === todayIso) {
+      const startMs = new Date(`${offlineForm.date}T${offlineForm.fromTime}`).getTime();
+      if (startMs <= Date.now()) {
+        setAlert({
+          show: true,
+          type: "warning",
+          message: "Nie możesz dodać rezerwacji offline w przeszłości.",
+          onClose: null,
+        });
         return;
       }
     }
@@ -682,7 +698,12 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         const to = offlineForm.toTime;
 
         if (!from || !to) {
-          setAlert({ show: true, type: "warning", message: "Uzupełnij godziny od/do.", onClose: null });
+          setAlert({
+            show: true,
+            type: "warning",
+            message: "Uzupełnij godziny od/do.",
+            onClose: null,
+          });
           return;
         }
 
@@ -704,14 +725,21 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         dateOnly: false,
       }));
 
-      setAlert({ show: true, type: "success", message: "Dodano offline rezerwację.", onClose: null });
+      setAlert({
+        show: true,
+        type: "success",
+        message: "Dodano offline rezerwację.",
+        onClose: null,
+      });
 
       await refetch();
     } catch (e) {
       console.error("❌ submitOffline error:", e);
 
       const msg =
-        e?.response?.data?.message || e?.response?.data?.error || "Nie udało się dodać offline rezerwacji.";
+        e?.response?.data?.message ||
+        e?.response?.data?.error ||
+        "Nie udało się dodać offline rezerwacji.";
 
       const looksLikeBreakIssue =
         String(msg).toLowerCase().includes("przerw") ||
@@ -750,12 +778,11 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   const filteredStaff = useMemo(() => {
     const staff = providerMeta?.staff || [];
     if (!offlineForm.serviceId) return staff;
-    return staff.filter((s) => (s.serviceIds || []).some((id) => String(id) === String(offlineForm.serviceId)));
+    return staff.filter((s) =>
+      (s.serviceIds || []).some((id) => String(id) === String(offlineForm.serviceId))
+    );
   }, [providerMeta, offlineForm.serviceId]);
 
-  // =========================
-  //  Konto (displayName) dla received
-  // =========================
   const senderUids = useMemo(() => {
     const arr = serviceReservations.map((r) => r.userId).filter(Boolean);
     return Array.from(new Set(arr));
@@ -801,7 +828,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     };
 
     (async () => {
-      const entries = await Promise.all(senderUids.map(async (uid) => [uid, await fetchOne(uid)]));
+      const entries = await Promise.all(
+        senderUids.map(async (uid) => [uid, await fetchOne(uid)])
+      );
+
       setAccountNameMap((prev) => {
         const next = { ...prev };
         entries.forEach(([uid, name]) => {
@@ -812,9 +842,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     })();
   }, [isLogged, senderUids]);
 
-  // =========================
-  //  Konflikty (ostrzeżenia w modalu) — również z dynamicznym buforem
-  // =========================
   const conflicts = useMemo(() => {
     if (!offlineOpen) return [];
     const iso = offlineForm.date;
@@ -827,9 +854,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     if (offlineForm.dateOnly || isDayBlockingMode) {
       return active.map((r) => ({
         id: r._id,
-        label: `${isWholeDay(r) ? "CAŁY DZIEŃ" : `${r.fromTime}–${r.toTime}`} • ${
-          r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
-        } • ${r.status}`,
+        label: `${isWholeDay(r) ? "CAŁY DZIEŃ" : `${r.fromTime}–${r.toTime}`} • ${r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
+          } • ${r.status}`,
       }));
     }
 
@@ -839,9 +865,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         .filter((r) => isWholeDay(r))
         .map((r) => ({
           id: r._id,
-          label: `CAŁY DZIEŃ • ${
-            r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
-          } • ${r.status}`,
+          label: `CAŁY DZIEŃ • ${r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
+            } • ${r.status}`,
         }));
     }
 
@@ -862,9 +887,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       })
       .map((r) => ({
         id: r._id,
-        label: `${r.fromTime}–${r.toTime} (+${OFFLINE_BUFFER_MIN}m) • ${
-          r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
-        } • ${r.status}`,
+        label: `${r.fromTime}–${r.toTime} (+${OFFLINE_BUFFER_MIN}m) • ${r.offline ? r.offlineClientName || "OFFLINE" : r.userName || "Klient"
+          } • ${r.status}`,
       }));
   }, [
     offlineOpen,
@@ -877,384 +901,105 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     OFFLINE_BUFFER_MIN,
   ]);
 
-  const offlineModalEl = useMemo(() => {
-    if (!offlineOpen) return null;
+  const pendingSent = clientReservations.filter((r) => r.status === "oczekująca").length;
+  const pendingReceived = serviceReservations.filter((r) => r.status === "oczekująca").length;
+  const acceptedSent = clientReservations.filter((r) => r.status === "zaakceptowana").length;
+  const acceptedReceived = serviceReservations.filter((r) => r.status === "zaakceptowana").length;
 
-    const servicesLocal = providerMeta?.services || [];
-
-    return (
-      <div className={styles.modalOverlay} onClick={() => setOfflineOpen(false)}>
-        <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-          <div className={styles.modalHead}>
-            <div className={styles.modalTitle}>
-              <FiPlus /> Dodaj rezerwację offline
-            </div>
-
-            <button className={styles.modalClose} onClick={() => setOfflineOpen(false)} type="button">
-              <FiX />
-            </button>
-          </div>
-
-          <div className={styles.modalBody}>
-            {metaLoading && <div className={styles.modalHint}>Ładowanie danych profilu…</div>}
-
-            <div className={styles.modalInfo}>
-              <FiInfo />
-              <div>
-                <b>System dolicza przerwę {OFFLINE_BUFFER_MIN} min</b> po każdej rezerwacji (także offline).
-                <div style={{ opacity: 0.85, fontSize: 12, marginTop: 4 }}>
-                  (bazowe {BASE_BREAK_MIN} min + bufor z profilu {bookingBufferMin} min)
-                </div>
-              </div>
-            </div>
-
-            {conflicts.length > 0 && (
-              <div className={styles.modalWarn}>
-                <div className={styles.modalWarnTitle}>
-                  <FiAlertCircle /> Uwaga: możliwy konflikt terminów (z buforem {OFFLINE_BUFFER_MIN} min)
-                </div>
-                <div className={styles.modalWarnText}>
-                  W tym dniu/godzinach są już rezerwacje. Terminy mogą się nałożyć:
-                </div>
-                <ul className={styles.conflictList}>
-                  {conflicts.slice(0, 6).map((c) => (
-                    <li key={c.id}>{c.label}</li>
-                  ))}
-                </ul>
-                {conflicts.length > 6 && <div className={styles.conflictMore}>+ {conflicts.length - 6} więcej</div>}
-              </div>
-            )}
-
-            <div className={styles.modalGrid}>
-              <label className={styles.field}>
-                <span>Data</span>
-                <input
-                  className={styles.formInput}
-                  type="date"
-                  value={offlineForm.date}
-                  onChange={(e) => setOfflineForm((p) => ({ ...p, date: e.target.value, slotStart: "" }))}
-                />
-              </label>
-
-              {!isDayBlockingMode && (
-                <label className={styles.fieldToggle}>
-                  <input
-                    type="checkbox"
-                    checked={offlineForm.dateOnly}
-                    onChange={(e) => setOfflineForm((p) => ({ ...p, dateOnly: e.target.checked, slotStart: "" }))}
-                  />
-                  <span>Cały dzień</span>
-                </label>
-              )}
-
-              <label className={styles.fieldWide}>
-                <span>Klient (offline)</span>
-                <input
-                  className={styles.formInput}
-                  value={offlineForm.offlineClientName}
-                  onChange={(e) => setOfflineForm((p) => ({ ...p, offlineClientName: e.target.value }))}
-                  placeholder="Np. Kasia / Firma X"
-                />
-              </label>
-
-              <label className={styles.fieldWide}>
-                <span>Opis (wyświetlany w rezerwacji)</span>
-                <textarea
-                  className={styles.formTextarea}
-                  rows={3}
-                  value={offlineForm.description}
-                  onChange={(e) => setOfflineForm((p) => ({ ...p, description: e.target.value }))}
-                  placeholder="Opcjonalnie"
-                />
-              </label>
-
-              <label className={styles.fieldWide}>
-                <span>Usługa (wymagane)</span>
-                <select
-                  className={styles.formInput}
-                  value={offlineForm.serviceId}
-                  onChange={(e) =>
-                    setOfflineForm((p) => ({
-                      ...p,
-                      serviceId: e.target.value,
-                      staffId: "",
-                      slotStart: "",
-                    }))
-                  }
-                >
-                  <option value="">— wybierz usługę —</option>
-                  {servicesLocal.map((s) => {
-                    const mins = getServiceDurationMinutes(s);
-                    const label = mins
-                      ? `${s.name} (${mins % 60 === 0 && mins >= 60 ? `${mins / 60} godz.` : `${mins} min`})`
-                      : s.name;
-
-                    return (
-                      <option key={String(s._id)} value={String(s._id)}>
-                        {label}
-                      </option>
-                    );
-                  })}
-                </select>
-
-                {!!durationLabel && (
-                  <div className={styles.durationPill}>
-                    ⏱ Czas usługi: <b>{durationLabel}</b>
-                    <span className={styles.durationMini}>+ {OFFLINE_BUFFER_MIN} min przerwy</span>
-                  </div>
-                )}
-              </label>
-
-              <label className={styles.fieldWide}>
-                <span>Pracownik</span>
-                <select
-                  className={styles.formInput}
-                  value={offlineForm.staffId}
-                  onChange={(e) =>
-                    setOfflineForm((p) => ({
-                      ...p,
-                      staffId: e.target.value,
-                      slotStart: "",
-                    }))
-                  }
-                  disabled={!teamEnabled || isAutoAssignTeam}
-                  title={
-                    !teamEnabled
-                      ? "Zespół wyłączony w profilu"
-                      : isAutoAssignTeam
-                      ? "Auto-assign: pracownik dobierany automatycznie"
-                      : ""
-                  }
-                >
-                  <option value="">{isUserPickTeam ? "— wybierz pracownika (wymagane) —" : "— opcjonalnie —"}</option>
-                  {filteredStaff.map((s) => (
-                    <option key={String(s._id)} value={String(s._id)}>
-                      {s.name} (cap: {s.capacity || 1})
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              {!isDayBlockingMode && isSlotMode && !offlineForm.dateOnly && (
-                <div className={styles.slotBox}>
-                  <div className={styles.slotHead}>
-                    Wybierz godzinę startu (slot)
-                    <span className={styles.slotHint}>+ {OFFLINE_BUFFER_MIN} min przerwy</span>
-                  </div>
-
-                  {!offlineForm.serviceId ? (
-                    <div className={styles.slotInfo}>
-                      Najpierw wybierz <b>usługę</b> — wtedy pokażę dopasowane sloty.
-                    </div>
-                  ) : isUserPickTeam && !offlineForm.staffId ? (
-                    <div className={styles.slotInfo}>
-                      Wybierz <b>pracownika</b>, żeby pokazać sloty (tryb user-pick).
-                    </div>
-                  ) : (
-                    <>
-                      <div className={styles.slotGrid}>
-                        {offlineSlots.map((s, i) => (
-                          <button
-                            key={`${s.label}-${i}`}
-                            type="button"
-                            className={`
-                              ${styles.slotBtn}
-                              ${s.status === "disabled" ? styles.slotDisabled : ""}
-                              ${s.status === "reserved" ? styles.slotReserved : ""}
-                              ${s.status === "pending" ? styles.slotPending : ""}
-                              ${offlineForm.slotStart === s.label ? styles.slotSelected : ""}
-                            `}
-                            disabled={s.status !== "free"}
-                            onClick={() => setOfflineForm((p) => ({ ...p, slotStart: s.label }))}
-                          >
-                            {s.label}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className={styles.slotLegend}>
-                        <span>
-                          <span className={`${styles.legBox} ${styles.legReserved}`} />
-                          zajęte
-                        </span>
-                        <span>
-                          <span className={`${styles.legBox} ${styles.legPending}`} />
-                          oczekujące
-                        </span>
-                        <span>
-                          <span className={`${styles.legBox} ${styles.legDisabled}`} />
-                          niedostępne
-                        </span>
-                        <span>
-                          <span className={`${styles.legBox} ${styles.legFree}`} />
-                          wolne
-                        </span>
-                      </div>
-
-                      {!!offlineForm.slotStart && (
-                        <div className={styles.slotSummary}>
-                          Start: <b>{offlineForm.fromTime}</b> • Koniec: <b>{offlineForm.toTime}</b>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className={styles.modalActions}>
-              <button className={styles.modalSecondary} onClick={() => setOfflineOpen(false)} type="button">
-                Anuluj
-              </button>
-
-              <button
-                className={styles.modalPrimary}
-                onClick={submitOffline}
-                type="button"
-                disabled={disabledIds.has("offline-submit")}
-              >
-                <FiEdit3 /> Dodaj
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+  const renderNameNode = (rawName) =>
+    rawName ? (
+      <span className={styles.name}>{rawName}</span>
+    ) : (
+      <span className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`} />
     );
-  }, [
-    offlineOpen,
-    providerMeta,
-    metaLoading,
-    offlineForm,
-    conflicts,
-    durationLabel,
-    filteredStaff,
-    disabledIds,
-    submitOffline,
-    getServiceDurationMinutes,
-    teamEnabled,
-    isUserPickTeam,
-    isAutoAssignTeam,
-    offlineSlots,
-    isDayBlockingMode,
-    isSlotMode,
-    OFFLINE_BUFFER_MIN,
-    bookingBufferMin,
-  ]);
 
-  // flash (sessionStorage)
-  useEffect(() => {
-    if (loading) return;
-    const raw = sessionStorage.getItem("flash");
-    const flash = safeParse(raw);
-    if (!flash) return;
-
-    const age = Date.now() - (flash.ts || 0);
-    const ttl = flash.ttl ?? 6000;
-
-    if (age < ttl) {
-      const remaining = ttl - age;
-      setAlert({
-        show: true,
-        type: flash.type || "info",
-        message: flash.message || "",
-        onClose: () => {
-          setAlert((a) => ({ ...a, show: false }));
-          sessionStorage.removeItem("flash");
-        },
-      });
-
-      const tid = setTimeout(() => {
-        setAlert((a) => ({ ...a, show: false }));
-        sessionStorage.removeItem("flash");
-      }, remaining);
-
-      return () => clearTimeout(tid);
-    } else {
-      sessionStorage.removeItem("flash");
-    }
-  }, [loading]);
-
-  // auto-refetch co 30s jeśli są pendingi
-  useEffect(() => {
-    if (!isLogged) return;
-
-    const hasPendings =
-      clientReservations.some((r) => r.status === "oczekująca") ||
-      serviceReservations.some((r) => r.status === "oczekująca");
-
-    if (!hasPendings) return;
-    const id = setInterval(() => {
-      refetch();
-    }, 30000);
-
-    return () => clearInterval(id);
-  }, [isLogged, clientReservations, serviceReservations, refetch]);
-
-  const withToastAndRefresh = (type, message, unlockId) => {
-    const onClose = async () => {
-      setAlert((a) => ({ ...a, show: false }));
-      await refetch();
-      if (unlockId) {
-        setDisabledIds((prev) => {
-          const next = new Set(prev);
-          next.delete(unlockId);
-          return next;
-        });
-      }
-    };
-    setAlert({ show: true, type, message, onClose });
+  const getAvatarVariant = (variant) => {
+    if (variant === "sent") return "sent";
+    return "recv";
   };
 
-  const handleStatusChange = async (reservationId, newStatus) => {
-    try {
-      setDisabledIds((prev) => new Set(prev).add(reservationId));
+  const AvatarNode = ({ variant, isOffline }) => {
+    const v = getAvatarVariant(variant);
+    const cls = `${styles.avatar} ${v === "sent" ? styles.avatarSent : styles.avatarRecv
+      } ${isOffline ? styles.avatarOffline : ""}`;
 
-      await api.patch(`/api/reservations/${reservationId}/status`, {
-        status: newStatus,
-      });
+    return (
+      <div className={cls} aria-hidden="true">
+        {v === "sent" ? <FiSend /> : <FiInbox />}
+      </div>
+    );
+  };
 
-      if (newStatus === "anulowana")
-        return withToastAndRefresh("warning", "Rezerwacja anulowana – slot zwolniony.", reservationId);
-
-      if (newStatus === "odrzucona")
-        return withToastAndRefresh("warning", "Rezerwacja odrzucona – slot zwolniony.", reservationId);
-
-      if (newStatus === "zaakceptowana") {
-        setAlert({
-          show: true,
-          type: "success",
-          message: "Pomyślnie potwierdzono rezerwację.",
-          onClose: null,
-        });
-        await refetch();
-        setDisabledIds((prev) => {
-          const n = new Set(prev);
-          n.delete(reservationId);
-          return n;
-        });
-        return;
-      }
-
-      withToastAndRefresh("info", "Status zaktualizowany.", reservationId);
-    } catch (err) {
-      console.error("❌ Błąd zmiany statusu rezerwacji:", err);
-      setAlert({ show: true, type: "error", message: "Nie udało się zmienić statusu.", onClose: null });
-      setDisabledIds((prev) => {
-        const n = new Set(prev);
-        n.delete(reservationId);
-        return n;
-      });
+  const renderHeader = (res, variant) => {
+    if (variant === "sent") {
+      return (
+        <>
+          <FiSend className={styles.icon} />
+          <span className={styles.metaText}>
+            Rezerwacja z <b>Twojego konta</b> do profilu{" "}
+            <span className={styles.name}>{res.providerProfileName || "Profil"}</span>
+          </span>
+        </>
+      );
     }
+
+    const rawAccountName = getAccountName(res.userId, res.userName);
+
+    return (
+      <>
+        <FiInbox className={styles.icon} />
+        <span className={styles.metaText}>
+          Otrzymana rezerwacja do <b>Twojego profilu</b> od {renderNameNode(rawAccountName)}
+        </span>
+      </>
+    );
   };
 
   const markSeen = async (id, who) => {
     try {
       await api.patch(`/api/reservations/${id}/seen`, { who });
-      if (who === "client") setClientReservations((prev) => prev.filter((r) => r._id !== id));
-      else setServiceReservations((prev) => prev.filter((r) => r._id !== id));
+      if (who === "client") {
+        setClientReservations((prev) => prev.filter((r) => r._id !== id));
+      } else {
+        setServiceReservations((prev) => prev.filter((r) => r._id !== id));
+      }
     } catch (e) {
       console.error("❌ markSeen error", e);
     }
+  };
+
+  const renderClosedInfo = (res, viewer) => {
+    if (!["anulowana", "odrzucona"].includes(res.status)) return null;
+
+    const who = viewer === "sent" ? "client" : "provider";
+    const unseen = viewer === "sent" ? !res.clientSeen : !res.providerSeen;
+    if (!unseen) return null;
+
+    const label =
+      res.closedReason === "expired"
+        ? "Rezerwacja wygasła (brak potwierdzenia w czasie)."
+        : res.status === "anulowana"
+          ? "Klient anulował rezerwację."
+          : "Usługodawca odrzucił rezerwację.";
+
+    return (
+      <div className={styles.closedInfo}>
+        <span>{label}</span>
+        <button className={styles.seenBtn} onClick={() => markSeen(res._id, who)}>
+          OK, widzę
+        </button>
+      </div>
+    );
+  };
+
+  const formatDatePL = (iso) => {
+    const d = new Date(iso);
+    if (isNaN(d)) return iso;
+    return d.toLocaleDateString("pl-PL", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
   };
 
   const timeLabel = (res) => {
@@ -1262,16 +1007,13 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     return whole ? "cały dzień" : `${res.fromTime} – ${res.toTime}`;
   };
 
-  const formatDatePL = (iso) => {
-    const d = new Date(iso);
-    if (isNaN(d)) return iso;
-    return d.toLocaleDateString("pl-PL", { day: "2-digit", month: "short", year: "numeric" });
-  };
-
   const statusIcon = (status) => {
-    if (status === "zaakceptowana") return <FiCheckCircle className={styles.chipIcon} aria-hidden="true" />;
-    if (status === "odrzucona" || status === "anulowana")
+    if (status === "zaakceptowana") {
+      return <FiCheckCircle className={styles.chipIcon} aria-hidden="true" />;
+    }
+    if (status === "odrzucona" || status === "anulowana") {
       return <FiXCircle className={styles.chipIcon} aria-hidden="true" />;
+    }
     return <FiAlertCircle className={styles.chipIcon} aria-hidden="true" />;
   };
 
@@ -1313,94 +1055,18 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       )}
 
       <span
-        className={`${styles.chip} ${
-          res.status === "zaakceptowana"
-            ? styles.chipAccepted
-            : res.status === "odrzucona" || res.status === "anulowana"
+        className={`${styles.chip} ${res.status === "zaakceptowana"
+          ? styles.chipAccepted
+          : res.status === "odrzucona" || res.status === "anulowana"
             ? styles.chipRejected
             : styles.chipPending
-        }`}
+          }`}
       >
         {statusIcon(res.status)}
         {res.status}
       </span>
     </div>
   );
-
-  const pendingSent = clientReservations.filter((r) => r.status === "oczekująca").length;
-  const pendingReceived = serviceReservations.filter((r) => r.status === "oczekująca").length;
-
-  const renderNameNode = (rawName) =>
-    rawName ? (
-      <span className={styles.name}>{rawName}</span>
-    ) : (
-      <span className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`} />
-    );
-
-  const getAvatarVariant = (variant) => {
-    if (variant === "sent") return "sent";
-    return "recv";
-  };
-
-  const AvatarNode = ({ variant, isOffline }) => {
-    const v = getAvatarVariant(variant);
-    const cls = `${styles.avatar} ${v === "sent" ? styles.avatarSent : styles.avatarRecv} ${
-      isOffline ? styles.avatarOffline : ""
-    }`;
-    return (
-      <div className={cls} aria-hidden="true">
-        {v === "sent" ? <FiSend /> : <FiInbox />}
-      </div>
-    );
-  };
-
-  const renderHeader = (res, variant) => {
-    if (variant === "sent") {
-      return (
-        <>
-          <FiSend className={styles.icon} />
-          <span className={styles.metaText}>
-            Rezerwacja z <b>Twojego konta</b> do profilu{" "}
-            <span className={styles.name}>{res.providerProfileName || "Profil"}</span>
-          </span>
-        </>
-      );
-    }
-
-    const rawAccountName = getAccountName(res.userId, res.userName);
-    return (
-      <>
-        <FiInbox className={styles.icon} />
-        <span className={styles.metaText}>
-          Otrzymana rezerwacja do <b>Twojego profilu</b> od {renderNameNode(rawAccountName)}
-        </span>
-      </>
-    );
-  };
-
-  const renderClosedInfo = (res, viewer) => {
-    if (!["anulowana", "odrzucona"].includes(res.status)) return null;
-
-    const who = viewer === "sent" ? "client" : "provider";
-    const unseen = viewer === "sent" ? !res.clientSeen : !res.providerSeen;
-    if (!unseen) return null;
-
-    const label =
-      res.closedReason === "expired"
-        ? "Rezerwacja wygasła (brak potwierdzenia w czasie)."
-        : res.status === "anulowana"
-        ? "Klient anulował rezerwację."
-        : "Usługodawca odrzucił rezerwację.";
-
-    return (
-      <div className={styles.closedInfo}>
-        <span>{label}</span>
-        <button className={styles.seenBtn} onClick={() => markSeen(res._id, who)}>
-          OK, widzę
-        </button>
-      </div>
-    );
-  };
 
   const renderDescription = (res, viewer) => {
     const text = (res.description || "").trim();
@@ -1417,6 +1083,84 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         <div className={styles.noteBody}>{text}</div>
       </div>
     );
+  };
+
+  const withToastAndRefresh = (type, message, unlockId) => {
+    const onClose = async () => {
+      setAlert((a) => ({ ...a, show: false }));
+      await refetch();
+
+      if (unlockId) {
+        setDisabledIds((prev) => {
+          const next = new Set(prev);
+          next.delete(unlockId);
+          return next;
+        });
+      }
+    };
+
+    setAlert({ show: true, type, message, onClose });
+  };
+
+  const handleStatusChange = async (reservationId, newStatus) => {
+    try {
+      setDisabledIds((prev) => new Set(prev).add(reservationId));
+
+      await api.patch(`/api/reservations/${reservationId}/status`, {
+        status: newStatus,
+      });
+
+      if (newStatus === "anulowana") {
+        return withToastAndRefresh(
+          "warning",
+          "Rezerwacja anulowana – slot zwolniony.",
+          reservationId
+        );
+      }
+
+      if (newStatus === "odrzucona") {
+        return withToastAndRefresh(
+          "warning",
+          "Rezerwacja odrzucona – slot zwolniony.",
+          reservationId
+        );
+      }
+
+      if (newStatus === "zaakceptowana") {
+        setAlert({
+          show: true,
+          type: "success",
+          message: "Pomyślnie potwierdzono rezerwację.",
+          onClose: null,
+        });
+
+        await refetch();
+
+        setDisabledIds((prev) => {
+          const n = new Set(prev);
+          n.delete(reservationId);
+          return n;
+        });
+
+        return;
+      }
+
+      withToastAndRefresh("info", "Status zaktualizowany.", reservationId);
+    } catch (err) {
+      console.error("❌ Błąd zmiany statusu rezerwacji:", err);
+      setAlert({
+        show: true,
+        type: "error",
+        message: "Nie udało się zmienić statusu.",
+        onClose: null,
+      });
+
+      setDisabledIds((prev) => {
+        const n = new Set(prev);
+        n.delete(reservationId);
+        return n;
+      });
+    }
   };
 
   const renderItem = (res, variant) => {
@@ -1487,13 +1231,12 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     );
   };
 
-  // =========================
-  //  KALENDARZ
-  // =========================
   const dayMap = useMemo(() => {
     const map = new Map();
+
     const push = (date, type, status) => {
       if (!date) return;
+
       const cur =
         map.get(date) || {
           total: 0,
@@ -1503,6 +1246,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
           sentTotal: 0,
           recvTotal: 0,
         };
+
       cur.total += 1;
       if (type === "sent") cur.sentTotal += 1;
       if (type === "recv") cur.recvTotal += 1;
@@ -1515,7 +1259,9 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     };
 
     clientReservations.forEach((r) => push(r.date, "sent", r.status));
-    if (hasProviderProfile) serviceReservations.forEach((r) => push(r.date, "recv", r.status));
+    if (hasProviderProfile) {
+      serviceReservations.forEach((r) => push(r.date, "recv", r.status));
+    }
 
     return map;
   }, [clientReservations, serviceReservations, hasProviderProfile]);
@@ -1524,7 +1270,9 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
   const selectedReservations = useMemo(() => {
     const sent = clientReservations.filter((r) => r.date === selectedIso);
-    const recv = hasProviderProfile ? serviceReservations.filter((r) => r.date === selectedIso) : [];
+    const recv = hasProviderProfile
+      ? serviceReservations.filter((r) => r.date === selectedIso)
+      : [];
 
     const sortFn = (a, b) => {
       const ap = a.status === "oczekująca" ? 0 : 1;
@@ -1610,7 +1358,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
         const title =
           r.__kind === "recv"
-            ? `${isOffline ? r.offlineClientName || "OFFLINE" : getAccountName(r.userId, r.userName) || "Klient"}`
+            ? `${isOffline
+              ? r.offlineClientName || "OFFLINE"
+              : getAccountName(r.userId, r.userName) || "Klient"
+            }`
             : `${r.providerProfileName || "Profil"}`;
 
         return {
@@ -1686,6 +1437,354 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     });
   }, [dayTimeline]);
 
+  const offlineModalEl = useMemo(() => {
+    if (!offlineOpen) return null;
+
+    const servicesLocal = providerMeta?.services || [];
+
+    return (
+      <div className={styles.modalOverlay} onClick={() => setOfflineOpen(false)}>
+        <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalHead}>
+            <div className={styles.modalTitle}>
+              <FiPlus /> Dodaj rezerwację offline
+            </div>
+
+            <button
+              className={styles.modalClose}
+              onClick={() => setOfflineOpen(false)}
+              type="button"
+            >
+              <FiX />
+            </button>
+          </div>
+
+          <div className={styles.modalBody}>
+            {metaLoading && <div className={styles.modalHint}>Ładowanie danych profilu…</div>}
+
+            <div className={styles.modalInfo}>
+              <FiInfo />
+              <div>
+                <b>System dolicza przerwę {OFFLINE_BUFFER_MIN} min</b> po każdej rezerwacji
+                (także offline).
+                <div style={{ opacity: 0.85, fontSize: 12, marginTop: 4 }}>
+                  (bazowe {BASE_BREAK_MIN} min + bufor z profilu {bookingBufferMin} min)
+                </div>
+              </div>
+            </div>
+
+            {conflicts.length > 0 && (
+              <div className={styles.modalWarn}>
+                <div className={styles.modalWarnTitle}>
+                  <FiAlertCircle /> Uwaga: możliwy konflikt terminów (z buforem{" "}
+                  {OFFLINE_BUFFER_MIN} min)
+                </div>
+                <div className={styles.modalWarnText}>
+                  W tym dniu/godzinach są już rezerwacje. Terminy mogą się nałożyć:
+                </div>
+                <ul className={styles.conflictList}>
+                  {conflicts.slice(0, 6).map((c) => (
+                    <li key={c.id}>{c.label}</li>
+                  ))}
+                </ul>
+                {conflicts.length > 6 && (
+                  <div className={styles.conflictMore}>+ {conflicts.length - 6} więcej</div>
+                )}
+              </div>
+            )}
+
+            <div className={styles.modalGrid}>
+              <label className={styles.field}>
+                <span>Data</span>
+                <input
+                  className={styles.formInput}
+                  type="date"
+                  value={offlineForm.date}
+                  onChange={(e) =>
+                    setOfflineForm((p) => ({ ...p, date: e.target.value, slotStart: "" }))
+                  }
+                />
+              </label>
+
+              {!isDayBlockingMode && (
+                <label className={styles.fieldToggle}>
+                  <input
+                    type="checkbox"
+                    checked={offlineForm.dateOnly}
+                    onChange={(e) =>
+                      setOfflineForm((p) => ({
+                        ...p,
+                        dateOnly: e.target.checked,
+                        slotStart: "",
+                      }))
+                    }
+                  />
+                  <span>Cały dzień</span>
+                </label>
+              )}
+
+              <label className={styles.fieldWide}>
+                <span>Klient (offline)</span>
+                <input
+                  className={styles.formInput}
+                  value={offlineForm.offlineClientName}
+                  onChange={(e) =>
+                    setOfflineForm((p) => ({ ...p, offlineClientName: e.target.value }))
+                  }
+                  placeholder="Np. Kasia / Firma X"
+                />
+              </label>
+
+              <label className={styles.fieldWide}>
+                <span>Opis (wyświetlany w rezerwacji)</span>
+                <textarea
+                  className={styles.formTextarea}
+                  rows={3}
+                  value={offlineForm.description}
+                  onChange={(e) =>
+                    setOfflineForm((p) => ({ ...p, description: e.target.value }))
+                  }
+                  placeholder="Opcjonalnie"
+                />
+              </label>
+
+              <label className={styles.fieldWide}>
+                <span>Usługa (wymagane)</span>
+                <select
+                  className={styles.formInput}
+                  value={offlineForm.serviceId}
+                  onChange={(e) =>
+                    setOfflineForm((p) => ({
+                      ...p,
+                      serviceId: e.target.value,
+                      staffId: "",
+                      slotStart: "",
+                    }))
+                  }
+                >
+                  <option value="">— wybierz usługę —</option>
+                  {servicesLocal.map((s) => {
+                    const mins = getServiceDurationMinutes(s);
+                    const label = mins
+                      ? `${s.name} (${mins % 60 === 0 && mins >= 60
+                        ? `${mins / 60} godz.`
+                        : `${mins} min`
+                      })`
+                      : s.name;
+
+                    return (
+                      <option key={String(s._id)} value={String(s._id)}>
+                        {label}
+                      </option>
+                    );
+                  })}
+                </select>
+
+                {!!durationLabel && (
+                  <div className={styles.durationPill}>
+                    ⏱ Czas usługi: <b>{durationLabel}</b>
+                    <span className={styles.durationMini}>
+                      + {OFFLINE_BUFFER_MIN} min przerwy
+                    </span>
+                  </div>
+                )}
+              </label>
+
+              <label className={styles.fieldWide}>
+                <span>Pracownik</span>
+                <select
+                  className={styles.formInput}
+                  value={offlineForm.staffId}
+                  onChange={(e) =>
+                    setOfflineForm((p) => ({
+                      ...p,
+                      staffId: e.target.value,
+                      slotStart: "",
+                    }))
+                  }
+                  disabled={!teamEnabled || isAutoAssignTeam}
+                  title={
+                    !teamEnabled
+                      ? "Zespół wyłączony w profilu"
+                      : isAutoAssignTeam
+                        ? "Auto-assign: pracownik dobierany automatycznie"
+                        : ""
+                  }
+                >
+                  <option value="">
+                    {isUserPickTeam
+                      ? "— wybierz pracownika (wymagane) —"
+                      : "— opcjonalnie —"}
+                  </option>
+                  {filteredStaff.map((s) => (
+                    <option key={String(s._id)} value={String(s._id)}>
+                      {s.name} (cap: {s.capacity || 1})
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {!isDayBlockingMode && isSlotMode && !offlineForm.dateOnly && (
+                <div className={styles.slotBox}>
+                  <div className={styles.slotHead}>
+                    Wybierz godzinę startu (slot)
+                    <span className={styles.slotHint}>+ {OFFLINE_BUFFER_MIN} min przerwy</span>
+                  </div>
+
+                  {!offlineForm.serviceId ? (
+                    <div className={styles.slotInfo}>
+                      Najpierw wybierz <b>usługę</b> — wtedy pokażę dopasowane sloty.
+                    </div>
+                  ) : isUserPickTeam && !offlineForm.staffId ? (
+                    <div className={styles.slotInfo}>
+                      Wybierz <b>pracownika</b>, żeby pokazać sloty (tryb user-pick).
+                    </div>
+                  ) : (
+                    <>
+                      <div className={styles.slotGrid}>
+                        {offlineSlots.map((s, i) => (
+                          <button
+                            key={`${s.label}-${i}`}
+                            type="button"
+                            className={`
+                              ${styles.slotBtn}
+                              ${s.status === "disabled" ? styles.slotDisabled : ""}
+                              ${s.status === "reserved" ? styles.slotReserved : ""}
+                              ${s.status === "pending" ? styles.slotPending : ""}
+                              ${offlineForm.slotStart === s.label ? styles.slotSelected : ""}
+                            `}
+                            disabled={s.status !== "free"}
+                            onClick={() =>
+                              setOfflineForm((p) => ({ ...p, slotStart: s.label }))
+                            }
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className={styles.slotLegend}>
+                        <span>
+                          <span className={`${styles.legBox} ${styles.legReserved}`} />
+                          zajęte
+                        </span>
+                        <span>
+                          <span className={`${styles.legBox} ${styles.legPending}`} />
+                          oczekujące
+                        </span>
+                        <span>
+                          <span className={`${styles.legBox} ${styles.legDisabled}`} />
+                          niedostępne
+                        </span>
+                        <span>
+                          <span className={`${styles.legBox} ${styles.legFree}`} />
+                          wolne
+                        </span>
+                      </div>
+
+                      {!!offlineForm.slotStart && (
+                        <div className={styles.slotSummary}>
+                          Start: <b>{offlineForm.fromTime}</b> • Koniec:{" "}
+                          <b>{offlineForm.toTime}</b>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className={styles.modalActions}>
+              <button
+                className={styles.modalSecondary}
+                onClick={() => setOfflineOpen(false)}
+                type="button"
+              >
+                Anuluj
+              </button>
+
+              <button
+                className={styles.modalPrimary}
+                onClick={submitOffline}
+                type="button"
+                disabled={disabledIds.has("offline-submit")}
+              >
+                <FiEdit3 /> Dodaj
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }, [
+    offlineOpen,
+    providerMeta,
+    metaLoading,
+    offlineForm,
+    conflicts,
+    durationLabel,
+    filteredStaff,
+    disabledIds,
+    submitOffline,
+    getServiceDurationMinutes,
+    teamEnabled,
+    isUserPickTeam,
+    isAutoAssignTeam,
+    offlineSlots,
+    isDayBlockingMode,
+    isSlotMode,
+    OFFLINE_BUFFER_MIN,
+    bookingBufferMin,
+  ]);
+
+  useEffect(() => {
+    if (loading) return;
+    const raw = sessionStorage.getItem("flash");
+    const flash = safeParse(raw);
+    if (!flash) return;
+
+    const age = Date.now() - (flash.ts || 0);
+    const ttl = flash.ttl ?? 6000;
+
+    if (age < ttl) {
+      const remaining = ttl - age;
+      setAlert({
+        show: true,
+        type: flash.type || "info",
+        message: flash.message || "",
+        onClose: () => {
+          setAlert((a) => ({ ...a, show: false }));
+          sessionStorage.removeItem("flash");
+        },
+      });
+
+      const tid = setTimeout(() => {
+        setAlert((a) => ({ ...a, show: false }));
+        sessionStorage.removeItem("flash");
+      }, remaining);
+
+      return () => clearTimeout(tid);
+    } else {
+      sessionStorage.removeItem("flash");
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    if (!isLogged) return;
+
+    const hasPendings =
+      clientReservations.some((r) => r.status === "oczekująca") ||
+      serviceReservations.some((r) => r.status === "oczekująca");
+
+    if (!hasPendings) return;
+
+    const id = setInterval(() => {
+      refetch();
+    }, 30000);
+
+    return () => clearInterval(id);
+  }, [isLogged, clientReservations, serviceReservations, refetch]);
+
   const CalendarPanel = () => {
     const meta = dayMap.get(selectedIso);
 
@@ -1695,7 +1794,9 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
           <div className={styles.calendarHeader}>
             <div>
               <div className={styles.calendarTitle}>Kalendarz rezerwacji</div>
-              <div className={styles.calendarSub}>Kliknij dzień, aby podejrzeć rezerwacje z tego terminu.</div>
+              <div className={styles.calendarSub}>
+                Kliknij dzień, aby podejrzeć rezerwacje i wolne sloty z tego terminu.
+              </div>
             </div>
 
             <div className={styles.calendarPills}>
@@ -1729,9 +1830,15 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
                     return (
                       <div className={styles.tileBadges} aria-hidden="true">
-                        {v.pending > 0 && <span className={`${styles.dotMini} ${styles.dotPending}`} />}
-                        {v.accepted > 0 && <span className={`${styles.dotMini} ${styles.dotAccepted}`} />}
-                        {v.rejected > 0 && <span className={`${styles.dotMini} ${styles.dotRejected}`} />}
+                        {v.pending > 0 && (
+                          <span className={`${styles.dotMini} ${styles.dotPending}`} />
+                        )}
+                        {v.accepted > 0 && (
+                          <span className={`${styles.dotMini} ${styles.dotAccepted}`} />
+                        )}
+                        {v.rejected > 0 && (
+                          <span className={`${styles.dotMini} ${styles.dotRejected}`} />
+                        )}
                         <span className={styles.tileCount}>{v.total}</span>
                       </div>
                     );
@@ -1765,10 +1872,17 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                               <span className={styles.tlTimeTxt}>
                                 {minToTime(b.startMin)}–{minToTime(b.endMin)}
                               </span>
-                              <span className={`${styles.tlDot} ${dotToTlClass(b.isFree ? "wolne" : b.status)}`} />
+                              <span
+                                className={`${styles.tlDot} ${dotToTlClass(
+                                  b.isFree ? "wolne" : b.status
+                                )}`}
+                              />
                             </div>
 
-                            <div className={`${styles.tlCard} ${b.isFree ? styles.tlCardFree : ""}`}>
+                            <div
+                              className={`${styles.tlCard} ${b.isFree ? styles.tlCardFree : ""
+                                }`}
+                            >
                               <div className={styles.tlTop}>
                                 {b.isFree ? (
                                   <span className={`${styles.tlKind} ${styles.tlKindRecv}`}>
@@ -1776,9 +1890,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                                   </span>
                                 ) : (
                                   <span
-                                    className={`${styles.tlKind} ${
-                                      b.kind === "recv" ? styles.tlKindRecv : styles.tlKindSent
-                                    }`}
+                                    className={`${styles.tlKind} ${b.kind === "recv"
+                                      ? styles.tlKindRecv
+                                      : styles.tlKindSent
+                                      }`}
                                   >
                                     {b.kind === "recv" ? (
                                       <>
@@ -1792,9 +1907,15 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                                   </span>
                                 )}
 
-                                {!b.isFree && b.offline && <span className={styles.tlOffline}>OFFLINE</span>}
+                                {!b.isFree && b.offline && (
+                                  <span className={styles.tlOffline}>OFFLINE</span>
+                                )}
 
-                                <span className={`${styles.tlStatus} ${statusToTlClass(b.isFree ? "wolne" : b.status)}`}>
+                                <span
+                                  className={`${styles.tlStatus} ${statusToTlClass(
+                                    b.isFree ? "wolne" : b.status
+                                  )}`}
+                                >
                                   {b.isFree ? (
                                     "wolne"
                                   ) : (
@@ -1833,7 +1954,9 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                                   <button
                                     type="button"
                                     className={styles.tlAddBtn}
-                                    onClick={() => openOfflineForSlot(selectedIso, b.startMin, b.endMin)}
+                                    onClick={() =>
+                                      openOfflineForSlot(selectedIso, b.startMin, b.endMin)
+                                    }
                                   >
                                     <FiPlus /> Dodaj offline w tym slocie
                                   </button>
@@ -1851,7 +1974,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                   <div className={styles.daySection}>
                     <div className={styles.daySectionTitle}>Blokowanie dnia</div>
                     <div className={styles.timelineEmpty}>
-                      W tym trybie możesz dodać offline rezerwację na cały dzień dla wybranej daty.
+                      W tym trybie możesz dodać offline rezerwację na cały dzień dla
+                      wybranej daty.
                     </div>
                   </div>
                 )}
@@ -1859,33 +1983,47 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                 {hasProviderProfile && (
                   <div className={styles.daySection}>
                     <div className={styles.daySectionTitle}>
-                      Otrzymane <span className={styles.dayCount}>{selectedReservations.recv.length}</span>
+                      Otrzymane{" "}
+                      <span className={styles.dayCount}>{selectedReservations.recv.length}</span>
                     </div>
 
                     {selectedReservations.recv.length === 0 ? (
-                      <div className={styles.dayEmpty}>Brak otrzymanych rezerwacji w tym dniu.</div>
+                      <div className={styles.dayEmpty}>
+                        Brak otrzymanych rezerwacji w tym dniu.
+                      </div>
                     ) : (
-                      <ul className={styles.list}>{selectedReservations.recv.map((r) => renderItem(r, "received"))}</ul>
+                      <ul className={styles.list}>
+                        {selectedReservations.recv.map((r) => renderItem(r, "received"))}
+                      </ul>
                     )}
                   </div>
                 )}
 
                 <div className={styles.daySection}>
                   <div className={styles.daySectionTitle}>
-                    Wysłane <span className={styles.dayCount}>{selectedReservations.sent.length}</span>
+                    Wysłane{" "}
+                    <span className={styles.dayCount}>{selectedReservations.sent.length}</span>
                   </div>
 
                   {selectedReservations.sent.length === 0 ? (
-                    <div className={styles.dayEmpty}>Brak wysłanych rezerwacji w tym dniu.</div>
+                    <div className={styles.dayEmpty}>
+                      Brak wysłanych rezerwacji w tym dniu.
+                    </div>
                   ) : (
-                    <ul className={styles.list}>{selectedReservations.sent.map((r) => renderItem(r, "sent"))}</ul>
+                    <ul className={styles.list}>
+                      {selectedReservations.sent.map((r) => renderItem(r, "sent"))}
+                    </ul>
                   )}
                 </div>
               </div>
 
               {hasProviderProfile && (isSlotMode || isDayBlockingMode) && (
                 <div className={styles.dayActions}>
-                  <button className={styles.addOfflineBtn} type="button" onClick={() => openOfflineForDay(selectedIso)}>
+                  <button
+                    className={styles.addOfflineBtn}
+                    type="button"
+                    onClick={() => openOfflineForDay(selectedIso)}
+                  >
                     <FiPlus />
                     {isDayBlockingMode ? " Zablokuj dzień offline" : " Dodaj offline"}
                   </button>
@@ -1900,80 +2038,114 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     );
   };
 
-  // =========================
-  //  LOADING
-  // =========================
+  const SkeletonItem = () => (
+    <li className={`${styles.item} ${styles.skeletonItem}`}>
+      <div className={styles.link}>
+        <div className={styles.row}>
+          <div className={styles.avatarWrap}>
+            <div className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`} />
+          </div>
+
+          <div className={styles.head}>
+            <span className={`${styles.metaSkel} ${styles.shimmer}`} />
+            <span className={`${styles.dateSkel} ${styles.shimmer}`} />
+          </div>
+
+          <div className={styles.content}>
+            <span className={`${styles.blockSkel} ${styles.shimmer}`} />
+            <span className={`${styles.blockSkel} ${styles.shimmer}`} />
+          </div>
+
+          <div className={styles.bottomRow}>
+            <span className={`${styles.pillSkel} ${styles.shimmer}`} />
+            <span className={`${styles.pillSkel} ${styles.shimmer}`} />
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+
   if (loading) {
     return (
       <section className={styles.page}>
         <div className={styles.bgGlow} aria-hidden="true" />
+
         <div className={styles.shell}>
-          <div className={styles.headerRow}>
-            <div>
-              <h2 className={styles.sectionTitle}>Twoje rezerwacje</h2>
-              <p className={styles.subTitle}>Ładowanie danych… proszę chwilkę poczekać.</p>
+          <div className={styles.pageHead}>
+            <div className={styles.labelRow}>
+              <span className={styles.label}>Showly Reservations</span>
+              <span className={styles.labelDot} />
+              <span className={styles.labelDesc}>Twoje rezerwacje i kalendarz</span>
+              <span className={styles.labelLine} />
+              <span className={styles.pill}>Lista • Terminy • Offline</span>
             </div>
+
+            <h2 className={styles.heading}>
+              Twoje <span className={styles.headingAccent}>rezerwacje</span> ⏳
+            </h2>
+
+            <p className={styles.description}>Ładowanie danych rezerwacji…</p>
           </div>
 
-          <ul className={styles.list}>
-            {Array.from({ length: 4 }).map((_, i) => (
-              <li key={i} className={`${styles.item} ${styles.skeletonItem}`}>
-                <div className={styles.link}>
-                  <div className={styles.row}>
-                    <div className={styles.avatarWrap}>
-                      <div className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`} />
-                    </div>
+          <div className={styles.contentBox}>
+            <div className={styles.contentHeader}>
+              <h3 className={styles.contentTitle}>Ładowanie rezerwacji</h3>
+              <span className={styles.badge}>—</span>
+            </div>
 
-                    <div className={styles.head}>
-                      <span className={`${styles.metaSkel} ${styles.shimmer}`} />
-                      <span className={`${styles.dateSkel} ${styles.shimmer}`} />
-                    </div>
-
-                    <div className={styles.content}>
-                      <span className={`${styles.blockSkel} ${styles.shimmer}`} />
-                      <span className={`${styles.blockSkel} ${styles.shimmer}`} />
-                    </div>
-
-                    <div className={styles.bottomRow}>
-                      <span className={`${styles.pillSkel} ${styles.shimmer}`} />
-                      <span className={`${styles.pillSkel} ${styles.shimmer}`} />
-                    </div>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+            <ul className={styles.list}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonItem key={i} />
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
     );
   }
 
-  // =========================
-  //  NIEZALOGOWANY
-  // =========================
   if (!isLogged) {
     return (
       <section className={styles.page}>
         <div className={styles.bgGlow} aria-hidden="true" />
+
         <div className={styles.shell}>
-          <div className={styles.headerRow}>
-            <div>
-              <h2 className={styles.sectionTitle}>Twoje rezerwacje</h2>
-              <p className={styles.subTitle}>
-                Musisz być <strong className={styles.subStrong}>zalogowany</strong>, żeby zobaczyć rezerwacje i kalendarz.
+          <div className={styles.pageHead}>
+            <div className={styles.labelRow}>
+              <span className={styles.label}>Showly Reservations</span>
+              <span className={styles.labelDot} />
+              <span className={styles.labelDesc}>Twoje rezerwacje i kalendarz</span>
+              <span className={styles.labelLine} />
+              <span className={styles.pill}>Lista • Terminy • Offline</span>
+            </div>
+
+            <h2 className={styles.heading}>
+              Twoje <span className={styles.headingAccent}>rezerwacje</span> ⏳
+            </h2>
+
+            <p className={styles.description}>
+              Musisz być <strong className={styles.inlineStrong}>zalogowany</strong>, żeby
+              zobaczyć rezerwacje i kalendarz.
+            </p>
+          </div>
+
+          <div className={styles.contentBox}>
+            <div className={styles.emptyBox}>
+              <div className={styles.emptyIconWrap}>
+                <FiCalendar className={styles.emptyIcon} />
+              </div>
+              <p className={styles.emptyTitle}>Brak dostępu do rezerwacji</p>
+              <p className={styles.emptyText}>
+                Zaloguj się, aby korzystać z listy rezerwacji, kalendarza i dodawania blokad
+                offline.
               </p>
             </div>
           </div>
-
-          <p className={styles.emptyGroup}>Zaloguj się, aby korzystać z rezerwacji.</p>
         </div>
       </section>
     );
   }
 
-  // =========================
-  //  RENDER
-  // =========================
   return (
     <section id="scrollToId" className={styles.page}>
       <div className={styles.bgGlow} aria-hidden="true" />
@@ -1989,41 +2161,72 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       )}
 
       <div className={styles.shell}>
-        <div className={styles.headerRow}>
-          <div>
-            <h2 className={styles.sectionTitle}>Twoje rezerwacje</h2>
-            <p className={styles.subTitle}>
-              Tutaj znajdziesz <strong className={styles.subStrong}>wysłane</strong>
-              {hasProviderProfile ? (
-                <>
-                  {" "}
-                  i <strong className={styles.subStrong}>otrzymane</strong> rezerwacje — w jednolitym, czytelnym układzie.
-                </>
-              ) : (
-                <>
-                  . <strong className={styles.subStrong}>Otrzymane</strong> będą dostępne po utworzeniu profilu.
-                </>
-              )}
-              {hasProviderProfile && !canUseCalendar ? (
-                <>
-                  {" "}
-                  <span className={styles.hintPill}>Tryb profilu: {providerMeta?.bookingMode || "—"}</span>
-                </>
-              ) : null}
-            </p>
+        <div className={styles.pageHead}>
+          <div className={styles.labelRow}>
+            <span className={styles.label}>Showly Reservations</span>
+            <span className={styles.labelDot} />
+            <span className={styles.labelDesc}>Twoje rezerwacje i kalendarz</span>
+            <span className={styles.labelLine} />
+            <span className={styles.pill}>Lista • Kalendarz • Offline</span>
+          </div>
+
+          <h2 className={styles.heading}>
+            Twoje <span className={styles.headingAccent}>rezerwacje</span> i terminy 📅
+          </h2>
+
+          <p className={styles.description}>
+            Tutaj znajdziesz <strong className={styles.inlineStrong}>wysłane</strong>
+            {hasProviderProfile ? (
+              <>
+                {" "}
+                i <strong className={styles.inlineStrong}>otrzymane</strong> rezerwacje,
+                a także podgląd terminów w kalendarzu.
+              </>
+            ) : (
+              <>
+                . Sekcja <strong className={styles.inlineStrong}>otrzymanych</strong> będzie
+                dostępna po utworzeniu profilu usługodawcy.
+              </>
+            )}
+          </p>
+
+          <div className={styles.metaRow}>
+            <div className={styles.metaCard}>
+              <strong>{pendingSent}</strong>
+              <span>oczekujących wysłanych</span>
+            </div>
+
+            <div className={styles.metaCard}>
+              <strong>{hasProviderProfile ? pendingReceived : 0}</strong>
+              <span>oczekujących otrzymanych</span>
+            </div>
+
+            <div className={styles.metaCard}>
+              <strong>{clientReservations.length + serviceReservations.length}</strong>
+              <span>wszystkich rezerwacji</span>
+            </div>
+
+            {hasProviderProfile && (
+              <div className={styles.metaCard}>
+                <strong>{providerMeta?.bookingMode || "—"}</strong>
+                <span>tryb rezerwacji profilu</span>
+              </div>
+            )}
           </div>
 
           {canUseCalendar && (
             <div className={styles.viewToggle}>
               <button
-                className={`${styles.toggleBtn} ${viewMode === "list" ? styles.toggleActive : ""}`}
+                className={`${styles.toggleBtn} ${viewMode === "list" ? styles.toggleActive : ""
+                  }`}
                 onClick={() => setViewMode("list")}
                 type="button"
               >
                 <FiList /> Lista
               </button>
               <button
-                className={`${styles.toggleBtn} ${viewMode === "calendar" ? styles.toggleActive : ""}`}
+                className={`${styles.toggleBtn} ${viewMode === "calendar" ? styles.toggleActive : ""
+                  }`}
                 onClick={() => setViewMode("calendar")}
                 type="button"
               >
@@ -2038,36 +2241,83 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         ) : (
           <>
             {hasProviderProfile && (
-              <div className={styles.sectionGroup}>
-                <div className={styles.groupHeader}>
-                  <h3 className={styles.groupTitle}>Otrzymane rezerwacje (do Twojego profilu)</h3>
+              <div className={styles.contentBox}>
+                <div className={styles.contentHeader}>
+                  <h3 className={styles.contentTitle}>
+                    Otrzymane rezerwacje do Twojego profilu
+                  </h3>
                   <span className={styles.badge}>
-                    {pendingReceived > 0 ? `${pendingReceived} oczek.` : `${serviceReservations.length}`}
+                    {pendingReceived > 0
+                      ? `${pendingReceived} oczek.`
+                      : `${serviceReservations.length}`}
                   </span>
                 </div>
 
                 {serviceReservations.length === 0 ? (
-                  <p className={styles.emptyGroup}>Brak otrzymanych rezerwacji.</p>
+                  <div className={styles.emptyBox}>
+                    <div className={styles.emptyIconWrap}>
+                      <FiInbox className={styles.emptyIcon} />
+                    </div>
+                    <p className={styles.emptyTitle}>Brak otrzymanych rezerwacji</p>
+                    <p className={styles.emptyText}>
+                      Gdy ktoś zarezerwuje termin w Twoim profilu, pojawi się on właśnie tutaj.
+                    </p>
+                  </div>
                 ) : (
-                  <ul className={styles.list}>{serviceReservations.map((r) => renderItem(r, "received"))}</ul>
+                  <ul className={styles.list}>
+                    {serviceReservations.map((r) => renderItem(r, "received"))}
+                  </ul>
                 )}
               </div>
             )}
 
-            <div className={styles.sectionGroup}>
-              <div className={styles.groupHeader}>
-                <h3 className={styles.groupTitle}>Wysłane rezerwacje (Twoje konto → inne profile)</h3>
+            <div className={styles.contentBox}>
+              <div className={styles.contentHeader}>
+                <h3 className={styles.contentTitle}>
+                  Wysłane rezerwacje (Twoje konto → inne profile)
+                </h3>
                 <span className={styles.badge}>
                   {pendingSent > 0 ? `${pendingSent} oczek.` : `${clientReservations.length}`}
                 </span>
               </div>
 
               {clientReservations.length === 0 ? (
-                <p className={styles.emptyGroup}>Brak wysłanych rezerwacji.</p>
+                <div className={styles.emptyBox}>
+                  <div className={styles.emptyIconWrap}>
+                    <FiSend className={styles.emptyIcon} />
+                  </div>
+                  <p className={styles.emptyTitle}>Brak wysłanych rezerwacji</p>
+                  <p className={styles.emptyText}>
+                    Gdy zarezerwujesz termin u innego usługodawcy, rezerwacja pojawi się w tej
+                    sekcji.
+                  </p>
+                </div>
               ) : (
-                <ul className={styles.list}>{clientReservations.map((r) => renderItem(r, "sent"))}</ul>
+                <ul className={styles.list}>
+                  {clientReservations.map((r) => renderItem(r, "sent"))}
+                </ul>
               )}
             </div>
+
+            {!hasProviderProfile && (
+              <div className={styles.contentBox}>
+                <div className={styles.contentHeader}>
+                  <h3 className={styles.contentTitle}>Rezerwacje do Twojego profilu</h3>
+                  <span className={styles.badge}>—</span>
+                </div>
+
+                <div className={styles.emptyBox}>
+                  <div className={styles.emptyIconWrap}>
+                    <FiCalendar className={styles.emptyIcon} />
+                  </div>
+                  <p className={styles.emptyTitle}>Nie masz jeszcze profilu usługodawcy</p>
+                  <p className={styles.emptyText}>
+                    Po utworzeniu profilu pojawią się tutaj otrzymane rezerwacje oraz kalendarz
+                    terminów.
+                  </p>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

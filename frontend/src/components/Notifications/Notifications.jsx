@@ -3,13 +3,12 @@ import styles from "./Notifications.module.scss";
 import axios from "axios";
 import { Link, useLocation } from "react-router-dom";
 import { FiInbox, FiSend, FiMail } from "react-icons/fi";
-
-import { auth } from "../../firebase"; // ✅ DOPASUJ ŚCIEŻKĘ jeśli masz inną
+import { auth } from "../../firebase";
 
 const API = process.env.REACT_APP_API_URL;
 const DEFAULT_AVATAR = "/images/other/no-image.png";
 
-// ✅ avatar może być string albo { url }
+// avatar może być string albo { url }
 const pickUrl = (val) => {
   if (!val) return "";
   if (typeof val === "string") return val;
@@ -36,27 +35,22 @@ const normalizeAvatar = (val) => {
 
 const Notifications = ({ user, setUnreadCount }) => {
   const [conversations, setConversations] = useState([]);
-  const [profileMetaMap, setProfileMetaMap] = useState({}); // uid -> undefined | {name,avatar}
+  const [profileMetaMap, setProfileMetaMap] = useState({});
   const [myProfile, setMyProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
 
-  // =========================================================
-  // ✅ AUTH HEADERS – token zawsze z Firebase auth.currentUser
-  // =========================================================
   const authHeaders = useCallback(async () => {
     const firebaseUser = auth.currentUser;
     const uid = firebaseUser?.uid || user?.uid || "";
 
     if (!firebaseUser) {
-      // firebase jeszcze nie gotowy -> brak tokena -> backend da 401
-      // lepiej tu zwrócić pusty obiekt i poczekać aż auth.currentUser będzie dostępny
       return uid ? { uid } : {};
     }
 
     let token = "";
     try {
-      token = await firebaseUser.getIdToken(); // możesz dać getIdToken(true) do "force refresh"
+      token = await firebaseUser.getIdToken();
     } catch {
       token = "";
     }
@@ -67,7 +61,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     };
   }, [user?.uid]);
 
-  // 0) Moja wizytówka (nazwa do nagłówka)
+  // moja wizytówka
   useEffect(() => {
     const fetchMyProfile = async () => {
       const firebaseUid = auth.currentUser?.uid || user?.uid;
@@ -75,7 +69,10 @@ const Notifications = ({ user, setUnreadCount }) => {
 
       try {
         const headers = await authHeaders();
-        const r = await axios.get(`${API}/api/profiles/by-user/${firebaseUid}`, { headers });
+        const r = await axios.get(`${API}/api/profiles/by-user/${firebaseUid}`, {
+          headers,
+        });
+
         if (r?.data?.name) setMyProfile(r.data);
         else setMyProfile(null);
       } catch {
@@ -86,21 +83,25 @@ const Notifications = ({ user, setUnreadCount }) => {
     fetchMyProfile();
   }, [user?.uid, authHeaders]);
 
-  // 1) Konwersacje
+  // konwersacje
   useEffect(() => {
     const fetchConversations = async () => {
       const firebaseUid = auth.currentUser?.uid || user?.uid;
-      if (!firebaseUid) return;
+      if (!firebaseUid) {
+        setConversations([]);
+        setLoading(false);
+        return;
+      }
 
-      // jeśli firebase user jeszcze nie jest gotowy, nie strzelaj do backendu
       if (!auth.currentUser) return;
 
       setLoading(true);
 
       try {
         const headers = await authHeaders();
-
-        const res = await axios.get(`${API}/api/conversations/by-uid/${firebaseUid}`, { headers });
+        const res = await axios.get(`${API}/api/conversations/by-uid/${firebaseUid}`, {
+          headers,
+        });
 
         const list = Array.isArray(res.data) ? res.data : [];
         setConversations(list);
@@ -109,6 +110,8 @@ const Notifications = ({ user, setUnreadCount }) => {
         setUnreadCount(unread);
       } catch (err) {
         console.error("❌ Błąd pobierania konwersacji:", err);
+        setConversations([]);
+        setUnreadCount(0);
       } finally {
         setLoading(false);
       }
@@ -117,7 +120,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     fetchConversations();
   }, [user?.uid, setUnreadCount, authHeaders]);
 
-  // 2) Unikalne „drugie” uid-y
+  // unikalne uid drugiej strony
   const otherUids = useMemo(
     () =>
       conversations
@@ -130,18 +133,20 @@ const Notifications = ({ user, setUnreadCount }) => {
 
   const isProfileResolved = (uid) => profileMetaMap[uid] !== undefined;
 
-  // 3) Meta PROFILI drugiej strony
+  // meta profili drugiej strony
   useEffect(() => {
     const fetchProfiles = async () => {
       if (otherUids.length === 0) return;
 
       setProfileMetaMap((prev) => {
         const draft = { ...prev };
+
         otherUids.forEach((uid) => {
           if (!Object.prototype.hasOwnProperty.call(draft, uid)) {
             draft[uid] = undefined;
           }
         });
+
         return draft;
       });
 
@@ -149,13 +154,10 @@ const Notifications = ({ user, setUnreadCount }) => {
         const entries = await Promise.all(
           otherUids.map(async (uid) => {
             try {
-              // jeśli ten endpoint u Ciebie też jest chroniony -> dodaj headers:
-              // const headers = await authHeaders();
-              // const r = await axios.get(`${API}/api/profiles/by-user/${uid}`, { headers });
-
               const r = await axios.get(`${API}/api/profiles/by-user/${uid}`);
               const name = (r?.data?.name || "").trim() || null;
               const avatar = normalizeAvatar(r?.data?.avatar) || null;
+
               return [uid, { name, avatar }];
             } catch {
               return [uid, { name: null, avatar: null }];
@@ -191,13 +193,16 @@ const Notifications = ({ user, setUnreadCount }) => {
     }
 
     if (!isProfileResolved(otherUid)) return "";
-    if (typeof profileMeta?.name === "string" && profileMeta.name.trim()) return profileMeta.name.trim();
+    if (typeof profileMeta?.name === "string" && profileMeta.name.trim()) {
+      return profileMeta.name.trim();
+    }
 
     return account || "Użytkownik";
   };
 
   const getAvatarSrc = (convo, variant) => {
     const otherUid = convo.withUid;
+
     if (variant === "system") return "";
 
     if (variant === "inbox") {
@@ -206,6 +211,7 @@ const Notifications = ({ user, setUnreadCount }) => {
 
     const meta = profileMetaMap[otherUid];
     if (!isProfileResolved(otherUid)) return "";
+
     return normalizeAvatar(meta?.avatar) || "";
   };
 
@@ -250,7 +256,12 @@ const Notifications = ({ user, setUnreadCount }) => {
     }
 
     if (!src) {
-      return <div className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`} aria-hidden="true" />;
+      return (
+        <div
+          className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`}
+          aria-hidden="true"
+        />
+      );
     }
 
     return (
@@ -276,6 +287,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     const avatarSrc = getAvatarSrc(convo, variant);
 
     let header;
+
     if (variant === "inbox") {
       const rawName = getName(otherUid, convo.withDisplayName, "account");
       header = (
@@ -311,19 +323,26 @@ const Notifications = ({ user, setUnreadCount }) => {
     return (
       <li
         key={convo._id}
-        className={`${styles.item} ${isUnread ? styles.unread : styles.read} ${variant === "system" ? styles.itemSystem : ""
-          }`}
+        className={`${styles.item} ${isUnread ? styles.unread : styles.read} ${
+          variant === "system" ? styles.itemSystem : ""
+        }`}
       >
-        <Link to={`/konwersacja/${convo._id}`} className={styles.link} state={{ scrollToId: "threadPageLayout" }}>
+        <Link
+          to={`/konwersacja/${convo._id}`}
+          className={styles.link}
+          state={{ scrollToId: "threadPageLayout" }}
+        >
           <div className={styles.row}>
             <div className={styles.avatarWrap}>
               <AvatarNode src={avatarSrc || DEFAULT_AVATAR} variant={variant} />
               {isUnread && <span className={styles.badgeDot} aria-hidden="true" />}
             </div>
 
-            <div className={styles.head}>
+            <div className={styles.itemHead}>
               <div className={styles.meta}>{header}</div>
-              <div className={styles.date}>{new Date(lastMsg.createdAt).toLocaleString()}</div>
+              <div className={styles.date}>
+                {new Date(lastMsg.createdAt).toLocaleString()}
+              </div>
             </div>
 
             <p className={styles.content}>{lastMsg.content}</p>
@@ -353,7 +372,7 @@ const Notifications = ({ user, setUnreadCount }) => {
             <div className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`} />
           </div>
 
-          <div className={styles.head}>
+          <div className={styles.itemHead}>
             <span className={`${styles.metaSkel} ${styles.shimmer}`} />
             <span className={`${styles.dateSkel} ${styles.shimmer}`} />
           </div>
@@ -369,7 +388,6 @@ const Notifications = ({ user, setUnreadCount }) => {
     </li>
   );
 
-  // Scroll po powrocie
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo || loading) return;
@@ -383,56 +401,79 @@ const Notifications = ({ user, setUnreadCount }) => {
         requestAnimationFrame(tryScroll);
       }
     };
+
     requestAnimationFrame(tryScroll);
   }, [location.state, loading, location.pathname]);
 
   return (
-    <div id="scrollToId" className={styles.page}>
-      <div className={styles.bgGlow} aria-hidden="true" />
+    <section id="scrollToId" className={styles.section}>
+      <div className={styles.sectionBackground} aria-hidden="true" />
 
-      <div className={styles.shell}>
-        <div className={styles.headerRow}>
-          <div>
-            <h2 className={styles.sectionTitle}>Twoje powiadomienia</h2>
-            <p className={styles.subTitle}>
-              Zebraliśmy wiadomości do Twojego profilu
-              {myProfile?.name ? (
-                <>
-                  {" "}
-                  <strong className={styles.subStrong}>{myProfile.name}</strong>
-                </>
-              ) : (
-                ""
-              )}{" "}
-              oraz wątki wysłane z <strong className={styles.subStrong}>Twojego konta</strong>.
-            </p>
+      <div className={styles.inner}>
+        <div className={styles.head}>
+          <div className={styles.labelRow}>
+            <span className={styles.label}>Showly Notifications</span>
+            <span className={styles.labelDot} />
+            <span className={styles.labelDesc}>Twoje konwersacje i wiadomości</span>
+            <span className={styles.labelLine} />
+            <span className={styles.pill}>Inbox • Wątki • System</span>
           </div>
 
-          <div className={styles.headerPills}>
-            <span className={styles.headerPill}>
-              Do profilu (nowe): <strong>{inboxUnread}</strong>
-            </span>
-            <span className={styles.headerPill}>
-              Z konta (nowe): <strong>{outboxUnread}</strong>
-            </span>
-            <span className={styles.headerPill}>
-              System (nowe): <strong>{systemUnread}</strong>
-            </span>
+          <h2 className={styles.heading}>
+            Twoje <span className={styles.headingAccent}>powiadomienia</span> i wiadomości
+            ✉️
+          </h2>
+
+          <p className={styles.description}>
+            Zebraliśmy wiadomości do Twojego profilu
+            {myProfile?.name ? (
+              <>
+                {" "}
+                <strong className={styles.inlineStrong}>{myProfile.name}</strong>
+              </>
+            ) : null}{" "}
+            oraz wątki wysłane z{" "}
+            <strong className={styles.inlineStrong}>Twojego konta</strong>.
+          </p>
+
+          <div className={styles.metaRow}>
+            <div className={styles.metaCard}>
+              <strong>{inboxUnread}</strong>
+              <span>nowych do Twojego profilu</span>
+            </div>
+
+            <div className={styles.metaCard}>
+              <strong>{outboxUnread}</strong>
+              <span>nowych z Twojego konta</span>
+            </div>
+
+            <div className={styles.metaCard}>
+              <strong>{systemUnread}</strong>
+              <span>wiadomości systemowych</span>
+            </div>
           </div>
         </div>
 
         {loading ? (
-          <ul className={styles.list}>
-            {Array.from({ length: 4 }).map((_, i) => (
-              <SkeletonItem key={i} />
-            ))}
-          </ul>
+          <div className={styles.contentBox}>
+            <div className={styles.contentHeader}>
+              <h3 className={styles.contentTitle}>Ładowanie powiadomień</h3>
+              <span className={styles.badge}>—</span>
+            </div>
+
+            <ul className={styles.list}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <SkeletonItem key={i} />
+              ))}
+            </ul>
+          </div>
         ) : (
           <>
-            <div className={styles.sectionGroup}>
-              <div className={styles.groupHeader}>
-                <h3 className={styles.groupTitle}>
-                  Otrzymane wiadomości do Twojego profilu{myProfile?.name ? ` „${myProfile.name}”` : ""}
+            <div className={styles.contentBox}>
+              <div className={styles.contentHeader}>
+                <h3 className={styles.contentTitle}>
+                  Otrzymane wiadomości do Twojego profilu
+                  {myProfile?.name ? ` „${myProfile.name}”` : ""}
                 </h3>
                 <span className={styles.badge}>
                   {inboxUnread > 0 ? `${inboxUnread} nieprze.` : `${inboxToMyProfile.length}`}
@@ -440,37 +481,72 @@ const Notifications = ({ user, setUnreadCount }) => {
               </div>
 
               {inboxToMyProfile.length === 0 ? (
-                <p className={styles.emptyGroup}>Brak wiadomości do Twojego profilu.</p>
+                <div className={styles.emptyBox}>
+                  <div className={styles.emptyIconWrap}>
+                    <FiInbox className={styles.emptyIcon} />
+                  </div>
+                  <p className={styles.emptyTitle}>Brak wiadomości do Twojego profilu</p>
+                  <p className={styles.emptyText}>
+                    Gdy ktoś napisze do Twojej wizytówki, konwersacje pojawią się właśnie
+                    tutaj.
+                  </p>
+                </div>
               ) : (
-                <ul className={styles.list}>{inboxToMyProfile.map((c) => renderItem(c, "inbox"))}</ul>
+                <ul className={styles.list}>
+                  {inboxToMyProfile.map((c) => renderItem(c, "inbox"))}
+                </ul>
               )}
             </div>
 
-            <div className={styles.sectionGroup}>
-              <div className={styles.groupHeader}>
-                <h3 className={styles.groupTitle}>Rozmowy z innymi profilami (Twoje konto → inne profile)</h3>
+            <div className={styles.contentBox}>
+              <div className={styles.contentHeader}>
+                <h3 className={styles.contentTitle}>
+                  Rozmowy z innymi profilami (Twoje konto → inne profile)
+                </h3>
                 <span className={styles.badge}>
-                  {outboxUnread > 0 ? `${outboxUnread} nieprze.` : `${myAccountToOtherProfiles.length}`}
+                  {outboxUnread > 0
+                    ? `${outboxUnread} nieprze.`
+                    : `${myAccountToOtherProfiles.length}`}
                 </span>
               </div>
 
               {myAccountToOtherProfiles.length === 0 ? (
-                <p className={styles.emptyGroup}>Brak rozmów z innymi profilami.</p>
+                <div className={styles.emptyBox}>
+                  <div className={styles.emptyIconWrap}>
+                    <FiSend className={styles.emptyIcon} />
+                  </div>
+                  <p className={styles.emptyTitle}>Brak rozmów z innymi profilami</p>
+                  <p className={styles.emptyText}>
+                    Gdy rozpoczniesz rozmowę z inną wizytówką, pojawi się ona w tej sekcji.
+                  </p>
+                </div>
               ) : (
-                <ul className={styles.list}>{myAccountToOtherProfiles.map((c) => renderItem(c, "outbox"))}</ul>
+                <ul className={styles.list}>
+                  {myAccountToOtherProfiles.map((c) => renderItem(c, "outbox"))}
+                </ul>
               )}
             </div>
 
-            <div className={styles.sectionGroup}>
-              <div className={styles.groupHeader}>
-                <h3 className={styles.groupTitle}>Wiadomości systemowe</h3>
+            <div className={styles.contentBox}>
+              <div className={styles.contentHeader}>
+                <h3 className={styles.contentTitle}>Wiadomości systemowe</h3>
                 <span className={styles.badge}>
-                  {systemUnread > 0 ? `${systemUnread} nieprze.` : `${systemConversations.length}`}
+                  {systemUnread > 0
+                    ? `${systemUnread} nieprze.`
+                    : `${systemConversations.length}`}
                 </span>
               </div>
 
               {systemConversations.length === 0 ? (
-                <p className={styles.emptyGroup}>Brak wiadomości systemowych.</p>
+                <div className={styles.emptyBox}>
+                  <div className={styles.emptyIconWrap}>
+                    <FiMail className={styles.emptyIcon} />
+                  </div>
+                  <p className={styles.emptyTitle}>Brak wiadomości systemowych</p>
+                  <p className={styles.emptyText}>
+                    Komunikaty systemowe od Showly pojawią się tutaj, gdy będą dostępne.
+                  </p>
+                </div>
               ) : (
                 <ul className={`${styles.list} ${styles.systemList}`}>
                   {systemConversations.map((c) => renderItem(c, "system"))}
@@ -480,7 +556,7 @@ const Notifications = ({ user, setUnreadCount }) => {
           </>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 

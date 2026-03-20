@@ -60,7 +60,6 @@ export default function AccountSettings() {
   const fallbackImg = "/images/other/no-image.png";
   const showAlert = (type, message) => setAlert({ type, message });
 
-  // 🔄 Wczytaj świeżego usera + dane z backendu
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       try {
@@ -75,21 +74,20 @@ export default function AccountSettings() {
 
         try {
           await u.reload();
-        } catch { }
+        } catch {}
 
         setUser(auth.currentUser);
         setDisplayName(auth.currentUser?.displayName || "");
 
         try {
           const headers = await authHeaders({ Accept: "application/json" });
-
           const res = await fetch(`${API}/api/users/${u.uid}`, { headers });
+
           if (res.ok) {
             const dbUser = await res.json();
             const avatarUrl = dbUser?.avatar || auth.currentUser?.photoURL || fallbackImg;
             setPreview(normalizeAvatar(avatarUrl));
           } else {
-            // fallback na firebase photo
             setPreview(normalizeAvatar(auth.currentUser?.photoURL) || fallbackImg);
           }
         } catch {
@@ -103,7 +101,6 @@ export default function AccountSettings() {
     return () => unsub();
   }, []);
 
-  // 🧭 Scrollowanie po wejściu na stronę (z route state lub #hash)
   useEffect(() => {
     if (loading) return;
 
@@ -132,25 +129,31 @@ export default function AccountSettings() {
   const onFileChange = (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (!/^image\//.test(f.type)) return showAlert("warning", "Wybierz plik graficzny.");
-    if (f.size > 2 * 1024 * 1024) return showAlert("warning", "Maksymalny rozmiar to 2 MB.");
+    if (!/^image\//.test(f.type)) {
+      return showAlert("warning", "Wybierz plik graficzny.");
+    }
+    if (f.size > 2 * 1024 * 1024) {
+      return showAlert("warning", "Maksymalny rozmiar to 2 MB.");
+    }
+
     setFile(f);
     setPreview(URL.createObjectURL(f));
   };
 
   const handleSaveAvatar = async () => {
     if (!user || !file) return;
+
     try {
       setLoadingAction("saveAvatar");
 
       const form = new FormData();
       form.append("file", file);
 
-      const headers = await authHeaders(); // ✅ Bearer
+      const headers = await authHeaders();
 
       const res = await fetch(`${API}/api/users/${user.uid}/avatar`, {
         method: "POST",
-        headers, // ✅ ważne: NIE ustawiaj Content-Type dla FormData
+        headers,
         body: form,
       });
 
@@ -164,7 +167,7 @@ export default function AccountSettings() {
       try {
         await updateProfile(user, { photoURL: url });
         await user.reload();
-      } catch { }
+      } catch {}
 
       setPreview(normalizeAvatar(url));
       setFile(null);
@@ -179,10 +182,11 @@ export default function AccountSettings() {
 
   const handleRemoveAvatar = async () => {
     if (!user) return;
+
     try {
       setLoadingAction("removeAvatar");
 
-      const headers = await authHeaders(); // ✅ Bearer
+      const headers = await authHeaders();
 
       const res = await fetch(`${API}/api/users/${user.uid}/avatar`, {
         method: "DELETE",
@@ -197,7 +201,7 @@ export default function AccountSettings() {
       try {
         await updateProfile(user, { photoURL: "" });
         await user.reload();
-      } catch { }
+      } catch {}
 
       setPreview(fallbackImg);
       setFile(null);
@@ -212,10 +216,12 @@ export default function AccountSettings() {
 
   const handleSaveDisplayName = async () => {
     if (!user) return;
+
     try {
       setLoadingAction("saveName");
 
       const clean = displayName.trim();
+
       await updateProfile(user, { displayName: clean });
       await user.reload();
 
@@ -225,7 +231,7 @@ export default function AccountSettings() {
         method: "PATCH",
         headers,
         body: JSON.stringify({ displayName: clean }),
-      }).catch(() => { });
+      }).catch(() => {});
 
       showAlert("success", "Zaktualizowano nazwę wyświetlaną.");
     } catch (e) {
@@ -238,6 +244,7 @@ export default function AccountSettings() {
 
   const handlePasswordReset = async () => {
     if (!user?.email) return showAlert("warning", "Brak adresu e-mail.");
+
     try {
       setLoadingAction("resetPass");
       await sendPasswordResetEmail(auth, user.email);
@@ -252,76 +259,68 @@ export default function AccountSettings() {
 
   if (loading) {
     return (
-      <div className={styles.page}>
-        <div className={styles.bgGlow} aria-hidden="true" />
-        <div className={styles.shell}>
-          <div className={styles.loadingCard}>⏳ Ładowanie…</div>
+      <section className={styles.section}>
+        <div className={styles.sectionBackground} aria-hidden="true" />
+        <div className={styles.inner}>
+          <div className={styles.contentBox}>
+            <div className={styles.loadingCard}>⏳ Ładowanie ustawień konta…</div>
+          </div>
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div id="scrollToId" className={styles.page}>
-      <div className={styles.bgGlow} aria-hidden="true" />
+    <section id="scrollToId" className={styles.section}>
+      <div className={styles.sectionBackground} aria-hidden="true" />
 
-      <div className={styles.shell}>
+      <div className={styles.inner}>
         {alert && (
-          <AlertBox
-            type={alert.type}
-            message={alert.message}
-            onClose={() => setAlert(null)}
-          />
+          <div className={styles.alertWrap}>
+            <AlertBox type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
+          </div>
         )}
 
-        <div className={styles.headerRow}>
-          <div>
-            <h2 className={styles.sectionTitle}>Twoje konto</h2>
-            <p className={styles.subTitle}>
-              Pomyślnie zalogowano jako:{" "}
-              <strong className={styles.subStrong}>
-                {user?.email || "—"}
-              </strong>
-            </p>
+        <div className={styles.head}>
+          <div className={styles.labelRow}>
+            <span className={styles.label}>Showly Account</span>
+            <span className={styles.labelDot} />
+            <span className={styles.labelDesc}>Ustawienia konta i profilu</span>
+            <span className={styles.labelLine} />
+            <span className={styles.pill}>Awatar • Nazwa • Hasło</span>
           </div>
 
-          <div className={styles.headerPills}>
-            <div className={styles.headerPill}>
-              <span className={styles.pillLeft}>
-                <FiMail className={styles.pillIcon} />
-                E-mail
-              </span>
-              <strong className={styles.pillRight}>
-                {user?.email ? "OK" : "—"}
-              </strong>
+          <h2 className={styles.heading}>
+            Twoje <span className={styles.headingAccent}>konto</span> ⚙️
+          </h2>
+
+          <p className={styles.description}>
+            Tutaj możesz zarządzać swoim <strong className={styles.inlineStrong}>awataren</strong>,
+            nazwą wyświetlaną oraz bezpieczeństwem konta powiązanego z adresem{" "}
+            <strong className={styles.inlineStrong}>{user?.email || "—"}</strong>.
+          </p>
+
+          <div className={styles.metaRow}>
+            <div className={styles.metaCard}>
+              <strong>{user?.email ? "OK" : "—"}</strong>
+              <span>adres e-mail konta</span>
             </div>
 
-            <div className={styles.headerPill}>
-              <span className={styles.pillLeft}>
-                <FiImage className={styles.pillIcon} />
-                Awatar
-              </span>
-              <strong className={styles.pillRight}>
-                {preview && preview !== fallbackImg ? "Ustawiony" : "Brak"}
-              </strong>
+            <div className={styles.metaCard}>
+              <strong>{preview && preview !== fallbackImg ? "Tak" : "Nie"}</strong>
+              <span>ustawiony awatar</span>
             </div>
 
-            <div className={styles.headerPill}>
-              <span className={styles.pillLeft}>
-                <FiUser className={styles.pillIcon} />
-                Nazwa
-              </span>
-              <strong className={styles.pillRight}>
-                {(displayName || "").trim() ? "Ustawiona" : "Brak"}
-              </strong>
+            <div className={styles.metaCard}>
+              <strong>{(displayName || "").trim() ? "Tak" : "Nie"}</strong>
+              <span>ustawiona nazwa</span>
             </div>
           </div>
         </div>
 
-        {/* AWATAR */}
-        <section id="avatarSection" className={styles.sectionGroup}>
-          <div className={styles.groupHeader}>
-            <h3 className={styles.groupTitle}>Awatar</h3>
+        <div className={styles.contentBox}>
+          <div className={styles.contentHeader}>
+            <h3 className={styles.contentTitle}>Awatar konta</h3>
             <span className={styles.badge}>{file ? "do zapisu" : "OK"}</span>
           </div>
 
@@ -377,19 +376,16 @@ export default function AccountSettings() {
                   )}
                 </div>
 
-                <small className={styles.hint}>Obsługiwane obrazy, do 2 MB.</small>
+                <small className={styles.hint}>Obsługiwane obrazy, maksymalnie 2 MB.</small>
               </div>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* DISPLAY NAME */}
-        <section id="nameSection" className={styles.sectionGroup}>
-          <div className={styles.groupHeader}>
-            <h3 className={styles.groupTitle}>Nazwa wyświetlana</h3>
-            <span className={styles.badge}>
-              {(displayName || "").trim() ? "OK" : "brak"}
-            </span>
+        <div className={styles.contentBox}>
+          <div className={styles.contentHeader}>
+            <h3 className={styles.contentTitle}>Nazwa wyświetlana</h3>
+            <span className={styles.badge}>{(displayName || "").trim() ? "OK" : "brak"}</span>
           </div>
 
           <div className={styles.card}>
@@ -417,21 +413,22 @@ export default function AccountSettings() {
             </div>
 
             <small className={styles.hint}>
-              Ta nazwa może pojawiać się przy opiniach, konwersacjach oraz rezerwacjach.
+              Ta nazwa może pojawiać się przy opiniach, konwersacjach, wiadomościach oraz
+              rezerwacjach.
             </small>
           </div>
-        </section>
+        </div>
 
-        {/* PASSWORD */}
-        <section id="passwordSection" className={styles.sectionGroup}>
-          <div className={styles.groupHeader}>
-            <h3 className={styles.groupTitle}>Hasło</h3>
+        <div className={styles.contentBox}>
+          <div className={styles.contentHeader}>
+            <h3 className={styles.contentTitle}>Bezpieczeństwo hasła</h3>
             <span className={styles.badge}>reset</span>
           </div>
 
           <div className={styles.card}>
             <p className={styles.text}>
-              Jeśli logujesz się hasłem, wyślemy Ci e-mail z linkiem do zmiany hasła.
+              Jeśli logujesz się hasłem, możesz wysłać na swój adres e-mail link do zmiany
+              hasła i zaktualizować dostęp do konta.
             </p>
 
             <LoadingButton
@@ -446,8 +443,8 @@ export default function AccountSettings() {
               </span>
             </LoadingButton>
           </div>
-        </section>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
