@@ -32,6 +32,7 @@ import PartnersShowcase from "./components/PartnersShowcase/PartnersShowcase";
 import HowShowlyWorks from "./components/HowShowlyWorks/HowShowlyWorks";
 import DiscoverShowly from "./components/DiscoverShowly/DiscoverShowly";
 import AlertBox from "./components/AlertBox/AlertBox";
+import Contact from "./components/Contact/Contact";
 
 // ✅ NEW: admin
 import AdminPanel from "./components/AdminPanel/AdminPanel";
@@ -517,6 +518,17 @@ function App() {
             ) : (
               <Navigate to="/login" replace />
             )
+          }
+        />
+
+        <Route
+          path="/kontakt"
+          element={
+            <>
+              <Hero {...heroProps} />
+              <Contact />
+              <Footer />
+            </>
           }
         />
       </Routes>

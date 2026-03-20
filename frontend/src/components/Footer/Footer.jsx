@@ -58,7 +58,7 @@ const Footer = () => {
                 </a>
               </li>
               <li>
-                <a href="#contact" className={styles.link}>
+                <a href="/kontakt" className={styles.link}>
                   Kontakt <FiArrowUpRight />
                 </a>
               </li>
