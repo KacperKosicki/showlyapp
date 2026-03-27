@@ -509,7 +509,7 @@ $page-max: 1240px;
 
 .metricRow {
   display: grid;
-  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   width: 100%;
 }
@@ -1997,11 +1997,14 @@ $page-max: 1240px;
   }
 
   .metricRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     width: 100%;
   }
 
   .metricCard {
+    min-width: 0;
+    width: 100%;
     padding: 10px 11px;
     border-radius: 16px;
     text-align: left;
@@ -2016,6 +2019,10 @@ $page-max: 1240px;
 
   .metricIcon svg {
     font-size: 0.92rem;
+  }
+
+  .metricContent {
+    min-width: 0;
   }
 
   .metricContent strong {
@@ -2051,16 +2058,6 @@ $page-max: 1240px;
     font-size: 0.78rem;
     justify-content: center;
     text-align: center;
-  }
-
-  .reportPill,
-  .ghostBtn,
-  .ctaPrimary,
-  .ctaSecondary {
-    width: 100%;
-    min-height: 44px;
-    border-radius: 15px;
-    font-size: 0.78rem;
   }
 
   .mainCard,
@@ -2155,6 +2152,12 @@ $page-max: 1240px;
   .reportGhost,
   .reportPrimary {
     width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .metricRow {
+    grid-template-columns: 1fr;
   }
 }
 
