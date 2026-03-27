@@ -2,26 +2,23 @@
 
 /* =========================================================
    NAVBAR (safe z-index + premium glass)
-   - AlertBox ma być zawsze NAD navbar
-   - unikamy transform na wrapperach z backdrop-filter
 ========================================================= */
 
 .navbar {
   position: relative;
   z-index: 30;
-  /* ✅ ważne: nie przykrywa AlertBox (z-index 9999) */
 
   display: flex;
   justify-content: space-between;
   align-items: center;
 
-  padding: 1rem 2rem;
+  /* 🔥 KLUCZOWA ZMIANA (iPhone notch) */
+  padding: calc(env(safe-area-inset-top, 0px) + 1rem) 2rem 1rem;
 
   background: transparent;
   border-bottom: none;
   box-shadow: none;
 
-  /* ✅ stabilizuje warstwy (mniej “dziwnych” konfliktów) */
   isolation: isolate;
 }
 
@@ -82,8 +79,7 @@
 }
 
 /* =========================================================
-   ACTION GROUP — glass pill
-   ✅ bez transform: żeby nie robić stacking-context przy blur
+   ACTION GROUP
 ========================================================= */
 
 .actionGroup {
@@ -101,7 +97,7 @@
 }
 
 /* =========================================================
-   LOGIN button (gdy nie ma usera)
+   LOGIN button
 ========================================================= */
 
 .loginPrompt {
@@ -157,7 +153,10 @@
   .navbar {
     flex-direction: column;
     align-items: center;
-    padding: 1rem;
+
+    /* 🔥 też musi mieć safe area */
+    padding: calc(env(safe-area-inset-top, 0px) + 1rem) 1rem 1rem;
+
     gap: 14px;
   }
 
@@ -188,7 +187,7 @@
 
 @media (max-width: 480px) {
   .navbar {
-    padding: 0.9rem;
+    padding: calc(env(safe-area-inset-top, 0px) + 0.9rem) 0.9rem 0.9rem;
     gap: 12px;
   }
 
