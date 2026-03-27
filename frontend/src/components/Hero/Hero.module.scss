@@ -7,11 +7,10 @@
 .hero {
   position: relative;
   overflow: hidden;
-  padding: 1rem 1rem 185px;
+  padding: 0 1rem 185px;
   color: #fff;
   background: #07080b;
   isolation: isolate;
-  /* ważne: poprawia warstwy */
 }
 
 /* ===== background layers ===== */
@@ -583,7 +582,7 @@
 
 @media (max-width: 768px) {
   .hero {
-    padding: 1rem 1rem 170px;
+    padding: 0 1rem 170px;
     text-align: center;
   }
 
@@ -622,7 +621,7 @@
 
 @media (max-width: 480px) {
   .hero {
-    padding: 0.8rem 0.8rem 150px;
+    padding: 0 0.8rem 150px;
   }
 
   .wave svg {
@@ -640,7 +639,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   .aurora,
   .aurora2 {
     animation: none;
