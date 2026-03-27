@@ -909,8 +909,9 @@ router.get("/", async (req, res) => {
 router.get("/by-user/:uid", async (req, res) => {
   try {
     const profile = await Profile.findOne({ userId: req.params.uid }).lean();
+
     if (!profile) {
-      return res.status(404).json({ message: "Brak wizytówki dla tego użytkownika." });
+      return res.json(null);
     }
 
     const avatar = normalizeAvatarOut(req, profile.avatar, profile.updatedAt);

@@ -1207,14 +1207,13 @@ router.get("/meta/:providerUid", async (req, res) => {
         team: 1,
         services: 1,
         bookingBufferMin: 1,
-
         workingHours: 1,
         workingDays: 1,
         blockedDays: 1,
       }
     ).lean();
 
-    if (!profile) return res.status(404).json({ message: "Profil nie istnieje" });
+    if (!profile) return res.json(null);
 
     const activeServices = Array.isArray(profile.services)
       ? profile.services.filter((s) => s?.isActive !== false)
@@ -1242,14 +1241,11 @@ router.get("/meta/:providerUid", async (req, res) => {
       providerProfileId: profile._id,
       providerProfileName: profile.name || "Profil",
       providerProfileRole: profile.role || "Brak roli",
-
       bookingMode: profile.bookingMode,
       team: profile.team || { enabled: false },
       services: activeServices,
       staff: normalizedStaff,
-
       bookingBufferMin: normalizeBuffer(profile.bookingBufferMin),
-
       workingHours: profile.workingHours || { from: "08:00", to: "20:00" },
       workingDays: Array.isArray(profile.workingDays) ? profile.workingDays : [1, 2, 3, 4, 5],
       blockedDays: Array.isArray(profile.blockedDays) ? profile.blockedDays : [],

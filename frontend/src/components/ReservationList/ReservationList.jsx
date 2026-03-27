@@ -2195,8 +2195,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
             </div>
 
             <div className={styles.metaCard}>
-              <strong>{hasProviderProfile ? pendingReceived : 0}</strong>
-              <span>oczekujących otrzymanych</span>
+              <strong>{hasProviderProfile ? pendingReceived : "—"}</strong>
+              <span>
+                {hasProviderProfile ? "oczekujących otrzymanych" : "profil nieutworzony"}
+              </span>
             </div>
 
             <div className={styles.metaCard}>

@@ -93,7 +93,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
       if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
         try {
           URL.revokeObjectURL(form.avatar);
-        } catch {}
+        } catch { }
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -120,7 +120,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
       try {
         URL.revokeObjectURL(form.avatar);
-      } catch {}
+      } catch { }
     }
 
     setAvatarFile(null);
@@ -644,7 +644,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                           ) {
                             try {
                               URL.revokeObjectURL(form.avatar);
-                            } catch {}
+                            } catch { }
                           }
 
                           const previewUrl = URL.createObjectURL(file);

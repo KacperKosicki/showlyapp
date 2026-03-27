@@ -42,17 +42,15 @@ const Notifications = ({ user, setUnreadCount }) => {
 
   const authHeaders = useCallback(async () => {
     const firebaseUser = auth.currentUser;
-    const uid = firebaseUser?.uid || user?.uid || "";
-
-    if (!firebaseUser) {
-      return uid ? { uid } : {};
-    }
+    const uid = user?.uid || firebaseUser?.uid || "";
 
     let token = "";
-    try {
-      token = await firebaseUser.getIdToken();
-    } catch {
-      token = "";
+    if (firebaseUser) {
+      try {
+        token = await firebaseUser.getIdToken();
+      } catch {
+        token = "";
+      }
     }
 
     return {
@@ -64,8 +62,11 @@ const Notifications = ({ user, setUnreadCount }) => {
   // moja wizytówka
   useEffect(() => {
     const fetchMyProfile = async () => {
-      const firebaseUid = auth.currentUser?.uid || user?.uid;
-      if (!firebaseUid) return;
+      const firebaseUid = user?.uid || auth.currentUser?.uid;
+      if (!firebaseUid) {
+        setMyProfile(null);
+        return;
+      }
 
       try {
         const headers = await authHeaders();
@@ -73,9 +74,9 @@ const Notifications = ({ user, setUnreadCount }) => {
           headers,
         });
 
-        if (r?.data?.name) setMyProfile(r.data);
-        else setMyProfile(null);
-      } catch {
+        setMyProfile(r?.data || null);
+      } catch (err) {
+        console.error("❌ Błąd pobierania mojego profilu:", err);
         setMyProfile(null);
       }
     };
@@ -86,14 +87,14 @@ const Notifications = ({ user, setUnreadCount }) => {
   // konwersacje
   useEffect(() => {
     const fetchConversations = async () => {
-      const firebaseUid = auth.currentUser?.uid || user?.uid;
+      const firebaseUid = user?.uid || auth.currentUser?.uid;
+
       if (!firebaseUid) {
         setConversations([]);
+        setUnreadCount(0);
         setLoading(false);
         return;
       }
-
-      if (!auth.currentUser) return;
 
       setLoading(true);
 
@@ -323,9 +324,8 @@ const Notifications = ({ user, setUnreadCount }) => {
     return (
       <li
         key={convo._id}
-        className={`${styles.item} ${isUnread ? styles.unread : styles.read} ${
-          variant === "system" ? styles.itemSystem : ""
-        }`}
+        className={`${styles.item} ${isUnread ? styles.unread : styles.read} ${variant === "system" ? styles.itemSystem : ""
+          }`}
       >
         <Link
           to={`/konwersacja/${convo._id}`}
@@ -334,7 +334,7 @@ const Notifications = ({ user, setUnreadCount }) => {
         >
           <div className={styles.row}>
             <div className={styles.avatarWrap}>
-              <AvatarNode src={avatarSrc || DEFAULT_AVATAR} variant={variant} />
+              <AvatarNode src={avatarSrc} variant={variant} />
               {isUnread && <span className={styles.badgeDot} aria-hidden="true" />}
             </div>
 
@@ -405,6 +405,8 @@ const Notifications = ({ user, setUnreadCount }) => {
     requestAnimationFrame(tryScroll);
   }, [location.state, loading, location.pathname]);
 
+  const hasMyProfile = !!(myProfile && myProfile._id);
+
   return (
     <section id="scrollToId" className={styles.section}>
       <div className={styles.sectionBackground} aria-hidden="true" />
@@ -425,21 +427,33 @@ const Notifications = ({ user, setUnreadCount }) => {
           </h2>
 
           <p className={styles.description}>
-            Zebraliśmy wiadomości do Twojego profilu
-            {myProfile?.name ? (
+            {hasMyProfile ? (
               <>
-                {" "}
-                <strong className={styles.inlineStrong}>{myProfile.name}</strong>
+                Zebraliśmy wiadomości do Twojego profilu
+                {myProfile?.name ? (
+                  <>
+                    {" "}
+                    <strong className={styles.inlineStrong}>{myProfile.name}</strong>
+                  </>
+                ) : null}{" "}
+                oraz wątki wysłane z{" "}
+                <strong className={styles.inlineStrong}>Twojego konta</strong>.
               </>
-            ) : null}{" "}
-            oraz wątki wysłane z{" "}
-            <strong className={styles.inlineStrong}>Twojego konta</strong>.
+            ) : (
+              <>
+                Wątki wysłane z <strong className={styles.inlineStrong}>Twojego konta</strong>{" "}
+                są dostępne poniżej. Wiadomości do profilu pojawią się, gdy utworzysz swoją
+                wizytówkę.
+              </>
+            )}
           </p>
 
           <div className={styles.metaRow}>
             <div className={styles.metaCard}>
-              <strong>{inboxUnread}</strong>
-              <span>nowych do Twojego profilu</span>
+              <strong>{hasMyProfile ? inboxUnread : "—"}</strong>
+              <span>
+                {hasMyProfile ? "nowych do Twojego profilu" : "profil jeszcze nieutworzony"}
+              </span>
             </div>
 
             <div className={styles.metaCard}>
@@ -476,19 +490,32 @@ const Notifications = ({ user, setUnreadCount }) => {
                   {myProfile?.name ? ` „${myProfile.name}”` : ""}
                 </h3>
                 <span className={styles.badge}>
-                  {inboxUnread > 0 ? `${inboxUnread} nieprze.` : `${inboxToMyProfile.length}`}
+                  {hasMyProfile
+                    ? inboxUnread > 0
+                      ? `${inboxUnread} nieprze.`
+                      : `${inboxToMyProfile.length}`
+                    : "—"}
                 </span>
               </div>
 
-              {inboxToMyProfile.length === 0 ? (
+              {!hasMyProfile ? (
+                <div className={styles.emptyBox}>
+                  <div className={styles.emptyIconWrap}>
+                    <FiInbox className={styles.emptyIcon} />
+                  </div>
+                  <p className={styles.emptyTitle}>Nie masz jeszcze utworzonego profilu</p>
+                  <p className={styles.emptyText}>
+                    Wiadomości do profilu będą dostępne dopiero po utworzeniu wizytówki usługodawcy.
+                  </p>
+                </div>
+              ) : inboxToMyProfile.length === 0 ? (
                 <div className={styles.emptyBox}>
                   <div className={styles.emptyIconWrap}>
                     <FiInbox className={styles.emptyIcon} />
                   </div>
                   <p className={styles.emptyTitle}>Brak wiadomości do Twojego profilu</p>
                   <p className={styles.emptyText}>
-                    Gdy ktoś napisze do Twojej wizytówki, konwersacje pojawią się właśnie
-                    tutaj.
+                    Gdy ktoś napisze do Twojej wizytówki, konwersacje pojawią się właśnie tutaj.
                   </p>
                 </div>
               ) : (

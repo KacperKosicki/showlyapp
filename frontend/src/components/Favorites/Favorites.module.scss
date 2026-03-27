@@ -252,7 +252,7 @@
   align-items: flex-start;
 }
 
-.cardWrap > * {
+.cardWrap>* {
   width: 100%;
   height: auto;
   align-self: flex-start;
@@ -302,6 +302,7 @@
   color: rgba(0, 0, 0, 0.6);
   line-height: 1.55;
   font-size: 0.95rem;
+  font-family: $font-body;
 }
 
 .cta {
@@ -392,12 +393,10 @@
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0),
-      rgba(255, 255, 255, 0.55),
-      rgba(255, 255, 255, 0)
-    );
+    background: linear-gradient(90deg,
+        rgba(255, 255, 255, 0),
+        rgba(255, 255, 255, 0.55),
+        rgba(255, 255, 255, 0));
     animation: shimmer 1.2s infinite;
   }
 }
