@@ -1228,13 +1228,13 @@ router.get("/meta/:providerUid", async (req, res) => {
 
     const normalizedStaff = Array.isArray(staff)
       ? staff
-          .map((s) => ({
-            ...s,
-            serviceIds: Array.isArray(s.serviceIds)
-              ? s.serviceIds.filter((id) => activeServiceIds.has(String(id)))
-              : [],
-          }))
-          .filter((s) => (s.serviceIds || []).length > 0 || !activeServices.length)
+        .map((s) => ({
+          ...s,
+          serviceIds: Array.isArray(s.serviceIds)
+            ? s.serviceIds.filter((id) => activeServiceIds.has(String(id)))
+            : [],
+        }))
+        .filter((s) => (s.serviceIds || []).length > 0 || !activeServices.length)
       : [];
 
     return res.json({
