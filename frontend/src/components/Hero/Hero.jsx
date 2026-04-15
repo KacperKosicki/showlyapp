@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import styles from "./Hero.module.scss";
 import Navbar from "../Navbar/Navbar";
 import SearchBar from "../SearchBar/SearchBar";
@@ -11,8 +12,18 @@ const Hero = ({
   unreadCount,
   setUnreadCount,
   pendingReservationsCount,
-  setAlert, // 👈 NOWE
+  setAlert,
 }) => {
+  useEffect(() => {
+    document.body.classList.add("hero-page");
+    document.documentElement.classList.add("hero-page-html");
+
+    return () => {
+      document.body.classList.remove("hero-page");
+      document.documentElement.classList.remove("hero-page-html");
+    };
+  }, []);
+
   return (
     <section className={styles.hero} id="hero">
       <Navbar
@@ -23,7 +34,7 @@ const Hero = ({
         unreadCount={unreadCount}
         setUnreadCount={setUnreadCount}
         pendingReservationsCount={pendingReservationsCount}
-        setAlert={setAlert} // 👈 NOWE
+        setAlert={setAlert}
       />
 
       <div className={styles.bg} aria-hidden="true">
