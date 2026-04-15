@@ -12,10 +12,9 @@
   justify-content: space-between;
   align-items: center;
 
-  /* 🔥 KLUCZOWA ZMIANA (iPhone notch) */
   padding: calc(env(safe-area-inset-top, 0px) + 1rem) 2rem 1rem;
 
-  background: transparent;
+  background: #07080b;
   border-bottom: none;
   box-shadow: none;
 
