@@ -12,22 +12,22 @@ import styles from './Register.module.scss';
 import Hero from '../Hero/Hero';
 import Footer from '../Footer/Footer';
 import axios from 'axios';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import LoadingButton from '../ui/LoadingButton/LoadingButton';
+import { FiUser, FiMail, FiLock, FiArrowRight, FiZap } from 'react-icons/fi';
 
 const Register = ({ user, setUser, setRefreshTrigger }) => {
   const [form, setForm] = useState({
     email: '',
     password: '',
     confirmPassword: '',
-    name: ''
+    name: '',
   });
 
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [emailSent, setEmailSent] = useState(false);
 
-  // 🔥 kropki / loadery
   const [isRegistering, setIsRegistering] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
@@ -80,7 +80,6 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // blokada podwójnych klików
     if (isRegistering || isGoogleLoading) return;
 
     if (form.password !== form.confirmPassword) {
@@ -104,16 +103,20 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
         return;
       }
 
-      const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password
+      );
       const firebaseUser = userCredential.user;
 
       await updateProfile(firebaseUser, { displayName: form.name || '' });
       await sendEmailVerification(firebaseUser);
 
       setEmailSent(true);
-      setMessage('Na Twój adres e-mail został wysłany link aktywacyjny. Kliknij w niego, aby aktywować konto.');
-      // opcjonalny redirect po czasie:
-      // setTimeout(() => navigate('/'), 3000);
+      setMessage(
+        'Na Twój adres e-mail został wysłany link aktywacyjny. Kliknij w niego, aby aktywować konto.'
+      );
     } catch (err) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {
@@ -127,13 +130,12 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   };
 
   const handleGoogleLogin = async () => {
-    // blokada podwójnych klików
     if (isRegistering || isGoogleLoading) return;
 
     setError('');
     setMessage('');
     setIsGoogleLoading(true);
-    sessionStorage.setItem('authFlow', '1'); // ⬅️ start
+    sessionStorage.setItem('authFlow', '1');
 
     try {
       const provider = googleProvider;
@@ -158,11 +160,13 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
           email,
           name: gUser.displayName || '',
           firebaseUid: uid,
-          provider: 'google'
+          provider: 'google',
         });
       } catch (err) {
         if (err.response?.status === 409) {
-          setError('Ten e-mail jest już przypisany do innego konta. Zaloguj się metodą, którą wcześniej użyłeś.');
+          setError(
+            'Ten e-mail jest już przypisany do innego konta. Zaloguj się metodą, którą wcześniej użyłeś.'
+          );
           sessionStorage.removeItem('authFlow');
           return;
         }
@@ -175,18 +179,20 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
       setMessage('Pomyślnie zalogowano przez Google. Przekierowuję…');
       setTimeout(() => {
-        sessionStorage.removeItem('authFlow'); // ⬅️ stop
+        sessionStorage.removeItem('authFlow');
         navigate('/', { replace: true });
       }, 1500);
     } catch (err) {
       console.error('❌ Błąd podczas logowania przez Google:', err);
       if (err.code === 'auth/account-exists-with-different-credential') {
         const email = err.customData?.email;
-        setError(`Konto o adresie ${email} zostało już utworzone inną metodą. Zaloguj się tą metodą.`);
+        setError(
+          `Konto o adresie ${email} zostało już utworzone inną metodą. Zaloguj się tą metodą.`
+        );
       } else {
         setError('Błąd podczas logowania przez Google.');
       }
-      sessionStorage.removeItem('authFlow'); // ⬅️ stop przy błędzie
+      sessionStorage.removeItem('authFlow');
     } finally {
       setIsGoogleLoading(false);
     }
@@ -196,78 +202,154 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
   return (
     <>
-      <Hero user={user} setUser={setUser} refreshTrigger={Date.now()} />
-      <div id="registerBox" className={styles.registerContainer}>
-        <h2>Utwórz konto</h2>
+      <Hero user={user} setUser={setUser} />
 
-        {!emailSent ? (
-          <>
-            <form onSubmit={handleSubmit}>
-              <input
-                type="text"
-                name="name"
-                placeholder="Imię i nazwisko"
-                onChange={handleChange}
-                required
-                disabled={isBusy}
-              />
-              <input
-                type="email"
-                name="email"
-                placeholder="Adres email"
-                onChange={handleChange}
-                required
-                disabled={isBusy}
-              />
-              <input
-                type="password"
-                name="password"
-                placeholder="Hasło"
-                onChange={handleChange}
-                required
-                disabled={isBusy}
-              />
-              <input
-                type="password"
-                name="confirmPassword"
-                placeholder="Powtórz hasło"
-                onChange={handleChange}
-                required
-                disabled={isBusy}
-              />
+      <section className={styles.authSection}>
+        <div id="registerBox" className={styles.registerContainer}>
+          <div className={`${styles.glow} ${styles.glowOne}`} />
+          <div className={`${styles.glow} ${styles.glowTwo}`} />
 
-              <LoadingButton
-                type="submit"
-                isLoading={isRegistering}
-                disabled={isBusy}
+          <div className={styles.card}>
+            <div className={styles.topBadge}>
+              <FiZap />
+              <span>Dołącz do Showly</span>
+            </div>
+
+            <h2 className={styles.title}>Utwórz swoje konto</h2>
+
+            <p className={styles.subtitle}>
+              Załóż konto i zacznij budować swoją wizytówkę online, zbierać opinie,
+              wiadomości i rezerwacje w jednym miejscu.
+            </p>
+
+            {!emailSent ? (
+              <>
+                <form onSubmit={handleSubmit} className={styles.form}>
+                  <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel}>Imię i nazwisko</label>
+                    <div className={styles.inputWrap}>
+                      <FiUser className={styles.inputIcon} />
+                      <input
+                        type="text"
+                        name="name"
+                        placeholder="Np. Jan Kowalski"
+                        value={form.name}
+                        onChange={handleChange}
+                        required
+                        disabled={isBusy}
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel}>Adres e-mail</label>
+                    <div className={styles.inputWrap}>
+                      <FiMail className={styles.inputIcon} />
+                      <input
+                        type="email"
+                        name="email"
+                        placeholder="twoj@email.com"
+                        value={form.email}
+                        onChange={handleChange}
+                        required
+                        disabled={isBusy}
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel}>Hasło</label>
+                    <div className={styles.inputWrap}>
+                      <FiLock className={styles.inputIcon} />
+                      <input
+                        type="password"
+                        name="password"
+                        placeholder="Ustaw swoje hasło"
+                        value={form.password}
+                        onChange={handleChange}
+                        required
+                        disabled={isBusy}
+                      />
+                    </div>
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <label className={styles.inputLabel}>Powtórz hasło</label>
+                    <div className={styles.inputWrap}>
+                      <FiLock className={styles.inputIcon} />
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        placeholder="Powtórz hasło"
+                        value={form.confirmPassword}
+                        onChange={handleChange}
+                        required
+                        disabled={isBusy}
+                      />
+                    </div>
+                  </div>
+
+                  <LoadingButton
+                    type="submit"
+                    isLoading={isRegistering}
+                    disabled={isBusy}
+                    className={styles.submitButton}
+                  >
+                    <span className={styles.buttonInner}>
+                      <span className={styles.buttonLabel}>Zarejestruj się</span>
+                      {!isRegistering && (
+                        <span className={styles.buttonIcon}>
+                          <FiArrowRight />
+                        </span>
+                      )}
+                    </span>
+                  </LoadingButton>
+                </form>
+
+                <div className={styles.orSeparator}>
+                  <span>lub kontynuuj przez</span>
+                </div>
+
+                <LoadingButton
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  isLoading={isGoogleLoading}
+                  disabled={isBusy}
+                  className={styles.googleButton}
+                >
+                  <span className={styles.buttonInner}>
+                    <span className={styles.googleIconWrap}>
+                      <img src="/images/icons/google.png" alt="Google" />
+                    </span>
+                    <span className={styles.buttonLabel}>Kontynuuj przez Google</span>
+                  </span>
+                </LoadingButton>
+              </>
+            ) : (
+              <div className={styles.successLarge}>
+                Rejestracja zakończona. Sprawdź swoją skrzynkę i kliknij link
+                aktywacyjny, aby aktywować konto. Następnie możesz się zalogować.
+              </div>
+            )}
+
+            {error && <div className={styles.error}>{error}</div>}
+            {message && <div className={styles.success}>{message}</div>}
+
+            <div className={styles.bottomBox}>
+              <p className={styles.loginLink}>Masz już konto?</p>
+
+              <Link
+                to="/login"
+                state={{ scrollToId: 'loginBox' }}
+                className={styles.linkButton}
               >
-                Zarejestruj się
-              </LoadingButton>
-            </form>
-
-            <div className={styles.orSeparator}>lub</div>
-
-            <LoadingButton
-              type="button"
-              onClick={handleGoogleLogin}
-              isLoading={isGoogleLoading}
-              disabled={isBusy}
-              className={styles.googleButton}
-            >
-              <img src="/images/icons/google.png" alt="Google" />
-              Kontynuuj przez Google
-            </LoadingButton>
-          </>
-        ) : (
-          <div className={styles.success}>
-            Rejestracja zakończona. Sprawdź swoją skrzynkę i kliknij link aktywacyjny, aby aktywować konto.
-            Następnie możesz się zalogować.
+                Przejdź do logowania
+              </Link>
+            </div>
           </div>
-        )}
+        </div>
+      </section>
 
-        {error && <div className={styles.error}>{error}</div>}
-        {message && <div className={styles.success}>{message}</div>}
-      </div>
       <Footer />
     </>
   );

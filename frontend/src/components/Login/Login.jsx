@@ -14,13 +14,13 @@ import Hero from '../Hero/Hero';
 import Footer from '../Footer/Footer';
 import axios from 'axios';
 import LoadingButton from '../ui/LoadingButton/LoadingButton';
+import { FiMail, FiLock, FiArrowRight, FiZap } from 'react-icons/fi';
 
 const Login = ({ setUser, setRefreshTrigger }) => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  // 🔥 loadery
   const [isLoggingEmail, setIsLoggingEmail] = useState(false);
   const [isLoggingGoogle, setIsLoggingGoogle] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
@@ -33,22 +33,21 @@ const Login = ({ setUser, setRefreshTrigger }) => {
   }, []);
 
   useEffect(() => {
-  const scrollToId = location.state?.scrollToId;
+    const scrollToId = location.state?.scrollToId;
+    if (!scrollToId) return;
 
-  if (!scrollToId) return;
+    const timeout = setTimeout(() => {
+      const el = document.getElementById(scrollToId);
+      if (el) {
+        el.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }
+    }, 120);
 
-  const timeout = setTimeout(() => {
-    const el = document.getElementById(scrollToId);
-    if (el) {
-      el.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
-    }
-  }, 120);
-
-  return () => clearTimeout(timeout);
-}, [location]);
+    return () => clearTimeout(timeout);
+  }, [location]);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -269,73 +268,122 @@ const Login = ({ setUser, setRefreshTrigger }) => {
     <>
       <Hero />
 
-      <div className={styles.container} id="loginBox">
-        <h2 className={styles.loginTitle}>Zaloguj się</h2>
+      <section className={styles.authSection}>
+        <div className={styles.container} id="loginBox">
+          <div className={`${styles.glow} ${styles.glowOne}`} />
+          <div className={`${styles.glow} ${styles.glowTwo}`} />
 
-        <form onSubmit={handleSubmit}>
-          <input
-            name="email"
-            type="email"
-            placeholder="Email"
-            required
-            value={form.email}
-            onChange={handleChange}
-            disabled={isBusy}
-          />
+          <div className={styles.card}>
+            <div className={styles.topBadge}>
+              <FiZap />
+              <span>Witaj ponownie w Showly</span>
+            </div>
 
-          <input
-            name="password"
-            type="password"
-            placeholder="Hasło"
-            required
-            value={form.password}
-            onChange={handleChange}
-            disabled={isBusy}
-          />
+            <h2 className={styles.loginTitle}>Zaloguj się do swojego konta</h2>
 
-          <div className={styles.actionsRow}>
-            <button
+            <p className={styles.subtitle}>
+              Zarządzaj profilem, wiadomościami, rezerwacjami i swoją wizytówką w jednym miejscu.
+            </p>
+
+            <form onSubmit={handleSubmit} className={styles.form}>
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>Adres e-mail</label>
+                <div className={styles.inputWrap}>
+                  <FiMail className={styles.inputIcon} />
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="twoj@email.com"
+                    required
+                    value={form.email}
+                    onChange={handleChange}
+                    disabled={isBusy}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label className={styles.inputLabel}>Hasło</label>
+                <div className={styles.inputWrap}>
+                  <FiLock className={styles.inputIcon} />
+                  <input
+                    name="password"
+                    type="password"
+                    placeholder="Wpisz swoje hasło"
+                    required
+                    value={form.password}
+                    onChange={handleChange}
+                    disabled={isBusy}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.actionsRow}>
+                <button
+                  type="button"
+                  className={styles.forgotPassword}
+                  onClick={handlePasswordReset}
+                  disabled={isBusy}
+                >
+                  {isResettingPassword ? 'Wysyłanie linku...' : 'Nie pamiętasz hasła?'}
+                </button>
+              </div>
+
+              <LoadingButton
+                type="submit"
+                isLoading={isLoggingEmail}
+                disabled={isBusy}
+                className={styles.submitButton}
+              >
+                <span className={styles.buttonInner}>
+                  <span className={styles.buttonLabel}>Zaloguj się</span>
+                  {!isLoggingEmail && (
+                    <span className={styles.buttonIcon}>
+                      <FiArrowRight />
+                    </span>
+                  )}
+                </span>
+              </LoadingButton>
+            </form>
+
+            {error && <div className={styles.error}>{error}</div>}
+            {message && <div className={styles.success}>{message}</div>}
+
+            <div className={styles.orSeparator}>
+              <span>lub kontynuuj przez</span>
+            </div>
+
+            <LoadingButton
               type="button"
-              className={styles.forgotPassword}
-              onClick={handlePasswordReset}
+              onClick={handleGoogleLogin}
+              isLoading={isLoggingGoogle}
               disabled={isBusy}
+              className={styles.googleButton}
             >
-              {isResettingPassword ? 'Wysyłanie linku...' : 'Nie pamiętasz hasła?'}
-            </button>
+              <span className={styles.buttonInner}>
+                <span className={styles.googleIconWrap}>
+                  <img src="/images/icons/google.png" alt="Google" />
+                </span>
+                <span className={styles.buttonLabel}>Kontynuuj przez Google</span>
+              </span>
+            </LoadingButton>
+
+            <div className={styles.bottomBox}>
+              <p className={styles.registerLink}>
+                Nie masz jeszcze konta?
+              </p>
+
+              <Link
+                to="/register"
+                state={{ scrollToId: 'registerBox' }}
+                className={styles.linkButton}
+              >
+                Załóż konto w Showly
+              </Link>
+            </div>
           </div>
-
-          <LoadingButton
-            type="submit"
-            isLoading={isLoggingEmail}
-            disabled={isBusy}
-          >
-            Zaloguj
-          </LoadingButton>
-        </form>
-
-        {error && <div className={styles.error}>{error}</div>}
-        {message && <div className={styles.success}>{message}</div>}
-
-        <div className={styles.orSeparator}>lub</div>
-
-        <LoadingButton
-          type="button"
-          onClick={handleGoogleLogin}
-          isLoading={isLoggingGoogle}
-          disabled={isBusy}
-          className={styles.googleButton}
-        >
-          <img src="/images/icons/google.png" alt="Google" />
-          Kontynuuj przez Google
-        </LoadingButton>
-
-        <p className={styles.registerLink}>
-          Nie masz konta?{' '}
-          <Link to="/register" className={styles.linkButton}>
-            Załóż je tutaj
-          </Link>
-        </p>
-      </div>
+        </div>
+      </section>
 
       <Footer />
     </>
