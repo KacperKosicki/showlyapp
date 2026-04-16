@@ -197,7 +197,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   return (
     <>
       <Hero user={user} setUser={setUser} refreshTrigger={Date.now()} />
-      <div id="registerContainer" className={styles.registerContainer}>
+      <div id="registerBox" className={styles.registerContainer}>
         <h2>Utwórz konto</h2>
 
         {!emailSent ? (

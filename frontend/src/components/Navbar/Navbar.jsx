@@ -10,9 +10,13 @@ const Navbar = ({
   unreadCount,
   setUnreadCount,
   pendingReservationsCount,
-  setAlert, // 👈 NOWE
+  setAlert,
 }) => {
   const navigate = useNavigate();
+
+  const handleAuthNavigate = (path, scrollToId) => {
+    navigate(path, { state: { scrollToId } });
+  };
 
   return (
     <nav className={styles.navbar}>
@@ -33,17 +37,32 @@ const Navbar = ({
               unreadCount={unreadCount}
               setUnreadCount={setUnreadCount}
               pendingReservationsCount={pendingReservationsCount}
-              setAlert={setAlert} // 👈 NOWE
+              setAlert={setAlert}
             />
           ) : (
-            <button
-              type="button"
-              className={styles.loginPrompt}
-              onClick={() => navigate("/login")}
-            >
-              <FaUser className={styles.icon} />
-              <span>Zaloguj się / Zarejestruj się</span>
-            </button>
+<div className={styles.authButtons}>
+  <button
+    type="button"
+    className={styles.loginPrompt}
+    onClick={() => handleAuthNavigate("/login", "loginBox")}
+  >
+    <span className={styles.iconWrap}>
+      <FaUser className={styles.icon} />
+    </span>
+    <span className={styles.buttonText}>Zaloguj się</span>
+  </button>
+
+  <button
+    type="button"
+    className={styles.registerPrompt}
+    onClick={() => handleAuthNavigate("/register", "registerBox")}
+  >
+    <span className={styles.iconWrap}>
+      <FaUser className={styles.icon} />
+    </span>
+    <span className={styles.buttonText}>Zarejestruj się</span>
+  </button>
+</div>
           )}
         </div>
       </div>

@@ -8,7 +8,7 @@ import {
   signOut,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../../firebase';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import styles from './Login.module.scss';
 import Hero from '../Hero/Hero';
 import Footer from '../Footer/Footer';
@@ -26,10 +26,29 @@ const Login = ({ setUser, setRefreshTrigger }) => {
   const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     return () => sessionStorage.removeItem('authFlow');
   }, []);
+
+  useEffect(() => {
+  const scrollToId = location.state?.scrollToId;
+
+  if (!scrollToId) return;
+
+  const timeout = setTimeout(() => {
+    const el = document.getElementById(scrollToId);
+    if (el) {
+      el.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  }, 120);
+
+  return () => clearTimeout(timeout);
+}, [location]);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -250,7 +269,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
     <>
       <Hero />
 
-      <div className={styles.container}>
+      <div className={styles.container} id="loginBox">
         <h2 className={styles.loginTitle}>Zaloguj się</h2>
 
         <form onSubmit={handleSubmit}>

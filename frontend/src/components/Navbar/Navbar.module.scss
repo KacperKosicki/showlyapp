@@ -85,63 +85,152 @@
   display: flex;
   align-items: center;
   gap: 10px;
+}
 
-  padding: 10px 12px;
+/* =========================================================
+   AUTH BUTTONS WRAPPER
+========================================================= */
+
+.authButtons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+
+  padding: 0.4rem;
   border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 
-  transition: box-shadow 0.18s ease, filter 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
 }
 
 /* =========================================================
-   LOGIN button
+   SHARED BUTTON STYLE
 ========================================================= */
 
-.loginPrompt {
+.loginPrompt,
+.registerPrompt {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 0.65rem;
 
-  padding: 10px 14px;
+  min-height: 46px;
+  padding: 0.78rem 1.15rem;
   border-radius: 999px;
 
   cursor: pointer;
-
-  font-family: $font-accent;
-  font-size: 0.95rem;
-  font-weight: 900;
-  letter-spacing: -0.01em;
-
-  color: rgba(255, 255, 255, 0.92);
-  background: transparent;
-
   border: 0;
   outline: 0;
   -webkit-appearance: none;
   appearance: none;
 
-  transition: filter 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+  font-family: $font-accent;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  line-height: 1;
+
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    filter 0.18s ease;
 }
 
-.loginPrompt:hover {
-  filter: brightness(1.04);
-  background: rgba(255, 255, 255, 0.06);
+.loginPrompt:active,
+.registerPrompt:active {
+  transform: translateY(0);
 }
 
-.loginPrompt:active {
-  filter: brightness(0.98);
-}
-
-.loginPrompt:focus-visible {
-  outline: none;
+.loginPrompt:focus-visible,
+.registerPrompt:focus-visible {
   box-shadow: 0 0 0 6px rgba(111, 78, 242, 0.18);
 }
 
-.icon {
-  font-size: 1.05rem;
+/* =========================================================
+   LOGIN
+========================================================= */
+
+.loginPrompt {
   color: rgba(255, 255, 255, 0.92);
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.loginPrompt:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   REGISTER CTA
+========================================================= */
+
+.registerPrompt {
+  color: #ffffff;
+  background: linear-gradient(
+    135deg,
+    rgba(111, 78, 242, 0.96),
+    rgba(255, 64, 129, 0.95)
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  box-shadow:
+    0 14px 34px rgba(111, 78, 242, 0.22),
+    0 10px 26px rgba(255, 64, 129, 0.14);
+}
+
+.registerPrompt:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow:
+    0 18px 40px rgba(111, 78, 242, 0.28),
+    0 12px 30px rgba(255, 64, 129, 0.18);
+}
+
+/* =========================================================
+   INNER ELEMENTS
+========================================================= */
+
+.iconWrap {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.loginPrompt .iconWrap {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.registerPrompt .iconWrap {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.icon {
+  font-size: 0.9rem;
+  color: inherit;
+}
+
+.buttonText {
+  white-space: nowrap;
 }
 
 /* =========================================================
@@ -152,10 +241,7 @@
   .navbar {
     flex-direction: column;
     align-items: center;
-
-    /* 🔥 też musi mieć safe area */
     padding: calc(env(safe-area-inset-top, 0px) + 1rem) 1rem 1rem;
-
     gap: 14px;
   }
 
@@ -174,13 +260,16 @@
     justify-content: center;
   }
 
-  .actionGroup {
-    padding: 10px 12px;
+  .authButtons {
+    gap: 0.45rem;
+    padding: 0.36rem;
   }
 
-  .loginPrompt {
+  .loginPrompt,
+  .registerPrompt {
+    min-height: 44px;
+    padding: 0.75rem 1rem;
     font-size: 0.92rem;
-    padding: 10px 14px;
   }
 }
 
@@ -194,14 +283,45 @@
     transform: translateY(-4px);
   }
 
-  .actionGroup {
+  .right {
     width: 100%;
-    max-width: 520px;
     justify-content: center;
   }
 
-  .loginPrompt {
+  .actionGroup {
     width: 100%;
     justify-content: center;
+  }
+
+  .authButtons {
+    width: auto;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.35rem;
+    border-radius: 22px;
+  }
+
+  .loginPrompt,
+  .registerPrompt {
+    flex: 0 1 auto;
+    width: auto;
+    min-height: 42px;
+    padding: 0.72rem 0.95rem;
+    font-size: 0.88rem;
+  }
+
+  .buttonText {
+    white-space: nowrap;
+  }
+
+  .iconWrap {
+    width: 24px;
+    height: 24px;
+  }
+
+  .icon {
+    font-size: 0.82rem;
   }
 }
