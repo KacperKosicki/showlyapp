@@ -135,7 +135,7 @@ const Hero = ({
               </div>
 
               <div className={styles.url}>
-                showly.app/<span className={styles.urlAccent}>twoj-profil</span>
+                showly.me/<span className={styles.urlAccent}>twoj-profil</span>
               </div>
 
               <div className={styles.badge}>PREVIEW</div>

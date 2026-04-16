@@ -18,7 +18,7 @@ const Navbar = ({
     <nav className={styles.navbar}>
       <div className={styles.left}>
         <Link to="/" className={styles.logoWrap}>
-          <span className={styles.logo}>Showly.app</span>
+          <span className={styles.logo}>Showly.me</span>
           <span className={styles.beta}>BETA</span>
         </Link>
       </div>

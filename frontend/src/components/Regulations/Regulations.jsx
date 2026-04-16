@@ -14,16 +14,15 @@ import {
 
 const Regulations = () => {
   return (
-    <section className={styles.regulationsSection}>
-      <div className={styles.bg} aria-hidden="true">
-        <span className={styles.blur1} />
-        <span className={styles.blur2} />
-        <span className={styles.grid} />
-        <span className={styles.vignette} />
+    <section className={styles.section}>
+      <div className={styles.bg}>
+        <div className={styles.blur1}></div>
+        <div className={styles.blur2}></div>
+        <div className={styles.vignette}></div>
       </div>
 
-      <div className={styles.container}>
-        <div className={styles.heading}>
+      <div className={styles.inner}>
+        <div className={styles.head}>
           <div className={styles.labelRow}>
             <span className={styles.label}>Showly Legal</span>
             <span className={styles.labelDot} />
@@ -32,11 +31,11 @@ const Regulations = () => {
             <span className={styles.pill}>Regulamin • Konto • Profile • Rezerwacje</span>
           </div>
 
-          <h2 className={styles.title}>
-            Regulamin <span className={styles.titleAccent}>Showly.app</span>
+          <h2 className={styles.heading}>
+            Regulamin <span className={styles.headingAccent}>Showly.app</span>
           </h2>
 
-          <p className={styles.subtitle}>
+          <p className={styles.description}>
             Ten regulamin określa zasady korzystania z platformy Showly.app,
             w tym zasady zakładania kont, publikowania profili, kontaktu między
             użytkownikami, rezerwacji, opinii, płatności oraz odpowiedzialności

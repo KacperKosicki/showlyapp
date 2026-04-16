@@ -23,12 +23,12 @@ const Footer = () => {
             <div className={styles.brandTop}>
               <div className={styles.logoMark} aria-hidden="true" />
               <h4 className={styles.footerLogo}>
-                Showly.app <span className={styles.beta}>BETA</span>
+                Showly.me <span className={styles.beta}>BETA</span>
               </h4>
             </div>
 
             <p className={styles.brandText}>
-              Showly.app to nowoczesna wizytówka usług online – profil, cennik, galeria i kontakt w jednym miejscu.
+              Showly.me to nowoczesna wizytówka usług online – profil, cennik, galeria i kontakt w jednym miejscu.
             </p>
 
             <div className={styles.pills}>
@@ -74,7 +74,7 @@ const Footer = () => {
                 <span className={styles.contactIcon} aria-hidden="true">
                   <FiMail />
                 </span>
-                <span className={styles.contactText}>kontakt@showly.app</span>
+                <span className={styles.contactText}>kontakt@showly.me</span>
               </div>
 
               <div className={styles.contactRow}>
@@ -116,7 +116,7 @@ const Footer = () => {
         {/* bottom */}
         <div className={styles.bottom}>
           <div className={styles.bottomLeft}>
-            <span className={styles.copy}>© {year} Showly.app. Wszelkie prawa zastrzeżone.</span>
+            <span className={styles.copy}>© {year} Showly.me. Wszelkie prawa zastrzeżone.</span>
             <span className={styles.sep} aria-hidden="true" />
             <a className={styles.smallLink} href="/regulamin">
               Regulamin

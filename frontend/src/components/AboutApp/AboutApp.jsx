@@ -116,7 +116,7 @@ const AboutApp = ({ user }) => {
                     Udostępniaj swój profil w CV, bio na TikToku, Instagramie,
                     ogłoszeniach, wiadomościach i social mediach.
                   </p>
-                  <code>https://showly.app/profil/twoja-nazwa</code>
+                  <code>https://showly.me/profil/twoja-nazwa</code>
                 </div>
               </li>
             </ul>

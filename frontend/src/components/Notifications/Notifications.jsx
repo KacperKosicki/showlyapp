@@ -310,7 +310,7 @@ const Notifications = ({ user, setUnreadCount }) => {
         </>
       );
     } else {
-      const sysName = (convo.withDisplayName || "Showly.app").trim();
+      const sysName = (convo.withDisplayName || "Showly.me").trim();
       header = (
         <>
           <FiMail className={styles.icon} />
