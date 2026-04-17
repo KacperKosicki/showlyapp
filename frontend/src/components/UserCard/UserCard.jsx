@@ -642,7 +642,7 @@ const UserCard = ({
               }
             >
               <span className={styles.favLabel}>
-                Ulubione: <strong>{favCount}</strong>
+                Ulubione: {favCount}
               </span>
               {isFav ? (
                 <FaHeart className={styles.heartFilled} />
