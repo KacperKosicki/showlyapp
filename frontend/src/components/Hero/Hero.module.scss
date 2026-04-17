@@ -81,7 +81,7 @@
   z-index: 1;
   max-width: 1180px;
   margin: 0 auto;
-  padding: clamp(18px, 2.2vw, 30px);
+  //padding: clamp(18px, 2.2vw, 30px);
 
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
@@ -621,7 +621,7 @@
 
 @media (max-width: 480px) {
   .hero {
-    padding: 0 0.8rem 150px;
+    padding: 0 1rem 150px;
   }
 
   .wave svg {

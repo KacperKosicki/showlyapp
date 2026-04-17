@@ -80,7 +80,6 @@
   z-index: 1;
   max-width: 1180px;
   margin: 0 auto;
-  padding: 0 clamp(12px, 1.8vw, 24px);
 }
 
 .top {
@@ -405,7 +404,7 @@
 
 @media (max-width: 768px) {
   .footer {
-    padding: 2.6rem 0.9rem 1.2rem;
+    padding: 2.6rem 1rem 1.2rem;
   }
 
   .brand,
