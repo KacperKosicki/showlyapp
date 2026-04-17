@@ -102,18 +102,44 @@ router.patch(
     try {
       const { isVisible } = req.body;
 
-      const updated = await Profile.findByIdAndUpdate(
-        req.params.id,
-        { $set: { isVisible: !!isVisible } },
-        { new: true }
-      ).lean();
-
-      if (!updated) {
+      const profile = await Profile.findById(req.params.id);
+      if (!profile) {
         return res.status(404).json({ message: "Nie znaleziono profilu" });
       }
 
-      return res.json(updated);
+      profile.isVisible = !!isVisible;
+      await profile.save();
+
+      const profileOwnerUid = String(profile.userId || "").trim();
+      const profileName = String(profile.name || "Twój profil").trim();
+
+      if (profileOwnerUid) {
+        if (!isVisible) {
+          await sendSystemMessage(
+            profileOwnerUid,
+            [
+              `⛔ Twój profil „${profileName}” został wyłączony przez administrację.`,
+              "",
+              "Jeśli uważasz, że to błąd lub chcesz wyjaśnić sytuację, skontaktuj się z administracją Showly.",
+              "",
+              "Do czasu wyjaśnienia profil może pozostać niewidoczny."
+            ].join("\n")
+          );
+        } else {
+          await sendSystemMessage(
+            profileOwnerUid,
+            [
+              `✅ Twój profil „${profileName}” został ponownie aktywowany przez administrację.`,
+              "",
+              "Profil jest ponownie widoczny w serwisie Showly."
+            ].join("\n")
+          );
+        }
+      }
+
+      return res.json(profile);
     } catch (e) {
+      console.error("❌ admin toggle profile visibility error:", e);
       return res.status(500).json({ message: "Błąd serwera", error: e.message });
     }
   }

@@ -204,7 +204,7 @@ router.get("/by-uid/:uid", requireAuth, async (req, res) => {
       const other = (c.participants || []).find((p) => p.uid !== authUid);
       const otherInfo =
         usersMap.get(other?.uid) || {
-          displayName: c.channel === "system" ? "Showly.app" : "Użytkownik",
+          displayName: c.channel === "system" ? "Showly.me" : "Użytkownik",
           avatar: "",
           email: "",
         };

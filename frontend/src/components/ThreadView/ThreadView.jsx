@@ -364,7 +364,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
   const receiverName = useMemo(() => {
     const myUid = auth.currentUser?.uid || user?.uid;
 
-    if (receiverId === "SYSTEM" || channel === "system") return "Showly.app";
+    if (receiverId === "SYSTEM" || channel === "system") return "Showly.me";
 
     const meta = receiverId ? profileMetaMap[receiverId] : undefined;
     const profResolved = receiverId ? isProfileResolved(receiverId) : false;

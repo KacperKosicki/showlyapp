@@ -386,17 +386,26 @@
 .btnInner {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 10px;
-  line-height: 1.1;
+  line-height: 1;
   white-space: nowrap;
 }
 
 .btnIcon {
   flex: 0 0 auto;
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.05rem;
   line-height: 1;
   opacity: 0.92;
+  transform: translateY(1px);
+}
+
+.btnInner svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 @mixin btnMotion {

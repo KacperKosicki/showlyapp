@@ -422,7 +422,7 @@ const UserDropdown = ({
               type="button"
               className={styles.item}
               role="menuitem"
-              onClick={() => handleNavigate("/admin", "scrollToId")}
+              onClick={() => handleNavigate("/admin", "adminPanel")}
             >
               <span className={styles.itemLeft}>
                 <FiShield className={styles.itemIcon} aria-hidden="true" />

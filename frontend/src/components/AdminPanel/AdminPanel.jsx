@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import styles from "./AdminPanel.module.scss";
 import AlertBox from "../AlertBox/AlertBox";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
@@ -151,8 +152,106 @@ const normalizePartnerDraft = (profile) => {
   };
 };
 
+const getVisibleUntilDate = (profile) => {
+  const raw = profile?.visibleUntil;
+  if (!raw) return null;
+
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return null;
+
+  return d;
+};
+
+const isProfileExpired = (profile) => {
+  const visibleUntil = getVisibleUntilDate(profile);
+  if (!visibleUntil) return false;
+
+  return visibleUntil.getTime() < Date.now();
+};
+
+const getProfileStatus = (profile) => {
+  const expired = isProfileExpired(profile);
+  const manuallyHidden = profile?.isVisible === false;
+
+  if (expired) {
+    return {
+      key: "expired",
+      label: "WYGASŁ",
+      canEnable: false,
+      canDisable: false,
+    };
+  }
+
+  if (manuallyHidden) {
+    return {
+      key: "hidden",
+      label: "UKRYTY",
+      canEnable: true,
+      canDisable: false,
+    };
+  }
+
+  return {
+    key: "active",
+    label: "AKTYWNY",
+    canEnable: false,
+    canDisable: true,
+  };
+};
+
+const getExpiryInfo = (profile) => {
+  const visibleUntil = getVisibleUntilDate(profile);
+  if (!visibleUntil) {
+    return {
+      dateLabel: "—",
+      expiredLabel: "Brak daty",
+      expired: false,
+    };
+  }
+
+  const now = Date.now();
+  const diffMs = visibleUntil.getTime() - now;
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMs < 0) {
+    return {
+      dateLabel: formatDate(visibleUntil.toISOString()),
+      expiredLabel:
+        diffDays === -1
+          ? "Wygasł 1 dzień temu"
+          : `Wygasł ${Math.abs(diffDays)} dni temu`,
+      expired: true,
+    };
+  }
+
+  if (diffDays === 0) {
+    return {
+      dateLabel: formatDate(visibleUntil.toISOString()),
+      expiredLabel: "Wygasa dziś",
+      expired: false,
+    };
+  }
+
+  if (diffDays === 1) {
+    return {
+      dateLabel: formatDate(visibleUntil.toISOString()),
+      expiredLabel: "Wygasa za 1 dzień",
+      expired: false,
+    };
+  }
+
+  return {
+    dateLabel: formatDate(visibleUntil.toISOString()),
+    expiredLabel: `Wygasa za ${diffDays} dni`,
+    expired: false,
+  };
+};
+
 export default function AdminPanel() {
   const [tab, setTab] = useState("dashboard");
+
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState(null);
@@ -280,6 +379,21 @@ export default function AdminPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
+  useEffect(() => {
+    const scrollToId = location.state?.scrollToId;
+    if (!scrollToId) return;
+
+    const el = document.getElementById(scrollToId);
+
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 120);
+    }
+
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location, navigate]);
+
   const usersPages = useMemo(
     () => Math.max(1, Math.ceil(usersTotal / usersLimit)),
     [usersTotal]
@@ -350,10 +464,35 @@ export default function AdminPanel() {
   };
 
   const onToggleProfileVisible = async (profileId, currentIsVisible) => {
+    const profile = profiles.find((item) => item._id === profileId);
+
+    if (!profile) {
+      setAlert({
+        type: "error",
+        message: "Nie znaleziono profilu.",
+      });
+      return;
+    }
+
+    if (isProfileExpired(profile)) {
+      setAlert({
+        type: "warning",
+        message:
+          "Ten profil wygasł czasowo. Nie można go ręcznie włączyć bez przedłużenia ważności.",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       await adminApi.setProfileVisible(profileId, !currentIsVisible);
-      setAlert({ type: "success", message: "Zmieniono widoczność profilu." });
+      setAlert({
+        type: "success",
+        message:
+          currentIsVisible
+            ? "Profil został ręcznie ukryty."
+            : "Profil został ponownie włączony.",
+      });
       await fetchProfiles(profilesPage);
     } catch (e) {
       setAlert({
@@ -549,7 +688,7 @@ export default function AdminPanel() {
   }, [reports, reportsPage, reportsLimit]);
 
   return (
-    <section className={styles.section}>
+    <section id="adminPanel" className={styles.section}>
       <div className={styles.sectionBackground} aria-hidden="true" />
 
       {alert && <AlertBox type={alert.type} message={alert.message} onClose={closeAlert} />}
@@ -745,7 +884,9 @@ export default function AdminPanel() {
                   <tr>
                     <th>Nazwa</th>
                     <th>UID</th>
-                    <th>Widoczny</th>
+                    <th>Status</th>
+                    <th>Ważny do</th>
+                    <th>Info</th>
                     <th>Partner</th>
                     <th>Tier</th>
                     <th>Badge</th>
@@ -762,6 +903,10 @@ export default function AdminPanel() {
                       color: "",
                     };
 
+                    const profileStatus = getProfileStatus(p);
+                    const expiryInfo = getExpiryInfo(p);
+                    const canToggleVisibility = profileStatus.key !== "expired";
+
                     return (
                       <tr key={p._id}>
                         <td>{p.name || "—"}</td>
@@ -772,12 +917,33 @@ export default function AdminPanel() {
 
                         <td>
                           <span
-                            className={`${styles.pillState} ${
-                              p.isVisible === false ? styles.pillOff : styles.pillOn
-                            }`}
+                            className={`${styles.pillState} ${profileStatus.key === "active"
+                                ? styles.pillOn
+                                : profileStatus.key === "hidden"
+                                  ? styles.pillWarn
+                                  : styles.pillOff
+                              }`}
                           >
-                            {p.isVisible === false ? "NIE" : "TAK"}
+                            {profileStatus.label}
                           </span>
+                        </td>
+
+                        <td className={styles.mono}>
+                          {expiryInfo.dateLabel}
+                        </td>
+
+                        <td>
+                          <div className={styles.profileInfoCell}>
+                            <strong>{expiryInfo.expiredLabel}</strong>
+                            {p.isVisible === false && !expiryInfo.expired && (
+                              <span className={styles.profileInfoSub}>Ukryty ręcznie przez admina</span>
+                            )}
+                            {expiryInfo.expired && (
+                              <span className={styles.profileInfoSub}>
+                                Profil wymaga przedłużenia ważności — samo włączenie jest zablokowane
+                              </span>
+                            )}
+                          </div>
                         </td>
 
                         <td>
@@ -849,13 +1015,22 @@ export default function AdminPanel() {
                         <td className={styles.actions}>
                           <button
                             className={styles.secondaryBtn}
-                            onClick={() =>
-                              onToggleProfileVisible(p._id, p.isVisible !== false)
+                            onClick={() => onToggleProfileVisible(p._id, p.isVisible !== false)}
+                            disabled={loading || !canToggleVisibility}
+                            title={
+                              profileStatus.key === "expired"
+                                ? "Nie można włączyć profilu, który wygasł czasowo. Najpierw trzeba przedłużyć ważność."
+                                : profileStatus.key === "hidden"
+                                  ? "Przywróć ręcznie ukryty profil"
+                                  : "Ukryj profil ręcznie"
                             }
-                            disabled={loading}
                             type="button"
                           >
-                            {p.isVisible === false ? "Włącz" : "Wyłącz"}
+                            {profileStatus.key === "hidden"
+                              ? "Włącz"
+                              : profileStatus.key === "expired"
+                                ? "Wygasł"
+                                : "Wyłącz"}
                           </button>
 
                           <button
@@ -873,7 +1048,7 @@ export default function AdminPanel() {
 
                   {profiles.length === 0 && (
                     <tr>
-                      <td colSpan={8} className={styles.empty}>
+                      <td colSpan={10} className={styles.empty}>
                         Brak danych
                       </td>
                     </tr>
@@ -923,9 +1098,8 @@ export default function AdminPanel() {
               {REPORT_TABS.map((t) => (
                 <button
                   key={t.key}
-                  className={`${styles.subTabBtn} ${
-                    reportTab === t.key ? styles.subActive : ""
-                  }`}
+                  className={`${styles.subTabBtn} ${reportTab === t.key ? styles.subActive : ""
+                    }`}
                   onClick={() => onChangeReportType(t.key)}
                   disabled={loading}
                   type="button"
@@ -1056,9 +1230,8 @@ export default function AdminPanel() {
 
                       <td>
                         <span
-                          className={`${styles.pillState} ${
-                            r.status === "closed" ? styles.pillOn : styles.pillWarn
-                          }`}
+                          className={`${styles.pillState} ${r.status === "closed" ? styles.pillOn : styles.pillWarn
+                            }`}
                         >
                           {r.status === "closed" ? "ZAMKNIĘTE" : "OTWARTE"}
                         </span>

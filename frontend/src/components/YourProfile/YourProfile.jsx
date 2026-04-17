@@ -1139,11 +1139,24 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     }) : '--';
 
   const now = new Date();
-  const until = profile?.visibleUntil ? new Date(profile.visibleUntil) : new Date(0);
+  const until = profile?.visibleUntil ? new Date(profile.visibleUntil) : null;
 
-  const daysLeft = Math.ceil((until.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  const canExtend = daysLeft <= 999; // zgodnie z backendem
-  const isExpired = until < now || !profile.isVisible;
+  const isTimeExpired = until ? until.getTime() < now.getTime() : false;
+  const isAdminHidden = profile?.isVisible === false && !isTimeExpired;
+
+  const daysLeft = until
+    ? Math.ceil((until.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
+
+  const isExpired = isTimeExpired;
+
+  // czy pokazać sekcję o widoczności / przedłużeniu
+  const shouldShowVisibilityNotice =
+    isAdminHidden || isExpired || (!isExpired && !isAdminHidden);
+
+  // czy wolno kliknąć Stripe
+  const canExtend =
+    !!until && !isAdminHidden;
 
   // =========================
   // Render
@@ -1210,16 +1223,34 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           </div>
         </div>
 
-        {(isExpired || canExtend) && (
+        {shouldShowVisibilityNotice && (
           <div className={`${styles.card} ${styles.noticeCard}`}>
             <div className={styles.noticeContent}>
-              {isExpired ? (
+              {isAdminHidden ? (
+                <>
+                  <p className={styles.noticeTitle}>
+                    ⛔ Twój profil został <strong>wyłączony przez administrację</strong>
+                  </p>
+                  <p className={styles.noticeText}>
+                    Profil jest obecnie niewidoczny mimo ważnej daty widoczności do:{" "}
+                    <strong>{until ? until.toLocaleDateString("pl-PL") : "—"}</strong>.
+                  </p>
+                  <p className={styles.noticeText}>
+                    Nie możesz samodzielnie przedłużyć ani przywrócić widoczności, dopóki sprawa nie
+                    zostanie wyjaśniona lub poprawiona.
+                  </p>
+                </>
+              ) : isExpired ? (
                 <>
                   <p className={styles.noticeTitle}>
                     🔒 Twój profil jest <strong>niewidoczny</strong>
                   </p>
                   <p className={styles.noticeText}>
-                    Wygasł: <strong>{new Date(profile.visibleUntil).toLocaleDateString()}</strong>
+                    Widoczność wygasła:{" "}
+                    <strong>{until ? until.toLocaleDateString("pl-PL") : "—"}</strong>
+                  </p>
+                  <p className={styles.noticeText}>
+                    Aby ponownie aktywować wizytówkę, przedłuż widoczność.
                   </p>
                 </>
               ) : (
@@ -1229,21 +1260,23 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   </p>
                   <p className={styles.noticeText}>
                     Pozostało: <strong>{daysLeft} dni</strong> (do:{" "}
-                    <strong>{new Date(profile.visibleUntil).toLocaleDateString()}</strong>)
+                    <strong>{until ? until.toLocaleDateString("pl-PL") : "—"}</strong>)
                   </p>
                 </>
               )}
             </div>
 
-            <LoadingButton
-              type="button"
-              isLoading={isExtending}
-              disabled={isExtending}
-              className={styles.secondary}
-              onClick={handleExtendVisibility}
-            >
-              Przedłuż widoczność (Stripe)
-            </LoadingButton>
+            {!isAdminHidden && (
+              <LoadingButton
+                type="button"
+                isLoading={isExtending}
+                disabled={isExtending || !canExtend}
+                className={styles.secondary}
+                onClick={handleExtendVisibility}
+              >
+                Przedłuż widoczność (Stripe)
+              </LoadingButton>
+            )}
           </div>
         )}
 
