@@ -184,7 +184,10 @@ const AllUsersList = ({ currentUser, setAlert }) => {
             <FaChevronLeft />
           </button>
 
-          <div className={styles.grid} ref={scrollerRef}>
+          <div
+            className={`${styles.grid} ${filteredUsers.length <= 3 ? styles.centerCards : ""}`}
+            ref={scrollerRef}
+          >
             {filteredUsers.map((user, index) => (
               <div className={styles.cardWrap} key={user._id || user.userId || index}>
                 <UserCard
@@ -195,6 +198,12 @@ const AllUsersList = ({ currentUser, setAlert }) => {
               </div>
             ))}
           </div>
+
+          <div className={styles.mobileHint}>
+  <span>←</span>
+  <p>Przesuń, aby zobaczyć więcej profili</p>
+  <span>→</span>
+</div>
 
           <button
             type="button"

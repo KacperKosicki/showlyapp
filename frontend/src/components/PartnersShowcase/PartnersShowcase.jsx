@@ -191,7 +191,10 @@ const PartnersShowcase = ({ currentUser, setAlert }) => {
                         <FaChevronLeft />
                     </button>
 
-                    <div className={styles.grid} ref={scrollerRef}>
+                    <div
+                        className={`${styles.grid} ${partners.length <= 3 ? styles.centerCards : ""}`}
+                        ref={scrollerRef}
+                    >
                         {partners.map((partner, index) => (
                             <div className={styles.cardWrap} key={partner._id || partner.userId || index}>
                                 <UserCard
@@ -201,6 +204,12 @@ const PartnersShowcase = ({ currentUser, setAlert }) => {
                                 />
                             </div>
                         ))}
+                    </div>
+
+                    <div className={styles.mobileHint}>
+                        <span>←</span>
+                        <p>Przesuń, aby zobaczyć więcej profili</p>
+                        <span>→</span>
                     </div>
 
                     <button

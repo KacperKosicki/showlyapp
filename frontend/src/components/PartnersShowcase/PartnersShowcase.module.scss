@@ -274,6 +274,58 @@
   }
 }
 
+@media (min-width: 769px) {
+  .centerCards {
+    justify-content: center;
+  }
+}
+
+.mobileHint {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileHint {
+    margin-top: 0.75rem;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+
+    color: rgba(20, 24, 35, 0.5);
+
+    font-size: 0.82rem;
+    font-family: $font-body;
+    font-weight: 600;
+
+    animation: mobileHintFade 2s ease-in-out infinite;
+
+    span {
+      font-size: 1rem;
+      color: $primary-color;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+}
+
+@keyframes mobileHintFade {
+  0% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.45;
+  }
+}
+
 /* wrapper jednej karty */
 .cardWrap {
   flex: 0 0 var(--cardW);
