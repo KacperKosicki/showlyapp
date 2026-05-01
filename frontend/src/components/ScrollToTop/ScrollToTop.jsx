@@ -4,9 +4,10 @@ import { useLocation } from "react-router-dom";
 
 const ScrollToTop = () => {
   const location = useLocation();
+  const scrollToId = location.state?.scrollToId;
 
   useLayoutEffect(() => {
-    if (location.state?.scrollToId) return;
+    if (scrollToId) return;
 
     const html = document.documentElement;
     const body = document.body;
@@ -45,7 +46,7 @@ const ScrollToTop = () => {
       html.style.scrollBehavior = previousHtmlBehavior;
       body.style.scrollBehavior = previousBodyBehavior;
     };
-  }, [location.pathname, location.search, location.key]);
+  }, [location.pathname, location.search, location.key, scrollToId]);
 
   return null;
 };

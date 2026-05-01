@@ -52,7 +52,7 @@ const slugify = (text = "") =>
     .replace(/-+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-    async function generateUniqueSlug(baseText, currentProfileId = null) {
+async function generateUniqueSlug(baseText, currentProfileId = null) {
   const baseSlug = slugify(baseText) || `profil-${Date.now()}`;
   let uniqueSlug = baseSlug;
   let i = 1;
@@ -1470,22 +1470,22 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
       };
     }
 
-const shouldUpdateSlug = updates.name !== undefined || updates.role !== undefined;
+    const shouldUpdateSlug = updates.name !== undefined || updates.role !== undefined;
 
-for (const field of allowedFields) {
-  if (field !== "team" && field !== "theme" && updates[field] !== undefined) {
-    profile[field] = updates[field];
-  }
-}
+    for (const field of allowedFields) {
+      if (field !== "team" && field !== "theme" && updates[field] !== undefined) {
+        profile[field] = updates[field];
+      }
+    }
 
-if (shouldUpdateSlug) {
-  profile.slug = await generateUniqueSlug(
-    `${profile.name}-${profile.role || "profil"}`,
-    profile._id
-  );
-}
+    if (shouldUpdateSlug) {
+      profile.slug = await generateUniqueSlug(
+        `${profile.name}-${profile.role || "profil"}`,
+        profile._id
+      );
+    }
 
-if (updates.theme) {
+    if (updates.theme) {
       if (typeof updates.theme.variant !== "undefined") {
         profile.set("theme.variant", updates.theme.variant);
       }
