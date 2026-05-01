@@ -15,7 +15,20 @@ import {
   FaEnvelope,
   FaMapMarkedAlt,
   FaGlobe,
+  FaRegCalendarAlt,
+  FaPaperPlane,
+  FaShieldAlt,
+  FaBolt,
+  FaClock,
+  FaMoneyBillWave,
+  FaImage,
+  FaQuoteLeft,
+  FaExternalLinkAlt,
+  FaInfoCircle,
+  FaAward,
+  FaComments,
 } from "react-icons/fa";
+
 import {
   FaHeart,
   FaRegHeart,
@@ -27,12 +40,13 @@ import {
   FaXTwitter,
   FaListUl,
 } from "react-icons/fa6";
-import { FaRegCalendarAlt, FaPaperPlane } from "react-icons/fa";
 
 import { FiFlag } from "react-icons/fi";
 import { reportApi } from "../../api/reportApi";
 
 import "react-calendar/dist/Calendar.css";
+
+const cn = (...classes) => classes.filter(Boolean).join(" ");
 
 const REPORT_REASONS = [
   { v: "spam", label: "Spam / reklama" },
@@ -54,7 +68,8 @@ const prettyUrl = (url) => {
   }
 };
 
-const normalizePhone = (val = "") => String(val || "").replace(/\s+/g, "").trim();
+const normalizePhone = (val = "") =>
+  String(val || "").replace(/\s+/g, "").trim();
 
 const buildGoogleMapsLink = (address) => {
   const a = (address || "").trim();
@@ -116,6 +131,7 @@ const normalizeAvatar = (val) => {
 
 const normalizePhotos = (photos) => {
   if (!Array.isArray(photos)) return [];
+
   return photos
     .map((p) => normalizeAvatar(p) || (typeof p === "string" ? p : p?.url) || "")
     .map((s) => String(s || "").trim())
@@ -161,7 +177,8 @@ const resolveProfileTheme = (theme) => {
   const preset = THEME_PRESETS[variant] || THEME_PRESETS.violet;
 
   const primary = (theme?.primary || theme?.accent || "").trim() || preset.primary;
-  const secondary = (theme?.secondary || theme?.accent2 || "").trim() || preset.secondary;
+  const secondary =
+    (theme?.secondary || theme?.accent2 || "").trim() || preset.secondary;
 
   return {
     primary,
@@ -182,9 +199,7 @@ const resolvePartnerData = (partnership = {}) => {
   const tier = String(partnership?.tier || "none").toLowerCase();
 
   const baseColor =
-    (partnership?.color || "").trim() ||
-    PARTNER_COLORS[tier] ||
-    "#59d0ff";
+    (partnership?.color || "").trim() || PARTNER_COLORS[tier] || "#59d0ff";
 
   const label =
     (partnership?.badgeText || "").trim() ||
@@ -233,6 +248,9 @@ export default function PublicProfile() {
   const [reportMsg, setReportMsg] = useState("");
   const [reportSending, setReportSending] = useState(false);
 
+  const [, setFavCount] = useState(0);
+  const [isFav, setIsFav] = useState(false);
+
   const maxChars = 200;
 
   const openLightbox = (src) => setFullscreenImage(src);
@@ -246,30 +264,33 @@ export default function PublicProfile() {
     setReportOpen(true);
   };
 
-const openReportReview = (reviewId, reviewUserId = null) => {
-  const currentUser = auth.currentUser;
+  const openReportReview = (reviewId, reviewUserId = null) => {
+    const currentUser = auth.currentUser;
 
-  if (!currentUser) {
-    setAlert({ type: "error", message: "Aby zgłosić opinię, musisz być zalogowany." });
-    return;
-  }
+    if (!currentUser) {
+      setAlert({
+        type: "error",
+        message: "Aby zgłosić opinię, musisz być zalogowany.",
+      });
+      return;
+    }
 
-  if (!reviewId) {
-    setAlert({ type: "error", message: "Brak identyfikatora opinii." });
-    return;
-  }
+    if (!reviewId) {
+      setAlert({ type: "error", message: "Brak identyfikatora opinii." });
+      return;
+    }
 
-  if (reviewUserId && currentUser.uid === reviewUserId) {
-    setAlert({ type: "info", message: "Nie możesz zgłosić własnej opinii." });
-    return;
-  }
+    if (reviewUserId && currentUser.uid === reviewUserId) {
+      setAlert({ type: "info", message: "Nie możesz zgłosić własnej opinii." });
+      return;
+    }
 
-  setReportType("review");
-  setReportReviewId(reviewId);
-  setReportReason("abuse");
-  setReportMsg("");
-  setReportOpen(true);
-};
+    setReportType("review");
+    setReportReviewId(reviewId);
+    setReportReason("abuse");
+    setReportMsg("");
+    setReportOpen(true);
+  };
 
   const submitReport = async () => {
     const currentUser = auth.currentUser;
@@ -338,6 +359,7 @@ const openReportReview = (reviewId, reviewUserId = null) => {
         if (reportOpen) setReportOpen(false);
       }
     };
+
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [fullscreenImage, reportOpen]);
@@ -413,9 +435,6 @@ const openReportReview = (reviewId, reviewUserId = null) => {
     return "Brak ceny";
   };
 
-  const [, setFavCount] = useState(0);
-  const [isFav, setIsFav] = useState(false);
-
   useEffect(() => {
     if (!profile) return;
     if (typeof profile.favoritesCount === "number") setFavCount(profile.favoritesCount);
@@ -433,6 +452,7 @@ const openReportReview = (reviewId, reviewUserId = null) => {
 
     const tryScroll = () => {
       const el = document.getElementById(scrollTo);
+
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "start" });
         window.history.replaceState({}, document.title, routerLocation.pathname);
@@ -451,7 +471,10 @@ const openReportReview = (reviewId, reviewUserId = null) => {
         const res = await fetch(`${API}/api/profiles/slug/${slug}`, { headers });
 
         if (res.status === 403) {
-          setAlert({ type: "error", message: "Profil jest obecnie niewidoczny lub wygasł." });
+          setAlert({
+            type: "error",
+            message: "Profil jest obecnie niewidoczny lub wygasł.",
+          });
           setProfile(null);
           return;
         }
@@ -479,6 +502,7 @@ const openReportReview = (reviewId, reviewUserId = null) => {
     if (!currentUserId || !profile?.ratedBy) return;
 
     const userRating = profile.ratedBy.find((r) => r.userId === currentUserId);
+
     if (userRating) {
       setHasRated(true);
       setSelectedRating(userRating.rating);
@@ -488,6 +512,7 @@ const openReportReview = (reviewId, reviewUserId = null) => {
   useEffect(() => {
     const currentUserId = auth.currentUser?.uid;
     if (!currentUserId || !profile?.userId) return;
+
     setIsOwner(profile.userId === currentUserId);
     setHasRated(profile.ratedBy?.some((r) => r.userId === currentUserId));
   }, [profile]);
@@ -496,12 +521,33 @@ const openReportReview = (reviewId, reviewUserId = null) => {
     if (isRatingSending) return;
 
     const userId = auth.currentUser?.uid;
-    if (!userId) return setAlert({ type: "error", message: "Musisz być zalogowany, aby ocenić." });
-    if (hasRated) return setAlert({ type: "info", message: "Już oceniłeś/aś ten profil." });
-    if (!selectedRating) return setAlert({ type: "warning", message: "Wybierz liczbę gwiazdek." });
+
+    if (!userId) {
+      return setAlert({
+        type: "error",
+        message: "Musisz być zalogowany, aby ocenić.",
+      });
+    }
+
+    if (hasRated) {
+      return setAlert({
+        type: "info",
+        message: "Już oceniłeś/aś ten profil.",
+      });
+    }
+
+    if (!selectedRating) {
+      return setAlert({
+        type: "warning",
+        message: "Wybierz liczbę gwiazdek.",
+      });
+    }
 
     if (comment.trim().length < 10) {
-      return setAlert({ type: "warning", message: "Komentarz musi mieć min. 10 znaków." });
+      return setAlert({
+        type: "warning",
+        message: "Komentarz musi mieć min. 10 znaków.",
+      });
     }
 
     if (comment.length > maxChars) {
@@ -518,7 +564,10 @@ const openReportReview = (reviewId, reviewUserId = null) => {
     let userAvatar = normalizeAvatar(u?.photoURL || "");
 
     try {
-      const r = await fetch(`${API}/api/users/${userId}`, { headers: await authHeaders() });
+      const r = await fetch(`${API}/api/users/${userId}`, {
+        headers: await authHeaders(),
+      });
+
       if (r.ok) {
         const dbUser = await r.json();
         userAvatar = normalizeAvatar(dbUser?.avatar || userAvatar) || "";
@@ -531,7 +580,13 @@ const openReportReview = (reviewId, reviewUserId = null) => {
       const res = await fetch(`${API}/api/profiles/rate/${slug}`, {
         method: "PATCH",
         headers,
-        body: JSON.stringify({ userId, rating: selectedRating, comment, userName, userAvatar }),
+        body: JSON.stringify({
+          userId,
+          rating: selectedRating,
+          comment,
+          userName,
+          userAvatar,
+        }),
       });
 
       const data = await res.json();
@@ -539,7 +594,10 @@ const openReportReview = (reviewId, reviewUserId = null) => {
 
       setAlert({ type: "success", message: "Dziękujemy za opinię!" });
 
-      const updated = await fetch(`${API}/api/profiles/slug/${slug}`, { headers: await authHeaders() });
+      const updated = await fetch(`${API}/api/profiles/slug/${slug}`, {
+        headers: await authHeaders(),
+      });
+
       const updatedData = await updated.json();
       setProfile(updatedData);
     } catch (err) {
@@ -553,18 +611,26 @@ const openReportReview = (reviewId, reviewUserId = null) => {
     const currentUser = auth.currentUser;
 
     if (!currentUser) {
-      setAlert({ type: "error", message: "Aby skorzystać z rezerwacji, musisz być zalogowany." });
+      setAlert({
+        type: "error",
+        message: "Aby skorzystać z rezerwacji, musisz być zalogowany.",
+      });
       return;
     }
+
     if (currentUser.uid === profile?.userId) {
-      setAlert({ type: "info", message: "Nie możesz wykonać rezerwacji na własnym profilu." });
+      setAlert({
+        type: "info",
+        message: "Nie możesz wykonać rezerwacji na własnym profilu.",
+      });
       return;
     }
 
     if (profile?.showAvailableDates === false) {
       setAlert({
         type: "info",
-        message: "Ten profil nie udostępnia wolnych terminów — możesz tylko napisać wiadomość.",
+        message:
+          "Ten profil nie udostępnia wolnych terminów — możesz tylko napisać wiadomość.",
       });
       return;
     }
@@ -574,28 +640,44 @@ const openReportReview = (reviewId, reviewUserId = null) => {
 
   const startMessage = () => {
     const currentUser = auth.currentUser;
+
     if (!currentUser) {
-      setAlert({ type: "error", message: "Aby wysłać wiadomość, musisz być zalogowany." });
-      return;
-    }
-    if (currentUser.uid === profile?.userId) {
-      setAlert({ type: "info", message: "Nie możesz wysłać wiadomości do własnego profilu." });
+      setAlert({
+        type: "error",
+        message: "Aby wysłać wiadomość, musisz być zalogowany.",
+      });
       return;
     }
 
-    navigate(`/wiadomosc/${profile.userId}`, { state: { scrollToId: "messageFormContainer" } });
+    if (currentUser.uid === profile?.userId) {
+      setAlert({
+        type: "info",
+        message: "Nie możesz wysłać wiadomości do własnego profilu.",
+      });
+      return;
+    }
+
+    navigate(`/wiadomosc/${profile.userId}`, {
+      state: { scrollToId: "messageFormContainer" },
+    });
   };
 
   const toggleFavorite = async () => {
     const currentUser = auth.currentUser;
 
     if (!currentUser) {
-      setAlert({ type: "error", message: "Aby dodać do ulubionych, musisz być zalogowany." });
+      setAlert({
+        type: "error",
+        message: "Aby dodać do ulubionych, musisz być zalogowany.",
+      });
       return;
     }
 
     if (currentUser.uid === profile?.userId) {
-      setAlert({ type: "error", message: "Nie możesz dodać własnego profilu do ulubionych." });
+      setAlert({
+        type: "error",
+        message: "Nie możesz dodać własnego profilu do ulubionych.",
+      });
       return;
     }
 
@@ -640,11 +722,21 @@ const openReportReview = (reviewId, reviewUserId = null) => {
     }
   };
 
-  if (loading) return <div className={styles.state}>⏳ Wczytywanie wizytówki...</div>;
+  if (loading) {
+    return (
+      <div className={cn(styles.state, styles.loadingState)}>
+        <div className={styles.loadingCard}>
+          <span className={styles.loadingOrb} />
+          <strong>Wczytywanie wizytówki...</strong>
+          <p>Ładujemy profil, galerię, opinie i dostępne opcje kontaktu.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!profile) {
     return (
-      <div className={styles.state}>
+      <div className={cn(styles.state, styles.emptyState)}>
         {alert ? (
           <AlertBox type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
         ) : (
@@ -697,7 +789,8 @@ const openReportReview = (reviewId, reviewUserId = null) => {
 
   const avgRating =
     ratedByArr.length > 0
-      ? ratedByArr.reduce((sum, r) => sum + Number(r?.rating || 0), 0) / ratedByArr.length
+      ? ratedByArr.reduce((sum, r) => sum + Number(r?.rating || 0), 0) /
+      ratedByArr.length
       : Number.isFinite(Number(rating))
         ? Number(rating)
         : 0;
@@ -723,16 +816,13 @@ const openReportReview = (reviewId, reviewUserId = null) => {
       .sort((a, b) => Number(a?.order ?? 0) - Number(b?.order ?? 0))
     : [];
 
-  const hasServices = visibleServices.length > 0;
-
   const bookingMode = String(profile?.bookingMode || "off").toLowerCase();
   const bookingEnabled = !["off", "none", "disabled", ""].includes(bookingMode);
   const isCalendar = bookingMode === "calendar";
 
   const allowBookingUI = bookingEnabled && profile?.showAvailableDates !== false;
-
   const showBookButton = !isOwner && allowBookingUI;
-  const bookBtnLabel = isCalendar ? "ZAREZERWUJ TERMIN" : "WYŚLIJ ZAPYTANIE";
+  const bookBtnLabel = isCalendar ? "Zarezerwuj termin" : "Wyślij zapytanie";
 
   const cleanLinks = (links || []).map((l) => (l || "").trim()).filter(Boolean);
 
@@ -775,21 +865,49 @@ const openReportReview = (reviewId, reviewUserId = null) => {
             ? "SPOŁECZNOŚĆ"
             : "PROFIL";
 
+  const statusLabel = partner.isPartner
+    ? partner.label
+    : isOwner
+      ? "Twój profil"
+      : "Aktywny profil";
+
+  const priceShortLabel = hasPrice ? `od ${pf} zł` : "brak danych";
+
   return (
     <div className={styles.page} style={cssVars}>
       <div className={styles.bgGlow} aria-hidden="true" />
+      <div className={styles.noiseLayer} aria-hidden="true" />
+      <div className={styles.orbOne} aria-hidden="true" />
+      <div className={styles.orbTwo} aria-hidden="true" />
 
       <div
-        className={`${styles.shell} ${partner.isPartner ? styles.partnerShell : ""}`}
+        className={cn(
+          styles.shell,
+          partner.isPartner && styles.partnerShell,
+          isOwner && styles.ownerShell
+        )}
         id="profileWrapper"
       >
-        {alert && <AlertBox type={alert.type} message={alert.message} onClose={() => setAlert(null)} />}
+        {alert && (
+          <AlertBox
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert(null)}
+          />
+        )}
 
-        <header className={styles.hero}>
+        <header
+          className={cn(
+            styles.hero,
+            partner.isPartner && styles.heroPartner,
+            isOwner && styles.heroOwner
+          )}
+        >
           <div className={styles.heroDecor} aria-hidden="true">
             <span className={styles.heroGlowA} />
             <span className={styles.heroGlowB} />
             <span className={styles.heroGrid} />
+            <span className={styles.heroBeam} />
           </div>
 
           <div className={styles.heroFade} aria-hidden="true" />
@@ -800,14 +918,32 @@ const openReportReview = (reviewId, reviewUserId = null) => {
               <span className={styles.locText}>{location || "Brak lokalizacji"}</span>
             </span>
 
-            <span className={styles.ratingPill} title={`Ocena: ${avgRatingLabel} (${reviewsCount})`}>
-              <FaStar />
-              <span>
-                <strong>{avgRatingLabel}</strong>
-                <span className={styles.dot} />
-                <span>{reviewsCount} opinii</span>
+            <div className={styles.heroTopRight}>
+              <span
+                className={styles.ratingPill}
+                title={`Ocena: ${avgRatingLabel} (${reviewsCount})`}
+              >
+                <FaStar />
+                <span>
+                  <strong>{avgRatingLabel}</strong>
+                  <span className={styles.dot} />
+                  <span>{reviewsCount} opinii</span>
+                </span>
               </span>
-            </span>
+
+              {!isOwner && (
+                <button
+                  type="button"
+                  className={styles.reportTopBtn}
+                  onClick={openReportProfile}
+                  title="Zgłoś profil"
+                  aria-label="Zgłoś profil"
+                >
+                  <FiFlag />
+                  <span>Zgłoś</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <div className={styles.heroInner}>
@@ -821,18 +957,39 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                     e.currentTarget.src = "/images/other/no-image.png";
                   }}
                 />
+
                 <div className={styles.avatarRing} aria-hidden="true" />
+
+                <span className={styles.avatarStatus}>
+                  <FaBolt />
+                </span>
               </div>
 
               <div className={styles.heroInfo}>
+                <div className={styles.kickerRow}>
+                  <span className={styles.kicker}>
+                    <FaAward />
+                    Wizytówka Showly
+                  </span>
+
+                  {partner.isPartner && (
+                    <span className={styles.partnerMini}>
+                      <FaShieldAlt />
+                      Partner
+                    </span>
+                  )}
+                </div>
+
                 <div className={styles.titleRow}>
                   <h1 className={styles.heroTitle}>{name}</h1>
 
                   <div className={styles.badgesRow}>
                     {partner.isPartner && (
                       <span
-                        className={`${styles.partnerBadge} ${styles[`partner_${partner.tier}`] || ""
-                          }`}
+                        className={cn(
+                          styles.partnerBadge,
+                          partner.tier && styles[`partner_${partner.tier}`]
+                        )}
                       >
                         {partner.label}
                       </span>
@@ -840,7 +997,12 @@ const openReportReview = (reviewId, reviewUserId = null) => {
 
                     {role?.trim() && <span className={styles.roleBadge}>{role}</span>}
 
-                    <span className={`${styles.titlePill} ${styles[`type_${profileType}`] || ""}`}>
+                    <span
+                      className={cn(
+                        styles.titlePill,
+                        profileType && styles[`type_${profileType}`]
+                      )}
+                    >
                       {typeLabel}
                     </span>
                   </div>
@@ -848,12 +1010,26 @@ const openReportReview = (reviewId, reviewUserId = null) => {
               </div>
             </div>
 
-            <div className={styles.heroBottom}>
+            <div
+              className={cn(
+                styles.heroPanel,
+                partner.isPartner && styles.heroPanelPartner
+              )}
+            >
+              <div className={styles.heroPanelTop}>
+                <span className={styles.panelEyebrow}>Szybki podgląd</span>
+                <span className={styles.panelStatus}>
+                  <span />
+                  Aktywny
+                </span>
+              </div>
+
               <div className={styles.metricRow}>
                 <div className={styles.metricCard}>
                   <span className={styles.metricIcon}>
                     <FaRegEye />
                   </span>
+
                   <div className={styles.metricContent}>
                     <strong>{Number(profile?.visits ?? 0).toLocaleString("pl-PL")}</strong>
                     <span>Odwiedzin</span>
@@ -862,59 +1038,82 @@ const openReportReview = (reviewId, reviewUserId = null) => {
 
                 <button
                   type="button"
-                  className={`${styles.metricCard} ${styles.favoriteMetric} ${isFav ? styles.favActive : ""}`}
+                  className={cn(
+                    styles.metricCard,
+                    styles.favoriteMetric,
+                    isFav && styles.favActive
+                  )}
                   onClick={toggleFavorite}
                 >
                   <span className={styles.metricIcon}>
                     {isFav ? <FaHeart /> : <FaRegHeart />}
                   </span>
+
                   <div className={styles.metricContent}>
                     <strong>{isFav ? "W ulubionych" : "Dodaj"}</strong>
                     <span>Ulubione</span>
                   </div>
                 </button>
+
+                <div className={styles.metricCard}>
+                  <span className={styles.metricIcon}>
+                    <FaShieldAlt />
+                  </span>
+
+                  <div className={styles.metricContent}>
+                    <strong>{statusLabel}</strong>
+                    <span>Status</span>
+                  </div>
+                </div>
               </div>
 
-              <div className={styles.heroActions}>
-                {hasServices && (
-                  <a className={styles.ghostBtn} href="#services">
-                    <FaListUl />
-                    <span>Zobacz usługi</span>
-                  </a>
-                )}
+              <div className={styles.quickStats}>
+                <div className={styles.quickStat}>
+                  <span>
+                    <FaMoneyBillWave />
+                  </span>
 
-                {!isOwner && (
-                  <button
-                    type="button"
-                    className={styles.reportPill}
-                    onClick={openReportProfile}
-                  >
-                    <FiFlag />
-                    <span className={styles.reportText}>Zgłoś profil</span>
-                  </button>
-                )}
+                  <div>
+                    <strong>{priceShortLabel}</strong>
+                    <small>Cennik</small>
+                  </div>
+                </div>
+
+                <div className={styles.quickStat}>
+                  <span>
+                    <FaListUl />
+                  </span>
+
+                  <div>
+                    <strong>{visibleServices.length}</strong>
+                    <small>Usług</small>
+                  </div>
+                </div>
+
+                <div className={styles.quickStat}>
+                  <span>
+                    <FaImage />
+                  </span>
+
+                  <div>
+                    <strong>{gallery.length}</strong>
+                    <small>Zdjęć</small>
+                  </div>
+                </div>
               </div>
 
               <div className={styles.ctaRow}>
                 {showBookButton && (
-                  <button
-                    type="button"
-                    className={styles.ctaPrimary}
-                    onClick={goToBooking}
-                  >
+                  <button type="button" className={styles.ctaPrimary} onClick={goToBooking}>
                     <FaRegCalendarAlt />
                     {bookBtnLabel}
                   </button>
                 )}
 
                 {!isOwner && (
-                  <button
-                    type="button"
-                    className={styles.ctaSecondary}
-                    onClick={startMessage}
-                  >
+                  <button type="button" className={styles.ctaSecondary} onClick={startMessage}>
                     <FaPaperPlane />
-                    ZADAJ PYTANIE
+                    Zadaj pytanie
                   </button>
                 )}
               </div>
@@ -924,20 +1123,38 @@ const openReportReview = (reviewId, reviewUserId = null) => {
 
         <main className={styles.grid}>
           <section className={styles.mainCol}>
-            <section className={styles.mainCard}>
+            <section className={cn(styles.mainCard, styles.profileIntroCard)}>
               <div className={styles.cardHeader}>
                 <div className={styles.titleWrap}>
+                  <span className={styles.sectionKicker}>
+                    <FaInfoCircle />
+                    Informacje
+                  </span>
+
                   <h2 className={styles.sectionTitle}>O profilu</h2>
-                  <p className={styles.sectionSub}>Najważniejsze informacje o działalności i ofercie.</p>
+
+                  <p className={styles.sectionSub}>
+                    Najważniejsze informacje o działalności, stylu pracy i ofercie.
+                  </p>
                 </div>
 
                 <div className={styles.pricePill}>
+                  <span className={styles.priceIcon}>
+                    <FaMoneyBillWave />
+                  </span>
+
                   {hasPrice ? (
-                    <>
-                      Cennik: <span>od</span> <strong>{pf} zł</strong> <span>do</span> <strong>{pt} zł</strong>
-                    </>
+                    <div>
+                      <small>Cennik</small>
+                      <strong>
+                        od {pf} zł do {pt} zł
+                      </strong>
+                    </div>
                   ) : (
-                    <em>Cennik: brak danych</em>
+                    <div>
+                      <small>Cennik</small>
+                      <em>brak danych</em>
+                    </div>
                   )}
                 </div>
               </div>
@@ -945,17 +1162,24 @@ const openReportReview = (reviewId, reviewUserId = null) => {
               <div className={styles.cardBody}>
                 {description?.trim() ? (
                   <div className={styles.descBox}>
+                    <span className={styles.quoteIcon}>
+                      <FaQuoteLeft />
+                    </span>
+
                     <p className={styles.desc}>{description}</p>
                   </div>
                 ) : (
-                  <p className={styles.muted}>Użytkownik nie dodał jeszcze opisu.</p>
+                  <div className={styles.emptyInline}>
+                    <FaInfoCircle />
+                    <p>Użytkownik nie dodał jeszcze opisu.</p>
+                  </div>
                 )}
 
                 {tags?.length > 0 && (
                   <div className={styles.chips}>
                     {tags.map((tag) => (
                       <span key={tag} className={styles.chip}>
-                        {String(tag).toUpperCase()}
+                        #{String(tag).toUpperCase()}
                       </span>
                     ))}
                   </div>
@@ -965,16 +1189,25 @@ const openReportReview = (reviewId, reviewUserId = null) => {
 
                 <div className={styles.block}>
                   <div className={styles.blockHeader}>
-                    <h3 className={styles.blockTitle}>Linki</h3>
-                    <span className={styles.blockHint}>
-                      {cleanLinks.length > 0 ? `${cleanLinks.length} ${cleanLinks.length === 1 ? "link" : "linki"}` : ""}
-                    </span>
+                    <div>
+                      <h3 className={styles.blockTitle}>Linki</h3>
+                      <p className={styles.blockSub}>
+                        Strony, portfolio lub dodatkowe miejsca w sieci.
+                      </p>
+                    </div>
+
+                    {cleanLinks.length > 0 && (
+                      <span className={styles.badgeCount}>
+                        {cleanLinks.length}
+                      </span>
+                    )}
                   </div>
 
                   {cleanLinks.length > 0 ? (
                     <div className={styles.linkGrid}>
                       {cleanLinks.map((link, i) => {
                         const href = ensureUrl(link);
+
                         return (
                           <a
                             key={`${href}-${i}`}
@@ -988,15 +1221,25 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                               <span className={styles.linkBadge}>
                                 <FaGlobe />
                               </span>
-                              <span className={styles.linkDomain}>{prettyUrl(href)}</span>
+
+                              <div className={styles.linkText}>
+                                <strong>{prettyUrl(href)}</strong>
+                                <small>Otwórz zewnętrzny link</small>
+                              </div>
                             </div>
-                            <span className={styles.linkHint}>Otwórz</span>
+
+                            <span className={styles.linkArrow}>
+                              <FaExternalLinkAlt />
+                            </span>
                           </a>
                         );
                       })}
                     </div>
                   ) : (
-                    <p className={styles.muted}>Użytkownik nie dodał jeszcze żadnych linków.</p>
+                    <div className={styles.emptyInline}>
+                      <FaGlobe />
+                      <p>Użytkownik nie dodał jeszcze żadnych linków.</p>
+                    </div>
                   )}
                 </div>
 
@@ -1007,10 +1250,25 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                     <div className={styles.rateBox}>
                       <div className={styles.rateTop}>
                         <div>
-                          <h3 className={styles.blockTitle}>{hasRated ? "Twoja ocena" : "Oceń profil"}</h3>
-                          <span className={styles.rateHint}>
-                            {hasRated ? "Dziękujemy za opinię!" : "Wybierz gwiazdki i dodaj krótki komentarz."}
+                          <span className={styles.sectionKicker}>
+                            <FaStar />
+                            Ocena
                           </span>
+
+                          <h3 className={styles.blockTitle}>
+                            {hasRated ? "Twoja ocena" : "Oceń profil"}
+                          </h3>
+
+                          <span className={styles.rateHint}>
+                            {hasRated
+                              ? "Dziękujemy za opinię!"
+                              : "Wybierz gwiazdki i dodaj krótki komentarz."}
+                          </span>
+                        </div>
+
+                        <div className={styles.rateScore}>
+                          <strong>{avgRatingLabel}</strong>
+                          <span>/ 5</span>
                         </div>
                       </div>
 
@@ -1018,7 +1276,13 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                         {[1, 2, 3, 4, 5].map((val) => (
                           <FaStar
                             key={val}
-                            className={val <= (hoveredRating || selectedRating) ? styles.starOn : styles.starOff}
+                            className={cn(
+                              styles.star,
+                              val <= (hoveredRating || selectedRating)
+                                ? styles.starOn
+                                : styles.starOff,
+                              hasRated && styles.starDisabled
+                            )}
                             onClick={!hasRated ? () => setSelectedRating(val) : undefined}
                             onMouseEnter={!hasRated ? () => setHoveredRating(val) : undefined}
                             onMouseLeave={!hasRated ? () => setHoveredRating(0) : undefined}
@@ -1039,7 +1303,10 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                           />
 
                           <div className={styles.textareaMeta}>
-                            <span className={styles.mutedSmall}>Bądź konkretny/a — to pomaga.</span>
+                            <span className={styles.mutedSmall}>
+                              Bądź konkretny/a — to pomaga innym użytkownikom.
+                            </span>
+
                             <span className={styles.counter}>
                               {comment.length} / {maxChars}
                             </span>
@@ -1063,12 +1330,25 @@ const openReportReview = (reviewId, reviewUserId = null) => {
             </section>
 
             {hasGallery && (
-              <section className={styles.sectionCard}>
+              <section className={cn(styles.sectionCard, styles.gallerySection)}>
                 <div className={styles.sectionHeader}>
                   <div>
+                    <span className={styles.sectionKicker}>
+                      <FaImage />
+                      Zdjęcia
+                    </span>
+
                     <h2 className={styles.sectionTitle}>Galeria</h2>
-                    <p className={styles.sectionSub}>Zdjęcia profilu i realizacji.</p>
+
+                    <p className={styles.sectionSub}>
+                      Zdjęcia profilu, realizacji lub przykładów pracy.
+                    </p>
+
+                    <span className={styles.mobileSwipeHint}>
+                      Przesuń palcem, aby zobaczyć więcej
+                    </span>
                   </div>
+
                   <span className={styles.badgeCount}>{gallery.length}</span>
                 </div>
 
@@ -1089,6 +1369,11 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                           e.currentTarget.src = "/images/other/no-image.png";
                         }}
                       />
+
+                      <span className={styles.galleryNumber}>
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+
                       <span className={styles.galleryOverlay}>Podgląd</span>
                     </button>
                   ))}
@@ -1096,13 +1381,22 @@ const openReportReview = (reviewId, reviewUserId = null) => {
               </section>
             )}
 
-            {hasServices && (
-              <section className={styles.sectionCard} id="services">
+            {visibleServices.length > 0 && (
+              <section className={cn(styles.sectionCard, styles.servicesSection)} id="services">
                 <div className={styles.sectionHeader}>
                   <div>
+                    <span className={styles.sectionKicker}>
+                      <FaListUl />
+                      Oferta
+                    </span>
+
                     <h2 className={styles.sectionTitle}>Usługi</h2>
-                    <p className={styles.sectionSub}>Oferta, ceny i czas realizacji.</p>
+
+                    <p className={styles.sectionSub}>
+                      Oferta, ceny i orientacyjny czas realizacji.
+                    </p>
                   </div>
+
                   <span className={styles.badgeCount}>{visibleServices.length}</span>
                 </div>
 
@@ -1117,7 +1411,13 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                         : "Brak czasu";
 
                     return (
-                      <article key={s._id || i} className={styles.serviceCard}>
+                      <article
+                        key={s._id || i}
+                        className={cn(
+                          styles.serviceCard,
+                          s.featured && styles.serviceCardFeatured
+                        )}
+                      >
                         <div className={styles.serviceMedia}>
                           {img ? (
                             <img
@@ -1136,10 +1436,13 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                           )}
 
                           <div className={styles.serviceBadges}>
-                            <span className={styles.serviceCategoryBadge}>{categoryLabel}</span>
+                            <span className={styles.serviceCategoryBadge}>
+                              {categoryLabel}
+                            </span>
 
                             {s.featured && (
                               <span className={styles.serviceFeaturedBadge}>
+                                <FaBolt />
                                 Wyróżniona
                               </span>
                             )}
@@ -1148,11 +1451,15 @@ const openReportReview = (reviewId, reviewUserId = null) => {
 
                         <div className={styles.serviceContent}>
                           <div className={styles.serviceTop}>
-                            <h3 className={styles.serviceCardTitle}>{s.name}</h3>
+                            <h3 className={styles.serviceCardTitle}>
+                              {s.name || `Usługa ${i + 1}`}
+                            </h3>
                           </div>
 
                           {s.shortDescription?.trim() ? (
-                            <p className={styles.serviceDescription}>{s.shortDescription}</p>
+                            <p className={styles.serviceDescription}>
+                              {s.shortDescription}
+                            </p>
                           ) : (
                             <p className={styles.serviceDescriptionMuted}>
                               Użytkownik nie dodał krótkiego opisu tej usługi.
@@ -1161,13 +1468,29 @@ const openReportReview = (reviewId, reviewUserId = null) => {
 
                           <div className={styles.serviceMetaGrid}>
                             <div className={styles.serviceMetaItem}>
-                              <span className={styles.serviceMetaLabel}>Cena</span>
-                              <span className={styles.serviceMetaValue}>{priceLabel}</span>
+                              <span className={styles.serviceMetaIcon}>
+                                <FaMoneyBillWave />
+                              </span>
+
+                              <div>
+                                <span className={styles.serviceMetaLabel}>Cena</span>
+                                <span className={styles.serviceMetaValue}>
+                                  {priceLabel}
+                                </span>
+                              </div>
                             </div>
 
                             <div className={styles.serviceMetaItem}>
-                              <span className={styles.serviceMetaLabel}>Czas</span>
-                              <span className={styles.serviceMetaValue}>{durationLabel}</span>
+                              <span className={styles.serviceMetaIcon}>
+                                <FaClock />
+                              </span>
+
+                              <div>
+                                <span className={styles.serviceMetaLabel}>Czas</span>
+                                <span className={styles.serviceMetaValue}>
+                                  {durationLabel}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1180,12 +1503,24 @@ const openReportReview = (reviewId, reviewUserId = null) => {
           </section>
 
           <aside className={styles.side}>
-            <section className={styles.sideCard}>
+            <section className={cn(styles.sideCard, styles.reviewsCard)}>
               <div className={styles.sideHeader}>
                 <div>
+                  <span className={styles.sectionKicker}>
+                    <FaComments />
+                    Społeczność
+                  </span>
+
                   <h2 className={styles.sectionTitle}>Opinie</h2>
+
                   <p className={styles.sectionSub}>Oceny i komentarze użytkowników.</p>
+
+
+                  <span className={styles.mobileSwipeHint}>
+                    Przesuń palcem, aby zobaczyć więcej
+                  </span>
                 </div>
+
                 <span className={styles.badgeCount}>{profile.ratedBy?.length || 0}</span>
               </div>
 
@@ -1193,7 +1528,8 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                 <ul className={styles.reviewList}>
                   {profile.ratedBy.map((op, i) => {
                     const ratingVal = Number(op.rating);
-                    const avatarSrc = normalizeAvatar(op.userAvatar) || "/images/other/no-image.png";
+                    const avatarSrc =
+                      normalizeAvatar(op.userAvatar) || "/images/other/no-image.png";
 
                     const dateLabel = op.createdAt
                       ? new Date(op.createdAt).toLocaleDateString("pl-PL", {
@@ -1204,7 +1540,10 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                       : "";
 
                     return (
-                      <li key={op?._id || i} className={styles.review}>
+                      <li
+                        key={op?._id || i}
+                        className={cn(styles.review, op?.userId === uid && styles.myReview)}
+                      >
                         <div className={styles.reviewTop}>
                           <div className={styles.reviewUser}>
                             <img
@@ -1217,22 +1556,38 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                                 e.currentTarget.src = "/images/other/no-image.png";
                               }}
                             />
+
                             <div className={styles.reviewMeta}>
-                              <strong className={styles.reviewName}>{op.userName || "Użytkownik"}</strong>
-                              {dateLabel && <span className={styles.reviewDate}>{dateLabel}</span>}
+                              <strong className={styles.reviewName}>
+                                {op.userName || "Użytkownik"}
+                              </strong>
+
+                              {dateLabel && (
+                                <span className={styles.reviewDate}>{dateLabel}</span>
+                              )}
                             </div>
                           </div>
 
                           <div className={styles.reviewRight}>
                             <div className={styles.reviewStars}>
                               {[...Array(5)].map((_, idx) => (
-                                <FaStar key={idx} className={idx < ratingVal ? styles.starMiniOn : styles.starMiniOff} />
+                                <FaStar
+                                  key={idx}
+                                  className={
+                                    idx < ratingVal
+                                      ? styles.starMiniOn
+                                      : styles.starMiniOff
+                                  }
+                                />
                               ))}
                             </div>
 
                             <button
                               type="button"
-                              className={styles.reportMiniBtn}
+                              className={cn(
+                                styles.reportMiniBtn,
+                                !op?._id && styles.disabledBtn
+                              )}
                               onClick={() => openReportReview(op?._id, op?.userId)}
                               title="Zgłoś opinię"
                               aria-label="Zgłoś opinię"
@@ -1249,16 +1604,27 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                   })}
                 </ul>
               ) : (
-                <p className={styles.muted}>Brak opinii użytkowników.</p>
+                <div className={styles.emptyInline}>
+                  <FaStar />
+                  <p>Brak opinii użytkowników.</p>
+                </div>
               )}
             </section>
 
             {hasInfoBox && (
-              <section className={styles.sideCard}>
+              <section className={cn(styles.sideCard, styles.contactCard)}>
                 <div className={styles.sideHeader}>
                   <div>
+                    <span className={styles.sectionKicker}>
+                      <FaPhoneAlt />
+                      Kontakt
+                    </span>
+
                     <h2 className={styles.sectionTitle}>Kontakt i social media</h2>
-                    <p className={styles.sectionSub}>Najważniejsze kanały kontaktu w jednym miejscu.</p>
+
+                    <p className={styles.sectionSub}>
+                      Najważniejsze kanały kontaktu w jednym miejscu.
+                    </p>
                   </div>
                 </div>
 
@@ -1272,7 +1638,12 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                     </span>
 
                     {fullAddress ? (
-                      <a className={styles.infoLink} href={mapsUrl} target="_blank" rel="noopener noreferrer">
+                      <a
+                        className={styles.infoLink}
+                        href={mapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         {fullAddress}
                       </a>
                     ) : (
@@ -1318,6 +1689,7 @@ const openReportReview = (reviewId, reviewUserId = null) => {
                 {socialItems.length > 0 && (
                   <>
                     <div className={styles.splitLine} />
+
                     <div className={styles.socialGrid}>
                       {socialItems.map((s) => (
                         <a
@@ -1343,10 +1715,21 @@ const openReportReview = (reviewId, reviewUserId = null) => {
       </div>
 
       {fullscreenImage && (
-        <div className={styles.lightbox} onClick={closeLightbox} role="dialog" aria-modal="true">
-          <button type="button" className={styles.lightboxClose} onClick={closeLightbox} aria-label="Zamknij">
+        <div
+          className={styles.lightbox}
+          onClick={closeLightbox}
+          role="dialog"
+          aria-modal="true"
+        >
+          <button
+            type="button"
+            className={styles.lightboxClose}
+            onClick={closeLightbox}
+            aria-label="Zamknij"
+          >
             ✕
           </button>
+
           <img src={fullscreenImage} alt="" onClick={(e) => e.stopPropagation()} />
         </div>
       )}
@@ -1360,9 +1743,17 @@ const openReportReview = (reviewId, reviewUserId = null) => {
         >
           <div className={styles.reportModal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.reportModalTop}>
-              <h3 className={styles.reportTitle}>
-                {reportType === "profile" ? "Zgłoś profil" : "Zgłoś opinię"}
-              </h3>
+              <div>
+                <span className={styles.sectionKicker}>
+                  <FiFlag />
+                  Zgłoszenie
+                </span>
+
+                <h3 className={styles.reportTitle}>
+                  {reportType === "profile" ? "Zgłoś profil" : "Zgłoś opinię"}
+                </h3>
+              </div>
+
               <button
                 type="button"
                 className={styles.reportClose}
@@ -1375,6 +1766,7 @@ const openReportReview = (reviewId, reviewUserId = null) => {
 
             <div className={styles.reportRow}>
               <label className={styles.reportLabel}>Powód</label>
+
               <select
                 className={styles.reportSelect}
                 value={reportReason}
@@ -1389,13 +1781,17 @@ const openReportReview = (reviewId, reviewUserId = null) => {
             </div>
 
             <div className={styles.reportRow}>
-              <label className={styles.reportLabel}>Dodatkowe informacje (opcjonalnie)</label>
+              <label className={styles.reportLabel}>
+                Dodatkowe informacje opcjonalnie
+              </label>
+
               <textarea
                 className={styles.reportTextarea}
                 value={reportMsg}
                 onChange={(e) => setReportMsg(e.target.value.slice(0, 400))}
                 placeholder="Opisz krótko dlaczego zgłaszasz…"
               />
+
               <div className={styles.reportHint}>{reportMsg.length} / 400</div>
             </div>
 
