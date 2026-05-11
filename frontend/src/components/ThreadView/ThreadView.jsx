@@ -4,15 +4,25 @@ import styles from "./ThreadView.module.scss";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import AlertBox from "../AlertBox/AlertBox";
 
-import { FaArrowLeft, FaRegCommentDots, FaUserCircle } from "react-icons/fa";
-import { FaRegEye } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaRegCommentDots,
+  FaUserCircle,
+  FaRegEye,
+  FaShieldAlt,
+  FaPaperPlane,
+  FaInfoCircle,
+  FaLock,
+  FaHourglassHalf,
+  FaBan,
+  FaComments,
+} from "react-icons/fa";
 
-import { auth } from "../../firebase"; // ✅ DOPASUJ ŚCIEŻKĘ jeśli masz inną
+import { auth } from "../../firebase";
 
 const API = process.env.REACT_APP_API_URL;
 const DEFAULT_AVATAR = "/images/other/no-image.png";
 
-// ✅ avatar może być string albo { url }
 const pickUrl = (val) => {
   if (!val) return "";
   if (typeof val === "string") return val;
@@ -65,9 +75,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
   const [flash, setFlash] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // =========================================================
-  // ✅ AUTH HEADERS – token zawsze z Firebase auth.currentUser
-  // =========================================================
+  const maxChars = 800;
+
   const authHeaders = useCallback(async () => {
     const firebaseUser = auth.currentUser;
     const uid = firebaseUser?.uid || user?.uid || "";
@@ -87,9 +96,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
     };
   }, [user?.uid]);
 
-  // ----------------------------
-  // Helpers skeleton
-  // ----------------------------
   const isProfileResolved = useCallback(
     (uid) =>
       Object.prototype.hasOwnProperty.call(profileMetaMap, uid) &&
@@ -104,34 +110,48 @@ const ThreadView = ({ user, setUnreadCount }) => {
       <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />
     );
 
-  // scroll to anchor
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
-    if (!scrollTo) return;
+    if (!scrollTo || loading) return;
 
     let attempts = 0;
-    const tryScroll = () => {
+
+    const scrollWithOffset = () => {
       const el = document.getElementById(scrollTo);
-      if (el && el.offsetHeight > 0) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        window.history.replaceState({}, document.title, location.pathname);
-      } else if (attempts < 60) {
+
+      if (!el && attempts < 30) {
         attempts++;
-        setTimeout(tryScroll, 50);
+        requestAnimationFrame(scrollWithOffset);
+        return;
       }
+
+      if (!el) return;
+
+      const offset = 90;
+
+      window.scrollTo({
+        top: el.offsetTop - offset,
+        behavior: "smooth",
+      });
+
+      window.history.replaceState({}, document.title, location.pathname);
     };
-    tryScroll();
-  }, [location.state, messages, location.pathname]);
+
+    setTimeout(scrollWithOffset, 120);
+  }, [location.state, messages, location.pathname, loading]);
 
   const fetchProfileMeta = useCallback(
     async (uid) => {
       try {
-        // ✅ jeśli masz requireAuth na profiles – to też dostanie token
         const headers = await authHeaders();
 
-        const r = await axios.get(`${API}/api/profiles/by-user/${uid}`, { headers });
+        const r = await axios.get(`${API}/api/profiles/by-user/${uid}`, {
+          headers,
+        });
+
         const name = (r?.data?.name || "").trim() || null;
         const avatar = normalizeAvatar(r?.data?.avatar) || null;
+
         return { name, avatar };
       } catch (err) {
         if (err.response?.status === 404) return { name: null, avatar: null };
@@ -142,9 +162,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
     [authHeaders]
   );
 
-  // moja nazwa profilu (do senderHint)
   useEffect(() => {
     let mounted = true;
+
     (async () => {
       const myUid = auth.currentUser?.uid || user?.uid;
       if (!myUid) return;
@@ -152,10 +172,12 @@ const ThreadView = ({ user, setUnreadCount }) => {
       const meta = await fetchProfileMeta(myUid);
       if (mounted) setMyProfileName(meta?.name || "");
     })();
-    return () => (mounted = false);
+
+    return () => {
+      mounted = false;
+    };
   }, [user?.uid, fetchProfileMeta]);
 
-  // FLASH z location.state lub sessionStorage
   useEffect(() => {
     if (location.state?.flash) {
       setFlash(location.state.flash);
@@ -164,22 +186,26 @@ const ThreadView = ({ user, setUnreadCount }) => {
       window.history.replaceState({ ...window.history.state, usr: clean }, "");
     } else {
       const raw = sessionStorage.getItem("flash");
+
       if (raw) {
         try {
           const f = JSON.parse(raw);
           setFlash(f);
-        } catch { }
+        } catch {}
       }
     }
   }, [location.key, location.state]);
 
   useEffect(() => {
     if (!flash) return;
+
     const ttl = Number(flash.ttl || 4000);
+
     const id = setTimeout(() => {
       setFlash(null);
       sessionStorage.removeItem("flash");
     }, ttl);
+
     return () => clearTimeout(id);
   }, [flash]);
 
@@ -188,10 +214,10 @@ const ThreadView = ({ user, setUnreadCount }) => {
     sessionStorage.removeItem("flash");
   };
 
-  // Dorysowanie optimisticMessage + draft
   useEffect(() => {
     const rawOpt =
-      location.state?.optimisticMessage || sessionStorage.getItem("optimisticMessage");
+      location.state?.optimisticMessage ||
+      sessionStorage.getItem("optimisticMessage");
 
     if (rawOpt) {
       try {
@@ -199,25 +225,21 @@ const ThreadView = ({ user, setUnreadCount }) => {
         if (optimistic && optimistic.content) {
           setMessages((prev) => [...prev, optimistic]);
         }
-      } catch { }
+      } catch {}
     }
 
     const rawDraft = location.state?.draft || sessionStorage.getItem("draft");
+
     if (rawDraft) {
       try {
         setNewMessage(typeof rawDraft === "string" ? rawDraft : String(rawDraft));
-      } catch { }
+      } catch {}
     }
   }, [location.state]);
 
-  // ----------------------------
-  // FETCH THREAD (🔐 requireAuth)
-  // ----------------------------
   const fetchThread = useCallback(async () => {
     const myUid = auth.currentUser?.uid || user?.uid;
     if (!myUid) return;
-
-    // jeśli firebase jeszcze nie jest gotowy, nie strzelaj
     if (!auth.currentUser) return;
 
     try {
@@ -225,7 +247,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
       const headers = await authHeaders();
 
-      const res = await axios.get(`${API}/api/conversations/${threadId}`, { headers });
+      const res = await axios.get(`${API}/api/conversations/${threadId}`, {
+        headers,
+      });
 
       const { messages: msgs, participants, channel: ch, firstFromUid: ff } = res.data;
 
@@ -237,29 +261,34 @@ const ThreadView = ({ user, setUnreadCount }) => {
       setChannel(ch);
       setFirstFromUid(ff || (msgs?.[0]?.fromUid ?? null));
 
-      // mapka avatarów KONT z participants
       const amap = {};
+
       (participants || []).forEach((p) => {
         if (!p?.uid) return;
         const a = normalizeAvatar(p.avatar) || null;
         amap[p.uid] = a;
       });
+
       setAccountAvatarMap(amap);
 
       const other = (participants || []).find((p) => p.uid !== myUid);
+
       if (other) {
         setReceiverId(other.uid);
         setAccountName(other.displayName || "Użytkownik");
       }
 
-      // BLOKADA: można odpisać tylko jeśli ostatnia od drugiej strony
       const last = (msgs && msgs.length ? msgs : []).slice(-1)[0];
       setCanReply(!!last && !last.isSystem && last.fromUid !== myUid);
 
-      // mark read + update counter (🔐 requireAuth)
-      const unreadInThread = (msgs || []).filter((m) => !m.read && m.toUid === myUid);
+      const unreadInThread = (msgs || []).filter(
+        (m) => !m.read && m.toUid === myUid
+      );
+
       if (unreadInThread.length > 0) {
-        await axios.patch(`${API}/api/conversations/${threadId}/read`, null, { headers });
+        await axios.patch(`${API}/api/conversations/${threadId}/read`, null, {
+          headers,
+        });
 
         if (setUnreadCount) {
           setUnreadCount((prev) => Math.max(prev - unreadInThread.length, 0));
@@ -280,9 +309,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
     fetchThread();
   }, [fetchThread]);
 
-  // ----------------------------
-  // META profilu drugiej strony
-  // ----------------------------
   useEffect(() => {
     const uid = receiverId;
     if (!uid || uid === "SYSTEM") return;
@@ -298,9 +324,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
     })();
   }, [receiverId, fetchProfileMeta]);
 
-  // ----------------------------
-  // RECEIVER PROFILE (FAQ)
-  // ----------------------------
   useEffect(() => {
     const fetchReceiverProfile = async () => {
       try {
@@ -310,15 +333,19 @@ const ThreadView = ({ user, setUnreadCount }) => {
           return;
         }
 
-        const headers = await authHeaders(); // ✅ jeśli endpoint chroniony
-        const res = await axios.get(`${API}/api/profiles/by-user/${receiverId}`, { headers });
+        const headers = await authHeaders();
+        const res = await axios.get(`${API}/api/profiles/by-user/${receiverId}`, {
+          headers,
+        });
 
         const prof = res.data;
         setReceiverProfile(prof);
 
         let expired = false;
+
         if (prof?.visibleUntil) expired = new Date(prof.visibleUntil) < new Date();
         if (prof?.isActive === false) expired = true;
+
         setProfileStatus(expired ? "expired" : "exists");
       } catch (err) {
         if (err.response?.status === 404) {
@@ -335,9 +362,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
     fetchReceiverProfile();
   }, [receiverId, channel, firstFromUid, authHeaders]);
 
-  // ----------------------------
-  // Kto jest po której stronie?
-  // ----------------------------
   const amProfileSide = useMemo(() => {
     const myUid = auth.currentUser?.uid || user?.uid;
     if (!channel || !firstFromUid || !myUid) return false;
@@ -356,11 +380,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
       : "Wyślesz wiadomość jako: Twoje konto";
   }, [amProfileSide, myProfileName]);
 
-  const showFaq = receiverId !== "SYSTEM" && channel === "account_to_profile" && !amProfileSide;
+  const showFaq =
+    receiverId !== "SYSTEM" && channel === "account_to_profile" && !amProfileSide;
 
-  // ----------------------------
-  // Nazwa odbiorcy
-  // ----------------------------
   const receiverName = useMemo(() => {
     const myUid = auth.currentUser?.uid || user?.uid;
 
@@ -376,6 +398,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
         if (typeof profName === "string" && profName.trim()) return profName.trim();
         return accountName || "Użytkownik";
       }
+
       return accountName || (typeof profName === "string" ? profName : "") || "Użytkownik";
     }
 
@@ -386,14 +409,22 @@ const ThreadView = ({ user, setUnreadCount }) => {
     }
 
     return accountName || (typeof profName === "string" ? profName : "") || "Użytkownik";
-  }, [receiverId, channel, firstFromUid, user?.uid, accountName, profileMetaMap, isProfileResolved]);
+  }, [
+    receiverId,
+    channel,
+    firstFromUid,
+    user?.uid,
+    accountName,
+    profileMetaMap,
+    isProfileResolved,
+  ]);
 
-  // ----------------------------
-  // Avatar per wiadomość
-  // ----------------------------
   const senderKindFor = useCallback(
     (msg) => {
-      if (!msg || msg.isSystem || receiverId === "SYSTEM" || channel === "system") return "system";
+      if (!msg || msg.isSystem || receiverId === "SYSTEM" || channel === "system") {
+        return "system";
+      }
+
       if (!channel || !firstFromUid) return "account";
 
       if (channel === "account_to_profile") {
@@ -425,24 +456,30 @@ const ThreadView = ({ user, setUnreadCount }) => {
     [senderKindFor, accountAvatarMap, profileMetaMap]
   );
 
-  // dociągnij META profilu dla uid-ów z wiadomości
   useEffect(() => {
     if (!channel || !messages?.length) return;
 
     const uids = Array.from(
-      new Set(messages.filter((m) => m && !m.isSystem && m.fromUid && m.fromUid !== "SYSTEM").map((m) => m.fromUid))
+      new Set(
+        messages
+          .filter((m) => m && !m.isSystem && m.fromUid && m.fromUid !== "SYSTEM")
+          .map((m) => m.fromUid)
+      )
     );
+
     if (uids.length === 0) return;
 
     setProfileMetaMap((prev) => {
       const next = { ...prev };
       let changed = false;
+
       uids.forEach((uid) => {
         if (!Object.prototype.hasOwnProperty.call(next, uid)) {
           next[uid] = undefined;
           changed = true;
         }
       });
+
       return changed ? next : prev;
     });
 
@@ -459,16 +496,18 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
       setProfileMetaMap((prev) => {
         const next = { ...prev };
+
         entries.forEach(([uid, meta]) => {
           next[uid] = meta;
         });
+
         return next;
       });
     })();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, channel, fetchProfileMeta]);
 
-  // HERO avatar
   const receiverHeroAvatar = useMemo(() => {
     const myUid = auth.currentUser?.uid || user?.uid;
 
@@ -504,29 +543,10 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
   const ThreadSkeleton = () => (
     <div className={styles.loadingBox}>
-      <div className={styles.skeletonTop}>
-        <div className={`${styles.skeletonBtn} ${styles.shimmer}`} />
-        <div className={`${styles.skeletonTitle} ${styles.shimmer}`} />
-      </div>
-
       <div className={styles.skeletonThread}>
-        <div className={`${styles.skeletonBubble} ${styles.left} ${styles.shimmer}`}>
-          <div className={`${styles.skeletonMeta} ${styles.shimmer}`} />
-          <div className={`${styles.skeletonText} ${styles.shimmer}`} />
-          <div className={`${styles.skeletonTextShort} ${styles.shimmer}`} />
-        </div>
-
-        <div className={`${styles.skeletonBubble} ${styles.right} ${styles.shimmer}`}>
-          <div className={`${styles.skeletonMeta} ${styles.shimmer}`} />
-          <div className={`${styles.skeletonText} ${styles.shimmer}`} />
-          <div className={`${styles.skeletonTextShort} ${styles.shimmer}`} />
-        </div>
-
-        <div className={`${styles.skeletonBubble} ${styles.left} ${styles.shimmer}`}>
-          <div className={`${styles.skeletonMeta} ${styles.shimmer}`} />
-          <div className={`${styles.skeletonText} ${styles.shimmer}`} />
-          <div className={`${styles.skeletonTextShort} ${styles.shimmer}`} />
-        </div>
+        <div className={`${styles.skeletonBubble} ${styles.left} ${styles.shimmer}`} />
+        <div className={`${styles.skeletonBubble} ${styles.right} ${styles.shimmer}`} />
+        <div className={`${styles.skeletonBubble} ${styles.left} ${styles.shimmer}`} />
       </div>
 
       <div className={styles.skeletonReplyBar}>
@@ -536,17 +556,22 @@ const ThreadView = ({ user, setUnreadCount }) => {
     </div>
   );
 
-  // ----------------------------
-  // Wysyłanie odpowiedzi (🔐 requireAuth)
-  // ----------------------------
   const handleReply = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+
+    const cleanMessage = newMessage.trim();
+    if (!cleanMessage) return;
 
     const myUid = auth.currentUser?.uid || user?.uid;
     if (!myUid) return;
 
+    if (cleanMessage.length > maxChars) {
+      setErrorMsg(`Wiadomość może mieć maksymalnie ${maxChars} znaków.`);
+      return;
+    }
+
     const last = messages[messages.length - 1];
+
     if (!canReply || last?.isSystem) {
       setErrorMsg("Nie można odpowiadać na wiadomości systemowe.");
       return;
@@ -560,7 +585,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
         {
           from: myUid,
           to: receiverId,
-          content: newMessage.trim(),
+          content: cleanMessage,
           channel,
           conversationId: threadId,
         },
@@ -572,8 +597,11 @@ const ThreadView = ({ user, setUnreadCount }) => {
       fetchThread();
     } catch (err) {
       console.error("❌ Błąd wysyłania odpowiedzi:", err);
+
       if (err.response?.status === 403) {
-        setErrorMsg(err.response.data?.message || "Musisz poczekać na odpowiedź drugiej osoby.");
+        setErrorMsg(
+          err.response.data?.message || "Musisz poczekać na odpowiedź drugiej osoby."
+        );
       } else if (err.response?.data?.message) {
         setErrorMsg(err.response.data.message);
       } else {
@@ -587,15 +615,26 @@ const ThreadView = ({ user, setUnreadCount }) => {
   return (
     <div id="threadPageLayout" className={styles.page}>
       <div className={styles.bgGlow} aria-hidden="true" />
+      <div className={styles.noiseLayer} aria-hidden="true" />
 
       <div className={styles.shell}>
-        {flash && <AlertBox type={flash.type} message={flash.message} onClose={closeFlash} />}
+        {flash && (
+          <AlertBox
+            type={flash.type}
+            message={flash.message}
+            onClose={closeFlash}
+          />
+        )}
 
         <div className={`${styles.mainArea} ${!showFaq ? styles.centered : ""}`}>
           <div className={styles.threadWrapper}>
             <div className={styles.backRow}>
               <button
-                onClick={() => navigate("/powiadomienia", { state: { scrollToId: "threadPageLayout" } })}
+                onClick={() =>
+                  navigate("/powiadomienia", {
+                    state: { scrollToId: "threadPageLayout" },
+                  })
+                }
                 className={styles.backButton}
                 type="button"
               >
@@ -605,28 +644,40 @@ const ThreadView = ({ user, setUnreadCount }) => {
             </div>
 
             <header className={styles.hero}>
+              <div className={styles.heroDecor} aria-hidden="true">
+                <span className={styles.heroGlowA} />
+                <span className={styles.heroGlowB} />
+                <span className={styles.heroGrid} />
+              </div>
+
               <div className={styles.heroTopBar}>
                 <div className={styles.heroBadge} title={statusLabel || ""}>
-                  <div className={styles.badgeItem}>
-                    <FaRegCommentDots />
-                    <span>
-                      <strong>{messages.filter((m) => !m?.isSystem).length}</strong>&nbsp;wiadomości
-                    </span>
-                  </div>
-
-                  {showFaq && (
-                    <div className={styles.badgeItem}>
-                      <FaRegEye />
-                      <span>{statusLabel || "Profil"}</span>
-                    </div>
-                  )}
+                  <FaRegCommentDots />
+                  <span>
+                    <strong>{messages.filter((m) => !m?.isSystem).length}</strong>{" "}
+                    wiadomości
+                  </span>
                 </div>
+
+                {showFaq && (
+                  <div className={styles.heroBadgeSoft}>
+                    <FaRegEye />
+                    <span>{statusLabel || "Profil"}</span>
+                  </div>
+                )}
               </div>
 
               <div className={styles.heroInner}>
                 <div className={styles.heroLeft}>
+                  <span className={styles.kicker}>
+                    <FaComments />
+                    Konwersacja
+                  </span>
+
                   <div className={styles.titleRow}>
-                    <h2 className={styles.heroTitle}>Rozmowa z&nbsp;{renderNameNode(receiverName)}</h2>
+                    <h2 className={styles.heroTitle}>
+                      Rozmowa z {renderNameNode(receiverName)}
+                    </h2>
 
                     <span className={styles.titlePill}>
                       {channel === "account_to_profile"
@@ -638,9 +689,11 @@ const ThreadView = ({ user, setUnreadCount }) => {
                   </div>
 
                   <div className={styles.metaRow}>
-                    <span className={styles.roleText}>{canReply ? "Możesz odpowiedzieć" : "Czekasz na odpowiedź"}</span>
+                    <span>{canReply ? "Możesz odpowiedzieć" : "Czekasz na odpowiedź"}</span>
                     <span className={styles.dot} aria-hidden="true" />
-                    <span className={styles.metaHint}>{amProfileSide ? "Piszesz jako wizytówka" : "Piszesz jako konto"}</span>
+                    <span>
+                      {amProfileSide ? "Piszesz jako wizytówka" : "Piszesz jako konto"}
+                    </span>
                   </div>
                 </div>
 
@@ -658,176 +711,263 @@ const ThreadView = ({ user, setUnreadCount }) => {
                         }}
                       />
                     ) : (
-                      <div className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`}>
+                      <div
+                        className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`}
+                      >
                         <FaUserCircle />
                       </div>
                     )}
+
                     <div className={styles.avatarRing} aria-hidden="true" />
                   </div>
                 </div>
               </div>
-
-              <div className={styles.heroFade} aria-hidden="true" />
             </header>
 
-            {loading ? (
-              <ThreadSkeleton />
-            ) : (
-              <>
-                <div className={styles.thread}>
-                  {messages.map((msg, i) => {
-                    const displayContent = msg.isSystem ? String(msg.content).replace(/\\n/g, "\n") : msg.content;
+            <section className={styles.threadCard}>
+              {loading ? (
+                <ThreadSkeleton />
+              ) : (
+                <>
+                  <div className={styles.thread}>
+                    {messages.map((msg, i) => {
+                      const displayContent = msg.isSystem
+                        ? String(msg.content).replace(/\\n/g, "\n")
+                        : msg.content;
 
-                    const isMe = msg.fromUid === myUid;
-                    const kind = senderKindFor(msg);
-                    const avatarSrc = avatarForMsg(msg);
+                      const isMe = msg.fromUid === myUid;
+                      const kind = senderKindFor(msg);
+                      const avatarSrc = avatarForMsg(msg);
 
-                    const nameForBubble = (() => {
-                      if (msg.isSystem) return "";
-                      if (isMe) return "Ty";
-                      if (kind === "account") return accountName || "Użytkownik";
-                      const meta = profileMetaMap[msg.fromUid];
-                      if (!meta) return "";
-                      return meta?.name || accountName || "Użytkownik";
-                    })();
+                      const nameForBubble = (() => {
+                        if (msg.isSystem) return "";
+                        if (isMe) return "Ty";
+                        if (kind === "account") return accountName || "Użytkownik";
 
-                    return (
-                      <div
-                        key={i}
-                        className={`${styles.messageRow} ${isMe ? styles.me : styles.other} ${msg.isSystem ? styles.systemRow : ""
-                          }`}
-                      >
-                        {!msg.isSystem && (
-                          <div className={styles.msgAvatarWrap}>
-                            {avatarSrc ? (
-                              <img
-                                src={avatarSrc}
-                                alt=""
-                                className={styles.msgAvatar}
-                                referrerPolicy="no-referrer"
-                                decoding="async"
-                                onError={(e) => {
-                                  e.currentTarget.src = DEFAULT_AVATAR;
-                                }}
-                              />
-                            ) : (
-                              <div className={`${styles.msgAvatar} ${styles.avatarSkeleton} ${styles.shimmer}`} />
-                            )}
-                          </div>
-                        )}
+                        const meta = profileMetaMap[msg.fromUid];
+                        if (!meta) return "";
 
-                        <div className={`${styles.message} ${isMe ? styles.own : styles.their} ${msg.isSystem ? styles.system : ""}`}>
+                        return meta?.name || accountName || "Użytkownik";
+                      })();
+
+                      return (
+                        <div
+                          key={i}
+                          className={`${styles.messageRow} ${
+                            isMe ? styles.me : styles.other
+                          } ${msg.isSystem ? styles.systemRow : ""}`}
+                        >
                           {!msg.isSystem && (
-                            <p className={styles.author}>
-                              {nameForBubble ? nameForBubble : <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />}
-                              <span className={styles.senderTag}>{kind === "profile" ? "PROFIL" : "KONTO"}</span>
-                            </p>
+                            <div className={styles.msgAvatarWrap}>
+                              {avatarSrc ? (
+                                <img
+                                  src={avatarSrc}
+                                  alt=""
+                                  className={styles.msgAvatar}
+                                  referrerPolicy="no-referrer"
+                                  decoding="async"
+                                  onError={(e) => {
+                                    e.currentTarget.src = DEFAULT_AVATAR;
+                                  }}
+                                />
+                              ) : (
+                                <div
+                                  className={`${styles.msgAvatar} ${styles.avatarSkeleton} ${styles.shimmer}`}
+                                />
+                              )}
+                            </div>
                           )}
 
-                          <p className={`${styles.content} ${msg.isSystem ? styles.systemContent : ""}`}>
-                            {displayContent}
-                            {msg.pending && <em className={styles.pending}> (wysyłanie…)</em>}
-                          </p>
+                          <div
+                            className={`${styles.message} ${
+                              isMe ? styles.own : styles.their
+                            } ${msg.isSystem ? styles.system : ""}`}
+                          >
+                            {!msg.isSystem && (
+                              <p className={styles.author}>
+                                {nameForBubble ? (
+                                  nameForBubble
+                                ) : (
+                                  <span
+                                    className={`${styles.nameSkeleton} ${styles.shimmer}`}
+                                  />
+                                )}
 
-                          <p className={styles.time}>{new Date(msg.createdAt).toLocaleString()}</p>
+                                <span className={styles.senderTag}>
+                                  {kind === "profile" ? "PROFIL" : "KONTO"}
+                                </span>
+                              </p>
+                            )}
+
+                            <p
+                              className={`${styles.content} ${
+                                msg.isSystem ? styles.systemContent : ""
+                              }`}
+                            >
+                              {displayContent}
+                              {msg.pending && (
+                                <em className={styles.pending}> (wysyłanie…)</em>
+                              )}
+                            </p>
+
+                            <p className={styles.time}>
+                              {new Date(msg.createdAt).toLocaleString("pl-PL")}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
 
-                <div className={styles.replyArea}>
-                  {(() => {
-                    const last = messages[messages.length - 1];
-                    if (!last) return null;
+                  <div className={styles.replyArea}>
+                    {(() => {
+                      const last = messages[messages.length - 1];
+                      if (!last) return null;
 
-                    if (last.isSystem || receiverId === "SYSTEM") {
+                      if (last.isSystem || receiverId === "SYSTEM") {
+                        return (
+                          <div className={styles.infoBox}>
+                            <span className={styles.infoIcon}>
+                              <FaLock />
+                            </span>
+                            <p>Nie możesz odpowiadać na wiadomości systemowe.</p>
+                          </div>
+                        );
+                      }
+
+                      if (last.fromUid === myUid) {
+                        return (
+                          <div className={styles.infoBox}>
+                            <span className={styles.infoIcon}>
+                              <FaHourglassHalf />
+                            </span>
+                            <p>
+                              Wysłałeś/aś wiadomość. Czekasz teraz na odpowiedź
+                              drugiej osoby.
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      if (canReply) {
+                        return (
+                          <form onSubmit={handleReply} className={styles.form}>
+                            <div className={styles.senderHint}>{mySenderLabel}</div>
+
+                            <textarea
+                              className={styles.textarea}
+                              placeholder="Napisz odpowiedź..."
+                              value={newMessage}
+                              onChange={(e) => {
+                                const text = e.target.value;
+                                if (text.length <= maxChars) setNewMessage(text);
+                              }}
+                              required
+                            />
+
+                            <div className={styles.textareaMeta}>
+                              <span>Odpowiadasz w aktualnej konwersacji.</span>
+                              <strong>
+                                {newMessage.length} / {maxChars}
+                              </strong>
+                            </div>
+
+                            <button className={styles.primaryBtn} type="submit">
+                              <FaPaperPlane />
+                              Wyślij wiadomość
+                            </button>
+                          </form>
+                        );
+                      }
+
                       return (
                         <div className={styles.infoBox}>
-                          <span className={styles.icon}>🔒</span>
-                          <p>Nie możesz odpowiadać na wiadomości systemowe.</p>
+                          <span className={styles.infoIcon}>
+                            <FaBan />
+                          </span>
+                          <p>Nie możesz odpowiedzieć na tę wiadomość.</p>
                         </div>
                       );
-                    }
+                    })()}
 
-                    if (last.fromUid === myUid) {
-                      return (
-                        <div className={styles.infoBox}>
-                          <span className={styles.icon}>⏳</span>
-                          <p>Wysłałeś/aś wiadomość. Czekasz teraz na odpowiedź drugiej osoby.</p>
-                        </div>
-                      );
-                    }
-
-                    if (canReply) {
-                      return (
-                        <form onSubmit={handleReply} className={styles.form}>
-                          <div className={styles.senderHint}>{mySenderLabel}</div>
-
-                          <textarea
-                            className={styles.textarea}
-                            placeholder="Napisz odpowiedź..."
-                            value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
-                            required
-                          />
-
-                          <button className={styles.primaryBtn} type="submit">
-                            Wyślij wiadomość
-                          </button>
-                        </form>
-                      );
-                    }
-
-                    return (
-                      <div className={styles.infoBox}>
-                        <span className={styles.icon}>🚫</span>
-                        <p>Nie możesz odpowiedzieć na tę wiadomość.</p>
-                      </div>
-                    );
-                  })()}
-
-                  {errorMsg && <p className={styles.error}>{errorMsg}</p>}
-                </div>
-              </>
-            )}
+                    {errorMsg && <p className={styles.error}>{errorMsg}</p>}
+                  </div>
+                </>
+              )}
+            </section>
           </div>
 
           {!loading && showFaq && (
-            <div className={styles.faqBoxWrapper}>
+            <aside className={styles.faqBoxWrapper}>
               <div className={styles.faqBox}>
                 <div className={styles.quickAnswers}>
-                  <h3>
-                    Najczęstsze pytania i odpowiedzi&nbsp;
-                    <span className={styles.faqReceiverName}>{receiverName || ""}</span>
-                  </h3>
+                  <div className={styles.faqHeader}>
+                    <span className={styles.sectionKicker}>
+                      <FaInfoCircle />
+                      FAQ
+                    </span>
 
-                  {profileStatus === "loading" && <p className={styles.noFaq}>Ładowanie profilu…</p>}
-                  {profileStatus === "missing" && <p className={styles.noFaq}>Użytkownik nie posiada jeszcze profilu.</p>}
-                  {profileStatus === "expired" && <p className={styles.noFaq}>Profil użytkownika jest nieważny (wygasł).</p>}
-                  {profileStatus === "error" && <p className={styles.noFaq}>Nie udało się pobrać informacji o profilu.</p>}
+                    <h3>
+                      Najczęstsze pytania i odpowiedzi{" "}
+                      <span className={styles.faqReceiverName}>
+                        {receiverName || ""}
+                      </span>
+                    </h3>
+                  </div>
+
+                  {profileStatus === "loading" && (
+                    <p className={styles.noFaq}>Ładowanie profilu…</p>
+                  )}
+
+                  {profileStatus === "missing" && (
+                    <p className={styles.noFaq}>
+                      Użytkownik nie posiada jeszcze profilu.
+                    </p>
+                  )}
+
+                  {profileStatus === "expired" && (
+                    <p className={styles.noFaq}>
+                      Profil użytkownika jest nieważny lub wygasł.
+                    </p>
+                  )}
+
+                  {profileStatus === "error" && (
+                    <p className={styles.noFaq}>
+                      Nie udało się pobrać informacji o profilu.
+                    </p>
+                  )}
 
                   {profileStatus === "exists" && (
                     <>
                       {receiverProfile?.quickAnswers?.length > 0 &&
-                        receiverProfile.quickAnswers.some((qa) => (qa.title || "").trim() || (qa.answer || "").trim()) ? (
+                      receiverProfile.quickAnswers.some(
+                        (qa) =>
+                          (qa.title || "").trim() || (qa.answer || "").trim()
+                      ) ? (
                         <ul>
                           {receiverProfile.quickAnswers
-                            .filter((qa) => (qa.title || "").trim() || (qa.answer || "").trim())
+                            .filter(
+                              (qa) =>
+                                (qa.title || "").trim() ||
+                                (qa.answer || "").trim()
+                            )
                             .map((qa, i) => (
                               <li key={i}>
-                                <strong>{qa.title}</strong> {qa.answer}
+                                <strong>{qa.title}</strong>
+                                <span>{qa.answer}</span>
                               </li>
                             ))}
                         </ul>
                       ) : (
-                        <p className={styles.noFaq}>Użytkownik nie dodał jeszcze żadnych pytań i odpowiedzi.</p>
+                        <p className={styles.noFaq}>
+                          Użytkownik nie dodał jeszcze żadnych pytań i odpowiedzi.
+                        </p>
                       )}
                     </>
                   )}
                 </div>
               </div>
-            </div>
+            </aside>
           )}
         </div>
       </div>

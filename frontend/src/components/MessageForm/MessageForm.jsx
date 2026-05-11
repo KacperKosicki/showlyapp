@@ -6,17 +6,23 @@ import axios from "axios";
 import AlertBox from "../AlertBox/AlertBox";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
 
-import { FaArrowLeft, FaRegCommentDots, FaUserCircle } from "react-icons/fa";
-import { FaRegPaperPlane } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaRegCommentDots,
+  FaUserCircle,
+  FaShieldAlt,
+  FaInfoCircle,
+  FaPaperPlane,
+  FaComments,
+  FaBolt,
+} from "react-icons/fa";
 
-// ✅ Firebase auth (dopasuj ścieżkę)
 import { auth } from "../../firebase";
 
-const CHANNEL = "account_to_profile"; // zawsze KONTO ➜ WIZYTÓWKA
+const CHANNEL = "account_to_profile";
 const API = process.env.REACT_APP_API_URL;
 const DEFAULT_AVATAR = "/images/other/no-image.png";
 
-// ✅ avatar może być string albo { url }
 const pickUrl = (val) => {
   if (!val) return "";
   if (typeof val === "string") return val;
@@ -42,33 +48,29 @@ const normalizeAvatar = (val) => {
 };
 
 const MessageForm = ({ user }) => {
-  const { recipientId } = useParams(); // firebaseUid właściciela profilu
+  const { recipientId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
   const [message, setMessage] = useState("");
   const [alert, setAlert] = useState(null);
 
-  const [loading, setLoading] = useState(true); // ładowanie strony (checkConversation)
-  const [isSending, setIsSending] = useState(false); // wysyłanie wiadomości
+  const [loading, setLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
 
-  // META odbiorcy (name + avatar) jak w ThreadView
-  const [receiverMeta, setReceiverMeta] = useState({ name: "", avatar: "" }); // avatar: string
+  const [receiverMeta, setReceiverMeta] = useState({ name: "", avatar: "" });
   const [metaPending, setMetaPending] = useState(true);
 
-  // =========================================================
-  // ✅ AUTH HEADERS (JWT + uid fallback) — token z auth.currentUser
-  // =========================================================
+  const maxChars = 800;
+
   const authHeaders = useCallback(async () => {
     const firebaseUser = auth.currentUser;
-
-    // uid bierzemy z firebase (pewne), a fallback z propsa
     const uid = firebaseUser?.uid || user?.uid || "";
 
-    // jeśli firebase user jeszcze nie gotowy, zwróć chociaż uid
     if (!firebaseUser) return uid ? { uid } : {};
 
     let token = "";
+
     try {
       token = await firebaseUser.getIdToken();
     } catch {
@@ -81,40 +83,47 @@ const MessageForm = ({ user }) => {
     };
   }, [user?.uid]);
 
-  // =========================================================
-  // Płynny scroll
-  // =========================================================
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
-    if (!scrollTo) return;
+    if (!scrollTo || loading) return;
 
     let attempts = 0;
-    const tryScroll = () => {
-      const el = document.getElementById(scrollTo);
-      if (el && el.offsetHeight > 0) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        window.history.replaceState({}, document.title, location.pathname);
-      } else if (attempts < 60) {
-        attempts++;
-        setTimeout(tryScroll, 50);
-      }
-    };
-    tryScroll();
-  }, [location.state, location.pathname]);
 
-  // =========================================================
-  // Meta odbiorcy (profil -> konto fallback)
-  // =========================================================
+    const scrollWithOffset = () => {
+      const el = document.getElementById(scrollTo);
+
+      if (!el && attempts < 30) {
+        attempts++;
+        requestAnimationFrame(scrollWithOffset);
+        return;
+      }
+
+      if (!el) return;
+
+      const offset = 90;
+
+      window.scrollTo({
+        top: el.offsetTop - offset,
+        behavior: "smooth",
+      });
+
+      window.history.replaceState({}, document.title, location.pathname);
+    };
+
+    setTimeout(scrollWithOffset, 120);
+  }, [location.state, location.pathname, loading]);
+
   const fetchReceiverMeta = useCallback(
     async (uid) => {
       setMetaPending(true);
 
-      // jeśli endpointy są chronione — lecimy z headers
       const headers = await authHeaders();
 
-      // 1) próbuj PROFIL
       try {
-        const res = await axios.get(`${API}/api/profiles/by-user/${uid}`, { headers });
+        const res = await axios.get(`${API}/api/profiles/by-user/${uid}`, {
+          headers,
+        });
+
         const prof = res.data;
 
         const name = String(prof?.name || "").trim();
@@ -126,12 +135,14 @@ const MessageForm = ({ user }) => {
           return;
         }
       } catch {
-        // ignore
+        // fallback below
       }
 
-      // 2) fallback na KONTO
       try {
-        const res = await axios.get(`${API}/api/users/by-uid/${uid}`, { headers });
+        const res = await axios.get(`${API}/api/users/by-uid/${uid}`, {
+          headers,
+        });
+
         const u = res.data;
 
         const name =
@@ -156,19 +167,13 @@ const MessageForm = ({ user }) => {
     [authHeaders]
   );
 
-  // =========================================================
-  // Jeśli istnieje MÓJ wątek KONTO➜WIZYTÓWKA (starter = user.uid) → przekieruj
-  // =========================================================
   const checkConversation = useCallback(async () => {
     const myUid = auth.currentUser?.uid || user?.uid;
 
     if (!myUid || !recipientId) return;
-
-    // 🔥 ważne: jeśli firebase user jeszcze nie gotowy, nie rób checka (bo wpadnie 401)
     if (!auth.currentUser) return;
 
     try {
-      // meta odbiorcy (odpal od razu)
       fetchReceiverMeta(recipientId);
 
       const headers = await authHeaders();
@@ -185,7 +190,6 @@ const MessageForm = ({ user }) => {
         return;
       }
     } catch {
-      // nawet jak check padnie, meta próbujemy pobrać
       fetchReceiverMeta(recipientId);
     } finally {
       setLoading(false);
@@ -196,27 +200,35 @@ const MessageForm = ({ user }) => {
     checkConversation();
   }, [checkConversation]);
 
-  // =========================================================
-  // Send
-  // =========================================================
   const handleSend = async (e) => {
     e.preventDefault();
 
     const myUid = auth.currentUser?.uid || user?.uid;
+    const cleanMessage = message.trim();
 
-    if (!message.trim()) return;
+    if (!cleanMessage) return;
     if (isSending) return;
 
     if (!myUid) {
-      setAlert({ type: "error", message: "Musisz być zalogowany, aby wysłać wiadomość." });
+      setAlert({
+        type: "error",
+        message: "Musisz być zalogowany, aby wysłać wiadomość.",
+      });
       return;
     }
 
-    // 🔥 token jeszcze nie gotowy
     if (!auth.currentUser) {
       setAlert({
         type: "error",
         message: "Sesja jeszcze się ładuje. Odśwież stronę lub zaloguj się ponownie.",
+      });
+      return;
+    }
+
+    if (cleanMessage.length > maxChars) {
+      setAlert({
+        type: "warning",
+        message: `Wiadomość może mieć maksymalnie ${maxChars} znaków.`,
       });
       return;
     }
@@ -230,10 +242,10 @@ const MessageForm = ({ user }) => {
       const { data } = await axios.post(
         `${API}/api/conversations/send`,
         {
-          from: myUid, // piszesz jako KONTO
-          to: recipientId, // do WŁAŚCICIELA PROFILU
-          content: message.trim(),
-          channel: CHANNEL, // KONTO ➜ WIZYTÓWKA
+          from: myUid,
+          to: recipientId,
+          content: cleanMessage,
+          channel: CHANNEL,
         },
         { headers }
       );
@@ -264,7 +276,10 @@ const MessageForm = ({ user }) => {
       } else if (err.response?.data?.message) {
         setAlert({ type: "error", message: err.response.data.message });
       } else {
-        setAlert({ type: "error", message: "Błąd podczas wysyłania wiadomości." });
+        setAlert({
+          type: "error",
+          message: "Błąd podczas wysyłania wiadomości.",
+        });
       }
     } finally {
       setIsSending(false);
@@ -275,15 +290,18 @@ const MessageForm = ({ user }) => {
   const receiverAvatar = useMemo(() => receiverMeta?.avatar || "", [receiverMeta]);
 
   const renderNameNode = (raw) =>
-    raw ? <span className={styles.receiverName}>{raw}</span> : <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />;
+    raw ? (
+      <span className={styles.receiverName}>{raw}</span>
+    ) : (
+      <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />
+    );
 
-  // =========================================================
-  // SKELETON PAGE (jak ThreadView vibe)
-  // =========================================================
   if (loading) {
     return (
       <div id="messageFormContainer" className={styles.page}>
         <div className={styles.bgGlow} aria-hidden="true" />
+        <div className={styles.noiseLayer} aria-hidden="true" />
+
         <div className={styles.shell}>
           <div className={styles.wrapper}>
             <div className={styles.backRow}>
@@ -294,24 +312,31 @@ const MessageForm = ({ user }) => {
             </div>
 
             <header className={styles.hero}>
+              <div className={styles.heroDecor} aria-hidden="true">
+                <span className={styles.heroGlowA} />
+                <span className={styles.heroGlowB} />
+                <span className={styles.heroGrid} />
+              </div>
+
               <div className={styles.heroTopBar}>
                 <div className={styles.heroBadge}>
-                  <div className={styles.badgeItem}>
-                    <FaRegCommentDots />
-                    <span>KONTO ➜ WIZYTÓWKA</span>
-                  </div>
+                  <FaRegCommentDots />
+                  <span>Konto ➜ Wizytówka</span>
                 </div>
               </div>
 
               <div className={styles.heroInner}>
                 <div className={styles.heroLeft}>
-                  <div className={styles.titleRow}>
-                    <h2 className={styles.heroTitle}>Przygotowuję rozmowę…</h2>
-                    <span className={styles.titlePill}>NOWA WIADOMOŚĆ</span>
-                  </div>
-                  <div className={styles.metaRow}>
-                    <span className={styles.roleText}>Sprawdzam wątek i dane odbiorcy</span>
-                  </div>
+                  <span className={styles.kicker}>
+                    <FaBolt />
+                    Nowa wiadomość
+                  </span>
+
+                  <h2 className={styles.heroTitle}>Przygotowuję rozmowę…</h2>
+
+                  <p className={styles.heroText}>
+                    Sprawdzam, czy istnieje już wątek oraz pobieram dane odbiorcy.
+                  </p>
                 </div>
 
                 <div className={styles.heroRight}>
@@ -323,67 +348,95 @@ const MessageForm = ({ user }) => {
                   </div>
                 </div>
               </div>
-
-              <div className={styles.heroFade} aria-hidden="true" />
             </header>
 
-            <div className={styles.body}>
+            <section className={styles.formCard}>
               <div className={styles.senderHint}>
                 <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />
               </div>
 
-              <div className={`${styles.textarea} ${styles.shimmer}`} style={{ minHeight: 120 }} />
-              <LoadingButton type="button" isLoading={true} disabled={true} className={styles.primaryBtn}>
+              <div className={`${styles.textarea} ${styles.shimmer}`} />
+
+              <LoadingButton
+                type="button"
+                isLoading={true}
+                disabled={true}
+                className={styles.primaryBtn}
+              >
                 Ładowanie
               </LoadingButton>
-            </div>
+            </section>
           </div>
         </div>
       </div>
     );
   }
 
-  // =========================================================
-  // PAGE
-  // =========================================================
   return (
     <div id="messageFormContainer" className={styles.page}>
       <div className={styles.bgGlow} aria-hidden="true" />
+      <div className={styles.noiseLayer} aria-hidden="true" />
 
       <div className={styles.shell}>
-        {alert && <AlertBox type={alert.type} message={alert.message} onClose={() => setAlert(null)} />}
+        {alert && (
+          <AlertBox
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert(null)}
+          />
+        )}
 
         <div className={styles.wrapper}>
-          {/* ✅ BACK NAD HERO (jak w ThreadView) */}
           <div className={styles.backRow}>
-            <button type="button" className={styles.backButton} onClick={() => navigate(-1)}>
+            <button
+              type="button"
+              className={styles.backButton}
+              onClick={() => navigate(-1)}
+            >
               <FaArrowLeft />
               Wróć
             </button>
           </div>
 
-          {/* ✅ HERO */}
           <header className={styles.hero}>
+            <div className={styles.heroDecor} aria-hidden="true">
+              <span className={styles.heroGlowA} />
+              <span className={styles.heroGlowB} />
+              <span className={styles.heroGrid} />
+            </div>
+
             <div className={styles.heroTopBar}>
               <div className={styles.heroBadge} title="Kanał wiadomości">
-                <div className={styles.badgeItem}>
-                  <FaRegCommentDots />
-                  <span>KONTO ➜ WIZYTÓWKA</span>
-                </div>
+                <FaRegCommentDots />
+                <span>Konto ➜ Wizytówka</span>
+              </div>
+
+              <div className={styles.heroBadgeSoft}>
+                <FaShieldAlt />
+                <span>Bezpieczny wątek</span>
               </div>
             </div>
 
             <div className={styles.heroInner}>
               <div className={styles.heroLeft}>
-                <div className={styles.titleRow}>
-                  <h2 className={styles.heroTitle}>Napisz do&nbsp;{renderNameNode(receiverName)}</h2>
-                  <span className={styles.titlePill}>NOWA WIADOMOŚĆ</span>
-                </div>
+                <span className={styles.kicker}>
+                  <FaComments />
+                  Nowa rozmowa
+                </span>
+
+                <h2 className={styles.heroTitle}>
+                  Napisz do {renderNameNode(receiverName)}
+                </h2>
+
+                <p className={styles.heroText}>
+                  Wyślij pierwszą wiadomość — po wysłaniu automatycznie przejdziesz
+                  do konwersacji.
+                </p>
 
                 <div className={styles.metaRow}>
-                  <span className={styles.roleText}>Pierwsza wiadomość tworzy wątek</span>
-                  <span className={styles.dot} aria-hidden="true" />
-                  <span className={styles.metaHint}>Po wysłaniu przejdziesz do konwersacji</span>
+                  <span>Pierwsza wiadomość tworzy wątek</span>
+                  <span className={styles.dot} />
+                  <span>Konto ➜ właściciel wizytówki</span>
                 </div>
               </div>
 
@@ -405,39 +458,74 @@ const MessageForm = ({ user }) => {
                       <FaUserCircle />
                     </div>
                   )}
+
                   <div className={styles.avatarRing} aria-hidden="true" />
                 </div>
               </div>
             </div>
-
-            <div className={styles.heroFade} aria-hidden="true" />
           </header>
 
-          {/* BODY */}
-          <div className={styles.body}>
+          <section className={styles.formCard}>
             <form onSubmit={handleSend} className={styles.form}>
-              <div className={styles.senderHint}>Wyślesz wiadomość jako: Twoje konto</div>
+              <div className={styles.formHeader}>
+                <div>
+                  <span className={styles.sectionKicker}>
+                    <FaPaperPlane />
+                    Wiadomość
+                  </span>
+
+                  <h3 className={styles.formTitle}>Napisz wiadomość</h3>
+
+                  <p className={styles.formSub}>
+                    Krótko opisz, o co chcesz zapytać. Odbiorca zobaczy wiadomość w
+                    swoim panelu.
+                  </p>
+                </div>
+              </div>
+
+              <div className={styles.senderHint}>
+                Wyślesz wiadomość jako: <strong>Twoje konto</strong>
+              </div>
 
               <textarea
                 className={styles.textarea}
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Wpisz swoją wiadomość..."
+                onChange={(e) => {
+                  const text = e.target.value;
+                  if (text.length <= maxChars) setMessage(text);
+                }}
+                placeholder="Np. Cześć, chciałbym zapytać o dostępny termin, cenę lub szczegóły usługi..."
                 required
                 disabled={isSending}
               />
 
-              <LoadingButton type="submit" isLoading={isSending} disabled={isSending} className={styles.primaryBtn}>
-                <FaRegPaperPlane />
+              <div className={styles.textareaMeta}>
+                <span>Wiadomość trafi bezpośrednio do właściciela wizytówki.</span>
+                <strong>{message.length} / {maxChars}</strong>
+              </div>
+
+              <LoadingButton
+                type="submit"
+                isLoading={isSending}
+                disabled={isSending || !message.trim()}
+                className={styles.primaryBtn}
+              >
+                <FaPaperPlane />
                 Wyślij wiadomość
               </LoadingButton>
             </form>
 
             <div className={styles.infoBox}>
-              <span className={styles.icon}>ℹ️</span>
-              <p>Jeśli wątek już istnieje, zostaniesz automatycznie przekierowany do rozmowy.</p>
+              <span className={styles.infoIcon}>
+                <FaInfoCircle />
+              </span>
+
+              <p>
+                Jeśli wątek już istnieje, zostaniesz automatycznie przekierowany do
+                aktualnej rozmowy.
+              </p>
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </div>
