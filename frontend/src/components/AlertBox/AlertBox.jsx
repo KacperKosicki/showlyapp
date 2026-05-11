@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import styles from "./AlertBox.module.scss";
 import {
   FaCheckCircle,
@@ -24,7 +25,7 @@ const AlertBox = ({ type = "info", message, onClose }) => {
 
   if (!message) return null;
 
-  return (
+  const alert = (
     <div className={styles.alertBox}>
       <div className={`${styles.alert} ${styles[type] || styles.info}`}>
         <span className={styles.icon}>{icons[type] || icons.info}</span>
@@ -42,6 +43,8 @@ const AlertBox = ({ type = "info", message, onClose }) => {
       </div>
     </div>
   );
+
+  return createPortal(alert, document.body);
 };
 
 export default AlertBox;
