@@ -450,18 +450,32 @@ export default function PublicProfile() {
     const scrollTo = routerLocation.state?.scrollToId;
     if (!scrollTo || loading) return;
 
-    const tryScroll = () => {
+    let attempts = 0;
+
+    const scrollWithOffset = () => {
       const el = document.getElementById(scrollTo);
 
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        window.history.replaceState({}, document.title, routerLocation.pathname);
-      } else {
-        requestAnimationFrame(tryScroll);
+      if (!el && attempts < 20) {
+        attempts++;
+        requestAnimationFrame(scrollWithOffset);
+        return;
       }
+
+      if (!el) return;
+
+      const offset = 90; // ile miejsca od góry
+      const rect = el.getBoundingClientRect();
+      const top = rect.top + window.scrollY - offset;
+
+      window.scrollTo({
+        top,
+        behavior: "smooth",
+      });
+
+      window.history.replaceState({}, document.title, routerLocation.pathname);
     };
 
-    requestAnimationFrame(tryScroll);
+    setTimeout(scrollWithOffset, 120);
   }, [routerLocation.state, loading, routerLocation.pathname]);
 
   useEffect(() => {

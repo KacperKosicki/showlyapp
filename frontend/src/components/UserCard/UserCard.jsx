@@ -1,17 +1,25 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./UserCard.module.scss";
-import { FaStar, FaMapMarkerAlt, FaRegEye } from "react-icons/fa";
+
+import {
+  FaStar,
+  FaMapMarkerAlt,
+  FaRegEye,
+  FaShieldAlt,
+  FaRegCalendarAlt,
+  FaPaperPlane,
+  FaExternalLinkAlt,
+  FaLink,
+} from "react-icons/fa";
+
 import { FaHeart, FaRegHeart } from "react-icons/fa6";
 import axios from "axios";
-
-// ✅ Firebase auth
 import { auth } from "../../firebase";
 
 const DEFAULT_AVATAR = "/images/other/no-image.png";
 const API = process.env.REACT_APP_API_URL;
 
-// ✅ url bez protokołu -> działa
 const ensureUrl = (url = "") => {
   const u = (url || "").trim();
   if (!u) return "";
@@ -19,7 +27,6 @@ const ensureUrl = (url = "") => {
   return `https://${u}`;
 };
 
-// ✅ czytelna etykieta linku
 const prettyUrl = (url) => {
   try {
     const u = new URL(ensureUrl(url));
@@ -32,7 +39,6 @@ const prettyUrl = (url) => {
   }
 };
 
-// ✅ avatar/photos mogą być: string albo { url, publicId }
 const pickUrl = (val) => {
   if (!val) return "";
   if (typeof val === "string") return val;
@@ -40,7 +46,6 @@ const pickUrl = (val) => {
   return "";
 };
 
-// ✅ ujednolicone z PublicProfile (uploads / http / data / blob) + obsługa obiektu
 const normalizeAvatar = (val) => {
   const raw = pickUrl(val);
   const v = String(raw || "").trim();
@@ -53,7 +58,6 @@ const normalizeAvatar = (val) => {
   if (v.startsWith("/uploads/")) return `${API}${v}`;
   if (v.startsWith("uploads/")) return `${API}/${v}`;
 
-  // domena bez protokołu
   if (/^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(v)) return `https://${v}`;
 
   return v;
@@ -117,6 +121,14 @@ const resolvePartnerData = (partnership = {}) => {
   };
 };
 
+const getProfileTypeLabel = (profileType) => {
+  if (profileType === "zawodowy") return "ZAWODOWY";
+  if (profileType === "hobbystyczny") return "HOBBY";
+  if (profileType === "serwis") return "SERWIS";
+  if (profileType === "społeczność") return "SPOŁECZNOŚĆ";
+  return "PROFIL";
+};
+
 const UserCard = ({
   user,
   currentUser,
@@ -143,9 +155,17 @@ const UserCard = ({
 
   const navigate = useNavigate();
 
-  // =========================================================
-  // ✅ AUTH HEADERS (JWT + uid fallback)
-  // =========================================================
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [visits, setVisits] = useState(
+    typeof user.visits === "number" ? user.visits : 0
+  );
+
+  const [favCount, setFavCount] = useState(
+    typeof user.favoritesCount === "number" ? user.favoritesCount : 0
+  );
+
+  const [isFav, setIsFav] = useState(!!user.isFavorite);
+
   const authHeaders = useCallback(async () => {
     const firebaseUser = auth.currentUser;
     const uid = firebaseUser?.uid || currentUser?.uid || "";
@@ -153,6 +173,7 @@ const UserCard = ({
     if (!firebaseUser) return uid ? { uid } : {};
 
     let token = "";
+
     try {
       token = await firebaseUser.getIdToken();
     } catch {
@@ -165,16 +186,15 @@ const UserCard = ({
     };
   }, [currentUser?.uid]);
 
-  // ✅ avatar
-  const avatarSrc = normalizeAvatar(avatar) || DEFAULT_AVATAR;
+  useEffect(() => {
+    setIsFav(!!user.isFavorite);
+  }, [user.userId, user.isFavorite]);
 
-  // ✅ ceny
-  const pf = Number(priceFrom);
-  const pt = Number(priceTo);
-  const hasPrice = Number.isFinite(pf) && Number.isFinite(pt) && pf > 0 && pt >= pf;
-
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [visits, setVisits] = useState(typeof user.visits === "number" ? user.visits : 0);
+  useEffect(() => {
+    if (typeof user.favoritesCount === "number") {
+      setFavCount(user.favoritesCount);
+    }
+  }, [user.userId, user.favoritesCount]);
 
   const showAlert = (message, type = "error") => {
     if (typeof setAlert === "function") {
@@ -189,28 +209,19 @@ const UserCard = ({
 
   const blockIfPreview = (e, msg) => {
     if (!isPreview) return false;
+
     e?.preventDefault?.();
     e?.stopPropagation?.();
-    if (typeof onPreviewBlocked === "function") onPreviewBlocked(msg);
-    else showAlert(msg, "info");
+
+    if (typeof onPreviewBlocked === "function") {
+      onPreviewBlocked(msg);
+    } else {
+      showAlert(msg, "info");
+    }
+
     return true;
   };
 
-  // ❤️ ulubione
-  const [favCount, setFavCount] = useState(
-    typeof user.favoritesCount === "number" ? user.favoritesCount : 0
-  );
-  const [isFav, setIsFav] = useState(!!user.isFavorite);
-
-  useEffect(() => {
-    setIsFav(!!user.isFavorite);
-  }, [user.userId, user.isFavorite]);
-
-  useEffect(() => {
-    if (typeof user.favoritesCount === "number") setFavCount(user.favoritesCount);
-  }, [user.userId, user.favoritesCount]);
-
-  // slugify
   const slugify = (text = "") =>
     String(text || "")
       .toLowerCase()
@@ -224,23 +235,56 @@ const UserCard = ({
 
   const slug = user?.slug || `${slugify(name)}-${slugify(role)}`;
 
-  // ✅ bookingMode
+  const avatarSrc = normalizeAvatar(avatar) || DEFAULT_AVATAR;
+
+  const pf = Number(priceFrom);
+  const pt = Number(priceTo);
+  const hasPrice = Number.isFinite(pf) && Number.isFinite(pt) && pf > 0 && pt >= pf;
+
   const bookingMode = String(user?.bookingMode || "off").toLowerCase();
   const bookingEnabled = !["off", "none", "disabled", ""].includes(bookingMode);
 
   const isCalendar = bookingMode === "calendar";
-  const isRequest = bookingMode === "request-open" || bookingMode === "request-blocking";
+  const isRequest =
+    bookingMode === "request-open" || bookingMode === "request-blocking";
 
   const allowBookingUI = bookingEnabled && user?.showAvailableDates !== false;
   const showNoBookingInfo = bookingEnabled && user?.showAvailableDates === false;
 
   const bookBtnLabel = isCalendar
-    ? "ZAREZERWUJ TERMIN"
+    ? "Zarezerwuj termin"
     : isRequest
-      ? "WYŚLIJ ZAPYTANIE"
-      : "ZAREZERWUJ TERMIN";
+      ? "Wyślij zapytanie"
+      : "Zarezerwuj termin";
 
-  // === Ulubione ===
+  const cleanLinks = (links || [])
+    .map((l) => ensureUrl((l || "").trim()))
+    .filter(Boolean);
+
+  const t = resolveUserCardTheme(user?.theme);
+  const partner = resolvePartnerData(partnership);
+
+  const cssVars = {
+    "--uc-primary": t.primary,
+    "--uc-secondary": t.secondary,
+    "--uc-banner": t.banner,
+
+    "--uc-p-06": `color-mix(in srgb, ${t.primary} 6%, transparent)`,
+    "--uc-p-10": `color-mix(in srgb, ${t.primary} 10%, transparent)`,
+    "--uc-p-14": `color-mix(in srgb, ${t.primary} 14%, transparent)`,
+    "--uc-p-18": `color-mix(in srgb, ${t.primary} 18%, transparent)`,
+    "--uc-p-22": `color-mix(in srgb, ${t.primary} 22%, transparent)`,
+
+    "--uc-s-06": `color-mix(in srgb, ${t.secondary} 6%, transparent)`,
+    "--uc-s-10": `color-mix(in srgb, ${t.secondary} 10%, transparent)`,
+    "--uc-s-14": `color-mix(in srgb, ${t.secondary} 14%, transparent)`,
+
+    "--uc-partner": partner.color,
+    "--uc-partner-soft": `color-mix(in srgb, ${partner.color} 16%, white)`,
+    "--uc-partner-border": `color-mix(in srgb, ${partner.color} 42%, rgba(15, 23, 42, 0.12))`,
+    "--uc-partner-glow": `color-mix(in srgb, ${partner.color} 28%, transparent)`,
+  };
+
   const toggleFavorite = async () => {
     if (!currentUser) {
       showAlert("Aby dodać do ulubionych, musisz być zalogowany.");
@@ -281,7 +325,7 @@ const UserCard = ({
         finalIsFav
           ? "Profil został dodany do ulubionych."
           : "Profil został usunięty z ulubionych.",
-        finalIsFav ? "info" : "info"
+        "info"
       );
     } catch (e) {
       setIsFav(prevIsFav);
@@ -295,7 +339,6 @@ const UserCard = ({
     }
   };
 
-  // === Profil ===
   const handleViewProfile = async () => {
     try {
       if (user?.userId) {
@@ -316,7 +359,6 @@ const UserCard = ({
     navigate(`/profil/${slug}`, { state: { scrollToId: "profileWrapper" } });
   };
 
-  // === Wiadomość ===
   const startAccountToProfile = () => {
     if (!currentUser) {
       showAlert("Aby wysłać wiadomość, musisz być zalogowany.");
@@ -333,7 +375,6 @@ const UserCard = ({
     });
   };
 
-  // === Rezerwacja / Zapytanie ===
   const goToBooking = () => {
     if (!currentUser) {
       showAlert("Aby skorzystać z rezerwacji/zapytania, musisz być zalogowany.");
@@ -358,302 +399,338 @@ const UserCard = ({
     });
   };
 
-  // ✅ linki
-  const cleanLinks = (links || [])
-    .map((l) => ensureUrl((l || "").trim()))
-    .filter(Boolean);
-
-  const t = resolveUserCardTheme(user?.theme);
-  const partner = resolvePartnerData(partnership);
-
-  const cssVars = {
-    "--uc-primary": t.primary,
-    "--uc-secondary": t.secondary,
-    "--uc-banner": t.banner,
-    "--uc-p-06": `color-mix(in srgb, ${t.primary} 6%, transparent)`,
-    "--uc-p-10": `color-mix(in srgb, ${t.primary} 10%, transparent)`,
-    "--uc-p-22": `color-mix(in srgb, ${t.primary} 22%, transparent)`,
-    "--uc-s-10": `color-mix(in srgb, ${t.secondary} 10%, transparent)`,
-    "--uc-partner": partner.color,
-    "--uc-partner-soft": `color-mix(in srgb, ${partner.color} 16%, white)`,
-    "--uc-partner-border": `color-mix(in srgb, ${partner.color} 42%, rgba(15, 23, 42, 0.12))`,
-    "--uc-partner-glow": `color-mix(in srgb, ${partner.color} 28%, transparent)`,
-  };
-
   return (
-    <>
-      <article
-        className={`${styles.card} ${partner.isPartner ? styles.partnerCard : ""}`}
-        style={cssVars}
-      >
-        <header className={styles.hero}>
-          <div className={styles.heroFade} aria-hidden="true" />
+    <article
+      className={`${styles.card} ${partner.isPartner ? styles.partnerCard : ""}`}
+      style={cssVars}
+    >
+      <header className={styles.hero}>
+        <div className={styles.heroDecor} aria-hidden="true">
+          <span className={styles.heroGlowA} />
+          <span className={styles.heroGlowB} />
+          <span className={styles.heroGrid} />
+        </div>
 
-          <div className={styles.heroTop}>
-            <span className={styles.locPill} title={location || "Brak lokalizacji"}>
-              <FaMapMarkerAlt />
-              <span className={styles.locText}>{location || "Brak lokalizacji"}</span>
-            </span>
+        <div className={styles.heroFade} aria-hidden="true" />
 
-            <span className={styles.ratingPill} title={`Ocena: ${rating} (${reviews})`}>
-              <FaStar />
-              <span>
-                <strong>{Number(rating || 0).toFixed(1)}</strong>
-                <span className={styles.dot} />
-                <span>{Number(reviews || 0)} opinii</span>
-              </span>
+        <div className={styles.heroTop}>
+          <span className={styles.locPill} title={location || "Brak lokalizacji"}>
+            <FaMapMarkerAlt />
+            <span className={styles.locText}>
+              {location || "Brak lokalizacji"}
             </span>
+          </span>
+
+          <span className={styles.ratingPill} title={`Ocena: ${rating} (${reviews})`}>
+            <FaStar />
+            <span>
+              <strong>{Number(rating || 0).toFixed(1)}</strong>
+              <span className={styles.dot} />
+              <span>{Number(reviews || 0)} opinii</span>
+            </span>
+          </span>
+        </div>
+
+        <div className={styles.heroInner}>
+          <div className={styles.avatarWrap}>
+            <img
+              src={avatarSrc}
+              alt={name || "Profil"}
+              className={styles.avatar}
+              decoding="async"
+              onError={(e) => {
+                if (!e.currentTarget.dataset.fallback) {
+                  e.currentTarget.dataset.fallback = "1";
+                  e.currentTarget.src = DEFAULT_AVATAR;
+                }
+              }}
+            />
+
+            <div className={styles.avatarRing} aria-hidden="true" />
           </div>
 
-          <div className={styles.heroInner}>
-            <div className={styles.avatarWrap}>
-              <img
-                src={avatarSrc}
-                alt={name}
-                className={styles.avatar}
-                decoding="async"
-                onError={(e) => {
-                  if (!e.currentTarget.dataset.fallback) {
-                    e.currentTarget.dataset.fallback = "1";
-                    e.currentTarget.src = DEFAULT_AVATAR;
-                  }
-                }}
-              />
-              <div className={styles.avatarRing} aria-hidden="true" />
-            </div>
+          <div className={styles.heroInfo}>
+            <div className={styles.titleRow}>
+              <h3 className={styles.name}>
+                <span className={styles.receiverName}>{name || "Profil użytkownika"}</span>
+              </h3>
 
-            <div className={styles.heroInfo}>
-              <div className={styles.titleRow}>
-                <h3 className={styles.name}>
-                  <span className={styles.receiverName}>{name}</span>
-                </h3>
-
-                <div className={styles.badgesRow}>
-                  {partner.isPartner && (
-                    <span
-                      className={`${styles.partnerBadge} ${styles[`partner_${partner.tier}`] || ""
-                        }`}
-                    >
-                      {partner.label}
-                    </span>
-                  )}
-
+              <div className={styles.badgesRow}>
+                {partner.isPartner && (
                   <span
-                    className={`${styles.profileBadge} ${styles[`type_${profileType}`] || ""
+                    className={`${styles.partnerBadge} ${styles[`partner_${partner.tier}`] || ""
                       }`}
                   >
-                    {profileType === "zawodowy" && "ZAWODOWY"}
-                    {profileType === "hobbystyczny" && "HOBBY"}
-                    {profileType === "serwis" && "SERWIS"}
-                    {profileType === "społeczność" && "SPOŁECZNOŚĆ"}
-                    {!["zawodowy", "hobbystyczny", "serwis", "społeczność"].includes(
-                      profileType
-                    ) && "PROFIL"}
+                    {partner.label}
                   </span>
-                </div>
-              </div>
+                )}
 
-              <p className={styles.role} title={role || ""}>
-                {role || "—"}
-              </p>
-            </div>
-          </div>
-        </header>
-
-        <section className={styles.body}>
-          {description?.trim() ? (
-            <>
-              <p className={`${styles.description} ${isExpanded ? styles.expanded : ""}`}>
-                {description}
-              </p>
-
-              {description.length > 120 && (
-                <button
-                  className={styles.toggleButton}
-                  onClick={() => setIsExpanded((p) => !p)}
-                  type="button"
+                <span
+                  className={`${styles.profileBadge} ${styles[`type_${profileType}`] || ""
+                    }`}
                 >
-                  {isExpanded ? "Zwiń" : "Pokaż więcej"}
-                </button>
-              )}
-            </>
-          ) : (
-            <p className={styles.noDescription}>Użytkownik nie dodał jeszcze opisu.</p>
-          )}
-
-          {tags?.length > 0 && (
-            <div className={styles.tags}>
-              {tags.map((tag) => (
-                <span key={tag} className={styles.tag}>
-                  {String(tag).toUpperCase()}
+                  {getProfileTypeLabel(profileType)}
                 </span>
-              ))}
-            </div>
-          )}
-
-          <div className={styles.splitLine} />
-
-          <div className={styles.details}>
-            {hasPrice ? (
-              <p className={styles.price}>
-                Cennik: <span>od</span> <strong>{pf} zł</strong> <span>do</span>{" "}
-                <strong>{pt} zł</strong>
-              </p>
-            ) : (
-              <p className={styles.price}>
-                Cennik: <em>Brak danych</em>
-              </p>
-            )}
-
-            {cleanLinks.length > 0 ? (
-              <div className={styles.linkGrid}>
-                {cleanLinks.slice(0, 4).map((link, i) => {
-                  const label = prettyUrl(link);
-
-                  if (isPreview) {
-                    return (
-                      <span
-                        key={`${link}-${i}`}
-                        className={styles.linkDisabled}
-                        onClick={(e) =>
-                          blockIfPreview(e, "Linki są aktywne dopiero po utworzeniu profilu.")
-                        }
-                        title="Podgląd — link nieaktywny"
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            blockIfPreview(
-                              e,
-                              "Linki są aktywne dopiero po utworzeniu profilu."
-                            );
-                          }
-                        }}
-                      >
-                        {label}
-                      </span>
-                    );
-                  }
-
-                  return (
-                    <a
-                      key={`${link}-${i}`}
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.linkTile}
-                      title={link}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <span className={styles.linkDomain}>{label}</span>
-                      <span className={styles.linkHint}>Otwórz</span>
-                    </a>
-                  );
-                })}
               </div>
-            ) : (
-              <p className={styles.noDescription}>
-                Użytkownik nie dodał jeszcze żadnych linków.
-              </p>
+            </div>
+
+            <p className={styles.role} title={role || ""}>
+              {role || "—"}
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <section className={styles.body}>
+        {description?.trim() ? (
+          <div className={styles.descBox}>
+            <p
+              className={`${styles.description} ${isExpanded ? styles.expanded : ""
+                }`}
+            >
+              {description}
+            </p>
+
+            {description.length > 120 && (
+              <button
+                className={styles.toggleButton}
+                onClick={() => setIsExpanded((p) => !p)}
+                type="button"
+              >
+                {isExpanded ? "Zwiń" : "Pokaż więcej"}
+              </button>
             )}
           </div>
+        ) : (
+          <div className={styles.emptyBox}>
+            <div className={styles.emptyIcon}>
+              <FaRegEye />
+            </div>
 
-          {showNoBookingInfo && (
-            <p className={styles.noReservationInfo}>
-              Ten profil nie udostępnia wolnych terminów – możesz tylko napisać wiadomość.
+            <div className={styles.emptyContent}>
+              <span>Użytkownik nie dodał jeszcze opisu.</span>
+            </div>
+          </div>
+        )}
+
+        {tags?.length > 0 && (
+          <div className={styles.tags}>
+            {tags.map((tag) => (
+              <span key={tag} className={styles.tag}>
+                {String(tag).toUpperCase()}
+              </span>
+            ))}
+          </div>
+        )}
+
+        <div className={styles.splitLine} />
+
+        <div className={styles.details}>
+          {hasPrice ? (
+            <p className={styles.price}>
+              Cennik: <span>od</span> <strong>{pf} zł</strong>{" "}
+              <span>do</span> <strong>{pt} zł</strong>
+            </p>
+          ) : (
+            <p className={styles.price}>
+              Cennik: <em>Brak danych</em>
             </p>
           )}
 
-          <div className={styles.buttons}>
-            {allowBookingUI && (
-              <button
-                type="button"
-                className={styles.calendarToggle}
-                disabled={isPreview}
-                onClick={(e) => {
-                  if (
-                    blockIfPreview(
-                      e,
-                      "Rezerwacje są dostępne dopiero po utworzeniu profilu."
-                    )
-                  ) {
-                    return;
-                  }
-                  goToBooking();
-                }}
-                title={isPreview ? "Podgląd — rezerwacje wyłączone" : "Rezerwacja / zapytanie"}
-              >
-                {bookBtnLabel}
-              </button>
-            )}
+          {cleanLinks.length > 0 ? (
+            <div className={styles.linkGrid}>
+              {cleanLinks.slice(0, 4).map((link, i) => {
+                const label = prettyUrl(link);
 
+                if (isPreview) {
+                  return (
+                    <span
+                      key={`${link}-${i}`}
+                      className={styles.linkDisabled}
+                      onClick={(e) =>
+                        blockIfPreview(
+                          e,
+                          "Linki są aktywne dopiero po utworzeniu profilu."
+                        )
+                      }
+                      title="Podgląd — link nieaktywny"
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          blockIfPreview(
+                            e,
+                            "Linki są aktywne dopiero po utworzeniu profilu."
+                          );
+                        }
+                      }}
+                    >
+                      <span className={styles.linkDomain}>{label}</span>
+                      <span className={styles.linkHint}>Podgląd</span>
+                    </span>
+                  );
+                }
+
+                return (
+                  <a
+                    key={`${link}-${i}`}
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.linkTile}
+                    title={link}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span className={styles.linkDomain}>{label}</span>
+
+                    <span className={styles.linkHint}>
+                      Otwórz <FaExternalLinkAlt />
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+          ) : (
+            <div className={styles.emptyBox}>
+              <div className={styles.emptyIcon}>
+                <FaLink />
+              </div>
+
+              <div className={styles.emptyContent}>
+                <span>Użytkownik nie dodał jeszcze żadnych linków.</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {showNoBookingInfo && (
+          <p className={styles.noReservationInfo}>
+            Ten profil nie udostępnia wolnych terminów – możesz tylko napisać wiadomość.
+          </p>
+        )}
+
+        <div className={styles.buttons}>
+          {allowBookingUI && (
             <button
               type="button"
-              className={styles.buttonSecondary}
+              className={styles.calendarToggle}
+              disabled={isPreview}
               onClick={(e) => {
                 if (
                   blockIfPreview(
                     e,
-                    "To tylko podgląd — profil będzie dostępny po utworzeniu."
+                    "Rezerwacje są dostępne dopiero po utworzeniu profilu."
                   )
                 ) {
                   return;
                 }
-                handleViewProfile();
+
+                goToBooking();
               }}
-              title={isPreview ? "Podgląd — po utworzeniu profilu" : "Zobacz profil"}
-            >
-              ZOBACZ PROFIL
-            </button>
-
-            {!isPreview && currentUser && currentUser.uid !== user.userId && (
-              <button
-                type="button"
-                className={styles.buttonSecondary}
-                onClick={startAccountToProfile}
-              >
-                ZADAJ PYTANIE
-              </button>
-            )}
-          </div>
-
-          <div className={styles.bottomMeta}>
-            <div className={styles.visits}>
-              <FaRegEye />
-              <span>
-                Odwiedzin: <strong>{Number(visits || 0).toLocaleString("pl-PL")}</strong>
-              </span>
-            </div>
-
-            <button
-              type="button"
-              className={`${styles.favoritesBtn} ${isFav ? styles.active : ""}`}
-              onClick={(e) => {
-                if (blockIfPreview(e, "Nie możesz dodać do ulubionych w podglądzie.")) return;
-                toggleFavorite();
-              }}
-              aria-label={isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
               title={
                 isPreview
-                  ? "Podgląd — ulubione wyłączone"
-                  : isFav
-                    ? "Usuń z ulubionych"
-                    : "Dodaj do ulubionych"
+                  ? "Podgląd — rezerwacje wyłączone"
+                  : "Rezerwacja / zapytanie"
               }
             >
-              <span className={styles.favLabel}>
-                Ulubione: {favCount}
-              </span>
-              {isFav ? (
-                <FaHeart className={styles.heartFilled} />
-              ) : (
-                <FaRegHeart className={styles.heart} />
-              )}
+              <FaRegCalendarAlt />
+              {bookBtnLabel}
             </button>
+          )}
+
+          <button
+            type="button"
+            className={styles.buttonSecondary}
+            onClick={(e) => {
+              if (
+                blockIfPreview(
+                  e,
+                  "To tylko podgląd — profil będzie dostępny po utworzeniu."
+                )
+              ) {
+                return;
+              }
+
+              handleViewProfile();
+            }}
+            title={isPreview ? "Podgląd — po utworzeniu profilu" : "Zobacz profil"}
+          >
+            <FaRegEye />
+            Zobacz profil
+          </button>
+
+          {!isPreview && currentUser && currentUser.uid !== user.userId && (
+            <button
+              type="button"
+              className={styles.buttonSecondary}
+              onClick={startAccountToProfile}
+            >
+              <FaPaperPlane />
+              Zadaj pytanie
+            </button>
+          )}
+        </div>
+
+        <div className={styles.cardStats}>
+          <div className={styles.statBox}>
+            <span className={styles.statIcon}>
+              <FaRegEye />
+            </span>
+
+            <div>
+              <strong>{Number(visits || 0).toLocaleString("pl-PL")}</strong>
+              <small>Odwiedzin</small>
+            </div>
           </div>
-        </section>
-      </article>
-    </>
+
+          <button
+            type="button"
+            className={`${styles.statBox} ${styles.favoriteStat} ${isFav ? styles.active : ""
+              }`}
+            onClick={(e) => {
+              if (
+                blockIfPreview(
+                  e,
+                  "Nie możesz dodać do ulubionych w podglądzie."
+                )
+              ) {
+                return;
+              }
+
+              toggleFavorite();
+            }}
+            aria-label={isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
+            title={
+              isPreview
+                ? "Podgląd — ulubione wyłączone"
+                : isFav
+                  ? "Usuń z ulubionych"
+                  : "Dodaj do ulubionych"
+            }
+          >
+            <span className={styles.statIcon}>
+              {isFav ? <FaHeart /> : <FaRegHeart />}
+            </span>
+
+            <div>
+              <strong>{favCount}</strong>
+              <small>Ulubione</small>
+            </div>
+          </button>
+
+          <div className={styles.statBox}>
+            <span className={styles.statIcon}>
+              <FaShieldAlt />
+            </span>
+
+            <div>
+              <strong>{partner.isPartner ? "Partner" : "Aktywny"}</strong>
+              <small>Status</small>
+            </div>
+          </div>
+        </div>
+      </section>
+    </article>
   );
 };
 
