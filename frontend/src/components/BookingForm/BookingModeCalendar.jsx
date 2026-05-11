@@ -42,7 +42,12 @@ const ceilToStep = (dt, stepMin) => {
   return rem ? addMinutes(d, stepMin - rem) : d;
 };
 
-export default function BookingModeCalendar({ user, provider, pushAlert }) {
+export default function BookingModeCalendar({
+  user,
+  provider,
+  pushAlert,
+  preselectedServiceId,
+}) {
   const [reservedSlots, setReserved] = useState([]); // { date, fromTime, toTime }
   const [pendingSlots, setPending] = useState([]); // { date, fromTime, toTime }
   const [reservationsAll, setReservationsAll] = useState([]); // RAW rezerwacje całego zespołu
@@ -84,6 +89,23 @@ export default function BookingModeCalendar({ user, provider, pushAlert }) {
   const activeServices = useMemo(() => {
     return (provider?.services || []).filter((s) => s?.isActive !== false);
   }, [provider?.services]);
+
+  useEffect(() => {
+    if (!preselectedServiceId) return;
+    if (!activeServices.length) return;
+    if (selectedService?._id) return;
+
+    const svc = activeServices.find(
+      (s) => String(s._id) === String(preselectedServiceId)
+    );
+
+    if (svc) {
+      setService(svc);
+      setSlot("");
+      setDate(null);
+      setSelectedStaffId("");
+    }
+  }, [preselectedServiceId, activeServices, selectedService?._id]);
 
   // ✅ BUFFER z profilu (0/5/10/15), fallback 0
   const bookingBufferMin = useMemo(() => {

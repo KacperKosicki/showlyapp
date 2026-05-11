@@ -20,7 +20,12 @@ import { api } from "../../api/api";
 
 const CHANNEL = "account_to_profile";
 
-export default function BookingModeDay({ user, provider, pushAlert }) {
+export default function BookingModeDay({
+  user,
+  provider,
+  pushAlert,
+  preselectedServiceId,
+}) {
   const [unavailableDays, setUnavailableDays] = useState([]); // ['YYYY-MM-DD']
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setDate] = useState(null);
@@ -35,6 +40,21 @@ export default function BookingModeDay({ user, provider, pushAlert }) {
   const activeServices = useMemo(() => {
     return (provider?.services || []).filter((s) => s?.isActive !== false);
   }, [provider?.services]);
+
+  useEffect(() => {
+    if (!preselectedServiceId) return;
+    if (!activeServices.length) return;
+    if (selectedService?._id) return;
+
+    const svc = activeServices.find(
+      (s) => String(s._id) === String(preselectedServiceId)
+    );
+
+    if (svc) {
+      setService(svc);
+      setDate(null);
+    }
+  }, [preselectedServiceId, activeServices, selectedService?._id]);
 
   // ✅ logika: jeśli profil ma aktywne usługi i NIE jest to "Tylko zapytanie" → usługa wymagana
   const hasServices = activeServices.length > 0;

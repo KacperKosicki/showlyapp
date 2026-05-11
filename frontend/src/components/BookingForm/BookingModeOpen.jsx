@@ -1,5 +1,5 @@
 // BookingModeOpen.jsx — czyste zapytanie (bez kalendarza)
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./BookingModeOpen.module.scss";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
@@ -7,44 +7,112 @@ import { api } from "../../api/api";
 
 const CHANNEL = "account_to_profile";
 
-export default function BookingModeOpen({ user, provider, pushAlert }) {
+export default function BookingModeOpen({
+  user,
+  provider,
+  pushAlert,
+  preselectedServiceId,
+  preselectedServiceName,
+}) {
   const [subject, setSubject] = useState("Zapytanie o usługę");
   const [message, setMessage] = useState("");
   const [phone, setPhone] = useState("");
   const [sending, setSending] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
 
   const navigate = useNavigate();
 
+  const activeServices = useMemo(() => {
+    return (provider?.services || []).filter((s) => s?.isActive !== false);
+  }, [provider?.services]);
+
+  useEffect(() => {
+    if (!preselectedServiceId) return;
+    if (!activeServices.length) return;
+    if (selectedService?._id) return;
+
+    const svc = activeServices.find(
+      (s) => String(s._id) === String(preselectedServiceId)
+    );
+
+    if (svc) {
+      setSelectedService(svc);
+      setSubject(`Zapytanie o usługę: ${svc.name}`);
+    } else if (preselectedServiceName) {
+      setSubject(`Zapytanie o usługę: ${preselectedServiceName}`);
+    }
+  }, [
+    preselectedServiceId,
+    preselectedServiceName,
+    activeServices,
+    selectedService?._id,
+  ]);
+
+  const handleServiceChange = (e) => {
+    const svc = activeServices.find(
+      (s) => String(s._id) === String(e.target.value)
+    );
+
+    setSelectedService(svc || null);
+
+    if (svc) {
+      setSubject(`Zapytanie o usługę: ${svc.name}`);
+    } else {
+      setSubject("Zapytanie o usługę");
+    }
+  };
+
+  const buildContent = () => {
+    const body = (message || "").trim();
+
+    return [
+      subject?.trim() ? `Temat: ${subject.trim()}` : null,
+      selectedService?.name ? `Usługa: ${selectedService.name}` : null,
+      phone?.trim() ? `Telefon: ${phone.trim()}` : null,
+      "",
+      body,
+    ]
+      .filter(Boolean)
+      .join("\n");
+  };
+
   const handleSubmit = async (e) => {
     e?.preventDefault?.();
-    if (sending) return; // ✅ blokada podwójnego kliku
+    if (sending) return;
+
     setSending(true);
 
     try {
       if (!user?.uid) {
-        pushAlert?.({ show: true, type: "error", message: "Musisz być zalogowany." });
+        pushAlert?.({
+          show: true,
+          type: "error",
+          message: "Musisz być zalogowany.",
+        });
         return;
       }
 
       if (!provider?.userId) {
-        pushAlert?.({ show: true, type: "error", message: "Brak danych usługodawcy." });
+        pushAlert?.({
+          show: true,
+          type: "error",
+          message: "Brak danych usługodawcy.",
+        });
         return;
       }
 
       const body = (message || "").trim();
+
       if (!body) {
-        pushAlert?.({ show: true, type: "error", message: "Napisz krótką wiadomość." });
+        pushAlert?.({
+          show: true,
+          type: "error",
+          message: "Napisz krótką wiadomość.",
+        });
         return;
       }
 
-      const content = [
-        subject?.trim() ? `Temat: ${subject.trim()}` : null,
-        phone?.trim() ? `Telefon: ${phone.trim()}` : null,
-        "",
-        body,
-      ]
-        .filter(Boolean)
-        .join("\n");
+      const content = buildContent();
 
       const { data } = await api.post("/api/conversations/send", {
         from: user.uid,
@@ -77,27 +145,25 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
           })
         );
 
-        navigate(`/konwersacja/${data.id}`, { state: { scrollToId: "threadPageLayout" } });
+        navigate(`/konwersacja/${data.id}`, {
+          state: { scrollToId: "threadPageLayout" },
+        });
+
         return;
       }
 
-      // fallback (gdyby API nie zwróciło id)
-      pushAlert?.({ show: true, type: "success", message: "Zapytanie wysłane." });
+      pushAlert?.({
+        show: true,
+        type: "success",
+        message: "Zapytanie wysłane.",
+      });
+
       setMessage("");
       setPhone("");
     } catch (err) {
-      // typowy przypadek: backend mówi "masz już konwersację"
       if (err?.response?.status === 403) {
         const existingId = err?.response?.data?.conversationId || null;
-
-        const draftContent = [
-          subject?.trim() ? `Temat: ${subject.trim()}` : null,
-          phone?.trim() ? `Telefon: ${phone.trim()}` : null,
-          "",
-          (message || "").trim(),
-        ]
-          .filter(Boolean)
-          .join("\n");
+        const draftContent = buildContent();
 
         sessionStorage.setItem(
           "flash",
@@ -112,20 +178,32 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
 
         sessionStorage.setItem("draft", draftContent);
 
-        navigate(existingId ? `/konwersacja/${existingId}` : `/wiadomosc/${provider.userId}`, {
-          state: { scrollToId: "threadPageLayout" },
-        });
+        navigate(
+          existingId
+            ? `/konwersacja/${existingId}`
+            : `/wiadomosc/${provider.userId}`,
+          {
+            state: { scrollToId: "threadPageLayout" },
+          }
+        );
+
         return;
       }
 
       const msg =
         err?.response?.data?.message ||
-        (err?.response?.status === 401 ? "Brak autoryzacji (401). Zaloguj się ponownie." : null) ||
+        (err?.response?.status === 401
+          ? "Brak autoryzacji (401). Zaloguj się ponownie."
+          : null) ||
         "Nie udało się wysłać zapytania.";
 
-      pushAlert?.({ show: true, type: "error", message: msg });
+      pushAlert?.({
+        show: true,
+        type: "error",
+        message: msg,
+      });
     } finally {
-      setSending(false); // ✅ zawsze odblokuje
+      setSending(false);
     }
   };
 
@@ -163,6 +241,30 @@ export default function BookingModeOpen({ user, provider, pushAlert }) {
             disabled={sending}
           />
         </label>
+
+        {activeServices.length > 0 && (
+          <label className={styles.field}>
+            <div className={styles.fieldHeader}>
+              <h3 className={styles.fieldTitle}>Usługa</h3>
+              <span className={styles.fieldHint}>opcjonalnie</span>
+            </div>
+
+            <select
+              className={styles.input}
+              value={selectedService?._id || ""}
+              onChange={handleServiceChange}
+              disabled={sending}
+            >
+              <option value="">– bez wyboru –</option>
+
+              {activeServices.map((s) => (
+                <option key={s._id} value={s._id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       <label className={styles.field}>

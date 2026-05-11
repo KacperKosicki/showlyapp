@@ -1,6 +1,6 @@
 // BookingForm.jsx (kontroler trybu) — layout jak UserCard (glass + gradient)
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import styles from "./BookingForm.module.scss";
 import AlertBox from "../AlertBox/AlertBox";
@@ -75,6 +75,11 @@ export default function BookingForm({ user }) {
 
   const [provider, setProvider] = useState(null);
   const [alert, setAlert] = useState({ show: false, type: "", message: "" });
+
+  const location = useLocation();
+
+  const preselectedServiceId = location.state?.serviceId || "";
+  const preselectedServiceName = location.state?.serviceName || "";
 
   // 1) Załaduj profil
   useEffect(() => {
@@ -177,15 +182,33 @@ export default function BookingForm({ user }) {
           {/* ===== BODY ===== */}
           <section className={styles.body}>
             {mode === "calendar" && (
-              <BookingModeCalendar user={user} provider={provider} pushAlert={setAlert} />
+              <BookingModeCalendar
+                user={user}
+                provider={provider}
+                pushAlert={setAlert}
+                preselectedServiceId={preselectedServiceId}
+                preselectedServiceName={preselectedServiceName}
+              />
             )}
 
             {mode === "request-blocking" && (
-              <BookingModeDay user={user} provider={provider} pushAlert={setAlert} />
+              <BookingModeDay
+                user={user}
+                provider={provider}
+                pushAlert={setAlert}
+                preselectedServiceId={preselectedServiceId}
+                preselectedServiceName={preselectedServiceName}
+              />
             )}
 
             {mode === "request-open" && (
-              <BookingModeOpen user={user} provider={provider} pushAlert={setAlert} />
+              <BookingModeOpen
+                user={user}
+                provider={provider}
+                pushAlert={setAlert}
+                preselectedServiceId={preselectedServiceId}
+                preselectedServiceName={preselectedServiceName}
+              />
             )}
           </section>
         </article>

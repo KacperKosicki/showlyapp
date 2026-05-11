@@ -1599,6 +1599,35 @@ $page-max: 1240px;
   margin-top: 16px;
 }
 
+.serviceCta {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 14px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(135deg, var(--pp-primary), var(--pp-secondary));
+  box-shadow: 0 16px 34px var(--pp-p-18);
+  font-family: $font-accent;
+  font-weight: 950;
+  transition: 0.18s ease;
+
+  svg {
+    flex: 0 0 auto;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.04);
+  }
+}
+
 .serviceCard {
   overflow: hidden;
   border-radius: 28px;

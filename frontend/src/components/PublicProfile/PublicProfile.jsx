@@ -838,6 +838,46 @@ export default function PublicProfile() {
   const showBookButton = !isOwner && allowBookingUI;
   const bookBtnLabel = isCalendar ? "Zarezerwuj termin" : "Wyślij zapytanie";
 
+  const getServiceCtaLabel = () => {
+    if (isCalendar) return "Zarezerwuj tę usługę";
+    if (bookingMode === "request-blocking") return "Zapytaj o termin";
+    if (bookingMode === "request-open") return "Wyślij zapytanie";
+    return "Skontaktuj się";
+  };
+
+  const goToServiceBooking = (service) => {
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      setAlert({
+        type: "error",
+        message: "Aby skorzystać z rezerwacji lub zapytania, musisz być zalogowany.",
+      });
+      return;
+    }
+
+    if (currentUser.uid === profile?.userId) {
+      setAlert({
+        type: "info",
+        message: "Nie możesz rezerwować własnej usługi.",
+      });
+      return;
+    }
+
+    if (!allowBookingUI) {
+      startMessage();
+      return;
+    }
+
+    navigate(`/rezerwacja/${slug}`, {
+      state: {
+        serviceId: service?._id,
+        serviceName: service?.name,
+        bookingMode,
+      },
+    });
+  };
+
   const cleanLinks = (links || []).map((l) => (l || "").trim()).filter(Boolean);
 
   const contactPhone = normalizePhone(contact?.phone);
@@ -1507,6 +1547,16 @@ export default function PublicProfile() {
                               </div>
                             </div>
                           </div>
+                          {!isOwner && (
+                            <button
+                              type="button"
+                              className={styles.serviceCta}
+                              onClick={() => goToServiceBooking(s)}
+                            >
+                              <FaRegCalendarAlt />
+                              {getServiceCtaLabel()}
+                            </button>
+                          )}
                         </div>
                       </article>
                     );
