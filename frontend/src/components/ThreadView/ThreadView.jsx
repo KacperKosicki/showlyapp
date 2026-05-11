@@ -9,7 +9,6 @@ import {
   FaRegCommentDots,
   FaUserCircle,
   FaRegEye,
-  FaShieldAlt,
   FaPaperPlane,
   FaInfoCircle,
   FaLock,
