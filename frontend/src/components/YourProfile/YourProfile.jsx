@@ -69,6 +69,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const [isExtending, setIsExtending] = useState(false);
   const [isCreatingStaff, setIsCreatingStaff] = useState(false);
   const [deletingStaffIds, setDeletingStaffIds] = useState([]); // lista id w trakcie usuwania
+  const [billingStatus, setBillingStatus] = useState(null);
 
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState("");
@@ -125,6 +126,20 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     };
   };
 
+  const fetchBillingStatus = async () => {
+    try {
+      const { data } = await axios.get(
+        `${process.env.REACT_APP_API_URL}/api/billing/status`,
+        { headers: await authHeaders() }
+      );
+
+      setBillingStatus(data);
+    } catch (err) {
+      console.error("❌ billing status error:", err);
+      setBillingStatus(null);
+    }
+  };
+
   const showAlert = (message, type = 'info') => {
     if (alertTimeoutRef.current) {
       clearTimeout(alertTimeoutRef.current);
@@ -178,6 +193,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       if (until < now) p.isVisible = false;
 
       setProfile(p);
+      await fetchBillingStatus();
 
       const photos = p.photos || [];
       const photoHashes = await Promise.all(photos.map(ph => hashString(ph)));
@@ -1150,13 +1166,11 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const isExpired = isTimeExpired;
 
-  // czy pokazać sekcję o widoczności / przedłużeniu
-  const shouldShowVisibilityNotice =
-    isAdminHidden || isExpired || (!isExpired && !isAdminHidden);
-
-  // czy wolno kliknąć Stripe
   const canExtend =
-    !!until && !isAdminHidden;
+    !isAdminHidden && (isExpired || !!billingStatus?.canExtend);
+
+  const shouldShowVisibilityNotice =
+    isAdminHidden || isExpired || !!billingStatus?.canExtend;
 
   // =========================
   // Render

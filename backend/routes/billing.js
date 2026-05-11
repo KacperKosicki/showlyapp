@@ -13,7 +13,7 @@ if (!stripeSecret) {
 const stripe = new Stripe(stripeSecret);
 
 // 🔥 TESTOWO
-const RENEW_WINDOW_DAYS = Number(process.env.RENEW_WINDOW_DAYS ?? 999); // docelowo np. 7
+const RENEW_WINDOW_DAYS = Number(process.env.RENEW_WINDOW_DAYS ?? 7); // docelowo np. 7
 const DURATION_DAYS = Number(process.env.DURATION_DAYS ?? 30);
 
 const addDays = (date, days) => new Date(date.getTime() + Number(days) * 86400000);

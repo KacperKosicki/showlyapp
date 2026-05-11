@@ -10,6 +10,8 @@ import {
   FiLogOut,
   FiShield,
   FiAlertTriangle,
+  FiTag,
+  FiMapPin,
 } from "react-icons/fi";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -469,7 +471,7 @@ const UserDropdown = ({
                     </span>
                   ) : (
                     <span className={`${styles.itemSub} ${styles.statusExpired}`}>
-                      Wygasła
+                      Wygasł
                     </span>
                   )}
                 </span>
@@ -538,6 +540,8 @@ const UserDropdown = ({
             </span>
           </button>
 
+          <div className={styles.sep} role="separator" />
+
           <button
             type="button"
             className={styles.item}
@@ -568,6 +572,34 @@ const UserDropdown = ({
             {Number(pendingReservationsCount) > 0 && (
               <span className={styles.countBadge}>{pendingReservationsCount}</span>
             )}
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.item} ${styles.itemDisabled}`}
+            role="menuitem"
+            disabled
+          >
+            <span className={styles.itemLeft}>
+              <FiTag className={styles.itemIcon} aria-hidden="true" />
+              <span className={styles.itemText}>Ogłoszenia</span>
+            </span>
+
+            <span className={styles.rightPill}>wkrótce</span>
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.item} ${styles.itemDisabled}`}
+            role="menuitem"
+            disabled
+          >
+            <span className={styles.itemLeft}>
+              <FiMapPin className={styles.itemIcon} aria-hidden="true" />
+              <span className={styles.itemText}>Wydarzenia</span>
+            </span>
+
+            <span className={styles.rightPill}>wkrótce</span>
           </button>
 
           <button

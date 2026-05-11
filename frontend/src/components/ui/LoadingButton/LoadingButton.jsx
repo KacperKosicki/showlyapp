@@ -1,6 +1,5 @@
 import React from "react";
 import styles from "./LoadingButton.module.scss";
-import DotsLoader from "../DotsLoader/DotsLoader";
 
 export default function LoadingButton({
   isLoading = false,
@@ -23,20 +22,19 @@ export default function LoadingButton({
       type={type}
       onClick={handleClick}
       disabled={blocked}
-      className={className} // tylko Twoje klasy
-      aria-busy={isLoading}
-      // kotwica dla absolutnego loadera (nie zmienia wyglądu)
-      style={{ position: "relative" }}
+      className={`${styles.button} ${className}`}
+      aria-busy={isLoading ? "true" : "false"}
       {...rest}
     >
-      {/* trzyma szerokość */}
-      <span style={{ visibility: isLoading ? "hidden" : "visible" }}>
+      <span className={`${styles.content} ${isLoading ? styles.hidden : ""}`}>
         {children}
       </span>
 
       {isLoading && (
         <span className={styles.loader} aria-hidden="true">
-          <DotsLoader />
+          <span className={styles.dot} />
+          <span className={styles.dot} />
+          <span className={styles.dot} />
         </span>
       )}
     </button>

@@ -434,6 +434,30 @@
   opacity: 0.92;
 }
 
+.itemDisabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.itemDisabled:hover {
+  background: rgba(255, 255, 255, 0.035);
+  filter: none;
+  transform: none;
+}
+
+.itemDisabled .itemIcon,
+.itemDisabled .itemText {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.itemDisabled .rightPill {
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
 /* =========================================================
    RESPONSIVE
 ========================================================= */

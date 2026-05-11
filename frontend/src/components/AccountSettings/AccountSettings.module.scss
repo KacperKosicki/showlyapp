@@ -1,7 +1,7 @@
 @import "../../styles/variables";
 
 /* =========================
-   AccountSettings – styl inspirowany Notifications
+   AccountSettings
    ========================= */
 
 .section {
@@ -18,11 +18,7 @@
   --as-p-06: color-mix(in srgb, var(--as-primary) 6%, transparent);
   --as-p-10: color-mix(in srgb, var(--as-primary) 10%, transparent);
   --as-p-18: color-mix(in srgb, var(--as-primary) 18%, transparent);
-  --as-p-30: color-mix(in srgb, var(--as-primary) 30%, transparent);
-
-  --as-s-08: color-mix(in srgb, var(--as-secondary) 8%, transparent);
   --as-s-10: color-mix(in srgb, var(--as-secondary) 10%, transparent);
-  --as-s-18: color-mix(in srgb, var(--as-secondary) 18%, transparent);
 }
 
 .section::before,
@@ -70,14 +66,8 @@
   margin: 0 auto;
 }
 
-.alertWrap {
-  width: 100%;
-  max-width: 880px;
-  margin: 0 auto 1rem;
-}
-
 /* =========================
-   Header like Notifications
+   Header
    ========================= */
 
 .head {
@@ -217,7 +207,7 @@
 }
 
 /* =========================
-   Content boxes like Notifications
+   Content
    ========================= */
 
 .contentBox {
@@ -284,7 +274,7 @@
    ========================= */
 
 .loadingCard {
-  padding: 1rem 1rem;
+  padding: 1rem;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -296,7 +286,7 @@
 }
 
 /* =========================
-   Avatar section
+   Avatar
    ========================= */
 
 .avatarRow {
@@ -338,15 +328,16 @@
 }
 
 .inline {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 10px;
   align-items: center;
-  flex-wrap: wrap;
 }
 
 .input {
   min-width: 220px;
   width: 100%;
+  min-height: 44px;
   border-radius: 14px;
   border: 1px solid rgba(20, 24, 35, 0.12);
   background: rgba(255, 255, 255, 0.92);
@@ -383,38 +374,16 @@
    Buttons
    ========================= */
 
-.btnInner {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.btnIcon {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.05rem;
-  line-height: 1;
-  opacity: 0.92;
-  transform: translateY(1px);
-}
-
-.btnInner svg {
-  display: block;
-  flex-shrink: 0;
-}
-
 @mixin btnMotion {
   position: relative;
   isolation: isolate;
+  overflow: hidden;
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
-    filter 0.18s ease;
+    filter 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
 
   &::after {
     content: "";
@@ -436,23 +405,25 @@
     z-index: 1;
   }
 
-  &:hover {
+  &:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: 0 18px 44px rgba(0, 0, 0, 0.09);
   }
 
-  &:hover::after {
+  &:hover:not(:disabled)::after {
     opacity: 1;
   }
 
-  &:active {
+  &:active:not(:disabled) {
     transform: translateY(1px) scale(0.99);
     box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
   }
 
   &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 4px var(--as-p-10), 0 18px 44px rgba(0, 0, 0, 0.1);
+    box-shadow:
+      0 0 0 4px var(--as-p-10),
+      0 18px 44px rgba(0, 0, 0, 0.1);
   }
 
   &:disabled {
@@ -467,11 +438,55 @@
   }
 }
 
+.btn,
+.fileBtn {
+  min-height: 44px;
+}
+
+.btn {
+  appearance: none;
+  border: 0;
+  outline: none;
+}
+
+.btnContent {
+  display: inline-grid;
+  grid-template-columns: 18px auto;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  line-height: 1;
+}
+
+.btnIcon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+
+  svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+    stroke-width: 2.35;
+  }
+}
+
+.btnText {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  transform: translateY(0.5px);
+  white-space: nowrap;
+}
+
 .fileBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
   width: fit-content;
   padding: 10px 14px;
   border-radius: 14px;
@@ -481,6 +496,8 @@
   font-family: $font-accent;
   font-weight: 900;
   color: rgba(0, 0, 0, 0.68);
+  text-decoration: none;
+  user-select: none;
 
   input {
     display: none;
@@ -496,11 +513,17 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
+  min-width: 132px;
+  min-height: 44px;
   padding: 10px 14px;
   border-radius: 14px;
   font-family: $font-accent;
   font-weight: 900;
+  line-height: 1;
   cursor: pointer;
+  text-decoration: none;
+  user-select: none;
+
   @include btnMotion;
 }
 
@@ -645,6 +668,7 @@
 
   .actionsRow,
   .inline {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
   }

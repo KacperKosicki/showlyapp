@@ -9,18 +9,10 @@ import {
   sendPasswordResetEmail,
   onAuthStateChanged,
 } from "firebase/auth";
-import {
-  FiImage,
-  FiSave,
-  FiTrash2,
-  FiLock,
-} from "react-icons/fi";
+import { FiImage, FiSave, FiTrash2, FiLock } from "react-icons/fi";
 
 const API = process.env.REACT_APP_API_URL;
 
-/** =========================
- * auth helpers (Bearer token)
- * ========================= */
 async function authHeaders(extra = {}) {
   const u = auth.currentUser;
   if (!u) return { ...extra };
@@ -28,7 +20,8 @@ async function authHeaders(extra = {}) {
   return { Authorization: `Bearer ${token}`, ...extra };
 }
 
-const isLocalhostUrl = (u = "") => /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(u);
+const isLocalhostUrl = (u = "") =>
+  /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(u);
 
 const normalizeAvatar = (val = "") => {
   if (!val) return "";
@@ -44,11 +37,20 @@ const normalizeAvatar = (val = "") => {
   return val;
 };
 
+const ButtonContent = ({ icon, children }) => (
+  <span className={styles.btnContent}>
+    <span className={styles.btnIcon}>{icon}</span>
+    <span className={styles.btnText}>{children}</span>
+  </span>
+);
+
 export default function AccountSettings() {
   const location = useLocation();
 
   const [user, setUser] = useState(() => auth.currentUser || null);
-  const [displayName, setDisplayName] = useState(auth.currentUser?.displayName || "");
+  const [displayName, setDisplayName] = useState(
+    auth.currentUser?.displayName || ""
+  );
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState("");
   const [loadingAction, setLoadingAction] = useState(null);
@@ -56,7 +58,10 @@ export default function AccountSettings() {
   const [alert, setAlert] = useState(null);
 
   const fallbackImg = "/images/other/no-image.png";
-  const showAlert = (type, message) => setAlert({ type, message });
+
+  const showAlert = (type, message) => {
+    setAlert({ type, message });
+  };
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -74,8 +79,10 @@ export default function AccountSettings() {
           await u.reload();
         } catch {}
 
-        setUser(auth.currentUser);
-        setDisplayName(auth.currentUser?.displayName || "");
+        const freshUser = auth.currentUser;
+
+        setUser(freshUser);
+        setDisplayName(freshUser?.displayName || "");
 
         try {
           const headers = await authHeaders({ Accept: "application/json" });
@@ -83,13 +90,15 @@ export default function AccountSettings() {
 
           if (res.ok) {
             const dbUser = await res.json();
-            const avatarUrl = dbUser?.avatar || auth.currentUser?.photoURL || fallbackImg;
+            const avatarUrl =
+              dbUser?.avatar || freshUser?.photoURL || fallbackImg;
+
             setPreview(normalizeAvatar(avatarUrl));
           } else {
-            setPreview(normalizeAvatar(auth.currentUser?.photoURL) || fallbackImg);
+            setPreview(normalizeAvatar(freshUser?.photoURL) || fallbackImg);
           }
         } catch {
-          setPreview(normalizeAvatar(auth.currentUser?.photoURL) || fallbackImg);
+          setPreview(normalizeAvatar(freshUser?.photoURL) || fallbackImg);
         }
       } finally {
         setLoading(false);
@@ -107,31 +116,56 @@ export default function AccountSettings() {
     if (!targetId && typeof window !== "undefined" && window.location.hash) {
       targetId = window.location.hash.replace("#", "").trim();
     }
+
     if (!targetId) return;
 
     const tryScroll = () => {
       const el = document.getElementById(targetId);
+
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "start" });
+
         if (location.state?.scrollToId) {
-          window.history.replaceState({}, document.title, location.pathname + window.location.hash);
+          window.history.replaceState(
+            {},
+            document.title,
+            location.pathname + window.location.hash
+          );
         }
-      } else {
-        requestAnimationFrame(tryScroll);
+
+        return;
       }
+
+      requestAnimationFrame(tryScroll);
     };
 
     requestAnimationFrame(tryScroll);
   }, [location.state, loading, location.pathname]);
 
+  useEffect(() => {
+    return () => {
+      if (preview?.startsWith("blob:")) {
+        URL.revokeObjectURL(preview);
+      }
+    };
+  }, [preview]);
+
   const onFileChange = (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
+
     if (!/^image\//.test(f.type)) {
+      e.target.value = "";
       return showAlert("warning", "Wybierz plik graficzny.");
     }
+
     if (f.size > 2 * 1024 * 1024) {
+      e.target.value = "";
       return showAlert("warning", "Maksymalny rozmiar to 2 MB.");
+    }
+
+    if (preview?.startsWith("blob:")) {
+      URL.revokeObjectURL(preview);
     }
 
     setFile(f);
@@ -223,7 +257,9 @@ export default function AccountSettings() {
       await updateProfile(user, { displayName: clean });
       await user.reload();
 
-      const headers = await authHeaders({ "Content-Type": "application/json" });
+      const headers = await authHeaders({
+        "Content-Type": "application/json",
+      });
 
       await fetch(`${API}/api/users/${user.uid}`, {
         method: "PATCH",
@@ -231,6 +267,7 @@ export default function AccountSettings() {
         body: JSON.stringify({ displayName: clean }),
       }).catch(() => {});
 
+      setUser(auth.currentUser);
       showAlert("success", "Zaktualizowano nazwę wyświetlaną.");
     } catch (e) {
       console.error(e);
@@ -241,7 +278,9 @@ export default function AccountSettings() {
   };
 
   const handlePasswordReset = async () => {
-    if (!user?.email) return showAlert("warning", "Brak adresu e-mail.");
+    if (!user?.email) {
+      return showAlert("warning", "Brak adresu e-mail.");
+    }
 
     try {
       setLoadingAction("resetPass");
@@ -259,9 +298,12 @@ export default function AccountSettings() {
     return (
       <section className={styles.section}>
         <div className={styles.sectionBackground} aria-hidden="true" />
+
         <div className={styles.inner}>
           <div className={styles.contentBox}>
-            <div className={styles.loadingCard}>⏳ Ładowanie ustawień konta…</div>
+            <div className={styles.loadingCard}>
+              Ładowanie ustawień konta…
+            </div>
           </div>
         </div>
       </section>
@@ -273,13 +315,13 @@ export default function AccountSettings() {
       <div className={styles.sectionBackground} aria-hidden="true" />
 
       <div className={styles.inner}>
-{alert && (
-  <AlertBox
-    type={alert.type}
-    message={alert.message}
-    onClose={() => setAlert(null)}
-  />
-)}
+        {alert && (
+          <AlertBox
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert(null)}
+          />
+        )}
 
         <div className={styles.head}>
           <div className={styles.labelRow}>
@@ -295,9 +337,13 @@ export default function AccountSettings() {
           </h2>
 
           <p className={styles.description}>
-            Tutaj możesz zarządzać swoim <strong className={styles.inlineStrong}>awataren</strong>,
-            nazwą wyświetlaną oraz bezpieczeństwem konta powiązanego z adresem{" "}
-            <strong className={styles.inlineStrong}>{user?.email || "—"}</strong>.
+            Tutaj możesz zarządzać swoim{" "}
+            <strong className={styles.inlineStrong}>awatarem</strong>, nazwą
+            wyświetlaną oraz bezpieczeństwem konta powiązanego z adresem{" "}
+            <strong className={styles.inlineStrong}>
+              {user?.email || "—"}
+            </strong>
+            .
           </p>
 
           <div className={styles.metaRow}>
@@ -312,7 +358,7 @@ export default function AccountSettings() {
             </div>
 
             <div className={styles.metaCard}>
-              <strong>{(displayName || "").trim() ? "Tak" : "Nie"}</strong>
+              <strong>{displayName.trim() ? "Tak" : "Nie"}</strong>
               <span>ustawiona nazwa</span>
             </div>
           </div>
@@ -329,7 +375,7 @@ export default function AccountSettings() {
               <div className={styles.avatarWrap}>
                 <img
                   src={preview || fallbackImg}
-                  alt="avatar"
+                  alt="Avatar użytkownika"
                   className={styles.avatar}
                   decoding="async"
                   referrerPolicy="no-referrer"
@@ -342,10 +388,7 @@ export default function AccountSettings() {
               <div className={styles.controls}>
                 <label className={styles.fileBtn}>
                   <input type="file" accept="image/*" onChange={onFileChange} />
-                  <span className={styles.btnInner}>
-                    <FiImage className={styles.btnIcon} />
-                    <span>Wybierz plik</span>
-                  </span>
+                  <ButtonContent icon={<FiImage />}>Wybierz plik</ButtonContent>
                 </label>
 
                 <div className={styles.actionsRow}>
@@ -353,12 +396,9 @@ export default function AccountSettings() {
                     isLoading={loadingAction === "saveAvatar"}
                     disabled={!file || loadingAction !== null}
                     onClick={handleSaveAvatar}
-                    className={styles.primary}
+                    className={`${styles.btn} ${styles.primary}`}
                   >
-                    <span className={styles.btnInner}>
-                      <FiSave className={styles.btnIcon} />
-                      <span>Zapisz awatar</span>
-                    </span>
+                    <ButtonContent icon={<FiSave />}>Zapisz awatar</ButtonContent>
                   </LoadingButton>
 
                   {preview && preview !== fallbackImg && (
@@ -366,17 +406,16 @@ export default function AccountSettings() {
                       isLoading={loadingAction === "removeAvatar"}
                       disabled={loadingAction !== null}
                       onClick={handleRemoveAvatar}
-                      className={styles.ghost}
+                      className={`${styles.btn} ${styles.ghost}`}
                     >
-                      <span className={styles.btnInner}>
-                        <FiTrash2 className={styles.btnIcon} />
-                        <span>Usuń awatar</span>
-                      </span>
+                      <ButtonContent icon={<FiTrash2 />}>Usuń awatar</ButtonContent>
                     </LoadingButton>
                   )}
                 </div>
 
-                <small className={styles.hint}>Obsługiwane obrazy, maksymalnie 2 MB.</small>
+                <small className={styles.hint}>
+                  Obsługiwane obrazy, maksymalnie 2 MB.
+                </small>
               </div>
             </div>
           </div>
@@ -385,7 +424,9 @@ export default function AccountSettings() {
         <div className={styles.contentBox}>
           <div className={styles.contentHeader}>
             <h3 className={styles.contentTitle}>Nazwa wyświetlana</h3>
-            <span className={styles.badge}>{(displayName || "").trim() ? "OK" : "brak"}</span>
+            <span className={styles.badge}>
+              {displayName.trim() ? "OK" : "brak"}
+            </span>
           </div>
 
           <div className={styles.card}>
@@ -403,18 +444,15 @@ export default function AccountSettings() {
                 isLoading={loadingAction === "saveName"}
                 disabled={loadingAction !== null}
                 onClick={handleSaveDisplayName}
-                className={styles.primary}
+                className={`${styles.btn} ${styles.primary}`}
               >
-                <span className={styles.btnInner}>
-                  <FiSave className={styles.btnIcon} />
-                  <span>Zapisz</span>
-                </span>
+                <ButtonContent icon={<FiSave />}>Zapisz</ButtonContent>
               </LoadingButton>
             </div>
 
             <small className={styles.hint}>
-              Ta nazwa może pojawiać się przy opiniach, konwersacjach, wiadomościach oraz
-              rezerwacjach.
+              Ta nazwa może pojawiać się przy opiniach, konwersacjach,
+              wiadomościach oraz rezerwacjach.
             </small>
           </div>
         </div>
@@ -427,20 +465,19 @@ export default function AccountSettings() {
 
           <div className={styles.card}>
             <p className={styles.text}>
-              Jeśli logujesz się hasłem, możesz wysłać na swój adres e-mail link do zmiany
-              hasła i zaktualizować dostęp do konta.
+              Jeśli logujesz się hasłem, możesz wysłać na swój adres e-mail link
+              do zmiany hasła i zaktualizować dostęp do konta.
             </p>
 
             <LoadingButton
               isLoading={loadingAction === "resetPass"}
               disabled={loadingAction !== null}
               onClick={handlePasswordReset}
-              className={styles.secondary}
+              className={`${styles.btn} ${styles.secondary}`}
             >
-              <span className={styles.btnInner}>
-                <FiLock className={styles.btnIcon} />
-                <span>Wyślij link do zmiany hasła</span>
-              </span>
+              <ButtonContent icon={<FiLock />}>
+                Wyślij link do zmiany hasła
+              </ButtonContent>
             </LoadingButton>
           </div>
         </div>
