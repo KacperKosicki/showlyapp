@@ -273,11 +273,13 @@ export default function AccountSettings() {
       <div className={styles.sectionBackground} aria-hidden="true" />
 
       <div className={styles.inner}>
-        {alert && (
-          <div className={styles.alertWrap}>
-            <AlertBox type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
-          </div>
-        )}
+{alert && (
+  <AlertBox
+    type={alert.type}
+    message={alert.message}
+    onClose={() => setAlert(null)}
+  />
+)}
 
         <div className={styles.head}>
           <div className={styles.labelRow}>
