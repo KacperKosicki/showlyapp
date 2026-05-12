@@ -1400,9 +1400,11 @@ export default function PublicProfile() {
                       Zdjęcia profilu, realizacji lub przykładów pracy.
                     </p>
 
-                    <span className={styles.mobileSwipeHint}>
-                      Przesuń palcem, aby zobaczyć więcej
-                    </span>
+                    {gallery.length > 1 && (
+                      <span className={styles.mobileSwipeHint}>
+                        Przesuń palcem, aby zobaczyć więcej
+                      </span>
+                    )}
                   </div>
 
                   <span className={styles.badgeCount}>{gallery.length}</span>
@@ -1582,9 +1584,11 @@ export default function PublicProfile() {
                   <p className={styles.sectionSub}>Oceny i komentarze użytkowników.</p>
 
 
-                  <span className={styles.mobileSwipeHint}>
-                    Przesuń palcem, aby zobaczyć więcej
-                  </span>
+                  {ratedByArr.length > 1 && (
+                    <span className={styles.mobileSwipeHint}>
+                      Przesuń palcem, aby zobaczyć więcej
+                    </span>
+                  )}
                 </div>
 
                 <span className={styles.badgeCount}>{profile.ratedBy?.length || 0}</span>
