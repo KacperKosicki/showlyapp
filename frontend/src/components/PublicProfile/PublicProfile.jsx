@@ -27,6 +27,7 @@ import {
   FaInfoCircle,
   FaAward,
   FaComments,
+  FaLink,
 } from "react-icons/fa";
 
 import {
@@ -1293,7 +1294,7 @@ export default function PublicProfile() {
                     </div>
                   ) : (
                     <div className={styles.emptyInline}>
-                      <FaGlobe />
+                      <FaLink />
                       <p>Użytkownik nie dodał jeszcze żadnych linków.</p>
                     </div>
                   )}
@@ -1531,7 +1532,7 @@ export default function PublicProfile() {
                               </span>
 
                               <div>
-                                <span className={styles.serviceMetaLabel}>Cena</span>
+                                <span className={styles.serviceMetaLabel}>Cena usługi</span>
                                 <span className={styles.serviceMetaValue}>
                                   {priceLabel}
                                 </span>
@@ -1544,7 +1545,7 @@ export default function PublicProfile() {
                               </span>
 
                               <div>
-                                <span className={styles.serviceMetaLabel}>Czas</span>
+                                <span className={styles.serviceMetaLabel}>Czas realizacji usługi</span>
                                 <span className={styles.serviceMetaValue}>
                                   {durationLabel}
                                 </span>

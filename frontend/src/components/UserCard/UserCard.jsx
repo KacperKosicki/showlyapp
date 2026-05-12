@@ -5,6 +5,7 @@ import styles from "./UserCard.module.scss";
 import {
   FaStar,
   FaMapMarkerAlt,
+  FaInfoCircle,
   FaRegEye,
   FaShieldAlt,
   FaRegCalendarAlt,
@@ -506,7 +507,7 @@ const UserCard = ({
         ) : (
           <div className={styles.emptyBox}>
             <div className={styles.emptyIcon}>
-              <FaRegEye />
+              <FaInfoCircle />
             </div>
 
             <div className={styles.emptyContent}>

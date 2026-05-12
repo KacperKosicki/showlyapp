@@ -408,7 +408,7 @@
   padding: 14px;
   border-radius: 20px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(248, 250, 255, 0.76));
+    linear-gradient(135deg, color-mix(in srgb, var(--pp-primary) 6%, #fff), #fff);
   border: 1px solid rgba(15, 23, 42, 0.06);
 }
 

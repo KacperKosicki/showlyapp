@@ -1150,7 +1150,8 @@ $page-max: 1240px;
   gap: 12px;
   text-decoration: none;
   color: var(--pp-text-main);
-  background: rgba(255, 255, 255, 0.84);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--pp-primary) 6%, #fff), #fff);
   border: 1px solid rgba(15, 23, 42, 0.08);
   box-shadow: 0 14px 34px rgba(15, 23, 42, 0.045);
   transition: 0.18s ease;
@@ -1504,7 +1505,8 @@ $page-max: 1240px;
   gap: 12px;
   padding: 14px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.82);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--pp-primary) 6%, #fff), #fff);
   border: 1px solid rgba(15, 23, 42, 0.08);
 }
 
@@ -1544,7 +1546,8 @@ $page-max: 1240px;
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  background: rgba(255, 255, 255, 0.84);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--pp-primary) 6%, #fff), #fff);
   border: 1px solid rgba(15, 23, 42, 0.08);
   transition: 0.18s ease;
 
