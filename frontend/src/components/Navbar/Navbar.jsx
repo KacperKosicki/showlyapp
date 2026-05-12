@@ -1,4 +1,4 @@
-import { FaUser } from "react-icons/fa";
+import { FaUser, FaUserPlus } from "react-icons/fa";
 import styles from "./Navbar.module.scss";
 import { Link, useNavigate } from "react-router-dom";
 import UserDropdown from "../UserDropdown/UserDropdown";
@@ -20,51 +20,44 @@ const Navbar = ({
 
   return (
     <nav className={styles.navbar}>
-      <div className={styles.left}>
-        <Link to="/" className={styles.logoWrap}>
-          <span className={styles.logo}>Showly.me</span>
-          <span className={styles.beta}>BETA</span>
-        </Link>
-      </div>
+      <Link to="/" className={styles.logoWrap}>
+        <span className={styles.logoMark}>S</span>
+        <span className={styles.logoText}>Showly.me</span>
+        <span className={styles.beta}>Beta</span>
+      </Link>
 
       <div className={styles.right}>
-        <div className={styles.actionGroup}>
-          {user ? (
-            <UserDropdown
-              user={user}
-              loadingUser={loadingUser}
-              refreshTrigger={refreshTrigger}
-              unreadCount={unreadCount}
-              setUnreadCount={setUnreadCount}
-              pendingReservationsCount={pendingReservationsCount}
-              setAlert={setAlert}
-            />
-          ) : (
-<div className={styles.authButtons}>
-  <button
-    type="button"
-    className={styles.loginPrompt}
-    onClick={() => handleAuthNavigate("/login", "loginBox")}
-  >
-    <span className={styles.iconWrap}>
-      <FaUser className={styles.icon} />
-    </span>
-    <span className={styles.buttonText}>Zaloguj się</span>
-  </button>
+        {user ? (
+          <UserDropdown
+            user={user}
+            loadingUser={loadingUser}
+            refreshTrigger={refreshTrigger}
+            unreadCount={unreadCount}
+            setUnreadCount={setUnreadCount}
+            pendingReservationsCount={pendingReservationsCount}
+            setAlert={setAlert}
+          />
+        ) : (
+          <div className={styles.authButtons}>
+            <button
+              type="button"
+              className={styles.loginPrompt}
+              onClick={() => handleAuthNavigate("/login", "loginBox")}
+            >
+              <FaUser />
+              <span>Zaloguj</span>
+            </button>
 
-  <button
-    type="button"
-    className={styles.registerPrompt}
-    onClick={() => handleAuthNavigate("/register", "registerBox")}
-  >
-    <span className={styles.iconWrap}>
-      <FaUser className={styles.icon} />
-    </span>
-    <span className={styles.buttonText}>Zarejestruj się</span>
-  </button>
-</div>
-          )}
-        </div>
+            <button
+              type="button"
+              className={styles.registerPrompt}
+              onClick={() => handleAuthNavigate("/register", "registerBox")}
+            >
+              <FaUserPlus />
+              <span>Załóż profil</span>
+            </button>
+          </div>
+        )}
       </div>
     </nav>
   );

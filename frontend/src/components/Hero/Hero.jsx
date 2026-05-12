@@ -26,6 +26,12 @@ const Hero = ({
 
   return (
     <section className={styles.hero} id="hero">
+      <div className={styles.bg} aria-hidden="true">
+        <span className={styles.orbOne} />
+        <span className={styles.orbTwo} />
+        <span className={styles.noise} />
+      </div>
+
       <Navbar
         user={user}
         loadingUser={loadingUser}
@@ -37,179 +43,134 @@ const Hero = ({
         setAlert={setAlert}
       />
 
-      <div className={styles.bg} aria-hidden="true">
-        <span className={styles.aurora} />
-        <span className={styles.aurora2} />
-        <span className={styles.grid} />
-        <span className={styles.vignette} />
-        <span className={styles.grain} />
-      </div>
-
       <div className={styles.wrap}>
-        <div className={styles.left}>
-          <div className={styles.labelRow}>
-            <span className={styles.label}>Showly</span>
-            <span className={styles.labelDot} />
-            <span className={styles.labelDesc}>Profil w jednym linku</span>
-            <span className={styles.labelLine} />
-            <span className={styles.pill}>Mobile-first</span>
+        <div className={styles.content}>
+          <div className={styles.eyebrow}>
+            <span>Showly.me</span>
+            <b>profil online w jednym linku</b>
           </div>
 
-          <h1 className={styles.h1}>
-            Zrób wrażenie
+          <h1>
+            Twoja oferta.
             <br />
-            <span className={styles.h1Accent}>jednym profilem.</span>
+            Jeden link.
+            <br />
+            <span>Zero chaosu.</span>
           </h1>
 
-          <p className={styles.p}>
-            Usługi, cennik, galeria i kontakt — ułożone w gotowy układ, który wygląda profesjonalnie na telefonie i
-            desktopie.
+          <p className={styles.lead}>
+            Stwórz nowoczesną wizytówkę z usługami, galerią, cennikiem,
+            opiniami i kontaktem — gotową do wysłania klientowi.
           </p>
 
+          <div className={styles.searchCard}>
+            <div className={styles.searchHeader}>
+              <span>Szukaj profili</span>
+              <small>rola, usługa, miasto</small>
+            </div>
+
+            <SearchBar variant="hero" />
+
+            <p className={styles.hint}>
+              Spróbuj: <b>DJ Poznań</b>, <b>fryzjer Piła</b>, <b>cukiernia</b>
+            </p>
+          </div>
+
           <div className={styles.actions}>
-            <div className={styles.searchBlock}>
-              <div className={styles.searchTop}>
-                <div className={styles.searchTitle}>Szukaj profili</div>
-                <div className={styles.searchKicker}>po usługach, roli i lokalizacji</div>
-              </div>
+            {user ? (
+              <LoadingLink
+                to="/profil"
+                state={{ scrollToId: "scrollToId" }}
+                className={styles.primaryBtn}
+              >
+                Edytuj profil
+              </LoadingLink>
+            ) : (
+              <LoadingLink
+                to="/register"
+                state={{ scrollToId: "registerContainer" }}
+                className={styles.primaryBtn}
+              >
+                Załóż darmowy profil
+              </LoadingLink>
+            )}
 
-              <SearchBar variant="hero" />
+            <a href="#how" className={styles.secondaryBtn}>
+              Zobacz jak działa
+            </a>
+          </div>
 
-              <div className={styles.searchHint}>
-                Tip: wpisz np. <b>“DJ Poznań”</b> albo <b>“fryzjer Piła”</b>.
-              </div>
+          <div className={styles.stats}>
+            <div>
+              <strong>1</strong>
+              <span>link do wszystkiego</span>
             </div>
-
-            <div className={styles.buttons}>
-              {user ? (
-                <LoadingLink
-                  to="/profil"
-                  state={{ scrollToId: "scrollToId" }}
-                  className={styles.primaryBtn}
-                  aria-label="Przejdź do edycji profilu"
-                >
-                  <span className={styles.btnGlow} aria-hidden="true" />
-                  Edytuj profil <span aria-hidden="true">→</span>
-                </LoadingLink>
-              ) : (
-                <LoadingLink
-                  to="/register"
-                  state={{ scrollToId: "registerContainer" }}
-                  className={styles.primaryBtn}
-                  aria-label="Załóż konto"
-                >
-                  <span className={styles.btnGlow} aria-hidden="true" />
-                  Załóż konto <span aria-hidden="true">→</span>
-                </LoadingLink>
-              )}
-
-              <a href="#how" className={styles.secondaryBtn}>
-                Zobacz jak działa
-              </a>
+            <div>
+              <strong>24/7</strong>
+              <span>dostęp dla klientów</span>
             </div>
-
-            <div className={styles.quick}>
-              <span className={styles.quickItem}>
-                <span className={styles.tick} aria-hidden="true" />
-                bez kodowania
-              </span>
-              <span className={styles.quickItem}>
-                <span className={styles.tick} aria-hidden="true" />
-                jeden link
-              </span>
-              <span className={styles.quickItem}>
-                <span className={styles.tick} aria-hidden="true" />
-                wygląda premium
-              </span>
+            <div>
+              <strong>mobile</strong>
+              <span>gotowe na telefon</span>
             </div>
           </div>
         </div>
 
-        <aside className={styles.right} aria-label="Podgląd profilu">
-          <div className={styles.browser}>
-            <div className={styles.browserTop}>
-              <div className={styles.dots} aria-hidden="true">
-                <span />
-                <span />
-                <span />
-              </div>
-
-              <div className={styles.url}>
-                showly.me/<span className={styles.urlAccent}>twoj-profil</span>
-              </div>
-
-              <div className={styles.badge}>PREVIEW</div>
+        <div className={styles.visual}>
+          <div className={styles.phone}>
+            <div className={styles.phoneTop}>
+              <span />
             </div>
 
-            <div className={styles.browserBody}>
-              <div className={styles.previewHeader}>
+            <div className={styles.profileCard}>
+              <div className={styles.profileCover} />
+
+              <div className={styles.profileMain}>
                 <div className={styles.avatar} />
-                <div className={styles.headText}>
-                  <div className={styles.name}>Twoja Nazwa / Firma</div>
-                  <div className={styles.sub}>DJ • Piła • dostępność: szybka</div>
 
-                  <div className={styles.chips}>
-                    <span className={styles.chip}>Rezerwacje</span>
-                    <span className={styles.chip}>Opinie</span>
-                    <span className={styles.chip}>Galeria</span>
-                  </div>
+                <div>
+                  <h3>Twoja marka</h3>
+                  <p>Usługi lokalne • Piła</p>
                 </div>
               </div>
 
-              <div className={styles.previewGrid}>
-                <div className={styles.tile}>
-                  <div className={styles.tileKey}>USŁUGI</div>
-                  <div className={styles.tileVal}>czytelna lista</div>
+              <div className={styles.tags}>
+                <span>Rezerwacje</span>
+                <span>Opinie</span>
+                <span>Galeria</span>
+              </div>
+
+              <div className={styles.list}>
+                <div>
+                  <span>Usługi</span>
+                  <b>od 150 zł</b>
                 </div>
-                <div className={styles.tile}>
-                  <div className={styles.tileKey}>CENNIK</div>
-                  <div className={styles.tileVal}>od–do / pakiety</div>
+                <div>
+                  <span>Dostępność</span>
+                  <b>dzisiaj</b>
                 </div>
-                <div className={styles.tile}>
-                  <div className={styles.tileKey}>GALERIA</div>
-                  <div className={styles.tileVal}>realizacje</div>
-                </div>
-                <div className={styles.tile}>
-                  <div className={styles.tileKey}>KONTAKT</div>
-                  <div className={styles.tileVal}>tel / linki</div>
+                <div>
+                  <span>Ocena</span>
+                  <b>4.9 ★</b>
                 </div>
               </div>
 
-              <div className={styles.previewBar}>
-                <div className={styles.barLine} />
-                <div className={styles.barText}>Układ gotowy do wysłania klientowi.</div>
-              </div>
+              <button type="button">Zadaj pytanie</button>
             </div>
           </div>
 
-          <div className={styles.sideFacts}>
-            <div className={styles.fact}>
-              <span className={styles.factIcon} aria-hidden="true">
-                ⚡
-              </span>
-              Minimalny wysiłek, maksymalny efekt wizualny.
-            </div>
-            <div className={styles.fact}>
-              <span className={styles.factIcon} aria-hidden="true">
-                📱
-              </span>
-              Stabilne na mobile — bez “rozjeżdżania” sekcji.
-            </div>
-            <div className={styles.fact}>
-              <span className={styles.factIcon} aria-hidden="true">
-                🔗
-              </span>
-              Jeden link do wszystkiego — jak nowoczesna wizytówka.
-            </div>
+          <div className={styles.floatingCard}>
+            <strong>+ szybki kontakt</strong>
+            <span>klient widzi wszystko od razu</span>
           </div>
-        </aside>
+        </div>
       </div>
 
       <div className={styles.wave}>
-        <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <svg viewBox="0 0 1440 220" preserveAspectRatio="none">
           <path
             fill="#fff"
-            d="M0,160L40,149.3C80,139,160,117,240,133.3C320,149,400,203,480,229.3C560,256,640,256,720,218.7C800,181,880,107,960,90.7C1040,75,1120,117,1200,154.7C1280,192,1360,224,1400,240L1440,256L1440,320L0,320Z"
+            d="M0,96L80,106.7C160,117,320,139,480,128C640,117,800,75,960,80C1120,85,1280,139,1360,165.3L1440,192L1440,220L0,220Z"
           />
         </svg>
       </div>

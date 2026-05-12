@@ -1233,7 +1233,7 @@ export default function PublicProfile() {
                   <div className={styles.chips}>
                     {tags.map((tag) => (
                       <span key={tag} className={styles.chip}>
-                        #{String(tag).toUpperCase()}
+                        {String(tag).toUpperCase()}
                       </span>
                     ))}
                   </div>
