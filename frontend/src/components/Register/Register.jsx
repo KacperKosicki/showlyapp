@@ -16,6 +16,8 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import LoadingButton from '../ui/LoadingButton/LoadingButton';
 import { FiUser, FiMail, FiLock, FiArrowRight, FiZap } from 'react-icons/fi';
 
+const API = process.env.REACT_APP_API_URL;
+
 const Register = ({ user, setUser, setRefreshTrigger }) => {
   const [form, setForm] = useState({
     email: '',
@@ -34,6 +36,28 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const syncUserWithMongo = async (firebaseUser, provider) => {
+    if (!firebaseUser?.email || !firebaseUser?.uid) {
+      throw new Error('Brak danych użytkownika Firebase.');
+    }
+
+    const idToken = await firebaseUser.getIdToken(true);
+
+    return axios.post(
+      `${API}/api/users`,
+      {
+        email: firebaseUser.email,
+        name: firebaseUser.displayName || '',
+        provider,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      }
+    );
+  };
+
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
     if (!scrollTo) return;
@@ -41,6 +65,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
     const timeout = setTimeout(() => {
       const tryScroll = () => {
         const el = document.getElementById(scrollTo);
+
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           window.history.replaceState({}, document.title, location.pathname);
@@ -48,6 +73,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
           requestAnimationFrame(tryScroll);
         }
       };
+
       requestAnimationFrame(tryScroll);
     }, 100);
 
@@ -55,21 +81,27 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   }, [location.state, location.pathname]);
 
   useEffect(() => {
-    if (message || error) {
-      const timer = setTimeout(() => {
-        setMessage('');
-        setError('');
-      }, 6000);
-      return () => clearTimeout(timer);
-    }
+    if (!message && !error) return;
+
+    const timer = setTimeout(() => {
+      setMessage('');
+      setError('');
+    }, 6000);
+
+    return () => clearTimeout(timer);
   }, [message, error]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      if (u && !u.emailVerified) {
+      const authFlow = sessionStorage.getItem('authFlow');
+
+      if (authFlow) return;
+
+      if (u && !u.emailVerified && !u.providerData?.some((p) => p.providerId === 'google.com')) {
         await signOut(auth);
       }
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -82,6 +114,9 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
     if (isRegistering || isGoogleLoading) return;
 
+    const email = form.email.trim().toLowerCase();
+    const name = form.name.trim();
+
     if (form.password !== form.confirmPassword) {
       setError('Hasła nie są identyczne.');
       return;
@@ -90,10 +125,11 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
     setError('');
     setMessage('');
     setIsRegistering(true);
+    sessionStorage.setItem('authFlow', '1');
 
     try {
       const res = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/users/check-email?email=${encodeURIComponent(form.email)}`
+        `${API}/api/users/check-email?email=${encodeURIComponent(email)}`
       );
 
       if (res.data.exists) {
@@ -105,26 +141,41 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        form.email,
+        email,
         form.password
       );
+
       const firebaseUser = userCredential.user;
 
-      await updateProfile(firebaseUser, { displayName: form.name || '' });
-      await sendEmailVerification(firebaseUser);
+      await updateProfile(firebaseUser, { displayName: name || '' });
+      await firebaseUser.reload();
+
+      const refreshedUser = auth.currentUser || firebaseUser;
+
+      await sendEmailVerification(refreshedUser);
+
+      await signOut(auth);
 
       setEmailSent(true);
       setMessage(
-        'Na Twój adres e-mail został wysłany link aktywacyjny. Kliknij w niego, aby aktywować konto.'
+        'Na Twój adres e-mail został wysłany link aktywacyjny. Kliknij w niego, aby aktywować konto. Następnie możesz się zalogować.'
       );
     } catch (err) {
-      console.error(err);
+      console.error('❌ Błąd rejestracji:', err);
+
       if (err.code === 'auth/email-already-in-use') {
         setError('Ten e-mail jest już używany w Firebase.');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Podany adres e-mail jest nieprawidłowy.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Hasło jest zbyt słabe. Użyj minimum 6 znaków.');
+      } else if (err.response?.status === 409) {
+        setError('Ten e-mail jest już przypisany do innego konta.');
       } else {
-        setError('Błąd podczas rejestracji.');
+        setError(err.response?.data?.message || 'Błąd podczas rejestracji.');
       }
     } finally {
+      sessionStorage.removeItem('authFlow');
       setIsRegistering(false);
     }
   };
@@ -151,25 +202,20 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
       if (!email || !uid) {
         setError('Nie udało się pobrać danych użytkownika (brak e-maila lub UID).');
-        sessionStorage.removeItem('authFlow');
         return;
       }
 
       try {
-        await axios.post(`${process.env.REACT_APP_API_URL}/api/users`, {
-          email,
-          name: gUser.displayName || '',
-          firebaseUid: uid,
-          provider: 'google',
-        });
+        await syncUserWithMongo(gUser, 'google');
       } catch (err) {
         if (err.response?.status === 409) {
           setError(
             'Ten e-mail jest już przypisany do innego konta. Zaloguj się metodą, którą wcześniej użyłeś.'
           );
-          sessionStorage.removeItem('authFlow');
+          await signOut(auth);
           return;
         }
+
         throw err;
       }
 
@@ -178,22 +224,26 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
       setRefreshTrigger(Date.now());
 
       setMessage('Pomyślnie zalogowano przez Google. Przekierowuję…');
+
       setTimeout(() => {
         sessionStorage.removeItem('authFlow');
         navigate('/', { replace: true });
-      }, 1500);
+      }, 1200);
     } catch (err) {
       console.error('❌ Błąd podczas logowania przez Google:', err);
+
       if (err.code === 'auth/account-exists-with-different-credential') {
         const email = err.customData?.email;
         setError(
           `Konto o adresie ${email} zostało już utworzone inną metodą. Zaloguj się tą metodą.`
         );
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        setError('Okno logowania zostało zamknięte.');
       } else {
-        setError('Błąd podczas logowania przez Google.');
+        setError(err.response?.data?.message || 'Błąd podczas logowania przez Google.');
       }
-      sessionStorage.removeItem('authFlow');
     } finally {
+      sessionStorage.removeItem('authFlow');
       setIsGoogleLoading(false);
     }
   };
@@ -227,8 +277,10 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
                 <form onSubmit={handleSubmit} className={styles.form}>
                   <div className={styles.inputGroup}>
                     <label className={styles.inputLabel}>Imię i nazwisko</label>
+
                     <div className={styles.inputWrap}>
                       <FiUser className={styles.inputIcon} />
+
                       <input
                         type="text"
                         name="name"
@@ -243,8 +295,10 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
                   <div className={styles.inputGroup}>
                     <label className={styles.inputLabel}>Adres e-mail</label>
+
                     <div className={styles.inputWrap}>
                       <FiMail className={styles.inputIcon} />
+
                       <input
                         type="email"
                         name="email"
@@ -259,8 +313,10 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
                   <div className={styles.inputGroup}>
                     <label className={styles.inputLabel}>Hasło</label>
+
                     <div className={styles.inputWrap}>
                       <FiLock className={styles.inputIcon} />
+
                       <input
                         type="password"
                         name="password"
@@ -275,8 +331,10 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
                   <div className={styles.inputGroup}>
                     <label className={styles.inputLabel}>Powtórz hasło</label>
+
                     <div className={styles.inputWrap}>
                       <FiLock className={styles.inputIcon} />
+
                       <input
                         type="password"
                         name="confirmPassword"
@@ -297,6 +355,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
                   >
                     <span className={styles.buttonInner}>
                       <span className={styles.buttonLabel}>Zarejestruj się</span>
+
                       {!isRegistering && (
                         <span className={styles.buttonIcon}>
                           <FiArrowRight />
@@ -321,6 +380,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
                     <span className={styles.googleIconWrap}>
                       <img src="/images/icons/google.png" alt="Google" />
                     </span>
+
                     <span className={styles.buttonLabel}>Kontynuuj przez Google</span>
                   </span>
                 </LoadingButton>
