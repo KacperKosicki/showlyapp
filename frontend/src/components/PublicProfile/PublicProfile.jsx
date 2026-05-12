@@ -40,6 +40,8 @@ import {
   FaLinkedin,
   FaXTwitter,
   FaListUl,
+  FaCopy,
+  FaCheck,
 } from "react-icons/fa6";
 
 import { FiFlag } from "react-icons/fi";
@@ -251,6 +253,7 @@ export default function PublicProfile() {
 
   const [, setFavCount] = useState(0);
   const [isFav, setIsFav] = useState(false);
+  const [copiedProfileLink, setCopiedProfileLink] = useState(false);
 
   const maxChars = 200;
 
@@ -737,6 +740,27 @@ export default function PublicProfile() {
     }
   };
 
+  const copyProfileLink = async () => {
+    const url = `https://www.showly.me/profil/${slug}`;
+
+    try {
+      await navigator.clipboard.writeText(url);
+
+      setCopiedProfileLink(true);
+      setAlert({
+        type: "success",
+        message: "Link do profilu został skopiowany.",
+      });
+
+      setTimeout(() => setCopiedProfileLink(false), 1800);
+    } catch {
+      setAlert({
+        type: "error",
+        message: "Nie udało się skopiować linku.",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className={cn(styles.state, styles.loadingState)}>
@@ -1158,6 +1182,21 @@ export default function PublicProfile() {
                   </div>
                 </div>
               </div>
+
+              <button
+                type="button"
+                className={cn(styles.shareProfileBtn, copiedProfileLink && styles.shareProfileBtnCopied)}
+                onClick={copyProfileLink}
+              >
+                <span className={styles.shareProfileIcon}>
+                  {copiedProfileLink ? <FaCheck /> : <FaCopy />}
+                </span>
+
+                <span className={styles.shareProfileText}>
+                  <strong>{copiedProfileLink ? "Skopiowano link" : "Skopiuj link do profilu"}</strong>
+                  <small>showly.me/profil/{slug}</small>
+                </span>
+              </button>
 
               <div className={styles.ctaRow}>
                 {showBookButton && (
