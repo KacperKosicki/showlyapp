@@ -1027,21 +1027,69 @@ $page-max: 1240px;
 }
 
 .emptyInline {
-  padding: 15px;
+  width: 100%;
+  padding: 14px;
   border-radius: 20px;
+
   display: flex;
   align-items: center;
-  gap: 10px;
-  color: var(--pp-text-muted);
-  background: rgba(255, 255, 255, 0.74);
+  gap: 12px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.92),
+      rgba(248, 250, 255, 0.82)
+    );
+
   border: 1px dashed rgba(15, 23, 42, 0.14);
 
+  box-shadow:
+    0 10px 24px rgba(17, 24, 39, 0.04),
+    0 0 0 1px rgba(255, 255, 255, 0.45) inset;
+
+  color: var(--pp-text-muted);
+
   svg {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+
+    padding: 11px;
+    border-radius: 14px;
+
     color: var(--pp-primary);
+
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--pp-primary) 10%, white),
+        color-mix(in srgb, var(--pp-secondary) 10%, white)
+      );
+
+    border: 1px solid
+      color-mix(in srgb, var(--pp-primary) 18%, transparent);
+
+    box-sizing: border-box;
   }
 
-  p {
+  span,
+  p,
+  small {
     margin: 0;
+    color: var(--pp-text-muted);
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
+  strong {
+    display: block;
+    margin-bottom: 2px;
+
+    color: var(--pp-text-strong);
+    font-family: $font-accent;
+    font-size: 0.84rem;
+    font-weight: 950;
   }
 }
 
@@ -1162,8 +1210,21 @@ $page-max: 1240px;
 }
 
 .linkArrow {
-  color: var(--pp-primary);
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
   flex: 0 0 auto;
+
+  display: grid;
+  place-items: center;
+
+  color: var(--pp-primary);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+
+  svg {
+    font-size: 0.78rem;
+  }
 }
 
 /* RATE */

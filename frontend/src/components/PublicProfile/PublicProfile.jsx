@@ -810,6 +810,8 @@ export default function PublicProfile() {
         : 0;
 
   const avgRatingLabel = avgRating > 0 ? avgRating.toFixed(1) : "0.0";
+  const myRating = ratedByArr.find((r) => r.userId === uid);
+  const myRatingLabel = myRating?.rating ? Number(myRating.rating).toFixed(1) : null;
 
   const themeVars = resolveProfileTheme(profile.theme);
   const partner = resolvePartnerData(partnership);
@@ -1310,7 +1312,7 @@ export default function PublicProfile() {
                           </span>
 
                           <h3 className={styles.blockTitle}>
-                            {hasRated ? "Twoja ocena" : "Oceń profil"}
+                            {hasRated ? "Twoja ocena została zapisana" : "Oceń profil"}
                           </h3>
 
                           <span className={styles.rateHint}>
@@ -1321,8 +1323,8 @@ export default function PublicProfile() {
                         </div>
 
                         <div className={styles.rateScore}>
-                          <strong>{avgRatingLabel}</strong>
-                          <span>/ 5</span>
+                          <strong>{hasRated && myRatingLabel ? myRatingLabel : avgRatingLabel}</strong>
+                          <span>{hasRated ? "Twoja" : "Średnia"}</span>
                         </div>
                       </div>
 

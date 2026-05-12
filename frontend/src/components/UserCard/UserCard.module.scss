@@ -568,108 +568,60 @@
   text-align: center;
 }
 
-.price {
+.pricePill {
+  width: 100%;
   margin: 0 0 12px;
-  padding: 11px 12px;
-  border-radius: 16px;
+  padding: 13px;
+  border-radius: 22px;
 
-  font-family: $font-accent;
-  font-weight: 900;
-  font-size: 0.9rem;
-  line-height: 1.35;
-  color: var(--uc-text-main);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
 
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.76));
-  border: 1px solid rgba(15, 23, 42, 0.07);
-  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.04);
+  background: linear-gradient(135deg,
+      #fff,
+      color-mix(in srgb, var(--uc-primary) 7%, #fff));
+  border: 1px solid var(--uc-p-14);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.05);
+
+  small {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--uc-text-muted);
+    font-size: 0.75rem;
+    font-weight: 800;
+  }
 
   strong {
     color: var(--uc-primary);
+    font-family: $font-accent;
     font-weight: 950;
-  }
-
-  span {
-    opacity: 0.74;
+    line-height: 1.2;
   }
 
   em {
     font-style: normal;
-    opacity: 0.84;
+    color: var(--uc-text-muted);
     font-weight: 850;
   }
 }
 
-/* =========================================================
-   LINKS
-========================================================= */
-
-.linkGrid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-}
-
-.linkTile,
-.linkDisabled {
-  min-width: 0;
-  padding: 12px;
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.linkTile {
-  text-decoration: none;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(250, 251, 255, 0.86));
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.04);
-
-  transition:
-    transform 0.16s ease,
-    border-color 0.16s ease,
-    box-shadow 0.16s ease;
-
-  &:hover {
-    transform: translateY(-1px);
-    border-color: var(--uc-p-22);
-    box-shadow: 0 16px 34px rgba(17, 24, 39, 0.06);
-  }
-}
-
-.linkDisabled {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px dashed rgba(15, 23, 42, 0.18);
-  color: rgba(15, 23, 42, 0.58);
-  cursor: not-allowed;
-  user-select: none;
-}
-
-.linkDomain {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: $font-heading;
-  font-size: 0.9rem;
-  color: var(--uc-primary);
-}
-
-.linkHint {
+.priceIcon {
+  width: 42px;
+  height: 42px;
   flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: $font-accent;
-  font-size: 0.75rem;
-  font-weight: 950;
-  color: var(--uc-text-muted);
+  border-radius: 15px;
+
+  display: grid;
+  place-items: center;
+
+  color: var(--uc-primary);
+  background: linear-gradient(135deg, var(--uc-p-10), var(--uc-s-10));
+  border: 1px solid var(--uc-p-18);
 
   svg {
-    font-size: 0.68rem;
+    font-size: 1rem;
   }
 }
 
@@ -682,6 +634,129 @@
   background: #fff6ed;
   border: 1px solid #ffd9b2;
   font-size: 0.88rem;
+}
+
+/* =========================================================
+   LINKS — same style as PublicProfile
+========================================================= */
+
+.linkGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.linkTile {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  text-decoration: none;
+  color: var(--uc-text-main);
+
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.045);
+
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    background: #fff;
+    border-color: var(--uc-p-22);
+    box-shadow: 0 22px 46px rgba(15, 23, 42, 0.075);
+  }
+}
+
+.linkDisabled {
+  cursor: not-allowed;
+  opacity: 0.82;
+  border-style: dashed;
+
+  &:hover {
+    transform: none;
+    background: rgba(255, 255, 255, 0.84);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.045);
+  }
+}
+
+.linkTileLeft {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.linkBadge {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  flex: 0 0 auto;
+
+  display: grid;
+  place-items: center;
+
+  color: var(--uc-primary);
+  background: linear-gradient(135deg, var(--uc-p-10), var(--uc-s-10));
+  border: 1px solid var(--uc-p-18);
+
+  svg {
+    font-size: 0.95rem;
+  }
+}
+
+.linkText {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+
+  strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    color: var(--uc-text-strong);
+    font-family: $font-heading;
+    font-size: 0.88rem;
+    font-weight: 850;
+    line-height: 1.2;
+  }
+
+  small {
+    margin-top: 2px;
+    color: var(--uc-text-muted);
+    font-size: 0.72rem;
+    line-height: 1.2;
+  }
+}
+
+.linkArrow {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  flex: 0 0 auto;
+
+  display: grid;
+  place-items: center;
+
+  color: var(--uc-primary);
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+
+  svg {
+    font-size: 0.78rem;
+  }
 }
 
 /* =========================================================
@@ -785,10 +860,6 @@
   }
 }
 
-/* =========================================================
-   STATS
-========================================================= */
-
 .cardStats {
   margin-top: 16px;
   padding-top: 12px;
@@ -801,12 +872,16 @@
 
 .statBox {
   min-width: 0;
-  min-height: 62px;
+  min-height: 64px;
   padding: 10px;
   border-radius: 18px;
-  display: flex;
+
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+
+  text-align: left;
 
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 255, 0.82));
@@ -815,62 +890,79 @@
 
   div {
     min-width: 0;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    gap: 2px;
   }
 
   strong {
+    display: block;
+    width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+
     color: var(--uc-text-strong);
     font-family: $font-accent;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
+    line-height: 1.1;
     font-weight: 950;
   }
 
   small {
+    display: block;
+    width: 100%;
     color: var(--uc-text-muted);
     font-size: 0.68rem;
+    line-height: 1.15;
   }
 }
 
 .statIcon {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   flex: 0 0 auto;
-  border-radius: 12px;
+  border-radius: 13px;
+
   display: grid;
   place-items: center;
+
   color: var(--uc-primary);
   background: linear-gradient(135deg, var(--uc-p-10), var(--uc-s-10));
   border: 1px solid var(--uc-p-18);
+
+  svg {
+    font-size: 0.95rem;
+  }
 }
+
+/* =========================================================
+   FAVORITE STAT
+========================================================= */
 
 .favoriteStat {
   cursor: pointer;
   text-align: left;
-  transition:
-    transform 0.16s ease,
-    border-color 0.16s ease,
-    background 0.16s ease;
+  width: 100%;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  appearance: none;
+  -webkit-appearance: none;
+}
 
-  &:hover {
-    transform: translateY(-1px);
-    border-color: var(--uc-p-22);
-  }
+.favoriteStat:hover {
+  transform: translateY(-1px);
+  border-color: var(--uc-p-22);
+}
 
-  &.active {
-    background:
-      linear-gradient(135deg, rgba(255, 228, 236, 0.96), rgba(255, 255, 255, 0.88));
-    border-color: rgba(244, 114, 182, 0.26);
+.favoriteStat.active {
+  background:
+    linear-gradient(135deg, rgba(255, 228, 236, 0.96), rgba(255, 255, 255, 0.88));
+  border-color: rgba(244, 114, 182, 0.26);
+}
 
-    .statIcon {
-      color: #be123c;
-      background: rgba(255, 228, 236, 0.96);
-      border-color: rgba(244, 114, 182, 0.28);
-    }
-  }
+.favoriteStat.active .statIcon {
+  color: #be123c;
+  background: rgba(255, 228, 236, 0.96);
+  border-color: rgba(244, 114, 182, 0.28);
 }
 
 /* =========================================================
@@ -1014,11 +1106,28 @@
 
   .cardStats {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .statBox {
-    min-height: 58px;
+    min-height: 60px;
     padding: 12px;
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 12px;
+
+    strong {
+      font-size: 0.88rem;
+    }
+
+    small {
+      font-size: 0.72rem;
+    }
+  }
+
+  .statIcon {
+    width: 38px;
+    height: 38px;
+    border-radius: 14px;
   }
 }
 

@@ -10,7 +10,9 @@ import {
   FaRegCalendarAlt,
   FaPaperPlane,
   FaExternalLinkAlt,
+  FaGlobe,
   FaLink,
+  FaMoneyBillWave,
 } from "react-icons/fa";
 
 import { FaHeart, FaRegHeart } from "react-icons/fa6";
@@ -526,27 +528,57 @@ const UserCard = ({
         <div className={styles.splitLine} />
 
         <div className={styles.details}>
-          {hasPrice ? (
-            <p className={styles.price}>
-              Cennik: <span>od</span> <strong>{pf} zł</strong>{" "}
-              <span>do</span> <strong>{pt} zł</strong>
-            </p>
-          ) : (
-            <p className={styles.price}>
-              Cennik: <em>Brak danych</em>
-            </p>
-          )}
+          <div className={styles.pricePill}>
+            <span className={styles.priceIcon}>
+              <FaMoneyBillWave />
+            </span>
+
+            {hasPrice ? (
+              <div>
+                <small>Cennik</small>
+                <strong>
+                  od {pf} zł do {pt} zł
+                </strong>
+              </div>
+            ) : (
+              <div>
+                <small>Cennik</small>
+                <em>brak danych</em>
+              </div>
+            )}
+          </div>
 
           {cleanLinks.length > 0 ? (
             <div className={styles.linkGrid}>
               {cleanLinks.slice(0, 4).map((link, i) => {
                 const label = prettyUrl(link);
 
+                const content = (
+                  <>
+                    <div className={styles.linkTileLeft}>
+                      <span className={styles.linkBadge}>
+                        <FaGlobe />
+                      </span>
+
+                      <div className={styles.linkText}>
+                        <strong>{label}</strong>
+                        <small>
+                          {isPreview ? "Podgląd — link nieaktywny" : "Otwórz zewnętrzny link"}
+                        </small>
+                      </div>
+                    </div>
+
+                    <span className={styles.linkArrow}>
+                      <FaExternalLinkAlt />
+                    </span>
+                  </>
+                );
+
                 if (isPreview) {
                   return (
                     <span
                       key={`${link}-${i}`}
-                      className={styles.linkDisabled}
+                      className={`${styles.linkTile} ${styles.linkDisabled}`}
                       onClick={(e) =>
                         blockIfPreview(
                           e,
@@ -565,8 +597,7 @@ const UserCard = ({
                         }
                       }}
                     >
-                      <span className={styles.linkDomain}>{label}</span>
-                      <span className={styles.linkHint}>Podgląd</span>
+                      {content}
                     </span>
                   );
                 }
@@ -581,11 +612,7 @@ const UserCard = ({
                     title={link}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <span className={styles.linkDomain}>{label}</span>
-
-                    <span className={styles.linkHint}>
-                      Otwórz <FaExternalLinkAlt />
-                    </span>
+                    {content}
                   </a>
                 );
               })}
