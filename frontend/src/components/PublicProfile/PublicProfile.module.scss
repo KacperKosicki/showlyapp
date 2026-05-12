@@ -1036,11 +1036,9 @@ $page-max: 1240px;
   gap: 12px;
 
   background:
-    linear-gradient(
-      180deg,
+    linear-gradient(180deg,
       rgba(255, 255, 255, 0.92),
-      rgba(248, 250, 255, 0.82)
-    );
+      rgba(248, 250, 255, 0.82));
 
   border: 1px dashed rgba(15, 23, 42, 0.14);
 
@@ -1061,14 +1059,11 @@ $page-max: 1240px;
     color: var(--pp-primary);
 
     background:
-      linear-gradient(
-        135deg,
+      linear-gradient(135deg,
         color-mix(in srgb, var(--pp-primary) 10%, white),
-        color-mix(in srgb, var(--pp-secondary) 10%, white)
-      );
+        color-mix(in srgb, var(--pp-secondary) 10%, white));
 
-    border: 1px solid
-      color-mix(in srgb, var(--pp-primary) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--pp-primary) 18%, transparent);
 
     box-sizing: border-box;
   }
@@ -2237,13 +2232,13 @@ $page-max: 1240px;
     border-radius: 24px;
   }
 
-.cardHeader,
-.rateTop,
-.blockHeader,
-.infoRow {
-  flex-direction: column;
-  align-items: stretch;
-}
+  .cardHeader,
+  .rateTop,
+  .blockHeader,
+  .infoRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
   .pricePill {
     width: 100%;
@@ -2293,6 +2288,28 @@ $page-max: 1240px;
   .reportGhost,
   .reportPrimary {
     width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .blockHeader {
+    position: relative;
+    flex-direction: row;
+    align-items: flex-start;
+    padding-right: 48px;
+  }
+
+  .blockHeader .badgeCount {
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    padding: 0;
+
+    border-radius: 999px;
   }
 }
 
