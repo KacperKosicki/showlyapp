@@ -1,0 +1,752 @@
+@import "../../styles/variables";
+
+.section {
+    position: relative;
+    width: 100%;
+    padding: 6rem 1rem 4.5rem;
+    text-align: center;
+    overflow: hidden;
+    font-family: $font-body;
+    color: #111827;
+
+    background:
+        linear-gradient(180deg,
+            #ffffff 0%,
+            #ffffff 18%,
+            #f8f7ff 48%,
+            #ffffff 74%,
+            #fff3f8 100%);
+
+    isolation: isolate;
+
+    --ck-primary: var(--pp-primary, #6f4ef2);
+    --ck-secondary: var(--pp-secondary, #ff4081);
+
+    --ck-p-06: color-mix(in srgb, var(--ck-primary) 6%, transparent);
+    --ck-p-10: color-mix(in srgb, var(--ck-primary) 10%, transparent);
+    --ck-p-16: color-mix(in srgb, var(--ck-primary) 16%, transparent);
+
+    --ck-s-08: color-mix(in srgb, var(--ck-secondary) 8%, transparent);
+    --ck-s-10: color-mix(in srgb, var(--ck-secondary) 10%, transparent);
+
+    --ck-line: rgba(17, 24, 39, 0.08);
+    --ck-line-strong: rgba(17, 24, 39, 0.12);
+}
+
+.section::before,
+.section::after {
+    content: "";
+    position: absolute;
+    border-radius: 999px;
+    pointer-events: none;
+    filter: blur(70px);
+    opacity: 0.5;
+    z-index: 0;
+}
+
+.section::before {
+    width: 420px;
+    height: 420px;
+    top: 30%;
+    left: -150px;
+    background: rgba(111, 78, 242, 0.2);
+}
+
+.section::after {
+    width: 460px;
+    height: 460px;
+    right: -160px;
+    top: 42%;
+    background: rgba(255, 64, 129, 0.16);
+}
+
+.sectionBackground {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        radial-gradient(720px 320px at 12% 52%, rgba(111, 78, 242, 0.12), transparent 64%),
+        radial-gradient(780px 320px at 90% 58%, rgba(255, 64, 129, 0.1), transparent 66%),
+        radial-gradient(900px 340px at 50% 100%, rgba(111, 78, 242, 0.07), transparent 70%);
+    mask-image: linear-gradient(to bottom,
+            transparent 0%,
+            transparent 16%,
+            #000 36%,
+            #000 100%);
+}
+
+.bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.blur1,
+.blur2 {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(90px);
+    opacity: 0.5;
+}
+
+.blur1 {
+    width: 360px;
+    height: 360px;
+    left: -140px;
+    top: 34%;
+    background: rgba(111, 78, 242, 0.16);
+}
+
+.blur2 {
+    width: 400px;
+    height: 400px;
+    right: -150px;
+    bottom: 4%;
+    background: rgba(255, 64, 129, 0.12);
+}
+
+.vignette {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(800px 320px at 12% 54%, rgba(111, 78, 242, 0.1), transparent 64%),
+        radial-gradient(780px 300px at 90% 60%, rgba(255, 64, 129, 0.08), transparent 66%),
+        radial-gradient(900px 340px at 50% 100%, rgba(111, 78, 242, 0.06), transparent 70%);
+    mask-image: linear-gradient(to bottom,
+            transparent 0%,
+            transparent 16%,
+            #000 36%,
+            #000 100%);
+}
+
+.inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1120px;
+    margin: 0 auto;
+}
+
+/* HEAD */
+
+.head {
+    position: relative;
+    z-index: 1;
+    max-width: 920px;
+    margin: 0 auto 2rem;
+    text-align: center;
+}
+
+.labelRow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    color: rgba(20, 24, 35, 0.7);
+    font-family: $font-body;
+}
+
+.labelBadge {
+    font-family: $font-accent;
+    font-weight: 950;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 0.76rem;
+    color: $primary-color;
+    padding: 0.48rem 0.82rem;
+    border-radius: 999px;
+    background: rgba(111, 78, 242, 0.08);
+    border: 1px solid rgba(111, 78, 242, 0.14);
+}
+
+.labelDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(20, 24, 35, 0.2);
+}
+
+.labelDesc {
+    font-size: 0.95rem;
+    color: rgba(20, 24, 35, 0.68);
+    font-family: $font-body;
+}
+
+.labelLine {
+    width: 48px;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, $primary-color, $secondary-color);
+    opacity: 0.9;
+}
+
+.pill {
+    font-family: $font-accent;
+    font-weight: 900;
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.5rem 0.82rem;
+    border-radius: 999px;
+    color: rgba(20, 24, 35, 0.76);
+    background: rgba(255, 255, 255, 0.76);
+    border: 1px solid rgba(20, 24, 35, 0.08);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.heading {
+    margin: 0 0 0.8rem;
+    font-size: clamp(2.1rem, 4.6vw, 3.6rem);
+    line-height: 1.04;
+    letter-spacing: -0.055em;
+    font-family: $font-accent;
+    font-weight: 950;
+    color: #101014;
+}
+
+.headingAccent {
+    background: linear-gradient(135deg, $primary-color, $secondary-color);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.description {
+    max-width: 760px;
+    margin: 0 auto;
+    color: rgba(17, 24, 39, 0.66);
+    font-size: clamp(1rem, 1.3vw, 1.12rem);
+    line-height: 1.75;
+    font-family: $font-body;
+}
+
+.metaRow {
+    margin: 1.4rem auto 0;
+    display: flex;
+    justify-content: center;
+    gap: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.metaCard {
+    min-width: 180px;
+    padding: 0.95rem 1rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(17, 24, 39, 0.08);
+    box-shadow:
+        0 18px 54px rgba(17, 24, 39, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+
+    strong {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-family: $font-accent;
+        font-size: 1.05rem;
+        font-weight: 950;
+        color: #111827;
+        line-height: 1.1;
+    }
+
+    span {
+        display: block;
+        font-family: $font-body;
+        font-size: 0.88rem;
+        line-height: 1.45;
+        color: rgba(17, 24, 39, 0.58);
+    }
+}
+
+/* NOTICE */
+
+.noticeBox {
+    max-width: 1120px;
+    margin: 0 auto 1.35rem;
+    padding: 1rem 1.1rem;
+    border-radius: 22px;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.95rem;
+    text-align: left;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(111, 78, 242, 0.14);
+    box-shadow:
+        0 18px 54px rgba(17, 24, 39, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.noticeIcon {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    background: rgba(111, 78, 242, 0.08);
+    border: 1px solid rgba(111, 78, 242, 0.16);
+    color: $primary-color;
+    font-size: 1.05rem;
+}
+
+.noticeTitle {
+    margin: 0 0 0.25rem;
+    color: #111827;
+    font-size: 0.96rem;
+    font-weight: 950;
+}
+
+.noticeText {
+    margin: 0;
+    color: rgba(17, 24, 39, 0.66);
+    line-height: 1.65;
+    font-size: 0.94rem;
+}
+
+/* LAYOUT */
+
+.contentGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) 340px;
+    gap: 1.35rem;
+    align-items: start;
+    max-width: 1120px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.mainColumn {
+    display: grid;
+    gap: 1.1rem;
+}
+
+.sideColumn {
+    display: grid;
+    gap: 1.1rem;
+}
+
+/* CARDS */
+
+.sectionCard,
+.sideCard {
+    position: relative;
+    overflow: hidden;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.84);
+    border: 1px solid var(--ck-line);
+    box-shadow:
+        0 28px 90px rgba(17, 24, 39, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+
+.sectionCard::before,
+.sideCard::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(700px 220px at 18% 18%, var(--ck-p-10), transparent 60%),
+        radial-gradient(620px 240px at 86% 26%, var(--ck-s-10), transparent 55%);
+    opacity: 0.9;
+}
+
+.sectionCard>*,
+.sideCard>* {
+    position: relative;
+    z-index: 1;
+}
+
+.sectionCard {
+    padding: 1.35rem;
+}
+
+.sideCard {
+    padding: 1.2rem;
+}
+
+/* CONTENT */
+
+.sectionTop {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.sectionIcon {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    background:
+        radial-gradient(120% 120% at 20% 20%, rgba(111, 78, 242, 0.14), transparent 50%),
+        radial-gradient(140% 140% at 80% 30%, rgba(255, 64, 129, 0.1), transparent 55%),
+        #fff;
+    border: 1px solid rgba(17, 24, 39, 0.08);
+    box-shadow: 0 14px 26px rgba(17, 24, 39, 0.06);
+    color: $primary-color;
+    font-size: 1.05rem;
+}
+
+.sectionTitle {
+    margin: 0 0 0.2rem;
+    color: #111827;
+    font-size: 1.08rem;
+    font-weight: 950;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+}
+
+.sectionLead {
+    margin: 0;
+    color: rgba(17, 24, 39, 0.56);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    font-family: $font-body;
+}
+
+.textBlock {
+    display: grid;
+    gap: 0.85rem;
+
+    p {
+        margin: 0;
+        color: rgba(17, 24, 39, 0.72);
+        font-size: 0.97rem;
+        line-height: 1.8;
+        font-family: $font-body;
+
+        strong {
+            color: #111827;
+            font-family: $font-accent;
+            font-weight: 950;
+        }
+    }
+}
+
+.listBlock {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.definitionItem {
+    padding: 0.95rem 1rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.74);
+    border: 1px solid rgba(17, 24, 39, 0.06);
+    box-shadow: 0 8px 20px rgba(17, 24, 39, 0.03);
+
+    strong {
+        display: block;
+        margin: 0 0 0.24rem;
+        color: #111827;
+        font-size: 0.96rem;
+        font-weight: 950;
+        line-height: 1.35;
+        font-family: $font-accent;
+        letter-spacing: -0.01em;
+    }
+
+    p {
+        margin: 0;
+        color: rgba(17, 24, 39, 0.64);
+        font-size: 0.93rem;
+        font-weight: 500;
+        line-height: 1.65;
+        font-family: $font-body;
+    }
+}
+
+/* SIDE */
+
+.sideTitle {
+    margin: 0 0 1rem;
+    color: #111827;
+    font-size: 1rem;
+    font-weight: 950;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+}
+
+.sideList {
+    display: grid;
+    gap: 0.8rem;
+}
+
+.sideItem {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    padding: 0.85rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.74);
+    border: 1px solid rgba(17, 24, 39, 0.06);
+    box-shadow: 0 8px 20px rgba(17, 24, 39, 0.03);
+
+    >div:last-child {
+        min-width: 0;
+    }
+
+    strong {
+        display: block;
+        margin: 0 0 0.2rem;
+        color: #111827;
+        font-size: 0.93rem;
+        font-weight: 950;
+        line-height: 1.35;
+        font-family: $font-accent;
+    }
+
+    p {
+        margin: 0;
+        color: rgba(17, 24, 39, 0.62);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        font-family: $font-body;
+    }
+}
+
+.sideItemIcon {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background:
+        radial-gradient(120% 120% at 20% 20%, rgba(111, 78, 242, 0.14), transparent 50%),
+        radial-gradient(140% 140% at 80% 30%, rgba(255, 64, 129, 0.1), transparent 55%),
+        #fff;
+    border: 1px solid rgba(17, 24, 39, 0.08);
+    color: $primary-color;
+    font-size: 1rem;
+    box-shadow: 0 10px 22px rgba(17, 24, 39, 0.05);
+}
+
+.companyBox {
+    display: grid;
+    gap: 0.45rem;
+    padding: 0.95rem 1rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.74);
+    border: 1px solid rgba(17, 24, 39, 0.06);
+    box-shadow: 0 8px 20px rgba(17, 24, 39, 0.03);
+
+    p {
+        margin: 0;
+        color: rgba(17, 24, 39, 0.72);
+        line-height: 1.65;
+        font-size: 0.94rem;
+        font-family: $font-body;
+    }
+
+    strong {
+        color: #111827;
+        font-family: $font-accent;
+        font-weight: 950;
+    }
+}
+
+.statusPill {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.95rem 1rem;
+    border-radius: 18px;
+    background: rgba(111, 78, 242, 0.08);
+    border: 1px solid rgba(111, 78, 242, 0.14);
+    color: #111827;
+
+    svg {
+        flex-shrink: 0;
+        font-size: 1rem;
+        color: $primary-color;
+    }
+
+    span {
+        font-size: 0.92rem;
+        line-height: 1.55;
+        font-family: $font-body;
+        font-weight: 700;
+    }
+}
+
+/* RWD */
+
+@media (max-width: 1080px) {
+    .contentGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .sideColumn {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .section {
+        padding: 4.5rem 1rem;
+    }
+
+    .section::before {
+        top: 34%;
+        left: -180px;
+    }
+
+    .section::after {
+        top: 48%;
+        right: -190px;
+    }
+
+    .blur1 {
+        top: 38%;
+        left: -180px;
+    }
+
+    .blur2 {
+        right: -190px;
+        bottom: 4%;
+    }
+
+    .head {
+        margin-bottom: 1.6rem;
+        padding: 0 0.2rem;
+    }
+
+    .heading {
+        font-size: 1.95rem;
+        margin-bottom: 0.7rem;
+    }
+
+    .description {
+        font-size: 0.94rem;
+        line-height: 1.7;
+    }
+
+    .metaRow {
+        gap: 0.75rem;
+        margin-top: 1.15rem;
+    }
+
+    .metaCard {
+        min-width: calc(50% - 0.5rem);
+        padding: 0.85rem 0.9rem;
+    }
+
+    .noticeBox {
+        border-radius: 20px;
+        padding: 0.95rem 1rem;
+    }
+
+    .sectionCard,
+    .sideCard {
+        padding: 1.1rem;
+        border-radius: 24px;
+    }
+
+    .sectionTop {
+        gap: 0.8rem;
+    }
+
+    .sectionIcon {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+    }
+
+    .sideColumn {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .section {
+        padding: 4rem 1rem 3.5rem;
+    }
+
+    .head {
+        margin-bottom: 1.4rem;
+    }
+
+    .labelRow {
+        gap: 8px;
+    }
+
+    .labelDesc {
+        font-size: 0.88rem;
+    }
+
+    .pill {
+        font-size: 0.68rem;
+        padding: 0.45rem 0.72rem;
+    }
+
+    .heading {
+        font-size: 1.65rem;
+    }
+
+    .description {
+        font-size: 0.88rem;
+    }
+
+    .metaRow {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .metaCard {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .noticeBox {
+        flex-direction: column;
+    }
+
+    .noticeIcon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+    }
+
+    .sectionTitle,
+    .sideTitle {
+        font-size: 0.98rem;
+    }
+
+    .textBlock p {
+        font-size: 0.94rem;
+    }
+
+    .definitionItem {
+        strong {
+            font-size: 0.92rem;
+        }
+
+        p {
+            font-size: 0.9rem;
+        }
+    }
+
+    .sideItem {
+        strong {
+            font-size: 0.91rem;
+        }
+
+        p {
+            font-size: 0.88rem;
+        }
+    }
+}

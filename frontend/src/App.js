@@ -34,6 +34,8 @@ import DiscoverShowly from "./components/DiscoverShowly/DiscoverShowly";
 import AlertBox from "./components/AlertBox/AlertBox";
 import Contact from "./components/Contact/Contact";
 import Regulations from "./components/Regulations/Regulations";
+import CookieBanner from "./components/CookieBanner/CookieBanner";
+import CookiesPolicy from "./components/CookiesPolicy/CookiesPolicy";
 
 // ✅ NEW: admin
 import AdminPanel from "./components/AdminPanel/AdminPanel";
@@ -270,6 +272,7 @@ function App() {
   return (
     <Router>
       <ScrollToTop />
+      <CookieBanner />
 
       {alert?.message && (
         <AlertBox
@@ -539,6 +542,17 @@ function App() {
             <>
               <Hero {...heroProps} />
               <Regulations />
+              <Footer />
+            </>
+          }
+        />
+
+        <Route
+          path="/polityka-cookies"
+          element={
+            <>
+              <Hero {...heroProps} />
+              <CookiesPolicy />
               <Footer />
             </>
           }

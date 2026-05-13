@@ -1,0 +1,261 @@
+@import "../../styles/variables";
+
+.cookieBanner {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    z-index: 99999;
+
+    width: min(980px, calc(100% - 2rem));
+    transform: translateX(-50%);
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+
+    padding: 14px;
+
+    border-radius: 28px;
+    overflow: hidden;
+
+    background:
+        radial-gradient(420px 160px at 10% 0%, rgba(111, 78, 242, 0.16), transparent 62%),
+        radial-gradient(360px 160px at 94% 100%, rgba(255, 64, 129, 0.14), transparent 62%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 255, 0.88));
+
+    border: 1px solid rgba(17, 24, 39, 0.08);
+
+    box-shadow:
+        0 28px 90px rgba(17, 24, 39, 0.18),
+        0 10px 26px rgba(111, 78, 242, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+
+    animation: cookieIn 0.32s ease both;
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+
+        background-image:
+            linear-gradient(to right, rgba(17, 24, 39, 0.045) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(17, 24, 39, 0.035) 1px, transparent 1px);
+        background-size: 42px 42px;
+        opacity: 0.38;
+        mask-image: radial-gradient(circle at 18% 20%, #000 0%, transparent 72%);
+    }
+
+    >* {
+        position: relative;
+        z-index: 1;
+    }
+}
+
+.content {
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.iconBox {
+    width: 52px;
+    height: 52px;
+    flex: 0 0 auto;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 18px;
+
+    background:
+        radial-gradient(120% 120% at 25% 20%, rgba(111, 78, 242, 0.2), transparent 56%),
+        radial-gradient(130% 130% at 80% 80%, rgba(255, 64, 129, 0.16), transparent 58%),
+        #fff;
+
+    border: 1px solid rgba(17, 24, 39, 0.08);
+    box-shadow:
+        0 14px 30px rgba(17, 24, 39, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+    font-size: 1.45rem;
+}
+
+.text {
+    min-width: 0;
+
+    strong {
+        display: block;
+        margin-bottom: 4px;
+
+        color: #101828;
+        font-family: $font-accent;
+        font-size: 1.02rem;
+        font-weight: 950;
+        letter-spacing: -0.02em;
+    }
+
+    p {
+        max-width: 620px;
+        margin: 0;
+        color: rgba(16, 24, 40, 0.68);
+        font-size: 0.9rem;
+        font-family: $font-body;
+        line-height: 1.58;
+    }
+}
+
+.link {
+    width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 8px;
+
+    color: $primary-color;
+    font-family: $font-accent;
+    font-size: 0.82rem;
+    font-weight: 950;
+    text-decoration: none;
+
+    &::after {
+        content: "→";
+        transition: transform 0.18s ease;
+    }
+
+    &:hover {
+        color: $secondary-color;
+
+        &::after {
+            transform: translateX(3px);
+        }
+    }
+}
+
+.actions {
+    flex: 0 0 auto;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.acceptBtn,
+.rejectBtn {
+    min-height: 44px;
+    padding: 0 18px;
+
+    border-radius: 999px;
+    cursor: pointer;
+
+    font-family: $font-accent;
+    font-size: 0.88rem;
+    font-weight: 950;
+
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease,
+        filter 0.18s ease;
+}
+
+.acceptBtn {
+    color: #fff;
+    border: 0;
+    background: linear-gradient(135deg, $primary-color, $secondary-color);
+    box-shadow:
+        0 16px 34px rgba(111, 78, 242, 0.24),
+        0 8px 18px rgba(255, 64, 129, 0.14);
+
+    &:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.04) saturate(1.05);
+    }
+}
+
+.rejectBtn {
+    color: rgba(16, 24, 40, 0.7);
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(17, 24, 39, 0.1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+    &:hover {
+        transform: translateY(-2px);
+        background: #fff;
+        box-shadow:
+            0 12px 24px rgba(17, 24, 39, 0.08),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+}
+
+@keyframes cookieIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(18px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0) scale(1);
+    }
+}
+
+@media (max-width: 720px) {
+    .cookieBanner {
+        align-items: stretch;
+        flex-direction: column;
+        border-radius: 24px;
+    }
+
+    .actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .acceptBtn,
+    .rejectBtn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 430px) {
+    .cookieBanner {
+        bottom: 12px;
+        width: calc(100% - 1.4rem);
+        padding: 12px;
+    }
+
+    .content {
+        gap: 10px;
+    }
+
+    .iconBox {
+        width: 42px;
+        height: 42px;
+        border-radius: 15px;
+        font-size: 1.2rem;
+    }
+
+    .text {
+        strong {
+            font-size: 0.96rem;
+        }
+
+        p {
+            font-size: 0.82rem;
+        }
+    }
+
+    .acceptBtn,
+    .rejectBtn {
+        min-height: 42px;
+        padding: 0 12px;
+        font-size: 0.8rem;
+    }
+}
