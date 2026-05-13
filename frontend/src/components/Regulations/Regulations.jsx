@@ -32,11 +32,11 @@ const Regulations = () => {
           </div>
 
           <h2 className={styles.heading}>
-            Regulamin <span className={styles.headingAccent}>Showly.app</span>
+            Regulamin <span className={styles.headingAccent}>Showly.me</span>
           </h2>
 
           <p className={styles.description}>
-            Ten regulamin określa zasady korzystania z platformy Showly.app,
+            Ten regulamin określa zasady korzystania z platformy Showly.me,
             w tym zasady zakładania kont, publikowania profili, kontaktu między
             użytkownikami, rezerwacji, opinii, płatności oraz odpowiedzialności
             za treści i usługi prezentowane w serwisie.
@@ -93,7 +93,7 @@ const Regulations = () => {
               <div className={styles.textBlock}>
                 <p>
                   1. Niniejszy Regulamin określa zasady korzystania z platformy
-                  internetowej działającej pod adresem <strong>Showly.app</strong>,
+                  internetowej działającej pod adresem <strong>Showly.me</strong>,
                   zwanej dalej „Serwisem”, „Platformą” lub „Showly”.
                 </p>
                 <p>
@@ -131,7 +131,7 @@ const Regulations = () => {
               <div className={styles.listBlock}>
                 <div className={styles.definitionItem}>
                   <strong>Serwis / Platforma</strong>
-                  <p>platforma internetowa dostępna pod adresem Showly.app.</p>
+                  <p>platforma internetowa dostępna pod adresem Showly.me.</p>
                 </div>
 
                 <div className={styles.definitionItem}>

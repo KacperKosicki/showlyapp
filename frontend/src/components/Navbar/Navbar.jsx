@@ -54,7 +54,7 @@ const Navbar = ({
               onClick={() => handleAuthNavigate("/register", "registerBox")}
             >
               <FaUserPlus />
-              <span>Załóż profil</span>
+              <span>Załóż konto</span>
             </button>
           </div>
         )}

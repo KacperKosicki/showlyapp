@@ -1,34 +1,83 @@
 @import "../../styles/variables";
 
 .page {
-  min-height: 100vh;
-  padding: clamp(24px, 4vw, 48px) 16px 70px;
   position: relative;
-  overflow-x: clip;
+  min-height: 100vh;
+  padding: 6rem 1rem 4.5rem;
+  overflow: hidden;
+  font-family: $font-body;
+  color: #111827;
+
+  background:
+    linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #ffffff 18%,
+      #f8f7ff 48%,
+      #ffffff 74%,
+      #fff3f8 100%
+    );
+
+  isolation: isolate;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    border-radius: 999px;
+    pointer-events: none;
+    filter: blur(70px);
+    opacity: 0.5;
+    z-index: 0;
+  }
+
+  &::before {
+    width: 420px;
+    height: 420px;
+    top: 30%;
+    left: -150px;
+    background: rgba(111, 78, 242, 0.2);
+  }
+
+  &::after {
+    width: 460px;
+    height: 460px;
+    right: -160px;
+    top: 42%;
+    background: rgba(255, 64, 129, 0.16);
+  }
 }
 
 .inner {
+  position: relative;
+  z-index: 1;
   width: min(1400px, 100%);
   margin: 0 auto;
 }
 
 .top {
   text-align: center;
-  margin-bottom: 26px;
+  max-width: 920px;
+  margin: 0 auto 2rem;
 }
 
 .title {
-  font-family: $font-heading;
-  font-size: clamp(2rem, 4vw, 3rem);
-  color: $text-color;
-  margin-bottom: 10px;
+  margin: 0 0 0.75rem;
+  font-family: $font-accent;
+  font-size: clamp(2.1rem, 4.6vw, 3.6rem);
+  line-height: 1.04;
+  letter-spacing: -0.055em;
+  color: #101014;
+  font-weight: 950;
 }
 
 .subtitle {
+  max-width: 760px;
+  margin: 0 auto 1.6rem;
   font-family: $font-body;
-  color: rgba(0, 0, 0, 0.62);
-  font-size: 1rem;
-  margin-bottom: 24px;
+  color: rgba(17, 24, 39, 0.66);
+  font-size: clamp(1rem, 1.3vw, 1.12rem);
+  line-height: 1.75;
 }
 
 .searchForm {
@@ -39,12 +88,17 @@
   align-items: center;
   gap: 12px;
 
-  padding: 12px;
+  padding: 0.7rem;
   border-radius: 999px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+
   box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.08),
-    0 0 0 1px rgba(0, 0, 0, 0.03) inset;
+    0 28px 90px rgba(17, 24, 39, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .input {
@@ -55,11 +109,11 @@
   background: transparent;
   font-family: $font-body;
   font-size: 1rem;
-  color: $text-color;
+  color: #111827;
   padding: 12px 14px;
 
   &::placeholder {
-    color: rgba(0, 0, 0, 0.4);
+    color: rgba(17, 24, 39, 0.42);
   }
 }
 
@@ -74,8 +128,10 @@
   place-items: center;
 
   color: #fff;
-  background: linear-gradient(135deg, #6f4ef2, #ff4081);
-  box-shadow: 0 16px 32px rgba(111, 78, 242, 0.24);
+  background: linear-gradient(135deg, $primary-color, $secondary-color);
+  box-shadow:
+    0 18px 34px rgba(111, 78, 242, 0.22),
+    0 8px 22px rgba(255, 64, 129, 0.12);
 
   transition:
     transform 0.18s ease,
@@ -85,7 +141,9 @@
   &:hover {
     transform: translateY(-1px);
     filter: brightness(1.04);
-    box-shadow: 0 20px 36px rgba(111, 78, 242, 0.28);
+    box-shadow:
+      0 20px 38px rgba(111, 78, 242, 0.26),
+      0 10px 28px rgba(255, 64, 129, 0.14);
   }
 }
 
@@ -95,32 +153,49 @@
   flex-wrap: wrap;
   gap: 10px;
 
-  margin-bottom: 22px;
-  padding: 14px 18px;
-  border-radius: 20px;
+  margin: 0 auto 1.4rem;
+  padding: 1rem 1.1rem;
+  border-radius: 22px;
 
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+
   box-shadow:
-    0 14px 34px rgba(0, 0, 0, 0.05),
-    0 0 0 1px rgba(0, 0, 0, 0.03) inset;
+    0 18px 54px rgba(17, 24, 39, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 
   span {
     font-family: $font-body;
-    color: $text-color;
+    color: rgba(17, 24, 39, 0.72);
     font-size: 0.95rem;
+    line-height: 1.45;
   }
 }
 
 .empty {
   text-align: center;
-  padding: 38px 18px;
+  padding: 2rem 1.15rem;
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.8);
-  color: rgba(0, 0, 0, 0.65);
+
+  background:
+    radial-gradient(700px 220px at 18% 18%, rgba(111, 78, 242, 0.08), transparent 60%),
+    radial-gradient(620px 240px at 86% 26%, rgba(255, 64, 129, 0.08), transparent 55%),
+    rgba(255, 255, 255, 0.94);
+
+  color: rgba(17, 24, 39, 0.62);
   font-family: $font-body;
+  line-height: 1.6;
+
+  border: 1px dashed rgba(17, 24, 39, 0.14);
   box-shadow:
-    0 14px 34px rgba(0, 0, 0, 0.05),
-    0 0 0 1px rgba(0, 0, 0, 0.03) inset;
+    0 18px 54px rgba(17, 24, 39, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .grid {
@@ -138,18 +213,26 @@
 
 .matchedBox {
   padding: 14px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.88);
+  border-radius: 22px;
+
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+
   box-shadow:
-    0 14px 28px rgba(0, 0, 0, 0.05),
-    0 0 0 1px rgba(0, 0, 0, 0.03) inset;
+    0 18px 54px rgba(17, 24, 39, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .matchedLabel {
-  font-family: $font-heading;
+  font-family: $font-accent;
   font-size: 0.92rem;
-  color: $text-color;
+  font-weight: 950;
+  color: #111827;
   margin-bottom: 10px;
+  letter-spacing: -0.01em;
 }
 
 .matchedServices {
@@ -167,10 +250,10 @@
 
   background: rgba(111, 78, 242, 0.08);
   color: $primary-color;
-  font-family: $font-body;
+  font-family: $font-accent;
   font-size: 0.84rem;
-  font-weight: 600;
-  border: 1px solid rgba(111, 78, 242, 0.12);
+  font-weight: 900;
+  border: 1px solid rgba(111, 78, 242, 0.14);
 }
 
 @media (max-width: 1100px) {
@@ -181,12 +264,46 @@
 
 @media (max-width: 768px) {
   .page {
-    padding: 22px 14px 60px;
+    padding: 4.5rem 1rem 4rem;
+
+    background:
+      linear-gradient(
+        180deg,
+        #ffffff 0%,
+        #ffffff 16%,
+        #f8f7ff 48%,
+        #ffffff 76%,
+        #fff3f8 100%
+      );
+
+    &::before {
+      top: 34%;
+      left: -180px;
+    }
+
+    &::after {
+      top: 48%;
+      right: -190px;
+    }
+  }
+
+  .top {
+    margin-bottom: 1.6rem;
+  }
+
+  .title {
+    font-size: 1.95rem;
+  }
+
+  .subtitle {
+    font-size: 0.94rem;
+    line-height: 1.7;
   }
 
   .searchForm {
     gap: 10px;
     padding: 10px;
+    border-radius: 24px;
   }
 
   .input {
@@ -197,6 +314,7 @@
   .button {
     width: 44px;
     height: 44px;
+    flex-shrink: 0;
   }
 
   .grid {
@@ -205,12 +323,13 @@
   }
 
   .infoBar {
-    padding: 12px 14px;
+    padding: 0.95rem 1rem;
+    border-radius: 20px;
   }
 
   .matchedBox {
     padding: 12px;
-    border-radius: 18px;
+    border-radius: 20px;
   }
 
   .matchedLabel {
@@ -221,5 +340,32 @@
     min-height: 30px;
     padding: 0 10px;
     font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 4rem 1rem 3.5rem;
+  }
+
+  .top {
+    margin-bottom: 1.4rem;
+  }
+
+  .title {
+    font-size: 1.65rem;
+  }
+
+  .subtitle {
+    font-size: 0.88rem;
+  }
+
+  .searchForm {
+    border-radius: 22px;
+  }
+
+  .infoBar {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
