@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import styles from "./ReservationList.module.scss";
+import { createPortal } from "react-dom";
 import AlertBox from "../AlertBox/AlertBox";
 import { useLocation } from "react-router-dom";
 import { FiInbox, FiSend, FiPlus, FiEdit3, FiX } from "react-icons/fi";
@@ -1440,7 +1441,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
     const servicesLocal = providerMeta?.services || [];
 
-    return (
+    return createPortal(
       <div className={styles.modalOverlay} onClick={() => setOfflineOpen(false)}>
         <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
           <div className={styles.modalHead}>
@@ -1712,7 +1713,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
             </div>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }, [
     offlineOpen,

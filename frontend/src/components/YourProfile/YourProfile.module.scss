@@ -14,16 +14,12 @@ $panel-max: 820px;
   color: #111827;
 
   background:
-    linear-gradient(
-      180deg,
+    linear-gradient(180deg,
       #ffffff 0%,
       #ffffff 16%,
       #f8f7ff 46%,
       #ffffff 72%,
-      #fff3f8 100%
-    );
-
-  isolation: isolate;
+      #fff3f8 100%);
 
   --yp-primary: var(--pp-primary, #6f4ef2);
   --yp-secondary: var(--pp-secondary, #ff4081);
@@ -75,7 +71,7 @@ $panel-max: 820px;
   background: rgba(255, 64, 129, 0.16);
 }
 
-.wrapper > * {
+.wrapper>* {
   position: relative;
 }
 
@@ -2188,12 +2184,16 @@ $panel-max: 820px;
 .lightbox {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 2147483647;
   display: grid;
   place-items: center;
   padding: 22px;
   background: rgba(8, 10, 16, 0.9);
   backdrop-filter: blur(10px);
+
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 .lightbox img {
@@ -2518,14 +2518,12 @@ $panel-max: 820px;
   .wrapper {
     padding: 5rem 1rem 6rem;
     background:
-      linear-gradient(
-        180deg,
+      linear-gradient(180deg,
         #ffffff 0%,
         #ffffff 14%,
         #f8f7ff 46%,
         #ffffff 74%,
-        #fff3f8 100%
-      );
+        #fff3f8 100%);
   }
 
   .wrapper::before {

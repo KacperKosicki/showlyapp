@@ -1,6 +1,7 @@
 // YourProfile.jsx
 import { useEffect, useState, useRef } from 'react';
 import { Navigate, useLocation, Link } from 'react-router-dom';
+import { createPortal } from "react-dom";
 import { auth } from "../../firebase"; // dopasuj ścieżkę
 import axios from 'axios';
 import styles from './YourProfile.module.scss';
@@ -3428,29 +3429,31 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           </div>
         )}
 
-        {fullscreenImage && (
-          <div
-            className={styles.lightbox}
-            onClick={closeLightbox}
-            role="dialog"
-            aria-modal="true"
-          >
-            <button
-              type="button"
-              className={styles.lightboxClose}
+        {fullscreenImage &&
+          createPortal(
+            <div
+              className={styles.lightbox}
               onClick={closeLightbox}
-              aria-label="Zamknij podgląd"
+              role="dialog"
+              aria-modal="true"
             >
-              ✕
-            </button>
+              <button
+                type="button"
+                className={styles.lightboxClose}
+                onClick={closeLightbox}
+                aria-label="Zamknij podgląd"
+              >
+                ✕
+              </button>
 
-            <img
-              src={fullscreenImage}
-              alt=""
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
-        )}
+              <img
+                src={fullscreenImage}
+                alt=""
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>,
+            document.body
+          )}
 
       </div>
     </div>

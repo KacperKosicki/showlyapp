@@ -9,7 +9,6 @@ $page-max: 1240px;
   padding: 6rem 0 80px;
   font-family: $font-body;
   color: $text-color;
-  isolation: isolate;
 
   --pp-primary: #6f4ef2;
   --pp-secondary: #ff4081;
@@ -1937,7 +1936,7 @@ $page-max: 1240px;
 .lightbox {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 2147483647;
   display: grid;
   place-items: center;
   padding: 22px;
@@ -1973,7 +1972,7 @@ $page-max: 1240px;
 .reportModalBackdrop {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 2147483647;
   display: grid;
   place-items: center;
   padding: 18px;
