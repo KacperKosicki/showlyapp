@@ -1739,15 +1739,15 @@ export default function PublicProfile() {
                 </div>
 
                 <div className={styles.infoList}>
-                  <div className={styles.infoRow}>
-                    <span className={styles.infoLeft}>
-                      <span className={styles.infoIcon}>
-                        <FaMapMarkedAlt />
+                  {fullAddress ? (
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLeft}>
+                        <span className={styles.infoIcon}>
+                          <FaMapMarkedAlt />
+                        </span>
+                        <span>Adres</span>
                       </span>
-                      <span>Adres</span>
-                    </span>
 
-                    {fullAddress ? (
                       <a
                         className={styles.infoLink}
                         href={mapsUrl}
@@ -1756,44 +1756,53 @@ export default function PublicProfile() {
                       >
                         {fullAddress}
                       </a>
-                    ) : (
-                      <span className={styles.muted}>Brak danych</span>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className={styles.emptyInline}>
+                      <FaMapMarkedAlt />
+                      <p>Użytkownik nie dodał jeszcze adresu.</p>
+                    </div>
+                  )}
 
-                  <div className={styles.infoRow}>
-                    <span className={styles.infoLeft}>
-                      <span className={styles.infoIcon}>
-                        <FaPhoneAlt />
+                  {contactPhone ? (
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLeft}>
+                        <span className={styles.infoIcon}>
+                          <FaPhoneAlt />
+                        </span>
+                        <span>Telefon</span>
                       </span>
-                      <span>Telefon</span>
-                    </span>
 
-                    {contactPhone ? (
                       <a className={styles.infoLink} href={`tel:${contactPhone}`}>
                         {contact.phone}
                       </a>
-                    ) : (
-                      <span className={styles.muted}>Brak danych</span>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className={styles.emptyInline}>
+                      <FaPhoneAlt />
+                      <p>Użytkownik nie dodał jeszcze numeru telefonu.</p>
+                    </div>
+                  )}
 
-                  <div className={styles.infoRow}>
-                    <span className={styles.infoLeft}>
-                      <span className={styles.infoIcon}>
-                        <FaEnvelope />
+                  {contactEmail ? (
+                    <div className={styles.infoRow}>
+                      <span className={styles.infoLeft}>
+                        <span className={styles.infoIcon}>
+                          <FaEnvelope />
+                        </span>
+                        <span>E-mail</span>
                       </span>
-                      <span>E-mail</span>
-                    </span>
 
-                    {contactEmail ? (
                       <a className={styles.infoLink} href={`mailto:${contactEmail}`}>
                         {contactEmail}
                       </a>
-                    ) : (
-                      <span className={styles.muted}>Brak danych</span>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className={styles.emptyInline}>
+                      <FaEnvelope />
+                      <p>Użytkownik nie dodał jeszcze adresu e-mail.</p>
+                    </div>
+                  )}
                 </div>
 
                 {socialItems.length > 0 && (
