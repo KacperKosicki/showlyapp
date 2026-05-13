@@ -1,19 +1,9 @@
 import { useEffect } from "react";
 import styles from "./Hero.module.scss";
-import Navbar from "../Navbar/Navbar";
 import SearchBar from "../SearchBar/SearchBar";
 import LoadingLink from "../ui/LoadingLink/LoadingLink";
 
-const Hero = ({
-  user,
-  loadingUser,
-  setUser,
-  refreshTrigger,
-  unreadCount,
-  setUnreadCount,
-  pendingReservationsCount,
-  setAlert,
-}) => {
+const Hero = ({ user }) => {
   useEffect(() => {
     document.body.classList.add("hero-page");
     document.documentElement.classList.add("hero-page-html");
@@ -31,17 +21,6 @@ const Hero = ({
         <span className={styles.orbTwo} />
         <span className={styles.noise} />
       </div>
-
-      <Navbar
-        user={user}
-        loadingUser={loadingUser}
-        setUser={setUser}
-        refreshTrigger={refreshTrigger}
-        unreadCount={unreadCount}
-        setUnreadCount={setUnreadCount}
-        pendingReservationsCount={pendingReservationsCount}
-        setAlert={setAlert}
-      />
 
       <div className={styles.wrap}>
         <div className={styles.content}>

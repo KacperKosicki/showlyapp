@@ -5,6 +5,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
 import { initForegroundPushListener } from "./services/pushNotifications";
 
+import Navbar from "./components/Navbar/Navbar";
 import Hero from "./components/Hero/Hero";
 import UserCardList from "./components/UserCardList/UserCardList";
 import WhyUs from "./components/WhyUs/WhyUs";
@@ -37,7 +38,6 @@ import Regulations from "./components/Regulations/Regulations";
 import CookieBanner from "./components/CookieBanner/CookieBanner";
 import CookiesPolicy from "./components/CookiesPolicy/CookiesPolicy";
 
-// ✅ NEW: admin
 import AdminPanel from "./components/AdminPanel/AdminPanel";
 import AdminRoute from "./components/auth/AdminRoute";
 
@@ -47,19 +47,16 @@ function App() {
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  // ✅ token do backendu (Firebase ID Token)
   const [token, setToken] = useState(null);
   const [loadingToken, setLoadingToken] = useState(true);
 
-  // ✅ NEW: rola z DB
-  const [userRole, setUserRole] = useState("user"); // user | mod | admin
+  const [userRole, setUserRole] = useState("user");
   const [loadingRole, setLoadingRole] = useState(true);
 
   const [refreshTrigger, setRefreshTrigger] = useState(Date.now());
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingReservationsCount, setPendingReservationsCount] = useState(0);
 
-  // ✅ globalny alert
   const [alert, setAlert] = useState(null);
 
   const resetPendingReservationsCount = () => setPendingReservationsCount(0);
@@ -68,19 +65,18 @@ function App() {
     setRefreshTrigger(Date.now());
   }, []);
 
-  // ✅ stabilne user object
   const safeUser = useMemo(() => {
     if (!user?.uid) return null;
     return { uid: user.uid, email: user.email || "" };
   }, [user?.uid, user?.email]);
 
-  // ✅ helper: fetch z tokenem
   const authFetch = useCallback(
     (url, options = {}) => {
       const headers = {
         ...(options.headers || {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
+
       return fetch(url, { ...options, headers });
     },
     [token]
@@ -90,7 +86,6 @@ function App() {
     initForegroundPushListener();
   }, []);
 
-  // ✅ ważne: wykryj flow logowania/rejestracji
   const isAuthFlow = sessionStorage.getItem("authFlow") === "1";
 
   useEffect(() => {
@@ -105,9 +100,9 @@ function App() {
             email: firebaseUser.email,
             uid: firebaseUser.uid,
           };
+
           setUser(safe);
 
-          // ✅ pobierz token do backendu
           const idToken = await firebaseUser.getIdToken();
           setToken(idToken);
         } else {
@@ -118,6 +113,7 @@ function App() {
         }
       } catch (e) {
         console.error("❌ onAuthStateChanged error:", e);
+
         setUser(null);
         setToken(null);
         setUserRole("user");
@@ -131,7 +127,6 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  // ✅ pobierz rolę z backendu
   useEffect(() => {
     if (!safeUser?.uid || !token) {
       setUserRole("user");
@@ -164,6 +159,7 @@ function App() {
         setUserRole(dbUser?.role || "user");
       } catch (err) {
         if (err?.name === "AbortError") return;
+
         console.error("❌ Błąd pobierania roli:", err);
         setUserRole("user");
       } finally {
@@ -176,7 +172,6 @@ function App() {
     return () => controller.abort();
   }, [safeUser?.uid, token, authFetch]);
 
-  // ✅ rezerwacje – AbortController + token required
   useEffect(() => {
     if (!safeUser?.uid || !token) {
       setPendingReservationsCount(0);
@@ -195,6 +190,7 @@ function App() {
         if (!res.ok) return;
 
         const data = await res.json();
+
         const pending = Array.isArray(data)
           ? data.filter((r) => r?.status === "oczekująca").length
           : 0;
@@ -202,6 +198,7 @@ function App() {
         setPendingReservationsCount(pending);
       } catch (err) {
         if (err?.name === "AbortError") return;
+
         console.error("❌ Błąd pobierania liczby rezerwacji:", err);
       }
     };
@@ -211,7 +208,6 @@ function App() {
     return () => controller.abort();
   }, [safeUser?.uid, token, refreshTrigger, authFetch]);
 
-  // ✅ unread – AbortController + token required
   useEffect(() => {
     if (!safeUser?.uid || !token) {
       setUnreadCount(0);
@@ -226,9 +222,11 @@ function App() {
           `${API}/api/conversations/by-uid/${safeUser.uid}`,
           { signal: controller.signal }
         );
+
         if (!res.ok) return;
 
         const data = await res.json();
+
         const totalUnread = Array.isArray(data)
           ? data.reduce((acc, convo) => acc + Number(convo?.unreadCount || 0), 0)
           : 0;
@@ -236,6 +234,7 @@ function App() {
         setUnreadCount(totalUnread);
       } catch (err) {
         if (err?.name === "AbortError") return;
+
         console.error(
           "❌ Błąd globalnego pobierania liczby nieprzeczytanych wiadomości:",
           err
@@ -272,6 +271,17 @@ function App() {
   return (
     <Router>
       <ScrollToTop />
+
+      <Navbar
+        user={safeUser}
+        loadingUser={loadingUser}
+        refreshTrigger={refreshTrigger}
+        unreadCount={unreadCount}
+        setUnreadCount={setUnreadCount}
+        pendingReservationsCount={pendingReservationsCount}
+        setAlert={setAlert}
+      />
+
       <CookieBanner />
 
       {alert?.message && (
@@ -379,10 +389,7 @@ function App() {
           element={
             <>
               <Hero {...heroProps} />
-              <CreateProfile
-                user={safeUser}
-                setRefreshTrigger={setRefreshTrigger}
-              />
+              <CreateProfile user={safeUser} setRefreshTrigger={setRefreshTrigger} />
               <Footer />
             </>
           }
@@ -431,10 +438,7 @@ function App() {
             safeUser ? (
               <>
                 <Hero {...heroProps} />
-                <Notifications
-                  user={safeUser}
-                  setUnreadCount={setUnreadCount}
-                />
+                <Notifications user={safeUser} setUnreadCount={setUnreadCount} />
                 <Footer />
               </>
             ) : (
