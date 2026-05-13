@@ -425,6 +425,7 @@
 @media (max-width: 520px) {
   .dropdown {
     width: 100%;
+    position: relative;
   }
 
   .trigger {
@@ -438,21 +439,21 @@
   }
 
   .menu {
-    position: fixed;
-    left: 0.75rem;
-    right: 0.75rem;
-    top: auto;
-    bottom: 0.75rem;
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    right: 0;
+    bottom: auto;
 
-    width: auto;
-    max-width: none;
-    max-height: calc(100svh - 1.5rem);
+    width: 100%;
+    max-width: 100%;
+    max-height: min(72svh, 625px);
     overflow-y: auto;
 
-    border-radius: 28px;
+    border-radius: 24px;
     padding: 0.7rem;
 
-    transform: translateY(16px) scale(0.98);
+    transform: translateY(-8px) scale(0.985);
   }
 
   .visible {
@@ -460,7 +461,10 @@
   }
 
   .menu::before {
-    display: none;
+    display: block;
+    top: -7px;
+    right: 50%;
+    transform: translateX(50%) rotate(45deg);
   }
 
   .menuTop {

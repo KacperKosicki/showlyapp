@@ -145,6 +145,8 @@
   .right {
     width: 100%;
     justify-content: center;
+    position: relative;
+    z-index: 100;
   }
 }
 

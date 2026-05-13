@@ -130,7 +130,7 @@ const Hero = ({
 
                 <div>
                   <h3>Twoja marka</h3>
-                  <p>Usługi lokalne • Piła</p>
+                  <p>Usługi lokalne • Cała Polska</p>
                 </div>
               </div>
 

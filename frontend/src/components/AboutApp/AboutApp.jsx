@@ -1,182 +1,202 @@
 import React from "react";
 import styles from "./AboutApp.module.scss";
 import LoadingLink from "../ui/LoadingLink/LoadingLink";
+
 import {
+  FiArrowRight,
   FiCheckCircle,
   FiGlobe,
   FiSmartphone,
+  FiStar,
   FiUsers,
+  FiZap,
 } from "react-icons/fi";
 
 const AboutApp = ({ user }) => {
   return (
     <section className={styles.about} id="about-app">
       <div className={styles.bg} aria-hidden="true">
-        <span className={styles.glowOne} />
-        <span className={styles.glowTwo} />
-        <span className={styles.grid} />
+        <span className={styles.orbOne} />
+        <span className={styles.orbTwo} />
+        <span className={styles.orbThree} />
         <span className={styles.noise} />
       </div>
 
       <div className={styles.wrap}>
         <header className={styles.head}>
-          <div className={styles.kickerRow}>
-            <span className={styles.kicker}>Showly</span>
-            <span className={styles.dot} />
-            <span className={styles.kickerText}>Nowoczesna wizytówka online</span>
+          <div className={styles.eyebrow}>
+            <span>Showly.me</span>
+            <b>profil online w jednym linku</b>
           </div>
 
-          <h2 className={styles.title}>
-            Pokaż się w sieci <span>prosto, estetycznie i skutecznie</span>
+          <h2>
+            Pokaż się w sieci.
+            <br />
+            <span>Bez strony. Bez chaosu.</span>
           </h2>
 
-          <p className={styles.subtitle}>
-            Showly pomaga tworzyć nowoczesne profile usług i wizytówki online —
-            bez kodowania, bez własnej strony i bez zbędnego kombinowania.
+          <p>
+            Showly to nowoczesna wizytówka online dla usług, twórców i lokalnych
+            marek. Dodajesz opis, zdjęcia, cennik, opinie i kontakt — a klient
+            widzi wszystko od razu.
           </p>
         </header>
 
-        {/* BLOK 1 */}
-        <div className={`${styles.block} ${styles.reverse}`}>
-          <div className={styles.visualCard}>
-            <div className={styles.visualGlow} />
-            <img src="/images/logos/aboutapp-1.png" alt="Tworzenie profilu Showly" />
+        <div className={styles.heroCard}>
+          <div className={styles.visualPanel}>
+            <div className={styles.visualBg} />
+            <img
+              src="/images/logos/aboutapp-1.png"
+              alt="Tworzenie profilu Showly"
+            />
           </div>
 
-          <div className={styles.contentCard}>
-            <span className={styles.eyebrow}>Start bez komplikacji</span>
-            <h3>Showly — Twoja wizytówka online w kilka minut</h3>
+          <div className={styles.heroContent}>
+            <span className={styles.label}>Start bez komplikacji</span>
+
+            <h3>Twoja oferta wygląda profesjonalnie od pierwszego kliknięcia</h3>
+
             <p>
-              Stwórz profil nawet wtedy, gdy dopiero zaczynasz. Pokaż swoje usługi,
-              zakres działania, zdjęcia, ceny i terminy bez potrzeby budowania własnej strony.
+              Nie musisz budować własnej strony ani kombinować z wieloma linkami.
+              W Showly tworzysz jeden czytelny profil, który możesz wysłać
+              klientowi, wrzucić do bio albo dodać do ogłoszenia.
             </p>
 
             <div className={styles.stats}>
-              <div className={styles.statItem}>
-                <strong>85+</strong>
-                <span>aktywnych wizytówek</span>
+              <div>
+                <strong>1</strong>
+                <span>link do wszystkiego</span>
               </div>
-              <div className={styles.statItem}>
-                <strong>4.9</strong>
-                <span>średnia ocen</span>
+
+              <div>
+                <strong>24/7</strong>
+                <span>dostęp dla klientów</span>
               </div>
-              <div className={styles.statItem}>
-                <strong>30 dni</strong>
-                <span>na start za darmo</span>
+
+              <div>
+                <strong>mobile</strong>
+                <span>gotowe na telefon</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* BLOK 2 */}
-        <div className={styles.block}>
-          <div className={styles.visualCard}>
-            <div className={styles.visualGlow} />
-            <img src="/images/logos/aboutapp-2.png" alt="Profil Showly i link do wizytówki" />
-          </div>
+        <div className={styles.grid}>
+          <article className={styles.textCard}>
+            <div className={styles.icon}>
+              <FiUsers />
+            </div>
 
-          <div className={styles.contentCard}>
-            <span className={styles.eyebrow}>Dla wielu branż</span>
-            <h3>Dla kogo jest Showly?</h3>
+            <h3>Dla wielu branż</h3>
 
-            <ul className={styles.benefits}>
-              <li>
-                <span className={styles.benefitIcon}>
-                  <FiUsers />
-                </span>
-                <div>
-                  <strong>Dla osób, które chcą zacząć działać</strong>
-                  <p>
-                    Korepetytorzy, studenci, uczniowie, freelancerzy i osoby rozwijające
-                    swoje pierwsze usługi lokalnie.
-                  </p>
-                </div>
-              </li>
-
-              <li>
-                <span className={styles.benefitIcon}>
-                  <FiCheckCircle />
-                </span>
-                <div>
-                  <strong>Dla pasjonatów i usługodawców</strong>
-                  <p>
-                    DJ, fotograf, fryzjer, stylista, trener lub twórca — nie musisz
-                    mieć działalności, by wyglądać profesjonalnie.
-                  </p>
-                </div>
-              </li>
-
-              <li>
-                <span className={styles.benefitIcon}>
-                  <FiGlobe />
-                </span>
-                <div>
-                  <strong>Jeden link, który możesz wrzucić wszędzie</strong>
-                  <p>
-                    Udostępniaj swój profil w CV, bio na TikToku, Instagramie,
-                    ogłoszeniach, wiadomościach i social mediach.
-                  </p>
-                  <code>https://showly.me/profil/twoja-nazwa</code>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {/* BLOK 3 */}
-        <div className={`${styles.block} ${styles.reverse}`}>
-          <div className={styles.visualCard}>
-            <div className={styles.visualGlow} />
-            <img src="/images/logos/aboutapp-3.png" alt="Prezentacja profilu użytkownika Showly" />
-          </div>
-
-          <div className={styles.contentCard}>
-            <span className={styles.eyebrow}>Widoczność i wygoda</span>
-            <h3>Zbuduj swoją obecność online bez własnej strony</h3>
             <p>
-              Showly działa jak Twoja mini-strona internetowa. Dodajesz opis, zdjęcia,
-              cennik, dostępność i formy kontaktu — a całość wygląda dobrze zarówno
-              na telefonie, jak i na komputerze.
+              Fryzjer, DJ, fotograf, korepetytor, trener, cukiernia, freelancer
+              albo twórca — każdy może pokazać swoją ofertę w estetyczny sposób.
+            </p>
+          </article>
+
+          <article className={`${styles.imageCard} ${styles.tall}`}>
+            <img
+              src="/images/logos/aboutapp-2.png"
+              alt="Profil Showly i link do wizytówki"
+            />
+          </article>
+
+          <article className={styles.textCard}>
+            <div className={styles.icon}>
+              <FiGlobe />
+            </div>
+
+            <h3>Jeden link wszędzie</h3>
+
+            <p>
+              Udostępnij profil w CV, Instagramie, TikToku, wiadomości do
+              klienta albo w ogłoszeniu.
             </p>
 
-            <div className={styles.featureStrip}>
-              <div className={styles.featureMini}>
-                <FiSmartphone />
-                <span>mobile first</span>
-              </div>
-              <div className={styles.featureMini}>
-                <FiGlobe />
-                <span>publiczny link</span>
-              </div>
-              <div className={styles.featureMini}>
-                <FiCheckCircle />
-                <span>gotowe w kilka minut</span>
-              </div>
+            <code>showly.me/profil/twoja-nazwa</code>
+          </article>
+
+          <article className={styles.textCard}>
+            <div className={styles.icon}>
+              <FiSmartphone />
             </div>
 
-            <div className={styles.buttons}>
-              <LoadingLink to="/wizytowki" className={styles.primary}>
-                Zobacz wizytówki
+            <h3>Mobile first</h3>
+
+            <p>
+              Profil dobrze wygląda na telefonie, czyli tam, gdzie klient
+              najczęściej otwiera link.
+            </p>
+          </article>
+
+          <article className={styles.textCard}>
+            <div className={styles.icon}>
+              <FiCheckCircle />
+            </div>
+
+            <h3>Bez własnej strony</h3>
+
+            <p>
+              Opis, zdjęcia, cennik, dostępność, opinie i kontakt są w jednym
+              miejscu — bez projektowania strony od zera.
+            </p>
+          </article>
+
+          <article className={`${styles.imageCard} ${styles.wide}`}>
+            <img
+              src="/images/logos/aboutapp-3.png"
+              alt="Prezentacja profilu użytkownika Showly"
+            />
+          </article>
+        </div>
+
+        <div className={styles.ctaCard}>
+          <div>
+            <span className={styles.label}>Widoczność i wygoda</span>
+
+            <h3>Zbuduj swoją obecność online bez zbędnego kombinowania</h3>
+
+            <p>
+              Showly działa jak Twoja mini-strona: prosta do udostępnienia,
+              wygodna do edycji i czytelna dla klientów.
+            </p>
+
+            <div className={styles.pills}>
+              <span>
+                <FiZap /> szybki start
+              </span>
+              <span>
+                <FiStar /> opinie klientów
+              </span>
+              <span>
+                <FiSmartphone /> mobile first
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.actions}>
+            <LoadingLink to="/wizytowki" className={styles.primary}>
+              Zobacz profile <FiArrowRight />
+            </LoadingLink>
+
+            {user ? (
+              <LoadingLink
+                to="/profil"
+                state={{ scrollToId: "scrollToId" }}
+                className={styles.secondary}
+              >
+                Edytuj swój profil
               </LoadingLink>
-
-              {user ? (
-                <LoadingLink
-                  to="/profil"
-                  state={{ scrollToId: "scrollToId" }}
-                  className={styles.secondary}
-                >
-                  Przejdź do edycji profilu
-                </LoadingLink>
-              ) : (
-                <LoadingLink
-                  to="/register"
-                  state={{ scrollToId: "registerContainer" }}
-                  className={styles.secondary}
-                >
-                  Załóż swoją wizytówkę
-                </LoadingLink>
-              )}
-            </div>
+            ) : (
+              <LoadingLink
+                to="/register"
+                state={{ scrollToId: "registerContainer" }}
+                className={styles.secondary}
+              >
+                Załóż darmowy profil
+              </LoadingLink>
+            )}
           </div>
         </div>
       </div>
