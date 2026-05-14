@@ -14,6 +14,22 @@
   padding:
     calc(env(safe-area-inset-top, 0px) + 1.1rem) 1rem 0.8rem;
 
+  background:
+    radial-gradient(
+      420px 120px at 12% 0%,
+      rgba(111, 78, 242, 0.10),
+      transparent 62%
+    ),
+    radial-gradient(
+      420px 120px at 90% 0%,
+      rgba(255, 64, 129, 0.08),
+      transparent 62%
+    ),
+    rgba(255, 255, 255, 0.55);
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
   transition:
     padding 0.24s ease,
     background 0.24s ease,

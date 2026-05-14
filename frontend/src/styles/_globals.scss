@@ -22,14 +22,33 @@ body,
   padding: 0;
 }
 
+/* DODAJ TYLKO TO ↓ */
+
 html {
   overflow-x: hidden;
+  background: #fbfaff;
 }
 
-body {
+body,
+#root {
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
+
+  background:
+    radial-gradient(
+      420px 220px at 10% 0%,
+      rgba(111, 78, 242, 0.13),
+      transparent 62%
+    ),
+    radial-gradient(
+      420px 220px at 90% 0%,
+      rgba(255, 64, 129, 0.12),
+      transparent 62%
+    ),
+    #fbfaff;
 }
+
+/* RESZTA BEZ ZMIAN */
 
 h1,
 h2,
