@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./UserCardList.module.scss";
 import UserCard from "../UserCard/UserCard";
 import axios from "axios";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { auth } from "../../firebase";
 
 const API = process.env.REACT_APP_API_URL;
@@ -17,6 +18,10 @@ const UserCardList = ({ currentUser, setAlert }) => {
   const [topRatedUsers, setTopRatedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const scrollerRef = useRef(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
   useEffect(() => {
     const run = async () => {
       try {
@@ -29,7 +34,7 @@ const UserCardList = ({ currentUser, setAlert }) => {
 
             return Number(b?.reviews || 0) - Number(a?.reviews || 0);
           })
-          .slice(0, 3);
+          .slice(0, 10);
 
         if (currentUser?.uid && auth.currentUser) {
           const authHeader = await getAuthHeader();
@@ -60,6 +65,48 @@ const UserCardList = ({ currentUser, setAlert }) => {
 
     run();
   }, [currentUser?.uid]);
+
+  const updateArrows = () => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    const max = el.scrollWidth - el.clientWidth;
+    const x = el.scrollLeft;
+
+    setCanLeft(x > 2);
+    setCanRight(x < max - 2);
+  };
+
+  useEffect(() => {
+    updateArrows();
+
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    const onScroll = () => updateArrows();
+    el.addEventListener("scroll", onScroll, { passive: true });
+
+    const ro = new ResizeObserver(() => updateArrows());
+    ro.observe(el);
+
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      ro.disconnect();
+    };
+  }, [topRatedUsers.length]);
+
+  const scrollByCard = (dir = 1) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    const first = el.querySelector(":scope > *");
+    const cardW = first?.getBoundingClientRect().width || 400;
+    const gap =
+      parseFloat(getComputedStyle(el).columnGap || getComputedStyle(el).gap) || 24;
+
+    const step = (cardW + gap) * 1.02;
+    el.scrollBy({ left: dir * step, behavior: "smooth" });
+  };
 
   if (loading) {
     return (
@@ -96,8 +143,8 @@ const UserCardList = ({ currentUser, setAlert }) => {
 
           <div className={styles.metaRow}>
             <div className={styles.metaCard}>
-              <strong>{topRatedUsers.length}</strong>
-              <span>topowych profili</span>
+              <strong>TOP {topRatedUsers.length}</strong>
+              <span>najlepszych profili</span>
             </div>
             <div className={styles.metaCard}>
               <strong>4★+</strong>
@@ -110,16 +157,49 @@ const UserCardList = ({ currentUser, setAlert }) => {
           </div>
         </div>
 
-        <div className={styles.list}>
-          {topRatedUsers.map((user, index) => (
-            <div className={styles.cardWrap} key={user._id || user.userId || index}>
-              <UserCard
-                user={user}
-                currentUser={currentUser}
-                setAlert={setAlert}
-              />
-            </div>
-          ))}
+        <div className={styles.carousel}>
+          <button
+            type="button"
+            className={`${styles.navBtn} ${styles.left} ${!canLeft ? styles.disabled : ""}`}
+            onClick={() => scrollByCard(-1)}
+            disabled={!canLeft}
+            aria-label="Przewiń w lewo"
+            title="Przewiń w lewo"
+          >
+            <FaChevronLeft />
+          </button>
+
+          <div
+            className={`${styles.list} ${topRatedUsers.length <= 3 ? styles.centerCards : ""}`}
+            ref={scrollerRef}
+          >
+            {topRatedUsers.map((user, index) => (
+              <div className={styles.cardWrap} key={user._id || user.userId || index}>
+                <UserCard
+                  user={user}
+                  currentUser={currentUser}
+                  setAlert={setAlert}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.mobileHint}>
+            <span>←</span>
+            <p>Przesuń, aby zobaczyć więcej profili</p>
+            <span>→</span>
+          </div>
+
+          <button
+            type="button"
+            className={`${styles.navBtn} ${styles.right} ${!canRight ? styles.disabled : ""}`}
+            onClick={() => scrollByCard(1)}
+            disabled={!canRight}
+            aria-label="Przewiń w prawo"
+            title="Przewiń w prawo"
+          >
+            <FaChevronRight />
+          </button>
         </div>
       </div>
     </section>

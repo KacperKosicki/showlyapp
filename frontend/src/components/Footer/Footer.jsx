@@ -1,13 +1,42 @@
 import styles from "./Footer.module.scss";
 import { FaFacebookF, FaInstagram, FaXTwitter, FaLinkedinIn } from "react-icons/fa6";
 import { FiMail, FiPhone, FiMapPin, FiArrowUpRight } from "react-icons/fi";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Footer = () => {
   const year = new Date().getFullYear();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleNavigate = (path, scrollToId = null) => {
+    if (location.pathname === path && scrollToId) {
+      const el = document.getElementById(scrollToId);
+
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
+
+      return;
+    }
+
+    navigate(path, { state: { scrollToId } });
+  };
+
+  const scrollToTop = () => {
+    const el = document.getElementById("hero");
+
+    if (location.pathname === "/" && el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    navigate("/", { state: { scrollToId: "hero" } });
+  };
 
   return (
     <footer className={styles.footer} id="footer">
-      {/* ✨ background layers */}
       <div className={styles.bg} aria-hidden="true">
         <span className={styles.aurora} />
         <span className={styles.aurora2} />
@@ -18,7 +47,6 @@ const Footer = () => {
 
       <div className={styles.wrap}>
         <div className={styles.top}>
-          {/* brand */}
           <div className={styles.brand}>
             <div className={styles.brandTop}>
               <div className={styles.logoMark} aria-hidden="true" />
@@ -28,7 +56,8 @@ const Footer = () => {
             </div>
 
             <p className={styles.brandText}>
-              Showly.me to nowoczesna wizytówka usług online – profil, cennik, galeria i kontakt w jednym miejscu.
+              Showly.me to nowoczesna wizytówka usług online – profil, cennik,
+              galeria i kontakt w jednym miejscu.
             </p>
 
             <div className={styles.pills}>
@@ -38,34 +67,52 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* navigation */}
           <nav className={styles.card} aria-label="Nawigacja">
             <h4 className={styles.cardTitle}>Nawigacja</h4>
+
             <ul className={styles.links}>
               <li>
-                <a href="/" className={styles.link}>
+                <button
+                  type="button"
+                  className={styles.link}
+                  onClick={() => handleNavigate("/")}
+                >
                   Strona Główna <FiArrowUpRight />
-                </a>
+                </button>
               </li>
+
               <li>
-                <a href="#whyus" className={styles.link}>
+                <button
+                  type="button"
+                  className={styles.link}
+                  onClick={() => handleNavigate("/")}
+                >
                   Dlaczego My? <FiArrowUpRight />
-                </a>
+                </button>
               </li>
+
               <li>
-                <a href="#specialists" className={styles.link}>
+                <button
+                  type="button"
+                  className={styles.link}
+                  onClick={() => handleNavigate("/")}
+                >
                   Specjaliści <FiArrowUpRight />
-                </a>
+                </button>
               </li>
+
               <li>
-                <a href="/kontakt" className={styles.link}>
+                <button
+                  type="button"
+                  className={styles.link}
+                  onClick={() => handleNavigate("/kontakt", "scrollToId")}
+                >
                   Kontakt <FiArrowUpRight />
-                </a>
+                </button>
               </li>
             </ul>
           </nav>
 
-          {/* contact */}
           <div className={styles.card}>
             <h4 className={styles.cardTitle}>Kontakt</h4>
 
@@ -93,16 +140,43 @@ const Footer = () => {
             </div>
 
             <div className={styles.socials} aria-label="Social media (wkrótce)">
-              <button type="button" className={styles.socialBtn} aria-label="Facebook (wkrótce)" title="Wkrótce" disabled>
+              <button
+                type="button"
+                className={styles.socialBtn}
+                aria-label="Facebook (wkrótce)"
+                title="Wkrótce"
+                disabled
+              >
                 <FaFacebookF />
               </button>
-              <button type="button" className={styles.socialBtn} aria-label="Instagram (wkrótce)" title="Wkrótce" disabled>
+
+              <button
+                type="button"
+                className={styles.socialBtn}
+                aria-label="Instagram (wkrótce)"
+                title="Wkrótce"
+                disabled
+              >
                 <FaInstagram />
               </button>
-              <button type="button" className={styles.socialBtn} aria-label="X / Twitter (wkrótce)" title="Wkrótce" disabled>
+
+              <button
+                type="button"
+                className={styles.socialBtn}
+                aria-label="X / Twitter (wkrótce)"
+                title="Wkrótce"
+                disabled
+              >
                 <FaXTwitter />
               </button>
-              <button type="button" className={styles.socialBtn} aria-label="LinkedIn (wkrótce)" title="Wkrótce" disabled>
+
+              <button
+                type="button"
+                className={styles.socialBtn}
+                aria-label="LinkedIn (wkrótce)"
+                title="Wkrótce"
+                disabled
+              >
                 <FaLinkedinIn />
               </button>
             </div>
@@ -113,27 +187,51 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* bottom */}
         <div className={styles.bottom}>
           <div className={styles.bottomLeft}>
-            <span className={styles.copy}>© {year} Showly.me. Wszelkie prawa zastrzeżone.</span>
+            <span className={styles.copy}>
+              © {year} Showly.me. Wszelkie prawa zastrzeżone.
+            </span>
+
             <span className={styles.sep} aria-hidden="true" />
-            <a className={styles.smallLink} href="/regulamin">
+
+            <button
+              type="button"
+              className={styles.smallLink}
+              onClick={() => handleNavigate("/regulamin", "scrollToId")}
+            >
               Regulamin
-            </a>
+            </button>
+
             <span className={styles.dot} aria-hidden="true" />
-            <a className={styles.smallLink} href="/polityka-prywatnosci">
+
+            <button
+              type="button"
+              className={styles.smallLink}
+              onClick={() => handleNavigate("/polityka-prywatnosci", "scrollToId")}
+            >
               Polityka prywatności
-            </a>
+            </button>
+
             <span className={styles.dot} aria-hidden="true" />
-            <a className={styles.smallLink} href="/cookies">
+
+            <button
+              type="button"
+              className={styles.smallLink}
+              onClick={() => handleNavigate("/polityka-cookies", "scrollToId")}
+            >
               Cookies
-            </a>
+            </button>
           </div>
 
-          <a className={styles.toTop} href="#hero" aria-label="Wróć na górę">
+          <button
+            type="button"
+            className={styles.toTop}
+            onClick={scrollToTop}
+            aria-label="Wróć na górę"
+          >
             Do góry <span aria-hidden="true">↑</span>
-          </a>
+          </button>
         </div>
       </div>
     </footer>

@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import styles from "./Regulations.module.scss";
 import {
   FiFileText,
@@ -13,8 +15,36 @@ import {
 } from "react-icons/fi";
 
 const Regulations = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const scrollTo = location.state?.scrollToId;
+
+    if (!scrollTo) return;
+
+    const tryScroll = () => {
+      const el = document.getElementById(scrollTo);
+
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        window.history.replaceState(
+          {},
+          document.title,
+          location.pathname
+        );
+
+        return;
+      }
+
+      requestAnimationFrame(tryScroll);
+    };
+
+    requestAnimationFrame(tryScroll);
+  }, [location.state, location.pathname]);
+
   return (
-    <section className={styles.section}>
+    <section id="scrollToId" className={styles.section}>
       <div className={styles.bg}>
         <div className={styles.blur1}></div>
         <div className={styles.blur2}></div>

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import styles from "./Contact.module.scss";
 import AlertBox from "../AlertBox/AlertBox";
 import {
@@ -13,6 +14,8 @@ import {
 import { FaFacebookF, FaInstagram, FaXTwitter, FaLinkedinIn } from "react-icons/fa6";
 
 const Contact = () => {
+  const location = useLocation();
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -26,6 +29,27 @@ const Contact = () => {
   });
 
   const [alert, setAlert] = useState(null);
+
+  useEffect(() => {
+    const scrollTo = location.state?.scrollToId;
+
+    if (!scrollTo) return;
+
+    const tryScroll = () => {
+      const el = document.getElementById(scrollTo);
+
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        window.history.replaceState({}, document.title, location.pathname);
+        return;
+      }
+
+      requestAnimationFrame(tryScroll);
+    };
+
+    requestAnimationFrame(tryScroll);
+  }, [location.state, location.pathname]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -88,7 +112,7 @@ const Contact = () => {
   };
 
   return (
-    <section className={styles.section}>
+    <section id="scrollToId" className={styles.section}>
       <div className={styles.sectionBackground} aria-hidden="true" />
 
       <div className={styles.bg} aria-hidden="true">

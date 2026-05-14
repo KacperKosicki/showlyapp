@@ -14,6 +14,7 @@
 }
 
 /* ===== background layers ===== */
+
 .bg {
   position: absolute;
   inset: 0;
@@ -33,35 +34,78 @@
 
 .aurora {
   background:
-    radial-gradient(600px 320px at 18% 28%, rgba(111, 78, 242, 0.34), transparent 62%),
-    radial-gradient(540px 300px at 45% 65%, rgba(255, 64, 129, 0.22), transparent 60%),
-    radial-gradient(520px 320px at 85% 35%, rgba(77, 214, 255, 0.14), transparent 62%);
+    radial-gradient(
+      600px 320px at 18% 28%,
+      rgba(111, 78, 242, 0.34),
+      transparent 62%
+    ),
+    radial-gradient(
+      540px 300px at 45% 65%,
+      rgba(255, 64, 129, 0.22),
+      transparent 60%
+    ),
+    radial-gradient(
+      520px 320px at 85% 35%,
+      rgba(77, 214, 255, 0.14),
+      transparent 62%
+    );
 }
 
 .aurora2 {
   opacity: 0.7;
   animation-duration: 15s;
   animation-direction: reverse;
+
   background:
-    radial-gradient(560px 320px at 72% 28%, rgba(111, 78, 242, 0.20), transparent 62%),
-    radial-gradient(520px 320px at 22% 72%, rgba(255, 64, 129, 0.14), transparent 62%);
+    radial-gradient(
+      560px 320px at 72% 28%,
+      rgba(111, 78, 242, 0.2),
+      transparent 62%
+    ),
+    radial-gradient(
+      520px 320px at 22% 72%,
+      rgba(255, 64, 129, 0.14),
+      transparent 62%
+    );
 }
 
 .grid {
   position: absolute;
   inset: 0;
   opacity: 0.07;
+
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.14) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+    linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.14) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.14) 1px,
+      transparent 1px
+    );
+
   background-size: 140px 140px;
-  mask-image: radial-gradient(circle at 35% 5%, #000 0%, #000 40%, transparent 72%);
+
+  mask-image: radial-gradient(
+    circle at 35% 5%,
+    #000 0%,
+    #000 40%,
+    transparent 72%
+  );
 }
 
 .vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(1200px 700px at 30% 15%, transparent 40%, rgba(0, 0, 0, 0.78) 84%);
+
+  background: radial-gradient(
+    1200px 700px at 30% 15%,
+    transparent 40%,
+    rgba(0, 0, 0, 0.78) 84%
+  );
+
   opacity: 0.92;
 }
 
@@ -70,11 +114,14 @@
   inset: -30%;
   opacity: 0.22;
   mix-blend-mode: soft-light;
+
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+
   transform: rotate(2deg);
 }
 
 /* ===== content ===== */
+
 .wrap {
   position: relative;
   z-index: 1;
@@ -89,16 +136,24 @@
   align-items: start;
 }
 
-/* brand column */
+/* ===== brand ===== */
+
 .brand {
   padding: 18px;
   border-radius: 18px;
 
   border: 1px solid rgba(255, 255, 255, 0.14);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
+
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.03)
+  );
+
   box-shadow:
     0 26px 90px rgba(0, 0, 0, 0.55),
     0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -113,7 +168,13 @@
   width: 38px;
   height: 38px;
   border-radius: 14px;
-  background: linear-gradient(135deg, rgba(111, 78, 242, 0.9), rgba(255, 64, 129, 0.85));
+
+  background: linear-gradient(
+    135deg,
+    rgba(111, 78, 242, 0.9),
+    rgba(255, 64, 129, 0.85)
+  );
+
   box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
 }
 
@@ -121,11 +182,13 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
+
   margin: 0;
 
   font-family: $font-accent;
   font-weight: 950;
   letter-spacing: -0.02em;
+
   color: rgba(255, 255, 255, 0.92);
   font-size: 1.1rem;
 }
@@ -134,8 +197,10 @@
   font-size: 0.62rem;
   font-weight: 900;
   letter-spacing: 0.12em;
+
   padding: 0.22rem 0.5rem;
   border-radius: 999px;
+
   text-transform: uppercase;
   font-family: $font-accent;
 
@@ -143,9 +208,11 @@
   color: rgba(255, 255, 255, 0.9);
 
   border: 1px solid transparent;
+
   background-image:
     linear-gradient(transparent, transparent),
     linear-gradient(135deg, $primary-color, $secondary-color);
+
   background-origin: border-box;
   background-clip: padding-box, border-box;
 
@@ -154,9 +221,12 @@
 
 .brandText {
   margin: 12px 0 14px;
+
   font-family: $font-body;
-  color: rgba(255, 255, 255, 0.78);
   line-height: 1.65;
+
+  color: rgba(255, 255, 255, 0.78);
+
   max-width: 60ch;
 }
 
@@ -171,39 +241,53 @@
   font-weight: 900;
   font-size: 0.72rem;
   letter-spacing: 0.08em;
+
   text-transform: uppercase;
+
   padding: 6px 9px;
   border-radius: 999px;
 
   color: rgba(255, 255, 255, 0.78);
+
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-/* glass card */
+/* ===== glass cards ===== */
+
 .card {
   padding: 18px;
   border-radius: 18px;
 
   border: 1px solid rgba(255, 255, 255, 0.14);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.028));
+
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.028)
+  );
+
   box-shadow:
     0 26px 90px rgba(0, 0, 0, 0.55),
     0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 .cardTitle {
   margin: 0 0 12px;
+
   font-family: $font-accent;
   font-weight: 950;
   letter-spacing: -0.02em;
+
   color: rgba(255, 255, 255, 0.92);
   font-size: 1.02rem;
 }
 
-/* nav links */
+/* ===== links ===== */
+
 .links {
   list-style: none;
   padding: 0;
@@ -213,7 +297,21 @@
   gap: 10px;
 }
 
+.link,
+.smallLink,
+.toTop {
+  border: none;
+  outline: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* nav button */
+
 .link {
+  width: 100%;
+
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
@@ -221,14 +319,21 @@
 
   padding: 10px 12px;
   border-radius: 14px;
-  text-decoration: none;
+
+  text-align: left;
 
   font-family: $font-body;
-  color: rgba(255, 255, 255, 0.78);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.10);
 
-  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+  color: rgba(255, 255, 255, 0.78);
+
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease;
 }
 
 .link svg {
@@ -237,12 +342,16 @@
 
 .link:hover {
   transform: translateY(-1px);
+
   color: rgba(255, 255, 255, 0.92);
+
   border-color: rgba(255, 255, 255, 0.16);
+
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* contact */
+/* ===== contact ===== */
+
 .contact {
   display: grid;
   gap: 10px;
@@ -260,6 +369,7 @@
   width: 32px;
   height: 32px;
   border-radius: 12px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -273,7 +383,8 @@
   color: rgba(255, 255, 255, 0.78);
 }
 
-/* socials */
+/* ===== socials ===== */
+
 .socials {
   display: flex;
   gap: 10px;
@@ -291,12 +402,16 @@
 
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
+
   color: rgba(255, 255, 255, 0.78);
 
   cursor: not-allowed;
   opacity: 0.8;
 
-  transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
 }
 
 .socialBtn svg {
@@ -305,13 +420,16 @@
 
 .note {
   margin-top: 12px;
+
   font-family: $font-body;
-  color: rgba(255, 255, 255, 0.62);
   font-size: 0.92rem;
   line-height: 1.5;
+
+  color: rgba(255, 255, 255, 0.62);
 }
 
-/* bottom */
+/* ===== bottom ===== */
+
 .bottom {
   margin-top: 16px;
   padding-top: 14px;
@@ -322,7 +440,7 @@
   gap: 12px;
   flex-wrap: wrap;
 
-  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .bottomLeft {
@@ -334,15 +452,22 @@
 
 .copy {
   font-family: $font-body;
-  color: rgba(255, 255, 255, 0.62);
   font-size: 0.92rem;
+
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .sep {
   width: 22px;
   height: 2px;
   border-radius: 2px;
-  background: linear-gradient(90deg, rgba(111, 78, 242, 0.55), rgba(255, 64, 129, 0.45));
+
+  background: linear-gradient(
+    90deg,
+    rgba(111, 78, 242, 0.55),
+    rgba(255, 64, 129, 0.45)
+  );
+
   opacity: 0.9;
 }
 
@@ -350,24 +475,37 @@
   width: 4px;
   height: 4px;
   border-radius: 999px;
+
   background: rgba(255, 255, 255, 0.22);
 }
 
+/* bottom links */
+
 .smallLink {
+  padding: 0;
+
   font-family: $font-body;
   font-size: 0.92rem;
+
   color: rgba(255, 255, 255, 0.72);
-  text-decoration: none;
+
   border-bottom: 1px solid rgba(255, 255, 255, 0.18);
 
-  transition: color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+  transition:
+    color 0.16s ease,
+    border-color 0.16s ease,
+    transform 0.16s ease;
 }
 
 .smallLink:hover {
-  color: rgba(255, 255, 255, 0.90);
+  color: rgba(255, 255, 255, 0.9);
+
   border-color: rgba(255, 255, 255, 0.32);
+
   transform: translateY(-1px);
 }
+
+/* top button */
 
 .toTop {
   display: inline-flex;
@@ -377,25 +515,31 @@
   height: 44px;
   padding: 0 14px;
   border-radius: 14px;
-  text-decoration: none;
 
   font-family: $font-accent;
   font-weight: 950;
 
   color: rgba(255, 255, 255, 0.86);
+
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.12);
 
-  transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease;
 }
 
 .toTop:hover {
   transform: translateY(-1px);
+
   background: rgba(255, 255, 255, 0.06);
+
   border-color: rgba(255, 255, 255, 0.18);
 }
 
-/* responsive */
+/* ===== responsive ===== */
+
 @media (max-width: 1024px) {
   .top {
     grid-template-columns: 1fr;
@@ -430,7 +574,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   .aurora,
   .aurora2 {
     animation: none;
@@ -444,7 +587,8 @@
   }
 }
 
-/* animations */
+/* ===== animations ===== */
+
 @keyframes floaty {
   0% {
     transform: translate3d(-1%, -1%, 0) scale(1.02);

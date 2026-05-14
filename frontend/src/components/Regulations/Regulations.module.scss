@@ -14,14 +14,12 @@
   color: #111827;
 
   background:
-    linear-gradient(
-      180deg,
+    linear-gradient(180deg,
       #ffffff 0%,
       #ffffff 18%,
       #f8f7ff 48%,
       #ffffff 74%,
-      #fff3f8 100%
-    );
+      #fff3f8 100%);
 
   isolation: isolate;
 
@@ -75,13 +73,11 @@
     radial-gradient(720px 320px at 12% 52%, rgba(111, 78, 242, 0.12), transparent 64%),
     radial-gradient(780px 320px at 90% 58%, rgba(255, 64, 129, 0.1), transparent 66%),
     radial-gradient(900px 340px at 50% 100%, rgba(111, 78, 242, 0.07), transparent 70%);
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    transparent 16%,
-    #000 36%,
-    #000 100%
-  );
+  mask-image: linear-gradient(to bottom,
+      transparent 0%,
+      transparent 16%,
+      #000 36%,
+      #000 100%);
 }
 
 .bg {
@@ -122,13 +118,11 @@
     radial-gradient(800px 320px at 12% 54%, rgba(111, 78, 242, 0.1), transparent 64%),
     radial-gradient(780px 300px at 90% 60%, rgba(255, 64, 129, 0.08), transparent 66%),
     radial-gradient(900px 340px at 50% 100%, rgba(111, 78, 242, 0.06), transparent 70%);
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    transparent 16%,
-    #000 36%,
-    #000 100%
-  );
+  mask-image: linear-gradient(to bottom,
+      transparent 0%,
+      transparent 16%,
+      #000 36%,
+      #000 100%);
 }
 
 .inner {
@@ -378,8 +372,8 @@
   opacity: 0.9;
 }
 
-.sectionCard > *,
-.sideCard > * {
+.sectionCard>*,
+.sideCard>* {
   position: relative;
   z-index: 1;
 }
@@ -517,7 +511,7 @@
   border: 1px solid rgba(17, 24, 39, 0.06);
   box-shadow: 0 8px 20px rgba(17, 24, 39, 0.03);
 
-  > div:last-child {
+  >div:last-child {
     min-width: 0;
   }
 
@@ -623,14 +617,12 @@
   .section {
     padding: 4.5rem 1rem;
     background:
-      linear-gradient(
-        180deg,
+      linear-gradient(180deg,
         #ffffff 0%,
         #ffffff 16%,
         #f8f7ff 48%,
         #ffffff 76%,
-        #fff3f8 100%
-      );
+        #fff3f8 100%);
   }
 
   .section::before {

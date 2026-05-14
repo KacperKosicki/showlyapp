@@ -1716,7 +1716,7 @@ export default function PublicProfile() {
               ) : (
                 <div className={styles.emptyInline}>
                   <FaStar />
-                  <p>Brak opinii użytkowników.</p>
+                  <p>Użytkownik nie posiada jeszcze żadnej opinii.</p>
                 </div>
               )}
             </section>
