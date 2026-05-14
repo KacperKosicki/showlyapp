@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "./Contact.module.scss";
+import AlertBox from "../AlertBox/AlertBox";
 import {
   FiMail,
   FiPhone,
@@ -22,9 +23,9 @@ const Contact = () => {
 
   const [status, setStatus] = useState({
     loading: false,
-    success: "",
-    error: "",
   });
+
+  const [alert, setAlert] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,17 +41,29 @@ const Contact = () => {
 
     setStatus({
       loading: true,
-      success: "",
-      error: "",
     });
 
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 900));
+    setAlert(null);
 
-      setStatus({
-        loading: false,
-        success: "Wiadomość została wysłana. Odezwiemy się do Ciebie możliwie szybko.",
-        error: "",
+    try {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/contact`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Błąd wysyłania wiadomości.");
+      }
+
+      setAlert({
+        type: "success",
+        message:
+          "Wiadomość została wysłana. Odezwiemy się do Ciebie możliwie szybko.",
       });
 
       setForm({
@@ -61,10 +74,15 @@ const Contact = () => {
         message: "",
       });
     } catch (error) {
+      setAlert({
+        type: "error",
+        message:
+          error.message ||
+          "Nie udało się wysłać wiadomości. Spróbuj ponownie za chwilę.",
+      });
+    } finally {
       setStatus({
         loading: false,
-        success: "",
-        error: "Nie udało się wysłać wiadomości. Spróbuj ponownie za chwilę.",
       });
     }
   };
@@ -80,6 +98,14 @@ const Contact = () => {
       </div>
 
       <div className={styles.inner}>
+        {alert && (
+          <AlertBox
+            type={alert.type}
+            message={alert.message}
+            onClose={() => setAlert(null)}
+          />
+        )}
+
         <div className={styles.head}>
           <div className={styles.labelRow}>
             <span className={styles.labelBadge}>Kontakt</span>
@@ -272,18 +298,6 @@ const Contact = () => {
                   required
                 />
               </div>
-
-              {status.success && (
-                <div className={`${styles.statusBox} ${styles.success}`}>
-                  {status.success}
-                </div>
-              )}
-
-              {status.error && (
-                <div className={`${styles.statusBox} ${styles.error}`}>
-                  {status.error}
-                </div>
-              )}
 
               <button
                 type="submit"

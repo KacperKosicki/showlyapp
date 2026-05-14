@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const path = require('path');
+const contactRoutes = require("./routes/contactRoutes");
 
 dotenv.config();
 
@@ -56,6 +57,8 @@ app.use('/api/reservations', require('./routes/reservations'));
 app.use("/api/admin", require("./routes/admin"));
 
 app.use("/api/reports", require("./routes/reports"));
+
+app.use("/api/contact", contactRoutes);
 
 // ==========================
 // ✅ DB CONNECT
