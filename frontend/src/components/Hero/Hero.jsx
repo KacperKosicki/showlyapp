@@ -105,7 +105,9 @@ const Hero = ({ user }) => {
               <div className={styles.profileCover} />
 
               <div className={styles.profileMain}>
-                <div className={styles.avatar} />
+                <div className={styles.avatar}>
+                  <img src="/images/other/logo-showly.png" alt="Showly" />
+                </div>
 
                 <div>
                   <h3>Twoja marka</h3>

@@ -81,7 +81,7 @@ const Footer = () => {
                 <span className={styles.contactIcon} aria-hidden="true">
                   <FiPhone />
                 </span>
-                <span className={styles.contactText}>+48 123 456 789</span>
+                <span className={styles.contactText}>+48 -</span>
               </div>
 
               <div className={styles.contactRow}>

@@ -150,7 +150,7 @@ const Contact = () => {
                   <div>
                     <span className={styles.infoLabel}>Telefon</span>
                     <a className={styles.valueLink} href="tel:+48123456789">
-                      +48 123 456 789
+                      +48 -
                     </a>
                   </div>
                 </div>

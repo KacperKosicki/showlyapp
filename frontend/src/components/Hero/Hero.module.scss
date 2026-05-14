@@ -331,9 +331,20 @@ h1 {
   width: 68px;
   height: 68px;
   border-radius: 22px;
-  background: linear-gradient(135deg, #fff, #f3f4f6);
+  background-color: #111827;
   border: 5px solid #fff;
   box-shadow: 0 14px 34px rgba(17, 24, 39, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  img {
+    width: 72%;
+    height: 72%;
+    object-fit: contain;
+    display: block;
+  }
 }
 
 .tags {
