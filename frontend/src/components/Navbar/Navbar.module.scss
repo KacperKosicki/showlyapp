@@ -1,42 +1,14 @@
 @import "../../styles/variables";
 
-/* =========================
-   Floating Navbar
-   ========================= */
-
+/* ========================= Floating Navbar ========================= */
 .navbarShell {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-
-  padding:
-    calc(env(safe-area-inset-top, 0px) + 1.1rem) 1rem 0.8rem;
-
-  background:
-    radial-gradient(
-      420px 120px at 12% 0%,
-      rgba(111, 78, 242, 0.10),
-      transparent 62%
-    ),
-    radial-gradient(
-      420px 120px at 90% 0%,
-      rgba(255, 64, 129, 0.08),
-      transparent 62%
-    ),
-    rgba(255, 255, 255, 0.55);
-
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-
-  transition:
-    padding 0.24s ease,
-    background 0.24s ease,
-    box-shadow 0.24s ease,
-    backdrop-filter 0.24s ease,
-    border-color 0.24s ease;
-
+  padding: calc(env(safe-area-inset-top, 0px) + 1.1rem) 1rem 0.8rem;
+  transition: padding 0.24s ease, background 0.24s ease, box-shadow 0.24s ease, backdrop-filter 0.24s ease, border-color 0.24s ease;
   pointer-events: none;
 }
 
@@ -44,29 +16,12 @@
   pointer-events: auto;
 }
 
-/* =========================
-   Scroll state
-   ========================= */
-
+/* ========================= Scroll state ========================= */
 .scrolled {
-  padding:
-    calc(env(safe-area-inset-top, 0px) + 0.55rem) 1rem 0.55rem;
-
-  background:
-    radial-gradient(420px 120px at 12% 0%,
-      rgba(111, 78, 242, 0.12),
-      transparent 62%),
-    radial-gradient(420px 120px at 90% 0%,
-      rgba(255, 64, 129, 0.1),
-      transparent 62%),
-    rgba(255, 255, 255, 0.74);
-
+  padding: calc(env(safe-area-inset-top, 0px) + 0.55rem) 1rem 0.55rem;
+  background: radial-gradient(420px 120px at 12% 0%, rgba(111, 78, 242, 0.12), transparent 62%), radial-gradient(420px 120px at 90% 0%, rgba(255, 64, 129, 0.1), transparent 62%), rgba(255, 255, 255, 0.74);
   border-bottom: 1px solid rgba(17, 24, 39, 0.08);
-
-  box-shadow:
-    0 18px 50px rgba(17, 24, 39, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72);
-
+  box-shadow: 0 18px 50px rgba(17, 24, 39, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 
@@ -90,28 +45,18 @@
   }
 }
 
-/* =========================
-   Navbar
-   ========================= */
-
+/* ========================= Navbar ========================= */
 .navbar {
   max-width: 1180px;
   margin: 0 auto;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-
-  transition:
-    max-width 0.24s ease,
-    transform 0.24s ease;
+  transition: max-width 0.24s ease, transform 0.24s ease;
 }
 
-/* =========================
-   Logo
-   ========================= */
-
+/* ========================= Logo ========================= */
 .logoWrap {
   display: inline-flex;
   align-items: center;
@@ -119,7 +64,6 @@
   text-decoration: none;
   min-width: 0;
   flex-shrink: 0;
-
   transition: transform 0.18s ease;
 
   &:hover {
@@ -130,33 +74,16 @@
 .logoMark {
   width: 42px;
   height: 42px;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   border-radius: 15px;
-
-  background:
-    radial-gradient(120% 120% at 20% 20%,
-      rgba(255, 255, 255, 0.14),
-      transparent 40%),
-    linear-gradient(135deg, #111827 0%, #1f2937 100%);
-
+  background: radial-gradient(120% 120% at 20% 20%, rgba(255, 255, 255, 0.14), transparent 40%), linear-gradient(135deg, #111827 0%, #1f2937 100%);
   color: #fff;
-
   font-family: $font-accent;
   font-weight: 950;
-
-  box-shadow:
-    0 16px 40px rgba(17, 24, 39, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
-
-  transition:
-    width 0.22s ease,
-    height 0.22s ease,
-    border-radius 0.22s ease,
-    transform 0.22s ease;
+  box-shadow: 0 16px 40px rgba(17, 24, 39, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: width 0.22s ease, height 0.22s ease, border-radius 0.22s ease, transform 0.22s ease;
 }
 
 .logoText {
@@ -166,34 +93,23 @@
   color: #111827;
   letter-spacing: -0.04em;
   white-space: nowrap;
-
   transition: font-size 0.22s ease;
 }
 
 .beta {
   padding: 0.28rem 0.52rem;
-
   border-radius: 999px;
-
   background: rgba(111, 78, 242, 0.09);
   border: 1px solid rgba(111, 78, 242, 0.14);
-
   color: $primary-color;
-
   font-family: $font-accent;
   font-weight: 950;
   font-size: 0.68rem;
   text-transform: uppercase;
-
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 8px 18px rgba(111, 78, 242, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 8px 18px rgba(111, 78, 242, 0.08);
 }
 
-/* =========================
-   Right
-   ========================= */
-
+/* ========================= Right ========================= */
 .right {
   display: flex;
   align-items: center;
@@ -201,64 +117,38 @@
   min-width: 0;
 }
 
-/* =========================
-   Auth buttons wrap
-   ========================= */
-
+/* ========================= Auth buttons wrap ========================= */
 .authButtons {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-
   padding: 0.35rem;
-
   border-radius: 999px;
-
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid rgba(17, 24, 39, 0.08);
-
-  box-shadow:
-    0 16px 48px rgba(17, 24, 39, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.72);
-
+  box-shadow: 0 16px 48px rgba(17, 24, 39, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-
-  transition:
-    background 0.22s ease,
-    box-shadow 0.22s ease,
-    transform 0.22s ease;
+  transition: background 0.22s ease, box-shadow 0.22s ease, transform 0.22s ease;
 }
 
-/* =========================
-   Buttons
-   ========================= */
-
+/* ========================= Buttons ========================= */
 .loginPrompt,
 .registerPrompt {
   min-height: 48px;
   padding: 0 1.18rem;
-
   border: 0;
   border-radius: 999px;
-
   cursor: pointer;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-
   font-family: $font-accent;
   font-weight: 950;
   font-size: 1rem;
   white-space: nowrap;
-
-  transition:
-    transform 0.18s ease,
-    background 0.18s ease,
-    box-shadow 0.18s ease,
-    color 0.18s ease;
+  transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
 
   svg {
     font-size: 0.95rem;
@@ -270,10 +160,7 @@
   }
 }
 
-/* =========================
-   Login
-   ========================= */
-
+/* ========================= Login ========================= */
 .loginPrompt {
   background: transparent;
   color: rgba(17, 24, 39, 0.72);
@@ -284,44 +171,26 @@
   }
 }
 
-/* =========================
-   Register
-   ========================= */
-
+/* ========================= Register ========================= */
 .registerPrompt {
-  background:
-    linear-gradient(135deg,
-      $primary-color 0%,
-      $secondary-color 100%);
-
+  background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
   color: #fff;
-
-  box-shadow:
-    0 14px 32px rgba(111, 78, 242, 0.22),
-    0 8px 20px rgba(255, 64, 129, 0.14);
+  box-shadow: 0 14px 32px rgba(111, 78, 242, 0.22), 0 8px 20px rgba(255, 64, 129, 0.14);
 
   &:hover {
     transform: translateY(-2px);
-
-    box-shadow:
-      0 18px 40px rgba(111, 78, 242, 0.28),
-      0 10px 26px rgba(255, 64, 129, 0.16);
+    box-shadow: 0 18px 40px rgba(111, 78, 242, 0.28), 0 10px 26px rgba(255, 64, 129, 0.16);
   }
 }
 
-/* =========================
-   TABLET
-   ========================= */
-
+/* ========================= TABLET ========================= */
 @media (max-width: 760px) {
   .navbarShell {
-    padding:
-      calc(env(safe-area-inset-top, 0px) + 0.9rem) 1rem 0.7rem;
+    padding: calc(env(safe-area-inset-top, 0px) + 0.9rem) 1rem 0.7rem;
   }
 
   .scrolled {
-    padding:
-      calc(env(safe-area-inset-top, 0px) + 0.45rem) 1rem 0.45rem;
+    padding: calc(env(safe-area-inset-top, 0px) + 0.45rem) 1rem 0.45rem;
   }
 
   .navbar {
@@ -343,14 +212,10 @@
   }
 }
 
-/* =========================
-   MOBILE
-   ========================= */
-
+/* ========================= MOBILE ========================= */
 @media (max-width: 520px) {
   .navbarShell {
-    padding:
-      calc(env(safe-area-inset-top, 0px) + 0.85rem) 0.8rem 0.7rem;
+    padding: calc(env(safe-area-inset-top, 0px) + 0.85rem) 0.8rem 0.7rem;
   }
 
   .navbar {
@@ -380,14 +245,10 @@
   .authButtons {
     width: 100%;
     max-width: 340px;
-
     display: grid;
     grid-template-columns: 1fr 1.25fr;
-
     gap: 0.35rem;
-
     padding: 0.32rem;
-
     border-radius: 22px;
   }
 
@@ -404,10 +265,7 @@
   }
 }
 
-/* =========================
-   VERY SMALL
-   ========================= */
-
+/* ========================= VERY SMALL ========================= */
 @media (max-width: 390px) {
   .navbar {
     gap: 0.65rem;
