@@ -1047,23 +1047,7 @@ export default function PublicProfile() {
               </div>
 
               <div className={styles.heroInfo}>
-                <div className={styles.kickerRow}>
-                  <span className={styles.kicker}>
-                    <FaAward />
-                    Wizytówka Showly
-                  </span>
-
-                  {partner.isPartner && (
-                    <span className={styles.partnerMini}>
-                      <FaShieldAlt />
-                      Partner
-                    </span>
-                  )}
-                </div>
-
                 <div className={styles.titleRow}>
-                  <h1 className={styles.heroTitle}>{name}</h1>
-
                   <div className={styles.badgesRow}>
                     {partner.isPartner && (
                       <span
@@ -1076,8 +1060,6 @@ export default function PublicProfile() {
                       </span>
                     )}
 
-                    {role?.trim() && <span className={styles.roleBadge}>{role}</span>}
-
                     <span
                       className={cn(
                         styles.titlePill,
@@ -1087,6 +1069,14 @@ export default function PublicProfile() {
                       {typeLabel}
                     </span>
                   </div>
+
+                  <h1 className={styles.heroTitle}>{name}</h1>
+
+                  {role?.trim() && (
+                    <p className={styles.heroRole} title={role}>
+                      {role}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

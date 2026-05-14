@@ -586,36 +586,13 @@ $page-max: 1240px;
 .heroInfo {
   min-width: 0;
   color: #fff;
-}
 
-.kickerRow {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
-  margin-bottom: 12px;
-}
 
-.kicker,
-.partnerMini {
-  min-height: 30px;
-  padding: 0 11px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: #fff;
-  background: rgba(15, 23, 42, 0.24);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(12px);
-  font-family: $font-accent;
-  font-size: 0.68rem;
-  font-weight: 950;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-.partnerMini {
-  background: rgba(255, 255, 255, 0.18);
+  text-align: left;
 }
 
 .titleRow {
@@ -632,6 +609,38 @@ $page-max: 1240px;
   letter-spacing: -0.055em;
   color: #fff;
   text-shadow: 0 10px 32px rgba(0, 0, 0, 0.28);
+}
+
+.heroRole {
+  margin: 0;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 34px;
+  padding: 0 13px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  font-family: $font-accent;
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1;
+
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(15, 23, 42, 0.24);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  backdrop-filter: blur(10px);
 }
 
 .badgesRow {
@@ -2262,19 +2271,16 @@ $page-max: 1240px;
     border-radius: 13px;
   }
 
-  .kickerRow {
-    margin-bottom: 6px;
-  }
-
-  .kicker,
-  .partnerMini {
-    min-height: 25px;
-    padding: 0 8px;
-    font-size: 0.55rem;
+  .heroRole {
+    min-height: 28px;
+    padding: 0 10px;
+    font-size: 0.62rem;
+    max-width: 100%;
+    justify-content: flex-start;
   }
 
   .heroTitle {
-    font-size: 1.25rem;
+    font-size: 1.38rem;
     line-height: 1.08;
     letter-spacing: -0.025em;
   }

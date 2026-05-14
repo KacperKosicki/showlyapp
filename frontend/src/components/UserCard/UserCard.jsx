@@ -453,29 +453,27 @@ const UserCard = ({
           </div>
 
           <div className={styles.heroInfo}>
-            <div className={styles.titleRow}>
-              <h3 className={styles.name}>
-                <span className={styles.receiverName}>{name || "Profil użytkownika"}</span>
-              </h3>
-
-              <div className={styles.badgesRow}>
-                {partner.isPartner && (
-                  <span
-                    className={`${styles.partnerBadge} ${styles[`partner_${partner.tier}`] || ""
-                      }`}
-                  >
-                    {partner.label}
-                  </span>
-                )}
-
+            <div className={styles.badgesRow}>
+              {partner.isPartner && (
                 <span
-                  className={`${styles.profileBadge} ${styles[`type_${profileType}`] || ""
+                  className={`${styles.partnerBadge} ${styles[`partner_${partner.tier}`] || ""
                     }`}
                 >
-                  {getProfileTypeLabel(profileType)}
+                  {partner.label}
                 </span>
-              </div>
+              )}
+
+              <span
+                className={`${styles.profileBadge} ${styles[`type_${profileType}`] || ""
+                  }`}
+              >
+                {getProfileTypeLabel(profileType)}
+              </span>
             </div>
+
+            <h3 className={styles.name}>
+              <span className={styles.receiverName}>{name || "Profil użytkownika"}</span>
+            </h3>
 
             <p className={styles.role} title={role || ""}>
               {role || "—"}
