@@ -25,7 +25,6 @@ import {
   FaQuoteLeft,
   FaExternalLinkAlt,
   FaInfoCircle,
-  FaAward,
   FaComments,
   FaLink,
 } from "react-icons/fa";
