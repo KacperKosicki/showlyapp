@@ -190,8 +190,10 @@ const UserCard = ({
   }, [currentUser?.uid]);
 
   useEffect(() => {
-    setIsFav(!!user.isFavorite);
-  }, [user.userId, user.isFavorite]);
+    if (typeof user.isFavorite === "boolean") {
+      setIsFav(user.isFavorite);
+    }
+  }, [user.userId]);
 
   useEffect(() => {
     if (typeof user.favoritesCount === "number") {
@@ -323,6 +325,16 @@ const UserCard = ({
 
       if (typeof data?.isFav === "boolean") setIsFav(data.isFav);
       if (typeof data?.count === "number") setFavCount(data.count);
+
+      window.dispatchEvent(
+        new CustomEvent("showly:favorites-updated", {
+          detail: {
+            profileUserId: user.userId,
+            isFav: finalIsFav,
+            count: typeof data?.count === "number" ? data.count : undefined,
+          },
+        })
+      );
 
       showAlert(
         finalIsFav

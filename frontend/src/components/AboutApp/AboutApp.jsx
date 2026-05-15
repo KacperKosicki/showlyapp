@@ -176,7 +176,11 @@ const AboutApp = ({ user }) => {
           </div>
 
           <div className={styles.actions}>
-            <LoadingLink to="/wizytowki" className={styles.primary}>
+            <LoadingLink
+              to="/profile"
+              state={{ scrollToId: "profilesHub" }}
+              className={styles.primary}
+            >
               Zobacz profile <FiArrowRight />
             </LoadingLink>
 
@@ -191,7 +195,7 @@ const AboutApp = ({ user }) => {
             ) : (
               <LoadingLink
                 to="/register"
-                state={{ scrollToId: "registerContainer" }}
+                state={{ scrollToId: "registerBox" }}
                 className={styles.secondary}
               >
                 Załóż darmowy profil

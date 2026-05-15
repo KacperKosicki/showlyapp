@@ -393,8 +393,8 @@ export default function Favorites({ currentUser, setAlert }) {
 
               <Link
                 className={styles.cta}
-                to="/"
-                state={{ scrollToId: "scrollToId" }}
+                to="/profile"
+                state={{ scrollToId: "profilesHub" }}
               >
                 Przeglądaj specjalistów
               </Link>

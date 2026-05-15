@@ -38,6 +38,7 @@ import Regulations from "./components/Regulations/Regulations";
 import CookieBanner from "./components/CookieBanner/CookieBanner";
 import CookiesPolicy from "./components/CookiesPolicy/CookiesPolicy";
 import ShowlyJourney from "./components/ShowlyJourney/ShowlyJourney";
+import ProfilesHub from "./components/ProfilesHub/ProfilesHub";
 
 import AdminPanel from "./components/AdminPanel/AdminPanel";
 import AdminRoute from "./components/auth/AdminRoute";
@@ -536,6 +537,17 @@ function App() {
             <>
               <Hero {...heroProps} />
               <Contact />
+              <Footer />
+            </>
+          }
+        />
+
+        <Route
+          path="/profile"
+          element={
+            <>
+              <Hero {...heroProps} />
+              <ProfilesHub currentUser={safeUser} setAlert={setAlert} />
               <Footer />
             </>
           }

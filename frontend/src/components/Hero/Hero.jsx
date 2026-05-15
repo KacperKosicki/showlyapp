@@ -87,7 +87,7 @@ const Hero = ({ user }) => {
             ) : (
               <LoadingLink
                 to="/register"
-                state={{ scrollToId: "registerContainer" }}
+                state={{ scrollToId: "registerBox" }}
                 className={styles.primaryBtn}
               >
                 Załóż darmowy profil
