@@ -4,7 +4,6 @@ import styles from "./ProfilesHub.module.scss";
 import UserCard from "../UserCard/UserCard";
 import {
     FiSearch,
-    FiSliders,
     FiGrid,
     FiStar,
     FiUsers,

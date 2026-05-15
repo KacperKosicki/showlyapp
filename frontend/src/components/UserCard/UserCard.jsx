@@ -193,7 +193,7 @@ const UserCard = ({
     if (typeof user.isFavorite === "boolean") {
       setIsFav(user.isFavorite);
     }
-  }, [user.userId]);
+  }, [user.userId, user.isFavorite]);
 
   useEffect(() => {
     if (typeof user.favoritesCount === "number") {
