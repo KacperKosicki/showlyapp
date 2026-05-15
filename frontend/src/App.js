@@ -37,6 +37,7 @@ import Contact from "./components/Contact/Contact";
 import Regulations from "./components/Regulations/Regulations";
 import CookieBanner from "./components/CookieBanner/CookieBanner";
 import CookiesPolicy from "./components/CookiesPolicy/CookiesPolicy";
+import ShowlyJourney from "./components/ShowlyJourney/ShowlyJourney";
 
 import AdminPanel from "./components/AdminPanel/AdminPanel";
 import AdminRoute from "./components/auth/AdminRoute";
@@ -535,6 +536,17 @@ function App() {
             <>
               <Hero {...heroProps} />
               <Contact />
+              <Footer />
+            </>
+          }
+        />
+
+        <Route
+          path="/jak-to-dziala"
+          element={
+            <>
+              <Hero {...heroProps} />
+              <ShowlyJourney />
               <Footer />
             </>
           }

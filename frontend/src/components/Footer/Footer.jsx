@@ -25,14 +25,27 @@ const Footer = () => {
   };
 
   const scrollToTop = () => {
-    const el = document.getElementById("hero");
+    const html = document.documentElement;
+    const body = document.body;
 
-    if (location.pathname === "/" && el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
+    const previousHtmlBehavior = html.style.scrollBehavior;
+    const previousBodyBehavior = body.style.scrollBehavior;
 
-    navigate("/", { state: { scrollToId: "hero" } });
+    html.style.scrollBehavior = "smooth";
+    body.style.scrollBehavior = "smooth";
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+
+    setTimeout(() => {
+      html.scrollTop = 0;
+      body.scrollTop = 0;
+
+      html.style.scrollBehavior = previousHtmlBehavior;
+      body.style.scrollBehavior = previousBodyBehavior;
+    }, 500);
   };
 
   return (

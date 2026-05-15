@@ -1,9 +1,29 @@
 import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import styles from "./Hero.module.scss";
 import SearchBar from "../SearchBar/SearchBar";
 import LoadingLink from "../ui/LoadingLink/LoadingLink";
 
 const Hero = ({ user }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleNavigate = (path, scrollToId = null) => {
+    if (location.pathname === path && scrollToId) {
+      const el = document.getElementById(scrollToId);
+
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
+
+      return;
+    }
+
+    navigate(path, { state: { scrollToId } });
+  };
+
   useEffect(() => {
     document.body.classList.add("hero-page");
     document.documentElement.classList.add("hero-page-html");
@@ -74,9 +94,13 @@ const Hero = ({ user }) => {
               </LoadingLink>
             )}
 
-            <a href="#how" className={styles.secondaryBtn}>
-              Zobacz jak działa
-            </a>
+            <button
+              type="button"
+              className={styles.secondaryBtn}
+              onClick={() => handleNavigate("/jak-to-dziala", "showlyJourney")}
+            >
+              Zobacz jak działa Showly
+            </button>
           </div>
 
           <div className={styles.stats}>
