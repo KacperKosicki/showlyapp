@@ -598,7 +598,7 @@ $page-max: 1240px;
 .titleRow {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 15px;
   min-width: 0;
 }
 
@@ -2209,6 +2209,10 @@ $page-max: 1240px;
   .heroTopRight {
     gap: 6px;
     max-width: calc(50% - 4px);
+  }
+
+  .titleRow {
+    gap: 6px;
   }
 
   .locPill {
