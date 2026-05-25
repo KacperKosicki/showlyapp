@@ -1,7 +1,11 @@
+// models/Profile.js
 const mongoose = require("mongoose");
 
 const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i;
 
+// =========================
+// OBRAZY
+// =========================
 const imageSchema = new mongoose.Schema(
   {
     url: { type: String, default: "" },
@@ -10,6 +14,9 @@ const imageSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// =========================
+// OCENY / OPINIE
+// =========================
 const ratedBySchema = new mongoose.Schema(
   {
     userId: { type: String, default: "" },
@@ -22,6 +29,9 @@ const ratedBySchema = new mongoose.Schema(
   { _id: true }
 );
 
+// =========================
+// TERMINY
+// =========================
 const availableDateSchema = new mongoose.Schema(
   {
     date: { type: String, required: true }, // np. "2025-07-15"
@@ -31,6 +41,9 @@ const availableDateSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// =========================
+// SZYBKIE ODPOWIEDZI
+// =========================
 const quickAnswerSchema = new mongoose.Schema(
   {
     title: { type: String, default: "", trim: true, maxlength: 80 },
@@ -39,6 +52,97 @@ const quickAnswerSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// =========================
+// BILLING / PLAN
+// =========================
+const billingSchema = new mongoose.Schema(
+  {
+    plan: {
+      type: String,
+      enum: ["free", "standard", "premium"],
+      default: "free",
+      index: true,
+    },
+
+    status: {
+      type: String,
+      enum: [
+        "inactive",
+        "pending",
+        "trialing",
+        "active",
+        "past_due",
+        "canceled",
+        "unpaid",
+        "incomplete",
+        "incomplete_expired",
+      ],
+      default: "inactive",
+      index: true,
+    },
+
+    stripeCustomerId: {
+      type: String,
+      default: "",
+      trim: true,
+      index: true,
+    },
+
+    stripeSubscriptionId: {
+      type: String,
+      default: "",
+      trim: true,
+      index: true,
+    },
+
+    stripePriceId: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    currentPeriodStart: {
+      type: Date,
+      default: null,
+    },
+
+    currentPeriodEnd: {
+      type: Date,
+      default: null,
+    },
+
+    cancelAtPeriodEnd: {
+      type: Boolean,
+      default: false,
+    },
+
+    lastPaymentAt: {
+      type: Date,
+      default: null,
+    },
+
+    lastPaymentFailedAt: {
+      type: Date,
+      default: null,
+    },
+
+    graceUntil: {
+      type: Date,
+      default: null,
+    },
+
+    // Na przyszłość, gdybyś chciał ręcznie komuś dać więcej limitów
+    featureOverrides: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {},
+    },
+  },
+  { _id: false }
+);
+
+// =========================
+// USŁUGI / OFERTA
+// =========================
 const serviceSchema = new mongoose.Schema(
   {
     name: {
@@ -84,12 +188,14 @@ const serviceSchema = new mongoose.Schema(
       default: () => ({ url: "", publicId: "" }),
     },
 
+    // Techniczny limit pod największy plan.
+    // Biznesowe limity Free/Standard/Premium sprawdzimy w routes.
     gallery: {
       type: [imageSchema],
       default: [],
       validate: {
-        validator: (arr) => Array.isArray(arr) && arr.length <= 6,
-        message: "Maksymalnie 6 zdjęć w galerii usługi.",
+        validator: (arr) => Array.isArray(arr) && arr.length <= 10,
+        message: "Maksymalnie 10 zdjęć w galerii usługi.",
       },
     },
 
@@ -99,21 +205,25 @@ const serviceSchema = new mongoose.Schema(
         enum: ["fixed", "from", "range", "contact", "free"],
         default: "contact",
       },
+
       amount: {
         type: Number,
         default: null,
         min: 0,
       },
+
       from: {
         type: Number,
         default: null,
         min: 0,
       },
+
       to: {
         type: Number,
         default: null,
         min: 0,
       },
+
       currency: {
         type: String,
         default: "PLN",
@@ -121,18 +231,20 @@ const serviceSchema = new mongoose.Schema(
         uppercase: true,
         maxlength: 8,
       },
+
       unitLabel: {
         type: String,
         default: "",
         trim: true,
         maxlength: 30,
-      }, // np. "za usługę", "za projekt", "za godzinę", "za sztukę"
+      },
+
       note: {
         type: String,
         default: "",
         trim: true,
         maxlength: 120,
-      }, // np. "Cena zależy od wielkości tortu"
+      },
     },
 
     duration: {
@@ -141,17 +253,19 @@ const serviceSchema = new mongoose.Schema(
         default: null,
         min: 0,
       },
+
       unit: {
         type: String,
         enum: ["minutes", "hours", "days", "weeks"],
         default: "minutes",
       },
+
       label: {
         type: String,
         default: "",
         trim: true,
         maxlength: 40,
-      }, // np. "czas wizyty", "czas realizacji"
+      },
     },
 
     booking: {
@@ -159,6 +273,7 @@ const serviceSchema = new mongoose.Schema(
         type: Boolean,
         default: false,
       },
+
       type: {
         type: String,
         enum: ["calendar", "request", "none"],
@@ -172,12 +287,13 @@ const serviceSchema = new mongoose.Schema(
         enum: ["onsite", "online", "shipping", "pickup", "hybrid", "none"],
         default: "none",
       },
+
       turnaroundText: {
         type: String,
         default: "",
         trim: true,
         maxlength: 80,
-      }, // np. "do 3 dni", "1–2 tygodnie"
+      },
     },
 
     tags: {
@@ -207,7 +323,7 @@ const serviceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Dodatkowa walidacja logiki ceny
+// Dodatkowa walidacja logiki ceny usługi
 serviceSchema.pre("validate", function (next) {
   const mode = this?.price?.mode;
 
@@ -230,7 +346,9 @@ serviceSchema.pre("validate", function (next) {
       this.price.to === null ||
       this.price.to === undefined
     ) {
-      return next(new Error("Dla price.mode='range' wymagane są price.from i price.to."));
+      return next(
+        new Error("Dla price.mode='range' wymagane są price.from i price.to.")
+      );
     }
 
     if (this.price.to < this.price.from) {
@@ -241,22 +359,33 @@ serviceSchema.pre("validate", function (next) {
   next();
 });
 
+// =========================
+// PROFIL
+// =========================
 const profileSchema = new mongoose.Schema(
   {
-    userId: { type: String, required: true, unique: true },
+    userId: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+    },
 
     name: { type: String, default: "", trim: true },
+
     avatar: {
       type: imageSchema,
       default: () => ({ url: "", publicId: "" }),
     },
 
+    // Techniczny limit pod Premium.
+    // Free/Standard/Premium będziemy pilnować w backend routes.
     photos: {
       type: [imageSchema],
       default: [],
       validate: {
-        validator: (arr) => Array.isArray(arr) && arr.length <= 6,
-        message: "Maksymalnie 6 zdjęć w galerii profilu.",
+        validator: (arr) => Array.isArray(arr) && arr.length <= 20,
+        message: "Maksymalnie 20 zdjęć w galerii profilu.",
       },
     },
 
@@ -278,6 +407,7 @@ const profileSchema = new mongoose.Schema(
     visits: { type: Number, default: 0 },
 
     showAvailableDates: { type: Boolean, default: true },
+
     availableDates: {
       type: [availableDateSchema],
       default: [],
@@ -320,6 +450,7 @@ const profileSchema = new mongoose.Schema(
 
     team: {
       enabled: { type: Boolean, default: false },
+
       assignmentMode: {
         type: String,
         enum: ["user-pick", "auto-assign"],
@@ -332,7 +463,14 @@ const profileSchema = new mongoose.Schema(
 
       tier: {
         type: String,
-        enum: ["none", "partner", "verified", "ambassador", "founding-partner", "owner"],
+        enum: [
+          "none",
+          "partner",
+          "verified",
+          "ambassador",
+          "founding-partner",
+          "owner",
+        ],
         default: "none",
       },
 
@@ -374,10 +512,23 @@ const profileSchema = new mongoose.Schema(
 
     favoritesCount: { type: Number, default: 0 },
 
+    // Widoczność profilu publicznego
     isVisible: { type: Boolean, default: true },
-    visibleUntil: { type: Date, required: true },
 
-    description: { type: String, default: "", trim: true, maxlength: 3000 },
+    visibleUntil: {
+      type: Date,
+      required: true,
+    },
+
+    // Technicznie dajemy większy limit.
+    // Limit planu będzie pilnowany osobno.
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 8000,
+    },
+
     links: { type: [String], default: [] },
 
     contact: {
@@ -409,6 +560,7 @@ const profileSchema = new mongoose.Schema(
         enum: ["system", "violet", "blue", "green", "orange", "red", "dark"],
         default: "system",
       },
+
       primary: {
         type: String,
         default: "",
@@ -417,6 +569,7 @@ const profileSchema = new mongoose.Schema(
           message: "theme.primary musi być HEX (#RGB lub #RRGGBB)",
         },
       },
+
       secondary: {
         type: String,
         default: "",
@@ -427,21 +580,50 @@ const profileSchema = new mongoose.Schema(
       },
     },
 
-    slug: { type: String, required: true, unique: true, trim: true },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      index: true,
+    },
 
+    // Techniczny limit pod Premium.
+    // Free/Standard/Premium limitujemy w routes.
     quickAnswers: {
       type: [quickAnswerSchema],
       default: [],
       validate: {
-        validator: (arr) => Array.isArray(arr) && arr.length <= 3,
-        message: "Maksymalnie 3 szybkie odpowiedzi.",
+        validator: (arr) => Array.isArray(arr) && arr.length <= 10,
+        message: "Maksymalnie 10 szybkich odpowiedzi.",
       },
+    },
+
+    // Nowe pole planów i płatności
+    billing: {
+      type: billingSchema,
+      default: () => ({
+        plan: "free",
+        status: "inactive",
+        stripeCustomerId: "",
+        stripeSubscriptionId: "",
+        stripePriceId: "",
+        currentPeriodStart: null,
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+        lastPaymentAt: null,
+        lastPaymentFailedAt: null,
+        graceUntil: null,
+        featureOverrides: {},
+      }),
     },
   },
   { timestamps: true }
 );
 
-// Dodatkowa walidacja profilu
+// =========================
+// DODATKOWA WALIDACJA PROFILU
+// =========================
 profileSchema.pre("validate", function (next) {
   if (
     this.priceFrom !== null &&
@@ -461,14 +643,16 @@ profileSchema.pre("validate", function (next) {
     this.partnership.tier = "none";
   }
 
+  // Jeżeli ktoś ma aktywny/płatny booking, ale plan nieaktywny,
+  // nie robimy tu blokady, bo to będzie pilnowane w routes.
+  // Dzięki temu stare profile nie wywalą walidacji przy migracji.
+
   next();
 });
 
 // =========================
 // INDEKSY POD WYSZUKIWARKĘ
 // =========================
-
-// główny text search
 profileSchema.index(
   {
     name: "text",
@@ -500,7 +684,9 @@ profileSchema.index(
   }
 );
 
-// pomocnicze indeksy do filtrowania i sortowania
+// =========================
+// INDEKSY POMOCNICZE
+// =========================
 profileSchema.index({ isVisible: 1, visibleUntil: 1 });
 profileSchema.index({ rating: -1, reviews: -1 });
 profileSchema.index({ location: 1 });
@@ -508,5 +694,11 @@ profileSchema.index({ bookingMode: 1 });
 profileSchema.index({ favoritesCount: -1 });
 profileSchema.index({ visits: -1 });
 profileSchema.index({ createdAt: -1 });
+
+profileSchema.index({ "billing.plan": 1 });
+profileSchema.index({ "billing.status": 1 });
+profileSchema.index({ "billing.stripeCustomerId": 1 });
+profileSchema.index({ "billing.stripeSubscriptionId": 1 });
+profileSchema.index({ "billing.currentPeriodEnd": 1 });
 
 module.exports = mongoose.model("Profile", profileSchema);
