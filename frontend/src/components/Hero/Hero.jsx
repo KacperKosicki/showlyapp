@@ -4,7 +4,7 @@ import styles from "./Hero.module.scss";
 import SearchBar from "../SearchBar/SearchBar";
 import LoadingLink from "../ui/LoadingLink/LoadingLink";
 
-const Hero = ({ user }) => {
+const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -77,21 +77,35 @@ const Hero = ({ user }) => {
 
           <div className={styles.actions}>
             {user ? (
-              <LoadingLink
-                to="/profil"
-                state={{ scrollToId: "scrollToId" }}
-                className={styles.primaryBtn}
-              >
-                Edytuj profil
-              </LoadingLink>
+              loadingProfileStatus ? (
+                <button type="button" className={styles.primaryBtn} disabled>
+                  Sprawdzanie profilu...
+                </button>
+              ) : hasProfile ? (
+                <button
+                  type="button"
+                  className={styles.primaryBtn}
+                  onClick={() => handleNavigate("/profil", "profileWrapper")}
+                >
+                  Edytuj profil
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.primaryBtn}
+                  onClick={() => handleNavigate("/stworz-profil", "scrollToId")}
+                >
+                  Stwórz profil
+                </button>
+              )
             ) : (
-              <LoadingLink
-                to="/register"
-                state={{ scrollToId: "registerBox" }}
+              <button
+                type="button"
                 className={styles.primaryBtn}
+                onClick={() => handleNavigate("/register", "registerBox")}
               >
                 Załóż darmowy profil
-              </LoadingLink>
+              </button>
             )}
 
             <button

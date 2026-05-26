@@ -1,4 +1,5 @@
 import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import styles from "./AboutApp.module.scss";
 import LoadingLink from "../ui/LoadingLink/LoadingLink";
 
@@ -12,7 +13,26 @@ import {
   FiZap,
 } from "react-icons/fi";
 
-const AboutApp = ({ user }) => {
+const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleNavigate = (path, scrollToId = null) => {
+    if (location.pathname === path && scrollToId) {
+      const el = document.getElementById(scrollToId);
+
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
+
+      return;
+    }
+
+    navigate(path, { state: { scrollToId } });
+  };
+
   return (
     <section className={styles.about} id="about-app">
       <div className={styles.bg} aria-hidden="true">
@@ -176,30 +196,44 @@ const AboutApp = ({ user }) => {
           </div>
 
           <div className={styles.actions}>
-            <LoadingLink
-              to="/profile"
-              state={{ scrollToId: "profilesHub" }}
+            <button
+              type="button"
               className={styles.primary}
+              onClick={() => handleNavigate("/profile", "profilesHub")}
             >
               Zobacz profile <FiArrowRight />
-            </LoadingLink>
+            </button>
 
             {user ? (
-              <LoadingLink
-                to="/profil"
-                state={{ scrollToId: "scrollToId" }}
-                className={styles.secondary}
-              >
-                Edytuj swój profil
-              </LoadingLink>
+              loadingProfileStatus ? (
+                <button type="button" className={styles.secondary} disabled>
+                  Sprawdzanie profilu...
+                </button>
+              ) : hasProfile ? (
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  onClick={() => handleNavigate("/profil", "profileWrapper")}
+                >
+                  Edytuj swój profil
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.secondary}
+                  onClick={() => handleNavigate("/stworz-profil", "createProfile")}
+                >
+                  Stwórz swój profil
+                </button>
+              )
             ) : (
-              <LoadingLink
-                to="/register"
-                state={{ scrollToId: "registerBox" }}
+              <button
+                type="button"
                 className={styles.secondary}
+                onClick={() => handleNavigate("/register", "registerBox")}
               >
                 Załóż darmowy profil
-              </LoadingLink>
+              </button>
             )}
           </div>
         </div>

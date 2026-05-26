@@ -61,6 +61,9 @@ function App() {
 
   const [alert, setAlert] = useState(null);
 
+  const [hasProfile, setHasProfile] = useState(false);
+  const [loadingProfileStatus, setLoadingProfileStatus] = useState(false);
+
   const resetPendingReservationsCount = () => setPendingReservationsCount(0);
 
   const triggerRefresh = useCallback(() => {
@@ -83,6 +86,51 @@ function App() {
     },
     [token]
   );
+
+  useEffect(() => {
+    if (!safeUser?.uid || !token) {
+      setHasProfile(false);
+      setLoadingProfileStatus(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const checkProfile = async () => {
+      try {
+        setLoadingProfileStatus(true);
+
+        const res = await authFetch(`${API}/api/profiles/by-user/${safeUser.uid}`, {
+          signal: controller.signal,
+        });
+
+        if (res.status === 404) {
+          setHasProfile(false);
+          return;
+        }
+
+        if (!res.ok) {
+          setHasProfile(false);
+          return;
+        }
+
+        const data = await res.json();
+
+        setHasProfile(Boolean(data));
+      } catch (err) {
+        if (err?.name === "AbortError") return;
+
+        console.error("❌ Błąd sprawdzania profilu:", err);
+        setHasProfile(false);
+      } finally {
+        setLoadingProfileStatus(false);
+      }
+    };
+
+    checkProfile();
+
+    return () => controller.abort();
+  }, [safeUser?.uid, token, refreshTrigger, authFetch]);
 
   useEffect(() => {
     initForegroundPushListener();
@@ -268,6 +316,8 @@ function App() {
     pendingReservationsCount,
     userRole,
     setAlert,
+    hasProfile,
+    loadingProfileStatus,
   };
 
   return (
@@ -300,7 +350,11 @@ function App() {
           element={
             <>
               <Hero {...heroProps} />
-              <AboutApp user={safeUser} />
+              <AboutApp
+                user={safeUser}
+                hasProfile={hasProfile}
+                loadingProfileStatus={loadingProfileStatus}
+              />
               <HowShowlyWorks />
               <PartnersShowcase currentUser={safeUser} setAlert={setAlert} />
               <DiscoverShowly />
