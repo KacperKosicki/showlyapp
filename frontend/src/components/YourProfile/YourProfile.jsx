@@ -1573,6 +1573,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
               <ul>
                 <li>30 dniowa widoczność profilu</li>
+                <li>Własny link do profilu</li>
                 <li>Do 3 zdjęć profilu</li>
                 <li>Do 3 usług</li>
                 <li>1 link</li>
@@ -1599,6 +1600,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
               <ul>
                 <li>Widoczność profilu wliczona w okres subskrybcji</li>
+                <li>Własny link do profilu</li>
                 <li>Do 6 zdjęć profilu</li>
                 <li>Do 10 usług</li>
                 <li>2 linki</li>
@@ -1638,6 +1640,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
               <ul>
                 <li>Widoczność profilu wliczona w okres subskrybcji</li>
+                <li>Własny link do profilu</li>
                 <li>Do 15 zdjęć profilu</li>
                 <li>Do 20 usług</li>
                 <li>3 linki</li>
