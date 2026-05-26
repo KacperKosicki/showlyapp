@@ -339,7 +339,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       try {
         setLoading(true);
 
-        const [metaResult, resClient, resService] = await Promise.all([
+        const [, resClient, resService] = await Promise.all([
           fetchProviderMeta(),
           api.get(`/api/reservations/by-user/${user.uid}`),
           api.get(`/api/reservations/by-provider/${user.uid}`),
