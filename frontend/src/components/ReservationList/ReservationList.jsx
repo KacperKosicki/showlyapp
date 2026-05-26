@@ -288,6 +288,44 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     setServiceReservations(resService.data || []);
   }, [isLogged, user?.uid]);
 
+  const markProviderReservationsAsSeen = useCallback(async (reservations = []) => {
+    if (!isLogged || !user?.uid) return;
+
+    const unseenProviderReservations = reservations.filter((reservation) => {
+      const status = String(reservation.status || "").toLowerCase();
+
+      const isRelevantStatus =
+        status === "oczekująca" ||
+        status === "zaakceptowana";
+
+      return isRelevantStatus && reservation.providerSeen === false;
+    });
+
+    if (!unseenProviderReservations.length) return;
+
+    try {
+      await Promise.all(
+        unseenProviderReservations.map((reservation) =>
+          api.patch(`/api/reservations/${reservation._id}/seen`, {
+            who: "provider",
+          })
+        )
+      );
+
+      setServiceReservations((prev) =>
+        prev.map((reservation) =>
+          unseenProviderReservations.some((x) => x._id === reservation._id)
+            ? { ...reservation, providerSeen: true }
+            : reservation
+        )
+      );
+
+      resetPendingReservationsCount?.();
+    } catch (err) {
+      console.error("❌ Nie udało się oznaczyć rezerwacji jako widziane:", err);
+    }
+  }, [isLogged, user?.uid, resetPendingReservationsCount]);
+
   useEffect(() => {
     if (!isLogged) {
       setClientReservations([]);
@@ -299,14 +337,28 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
     (async () => {
       try {
-        await Promise.all([fetchProviderMeta(), refetch()]);
+        setLoading(true);
+
+        const [metaResult, resClient, resService] = await Promise.all([
+          fetchProviderMeta(),
+          api.get(`/api/reservations/by-user/${user.uid}`),
+          api.get(`/api/reservations/by-provider/${user.uid}`),
+        ]);
+
+        const clientData = resClient.data || [];
+        const serviceData = resService.data || [];
+
+        setClientReservations(clientData);
+        setServiceReservations(serviceData);
+
+        await markProviderReservationsAsSeen(serviceData);
       } catch (e) {
         console.error("❌ Błąd pobierania:", e);
       } finally {
         setLoading(false);
       }
     })();
-  }, [isLogged, fetchProviderMeta, refetch]);
+  }, [isLogged, user?.uid, fetchProviderMeta, markProviderReservationsAsSeen]);
 
   useEffect(() => {
     if (!offlineOpen) return;
@@ -1182,6 +1234,31 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     );
   };
 
+  const renderClientNote = (res) => {
+    const message = String(res.clientNote?.message || "").trim();
+
+    if (!message) return null;
+
+    return (
+      <div className={styles.note}>
+        <div className={styles.noteHeader}>
+          <FiFileText className={styles.noteIcon} aria-hidden="true" />
+          <span>Informacja od klienta</span>
+        </div>
+
+        <div className={styles.noteBody}>
+          <strong>
+            {res.clientNote?.createdAt
+              ? new Date(res.clientNote.createdAt).toLocaleString("pl-PL")
+              : "Wiadomość"}
+            :
+          </strong>{" "}
+          {message}
+        </div>
+      </div>
+    );
+  };
+
   const withToastAndRefresh = (type, message, unlockId) => {
     const onClose = async () => {
       setAlert((a) => ({ ...a, show: false }));
@@ -1260,6 +1337,146 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     }
   };
 
+  const handleClientNote = async (reservation) => {
+    if (reservation.clientNote?.message) {
+      setAlert({
+        show: true,
+        type: "info",
+        message: "Do tej rezerwacji dodano już wiadomość. Możesz dodać tylko jedną informację.",
+        onClose: null,
+      });
+      return;
+    }
+
+    const text = window.prompt(
+      "Dodaj jedną ważną informację do rezerwacji, np. „Spóźnię się 10 minut”. Tej wiadomości nie będzie można później edytować."
+    );
+
+    const message = String(text || "").trim();
+
+    if (!message) return;
+
+    if (message.length < 5) {
+      setAlert({
+        show: true,
+        type: "warning",
+        message: "Wiadomość musi mieć minimum 5 znaków.",
+        onClose: null,
+      });
+      return;
+    }
+
+    if (message.length > 500) {
+      setAlert({
+        show: true,
+        type: "warning",
+        message: "Wiadomość może mieć maksymalnie 500 znaków.",
+        onClose: null,
+      });
+      return;
+    }
+
+    try {
+      setDisabledIds((prev) => new Set(prev).add(`note-${reservation._id}`));
+
+      await api.patch(`/api/reservations/${reservation._id}/client-note`, {
+        message,
+      });
+
+      setAlert({
+        show: true,
+        type: "success",
+        message: "Dodano informację do rezerwacji.",
+        onClose: null,
+      });
+
+      await refetch();
+    } catch (err) {
+      console.error("❌ Błąd dodawania informacji do rezerwacji:", err);
+
+      setAlert({
+        show: true,
+        type: "error",
+        message:
+          err?.response?.data?.message ||
+          "Nie udało się dodać informacji do rezerwacji.",
+        onClose: null,
+      });
+    } finally {
+      setDisabledIds((prev) => {
+        const next = new Set(prev);
+        next.delete(`note-${reservation._id}`);
+        return next;
+      });
+    }
+  };
+
+  const handleClientCancelWithReason = async (reservation) => {
+    const text = window.prompt(
+      "Podaj powód anulowania rezerwacji. Usługodawca zobaczy tę informację."
+    );
+
+    const reason = String(text || "").trim();
+
+    if (!reason) return;
+
+    if (reason.length > 500) {
+      setAlert({
+        show: true,
+        type: "warning",
+        message: "Powód anulowania może mieć maksymalnie 500 znaków.",
+        onClose: null,
+      });
+      return;
+    }
+
+    try {
+      setDisabledIds((prev) => new Set(prev).add(`cancel-${reservation._id}`));
+
+      await api.patch(`/api/reservations/${reservation._id}/cancel-by-client`, {
+        reason,
+      });
+
+      setAlert({
+        show: true,
+        type: "success",
+        message: "Rezerwacja została anulowana.",
+        onClose: null,
+      });
+
+      await refetch();
+    } catch (err) {
+      console.error("❌ Błąd anulowania rezerwacji:", err);
+
+      setAlert({
+        show: true,
+        type: "error",
+        message:
+          err?.response?.data?.message ||
+          "Nie udało się anulować rezerwacji.",
+        onClose: null,
+      });
+    } finally {
+      setDisabledIds((prev) => {
+        const next = new Set(prev);
+        next.delete(`cancel-${reservation._id}`);
+        return next;
+      });
+    }
+  };
+
+  const renderCancellationReason = (res) => {
+    if (!res.cancellationReason) return null;
+
+    return (
+      <div className={styles.closedInfo}>
+        <span>
+          Powód anulowania: <strong>{res.cancellationReason}</strong>
+        </span>
+      </div>
+    );
+  };
+
   const renderItem = (res, variant) => {
     const isPending = res.status === "oczekująca";
     const created = res.createdAt || res.updatedAt || Date.now();
@@ -1282,21 +1499,39 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
             <div className={styles.content}>
               {renderInfo(res)}
               {renderDescription(res, variant)}
+              {renderClientNote(res)}
               {res.status === "oczekująca" && res.pendingExpiresAt && (
                 <Countdown until={res.pendingExpiresAt} onExpire={() => refetch()} />
               )}
               {renderClosedInfo(res, variant)}
+              {renderCancellationReason(res)}
             </div>
 
             <div className={styles.bottomRow}>
-              {variant === "sent" && res.status === "oczekująca" ? (
-                <button
-                  onClick={() => handleStatusChange(res._id, "anulowana")}
-                  className={`${styles.actionBtn} ${styles.cancelBtn}`}
-                  disabled={disabledIds.has(res._id)}
-                >
-                  ❌ Anuluj
-                </button>
+              {variant === "sent" && !["anulowana", "odrzucona"].includes(res.status) ? (
+                <>
+                  {!res.clientNote?.message ? (
+                    <button
+                      onClick={() => handleClientNote(res)}
+                      className={`${styles.actionBtn} ${styles.acceptBtn}`}
+                      disabled={disabledIds.has(`note-${res._id}`)}
+                    >
+                      💬 Dodaj informację
+                    </button>
+                  ) : (
+                    <span className={styles.statePill}>
+                      Informacja dodana
+                    </span>
+                  )}
+
+                  <button
+                    onClick={() => handleClientCancelWithReason(res)}
+                    className={`${styles.actionBtn} ${styles.cancelBtn}`}
+                    disabled={disabledIds.has(`cancel-${res._id}`)}
+                  >
+                    ❌ Anuluj z powodem
+                  </button>
+                </>
               ) : null}
 
               {variant === "received" && res.status === "oczekująca" ? (

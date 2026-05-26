@@ -251,7 +251,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         workingHours: p.workingHours || { from: '08:00', to: '20:00' },
         workingDays: p.workingDays || [1, 2, 3, 4, 5],
         team: p.team || { enabled: false, assignmentMode: 'user-pick' },
-        bookingBufferMin: Number.isFinite(p.bookingBufferMin) ? p.bookingBufferMin : 0,
+        bookingBufferMin: Number.isFinite(Number(p.bookingBufferMin)) ? Number(p.bookingBufferMin) : 0,
+        autoAcceptReservations: !!p.autoAcceptReservations,
       });
 
       setInitialEditData({
@@ -268,7 +269,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         workingHours: p.workingHours || { from: '08:00', to: '20:00' },
         workingDays: p.workingDays || [1, 2, 3, 4, 5],
         team: p.team || { enabled: false, assignmentMode: 'user-pick' },
-        bookingBufferMin: Number.isFinite(p.bookingBufferMin) ? p.bookingBufferMin : 0,
+        bookingBufferMin: Number.isFinite(Number(p.bookingBufferMin)) ? Number(p.bookingBufferMin) : 0,
+        autoAcceptReservations: !!p.autoAcceptReservations,
       });
 
       // Po profilu dociągnij pracowników
@@ -557,6 +559,11 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
     if (!canUseTeam && data.team?.enabled) {
       errors.team = 'Zespół i pracownicy są dostępni tylko w planie Premium.';
+    }
+
+    if (!canUseAutoAccept && data.autoAcceptReservations) {
+      errors.autoAcceptReservations =
+        'Automatyczna akceptacja rezerwacji jest dostępna tylko w planie Premium.';
     }
 
     const priceFrom = Number(data.priceFrom);
@@ -996,6 +1003,10 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         ? payload.team || { enabled: false, assignmentMode: 'user-pick' }
         : { enabled: false, assignmentMode: 'user-pick' };
 
+      const safeAutoAcceptReservations = canUseAutoAccept
+        ? !!payload.autoAcceptReservations
+        : false;
+
       const safeServices = (payload.services || []).slice(0, MAX_SERVICES);
       const safeLinks = (payload.links || []).slice(0, MAX_LINKS);
       const safeQuickAnswers = (payload.quickAnswers || []).filter(
@@ -1010,6 +1021,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           links: safeLinks,
           bookingMode: safeBookingMode,
           bookingBufferMin: canUseBooking ? Number(payload.bookingBufferMin ?? 0) : 0,
+          autoAcceptReservations: safeAutoAcceptReservations,
           theme: safeTheme,
           contact: {
             email: c.email || "",
@@ -1458,6 +1470,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const canUseSocialMedia = !!billingFeatures.socialMedia;
 
+  const canUseAutoAccept = canUseBooking && billingPlan === "premium";
+
   // =========================
   // Render
   // =========================
@@ -1572,8 +1586,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
               <p>Podstawowa wizytówka na start widoczna za darmo przez 30 dni.</p>
 
               <ul>
-                <li>30 dniowa widoczność profilu</li>
-                <li>Własny link do profilu</li>
                 <li>Do 3 zdjęć profilu</li>
                 <li>Do 3 usług</li>
                 <li>1 link</li>
@@ -1651,6 +1663,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 <li>Limit opisu profilu do 1000 znaków</li>
                 <li>Promowanie profilu</li>
                 <li>Zaawansowany kalendarz rezerwacji</li>
+                <li>Zaawansowany system rezerwacji</li>
                 <li>Zespół i pracownicy</li>
               </ul>
 
@@ -2737,6 +2750,94 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             {canUseBooking && (
               <div className={styles.infoMuted} style={{ marginTop: 8 }}>
                 Buffer doliczany jest po każdej usłudze i blokuje kolejne sloty, żebyś miał/a przerwę.
+              </div>
+            )}
+          </div>
+
+          {/* AUTO-AKCEPTACJA REZERWACJI */}
+          <div className={styles.inputBlock}>
+            <div className={styles.groupTitle}>
+              <FaClock /> Automatyczna akceptacja rezerwacji
+            </div>
+
+            {!canUseAutoAccept && (
+              <div className={styles.bufferPremiumNotice}>
+                <div className={styles.bufferPremiumIcon}>
+                  <FaClock />
+                </div>
+
+                <div className={styles.bufferPremiumText}>
+                  <div className={styles.bufferPremiumTop}>
+                    <strong>Automatyczna akceptacja jest dostępna w planie Premium.</strong>
+                    <span className={styles.lockBadge}>Premium</span>
+                  </div>
+
+                  <p>
+                    Po włączeniu tej opcji klient od razu otrzyma potwierdzoną rezerwację,
+                    a termin automatycznie zablokuje się w Twoim kalendarzu.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {isEditing ? (
+              <>
+                <label
+                  className={`${styles.checkboxLabel} ${!canUseAutoAccept ? styles.disabledOption : ""
+                    }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={canUseAutoAccept ? !!editData.autoAcceptReservations : false}
+                    disabled={!canUseAutoAccept}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        autoAcceptReservations: e.target.checked,
+                      }))
+                    }
+                  />
+
+                  <span>Automatycznie akceptuj nowe rezerwacje</span>
+                </label>
+
+                <div className={styles.infoMuted} style={{ marginTop: 8 }}>
+                  {canUseAutoAccept ? (
+                    <>
+                      Jeśli ta opcja jest włączona, nowe rezerwacje będą od razu miały status{" "}
+                      <strong>zaakceptowana</strong>. Usługodawca nie będzie musiał
+                      ręcznie potwierdzać terminu.
+                    </>
+                  ) : (
+                    <>
+                      W obecnym planie rezerwacje wymagają ręcznego potwierdzenia przez
+                      usługodawcę.
+                    </>
+                  )}
+                </div>
+
+                {formErrors.autoAcceptReservations && (
+                  <small className={styles.error}>
+                    {formErrors.autoAcceptReservations}
+                  </small>
+                )}
+              </>
+            ) : (
+              <div className={styles.bufferViewBox}>
+                <div className={styles.bufferViewItem}>
+                  <span className={styles.bufferViewLabel}>Status funkcji</span>
+                  <strong>
+                    {canUseAutoAccept && profile?.autoAcceptReservations
+                      ? "Włączona"
+                      : "Wyłączona"}
+                  </strong>
+                </div>
+
+                <div className={styles.bufferViewText}>
+                  {canUseAutoAccept && profile?.autoAcceptReservations
+                    ? "Nowe rezerwacje będą automatycznie potwierdzane bez ręcznej akceptacji."
+                    : "Nowe rezerwacje będą wymagały ręcznego potwierdzenia przez usługodawcę."}
+                </div>
               </div>
             )}
           </div>

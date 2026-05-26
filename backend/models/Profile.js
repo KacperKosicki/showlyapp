@@ -448,6 +448,11 @@ const profileSchema = new mongoose.Schema(
       default: "request-open",
     },
 
+    autoAcceptReservations: {
+      type: Boolean,
+      default: false,
+    },
+
     team: {
       enabled: { type: Boolean, default: false },
 

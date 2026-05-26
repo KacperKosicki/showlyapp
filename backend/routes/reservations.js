@@ -71,10 +71,63 @@ const toMin = (hhmm) => {
   const [h, m] = String(hhmm).split(":").map(Number);
   return (h || 0) * 60 + (m || 0);
 };
+
 const overlap = (aStart, aEnd, bStart, bEnd) => aStart < bEnd && aEnd > bStart;
 
 // ⚠️ Uwaga: to jest UTC "na sztywno" (Z). Jeśli liczysz lokalnie, musisz to ujednolicić.
 const toDateTime = (dateStr, hhmm) => new Date(`${dateStr}T${hhmm}:00.000Z`);
+
+const MIN_CONFIRM_BEFORE_START_MIN = Number(
+  process.env.MIN_CONFIRM_BEFORE_START_MIN ?? 60
+);
+
+function calculatePendingExpiresAt(startAt) {
+  const now = new Date();
+
+  const maxPendingDeadline = new Date(
+    now.getTime() + PENDING_MINUTES * 60 * 1000
+  );
+
+  const beforeStartDeadline = new Date(
+    startAt.getTime() - MIN_CONFIRM_BEFORE_START_MIN * 60 * 1000
+  );
+
+  const deadline =
+    beforeStartDeadline.getTime() < maxPendingDeadline.getTime()
+      ? beforeStartDeadline
+      : maxPendingDeadline;
+
+  // Jeżeli deadline już minął, to nie ma sensu tworzyć oczekującej rezerwacji.
+  if (deadline.getTime() <= now.getTime()) {
+    return null;
+  }
+
+  return deadline;
+}
+
+function calculateDayPendingExpiresAt(dateStr) {
+  const now = new Date();
+
+  const maxPendingDeadline = new Date(
+    now.getTime() + PENDING_MINUTES * 60 * 1000
+  );
+
+  // Deadline dla rezerwacji całodniowej: dzień przed terminem, godz. 20:00.
+  // Trzymamy się UTC, bo cały ten plik używa dat z "Z".
+  const beforeDayDeadline = new Date(`${dateStr}T20:00:00.000Z`);
+  beforeDayDeadline.setUTCDate(beforeDayDeadline.getUTCDate() - 1);
+
+  const deadline =
+    beforeDayDeadline.getTime() < maxPendingDeadline.getTime()
+      ? beforeDayDeadline
+      : maxPendingDeadline;
+
+  if (deadline.getTime() <= now.getTime()) {
+    return null;
+  }
+
+  return deadline;
+}
 
 const ALIVE_STATUSES = ["zaakceptowana", "oczekująca", "tymczasowa"];
 
@@ -117,6 +170,9 @@ const getReservationPlanAccess = (profile) => {
       ? normalizeBuffer(profile?.bookingBufferMin)
       : 0;
 
+  const autoAcceptReservations =
+    canUseBooking && profile?.autoAcceptReservations === true;
+
   return {
     billingPublic,
     bookingMode,
@@ -125,6 +181,7 @@ const getReservationPlanAccess = (profile) => {
     canUseBooking,
     canUseRequestBlocking,
     canUseTeam,
+    autoAcceptReservations,
   };
 };
 
@@ -424,7 +481,20 @@ router.post("/", requireAuth, async (req, res) => {
       }
     }
 
-    const pendingExpiresAt = new Date(Date.now() + PENDING_MINUTES * 60 * 1000);
+    const shouldAutoAccept = planAccess.autoAcceptReservations === true;
+
+    const pendingExpiresAt = shouldAutoAccept
+      ? null
+      : calculatePendingExpiresAt(startAt);
+
+    if (!shouldAutoAccept && !pendingExpiresAt) {
+      return res.status(400).json({
+        message:
+          "Ten termin jest zbyt blisko rozpoczęcia, aby wysłać rezerwację do ręcznego potwierdzenia. Wybierz późniejszą godzinę.",
+      });
+    }
+
+    const reservationStatus = shouldAutoAccept ? "zaakceptowana" : "oczekująca";
 
     const newReservation = await Reservation.create({
       offline: false,
@@ -454,7 +524,7 @@ router.post("/", requireAuth, async (req, res) => {
       serviceName: serviceName || null,
 
       description,
-      status: "oczekująca",
+      status: reservationStatus,
       pendingExpiresAt,
       holdExpiresAt: null,
 
@@ -465,9 +535,24 @@ router.post("/", requireAuth, async (req, res) => {
       providerSeen: false,
     });
 
+    if (shouldAutoAccept && Array.isArray(profile.availableDates)) {
+      profile.availableDates = profile.availableDates.filter(
+        (slot) =>
+          !(
+            slot.date === date &&
+            slot.fromTime === fromTime &&
+            slot.toTime === toTime
+          )
+      );
+
+      await profile.save();
+    }
+
     await sendPushToUserUid(providerUserId, {
-      title: "Nowa rezerwacja",
-      body: `${user?.name || "Klient"} wysłał rezerwację na ${date} o ${fromTime}`,
+      title: shouldAutoAccept ? "Nowa potwierdzona rezerwacja" : "Nowa rezerwacja",
+      body: shouldAutoAccept
+        ? `${user?.name || "Klient"} zarezerwował termin ${date} o ${fromTime}. Rezerwacja została automatycznie zaakceptowana.`
+        : `${user?.name || "Klient"} wysłał rezerwację na ${date} o ${fromTime}`,
       url: `${FRONTEND_URL}/rezerwacje`,
     });
 
@@ -790,7 +875,20 @@ router.post("/day", requireAuth, async (req, res) => {
       serviceName = serviceDoc.name;
     }
 
-    const pendingExpiresAt = new Date(Date.now() + PENDING_MINUTES * 60 * 1000);
+    const shouldAutoAccept = planAccess.autoAcceptReservations === true;
+
+    const pendingExpiresAt = shouldAutoAccept
+      ? null
+      : calculateDayPendingExpiresAt(date);
+
+    if (!shouldAutoAccept && !pendingExpiresAt) {
+      return res.status(400).json({
+        message:
+          "Ten dzień jest zbyt blisko terminu, aby wysłać rezerwację do ręcznego potwierdzenia. Wybierz późniejszą datę albo skontaktuj się z usługodawcą.",
+      });
+    }
+
+    const reservationStatus = shouldAutoAccept ? "zaakceptowana" : "oczekująca";
 
     const created = await Reservation.create({
       offline: false,
@@ -811,7 +909,7 @@ router.post("/day", requireAuth, async (req, res) => {
       toTime: "23:59",
       description: (description || "").trim(),
 
-      status: "oczekująca",
+      status: reservationStatus,
       pendingExpiresAt,
 
       serviceId: serviceId || null,
@@ -825,8 +923,10 @@ router.post("/day", requireAuth, async (req, res) => {
     });
 
     await sendPushToUserUid(providerUserId, {
-      title: "Nowa rezerwacja",
-      body: `${userName || "Klient"} wysłał rezerwację na dzień ${date}`,
+      title: shouldAutoAccept ? "Nowa potwierdzona rezerwacja" : "Nowa rezerwacja",
+      body: shouldAutoAccept
+        ? `${userName || "Klient"} zarezerwował dzień ${date}. Rezerwacja została automatycznie zaakceptowana.`
+        : `${userName || "Klient"} wysłał rezerwację na dzień ${date}`,
       url: `${FRONTEND_URL}/rezerwacje`,
     });
 
@@ -1171,6 +1271,162 @@ router.get("/unavailable-days/:providerUid", async (req, res) => {
 
 /**
  * =====================
+ * PATCH /api/reservations/:id/client-note
+ * Klient może dodać jedną wiadomość do swojej rezerwacji
+ * =====================
+ */
+router.patch("/:id/client-note", requireAuth, async (req, res) => {
+  try {
+    const authUid = req.auth.uid;
+    const { id } = req.params;
+    const { message } = req.body;
+
+    const text = String(message || "").trim();
+
+    if (!text) {
+      return res.status(400).json({
+        message: "Wiadomość nie może być pusta.",
+      });
+    }
+
+    if (text.length < 5) {
+      return res.status(400).json({
+        message: "Wiadomość musi mieć minimum 5 znaków.",
+      });
+    }
+
+    if (text.length > 500) {
+      return res.status(400).json({
+        message: "Wiadomość może mieć maksymalnie 500 znaków.",
+      });
+    }
+
+    const reservation = await Reservation.findById(id);
+
+    if (!reservation) {
+      return res.status(404).json({
+        message: "Rezerwacja nie istnieje.",
+      });
+    }
+
+    if (!reservation.userId || String(reservation.userId) !== String(authUid)) {
+      return res.status(403).json({
+        message: "Możesz dopisać informację tylko do własnej rezerwacji.",
+      });
+    }
+
+    if (["anulowana", "odrzucona"].includes(reservation.status)) {
+      return res.status(400).json({
+        message: "Nie można dopisać informacji do zamkniętej rezerwacji.",
+      });
+    }
+
+    if (reservation.clientNote?.message) {
+      return res.status(400).json({
+        message: "Do tej rezerwacji dodano już wiadomość. Możesz dodać tylko jedną informację.",
+      });
+    }
+
+    reservation.clientNote = {
+      message: text,
+      createdAt: new Date(),
+    };
+
+    reservation.providerSeen = false;
+
+    await reservation.save();
+
+    await sendPushToUserUid(reservation.providerUserId, {
+      title: "Nowa informacja do rezerwacji",
+      body: `${reservation.userName || "Klient"} dopisał/a informację do rezerwacji.`,
+      url: `${FRONTEND_URL}/rezerwacje`,
+    });
+
+    return res.json({
+      message: "Dodano informację do rezerwacji.",
+      reservation,
+    });
+  } catch (err) {
+    console.error("PATCH /reservations/:id/client-note error:", err);
+    return res.status(500).json({
+      message: "Błąd serwera",
+    });
+  }
+});
+
+/**
+ * =====================
+ * PATCH /api/reservations/:id/cancel-by-client
+ * Klient anuluje swoją rezerwację z powodem
+ * =====================
+ */
+router.patch("/:id/cancel-by-client", requireAuth, async (req, res) => {
+  try {
+    const authUid = req.auth.uid;
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const text = String(reason || "").trim();
+
+    if (!text) {
+      return res.status(400).json({ message: "Podaj powód anulowania rezerwacji." });
+    }
+
+    if (text.length > 500) {
+      return res.status(400).json({ message: "Powód może mieć maksymalnie 500 znaków." });
+    }
+
+    const reservation = await Reservation.findById(id);
+
+    if (!reservation) {
+      return res.status(404).json({ message: "Rezerwacja nie istnieje." });
+    }
+
+    if (!reservation.userId || String(reservation.userId) !== String(authUid)) {
+      return res.status(403).json({ message: "Możesz anulować tylko własną rezerwację." });
+    }
+
+    if (["anulowana", "odrzucona"].includes(reservation.status)) {
+      return res.status(400).json({
+        message: "Ta rezerwacja jest już zamknięta.",
+      });
+    }
+
+    const now = new Date();
+
+    reservation.status = "anulowana";
+    reservation.closedAt = now;
+    reservation.closedBy = "client";
+    reservation.closedReason = "cancelled";
+    reservation.cancelledBy = "client";
+    reservation.cancellationReason = text;
+
+    reservation.pendingExpiresAt = null;
+    reservation.holdExpiresAt = null;
+
+    reservation.clientSeen = true;
+    reservation.providerSeen = false;
+
+    await reservation.save();
+
+    await sendPushToUserUid(reservation.providerUserId, {
+      title: "Rezerwacja anulowana",
+      body: `${reservation.userName || "Klient"} anulował/a rezerwację. Powód: ${text}`,
+      url: `${FRONTEND_URL}/rezerwacje`,
+    });
+
+    return res.json({
+      message: "Rezerwacja została anulowana.",
+      reservation,
+    });
+  } catch (err) {
+    console.error("PATCH /reservations/:id/cancel-by-client error:", err);
+    return res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+/**
+ * =====================
  * PATCH /api/reservations/:id/status
  * AUTH:
  *  - anulowana -> klient (authUid === reservation.userId)
@@ -1206,7 +1462,7 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
 
       await sendPushToUserUid(reservation.providerUserId, {
         title: "Rezerwacja anulowana",
-        body: `${reservation.userName || "Klient"} anulował rezerwację ${reservation.date}${reservation.dateOnly ? "" : ` o ${reservation.fromTime}`}`,
+        body: `${reservation.userName || "Klient"} anulował/a rezerwację ${reservation.date}${reservation.dateOnly ? "" : ` o ${reservation.fromTime}`}`,
         url: `${FRONTEND_URL}/rezerwacje`,
       });
 
@@ -1317,6 +1573,7 @@ router.get("/meta/:providerUid", async (req, res) => {
         workingHours: 1,
         workingDays: 1,
         blockedDays: 1,
+        autoAcceptReservations: 1,
         billing: 1,
       }
     ).lean();
@@ -1365,6 +1622,9 @@ router.get("/meta/:providerUid", async (req, res) => {
       staff: normalizedStaff,
 
       bookingBufferMin: planAccess.bookingBufferMin,
+
+      autoAcceptReservations:
+        planAccess.canUseBooking && profile.autoAcceptReservations === true,
 
       workingHours: profile.workingHours || { from: "08:00", to: "20:00" },
       workingDays: Array.isArray(profile.workingDays)

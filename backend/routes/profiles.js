@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const crypto = require("crypto");
 
 const Profile = require("../models/Profile");
 const User = require("../models/User");
@@ -14,7 +15,7 @@ const { uploadBuffer } = require("../utils/cloudinaryUpload");
 const requireAuth = require("../middleware/requireAuth");
 const requireOwnerOrAdmin = require("../middleware/requireOwnerOrAdmin");
 
-const { getLimit } = require("../config/plans");
+const { getLimit, hasFeature } = require("../config/plans");
 
 // -----------------------------
 // Helpers: slug + public URLs
@@ -69,6 +70,57 @@ async function generateUniqueSlug(baseText, currentProfileId = null) {
   }
 
   return uniqueSlug;
+}
+
+async function generateRandomProfileSlug(currentProfileId = null) {
+  let slug = "";
+
+  do {
+    slug = `p-${crypto.randomBytes(5).toString("hex")}`;
+  } while (
+    await Profile.findOne({
+      slug,
+      ...(currentProfileId ? { _id: { $ne: currentProfileId } } : {}),
+    })
+  );
+
+  return slug;
+}
+
+function getProfilePlan(profile = {}) {
+  return String(
+    profile?.billing?.effectivePlan ||
+    profile?.billing?.plan ||
+    profile?.plan?.effectivePlan ||
+    profile?.plan?.plan ||
+    profile?.plan ||
+    "free"
+  ).toLowerCase();
+}
+
+function canUsePrettyProfileSlug(profile = {}) {
+  const plan = getProfilePlan(profile);
+
+  return plan === "standard" || plan === "premium";
+}
+
+function isRandomProfileSlug(slug = "") {
+  return /^p-[a-f0-9]{10}$/i.test(String(slug || ""));
+}
+
+async function resolveProfileSlug(profile, currentProfileId = null) {
+  if (canUsePrettyProfileSlug(profile)) {
+    return generateUniqueSlug(
+      `${profile.name || "profil"}-${profile.role || "showly"}`,
+      currentProfileId
+    );
+  }
+
+  if (profile.slug && isRandomProfileSlug(profile.slug)) {
+    return profile.slug;
+  }
+
+  return generateRandomProfileSlug(currentProfileId);
 }
 
 function getProto(req) {
@@ -1125,17 +1177,19 @@ router.post("/", requireAuth, async (req, res) => {
       return res.status(409).json({ message: "Ten użytkownik już posiada wizytówkę." });
     }
 
-    const baseSlug = slugify(`${name}-${role || "profil"}`);
-    let uniqueSlug = baseSlug || `profil-${Date.now()}`;
-    let i = 1;
-
-    while (await Profile.findOne({ slug: uniqueSlug })) {
-      uniqueSlug = `${baseSlug || "profil"}-${i++}`;
-    }
-
     const { userId: _ignoredUserId, services, ...safeBody } = req.body || {};
 
     const safeServices = services ? sanitizeServicesInput(services) : [];
+
+    const profileDraft = {
+      userId,
+      name: name.trim(),
+      role: role.trim(),
+      location: location.trim(),
+      ...(req.body || {}),
+    };
+
+    const uniqueSlug = await resolveProfileSlug(profileDraft);
 
     const newProfile = new Profile({
       ...safeBody,
@@ -1287,6 +1341,7 @@ const allowedFields = [
   "showAvailableDates",
   "services",
   "bookingMode",
+  "autoAcceptReservations",
   "workingHours",
   "bookingBufferMin",
   "workingDays",
@@ -1476,7 +1531,21 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
       };
     }
 
-    const shouldUpdateSlug = updates.name !== undefined || updates.role !== undefined;
+    if (updates.autoAcceptReservations !== undefined) {
+      const canUseBooking = hasFeature(profile, "booking", {
+        allowPastDue: true,
+      });
+
+      updates.autoAcceptReservations = canUseBooking
+        ? !!updates.autoAcceptReservations
+        : false;
+    }
+
+    const shouldUpdateSlug =
+      updates.name !== undefined ||
+      updates.role !== undefined ||
+      updates.billing !== undefined ||
+      updates.plan !== undefined;
 
     for (const field of allowedFields) {
       if (field !== "team" && field !== "theme" && updates[field] !== undefined) {
@@ -1484,11 +1553,8 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
       }
     }
 
-    if (shouldUpdateSlug) {
-      profile.slug = await generateUniqueSlug(
-        `${profile.name}-${profile.role || "profil"}`,
-        profile._id
-      );
+    if (shouldUpdateSlug || !profile.slug) {
+      profile.slug = await resolveProfileSlug(profile, profile._id);
     }
 
     if (updates.theme) {

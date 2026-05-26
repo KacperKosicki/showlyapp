@@ -80,6 +80,8 @@ const UserDropdown = ({
   const [pushLoading, setPushLoading] = useState(false);
   const [pushSaved, setPushSaved] = useState(false);
 
+  const [providerReservationsCount, setProviderReservationsCount] = useState(0);
+
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const triggerRef = useRef(null);
@@ -312,6 +314,45 @@ const UserDropdown = ({
     fetchUnread();
   }, [user?.uid, refreshTrigger, location.pathname, setUnreadCount]);
 
+  // Rezerwacje usługodawcy — nowe / nieodczytane
+  useEffect(() => {
+    const fetchProviderReservationsCount = async () => {
+      if (!user?.uid) {
+        setProviderReservationsCount(0);
+        return;
+      }
+
+      try {
+        const authHeader = await getAuthHeader();
+
+        const res = await axios.get(`${API}/api/reservations/by-provider/${user.uid}`, {
+          headers: {
+            ...authHeader,
+          },
+        });
+
+        const reservations = Array.isArray(res.data) ? res.data : [];
+
+        const count = reservations.filter((reservation) => {
+          const status = String(reservation.status || "").toLowerCase();
+
+          const isRelevantStatus =
+            status === "oczekująca" ||
+            status === "zaakceptowana";
+
+          return isRelevantStatus && reservation.providerSeen === false;
+        }).length;
+
+        setProviderReservationsCount(count);
+      } catch (err) {
+        console.error("❌ Błąd pobierania liczby rezerwacji usługodawcy:", err);
+        setProviderReservationsCount(0);
+      }
+    };
+
+    fetchProviderReservationsCount();
+  }, [user?.uid, refreshTrigger, location.pathname]);
+
   // Zamknięcie dropdown po kliknięciu poza
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -419,6 +460,9 @@ const UserDropdown = ({
 
   const avatarSrc = photoURL || "/images/other/no-image.png";
 
+  const reservationBadgeCount =
+    Number(pendingReservationsCount || 0) + Number(providerReservationsCount || 0);
+
   return (
     <div className={styles.dropdown} ref={dropdownRef}>
       <button
@@ -445,7 +489,7 @@ const UserDropdown = ({
 
         <span className={styles.email}>{displayEmail}</span>
 
-        {(Number(unreadCount) > 0 || Number(pendingReservationsCount) > 0) && (
+        {(Number(unreadCount) > 0 || Number(reservationBadgeCount) > 0) && (
           <span className={styles.dotPulse} aria-hidden="true" />
         )}
 
@@ -578,10 +622,10 @@ const UserDropdown = ({
 
                 <span
                   className={`${styles.itemSub} ${pushSaved || pushState === "granted"
-                      ? styles.statusActive
-                      : pushState === "denied"
-                        ? styles.statusExpired
-                        : ""
+                    ? styles.statusActive
+                    : pushState === "denied"
+                      ? styles.statusExpired
+                      : ""
                     }`}
                 >
                   {pushSaved &&
@@ -633,8 +677,8 @@ const UserDropdown = ({
               <span className={styles.itemText}>Rezerwacje</span>
             </span>
 
-            {Number(pendingReservationsCount) > 0 && (
-              <span className={styles.countBadge}>{pendingReservationsCount}</span>
+            {Number(reservationBadgeCount) > 0 && (
+              <span className={styles.countBadge}>{reservationBadgeCount}</span>
             )}
           </button>
 
