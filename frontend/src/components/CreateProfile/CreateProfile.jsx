@@ -23,6 +23,36 @@ import {
 
 const DEFAULT_AVATAR = "/images/other/no-image.png";
 
+const CREATE_TAGS_LIMIT = 3;
+
+const CREATE_PLAN = {
+  key: "free",
+  name: "Free",
+  label: "Starter",
+  priceLabel: "0 zł",
+  description: "Podstawowa wizytówka na start.",
+  features: {
+    profile: true,
+    messages: true,
+    booking: false,
+    requestBlocking: false,
+    team: false,
+    premiumThemes: false,
+    advancedChat: false,
+    analytics: false,
+    customSlug: false,
+    priorityProfile: false,
+  },
+  limits: {
+    photos: 3,
+    services: 3,
+    serviceGallery: 2,
+    links: 1,
+    quickAnswers: 1,
+    descriptionLength: 200,
+  },
+};
+
 const CreateProfile = ({ user, setRefreshTrigger }) => {
   const [form, setForm] = useState({
     name: "",
@@ -93,7 +123,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
       if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
         try {
           URL.revokeObjectURL(form.avatar);
-        } catch { }
+        } catch {}
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -120,7 +150,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
       try {
         URL.revokeObjectURL(form.avatar);
-      } catch { }
+      } catch {}
     }
 
     setAvatarFile(null);
@@ -136,6 +166,27 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
     if (type === "checkbox") {
       setForm((prev) => ({ ...prev, [name]: checked }));
+      return;
+    }
+
+    if (name === "bookingMode") {
+      if (value === "calendar" || value === "request-blocking") {
+        setFormErrors((prev) => ({
+          ...prev,
+          bookingMode:
+            "Kalendarz i blokowanie dni są dostępne w planie Premium. Na start wybierz zapytania.",
+        }));
+
+        setForm((prev) => ({
+          ...prev,
+          bookingMode: "request-open",
+        }));
+
+        return;
+      }
+
+      setFormErrors((prev) => ({ ...prev, bookingMode: "" }));
+      setForm((prev) => ({ ...prev, bookingMode: value }));
       return;
     }
 
@@ -207,6 +258,10 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
         return "Lekcja";
       case "consultation":
         return "Konsultacja";
+      case "event":
+        return "Event";
+      case "custom":
+        return "Inne";
       default:
         return "Oferta";
     }
@@ -216,16 +271,41 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     const mode = service?.price?.mode;
     const amount = service?.price?.amount;
     const from = service?.price?.from;
+    const to = service?.price?.to;
     const currency = service?.price?.currency || "PLN";
 
-    if (mode === "fixed" && amount) return `${amount} ${currency}`;
-    if (mode === "from" && from) return `od ${from} ${currency}`;
+    if (mode === "fixed" && amount !== null && amount !== undefined) {
+      return `${amount} ${currency}`;
+    }
+
+    if (mode === "from" && from !== null && from !== undefined) {
+      return `od ${from} ${currency}`;
+    }
+
+    if (
+      mode === "range" &&
+      from !== null &&
+      from !== undefined &&
+      to !== null &&
+      to !== undefined
+    ) {
+      return `${from}–${to} ${currency}`;
+    }
+
     if (mode === "contact") return "wycena indywidualna";
     if (mode === "free") return "darmowe";
+
     return "bez ceny";
   };
 
   const handleAddService = () => {
+    if (form.services.length >= CREATE_PLAN.limits.services) {
+      setServiceError(
+        `Plan Starter pozwala dodać maksymalnie ${CREATE_PLAN.limits.services} usługi. Po utworzeniu profilu możesz przejść na Standard lub Premium.`
+      );
+      return;
+    }
+
     const name = newService.name.trim();
     const shortDescription = newService.shortDescription.trim();
     const category = newService.category;
@@ -237,7 +317,8 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
       Number.isFinite(durationValue) &&
       ((durationUnit === "minutes" && durationValue >= 15) ||
         (durationUnit === "hours" && durationValue >= 1) ||
-        (durationUnit === "days" && durationValue >= 1));
+        (durationUnit === "days" && durationValue >= 1) ||
+        (durationUnit === "weeks" && durationValue >= 1));
 
     if (!name || name.length < 2) {
       setServiceError("Podaj nazwę usługi (minimum 2 znaki).");
@@ -250,7 +331,9 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     }
 
     if (!hasValidDuration) {
-      setServiceError("Czas usługi: minimum 15 minut, 1 godzina lub 1 dzień.");
+      setServiceError(
+        "Czas usługi: minimum 15 minut, 1 godzina, 1 dzień lub 1 tydzień."
+      );
       return;
     }
 
@@ -289,11 +372,15 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     }
 
     const bookingEnabled = !!newService.bookingEnabled;
-    const bookingType = bookingEnabled
-      ? newService.bookingType === "calendar"
-        ? "calendar"
-        : "request"
-      : "none";
+
+    if (bookingEnabled && newService.bookingType === "calendar") {
+      setServiceError(
+        "Kalendarz godzinowy jest dostępny w planie Premium. W planie Starter możesz dodać usługę jako zapytanie."
+      );
+      return;
+    }
+
+    const bookingType = bookingEnabled ? "request" : "none";
 
     setForm((prev) => ({
       ...prev,
@@ -375,12 +462,30 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
       errors.tags = "Podaj przynajmniej 1 tag";
     }
 
-    if (form.description.length > 500) {
-      errors.description = "Opis nie może przekraczać 500 znaków";
+    if (nonEmptyTags.length > CREATE_TAGS_LIMIT) {
+      errors.tags = `Możesz dodać maksymalnie ${CREATE_TAGS_LIMIT} tagi.`;
+    }
+
+    const nonEmptyLinks = form.links.filter((link) => link.trim() !== "");
+    if (nonEmptyLinks.length > CREATE_PLAN.limits.links) {
+      errors.links = `Plan Starter pozwala dodać maksymalnie ${CREATE_PLAN.limits.links} linki.`;
+    }
+
+    if (form.description.length > CREATE_PLAN.limits.descriptionLength) {
+      errors.description = `Opis nie może przekraczać ${CREATE_PLAN.limits.descriptionLength} znaków w planie Starter.`;
     }
 
     if (!form.profileType) {
       errors.profileType = "Wybierz typ profilu";
+    }
+
+    if ((form.services || []).length > CREATE_PLAN.limits.services) {
+      errors.services = `Plan Starter pozwala dodać maksymalnie ${CREATE_PLAN.limits.services} usługi.`;
+    }
+
+    if (form.bookingMode === "calendar" || form.bookingMode === "request-blocking") {
+      errors.bookingMode =
+        "Kalendarz i blokowanie dni są dostępne w planie Premium. W planie Starter wybierz zapytania.";
     }
 
     const priceFromNum = Number(form.priceFrom);
@@ -400,7 +505,8 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
           !s.name?.trim() ||
           ((s.duration.unit === "minutes" && s.duration.value < 15) ||
             (s.duration.unit === "hours" && s.duration.value < 1) ||
-            (s.duration.unit === "days" && s.duration.value < 1))
+            (s.duration.unit === "days" && s.duration.value < 1) ||
+            (s.duration.unit === "weeks" && s.duration.value < 1))
       )
     ) {
       errors.services =
@@ -419,9 +525,23 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
       priceTo: priceToNum,
       rating: 0,
       reviews: 0,
-      tags: nonEmptyTags.map((tag) => tag.trim()),
+      tags: nonEmptyTags
+        .map((tag) => tag.trim())
+        .slice(0, CREATE_TAGS_LIMIT),
+      links: form.links
+        .map((link) => link.trim())
+        .filter(Boolean)
+        .slice(0, CREATE_PLAN.limits.links),
       availableDates: [],
-      services: form.services,
+      services: form.services.slice(0, CREATE_PLAN.limits.services),
+      bookingMode: "request-open",
+      workingHours: form.workingHours || { from: "08:00", to: "20:00" },
+      workingDays: form.workingDays || [1, 2, 3, 4, 5],
+      team: {
+        enabled: false,
+        assignmentMode: "user-pick",
+      },
+      bookingBufferMin: 0,
       userId: uid,
       visibleUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     };
@@ -449,6 +569,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
   };
 
   const activeTagsCount = form.tags.filter((tag) => tag.trim() !== "").length;
+  const activeLinksCount = form.links.filter((link) => link.trim() !== "").length;
   const servicesCount = form.services.length;
 
   return (
@@ -477,20 +598,49 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
           <div className={styles.metaRow}>
             <div className={styles.metaCard}>
-              <strong>{activeTagsCount}/3</strong>
+              <strong>
+                {activeTagsCount}/{CREATE_TAGS_LIMIT}
+              </strong>
               <span>aktywnych tagów</span>
             </div>
 
             <div className={styles.metaCard}>
-              <strong>{servicesCount}</strong>
-              <span>dodanych usług</span>
+              <strong>
+                {servicesCount}/{CREATE_PLAN.limits.services}
+              </strong>
+              <span>dodanych usług w planie Starter</span>
             </div>
 
             <div className={styles.metaCard}>
-              <strong>{form.bookingMode === "calendar" ? "Kalendarz" : "Zapytania"}</strong>
-              <span>wybrany tryb działania</span>
+              <strong>Zapytania</strong>
+              <span>tryb działania w planie Starter</span>
             </div>
           </div>
+        </div>
+
+        <div className={styles.planNotice}>
+          <div className={styles.planNoticeContent}>
+            <span className={styles.planEyebrow}>Plan startowy</span>
+
+            <h3 className={styles.planTitle}>
+              Tworzysz profil w planie {CREATE_PLAN.label}
+            </h3>
+
+            <p className={styles.planText}>
+              Na start możesz dodać podstawowe informacje, opis, tagi, linki i kilka
+              usług. Po utworzeniu profilu odblokujesz możliwość przejścia na Standard
+              lub Premium w panelu zarządzania profilem.
+            </p>
+
+            <div className={styles.planLimits}>
+              <span>{CREATE_TAGS_LIMIT} tagi</span>
+              <span>{CREATE_PLAN.limits.links} linki</span>
+              <span>{CREATE_PLAN.limits.services} usługi</span>
+              <span>{CREATE_PLAN.limits.descriptionLength} znaków opisu</span>
+            </div>
+          </div>
+
+          <div className={styles.planBadge}>{CREATE_PLAN.label}</div>
         </div>
 
         <div className={styles.layout}>
@@ -644,7 +794,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                           ) {
                             try {
                               URL.revokeObjectURL(form.avatar);
-                            } catch { }
+                            } catch {}
                           }
 
                           const previewUrl = URL.createObjectURL(file);
@@ -683,11 +833,11 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     name="description"
                     value={form.description}
                     onChange={handleChange}
-                    maxLength={500}
+                    maxLength={CREATE_PLAN.limits.descriptionLength}
                     placeholder="Napisz kilka zdań o sobie, swojej działalności i tym, co oferujesz..."
                   />
                   <small className={styles.counterText}>
-                    {form.description.length}/500 znaków
+                    {form.description.length}/{CREATE_PLAN.limits.descriptionLength} znaków — plan Starter
                   </small>
                   {formErrors.description && (
                     <small className={styles.error}>{formErrors.description}</small>
@@ -697,7 +847,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                 <label className={styles.formField}>
                   <span className={styles.fieldLabel}>
                     <FiTag className={styles.fieldIcon} />
-                    Tagi (maksymalnie 3)
+                    Tagi — {activeTagsCount}/{CREATE_TAGS_LIMIT}
                   </span>
 
                   <div className={styles.inlineGrid}>
@@ -821,7 +971,9 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
               <div className={styles.serviceCard}>
                 <div className={styles.serviceCardHead}>
                   <h4 className={styles.serviceCardTitle}>Dodaj usługę / ofertę</h4>
-                  <span className={styles.serviceCardPill}>Nowa pozycja</span>
+                  <span className={styles.serviceCardPill}>
+                    {servicesCount}/{CREATE_PLAN.limits.services} w planie Starter
+                  </span>
                 </div>
 
                 <div className={styles.serviceGrid}>
@@ -831,12 +983,14 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     placeholder="Nazwa (np. Strzyżenie męskie)"
                     value={newService.name}
                     maxLength={80}
+                    disabled={servicesCount >= CREATE_PLAN.limits.services}
                     onChange={(e) => setNewService({ ...newService, name: e.target.value })}
                   />
 
                   <select
                     className={styles.formSelect}
                     value={newService.category}
+                    disabled={servicesCount >= CREATE_PLAN.limits.services}
                     onChange={(e) => setNewService({ ...newService, category: e.target.value })}
                   >
                     <option value="service">Usługa</option>
@@ -846,6 +1000,8 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     <option value="handmade">Rękodzieło</option>
                     <option value="lesson">Lekcja</option>
                     <option value="consultation">Konsultacja</option>
+                    <option value="event">Event</option>
+                    <option value="custom">Inne</option>
                   </select>
 
                   <input
@@ -854,6 +1010,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     placeholder="Krótki opis (opcjonalnie)"
                     value={newService.shortDescription}
                     maxLength={120}
+                    disabled={servicesCount >= CREATE_PLAN.limits.services}
                     onChange={(e) =>
                       setNewService({ ...newService, shortDescription: e.target.value })
                     }
@@ -862,6 +1019,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                   <select
                     className={styles.formSelect}
                     value={newService.priceMode}
+                    disabled={servicesCount >= CREATE_PLAN.limits.services}
                     onChange={(e) =>
                       setNewService({
                         ...newService,
@@ -883,6 +1041,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                       placeholder={newService.priceMode === "fixed" ? "Cena" : "Cena od"}
                       min="0"
                       value={newService.priceValue}
+                      disabled={servicesCount >= CREATE_PLAN.limits.services}
                       onChange={(e) =>
                         setNewService({ ...newService, priceValue: e.target.value })
                       }
@@ -895,6 +1054,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     placeholder="Czas"
                     min="1"
                     value={newService.durationValue}
+                    disabled={servicesCount >= CREATE_PLAN.limits.services}
                     onChange={(e) =>
                       setNewService({ ...newService, durationValue: e.target.value })
                     }
@@ -903,6 +1063,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                   <select
                     className={styles.formSelect}
                     value={newService.durationUnit}
+                    disabled={servicesCount >= CREATE_PLAN.limits.services}
                     onChange={(e) =>
                       setNewService({ ...newService, durationUnit: e.target.value })
                     }
@@ -910,6 +1071,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     <option value="minutes">Minuty</option>
                     <option value="hours">Godziny</option>
                     <option value="days">Dni</option>
+                    <option value="weeks">Tygodnie</option>
                   </select>
                 </div>
 
@@ -918,6 +1080,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     <input
                       type="checkbox"
                       checked={newService.bookingEnabled}
+                      disabled={servicesCount >= CREATE_PLAN.limits.services}
                       onChange={(e) =>
                         setNewService((prev) => ({
                           ...prev,
@@ -926,19 +1089,22 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                         }))
                       }
                     />
-                    Umożliw rezerwację / zapytanie
+                    Umożliw zapytanie o usługę
                   </label>
 
                   {newService.bookingEnabled && (
                     <select
                       className={styles.formSelect}
                       value={newService.bookingType}
+                      disabled={servicesCount >= CREATE_PLAN.limits.services}
                       onChange={(e) =>
                         setNewService({ ...newService, bookingType: e.target.value })
                       }
                     >
-                      <option value="request">Zapytanie</option>
-                      <option value="calendar">Kalendarz</option>
+                      <option value="request">Zapytanie — Starter</option>
+                      <option value="calendar" disabled>
+                        Kalendarz — Premium
+                      </option>
                     </select>
                   )}
                 </div>
@@ -947,9 +1113,12 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                   type="button"
                   className={styles.addServiceBtn}
                   onClick={handleAddService}
+                  disabled={servicesCount >= CREATE_PLAN.limits.services}
                 >
                   <FiPlus />
-                  Dodaj usługę
+                  {servicesCount >= CREATE_PLAN.limits.services
+                    ? "Limit usług w planie Starter"
+                    : "Dodaj usługę"}
                 </button>
 
                 {serviceError && <small className={styles.error}>{serviceError}</small>}
@@ -966,79 +1135,24 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                   value={form.bookingMode}
                   onChange={handleChange}
                 >
-                  <option value="calendar">
-                    Kalendarz godzinowy (np. fryzjer, korepetytor)
+                  <option value="calendar" disabled>
+                    Kalendarz godzinowy — dostępny w Premium
                   </option>
-                  <option value="request-blocking">
-                    Zablokuj dzień (np. DJ, cukiernik)
+                  <option value="request-blocking" disabled>
+                    Blokowanie dni — dostępne w Premium
                   </option>
-                  <option value="request-open">
-                    Zapytanie bez blokowania (np. programista)
-                  </option>
+                  <option value="request-open">Zapytanie bez blokowania — Starter</option>
                 </select>
+
+                <small className={styles.helperText}>
+                  W planie Starter dostępny jest tryb zapytań. Kalendarz i blokowanie
+                  dni odblokujesz po przejściu na Premium.
+                </small>
+
+                {formErrors.bookingMode && (
+                  <small className={styles.error}>{formErrors.bookingMode}</small>
+                )}
               </label>
-
-              {form.bookingMode === "calendar" && (
-                <div className={styles.scheduleBox}>
-                  <h4 className={styles.subSectionTitle}>Godziny i dni pracy</h4>
-
-                  <div className={styles.fieldGrid}>
-                    <label className={styles.formField}>
-                      <span className={styles.fieldLabel}>Od</span>
-                      <input
-                        className={styles.formInput}
-                        type="time"
-                        value={form.workingHours.from}
-                        onChange={(e) => {
-                          const from = e.target.value;
-                          setForm((f) => ({
-                            ...f,
-                            workingHours: { ...f.workingHours, from },
-                          }));
-                        }}
-                      />
-                    </label>
-
-                    <label className={styles.formField}>
-                      <span className={styles.fieldLabel}>Do</span>
-                      <input
-                        className={styles.formInput}
-                        type="time"
-                        value={form.workingHours.to}
-                        onChange={(e) => {
-                          const to = e.target.value;
-                          setForm((f) => ({
-                            ...f,
-                            workingHours: { ...f.workingHours, to },
-                          }));
-                        }}
-                      />
-                    </label>
-                  </div>
-
-                  <fieldset className={styles.fieldset}>
-                    {[1, 2, 3, 4, 5, 6, 0].map((d) => (
-                      <label key={d} className={styles.checkboxLabel}>
-                        <input
-                          type="checkbox"
-                          value={d}
-                          checked={form.workingDays.includes(d)}
-                          onChange={(e) => {
-                            const day = Number(e.target.value);
-                            setForm((f) => {
-                              const days = f.workingDays.includes(day)
-                                ? f.workingDays.filter((x) => x !== day)
-                                : [...f.workingDays, day];
-                              return { ...f, workingDays: days };
-                            });
-                          }}
-                        />
-                        {["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "Sb"][d]}
-                      </label>
-                    ))}
-                  </fieldset>
-                </div>
-              )}
 
               {formErrors.services && <small className={styles.error}>{formErrors.services}</small>}
             </div>
@@ -1059,13 +1173,19 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     <input
                       className={styles.formInput}
                       type="url"
-                      placeholder={`https://...`}
+                      placeholder="https://..."
                       value={link}
                       onChange={(e) => handleLinkChange(index, e.target.value)}
                     />
                   </label>
                 ))}
               </div>
+
+              <small className={styles.counterText}>
+                {activeLinksCount}/{CREATE_PLAN.limits.links} linki — plan Starter
+              </small>
+
+              {formErrors.links && <small className={styles.error}>{formErrors.links}</small>}
             </div>
 
             <div className={styles.contentBox}>
@@ -1133,6 +1253,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                       tags: form.tags.filter(
                         (tag) => tag.trim() !== "" && tag.length <= 20
                       ),
+                      links: form.links.filter((link) => link.trim() !== ""),
                       rating: 0,
                       reviews: 0,
                       availableDates: [],

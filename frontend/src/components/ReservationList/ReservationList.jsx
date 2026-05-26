@@ -33,36 +33,103 @@ const BASE_BREAK_MIN = 5;
 const MIN_VISIBLE_FREE_MIN = 30;
 
 function Countdown({ until, onExpire }) {
-  const [txt, setTxt] = useState("");
+  const [state, setState] = useState({
+    label: "Sprawdzanie czasu…",
+    detail: "",
+    urgent: false,
+    expired: false,
+  });
 
   useEffect(() => {
+    if (!until) {
+      setState({
+        label: "Brak terminu wygaśnięcia",
+        detail: "",
+        urgent: false,
+        expired: false,
+      });
+      return undefined;
+    }
+
     let fired = false;
 
-    const toLabel = (ms) => {
-      if (ms <= 0) return "00:00";
-      const s = Math.floor(ms / 1000);
-      const mm = String(Math.floor(s / 60)).padStart(2, "0");
-      const ss = String(s % 60).padStart(2, "0");
-      return `${mm}:${ss}`;
+    const formatTimeLeft = () => {
+      const end = new Date(until).getTime();
+      const now = Date.now();
+      const diffMs = end - now;
+
+      if (!Number.isFinite(end) || diffMs <= 0) {
+        return {
+          label: "Rezerwacja wygasła",
+          detail: "Czas na potwierdzenie minął.",
+          urgent: true,
+          expired: true,
+        };
+      }
+
+      const totalSeconds = Math.floor(diffMs / 1000);
+      const totalMinutes = Math.floor(totalSeconds / 60);
+
+      if (totalSeconds >= 3600) {
+        const hoursLeft = Math.ceil(totalSeconds / 3600);
+
+        return {
+          label: `Wygasa za ${hoursLeft}h`,
+          detail:
+            hoursLeft <= 3
+              ? "Zostało niewiele czasu na reakcję."
+              : "Usługodawca ma jeszcze czas na potwierdzenie.",
+          urgent: hoursLeft <= 3,
+          expired: false,
+        };
+      }
+
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+
+      return {
+        label: `Wygasa za ${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`,
+        detail:
+          totalMinutes <= 10
+            ? "Ostatnie minuty na potwierdzenie."
+            : "Pozostało mniej niż godzina.",
+        urgent: true,
+        expired: false,
+      };
     };
 
     const tick = () => {
-      const ms = new Date(until).getTime() - Date.now();
-      setTxt(toLabel(ms));
-      if (ms <= 0 && !fired) {
+      const nextState = formatTimeLeft();
+
+      setState(nextState);
+
+      if (nextState.expired && !fired) {
         fired = true;
         onExpire?.();
       }
     };
 
     tick();
+
     const id = setInterval(tick, 1000);
+
     return () => clearInterval(id);
   }, [until, onExpire]);
 
   return (
-    <div className={styles.countdown}>
-      Wygasa za: <strong>{txt}</strong>
+    <div
+      className={`
+        ${styles.countdown}
+        ${state.urgent ? styles.countdownUrgent : ""}
+        ${state.expired ? styles.countdownExpired : ""}
+      `}
+    >
+      <div className={styles.countdownTop}>
+        <FiClock className={styles.countdownIcon} aria-hidden="true" />
+        <strong>{state.label}</strong>
+      </div>
+
+      {state.detail && <span>{state.detail}</span>}
     </div>
   );
 }
@@ -142,9 +209,40 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   };
 
   const hasProviderProfile = !!providerMeta?.providerProfileId;
-  const bookingMode = providerMeta?.bookingMode;
+
+  const billingFeatures =
+    providerMeta?.billingPublic?.features ||
+    providerMeta?.billing?.features ||
+    {};
+
+  const hasBillingFeatures = Object.keys(billingFeatures).length > 0;
+
+  const canUseBookingFeature = hasBillingFeatures
+    ? !!billingFeatures.booking
+    : true;
+
+  const canUseRequestBlockingFeature = hasBillingFeatures
+    ? !!billingFeatures.requestBlocking
+    : true;
+
+  const canUseTeamFeature = hasBillingFeatures
+    ? !!billingFeatures.team
+    : true;
+
+  const rawBookingMode = String(providerMeta?.bookingMode || "request-open").toLowerCase();
+
+  const bookingMode =
+    rawBookingMode === "calendar" && canUseBookingFeature
+      ? "calendar"
+      : rawBookingMode === "request-blocking" && canUseRequestBlockingFeature
+        ? "request-blocking"
+        : rawBookingMode === "request-open"
+          ? "request-open"
+          : "request-open";
+
   const canUseCalendar =
-    hasProviderProfile && (bookingMode === "calendar" || bookingMode === "request-blocking");
+    hasProviderProfile &&
+    (bookingMode === "calendar" || bookingMode === "request-blocking");
 
   const isSlotMode = bookingMode === "calendar";
   const isDayBlockingMode = bookingMode === "request-blocking";
@@ -258,7 +356,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     requestAnimationFrame(tryScroll);
   }, [location.state, loading, location.pathname]);
 
-  const teamEnabled = providerMeta?.team?.enabled === true;
+  const teamEnabled = canUseTeamFeature && providerMeta?.team?.enabled === true;
   const assignmentMode = providerMeta?.team?.assignmentMode;
   const isUserPickTeam = teamEnabled && assignmentMode === "user-pick";
   const isAutoAssignTeam = teamEnabled && assignmentMode === "auto-assign";

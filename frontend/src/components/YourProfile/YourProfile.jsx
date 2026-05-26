@@ -32,6 +32,12 @@ import {
   FaClock,
 } from 'react-icons/fa';
 import AlertBox from "../AlertBox/AlertBox";
+import {
+  getBillingStatus,
+  startSubscriptionCheckout,
+  openBillingPortal,
+  startExtensionCheckout,
+} from "../../api/billingApi";
 
 const YourProfile = ({ user, setRefreshTrigger }) => {
   // =========================
@@ -47,7 +53,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     name: '',
     shortDescription: '',
     category: 'service',
-    priceMode: 'fixed',
+    priceMode: 'contact',
     priceValue: '',
     durationValue: '',
     durationUnit: 'minutes',
@@ -55,7 +61,14 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     featured: false,
   });
 
-  const MAX_PHOTOS = 6;
+  const DEFAULT_LIMITS = {
+    photos: 3,
+    services: 3,
+    serviceGallery: 2,
+    links: 1,
+    quickAnswers: 1,
+    descriptionLength: 200,
+  };
 
   const [profile, setProfile] = useState(null);
   const [editData, setEditData] = useState({});
@@ -71,6 +84,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const [isCreatingStaff, setIsCreatingStaff] = useState(false);
   const [deletingStaffIds, setDeletingStaffIds] = useState([]); // lista id w trakcie usuwania
   const [billingStatus, setBillingStatus] = useState(null);
+  const [billingLoading, setBillingLoading] = useState(false);
+  const [billingActionLoading, setBillingActionLoading] = useState("");
 
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState("");
@@ -129,15 +144,14 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const fetchBillingStatus = async () => {
     try {
-      const { data } = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/billing/status`,
-        { headers: await authHeaders() }
-      );
-
+      setBillingLoading(true);
+      const data = await getBillingStatus();
       setBillingStatus(data);
     } catch (err) {
       console.error("❌ billing status error:", err);
       setBillingStatus(null);
+    } finally {
+      setBillingLoading(false);
     }
   };
 
@@ -307,6 +321,11 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const createStaff = async () => {
     if (isCreatingStaff) return;
     if (!profile?._id) return;
+
+    if (!canUseTeam) {
+      showAlert('Zespół i pracownicy są dostępni tylko w planie Premium.', 'warning');
+      return;
+    }
 
     if (!newStaff.name.trim()) {
       showAlert('Podaj imię pracownika.', 'warning');
@@ -495,6 +514,15 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     }
   };
 
+  const makeEmptyQaError = () => ({
+    title: '',
+    answer: '',
+    touched: false,
+  });
+
+  const normalizeQaErrors = (length) =>
+    Array.from({ length }).map((_, i) => qaErrors[i] || makeEmptyQaError());
+
   // =========================
   // Walidacje / zapis profilu
   // =========================
@@ -512,7 +540,33 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     const nonEmptyTags = (data.tags || []).filter(tag => tag.trim() !== '');
     if (nonEmptyTags.length === 0) errors.tags = 'Podaj przynajmniej 1 tag';
 
-    if (data.description?.length > 500) errors.description = 'Opis nie może przekraczać 500 znaków';
+    if ((data.description || '').length > MAX_DESCRIPTION) {
+      errors.description = `Opis nie może przekraczać ${MAX_DESCRIPTION} znaków w obecnym planie.`;
+    }
+
+    if ((data.services || []).length > MAX_SERVICES) {
+      errors.services = `Obecny plan pozwala dodać maksymalnie ${MAX_SERVICES} usług.`;
+    }
+
+    const nonEmptyLinks = (data.links || []).filter((link) => String(link || '').trim() !== '');
+    if (nonEmptyLinks.length > MAX_LINKS) {
+      errors.links = `Obecny plan pozwala dodać maksymalnie ${MAX_LINKS} linków.`;
+    }
+
+    const nonEmptyQuickAnswers = (data.quickAnswers || []).filter(
+      (qa) => String(qa?.title || '').trim() || String(qa?.answer || '').trim()
+    );
+    if (nonEmptyQuickAnswers.length > MAX_QUICK_ANSWERS) {
+      errors.quickAnswers = `Obecny plan pozwala dodać maksymalnie ${MAX_QUICK_ANSWERS} szybkich odpowiedzi.`;
+    }
+
+    if (!canUseBooking && ['calendar', 'request-blocking'].includes(data.bookingMode)) {
+      errors.bookingMode = 'Kalendarz i blokowanie dni są dostępne tylko w planie Premium.';
+    }
+
+    if (!canUseTeam && data.team?.enabled) {
+      errors.team = 'Zespół i pracownicy są dostępni tylko w planie Premium.';
+    }
 
     const priceFrom = Number(data.priceFrom);
     const priceTo = Number(data.priceTo);
@@ -537,6 +591,11 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     }
 
     const buf = Number(data.bookingBufferMin ?? 0);
+
+    if (!canUseBooking && buf !== 0) {
+      errors.bookingBufferMin = 'Przerwa między usługami jest dostępna tylko w planie Premium.';
+    }
+
     if (![0, 5, 10, 15].includes(buf)) {
       errors.bookingBufferMin = 'Buffer musi mieć wartość: 0, 5, 10 lub 15 minut.';
     }
@@ -827,18 +886,13 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
     setIsExtending(true);
     try {
-      const { data } = await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/billing/checkout-extension`,
-        { uid: user.uid },
-        { headers: await authHeaders({ "Content-Type": "application/json" }) }
-      );
+      const data = await startExtensionCheckout();
 
       if (!data?.url) {
         showAlert("Nie udało się rozpocząć płatności (brak URL).", "error");
         return;
       }
 
-      // przekierowanie do Stripe Checkout
       window.location.href = data.url;
     } catch (err) {
       const msg =
@@ -850,6 +904,60 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       showAlert(msg, "error");
     } finally {
       setIsExtending(false);
+    }
+  };
+
+  const handleStartSubscription = async (plan) => {
+    if (billingActionLoading) return;
+
+    try {
+      setBillingActionLoading(plan);
+
+      const data = await startSubscriptionCheckout(plan);
+
+      if (!data?.url) {
+        showAlert("Nie udało się utworzyć płatności za plan.", "error");
+        return;
+      }
+
+      window.location.href = data.url;
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Nie udało się rozpocząć płatności za plan.";
+
+      console.error("❌ checkout-subscription:", err);
+      showAlert(msg, "error");
+    } finally {
+      setBillingActionLoading("");
+    }
+  };
+
+  const handleOpenBillingPortal = async () => {
+    if (billingActionLoading) return;
+
+    try {
+      setBillingActionLoading("portal");
+
+      const data = await openBillingPortal();
+
+      if (!data?.url) {
+        showAlert("Nie udało się otworzyć panelu subskrypcji.", "error");
+        return;
+      }
+
+      window.location.href = data.url;
+    } catch (err) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Nie udało się otworzyć zarządzania subskrypcją.";
+
+      console.error("❌ billing portal:", err);
+      showAlert(msg, "error");
+    } finally {
+      setBillingActionLoading("");
     }
   };
 
@@ -876,16 +984,42 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         secondary: t.secondary || "#ff4081",
       };
 
+      const currentTheme = profile?.theme || {};
+      const safeTheme = canUsePremiumThemes
+        ? mappedTheme
+        : {
+          variant: currentTheme.variant || "system",
+          primary: currentTheme.primary || "#6f4ef2",
+          secondary: currentTheme.secondary || "#ff4081",
+        };
+
       // 1) Zapis profilu
       const c = payload.contact || {};
       const builtAddressFull = [payload.location, c.postcode, c.street].filter(Boolean).join(", ").trim();
+
+      const safeBookingMode = canUseBooking
+        ? payload.bookingMode || 'request-open'
+        : 'request-open';
+
+      const safeTeam = canUseTeam
+        ? payload.team || { enabled: false, assignmentMode: 'user-pick' }
+        : { enabled: false, assignmentMode: 'user-pick' };
+
+      const safeServices = (payload.services || []).slice(0, MAX_SERVICES);
+      const safeLinks = (payload.links || []).slice(0, MAX_LINKS);
+      const safeQuickAnswers = (payload.quickAnswers || []).filter(
+        (qa) => qa.title?.trim() || qa.answer?.trim()
+      ).slice(0, MAX_QUICK_ANSWERS);
 
       await axios.patch(
         `${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`,
         {
           ...payload,
-          bookingBufferMin: Number(payload.bookingBufferMin ?? 0), // ✅ DODAJ
-          theme: mappedTheme,
+          services: safeServices,
+          links: safeLinks,
+          bookingMode: safeBookingMode,
+          bookingBufferMin: canUseBooking ? Number(payload.bookingBufferMin ?? 0) : 0,
+          theme: safeTheme,
           contact: {
             email: c.email || "",
             phone: c.phone || "",
@@ -893,19 +1027,25 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             postcode: c.postcode || "",
             addressFull: builtAddressFull,
           },
-          socials: payload.socials || {
-            website: "",
-            facebook: "",
-            instagram: "",
-            youtube: "",
-            tiktok: "",
-          },
+          socials: canUseSocialMedia
+            ? payload.socials || {
+              website: "",
+              facebook: "",
+              instagram: "",
+              youtube: "",
+              tiktok: "",
+            }
+            : {
+              website: "",
+              facebook: "",
+              instagram: "",
+              youtube: "",
+              tiktok: "",
+            },
           showAvailableDates: !!payload.showAvailableDates,
           tags: (payload.tags || []).filter((tag) => String(tag).trim() !== ""),
-          quickAnswers: (payload.quickAnswers || []).filter(
-            (qa) => qa.title?.trim() || qa.answer?.trim()
-          ),
-          team: payload.team || { enabled: false, assignmentMode: "user-pick" },
+          quickAnswers: safeQuickAnswers,
+          team: safeTeam,
         },
         {
           headers: await authHeaders({ "Content-Type": "application/json" }),
@@ -1096,6 +1236,123 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     }
   };
 
+  const handleAddEditableService = () => {
+    const currentServicesCount = (editData.services || []).length;
+
+    if (currentServicesCount >= MAX_SERVICES) {
+      showAlert(`Limit obecnego planu: maksymalnie ${MAX_SERVICES} usług.`, 'warning');
+      return;
+    }
+
+    const name = newService.name.trim();
+    const shortDescription = newService.shortDescription.trim();
+    const value = Number(newService.durationValue);
+    const unit = newService.durationUnit;
+
+    const durationOk =
+      Number.isFinite(value) &&
+      (
+        (unit === 'minutes' && value >= 15) ||
+        (unit === 'hours' && value >= 1) ||
+        (unit === 'days' && value >= 1) ||
+        (unit === 'weeks' && value >= 1)
+      );
+
+    if (!name || !durationOk) {
+      showAlert('Podaj nazwę usługi i poprawny czas.', 'warning');
+      return;
+    }
+
+    const priceMode = newService.priceMode || 'contact';
+
+    const price = {
+      mode: priceMode,
+      amount: null,
+      from: null,
+      to: null,
+      currency: 'PLN',
+      unitLabel: '',
+      note: '',
+    };
+
+    if (priceMode === 'fixed') {
+      const amount = Number(newService.priceValue);
+
+      if (newService.priceValue === '' || !Number.isFinite(amount) || amount < 0) {
+        showAlert('Przy cenie stałej musisz podać kwotę.', 'warning');
+        return;
+      }
+
+      price.amount = amount;
+    }
+
+    if (priceMode === 'from') {
+      const from = Number(newService.priceValue);
+
+      if (newService.priceValue === '' || !Number.isFinite(from) || from < 0) {
+        showAlert('Przy cenie „od” musisz podać kwotę.', 'warning');
+        return;
+      }
+
+      price.from = from;
+    }
+
+    setEditData((prev) => ({
+      ...prev,
+      services: [
+        ...(prev.services || []),
+        {
+          name,
+          shortDescription,
+          description: '',
+          category: newService.category,
+          image: { url: '', publicId: '' },
+          gallery: [],
+          price,
+          duration: {
+            value,
+            unit,
+            label:
+              unit === 'minutes' || unit === 'hours'
+                ? 'czas wizyty'
+                : 'czas realizacji',
+          },
+          booking: {
+            enabled: false,
+            type: 'none',
+          },
+          delivery: {
+            mode: 'none',
+            turnaroundText: '',
+          },
+          tags: [],
+          featured: !!newService.featured,
+          isActive: !!newService.isActive,
+          order: (prev.services || []).length,
+        },
+      ],
+    }));
+
+    setNewService({
+      name: '',
+      shortDescription: '',
+      category: 'service',
+      priceMode: 'contact',
+      priceValue: '',
+      durationValue: '',
+      durationUnit: 'minutes',
+      isActive: true,
+      featured: false,
+    });
+
+    setFormErrors((prev) => ({
+      ...prev,
+      services: '',
+    }));
+
+    showAlert('Dodano usługę. Pamiętaj, aby zapisać zmiany w profilu.', 'success');
+  };
+
   if (!user) return <Navigate to="/login" replace />;
   if (loading) return <div className={styles.wrapper}>⏳ Ładowanie profilu…</div>;
   if (notFound) {
@@ -1168,10 +1425,47 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const isExpired = isTimeExpired;
 
   const canExtend =
-    !isAdminHidden && (isExpired || !!billingStatus?.canExtend);
+    !isAdminHidden &&
+    (isExpired || !!billingStatus?.canExtend || !!billingStatus?.legacy?.canExtend);
 
   const shouldShowVisibilityNotice =
-    isAdminHidden || isExpired || !!billingStatus?.canExtend;
+    isAdminHidden ||
+    isExpired ||
+    !!billingStatus?.canExtend ||
+    !!billingStatus?.legacy?.canExtend;
+
+  const billingPublic = billingStatus?.billing || {};
+  const billingPlan =
+    billingPublic?.effectivePlan ||
+    billingPublic?.plan ||
+    billingStatus?.plan?.effectivePlan ||
+    billingStatus?.plan?.plan ||
+    "free";
+
+  const billingLabel =
+    billingPublic?.label ||
+    billingStatus?.plan?.label ||
+    (billingPlan === "premium" ? "Premium" : billingPlan === "standard" ? "Standard" : "Free");
+
+  const billingCurrentStatus = billingPublic?.status || "inactive";
+  const billingLimits = {
+    ...DEFAULT_LIMITS,
+    ...(billingPublic?.limits || billingStatus?.plan?.limits || {}),
+  };
+  const billingFeatures = billingPublic?.features || billingStatus?.plan?.features || {};
+  const isPaidActive = ["standard", "premium"].includes(billingPlan);
+
+  const MAX_PHOTOS = Number(billingLimits.photos || DEFAULT_LIMITS.photos);
+  const MAX_SERVICES = Number(billingLimits.services || DEFAULT_LIMITS.services);
+  const MAX_DESCRIPTION = Number(billingLimits.descriptionLength || DEFAULT_LIMITS.descriptionLength);
+  const MAX_LINKS = Number(billingLimits.links || DEFAULT_LIMITS.links);
+  const MAX_QUICK_ANSWERS = Number(billingLimits.quickAnswers || DEFAULT_LIMITS.quickAnswers);
+
+  const canUseBooking = !!billingFeatures.booking;
+  const canUseTeam = !!billingFeatures.team;
+  const canUsePremiumThemes = !!billingFeatures.premiumThemes;
+
+  const canUseSocialMedia = !!billingFeatures.socialMedia;
 
   // =========================
   // Render
@@ -1237,6 +1531,170 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             )}
           </div>
         </div>
+
+        <section className={styles.billingPanel}>
+          <div className={styles.billingHeader}>
+            <div>
+              <p className={styles.billingEyebrow}>Plan Showly</p>
+              <h2>Twój plan i limity</h2>
+              <p>
+                Zarządzaj widocznością profilu, zdjęciami, usługami i funkcjami rezerwacji.
+              </p>
+            </div>
+
+            <div className={styles.currentPlanBadge}>
+              {billingLoading ? "Ładowanie..." : billingLabel}
+            </div>
+          </div>
+
+          <div className={styles.billingStatusBox}>
+            <div>
+              <span>Aktualny plan</span>
+              <strong>{billingLabel}</strong>
+            </div>
+
+            <div>
+              <span>Status</span>
+              <strong>{billingCurrentStatus}</strong>
+            </div>
+
+            <div>
+              <span>Zdjęcia profilu</span>
+              <strong>{billingLimits.photos || 3}</strong>
+            </div>
+
+            <div>
+              <span>Usługi</span>
+              <strong>{billingLimits.services || 3}</strong>
+            </div>
+          </div>
+
+          <div className={styles.planCards}>
+            <article
+              className={`${styles.planCard} ${billingPlan === "free" ? styles.activePlan : ""}`}
+            >
+              <div className={styles.planTop}>
+                <h3>Starter</h3>
+                <strong>0 zł</strong>
+              </div>
+
+              <p>Podstawowa wizytówka na start widoczna za darmo przez 30 dni.</p>
+
+              <ul>
+                <li>30 dniowa widoczność profilu</li>
+                <li>Do 3 zdjęć profilu</li>
+                <li>Do 3 usług</li>
+                <li>1 link</li>
+                <li>Wiadomości od klientów</li>
+                <li>Podstawowy wygląd profilu</li>
+                <li>1 szybka odpowiedź profilu</li>
+                <li>Limit opisu profilu do 200 znaków</li>
+              </ul>
+
+              <button type="button" disabled className={styles.planButtonGhost}>
+                {billingPlan === "free" ? "Aktywny plan" : "Plan podstawowy"}
+              </button>
+            </article>
+
+            <article
+              className={`${styles.planCard} ${billingPlan === "standard" ? styles.activePlan : ""}`}
+            >
+              <div className={styles.planTop}>
+                <h3>Standard</h3>
+                <strong>29,99 zł / mies.</strong>
+              </div>
+
+              <p>Dla twórców, freelancerów i małych usług.</p>
+
+              <ul>
+                <li>Widoczność profilu wliczona w okres subskrybcji</li>
+                <li>Do 6 zdjęć profilu</li>
+                <li>Do 10 usług</li>
+                <li>2 linki</li>
+                <li>Wiadomości od klientów</li>
+                <li>Rozszerzone motywy profilu</li>
+                <li>Social media profilu</li>
+                <li>3 szybkie odpowiedzi profilu</li>
+                <li>Limit opisu profilu do 500 znaków</li>
+                <li>Promowanie profilu</li>
+              </ul>
+
+              {billingPlan === "standard" ? (
+                <button type="button" disabled className={styles.planButtonGhost}>
+                  Aktywny plan
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.planButton}
+                  onClick={() => handleStartSubscription("standard")}
+                  disabled={billingActionLoading === "standard"}
+                >
+                  {billingActionLoading === "standard" ? "Przekierowanie..." : "Wybierz Standard"}
+                </button>
+              )}
+            </article>
+
+            <article
+              className={`${styles.planCard} ${styles.premiumPlan} ${billingPlan === "premium" ? styles.activePlan : ""}`}
+            >
+              <div className={styles.planTop}>
+                <h3>Premium</h3>
+                <strong>59,99 zł / mies.</strong>
+              </div>
+
+              <p>Dla profili biznesowych z rezerwacjami.</p>
+
+              <ul>
+                <li>Widoczność profilu wliczona w okres subskrybcji</li>
+                <li>Do 15 zdjęć profilu</li>
+                <li>Do 20 usług</li>
+                <li>3 linki</li>
+                <li>Wiadomości od klientów</li>
+                <li>Rozszerzone motywy profilu</li>
+                <li>Social media profilu</li>
+                <li>5 szybkich odpowiedzi profilu</li>
+                <li>Limit opisu profilu do 1000 znaków</li>
+                <li>Promowanie profilu</li>
+                <li>Zaawansowany kalendarz rezerwacji</li>
+                <li>Zespół i pracownicy</li>
+              </ul>
+
+              {billingPlan === "premium" ? (
+                <button type="button" disabled className={styles.planButtonGhost}>
+                  Aktywny plan
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.planButton}
+                  onClick={() => handleStartSubscription("premium")}
+                  disabled={billingActionLoading === "premium"}
+                >
+                  {billingActionLoading === "premium" ? "Przekierowanie..." : "Wybierz Premium"}
+                </button>
+              )}
+            </article>
+          </div>
+
+          {isPaidActive && (
+            <div className={styles.billingFooter}>
+              <p>
+                Subskrypcją możesz zarządzać w bezpiecznym panelu Stripe — anulowanie,
+                zmiana karty i historia płatności.
+              </p>
+
+              <button
+                type="button"
+                className={styles.portalButton}
+                onClick={handleOpenBillingPortal}
+                disabled={billingActionLoading === "portal"}
+              >
+                {billingActionLoading === "portal" ? "Otwieranie..." : "Zarządzaj subskrypcją"}
+              </button>
+            </div>
+          )}
+        </section>
 
         {shouldShowVisibilityNotice && (
           <div className={`${styles.card} ${styles.noticeCard}`}>
@@ -1433,7 +1891,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   onChange={(e) => setEditData({ ...editData, description: e.target.value })}
                   rows={4}
                   className={styles.formTextarea}
-                  maxLength={500}
+                  maxLength={MAX_DESCRIPTION}
                 />
                 <div className={styles.descMeta}>
                   <div className={styles.descLeft}>
@@ -1443,7 +1901,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   </div>
                   <div className={styles.descRight}>
                     <small className={styles.hint}>
-                      {editData.description?.length || 0}/500 znaków
+                      {editData.description?.length || 0}/{MAX_DESCRIPTION} znaków
                     </small>
                   </div>
                 </div>
@@ -1459,8 +1917,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         </section>
 
         {/* =========================
-          Wygląd profilu (Kolory)
-        ========================= */}
+  Wygląd profilu (Kolory)
+========================= */}
         <section className={styles.card}>
           <div className={styles.sectionTop}>
             <div>
@@ -1469,10 +1927,26 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 Ustaw akcenty kolorystyczne i dopasuj wizytówkę do swojego stylu lub marki.
               </p>
             </div>
+
+            {!canUsePremiumThemes && (
+              <span className={styles.lockBadge}>
+                Standard / Premium
+              </span>
+            )}
           </div>
 
           <div className={styles.inputBlock}>
-            {isEditing && (
+            {!canUsePremiumThemes && isEditing && (
+              <div className={styles.upgradeNotice}>
+                <strong>Personalizacja kolorów jest dostępna w planie Standard i Premium.</strong>
+                <span>
+                  W planie Starter profil korzysta z podstawowego, systemowego wyglądu. Po przejściu
+                  na wyższy plan odblokujesz własne kolory i gotowe motywy.
+                </span>
+              </div>
+            )}
+
+            {isEditing && canUsePremiumThemes && (
               <div className={styles.colorPresets}>
                 {[
                   { name: 'Systemowy', primary: '#6f4ef2', secondary: '#ff4081', variant: 'system' },
@@ -1481,26 +1955,34 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   { name: 'Zielony', primary: '#16a34a', secondary: '#86efac', variant: 'green' },
                   { name: 'Różowy', primary: '#db2777', secondary: '#ff6ea8', variant: 'violet' },
                   { name: 'Ciemny', primary: '#e50914', secondary: '#9aa3af', variant: 'dark' },
-                ].map(p => (
+                ].map((p) => (
                   <button
                     key={p.name}
                     type="button"
                     className={styles.presetBtn}
                     onClick={() =>
-                      setEditData(prev => ({
+                      setEditData((prev) => ({
                         ...prev,
                         theme: {
                           ...(prev.theme || {}),
                           variant: p.variant,
                           primary: p.primary,
                           secondary: p.secondary,
-                        }
+                        },
                       }))
                     }
                     title={`Ustaw preset: ${p.name}`}
                   >
-                    <span className={styles.presetDot} style={{ background: p.primary }} aria-hidden="true" />
-                    <span className={styles.presetDot} style={{ background: p.secondary }} aria-hidden="true" />
+                    <span
+                      className={styles.presetDot}
+                      style={{ background: p.primary }}
+                      aria-hidden="true"
+                    />
+                    <span
+                      className={styles.presetDot}
+                      style={{ background: p.secondary }}
+                      aria-hidden="true"
+                    />
                     <span className={styles.presetName}>{p.name}</span>
                   </button>
                 ))}
@@ -1508,59 +1990,111 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             )}
 
             {isEditing ? (
-              <div className={styles.colorGrid}>
-                <div className={styles.colorField}>
-                  <label className={styles.colorLabel}>Akcent</label>
-                  <div className={styles.colorRow}>
-                    <input
-                      type="color"
-                      value={editData.theme?.primary || '#ff5a1f'}
-                      onChange={(e) => setEditData(prev => ({
-                        ...prev,
-                        theme: { ...(prev.theme || {}), primary: e.target.value }
-                      }))}
-                    />
-                    <input
-                      className={styles.formInput}
-                      value={editData.theme?.primary || '#ff5a1f'}
-                      onChange={(e) => setEditData(prev => ({
-                        ...prev,
-                        theme: { ...(prev.theme || {}), primary: e.target.value }
-                      }))}
-                      placeholder="#ff5a1f"
-                    />
+              canUsePremiumThemes ? (
+                <div className={styles.colorGrid}>
+                  <div className={styles.colorField}>
+                    <label className={styles.colorLabel}>Akcent</label>
+                    <div className={styles.colorRow}>
+                      <input
+                        type="color"
+                        value={editData.theme?.primary || '#6f4ef2'}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            theme: {
+                              ...(prev.theme || {}),
+                              primary: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                      <input
+                        className={styles.formInput}
+                        value={editData.theme?.primary || '#6f4ef2'}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            theme: {
+                              ...(prev.theme || {}),
+                              primary: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="#6f4ef2"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className={styles.colorField}>
-                  <label className={styles.colorLabel}>Akcent 2</label>
-                  <div className={styles.colorRow}>
-                    <input
-                      type="color"
-                      value={editData.theme?.secondary || '#7c9dff'}
-                      onChange={(e) => setEditData(prev => ({
-                        ...prev,
-                        theme: { ...(prev.theme || {}), secondary: e.target.value }
-                      }))}
-                    />
-                    <input
-                      className={styles.formInput}
-                      value={editData.theme?.secondary || '#7c9dff'}
-                      onChange={(e) => setEditData(prev => ({
-                        ...prev,
-                        theme: { ...(prev.theme || {}), secondary: e.target.value }
-                      }))}
-                      placeholder="#7c9dff"
-                    />
+                  <div className={styles.colorField}>
+                    <label className={styles.colorLabel}>Akcent 2</label>
+                    <div className={styles.colorRow}>
+                      <input
+                        type="color"
+                        value={editData.theme?.secondary || '#ff4081'}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            theme: {
+                              ...(prev.theme || {}),
+                              secondary: e.target.value,
+                            },
+                          }))
+                        }
+                      />
+                      <input
+                        className={styles.formInput}
+                        value={editData.theme?.secondary || '#ff4081'}
+                        onChange={(e) =>
+                          setEditData((prev) => ({
+                            ...prev,
+                            theme: {
+                              ...(prev.theme || {}),
+                              secondary: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="#ff4081"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className={styles.colorPreview}>
+                  <div
+                    className={`${styles.previewCard} ${styles.lockedPreviewCard}`}
+                    style={{
+                      borderColor: profile.theme?.primary || '#6f4ef2',
+                    }}
+                  >
+                    <div className={styles.previewTop}>
+                      <span
+                        className={styles.previewPill}
+                        style={{ background: profile.theme?.primary || '#6f4ef2' }}
+                      >
+                        Akcent
+                      </span>
+                      <span
+                        className={styles.previewPill}
+                        style={{ background: profile.theme?.secondary || '#ff4081' }}
+                      >
+                        Akcent 2
+                      </span>
+                    </div>
+
+                    <div className={styles.previewLine} />
+
+                    <div className={styles.previewText}>
+                      Podgląd aktualnych kolorów — edycja zablokowana w planie Starter
+                    </div>
+                  </div>
+                </div>
+              )
             ) : (
               <div className={styles.colorPreview}>
                 <div
                   className={styles.previewCard}
                   style={{
-                    borderColor: profile.theme?.primary || '#6f4ef2'
+                    borderColor: profile.theme?.primary || '#6f4ef2',
                   }}
                 >
                   <div className={styles.previewTop}>
@@ -1577,7 +2111,9 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                       Akcent 2
                     </span>
                   </div>
+
                   <div className={styles.previewLine} />
+
                   <div className={styles.previewText}>
                     Podgląd kolorów profilu
                   </div>
@@ -1783,24 +2319,18 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
                       <select
                         className={styles.formInput}
-                        value={s.price?.mode || 'contact'}
-                        onChange={(e) => {
-                          const arr = [...editData.services];
-                          arr[i].price = {
-                            ...(arr[i].price || {}),
-                            mode: e.target.value,
-                            amount: null,
-                            from: null,
-                            to: null,
-                            currency: 'PLN',
-                          };
-                          setEditData((prev) => ({ ...prev, services: arr }));
-                        }}
+                        value={newService.priceMode}
+                        onChange={(e) =>
+                          setNewService((prev) => ({
+                            ...prev,
+                            priceMode: e.target.value,
+                            priceValue: '',
+                          }))
+                        }
                       >
+                        <option value="contact">Wycena indywidualna</option>
                         <option value="fixed">Cena stała</option>
                         <option value="from">Cena od</option>
-                        <option value="range">Przedział cenowy</option>
-                        <option value="contact">Wycena indywidualna</option>
                         <option value="free">Darmowe</option>
                       </select>
 
@@ -2033,86 +2563,12 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   <button
                     type="button"
                     className={styles.primary}
-                    onClick={() => {
-                      const value = Number(newService.durationValue);
-                      const unit = newService.durationUnit;
-
-                      const durationOk =
-                        Number.isFinite(value) &&
-                        (
-                          (unit === 'minutes' && value >= 15) ||
-                          (unit === 'hours' && value >= 1) ||
-                          (unit === 'days' && value >= 1) ||
-                          (unit === 'weeks' && value >= 1)
-                        );
-
-                      if (!newService.name.trim() || !durationOk) {
-                        showAlert('Podaj nazwę usługi i poprawny czas.', 'warning');
-                        return;
-                      }
-
-                      let price = {
-                        mode: newService.priceMode,
-                        amount: null,
-                        from: null,
-                        to: null,
-                        currency: 'PLN',
-                        unitLabel: '',
-                        note: '',
-                      };
-
-                      if (newService.priceMode === 'fixed') {
-                        price.amount = newService.priceValue === '' ? null : Number(newService.priceValue);
-                      }
-
-                      if (newService.priceMode === 'from') {
-                        price.from = newService.priceValue === '' ? null : Number(newService.priceValue);
-                      }
-
-                      setEditData((prev) => ({
-                        ...prev,
-                        services: [
-                          ...(prev.services || []),
-                          {
-                            name: newService.name.trim(),
-                            shortDescription: newService.shortDescription.trim(),
-                            description: '',
-                            category: newService.category,
-                            image: { url: '', publicId: '' },
-                            gallery: [],
-                            price,
-                            duration: {
-                              value: Number(newService.durationValue),
-                              unit: newService.durationUnit,
-                              label:
-                                newService.durationUnit === 'minutes' || newService.durationUnit === 'hours'
-                                  ? 'czas wizyty'
-                                  : 'czas realizacji',
-                            },
-                            booking: { enabled: false, type: 'none' },
-                            delivery: { mode: 'none', turnaroundText: '' },
-                            tags: [],
-                            featured: !!newService.featured,
-                            isActive: !!newService.isActive,
-                            order: (prev.services || []).length,
-                          },
-                        ],
-                      }));
-
-                      setNewService({
-                        name: '',
-                        shortDescription: '',
-                        category: 'service',
-                        priceMode: 'fixed',
-                        priceValue: '',
-                        durationValue: '',
-                        durationUnit: 'minutes',
-                        isActive: true,
-                        featured: false,
-                      });
-                    }}
+                    disabled={(editData.services || []).length >= MAX_SERVICES}
+                    onClick={handleAddEditableService}
                   >
-                    Dodaj usługę
+                    {(editData.services || []).length >= MAX_SERVICES
+                      ? `Limit usług (${MAX_SERVICES})`
+                      : 'Dodaj usługę'}
                   </button>
                 </div>
 
@@ -2170,15 +2626,27 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
               <FaCalendarAlt /> Tryb rezerwacji
             </div>
             {isEditing ? (
-              <select
-                className={styles.formInput}
-                value={editData.bookingMode}
-                onChange={e => setEditData({ ...editData, bookingMode: e.target.value })}
-              >
-                <option value="calendar">Kalendarz godzinowy (np. fryzjer)</option>
-                <option value="request-blocking">Rezerwacja dnia (np. DJ, cukiernik)</option>
-                <option value="request-open">Zapytanie bez blokowania (np. programista)</option>
-              </select>
+              <>
+                <select
+                  className={`${styles.formInput} ${formErrors.bookingMode ? styles.inputError : ''}`}
+                  value={canUseBooking ? editData.bookingMode : 'request-open'}
+                  onChange={e => setEditData({ ...editData, bookingMode: e.target.value })}
+                >
+                  {canUseBooking && (
+                    <>
+                      <option value="calendar">Kalendarz godzinowy (np. fryzjer)</option>
+                      <option value="request-blocking">Rezerwacja dnia (np. DJ, cukiernik)</option>
+                    </>
+                  )}
+                  <option value="request-open">Zapytanie bez blokowania (np. programista)</option>
+                </select>
+                {!canUseBooking && (
+                  <small className={styles.hint}>
+                    Kalendarz i blokowanie dni są dostępne tylko w planie Premium.
+                  </small>
+                )}
+                {formErrors.bookingMode && <small className={styles.error}>{formErrors.bookingMode}</small>}
+              </>
             ) : (
               <ul className={styles.priceView}>
                 <li className={styles.priceItem}>
@@ -2201,36 +2669,82 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
               <FaClock /> Przerwa (buffer) między usługami
             </div>
 
-            {isEditing ? (
-              <select
-                className={styles.formInput}
-                value={editData.bookingBufferMin ?? 0}
-                onChange={(e) =>
-                  setEditData(prev => ({
-                    ...prev,
-                    bookingBufferMin: parseInt(e.target.value, 10),
-                  }))
-                }
-              >
-                <option value={0}>0 min (brak przerwy)</option>
-                <option value={5}>5 min</option>
-                <option value={10}>10 min</option>
-                <option value={15}>15 min</option>
-              </select>
-            ) : (
-              <ul className={styles.priceView}>
-                <li className={styles.priceItem}>
-                  <span className={styles.priceLabel}>Buffer</span>
-                  <span className={styles.priceAmount}>
-                    {profile.bookingBufferMin ?? 0} min
-                  </span>
-                </li>
-              </ul>
+            {!canUseBooking && (
+              <div className={styles.bufferPremiumNotice}>
+                <div className={styles.bufferPremiumIcon}>
+                  <FaClock />
+                </div>
+
+                <div className={styles.bufferPremiumText}>
+                  <div className={styles.bufferPremiumTop}>
+                    <strong>Przerwa między usługami jest dostępna w planie Premium.</strong>
+                    <span className={styles.lockBadge}>Premium</span>
+                  </div>
+
+                  <p>
+                    Buffer działa razem z kalendarzem slotowym — po zakończeniu usługi
+                    automatycznie blokuje kolejne minuty, np. na sprzątnięcie stanowiska,
+                    przygotowanie się do następnego klienta albo krótką przerwę.
+                  </p>
+                </div>
+              </div>
             )}
 
-            <div className={styles.infoMuted} style={{ marginTop: 8 }}>
-              Buffer doliczany jest po każdej usłudze (blokuje kolejne sloty, żebyś miał/a przerwę).
-            </div>
+            {isEditing ? (
+              <div className={styles.bufferControlBox}>
+                <div className={styles.bufferSelectRow}>
+                  <div className={styles.bufferSelectText}>
+                    <strong>Ustaw długość przerwy</strong>
+                    <span>
+                      {canUseBooking
+                        ? "Wybierz, ile minut ma być automatycznie doliczane po każdej usłudze."
+                        : "Opcja jest zablokowana, ponieważ obecny plan nie obsługuje kalendarza slotowego."}
+                    </span>
+                  </div>
+
+                  <select
+                    className={`${styles.formInput} ${styles.bufferSelect} ${formErrors.bookingBufferMin ? styles.inputError : ""
+                      }`}
+                    value={canUseBooking ? editData.bookingBufferMin ?? 0 : 0}
+                    disabled={!canUseBooking}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        bookingBufferMin: parseInt(e.target.value, 10),
+                      }))
+                    }
+                  >
+                    <option value={0}>0 min — brak przerwy</option>
+                    <option value={5}>5 min</option>
+                    <option value={10}>10 min</option>
+                    <option value={15}>15 min</option>
+                  </select>
+                </div>
+
+                {formErrors.bookingBufferMin && (
+                  <small className={styles.error}>{formErrors.bookingBufferMin}</small>
+                )}
+              </div>
+            ) : (
+              <div className={styles.bufferViewBox}>
+                <div className={styles.bufferViewItem}>
+                  <span className={styles.bufferViewLabel}>Aktualny buffer</span>
+                  <strong>{canUseBooking ? profile.bookingBufferMin ?? 0 : 0} min</strong>
+                </div>
+
+                <div className={styles.bufferViewText}>
+                  {canUseBooking
+                    ? "Buffer doliczany jest po każdej usłudze i blokuje kolejne sloty w kalendarzu."
+                    : "Buffer jest nieaktywny, ponieważ obecny plan nie obsługuje kalendarza slotowego."}
+                </div>
+              </div>
+            )}
+
+            {canUseBooking && (
+              <div className={styles.infoMuted} style={{ marginTop: 8 }}>
+                Buffer doliczany jest po każdej usłudze i blokuje kolejne sloty, żebyś miał/a przerwę.
+              </div>
+            )}
           </div>
 
           <div className={styles.subsection}></div>
@@ -2243,30 +2757,53 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
             {isEditing ? (
               <div className={styles.teamSettingsStack}>
-                <label className={styles.checkboxLabel}>
+                <label
+                  className={`${styles.checkboxLabel} ${!canUseTeam ? styles.disabledOption : ""
+                    }`}
+                >
                   <input
                     type="checkbox"
-                    checked={!!editData.team?.enabled}
+                    checked={canUseTeam ? !!editData.team?.enabled : false}
+                    disabled={!canUseTeam}
                     onChange={(e) =>
-                      setEditData(prev => ({
+                      setEditData((prev) => ({
                         ...prev,
-                        team: { ...(prev.team || {}), enabled: e.target.checked }
+                        team: {
+                          ...(prev.team || {}),
+                          enabled: e.target.checked,
+                          assignmentMode: prev.team?.assignmentMode || "user-pick",
+                        },
                       }))
                     }
                   />
                   Włącz obsługę zespołu (pracowników)
                 </label>
 
+                {!canUseTeam && (
+                  <div className={styles.upgradeNotice}>
+                    <strong>Zespół jest dostępny tylko w planie Premium.</strong>
+                    <span>
+                      W planie Starter i Standard nie możesz włączyć obsługi pracowników ani
+                      przydziału do rezerwacji. Po przejściu na Premium odblokujesz
+                      pracowników, wybór osoby przy rezerwacji i automatyczny przydział.
+                    </span>
+                  </div>
+                )}
+
                 <div className={styles.teamAssignStack}>
                   <span className={styles.teamAssignLabel}>Tryb przydziału:</span>
+
                   <select
                     className={styles.formInput}
-                    disabled={!editData.team?.enabled}
-                    value={editData.team?.assignmentMode || 'user-pick'}
+                    disabled={!canUseTeam || !editData.team?.enabled}
+                    value={editData.team?.assignmentMode || "user-pick"}
                     onChange={(e) =>
-                      setEditData(prev => ({
+                      setEditData((prev) => ({
                         ...prev,
-                        team: { ...(prev.team || {}), assignmentMode: e.target.value }
+                        team: {
+                          ...(prev.team || {}),
+                          assignmentMode: e.target.value,
+                        },
                       }))
                     }
                   >
@@ -2275,10 +2812,14 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   </select>
                 </div>
 
-                {!editData.team?.enabled && (
+                {canUseTeam && !editData.team?.enabled && (
                   <div className={styles.infoMuted}>
                     Wyłączone — wybór pracownika nie będzie pokazywany w rezerwacji.
                   </div>
+                )}
+
+                {formErrors.team && (
+                  <small className={styles.error}>{formErrors.team}</small>
                 )}
               </div>
             ) : (
@@ -2286,16 +2827,17 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 <li className={styles.priceItem}>
                   <span className={styles.priceLabel}>Zespół</span>
                   <span className={styles.priceAmount}>
-                    {profile.team?.enabled ? 'Włączony' : 'Wyłączony'}
+                    {canUseTeam && profile.team?.enabled ? "Włączony" : "Wyłączony"}
                   </span>
                 </li>
-                {profile.team?.enabled && (
+
+                {canUseTeam && profile.team?.enabled && (
                   <li className={styles.priceItem}>
                     <span className={styles.priceLabel}>Tryb przydziału</span>
                     <span className={styles.priceAmount}>
-                      {profile.team?.assignmentMode === 'user-pick'
-                        ? 'Klient wybiera'
-                        : 'Automatyczny przydział'}
+                      {profile.team?.assignmentMode === "user-pick"
+                        ? "Klient wybiera"
+                        : "Automatyczny przydział"}
                     </span>
                   </li>
                 )}
@@ -2530,8 +3072,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         </section>
 
         {/* =========================
-          PRACOWNICY
-      ========================= */}
+  PRACOWNICY
+========================= */}
         <section className={styles.card} id="staffSection">
           <div className={styles.sectionTop}>
             <div>
@@ -2540,13 +3082,30 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 Dodawaj członków zespołu, przypisuj im usługi i zarządzaj ich dostępnością w rezerwacjach.
               </p>
             </div>
+
+            {!canUseTeam && (
+              <span className={styles.lockBadge}>
+                Premium
+              </span>
+            )}
           </div>
+
+          {!canUseTeam && (
+            <div className={styles.upgradeNotice}>
+              <strong>Pracownicy są dostępni tylko w planie Premium.</strong>
+              <span>
+                W planie Starter i Standard możesz prowadzić profil jako jedna osoba. Po przejściu na
+                Premium odblokujesz dodawanie pracowników, przypisywanie usług do konkretnych osób,
+                pojemność rezerwacji i wybór pracownika przez klienta.
+              </span>
+            </div>
+          )}
 
           {/* Lista pracowników */}
           {staffLoading ? (
             <div>Ładowanie pracowników…</div>
           ) : staff.length ? (
-            <ul className={styles.slotList}>
+            <ul className={`${styles.slotList} ${!canUseTeam ? styles.lockedSection : ""}`}>
               {staff.map((st) => {
                 const edit = staffEdits[st._id] || st;
                 const services = editData.services || [];
@@ -2555,18 +3114,18 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 return (
                   <li key={st._id} className={styles.slotItem}>
                     {/* LEWA STRONA: nazwa */}
-                    <div className={styles.slotLeft} style={{ gap: '.35rem' }}>
+                    <div className={styles.slotLeft} style={{ gap: ".35rem" }}>
                       <span className={styles.badge}>#{st._id.slice(-5)}</span>
 
-                      {isEditing ? (
+                      {isEditing && canUseTeam ? (
                         <input
                           className={styles.formInput}
                           style={{ minWidth: 180 }}
-                          value={edit.name ?? ''}
+                          value={edit.name ?? ""}
                           onChange={(e) =>
-                            setStaffEdits(prev => ({
+                            setStaffEdits((prev) => ({
                               ...prev,
-                              [st._id]: { ...edit, name: e.target.value }
+                              [st._id]: { ...edit, name: e.target.value },
                             }))
                           }
                           placeholder="Imię i nazwisko"
@@ -2579,15 +3138,15 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                     {/* PRAWA STRONA */}
                     <div className={styles.slotRight}>
                       {/* Aktywny */}
-                      {isEditing ? (
+                      {isEditing && canUseTeam ? (
                         <label className={styles.checkboxLabel}>
                           <input
                             type="checkbox"
                             checked={!!(edit.active ?? true)}
                             onChange={(e) =>
-                              setStaffEdits(prev => ({
+                              setStaffEdits((prev) => ({
                                 ...prev,
-                                [st._id]: { ...edit, active: e.target.checked }
+                                [st._id]: { ...edit, active: e.target.checked },
                               }))
                             }
                           />
@@ -2595,31 +3154,32 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                         </label>
                       ) : (
                         <span
-                          className={`${styles.statusPill} ${st.active ? styles.statusActive : styles.statusInactive}`}
-                          title={st.active ? 'Aktywny' : 'Nieaktywny'}
+                          className={`${styles.statusPill} ${st.active ? styles.statusActive : styles.statusInactive
+                            }`}
+                          title={st.active ? "Aktywny" : "Nieaktywny"}
                         >
                           <span className={styles.statusDot} aria-hidden="true" />
-                          {st.active ? 'Aktywny' : 'Nieaktywny'}
+                          {st.active ? "Aktywny" : "Nieaktywny"}
                         </span>
-
                       )}
 
                       {/* Pojemność */}
                       <span className={styles.badge}>pojemność</span>
-                      {isEditing ? (
+
+                      {isEditing && canUseTeam ? (
                         <input
                           type="number"
                           min={1}
                           className={styles.formInput}
-                          style={{ width: 90, textAlign: 'center' }}
+                          style={{ width: 90, textAlign: "center" }}
                           value={edit.capacity ?? 1}
                           onChange={(e) =>
-                            setStaffEdits(prev => ({
+                            setStaffEdits((prev) => ({
                               ...prev,
                               [st._id]: {
                                 ...edit,
-                                capacity: Math.max(1, parseInt(e.target.value || '1', 10))
-                              }
+                                capacity: Math.max(1, parseInt(e.target.value || "1", 10)),
+                              },
                             }))
                           }
                         />
@@ -2628,9 +3188,9 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                       )}
 
                       {/* Usługi */}
-                      {isEditing ? (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.4rem' }}>
-                          {services.map(s => (
+                      {isEditing && canUseTeam ? (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: ".4rem" }}>
+                          {services.map((s) => (
                             <label key={s._id} className={styles.checkboxLabel}>
                               <input
                                 type="checkbox"
@@ -2639,9 +3199,13 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                                   const next = new Set(selected);
                                   if (e.target.checked) next.add(String(s._id));
                                   else next.delete(String(s._id));
-                                  setStaffEdits(prev => ({
+
+                                  setStaffEdits((prev) => ({
                                     ...prev,
-                                    [st._id]: { ...edit, serviceIds: Array.from(next) }
+                                    [st._id]: {
+                                      ...edit,
+                                      serviceIds: Array.from(next),
+                                    },
                                   }));
                                 }}
                               />
@@ -2650,18 +3214,20 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                           ))}
                         </div>
                       ) : (
-                        <div className={styles.tags} style={{ gap: '.3rem' }}>
-                          {(st.serviceIds || []).map(id => {
-                            const svc = services.find(s => String(s._id) === String(id));
+                        <div className={styles.tags} style={{ gap: ".3rem" }}>
+                          {(st.serviceIds || []).map((id) => {
+                            const svc = services.find((s) => String(s._id) === String(id));
                             return svc ? (
-                              <span key={id} className={styles.tag}>{svc.name}</span>
+                              <span key={id} className={styles.tag}>
+                                {svc.name}
+                              </span>
                             ) : null;
                           })}
                         </div>
                       )}
 
-                      {/* Akcje – tylko w trybie edycji */}
-                      {isEditing && (
+                      {/* Akcje – tylko Premium + tryb edycji */}
+                      {isEditing && canUseTeam && (
                         <>
                           <LoadingButton
                             type="button"
@@ -2670,13 +3236,14 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                             className={styles.ghost}
                             onClick={() => deleteStaff(st._id)}
                           >
-                            <FaTrash style={{ transform: 'translateY(1px)' }} /> Usuń
+                            <FaTrash style={{ transform: "translateY(1px)" }} /> Usuń
                           </LoadingButton>
+
                           <button
                             type="button"
                             className={styles.ghost}
                             onClick={() =>
-                              setStaffEdits(prev => {
+                              setStaffEdits((prev) => {
                                 const copy = { ...prev };
                                 delete copy[st._id];
                                 return copy;
@@ -2684,7 +3251,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                             }
                             title="Anuluj zmiany"
                           >
-                            <FaTimes style={{ transform: 'translateY(1px)' }} /> Anuluj
+                            <FaTimes style={{ transform: "translateY(1px)" }} /> Anuluj
                           </button>
                         </>
                       )}
@@ -2692,96 +3259,143 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   </li>
                 );
               })}
-
             </ul>
           ) : (
             <p className={styles.noInfo}>
-              <span>❔</span> Nie dodałeś/aś jeszcze żadnych pracowników.
+              <span>❔</span>{" "}
+              {canUseTeam
+                ? "Nie dodałeś/aś jeszcze żadnych pracowników."
+                : "Pracownicy są zablokowani w obecnym planie."}
             </p>
           )}
 
           <div className={styles.subsection}></div>
 
           {/* Dodawanie pracownika */}
-          {/* Dodawanie pracownika — tylko w trybie edycji */}
           {isEditing ? (
-            <div className={styles.inputBlock}>
-              <div className={styles.groupTitle}><FaPlus /> Dodaj pracownika</div>
+            canUseTeam ? (
+              <div className={styles.inputBlock}>
+                <div className={styles.groupTitle}>
+                  <FaPlus /> Dodaj pracownika
+                </div>
 
-              <div className={styles.availableDatesForm}>
-                <input
-                  type="text"
-                  className={styles.formInput}
-                  placeholder="Imię i nazwisko"
-                  value={newStaff.name}
-                  onChange={(e) => setNewStaff(s => ({ ...s, name: e.target.value }))}
-                />
-                <input
-                  type="number"
-                  className={styles.formInput}
-                  min={1}
-                  placeholder="Pojemność (ile równolegle)"
-                  value={newStaff.capacity}
-                  onChange={(e) =>
-                    setNewStaff(s => ({
-                      ...s,
-                      capacity: Math.max(1, parseInt(e.target.value || '1', 10))
-                    }))
-                  }
-                />
-                <label className={styles.checkboxLabel}>
+                <div className={styles.availableDatesForm}>
                   <input
-                    type="checkbox"
-                    checked={newStaff.active}
-                    onChange={(e) => setNewStaff(s => ({ ...s, active: e.target.checked }))}
+                    type="text"
+                    className={styles.formInput}
+                    placeholder="Imię i nazwisko"
+                    value={newStaff.name}
+                    onChange={(e) =>
+                      setNewStaff((s) => ({ ...s, name: e.target.value }))
+                    }
                   />
-                  Aktywny
-                </label>
-              </div>
 
-              {/* Wybór usług dla nowego pracownika */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '.45rem', marginTop: '.5rem' }}>
-                {(editData.services || []).length ? (
-                  editData.services.map(s => {
-                    const checked = newStaff.serviceIds.includes(String(s._id));
-                    return (
-                      <label key={s._id} className={styles.checkboxLabel}>
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(e) => {
-                            setNewStaff(prev => {
-                              const set = new Set(prev.serviceIds.map(String));
-                              if (e.target.checked) set.add(String(s._id));
-                              else set.delete(String(s._id));
-                              return { ...prev, serviceIds: Array.from(set) };
-                            });
-                          }}
-                        />
-                        {s.name}
-                      </label>
-                    );
-                  })
-                ) : (
-                  <span className={styles.infoMuted}>Najpierw dodaj usługi w sekcji wyżej.</span>
-                )}
-              </div>
+                  <input
+                    type="number"
+                    className={styles.formInput}
+                    min={1}
+                    placeholder="Pojemność (ile równolegle)"
+                    value={newStaff.capacity}
+                    onChange={(e) =>
+                      setNewStaff((s) => ({
+                        ...s,
+                        capacity: Math.max(1, parseInt(e.target.value || "1", 10)),
+                      }))
+                    }
+                  />
 
-              <div style={{ marginTop: '.6rem' }}>
-                <LoadingButton
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={newStaff.active}
+                      onChange={(e) =>
+                        setNewStaff((s) => ({ ...s, active: e.target.checked }))
+                      }
+                    />
+                    Aktywny
+                  </label>
+                </div>
+
+                {/* Wybór usług dla nowego pracownika */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: ".45rem", marginTop: ".5rem" }}>
+                  {(editData.services || []).length ? (
+                    editData.services.map((s) => {
+                      const checked = newStaff.serviceIds.includes(String(s._id));
+
+                      return (
+                        <label key={s._id} className={styles.checkboxLabel}>
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              setNewStaff((prev) => {
+                                const set = new Set(prev.serviceIds.map(String));
+                                if (e.target.checked) set.add(String(s._id));
+                                else set.delete(String(s._id));
+
+                                return {
+                                  ...prev,
+                                  serviceIds: Array.from(set),
+                                };
+                              });
+                            }}
+                          />
+                          {s.name}
+                        </label>
+                      );
+                    })
+                  ) : (
+                    <span className={styles.infoMuted}>
+                      Najpierw dodaj usługi w sekcji wyżej.
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ marginTop: ".6rem" }}>
+                  <LoadingButton
+                    type="button"
+                    isLoading={isCreatingStaff}
+                    disabled={isCreatingStaff}
+                    className={styles.primary}
+                    onClick={createStaff}
+                  >
+                    <FaPlus style={{ transform: "translateY(1px)" }} /> Dodaj pracownika
+                  </LoadingButton>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.lockedFeatureBox}>
+                <div>
+                  <strong>Dodawanie pracowników jest zablokowane.</strong>
+                  <span>
+                    Ta funkcja wymaga planu Premium, ponieważ działa razem z kalendarzem,
+                    przypisywaniem usług i obsługą rezerwacji zespołowych.
+                  </span>
+                </div>
+
+                <button
                   type="button"
-                  isLoading={isCreatingStaff}
-                  disabled={isCreatingStaff}
-                  className={styles.primary}
-                  onClick={createStaff}
+                  className={styles.planButton}
+                  onClick={() => handleStartSubscription("premium")}
+                  disabled={billingActionLoading === "premium"}
                 >
-                  <FaPlus style={{ transform: 'translateY(1px)' }} /> Dodaj pracownika
-                </LoadingButton>
+                  {billingActionLoading === "premium"
+                    ? "Przekierowanie..."
+                    : "Odblokuj w Premium"}
+                </button>
               </div>
-            </div>
+            )
           ) : (
             <div className={styles.infoMuted}>
-              Aby dodać pracownika, kliknij <strong>Edytuj profil</strong>.
+              {canUseTeam ? (
+                <>
+                  Aby dodać pracownika, kliknij <strong>Edytuj profil</strong>.
+                </>
+              ) : (
+                <>
+                  Sekcja pracowników jest dostępna w planie <strong>Premium</strong>.
+                </>
+              )}
             </div>
           )}
         </section>
@@ -2848,7 +3462,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
             {isEditing ? (
               <div className={styles.linksWrapper}>
-                {[0, 1, 2].map(i => (
+                {Array.from({ length: MAX_LINKS }).map((_, i) => (
                   <input
                     key={i}
                     type="text"
@@ -2862,6 +3476,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                     }}
                   />
                 ))}
+                {formErrors.links && <small className={styles.error}>{formErrors.links}</small>}
               </div>
             ) : (
               <>
@@ -2992,9 +3607,17 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
               {(editData.photos?.length + newPhotoFiles.length) < MAX_PHOTOS && (
                 <>
-                  <button type="button" className={styles.primary} onClick={openAddPhotoPicker}>
+                  <button
+                    type="button"
+                    className={styles.primary}
+                    onClick={openAddPhotoPicker}
+                    disabled={(editData.photos?.length || 0) + newPhotoFiles.length >= MAX_PHOTOS}
+                  >
                     Dodaj zdjęcia
                   </button>
+                  <small className={styles.hint}>
+                    Limit Twojego planu: {MAX_PHOTOS} zdjęć profilu.
+                  </small>
                   <input
                     ref={addPhotoInputRef}
                     type="file"
@@ -3205,75 +3828,281 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
           <div className={styles.subsection}></div>
 
-          {/* SOCIALS */}
+          {/* SOCIAL MEDIA */}
           <div className={styles.inputBlock}>
             <div className={styles.groupTitle}>
               <FaGlobe /> Social media
+
+              {!canUseSocialMedia && (
+                <span className={styles.lockBadge}>
+                  Standard / Premium
+                </span>
+              )}
             </div>
 
+            {!canUseSocialMedia && isEditing && (
+              <div className={styles.upgradeNotice}>
+                <strong>Social media są dostępne od planu Standard.</strong>
+                <span>
+                  W planie Starter możesz dodać podstawowy link, ale osobne pola na social media
+                  — Facebook, Instagram, YouTube, TikTok i stronę www — są dostępne w planie
+                  Standard i Premium.
+                </span>
+              </div>
+            )}
+
             {isEditing ? (
-              <div className={styles.socialGrid}>
-                {[
-                  { key: 'website', label: 'Strona', icon: <FaGlobe /> },
-                  { key: 'facebook', label: 'Facebook', icon: <FaFacebook /> },
-                  { key: 'instagram', label: 'Instagram', icon: <FaInstagram /> },
-                  { key: 'youtube', label: 'YouTube', icon: <FaYoutube /> },
-                  { key: 'tiktok', label: 'TikTok', icon: <FaTiktok /> },
-                ].map((s) => (
-                  <div key={s.key} className={styles.socialField}>
-                    <label>{s.icon} {s.label}</label>
+              canUseSocialMedia ? (
+                <div className={styles.socialGrid}>
+                  <div className={styles.socialField}>
+                    <label>
+                      <FaGlobe /> Strona www
+                    </label>
                     <input
-                      className={`${styles.formInput} ${formErrors[`social_${s.key}`] ? styles.inputError : ''}`}
-                      value={editData.socials?.[s.key] || ''}
+                      type="text"
+                      className={`${styles.formInput} ${formErrors.social_website ? styles.inputError : ""}`}
+                      value={editData.socials?.website || ""}
+                      placeholder="np. showly.app"
                       onChange={(e) =>
-                        setEditData(prev => ({
+                        setEditData((prev) => ({
                           ...prev,
-                          socials: { ...(prev.socials || {}), [s.key]: e.target.value }
+                          socials: {
+                            ...(prev.socials || {}),
+                            website: e.target.value,
+                          },
                         }))
                       }
-                      placeholder={`Link do ${s.label}`}
                     />
-                    {formErrors[`social_${s.key}`] && (
-                      <small className={styles.error}>{formErrors[`social_${s.key}`]}</small>
+                    {formErrors.social_website && (
+                      <small className={styles.error}>{formErrors.social_website}</small>
                     )}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className={styles.socialPills}>
-                {[
-                  { key: 'website', label: 'WWW', icon: <FaGlobe /> },
-                  { key: 'facebook', label: 'Facebook', icon: <FaFacebook /> },
-                  { key: 'instagram', label: 'Instagram', icon: <FaInstagram /> },
-                  { key: 'youtube', label: 'YouTube', icon: <FaYoutube /> },
-                  { key: 'tiktok', label: 'TikTok', icon: <FaTiktok /> },
-                ]
-                  .filter(s => profile.socials?.[s.key])
-                  .map((s) => (
-                    <a
-                      key={s.key}
-                      href={profile.socials[s.key]}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.linkPill}
-                      title={profile.socials[s.key]}
-                    >
-                      {s.icon} {s.label}
-                    </a>
-                  ))
-                }
 
-                {!Object.values(profile.socials || {}).some(Boolean) && (
-                  <p className={styles.noInfo}><span>❔</span> Nie dodałeś/aś linków do social mediów.</p>
+                  <div className={styles.socialField}>
+                    <label>
+                      <FaFacebook /> Facebook
+                    </label>
+                    <input
+                      type="text"
+                      className={`${styles.formInput} ${formErrors.social_facebook ? styles.inputError : ""}`}
+                      value={editData.socials?.facebook || ""}
+                      placeholder="np. facebook.com/twojprofil"
+                      onChange={(e) =>
+                        setEditData((prev) => ({
+                          ...prev,
+                          socials: {
+                            ...(prev.socials || {}),
+                            facebook: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                    {formErrors.social_facebook && (
+                      <small className={styles.error}>{formErrors.social_facebook}</small>
+                    )}
+                  </div>
+
+                  <div className={styles.socialField}>
+                    <label>
+                      <FaInstagram /> Instagram
+                    </label>
+                    <input
+                      type="text"
+                      className={`${styles.formInput} ${formErrors.social_instagram ? styles.inputError : ""}`}
+                      value={editData.socials?.instagram || ""}
+                      placeholder="np. instagram.com/twojprofil"
+                      onChange={(e) =>
+                        setEditData((prev) => ({
+                          ...prev,
+                          socials: {
+                            ...(prev.socials || {}),
+                            instagram: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                    {formErrors.social_instagram && (
+                      <small className={styles.error}>{formErrors.social_instagram}</small>
+                    )}
+                  </div>
+
+                  <div className={styles.socialField}>
+                    <label>
+                      <FaYoutube /> YouTube
+                    </label>
+                    <input
+                      type="text"
+                      className={`${styles.formInput} ${formErrors.social_youtube ? styles.inputError : ""}`}
+                      value={editData.socials?.youtube || ""}
+                      placeholder="np. youtube.com/@twojkanal"
+                      onChange={(e) =>
+                        setEditData((prev) => ({
+                          ...prev,
+                          socials: {
+                            ...(prev.socials || {}),
+                            youtube: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                    {formErrors.social_youtube && (
+                      <small className={styles.error}>{formErrors.social_youtube}</small>
+                    )}
+                  </div>
+
+                  <div className={styles.socialField}>
+                    <label>
+                      <FaTiktok /> TikTok
+                    </label>
+                    <input
+                      type="text"
+                      className={`${styles.formInput} ${formErrors.social_tiktok ? styles.inputError : ""}`}
+                      value={editData.socials?.tiktok || ""}
+                      placeholder="np. tiktok.com/@twojprofil"
+                      onChange={(e) =>
+                        setEditData((prev) => ({
+                          ...prev,
+                          socials: {
+                            ...(prev.socials || {}),
+                            tiktok: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                    {formErrors.social_tiktok && (
+                      <small className={styles.error}>{formErrors.social_tiktok}</small>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.lockedFeatureBox}>
+                  <div>
+                    <strong>Social media są zablokowane w planie Starter.</strong>
+                    <span>
+                      Po przejściu na Standard lub Premium możesz dodać osobne linki do Facebooka,
+                      Instagrama, YouTube, TikToka i strony internetowej.
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className={styles.planButton}
+                    onClick={() => handleStartSubscription("standard")}
+                    disabled={billingActionLoading === "standard"}
+                  >
+                    {billingActionLoading === "standard"
+                      ? "Przekierowanie..."
+                      : "Odblokuj w Standard"}
+                  </button>
+                </div>
+              )
+            ) : (
+              <>
+                {canUseSocialMedia &&
+                  (
+                    profile.socials?.website ||
+                    profile.socials?.facebook ||
+                    profile.socials?.instagram ||
+                    profile.socials?.youtube ||
+                    profile.socials?.tiktok
+                  ) ? (
+                  <ul className={styles.contactView}>
+                    {profile.socials?.website && (
+                      <li className={styles.contactItem}>
+                        <span className={styles.contactLabel}>
+                          <FaGlobe /> Strona www
+                        </span>
+                        <a
+                          href={profile.socials.website.startsWith("http") ? profile.socials.website : `https://${profile.socials.website}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={styles.contactValue}
+                        >
+                          {prettyUrl(profile.socials.website)}
+                        </a>
+                      </li>
+                    )}
+
+                    {profile.socials?.facebook && (
+                      <li className={styles.contactItem}>
+                        <span className={styles.contactLabel}>
+                          <FaFacebook /> Facebook
+                        </span>
+                        <a
+                          href={profile.socials.facebook.startsWith("http") ? profile.socials.facebook : `https://${profile.socials.facebook}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={styles.contactValue}
+                        >
+                          {prettyUrl(profile.socials.facebook)}
+                        </a>
+                      </li>
+                    )}
+
+                    {profile.socials?.instagram && (
+                      <li className={styles.contactItem}>
+                        <span className={styles.contactLabel}>
+                          <FaInstagram /> Instagram
+                        </span>
+                        <a
+                          href={profile.socials.instagram.startsWith("http") ? profile.socials.instagram : `https://${profile.socials.instagram}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={styles.contactValue}
+                        >
+                          {prettyUrl(profile.socials.instagram)}
+                        </a>
+                      </li>
+                    )}
+
+                    {profile.socials?.youtube && (
+                      <li className={styles.contactItem}>
+                        <span className={styles.contactLabel}>
+                          <FaYoutube /> YouTube
+                        </span>
+                        <a
+                          href={profile.socials.youtube.startsWith("http") ? profile.socials.youtube : `https://${profile.socials.youtube}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={styles.contactValue}
+                        >
+                          {prettyUrl(profile.socials.youtube)}
+                        </a>
+                      </li>
+                    )}
+
+                    {profile.socials?.tiktok && (
+                      <li className={styles.contactItem}>
+                        <span className={styles.contactLabel}>
+                          <FaTiktok /> TikTok
+                        </span>
+                        <a
+                          href={profile.socials.tiktok.startsWith("http") ? profile.socials.tiktok : `https://${profile.socials.tiktok}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={styles.contactValue}
+                        >
+                          {prettyUrl(profile.socials.tiktok)}
+                        </a>
+                      </li>
+                    )}
+                  </ul>
+                ) : (
+                  <p className={styles.noInfo}>
+                    <span>❔</span>{" "}
+                    {canUseSocialMedia
+                      ? "Nie dodałeś/aś jeszcze social mediów."
+                      : "Social media są dostępne od planu Standard."}
+                  </p>
                 )}
-              </div>
+              </>
             )}
           </div>
         </section>
 
         {/* =========================
-          FAQ
-        ========================= */}
+  FAQ
+========================= */}
         <section className={styles.card}>
           <div className={styles.sectionTop}>
             <div>
@@ -3282,48 +4111,95 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 Krótkie pytania i odpowiedzi, które pomogą klientom szybciej zrozumieć Twoją ofertę.
               </p>
             </div>
+
+            <span className={styles.lockBadge}>
+              Limit: {MAX_QUICK_ANSWERS}
+            </span>
           </div>
 
           {isEditing ? (
             <div className={styles.faqWrapper}>
               <div className={styles.qaGrid}>
-                {[0, 1, 2].map((i) => {
-                  const qaArray =
-                    editData.quickAnswers?.length === 3
-                      ? [...editData.quickAnswers]
-                      : [{}, {}, {}].map((_, idx) => editData.quickAnswers?.[idx] || { title: '', answer: '' });
-
-                  const title = qaArray[i].title || '';
-                  const answer = qaArray[i].answer || '';
+                {Array.from({ length: MAX_QUICK_ANSWERS }).map((_, i) => {
+                  const title = editData.quickAnswers?.[i]?.title || "";
+                  const answer = editData.quickAnswers?.[i]?.answer || "";
 
                   const onTitleChange = (e) => {
-                    let value = e.target.value.slice(0, 10);
-                    const newQA = [...qaArray];
-                    newQA[i].title = value;
+                    const value = e.target.value.slice(0, 10);
 
-                    const newErrors = [...qaErrors];
-                    newErrors[i].touched = true;
-                    if (!value.trim()) newErrors[i].title = 'Tytuł jest wymagany';
-                    else if (value.length > 10) newErrors[i].title = 'Tytuł max. 10 znaków';
-                    else newErrors[i].title = '';
+                    setEditData((prev) => {
+                      const newQA = Array.from({ length: MAX_QUICK_ANSWERS }).map(
+                        (_, idx) => prev.quickAnswers?.[idx] || { title: "", answer: "" }
+                      );
 
-                    setEditData({ ...editData, quickAnswers: newQA });
-                    setQaErrors(newErrors);
+                      newQA[i] = {
+                        ...(newQA[i] || { title: "", answer: "" }),
+                        title: value,
+                      };
+
+                      return {
+                        ...prev,
+                        quickAnswers: newQA,
+                      };
+                    });
+
+                    setQaErrors((prev) => {
+                      const newErrors = Array.from({ length: MAX_QUICK_ANSWERS }).map(
+                        (_, idx) => prev[idx] || { title: "", answer: "", touched: false }
+                      );
+
+                      newErrors[i] = {
+                        ...(newErrors[i] || { title: "", answer: "", touched: false }),
+                        touched: true,
+                        title:
+                          !value.trim()
+                            ? "Tytuł jest wymagany"
+                            : value.length > 10
+                              ? "Tytuł max. 10 znaków"
+                              : "",
+                      };
+
+                      return newErrors;
+                    });
                   };
 
                   const onAnswerChange = (e) => {
-                    let value = e.target.value.slice(0, 64);
-                    const newQA = [...qaArray];
-                    newQA[i].answer = value;
+                    const value = e.target.value.slice(0, 64);
 
-                    const newErrors = [...qaErrors];
-                    newErrors[i].touched = true;
-                    if (!value.trim()) newErrors[i].answer = 'Odpowiedź jest wymagana';
-                    else if (value.length > 64) newErrors[i].answer = 'Maks. 64 znaki';
-                    else newErrors[i].answer = '';
+                    setEditData((prev) => {
+                      const newQA = Array.from({ length: MAX_QUICK_ANSWERS }).map(
+                        (_, idx) => prev.quickAnswers?.[idx] || { title: "", answer: "" }
+                      );
 
-                    setEditData({ ...editData, quickAnswers: newQA });
-                    setQaErrors(newErrors);
+                      newQA[i] = {
+                        ...(newQA[i] || { title: "", answer: "" }),
+                        answer: value,
+                      };
+
+                      return {
+                        ...prev,
+                        quickAnswers: newQA,
+                      };
+                    });
+
+                    setQaErrors((prev) => {
+                      const newErrors = Array.from({ length: MAX_QUICK_ANSWERS }).map(
+                        (_, idx) => prev[idx] || { title: "", answer: "", touched: false }
+                      );
+
+                      newErrors[i] = {
+                        ...(newErrors[i] || { title: "", answer: "", touched: false }),
+                        touched: true,
+                        answer:
+                          !value.trim()
+                            ? "Odpowiedź jest wymagana"
+                            : value.length > 64
+                              ? "Maks. 64 znaki"
+                              : "",
+                      };
+
+                      return newErrors;
+                    });
                   };
 
                   return (
@@ -3337,13 +4213,15 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                         <div className={styles.qaField}>
                           <input
                             type="text"
-                            className={`${styles.formInput} ${qaErrors[i]?.title ? styles.inputError : ''} ${styles.qaTitleInput}`}
+                            className={`${styles.formInput} ${qaErrors[i]?.title ? styles.inputError : ""
+                              } ${styles.qaTitleInput}`}
                             placeholder={`Tytuł #${i + 1}`}
                             value={title}
                             maxLength={10}
                             onChange={onTitleChange}
                             aria-invalid={!!qaErrors[i]?.title}
                           />
+
                           <div className={styles.qaMeta}>
                             {qaErrors[i]?.touched && qaErrors[i]?.title && (
                               <small className={styles.error}>{qaErrors[i].title}</small>
@@ -3355,13 +4233,15 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                         <div className={styles.qaField}>
                           <input
                             type="text"
-                            className={`${styles.formInput} ${qaErrors[i]?.answer ? styles.inputError : ''} ${styles.qaAnswerInput}`}
+                            className={`${styles.formInput} ${qaErrors[i]?.answer ? styles.inputError : ""
+                              } ${styles.qaAnswerInput}`}
                             placeholder={`Odpowiedź #${i + 1}`}
                             value={answer}
                             maxLength={64}
                             onChange={onAnswerChange}
                             aria-invalid={!!qaErrors[i]?.answer}
                           />
+
                           <div className={styles.qaMeta}>
                             {qaErrors[i]?.touched && qaErrors[i]?.answer && (
                               <small className={styles.error}>{qaErrors[i].answer}</small>
@@ -3375,7 +4255,13 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                 })}
               </div>
 
-              {formErrors.quickAnswers && <small className={styles.error}>{formErrors.quickAnswers}</small>}
+              {formErrors.quickAnswers && (
+                <small className={styles.error}>{formErrors.quickAnswers}</small>
+              )}
+
+              <small className={styles.hint}>
+                Obecny plan pozwala dodać maksymalnie {MAX_QUICK_ANSWERS} szybkich odpowiedzi.
+              </small>
             </div>
           ) : (
             <>
@@ -3389,7 +4275,9 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
                   ))}
                 </ul>
               ) : (
-                <p className={styles.noInfo}><span>❔</span> Nie dodałeś/aś jeszcze szybkich odpowiedzi.</p>
+                <p className={styles.noInfo}>
+                  <span>❔</span> Nie dodałeś/aś jeszcze szybkich odpowiedzi.
+                </p>
               )}
             </>
           )}

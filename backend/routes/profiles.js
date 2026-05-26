@@ -14,6 +14,8 @@ const { uploadBuffer } = require("../utils/cloudinaryUpload");
 const requireAuth = require("../middleware/requireAuth");
 const requireOwnerOrAdmin = require("../middleware/requireOwnerOrAdmin");
 
+const { getLimit } = require("../config/plans");
+
 // -----------------------------
 // Helpers: slug + public URLs
 // -----------------------------
@@ -1385,6 +1387,10 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
     }
 
     if (updates.quickAnswers) {
+      const maxQuickAnswers = getLimit(profile, "quickAnswers", {
+        allowPastDue: true,
+      });
+
       updates.quickAnswers = Array.isArray(updates.quickAnswers)
         ? updates.quickAnswers
           .map((qa) => ({
@@ -1392,7 +1398,7 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
             answer: clean(qa?.answer),
           }))
           .filter((qa) => qa.title || qa.answer)
-          .slice(0, 3)
+          .slice(0, maxQuickAnswers)
         : [];
     }
 

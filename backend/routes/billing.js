@@ -25,6 +25,9 @@ const stripe = new Stripe(stripeSecret);
 const RENEW_WINDOW_DAYS = Number(process.env.RENEW_WINDOW_DAYS ?? 7);
 const DURATION_DAYS = Number(process.env.DURATION_DAYS ?? 30);
 
+const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing", "past_due"];
+const PAID_PLANS = ["standard", "premium"];
+
 const addDays = (date, days) =>
   new Date(date.getTime() + Number(days) * 24 * 60 * 60 * 1000);
 
@@ -72,6 +75,7 @@ const getOrCreateStripeCustomer = async (profile, uid) => {
 // ------------------------------------
 // POST /api/billing/checkout-extension
 // Jednorazowe przedłużenie widoczności profilu
+// TYLKO dla Free / braku aktywnej subskrypcji
 // ------------------------------------
 router.post("/checkout-extension", requireAuth, async (req, res) => {
   try {
@@ -95,6 +99,22 @@ router.post("/checkout-extension", requireAuth, async (req, res) => {
 
     if (!profile) {
       return res.status(404).json({ error: "Profil nie istnieje" });
+    }
+
+    /**
+     * OPCJA A:
+     * Jeżeli użytkownik ma aktywny Standard/Premium,
+     * nie pozwalamy kupować osobnego przedłużenia widoczności,
+     * bo widoczność odnawia się automatycznie z subskrypcją.
+     */
+    if (
+      PAID_PLANS.includes(profile.billing?.plan) &&
+      ACTIVE_SUBSCRIPTION_STATUSES.includes(profile.billing?.status)
+    ) {
+      return res.status(409).json({
+        error:
+          "Masz aktywną subskrypcję — widoczność profilu odnawia się automatycznie razem z planem.",
+      });
     }
 
     const now = new Date();
@@ -161,7 +181,7 @@ router.post("/checkout-subscription", requireAuth, async (req, res) => {
 
     const plan = String(req.body?.plan || "").trim();
 
-    if (!["standard", "premium"].includes(plan)) {
+    if (!PAID_PLANS.includes(plan)) {
       return res.status(400).json({
         error: "Nieprawidłowy plan. Dostępne plany: standard, premium.",
       });
@@ -187,7 +207,7 @@ router.post("/checkout-subscription", requireAuth, async (req, res) => {
 
     if (
       profile.billing?.stripeSubscriptionId &&
-      ["active", "trialing", "past_due"].includes(profile.billing?.status)
+      ACTIVE_SUBSCRIPTION_STATUSES.includes(profile.billing?.status)
     ) {
       return res.status(409).json({
         error: "Masz już aktywną subskrypcję. Zarządzaj nią w panelu płatności.",
@@ -319,9 +339,20 @@ router.get("/status", requireAuth, async (req, res) => {
       ? new Date(profile.visibleUntil)
       : new Date(0);
 
-    const canExtend = visibleUntil <= addDays(now, RENEW_WINDOW_DAYS);
-
     const publicBilling = getPublicBilling(profile);
+
+    const hasActivePaidSubscription =
+      PAID_PLANS.includes(publicBilling?.effectivePlan) &&
+      ACTIVE_SUBSCRIPTION_STATUSES.includes(publicBilling?.status);
+
+    /**
+     * Dla aktywnego Standard/Premium nie pokazujemy opcji ręcznego przedłużenia,
+     * bo widoczność idzie z subskrypcji.
+     */
+    const canExtend =
+      !hasActivePaidSubscription &&
+      visibleUntil <= addDays(now, RENEW_WINDOW_DAYS);
+
     const effectivePlanKey = getEffectivePlanKey(profile, {
       allowPastDue: true,
     });
@@ -350,6 +381,7 @@ router.get("/status", requireAuth, async (req, res) => {
         canExtend,
         renewWindowDays: RENEW_WINDOW_DAYS,
         durationDays: DURATION_DAYS,
+        autoRenewedBySubscription: hasActivePaidSubscription,
       },
 
       billing: publicBilling,
@@ -370,6 +402,7 @@ router.get("/status", requireAuth, async (req, res) => {
         visibleUntil: visibleUntil.toISOString(),
         renewWindowDays: RENEW_WINDOW_DAYS,
         durationDays: DURATION_DAYS,
+        autoRenewedBySubscription: hasActivePaidSubscription,
       },
     });
   } catch (err) {

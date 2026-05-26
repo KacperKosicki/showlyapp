@@ -246,7 +246,31 @@ const UserCard = ({
   const pt = Number(priceTo);
   const hasPrice = Number.isFinite(pf) && Number.isFinite(pt) && pf > 0 && pt >= pf;
 
-  const bookingMode = String(user?.bookingMode || "off").toLowerCase();
+  const publicBilling = user?.billingPublic || user?.billing || {};
+  const billingFeatures = publicBilling?.features || null;
+
+  const hasBillingFeatures =
+    billingFeatures && Object.keys(billingFeatures).length > 0;
+
+  const canUseBooking = hasBillingFeatures
+    ? !!billingFeatures.booking
+    : true;
+
+  const canUseRequestBlocking = hasBillingFeatures
+    ? !!billingFeatures.requestBlocking
+    : true;
+
+  const rawBookingMode = String(user?.bookingMode || "off").toLowerCase();
+
+  const bookingMode =
+    rawBookingMode === "calendar" && canUseBooking
+      ? "calendar"
+      : rawBookingMode === "request-blocking" && canUseRequestBlocking
+        ? "request-blocking"
+        : rawBookingMode === "request-open"
+          ? "request-open"
+          : "off";
+
   const bookingEnabled = !["off", "none", "disabled", ""].includes(bookingMode);
 
   const isCalendar = bookingMode === "calendar";
@@ -561,7 +585,7 @@ const UserCard = ({
 
           {cleanLinks.length > 0 ? (
             <div className={styles.linkGrid}>
-              {cleanLinks.slice(0, 4).map((link, i) => {
+              {cleanLinks.slice(0, 3).map((link, i) => {
                 const label = prettyUrl(link);
 
                 const content = (

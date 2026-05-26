@@ -23,6 +23,9 @@ const stripe = new Stripe(stripeSecret);
 const DURATION_DAYS = Number(process.env.DURATION_DAYS ?? 30);
 const MAX_FORWARD_DAYS = Number(process.env.MAX_FORWARD_DAYS ?? 37);
 
+const ACTIVE_SUBSCRIPTION_STATUSES = ["active", "trialing", "past_due"];
+const PAID_PLANS = ["standard", "premium"];
+
 const addDays = (date, days) =>
   new Date(date.getTime() + Number(days) * 24 * 60 * 60 * 1000);
 
@@ -81,6 +84,15 @@ const updateBillingEvent = async (eventId, update = {}) => {
   }
 };
 
+/**
+ * OPCJA A:
+ * Subskrypcja Standard/Premium automatycznie utrzymuje widoczność profilu.
+ *
+ * Zasada:
+ * - Nie dodajemy ręcznie +30 dni.
+ * - Ustawiamy visibleUntil na current_period_end ze Stripe.
+ * - Dzięki temu webhook jest idempotentny i nie nabija podwójnych dni.
+ */
 const applySubscriptionToProfile = async (subscription, fallback = {}) => {
   const uid = String(subscription?.metadata?.uid || fallback.uid || "");
   const profileId = String(subscription?.metadata?.profileId || fallback.profileId || "");
@@ -100,7 +112,7 @@ const applySubscriptionToProfile = async (subscription, fallback = {}) => {
     };
   }
 
-  if (!["standard", "premium"].includes(plan)) {
+  if (!PAID_PLANS.includes(plan)) {
     return {
       ok: false,
       reason: "Nieprawidłowy plan subskrypcji.",
@@ -127,30 +139,51 @@ const applySubscriptionToProfile = async (subscription, fallback = {}) => {
 
   const status = String(subscription.status || "inactive");
 
+  const currentPeriodStart = unixToDate(subscription.current_period_start);
+  const currentPeriodEnd = unixToDate(subscription.current_period_end);
+
   profile.billing = {
     ...(profile.billing || {}),
     plan,
     status,
-    stripeCustomerId: String(subscription.customer || profile.billing?.stripeCustomerId || ""),
+    stripeCustomerId: String(
+      subscription.customer || profile.billing?.stripeCustomerId || ""
+    ),
     stripeSubscriptionId: String(subscription.id || ""),
     stripePriceId: priceId,
-    currentPeriodStart: unixToDate(subscription.current_period_start),
-    currentPeriodEnd: unixToDate(subscription.current_period_end),
+    currentPeriodStart,
+    currentPeriodEnd,
     cancelAtPeriodEnd: !!subscription.cancel_at_period_end,
-    lastPaymentAt: ["active", "trialing"].includes(status)
+    lastPaymentAt: ACTIVE_SUBSCRIPTION_STATUSES.includes(status)
       ? new Date()
       : profile.billing?.lastPaymentAt || null,
   };
 
-  if (["active", "trialing", "past_due"].includes(status)) {
+  if (ACTIVE_SUBSCRIPTION_STATUSES.includes(status)) {
     profile.isVisible = true;
-
-    if (subscription.current_period_end) {
-      profile.visibleUntil = unixToDate(subscription.current_period_end);
-    }
+    profile.visibleUntil = currentPeriodEnd || addDays(new Date(), DURATION_DAYS);
   }
 
+  /**
+   * Przy statusach typu canceled/unpaid/incomplete nie wyłączamy profilu od razu.
+   * Widoczność nadal zależy od visibleUntil.
+   * Dzięki temu np. ręcznie opłacony okres Free nie znika przypadkiem.
+   */
+
   await profile.save();
+
+  console.log("✅ Zaktualizowano subskrypcję profilu:", {
+    uid: profile.userId,
+    profileId: String(profile._id),
+    plan,
+    status,
+    visibleUntil: profile.visibleUntil
+      ? new Date(profile.visibleUntil).toISOString()
+      : null,
+    currentPeriodEnd: currentPeriodEnd
+      ? currentPeriodEnd.toISOString()
+      : null,
+  });
 
   return {
     ok: true,
@@ -159,9 +192,17 @@ const applySubscriptionToProfile = async (subscription, fallback = {}) => {
     plan,
     status,
     priceId,
+    visibleUntil: profile.visibleUntil
+      ? new Date(profile.visibleUntil).toISOString()
+      : null,
   };
 };
 
+/**
+ * Jednorazowe przedłużenie widoczności.
+ *
+ * To zostaje tylko dla Free / braku aktywnego płatnego planu.
+ */
 const handleExtensionPayment = async (session) => {
   if (session.payment_status !== "paid") {
     return {
@@ -186,6 +227,23 @@ const handleExtensionPayment = async (session) => {
     return {
       ok: false,
       reason: "Profil nie istnieje.",
+      uid,
+    };
+  }
+
+  /**
+   * Jeśli użytkownik ma aktywny Standard/Premium,
+   * nie przedłużamy ręcznie, bo widoczność odnawia się z subskrypcją.
+   */
+  if (
+    PAID_PLANS.includes(profile.billing?.plan) &&
+    ACTIVE_SUBSCRIPTION_STATUSES.includes(profile.billing?.status)
+  ) {
+    return {
+      ok: true,
+      skipped: true,
+      reason:
+        "Profil ma aktywną subskrypcję — widoczność odnawia się automatycznie.",
       uid,
     };
   }
@@ -296,6 +354,15 @@ const handleSubscriptionDeleted = async (subscription) => {
     };
   }
 
+  /**
+   * Po anulowaniu subskrypcji:
+   * - profil wraca na Free,
+   * - funkcje płatne znikają,
+   * - visibleUntil zostaje bez zmian.
+   *
+   * Dzięki temu jeśli użytkownik ma jeszcze ważną widoczność,
+   * profil nie gaśnie natychmiast.
+   */
   profile.billing = {
     ...(profile.billing || {}),
     plan: "free",
@@ -311,6 +378,9 @@ const handleSubscriptionDeleted = async (subscription) => {
 
   console.log("❌ Subskrypcja anulowana, profil wraca na Free:", {
     uid: profile.userId,
+    visibleUntil: profile.visibleUntil
+      ? new Date(profile.visibleUntil).toISOString()
+      : null,
   });
 
   return {
@@ -318,6 +388,9 @@ const handleSubscriptionDeleted = async (subscription) => {
     uid: profile.userId,
     plan: "free",
     status: "canceled",
+    visibleUntil: profile.visibleUntil
+      ? new Date(profile.visibleUntil).toISOString()
+      : null,
   };
 };
 
@@ -373,24 +446,38 @@ const handleInvoicePaymentFailed = async (invoice) => {
     };
   }
 
+  const currentPeriodStart = unixToDate(subscription.current_period_start);
+  const currentPeriodEnd = unixToDate(subscription.current_period_end);
+
   profile.billing = {
     ...(profile.billing || {}),
     status: "past_due",
-    stripeCustomerId: String(subscription.customer || profile.billing?.stripeCustomerId || ""),
+    stripeCustomerId: String(
+      subscription.customer || profile.billing?.stripeCustomerId || ""
+    ),
     stripeSubscriptionId: String(subscription.id || ""),
     stripePriceId: getSubscriptionMainPriceId(subscription),
-    currentPeriodStart: unixToDate(subscription.current_period_start),
-    currentPeriodEnd: unixToDate(subscription.current_period_end),
+    currentPeriodStart,
+    currentPeriodEnd,
     cancelAtPeriodEnd: !!subscription.cancel_at_period_end,
     lastPaymentFailedAt: new Date(),
     graceUntil: addDays(new Date(), 7),
   };
+
+  /**
+   * Przy past_due nie zmieniamy visibleUntil.
+   * Jeśli Stripe jeszcze trzyma current_period_end, profil zostaje widoczny
+   * zgodnie z dotychczasowym okresem / grace.
+   */
 
   await profile.save();
 
   console.log("⚠️ Płatność subskrypcji nieudana:", {
     uid: profile.userId,
     status: "past_due",
+    graceUntil: profile.billing?.graceUntil
+      ? new Date(profile.billing.graceUntil).toISOString()
+      : null,
   });
 
   return {

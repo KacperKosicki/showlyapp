@@ -9,6 +9,11 @@ const { sendPushToUserUid } = require("../utils/sendPushNotification");
 
 const requireAuth = require("../middleware/requireAuth");
 
+const {
+  hasFeature,
+  getPublicBilling,
+} = require("../config/plans");
+
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 // === USTAWIENIA ===
@@ -72,6 +77,56 @@ const overlap = (aStart, aEnd, bStart, bEnd) => aStart < bEnd && aEnd > bStart;
 const toDateTime = (dateStr, hhmm) => new Date(`${dateStr}T${hhmm}:00.000Z`);
 
 const ALIVE_STATUSES = ["zaakceptowana", "oczekująca", "tymczasowa"];
+
+const getReservationPlanAccess = (profile) => {
+  const billingPublic = getPublicBilling(profile);
+
+  const canUseBooking = hasFeature(profile, "booking", {
+    allowPastDue: true,
+  });
+
+  const canUseRequestBlocking = hasFeature(profile, "requestBlocking", {
+    allowPastDue: true,
+  });
+
+  const canUseTeam = hasFeature(profile, "team", {
+    allowPastDue: true,
+  });
+
+  const rawBookingMode = String(profile?.bookingMode || "request-open").toLowerCase();
+
+  const bookingMode =
+    rawBookingMode === "calendar" && canUseBooking
+      ? "calendar"
+      : rawBookingMode === "request-blocking" && canUseRequestBlocking
+        ? "request-blocking"
+        : rawBookingMode === "request-open"
+          ? "request-open"
+          : "request-open";
+
+  const team =
+    canUseTeam && profile?.team?.enabled === true
+      ? profile.team
+      : {
+        enabled: false,
+        assignmentMode: "user-pick",
+      };
+
+  const bookingBufferMin =
+    bookingMode === "calendar"
+      ? normalizeBuffer(profile?.bookingBufferMin)
+      : 0;
+
+  return {
+    billingPublic,
+    bookingMode,
+    team,
+    bookingBufferMin,
+    canUseBooking,
+    canUseRequestBlocking,
+    canUseTeam,
+  };
+};
 
 // ⬇️ wspólny warunek czasowy z buforem (w minutach)
 function mongoTimeCondition(startAt, endAt, bufferMin = SLOT_BREAK_MIN) {
@@ -230,12 +285,21 @@ router.post("/", requireAuth, async (req, res) => {
 
     if (!profile) return res.status(404).json({ message: "Profil usługodawcy nie istnieje" });
 
+    const planAccess = getReservationPlanAccess(profile);
+
+    if (planAccess.bookingMode !== "calendar") {
+      return res.status(403).json({
+        message:
+          "Rezerwacje godzinowe są dostępne tylko dla profili z aktywnym planem Premium i trybem kalendarza.",
+      });
+    }
+
     // 🔒 profil musi należeć do providerUserId
     if (String(profile.userId) !== String(providerUserId)) {
       return res.status(403).json({ message: "Nieprawidłowy providerProfileId dla tego providerUserId" });
     }
 
-    const effectiveBufferMin = getEffectiveBufferMin(profile);
+    const effectiveBufferMin = SLOT_BREAK_MIN + planAccess.bookingBufferMin;
 
     const serviceCheck = ensureServiceIsBookable(profile, serviceId);
     if (!serviceCheck.ok) {
@@ -245,13 +309,14 @@ router.post("/", requireAuth, async (req, res) => {
     const serviceDoc = serviceCheck.service;
     const serviceName = serviceDoc?.name || null;
 
-    const isCalendarTeam = profile.bookingMode === "calendar" && profile.team?.enabled === true;
+    const isCalendarTeam =
+      planAccess.bookingMode === "calendar" && planAccess.team?.enabled === true;
 
     let staffDocFinal = null;
     let staffAutoAssigned = false;
 
     if (isCalendarTeam) {
-      const mode = profile.team.assignmentMode; // 'user-pick' | 'auto-assign'
+      const mode = planAccess.team.assignmentMode; // 'user-pick' | 'auto-assign'
 
       if (mode === "user-pick") {
         if (!staffIdFromClient) return res.status(400).json({ message: "Wybierz pracownika" });
@@ -467,8 +532,19 @@ router.post("/offline", requireAuth, async (req, res) => {
       return res.status(403).json({ message: "Nieprawidłowy providerProfileId dla tego providerUserId" });
     }
 
-    const effectiveBufferMin = getEffectiveBufferMin(profile);
-    const isCalendarTeam = profile.bookingMode === "calendar" && profile.team?.enabled === true;
+    const planAccess = getReservationPlanAccess(profile);
+
+    if (planAccess.bookingMode !== "calendar") {
+      return res.status(403).json({
+        message:
+          "Dodawanie rezerwacji godzinowych offline jest dostępne tylko w aktywnym planie Premium z trybem kalendarza.",
+      });
+    }
+
+    const effectiveBufferMin = SLOT_BREAK_MIN + planAccess.bookingBufferMin;
+
+    const isCalendarTeam =
+      planAccess.bookingMode === "calendar" && planAccess.team?.enabled === true;
 
     const serviceCheck = ensureServiceIsBookable(profile, serviceId);
     if (!serviceCheck.ok) {
@@ -482,7 +558,7 @@ router.post("/offline", requireAuth, async (req, res) => {
     let staffAutoAssigned = false;
 
     if (isCalendarTeam) {
-      const mode = profile.team.assignmentMode; // 'user-pick' | 'auto-assign'
+      const mode = planAccess.team.assignmentMode; // 'user-pick' | 'auto-assign'
       const preferredStaffId = staffIdFromProvider || null;
 
       if (mode === "user-pick" || preferredStaffId) {
@@ -665,6 +741,15 @@ router.post("/day", requireAuth, async (req, res) => {
       return res.status(403).json({ message: "Nieprawidłowy providerProfileId dla tego providerUserId" });
     }
 
+    const planAccess = getReservationPlanAccess(providerProfile);
+
+    if (planAccess.bookingMode !== "request-blocking") {
+      return res.status(403).json({
+        message:
+          "Rezerwacje całodniowe są dostępne tylko dla profili z aktywnym planem Premium i trybem blokowania dni.",
+      });
+    }
+
     const profile = await Profile.findOne(
       { userId: providerUserId },
       { blockedDays: 1, services: 1 }
@@ -797,6 +882,15 @@ router.post("/offline/day", requireAuth, async (req, res) => {
     // 🔒 profil musi należeć do providerUserId
     if (String(profile.userId) !== String(providerUserId)) {
       return res.status(403).json({ message: "Nieprawidłowy providerProfileId dla tego providerUserId" });
+    }
+
+    const planAccess = getReservationPlanAccess(profile);
+
+    if (planAccess.bookingMode !== "request-blocking") {
+      return res.status(403).json({
+        message:
+          "Dodawanie blokad całodniowych offline jest dostępne tylko w aktywnym planie Premium i trybie blokowania dni.",
+      });
     }
 
     const fullProfile = await Profile.findOne(
@@ -1042,17 +1136,30 @@ router.get("/unavailable-days/:providerUid", async (req, res) => {
 
     const profile = await Profile.findOne(
       { userId: providerUid },
-      { blockedDays: 1, _id: 0 }
+      {
+        blockedDays: 1,
+        bookingMode: 1,
+        billing: 1,
+      }
     ).lean();
 
-    const blocked = profile?.blockedDays || [];
+    const planAccess = profile ? getReservationPlanAccess(profile) : null;
+
+    const canShowBlockedDays =
+      planAccess?.bookingMode === "request-blocking";
+
+    const blocked =
+      canShowBlockedDays && Array.isArray(profile?.blockedDays)
+        ? profile.blockedDays
+        : [];
 
     const takenDocs = await Reservation.find(
       { providerUserId: providerUid, dateOnly: true, status: "zaakceptowana" },
       { date: 1, _id: 0 }
     ).lean();
 
-    const taken = takenDocs.map((d) => d.date);
+    const taken = canShowBlockedDays ? takenDocs.map((d) => d.date) : [];
+
     const all = Array.from(new Set([...blocked, ...taken]));
 
     return res.json(all);
@@ -1210,10 +1317,13 @@ router.get("/meta/:providerUid", async (req, res) => {
         workingHours: 1,
         workingDays: 1,
         blockedDays: 1,
+        billing: 1,
       }
     ).lean();
 
     if (!profile) return res.json(null);
+
+    const planAccess = getReservationPlanAccess(profile);
 
     const activeServices = Array.isArray(profile.services)
       ? profile.services.filter((s) => s?.isActive !== false)
@@ -1221,10 +1331,16 @@ router.get("/meta/:providerUid", async (req, res) => {
 
     const activeServiceIds = new Set(activeServices.map((s) => String(s._id)));
 
-    const staff = await Staff.find(
-      { profileId: profile._id, active: true },
-      { _id: 1, name: 1, capacity: 1, serviceIds: 1 }
-    ).lean();
+    const shouldLoadStaff =
+      planAccess.bookingMode === "calendar" &&
+      planAccess.team?.enabled === true;
+
+    const staff = shouldLoadStaff
+      ? await Staff.find(
+        { profileId: profile._id, active: true },
+        { _id: 1, name: 1, capacity: 1, serviceIds: 1 }
+      ).lean()
+      : [];
 
     const normalizedStaff = Array.isArray(staff)
       ? staff
@@ -1241,14 +1357,27 @@ router.get("/meta/:providerUid", async (req, res) => {
       providerProfileId: profile._id,
       providerProfileName: profile.name || "Profil",
       providerProfileRole: profile.role || "Brak roli",
-      bookingMode: profile.bookingMode,
-      team: profile.team || { enabled: false },
+
+      bookingMode: planAccess.bookingMode,
+      team: planAccess.team,
+
       services: activeServices,
       staff: normalizedStaff,
-      bookingBufferMin: normalizeBuffer(profile.bookingBufferMin),
+
+      bookingBufferMin: planAccess.bookingBufferMin,
+
       workingHours: profile.workingHours || { from: "08:00", to: "20:00" },
-      workingDays: Array.isArray(profile.workingDays) ? profile.workingDays : [1, 2, 3, 4, 5],
-      blockedDays: Array.isArray(profile.blockedDays) ? profile.blockedDays : [],
+      workingDays: Array.isArray(profile.workingDays)
+        ? profile.workingDays
+        : [1, 2, 3, 4, 5],
+
+      blockedDays:
+        planAccess.bookingMode === "request-blocking" &&
+          Array.isArray(profile.blockedDays)
+          ? profile.blockedDays
+          : [],
+
+      billingPublic: planAccess.billingPublic,
     });
   } catch (e) {
     console.error("GET /reservations/meta error", e);

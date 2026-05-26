@@ -856,7 +856,35 @@ export default function PublicProfile() {
       .sort((a, b) => Number(a?.order ?? 0) - Number(b?.order ?? 0))
     : [];
 
-  const bookingMode = String(profile?.bookingMode || "off").toLowerCase();
+  const publicBilling = profile?.billingPublic || profile?.billing || {};
+  const billingFeatures = publicBilling?.features || null;
+
+  const hasBillingFeatures =
+    billingFeatures && Object.keys(billingFeatures).length > 0;
+
+  const canUseSocialMedia = hasBillingFeatures
+    ? !!billingFeatures.socialMedia
+    : true;
+
+  const canUseBooking = hasBillingFeatures
+    ? !!billingFeatures.booking
+    : true;
+
+  const canUseRequestBlocking = hasBillingFeatures
+    ? !!billingFeatures.requestBlocking
+    : true;
+
+  const rawBookingMode = String(profile?.bookingMode || "off").toLowerCase();
+
+  const bookingMode =
+    rawBookingMode === "calendar" && canUseBooking
+      ? "calendar"
+      : rawBookingMode === "request-blocking" && canUseRequestBlocking
+        ? "request-blocking"
+        : rawBookingMode === "request-open"
+          ? "request-open"
+          : "off";
+
   const bookingEnabled = !["off", "none", "disabled", ""].includes(bookingMode);
   const isCalendar = bookingMode === "calendar";
 
@@ -904,7 +932,10 @@ export default function PublicProfile() {
     });
   };
 
-  const cleanLinks = (links || []).map((l) => (l || "").trim()).filter(Boolean);
+  const cleanLinks = (links || [])
+    .map((l) => (l || "").trim())
+    .filter(Boolean)
+    .slice(0, 3);
 
   const contactPhone = normalizePhone(contact?.phone);
   const contactEmail = (contact?.email || "").trim();
@@ -918,17 +949,19 @@ export default function PublicProfile() {
 
   const mapsUrl = buildGoogleMapsLink(fullAddress);
 
-  const socialItems = [
-    { key: "website", label: "WWW", icon: <FaGlobe />, url: socials?.website },
-    { key: "facebook", label: "Facebook", icon: <FaFacebook />, url: socials?.facebook },
-    { key: "instagram", label: "Instagram", icon: <FaInstagram />, url: socials?.instagram },
-    { key: "youtube", label: "YouTube", icon: <FaYoutube />, url: socials?.youtube },
-    { key: "tiktok", label: "TikTok", icon: <FaTiktok />, url: socials?.tiktok },
-    { key: "linkedin", label: "LinkedIn", icon: <FaLinkedin />, url: socials?.linkedin },
-    { key: "x", label: "X", icon: <FaXTwitter />, url: socials?.x },
-  ]
-    .map((s) => ({ ...s, url: ensureUrl(s.url) }))
-    .filter((s) => !!s.url);
+  const socialItems = canUseSocialMedia
+    ? [
+      { key: "website", label: "WWW", icon: <FaGlobe />, url: socials?.website },
+      { key: "facebook", label: "Facebook", icon: <FaFacebook />, url: socials?.facebook },
+      { key: "instagram", label: "Instagram", icon: <FaInstagram />, url: socials?.instagram },
+      { key: "youtube", label: "YouTube", icon: <FaYoutube />, url: socials?.youtube },
+      { key: "tiktok", label: "TikTok", icon: <FaTiktok />, url: socials?.tiktok },
+      { key: "linkedin", label: "LinkedIn", icon: <FaLinkedin />, url: socials?.linkedin },
+      { key: "x", label: "X", icon: <FaXTwitter />, url: socials?.x },
+    ]
+      .map((s) => ({ ...s, url: ensureUrl(s.url) }))
+      .filter((s) => !!s.url)
+    : [];
 
   const hasContact = !!fullAddress || !!contactPhone || !!contactEmail;
   const hasSocials = socialItems.length > 0;

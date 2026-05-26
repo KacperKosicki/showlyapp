@@ -69,6 +69,10 @@ const UserDropdown = ({
   const [remainingDays, setRemainingDays] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
 
+  const [profilePlanLabel, setProfilePlanLabel] = useState("");
+  const [autoRenewedBySubscription, setAutoRenewedBySubscription] =
+    useState(false);
+
   const [photoURL, setPhotoURL] = useState("");
   const [userRole, setUserRole] = useState("user"); // user | mod | admin
 
@@ -169,24 +173,36 @@ const UserDropdown = ({
     run();
   }, [user?.uid, refreshTrigger]);
 
-  // Status wizytówki
+  // Status wizytówki + billing
   useEffect(() => {
     if (!user?.uid) {
       setProfileStatus("none");
       setIsVisible(false);
       setRemainingDays(null);
+      setProfilePlanLabel("");
+      setAutoRenewedBySubscription(false);
       return;
     }
 
     const controller = new AbortController();
 
-    const fetchProfile = async () => {
+    const countDaysLeft = (dateValue) => {
+      if (!dateValue) return null;
+
+      const now = new Date();
+      const until = new Date(dateValue);
+      const diff = Math.ceil((until - now) / (1000 * 60 * 60 * 24));
+
+      return diff > 0 ? diff : 0;
+    };
+
+    const fetchProfileStatus = async () => {
       try {
         setProfileStatus("loading");
 
         const authHeader = await getAuthHeader();
 
-        const res = await fetch(`${API}/api/profiles/by-user/${user.uid}`, {
+        const profileRes = await fetch(`${API}/api/profiles/by-user/${user.uid}`, {
           headers: {
             Accept: "application/json",
             ...authHeader,
@@ -194,41 +210,77 @@ const UserDropdown = ({
           signal: controller.signal,
         });
 
-        if (res.status === 404) {
+        if (profileRes.status === 404) {
           setProfileStatus("none");
           setIsVisible(false);
           setRemainingDays(null);
+          setProfilePlanLabel("");
+          setAutoRenewedBySubscription(false);
           return;
         }
 
-        if (!res.ok) {
+        if (!profileRes.ok) {
           setProfileStatus("error");
           return;
         }
 
-        const profile = await res.json();
+        const profile = await profileRes.json();
 
-        if (profile?.visibleUntil) {
-          const now = new Date();
-          const until = new Date(profile.visibleUntil);
-          const diff = Math.ceil((until - now) / (1000 * 60 * 60 * 24));
+        let billingData = null;
 
-          setIsVisible(profile.isVisible !== false && until > now);
-          setRemainingDays(diff > 0 ? diff : 0);
-        } else {
-          setIsVisible(!!profile);
-          setRemainingDays(!!profile ? 0 : null);
+        try {
+          const billingRes = await fetch(`${API}/api/billing/status`, {
+            headers: {
+              Accept: "application/json",
+              ...authHeader,
+            },
+            signal: controller.signal,
+          });
+
+          if (billingRes.ok) {
+            billingData = await billingRes.json();
+          }
+        } catch {
+          billingData = null;
         }
+
+        const billingVisibility = billingData?.visibility || null;
+        const billing = billingData?.billing || null;
+
+        const visibleUntil =
+          billingVisibility?.visibleUntil ||
+          profile?.visibleUntil ||
+          null;
+
+        const daysLeft = countDaysLeft(visibleUntil);
+
+        setIsVisible(
+          typeof billingVisibility?.isVisible === "boolean"
+            ? billingVisibility.isVisible
+            : profile?.isVisible !== false && daysLeft !== null && daysLeft > 0
+        );
+
+        setRemainingDays(daysLeft);
+
+        setProfilePlanLabel(
+          billing?.label ||
+          billingData?.plan?.label ||
+          ""
+        );
+
+        setAutoRenewedBySubscription(
+          !!billingVisibility?.autoRenewedBySubscription
+        );
 
         setProfileStatus(profile ? "has" : "none");
       } catch (err) {
         if (err?.name === "AbortError") return;
         setProfileStatus("error");
-        console.error("❌ Błąd pobierania profilu:", err);
+        console.error("❌ Błąd pobierania statusu profilu:", err);
       }
     };
 
-    fetchProfile();
+    fetchProfileStatus();
 
     return () => controller.abort();
   }, [user?.uid, refreshTrigger]);
@@ -267,6 +319,7 @@ const UserDropdown = ({
         setOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -275,11 +328,13 @@ const UserDropdown = ({
   useEffect(() => {
     const onKey = (e) => {
       if (!open) return;
+
       if (e.key === "Escape") {
         setOpen(false);
         triggerRef.current?.focus?.();
       }
     };
+
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
@@ -467,7 +522,16 @@ const UserDropdown = ({
 
                   {isVisible ? (
                     <span className={`${styles.itemSub} ${styles.statusActive}`}>
-                      Pozostało <b>{remainingDays}</b> dni
+                      {autoRenewedBySubscription ? (
+                        <>
+                          {profilePlanLabel || "Plan aktywny"} • aktywny jeszcze{" "}
+                          <b>{remainingDays}</b> dni
+                        </>
+                      ) : (
+                        <>
+                          Pozostało <b>{remainingDays}</b> dni
+                        </>
+                      )}
                     </span>
                   ) : (
                     <span className={`${styles.itemSub} ${styles.statusExpired}`}>
@@ -514,10 +578,10 @@ const UserDropdown = ({
 
                 <span
                   className={`${styles.itemSub} ${pushSaved || pushState === "granted"
-                    ? styles.statusActive
-                    : pushState === "denied"
-                      ? styles.statusExpired
-                      : ""
+                      ? styles.statusActive
+                      : pushState === "denied"
+                        ? styles.statusExpired
+                        : ""
                     }`}
                 >
                   {pushSaved &&

@@ -2,7 +2,7 @@
 
 const PLANS = {
   free: {
-    label: "Free",
+    label: "Starter",
     priceLabel: "0 zł",
     description: "Podstawowa wizytówka na start.",
     features: {
@@ -12,6 +12,7 @@ const PLANS = {
       requestBlocking: false,
       team: false,
       premiumThemes: false,
+      socialMedia: false,
       advancedChat: false,
       analytics: false,
       customSlug: false,
@@ -21,9 +22,9 @@ const PLANS = {
       photos: 3,
       services: 3,
       serviceGallery: 2,
-      links: 3,
+      links: 1,
       quickAnswers: 1,
-      descriptionLength: 500,
+      descriptionLength: 200,
     },
   },
 
@@ -38,6 +39,7 @@ const PLANS = {
       requestBlocking: false,
       team: false,
       premiumThemes: true,
+      socialMedia: true,
       advancedChat: false,
       analytics: true,
       customSlug: false,
@@ -47,9 +49,9 @@ const PLANS = {
       photos: 6,
       services: 10,
       serviceGallery: 4,
-      links: 6,
+      links: 2,
       quickAnswers: 3,
-      descriptionLength: 1500,
+      descriptionLength: 500,
     },
   },
 
@@ -64,18 +66,19 @@ const PLANS = {
       requestBlocking: true,
       team: true,
       premiumThemes: true,
+      socialMedia: true,
       advancedChat: true,
       analytics: true,
       customSlug: true,
       priorityProfile: true,
     },
     limits: {
-      photos: 20,
-      services: 50,
+      photos: 15,
+      services: 20,
       serviceGallery: 10,
-      links: 10,
-      quickAnswers: 10,
-      descriptionLength: 3000,
+      links: 3,
+      quickAnswers: 5,
+      descriptionLength: 1000,
     },
   },
 };
