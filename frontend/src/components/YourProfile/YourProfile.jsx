@@ -514,15 +514,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     }
   };
 
-  const makeEmptyQaError = () => ({
-    title: '',
-    answer: '',
-    touched: false,
-  });
-
-  const normalizeQaErrors = (length) =>
-    Array.from({ length }).map((_, i) => qaErrors[i] || makeEmptyQaError());
-
   // =========================
   // Walidacje / zapis profilu
   // =========================
