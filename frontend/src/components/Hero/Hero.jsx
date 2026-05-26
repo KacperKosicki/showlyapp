@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styles from "./Hero.module.scss";
 import SearchBar from "../SearchBar/SearchBar";
-import LoadingLink from "../ui/LoadingLink/LoadingLink";
 
 const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
   const navigate = useNavigate();

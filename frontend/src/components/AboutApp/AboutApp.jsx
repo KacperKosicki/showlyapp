@@ -1,7 +1,6 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import styles from "./AboutApp.module.scss";
-import LoadingLink from "../ui/LoadingLink/LoadingLink";
 
 import {
   FiArrowRight,
