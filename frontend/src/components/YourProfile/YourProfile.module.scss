@@ -6813,3 +6813,33 @@ button.mediaPhotoItem,
     right: 0.85rem;
   }
 }
+/* =========================
+   PATCH po rozbiciu YourProfile.jsx na sekcje
+   Te klasy są używane przez aktualne komponenty JSX jako styles.xxx.
+   Zostają osobno, aby CSS Modules eksportował je bez problemów.
+   ========================= */
+
+.two {
+  width: 180px;
+  height: 180px;
+  right: auto;
+  left: -50px;
+  top: 40%;
+  background: radial-gradient(100px 100px at 50% 50%, rgba(#ff6ea8, .14), transparent 60%);
+}
+
+.three {
+  width: 140px;
+  height: 140px;
+  right: 10%;
+  bottom: -40px;
+  background: radial-gradient(90px 90px at 60% 40%, rgba(#7c9dff, .12), transparent 60%);
+}
+
+.starterPlan {
+  border-color: rgba(17, 24, 39, 0.08);
+}
+
+.pricePanel {
+  min-width: 0;
+}
