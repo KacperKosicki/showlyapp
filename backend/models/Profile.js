@@ -10,6 +10,7 @@ const imageSchema = new mongoose.Schema(
   {
     url: { type: String, default: "" },
     publicId: { type: String, default: "" },
+    hash: { type: String, default: "" },
   },
   { _id: false }
 );

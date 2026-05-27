@@ -20,10 +20,16 @@ import {
   FiPlus,
   FiTrash2,
 } from "react-icons/fi";
+import {
+  TAGS_LIMIT,
+  TAG_MAX_LENGTH,
+  SERVICE_NAME_MAX_LENGTH,
+  SERVICE_SHORT_DESCRIPTION_MAX_LENGTH,
+  SERVICE_PRICE_MAX,
+  SERVICE_DURATION_LIMITS,
+} from "../constants/validationLimits";
 
 const DEFAULT_AVATAR = "/images/other/no-image.png";
-
-const CREATE_TAGS_LIMIT = 3;
 
 const CREATE_PLAN = {
   key: "free",
@@ -79,8 +85,10 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     name: "",
     shortDescription: "",
     category: "service",
-    priceMode: "fixed",
+    priceMode: "contact",
     priceValue: "",
+    priceFrom: "",
+    priceTo: "",
     durationValue: "",
     durationUnit: "minutes",
     bookingEnabled: false,
@@ -123,7 +131,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
       if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
         try {
           URL.revokeObjectURL(form.avatar);
-        } catch {}
+        } catch { }
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,7 +158,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
       try {
         URL.revokeObjectURL(form.avatar);
-      } catch {}
+      } catch { }
     }
 
     setAvatarFile(null);
@@ -223,7 +231,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
   const handleTagChange = (index, value) => {
     const updatedTags = [...form.tags];
-    updatedTags[index] = value;
+    updatedTags[index] = cleanTagInput(value);
     setForm((prev) => ({ ...prev, tags: updatedTags }));
   };
 
@@ -298,6 +306,135 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     return "bez ceny";
   };
 
+  const cleanServiceText = (value, maxLength) => {
+    return String(value || "")
+      .replace(/\s+/g, " ")
+      .trimStart()
+      .slice(0, maxLength);
+  };
+
+  const cleanIntegerInput = (value, maxLength = 7) => {
+    return String(value || "")
+      .replace(/[^\d]/g, "")
+      .slice(0, maxLength);
+  };
+
+  const cleanTagInput = (value) => {
+    return String(value || "")
+      .replace(/[#,\n\r\t]/g, "")
+      .replace(/\s+/g, " ")
+      .trimStart()
+      .slice(0, TAG_MAX_LENGTH);
+  };
+
+  const hasSpammyRepeatedChars = (value) => {
+    const text = String(value || "").trim();
+
+    if (/(.)\1{12,}/i.test(text)) return true;
+
+    const words = text.toLowerCase().split(/\s+/).filter(Boolean);
+    const wordCount = words.reduce((acc, word) => {
+      acc[word] = (acc[word] || 0) + 1;
+      return acc;
+    }, {});
+
+    return Object.values(wordCount).some((count) => count >= 5);
+  };
+
+  const getDurationLimitText = (unit) => {
+    const limit = SERVICE_DURATION_LIMITS[unit];
+
+    if (!limit) return "";
+
+    return `${limit.min}–${limit.max} ${limit.label}`;
+  };
+
+  const validateServiceData = (service) => {
+    const name = String(service?.name || "").trim();
+    const shortDescription = String(service?.shortDescription || "").trim();
+
+    if (!name) {
+      return "Podaj nazwę usługi.";
+    }
+
+    if (name.length > SERVICE_NAME_MAX_LENGTH) {
+      return `Nazwa usługi może mieć maksymalnie ${SERVICE_NAME_MAX_LENGTH} znaków.`;
+    }
+
+    if (name.length < 3) {
+      return "Nazwa usługi musi mieć minimum 3 znaki.";
+    }
+
+    if (hasSpammyRepeatedChars(name)) {
+      return "Nazwa usługi wygląda na spam. Wpisz normalną nazwę usługi.";
+    }
+
+    if (shortDescription.length > SERVICE_SHORT_DESCRIPTION_MAX_LENGTH) {
+      return `Krótki opis usługi może mieć maksymalnie ${SERVICE_SHORT_DESCRIPTION_MAX_LENGTH} znaków.`;
+    }
+
+    if (shortDescription && shortDescription.length < 10) {
+      return "Krótki opis powinien mieć minimum 10 znaków albo zostaw go pusty.";
+    }
+
+    if (hasSpammyRepeatedChars(shortDescription)) {
+      return "Krótki opis wygląda na spam. Wpisz normalny opis usługi.";
+    }
+
+    const durationValue = Number(service?.duration?.value);
+    const durationUnit = service?.duration?.unit || "minutes";
+    const durationLimit = SERVICE_DURATION_LIMITS[durationUnit];
+
+    if (!durationLimit || !Number.isFinite(durationValue)) {
+      return "Podaj poprawny czas usługi.";
+    }
+
+    if (durationValue < durationLimit.min || durationValue > durationLimit.max) {
+      return `Czas usługi dla jednostki "${durationLimit.label}" musi być w zakresie ${durationLimit.min}–${durationLimit.max}.`;
+    }
+
+    const priceMode = service?.price?.mode || "contact";
+
+    if (!["contact", "free", "fixed", "from", "range"].includes(priceMode)) {
+      return "Wybierz poprawny typ ceny.";
+    }
+
+    if (priceMode === "fixed") {
+      const amount = Number(service?.price?.amount);
+
+      if (!Number.isFinite(amount) || amount < 0 || amount > SERVICE_PRICE_MAX) {
+        return `Cena stała musi być w zakresie 0–${SERVICE_PRICE_MAX} zł.`;
+      }
+    }
+
+    if (priceMode === "from") {
+      const from = Number(service?.price?.from);
+
+      if (!Number.isFinite(from) || from < 0 || from > SERVICE_PRICE_MAX) {
+        return `Cena „od” musi być w zakresie 0–${SERVICE_PRICE_MAX} zł.`;
+      }
+    }
+
+    if (priceMode === "range") {
+      const from = Number(service?.price?.from);
+      const to = Number(service?.price?.to);
+
+      if (
+        !Number.isFinite(from) ||
+        !Number.isFinite(to) ||
+        from < 0 ||
+        to < 0 ||
+        from > SERVICE_PRICE_MAX ||
+        to > SERVICE_PRICE_MAX ||
+        to < from
+      ) {
+        return `Zakres cen musi być poprawny: od 0 do ${SERVICE_PRICE_MAX} zł, a cena „do” nie może być mniejsza niż „od”.`;
+      }
+    }
+
+    return "";
+  };
+
   const handleAddService = () => {
     if (form.services.length >= CREATE_PLAN.limits.services) {
       setServiceError(
@@ -306,38 +443,18 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
       return;
     }
 
-    const name = newService.name.trim();
-    const shortDescription = newService.shortDescription.trim();
-    const category = newService.category;
-    const priceMode = newService.priceMode;
+    const name = cleanServiceText(newService.name, SERVICE_NAME_MAX_LENGTH).trim();
+    const shortDescription = cleanServiceText(
+      newService.shortDescription,
+      SERVICE_SHORT_DESCRIPTION_MAX_LENGTH
+    ).trim();
+
+    const category = newService.category || "service";
+    const priceMode = newService.priceMode || "contact";
     const durationValue = Number(newService.durationValue);
-    const durationUnit = newService.durationUnit;
+    const durationUnit = newService.durationUnit || "minutes";
 
-    const hasValidDuration =
-      Number.isFinite(durationValue) &&
-      ((durationUnit === "minutes" && durationValue >= 15) ||
-        (durationUnit === "hours" && durationValue >= 1) ||
-        (durationUnit === "days" && durationValue >= 1) ||
-        (durationUnit === "weeks" && durationValue >= 1));
-
-    if (!name || name.length < 2) {
-      setServiceError("Podaj nazwę usługi (minimum 2 znaki).");
-      return;
-    }
-
-    if (shortDescription.length > 120) {
-      setServiceError("Krótki opis usługi może mieć maksymalnie 120 znaków.");
-      return;
-    }
-
-    if (!hasValidDuration) {
-      setServiceError(
-        "Czas usługi: minimum 15 minut, 1 godzina, 1 dzień lub 1 tydzień."
-      );
-      return;
-    }
-
-    let price = {
+    const price = {
       mode: priceMode,
       amount: null,
       from: null,
@@ -348,27 +465,33 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
     };
 
     if (priceMode === "fixed") {
-      const amount = Number(newService.priceValue);
-      if (!Number.isFinite(amount) || amount < 0) {
-        setServiceError("Podaj poprawną cenę stałą usługi.");
-        return;
-      }
-      price.amount = amount;
+      price.amount = Number(newService.priceValue);
     }
 
     if (priceMode === "from") {
-      const from = Number(newService.priceValue);
-      if (!Number.isFinite(from) || from < 0) {
-        setServiceError("Podaj poprawną cenę 'od'.");
-        return;
-      }
-      price.from = from;
+      price.from = Number(newService.priceValue);
     }
 
-    if (priceMode === "contact" || priceMode === "free") {
-      price.amount = null;
-      price.from = null;
-      price.to = null;
+    if (priceMode === "range") {
+      price.from = Number(newService.priceFrom);
+      price.to = Number(newService.priceTo);
+    }
+
+    const serviceToValidate = {
+      name,
+      shortDescription,
+      price,
+      duration: {
+        value: durationValue,
+        unit: durationUnit,
+      },
+    };
+
+    const validationError = validateServiceData(serviceToValidate);
+
+    if (validationError) {
+      setServiceError(validationError);
+      return;
     }
 
     const bookingEnabled = !!newService.bookingEnabled;
@@ -422,8 +545,10 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
       name: "",
       shortDescription: "",
       category: "service",
-      priceMode: "fixed",
+      priceMode: "contact",
       priceValue: "",
+      priceFrom: "",
+      priceTo: "",
       durationValue: "",
       durationUnit: "minutes",
       bookingEnabled: false,
@@ -462,8 +587,18 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
       errors.tags = "Podaj przynajmniej 1 tag";
     }
 
-    if (nonEmptyTags.length > CREATE_TAGS_LIMIT) {
-      errors.tags = `Możesz dodać maksymalnie ${CREATE_TAGS_LIMIT} tagi.`;
+    if (nonEmptyTags.length > TAGS_LIMIT) {
+      errors.tags = `Możesz dodać maksymalnie ${TAGS_LIMIT} tagi.`;
+    }
+
+    const uniqueTags = new Set(nonEmptyTags.map((tag) => tag.toLowerCase()));
+
+    if (nonEmptyTags.some((tag) => tag.length > TAG_MAX_LENGTH)) {
+      errors.tags = `Jeden tag może mieć maksymalnie ${TAG_MAX_LENGTH} znaków.`;
+    }
+
+    if (uniqueTags.size !== nonEmptyTags.length) {
+      errors.tags = "Tagi nie mogą się powtarzać.";
     }
 
     const nonEmptyLinks = form.links.filter((link) => link.trim() !== "");
@@ -499,18 +634,12 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
       errors.priceTo = 'Cena do musi być większa niż "od" i nie większa niż 1 000 000';
     }
 
-    if (
-      (form.services || []).some(
-        (s) =>
-          !s.name?.trim() ||
-          ((s.duration.unit === "minutes" && s.duration.value < 15) ||
-            (s.duration.unit === "hours" && s.duration.value < 1) ||
-            (s.duration.unit === "days" && s.duration.value < 1) ||
-            (s.duration.unit === "weeks" && s.duration.value < 1))
-      )
-    ) {
-      errors.services =
-        "Każda usługa musi mieć poprawną nazwę i czas trwania/realizacji.";
+    const serviceValidationError = (form.services || [])
+      .map((service) => validateServiceData(service))
+      .find(Boolean);
+
+    if (serviceValidationError) {
+      errors.services = serviceValidationError;
     }
 
     setFormErrors(errors);
@@ -527,7 +656,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
       reviews: 0,
       tags: nonEmptyTags
         .map((tag) => tag.trim())
-        .slice(0, CREATE_TAGS_LIMIT),
+        .slice(0, TAGS_LIMIT),
       links: form.links
         .map((link) => link.trim())
         .filter(Boolean)
@@ -599,7 +728,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
           <div className={styles.metaRow}>
             <div className={styles.metaCard}>
               <strong>
-                {activeTagsCount}/{CREATE_TAGS_LIMIT}
+                {activeTagsCount}/{TAGS_LIMIT}
               </strong>
               <span>aktywnych tagów</span>
             </div>
@@ -633,7 +762,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
             </p>
 
             <div className={styles.planLimits}>
-              <span>{CREATE_TAGS_LIMIT} tagi</span>
+              <span>{TAGS_LIMIT} tagi</span>
               <span>{CREATE_PLAN.limits.links} linki</span>
               <span>{CREATE_PLAN.limits.services} usługi</span>
               <span>{CREATE_PLAN.limits.descriptionLength} znaków opisu</span>
@@ -794,7 +923,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                           ) {
                             try {
                               URL.revokeObjectURL(form.avatar);
-                            } catch {}
+                            } catch { }
                           }
 
                           const previewUrl = URL.createObjectURL(file);
@@ -847,7 +976,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                 <label className={styles.formField}>
                   <span className={styles.fieldLabel}>
                     <FiTag className={styles.fieldIcon} />
-                    Tagi — {activeTagsCount}/{CREATE_TAGS_LIMIT}
+                    Tagi — {activeTagsCount}/{TAGS_LIMIT}
                   </span>
 
                   <div className={styles.inlineGrid}>
@@ -858,7 +987,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                           type="text"
                           placeholder={`Tag ${index + 1}`}
                           value={tag}
-                          maxLength={20}
+                          maxLength={TAG_MAX_LENGTH}
                           onChange={(e) => handleTagChange(index, e.target.value)}
                         />
                       </div>
@@ -977,15 +1106,26 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                 </div>
 
                 <div className={styles.serviceGrid}>
-                  <input
-                    className={styles.formInput}
-                    type="text"
-                    placeholder="Nazwa (np. Strzyżenie męskie)"
-                    value={newService.name}
-                    maxLength={80}
-                    disabled={servicesCount >= CREATE_PLAN.limits.services}
-                    onChange={(e) => setNewService({ ...newService, name: e.target.value })}
-                  />
+                  <div>
+                    <input
+                      className={styles.formInput}
+                      type="text"
+                      placeholder="Nazwa (np. Strzyżenie męskie)"
+                      value={newService.name}
+                      maxLength={SERVICE_NAME_MAX_LENGTH}
+                      disabled={servicesCount >= CREATE_PLAN.limits.services}
+                      onChange={(e) =>
+                        setNewService((prev) => ({
+                          ...prev,
+                          name: cleanServiceText(e.target.value, SERVICE_NAME_MAX_LENGTH),
+                        }))
+                      }
+                    />
+
+                    <small className={styles.fieldCounter}>
+                      {newService.name.length}/{SERVICE_NAME_MAX_LENGTH}
+                    </small>
+                  </div>
 
                   <select
                     className={styles.formSelect}
@@ -1004,17 +1144,29 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     <option value="custom">Inne</option>
                   </select>
 
-                  <input
-                    className={styles.formInput}
-                    type="text"
-                    placeholder="Krótki opis (opcjonalnie)"
-                    value={newService.shortDescription}
-                    maxLength={120}
-                    disabled={servicesCount >= CREATE_PLAN.limits.services}
-                    onChange={(e) =>
-                      setNewService({ ...newService, shortDescription: e.target.value })
-                    }
-                  />
+                  <div>
+                    <input
+                      className={styles.formInput}
+                      type="text"
+                      placeholder="Krótki opis (opcjonalnie)"
+                      value={newService.shortDescription}
+                      maxLength={SERVICE_SHORT_DESCRIPTION_MAX_LENGTH}
+                      disabled={servicesCount >= CREATE_PLAN.limits.services}
+                      onChange={(e) =>
+                        setNewService((prev) => ({
+                          ...prev,
+                          shortDescription: cleanServiceText(
+                            e.target.value,
+                            SERVICE_SHORT_DESCRIPTION_MAX_LENGTH
+                          ),
+                        }))
+                      }
+                    />
+
+                    <small className={styles.fieldCounter}>
+                      {newService.shortDescription.length}/{SERVICE_SHORT_DESCRIPTION_MAX_LENGTH}
+                    </small>
+                  </div>
 
                   <select
                     className={styles.formSelect}
@@ -1025,40 +1177,115 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                         ...newService,
                         priceMode: e.target.value,
                         priceValue: "",
+                        priceFrom: "",
+                        priceTo: "",
                       })
                     }
                   >
+                    <option value="contact">Wycena indywidualna</option>
                     <option value="fixed">Cena stała</option>
                     <option value="from">Cena od</option>
-                    <option value="contact">Wycena indywidualna</option>
+                    <option value="range">Zakres cen</option>
                     <option value="free">Darmowe</option>
                   </select>
 
                   {(newService.priceMode === "fixed" || newService.priceMode === "from") && (
+                    <div>
+                      <input
+                        className={styles.formInput}
+                        type="number"
+                        inputMode="numeric"
+                        placeholder={newService.priceMode === "fixed" ? "Cena" : "Cena od"}
+                        min="0"
+                        max={SERVICE_PRICE_MAX}
+                        value={newService.priceValue}
+                        disabled={servicesCount >= CREATE_PLAN.limits.services}
+                        onChange={(e) =>
+                          setNewService((prev) => ({
+                            ...prev,
+                            priceValue: cleanIntegerInput(e.target.value, 7),
+                          }))
+                        }
+                      />
+
+                      <small className={styles.fieldCounter}>
+                        Dostępny zakres: 0–{SERVICE_PRICE_MAX} zł
+                      </small>
+                    </div>
+                  )}
+
+                  {newService.priceMode === "range" && (
+                    <>
+                      <div>
+                        <input
+                          className={styles.formInput}
+                          type="number"
+                          inputMode="numeric"
+                          placeholder="Cena od"
+                          min="0"
+                          max={SERVICE_PRICE_MAX}
+                          value={newService.priceFrom}
+                          disabled={servicesCount >= CREATE_PLAN.limits.services}
+                          onChange={(e) =>
+                            setNewService((prev) => ({
+                              ...prev,
+                              priceFrom: cleanIntegerInput(e.target.value, 7),
+                            }))
+                          }
+                        />
+
+                        <small className={styles.fieldCounter}>
+                          Dostępny zakres: 0–{SERVICE_PRICE_MAX} zł
+                        </small>
+                      </div>
+
+                      <div>
+                        <input
+                          className={styles.formInput}
+                          type="number"
+                          inputMode="numeric"
+                          placeholder="Cena do"
+                          min="0"
+                          max={SERVICE_PRICE_MAX}
+                          value={newService.priceTo}
+                          disabled={servicesCount >= CREATE_PLAN.limits.services}
+                          onChange={(e) =>
+                            setNewService((prev) => ({
+                              ...prev,
+                              priceTo: cleanIntegerInput(e.target.value, 7),
+                            }))
+                          }
+                        />
+
+                        <small className={styles.fieldCounter}>
+                          Dostępny zakres: 0–{SERVICE_PRICE_MAX} zł
+                        </small>
+                      </div>
+                    </>
+                  )}
+
+                  <div>
                     <input
                       className={styles.formInput}
                       type="number"
-                      placeholder={newService.priceMode === "fixed" ? "Cena" : "Cena od"}
-                      min="0"
-                      value={newService.priceValue}
+                      inputMode="numeric"
+                      placeholder="Czas"
+                      min={SERVICE_DURATION_LIMITS[newService.durationUnit]?.min || 1}
+                      max={SERVICE_DURATION_LIMITS[newService.durationUnit]?.max || 999}
+                      value={newService.durationValue}
                       disabled={servicesCount >= CREATE_PLAN.limits.services}
                       onChange={(e) =>
-                        setNewService({ ...newService, priceValue: e.target.value })
+                        setNewService((prev) => ({
+                          ...prev,
+                          durationValue: cleanIntegerInput(e.target.value, 4),
+                        }))
                       }
                     />
-                  )}
 
-                  <input
-                    className={styles.formInput}
-                    type="number"
-                    placeholder="Czas"
-                    min="1"
-                    value={newService.durationValue}
-                    disabled={servicesCount >= CREATE_PLAN.limits.services}
-                    onChange={(e) =>
-                      setNewService({ ...newService, durationValue: e.target.value })
-                    }
-                  />
+                    <small className={styles.fieldCounter}>
+                      Dostępny zakres: {getDurationLimitText(newService.durationUnit)}
+                    </small>
+                  </div>
 
                   <select
                     className={styles.formSelect}
@@ -1251,7 +1478,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                     user={{
                       ...form,
                       tags: form.tags.filter(
-                        (tag) => tag.trim() !== "" && tag.length <= 20
+                        (tag) => tag.trim() !== "" && tag.length <= TAG_MAX_LENGTH
                       ),
                       links: form.links.filter((link) => link.trim() !== ""),
                       rating: 0,

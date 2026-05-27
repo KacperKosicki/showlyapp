@@ -667,65 +667,188 @@ router.delete("/:uid/avatar", requireAuth, requireOwnerOrAdmin, async (req, res)
 });
 
 // POST /api/profiles/:uid/photos
-router.post("/:uid/photos", requireAuth, requireOwnerOrAdmin, upload.array("files", 6), async (req, res) => {
-  try {
-    const uid = req.params.uid;
-    const files = req.files || [];
-    if (!files.length) return res.status(400).json({ message: "Brak plików." });
+router.post(
+  "/:uid/photos",
+  requireAuth,
+  requireOwnerOrAdmin,
+  upload.array("files", 15),
+  async (req, res) => {
+    try {
+      const uid = req.params.uid;
+      const files = req.files || [];
 
-    const profile = await Profile.findOne({ userId: uid });
-    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
+      if (!files.length) {
+        return res.status(400).json({ message: "Brak plików." });
+      }
 
-    const MAX = 6;
-    const currentCount = Array.isArray(profile.photos) ? profile.photos.length : 0;
-    if (currentCount + files.length > MAX) {
-      return res.status(400).json({ message: `Maksymalnie ${MAX} zdjęć w galerii.` });
-    }
+      const profile = await Profile.findOne({ userId: uid });
+      if (!profile) {
+        return res.status(404).json({ message: "Nie znaleziono profilu." });
+      }
 
-    const uploaded = [];
-    for (const f of files) {
-      const r = await uploadBuffer(f.buffer, {
-        folder: `showly/profiles/${uid}/photos`,
-        resource_type: "image",
-        transformation: [
-          { width: 1600, height: 1600, crop: "limit" },
-          { quality: "auto", fetch_format: "auto" },
-        ],
+      const maxPhotos = getLimit(profile, "photos", {
+        allowPastDue: true,
       });
-      uploaded.push({ url: r.secure_url, publicId: r.public_id });
+
+      const currentCount = Array.isArray(profile.photos)
+        ? profile.photos.length
+        : 0;
+
+      if (currentCount + files.length > maxPhotos) {
+        return res.status(400).json({
+          message: `Maksymalnie ${maxPhotos} zdjęć w galerii dla Twojego planu.`,
+        });
+      }
+
+      profile.photos = Array.isArray(profile.photos) ? profile.photos : [];
+
+      const existingPhotoHashes = new Set(
+        profile.photos
+          .map((p) => (typeof p === "string" ? "" : p?.hash))
+          .filter(Boolean)
+      );
+
+      const uploaded = [];
+      let skippedDuplicates = 0;
+
+      for (const f of files) {
+        const fileHash = crypto
+          .createHash("sha256")
+          .update(f.buffer)
+          .digest("hex");
+
+        if (existingPhotoHashes.has(fileHash)) {
+          skippedDuplicates++;
+          continue;
+        }
+
+        const r = await uploadBuffer(f.buffer, {
+          folder: `showly/profiles/${uid}/photos`,
+          resource_type: "image",
+          transformation: [
+            { width: 1600, height: 1600, crop: "limit" },
+            { quality: "auto", fetch_format: "auto" },
+          ],
+        });
+
+        uploaded.push({
+          url: r.secure_url,
+          publicId: r.public_id,
+          hash: fileHash,
+        });
+
+        existingPhotoHashes.add(fileHash);
+      }
+
+      if (!uploaded.length) {
+        return res.status(400).json({
+          message: "Te zdjęcia są już dodane w galerii.",
+        });
+      }
+
+      profile.photos = [...profile.photos, ...uploaded];
+
+      await profile.save();
+
+      return res.json({
+        message: "Zdjęcia dodane.",
+        photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
+      });
+    } catch (e) {
+      console.error("❌ upload photos:", e);
+      return res.status(500).json({ message: "Błąd uploadu zdjęć." });
     }
-
-    profile.photos = Array.isArray(profile.photos) ? profile.photos : [];
-    profile.photos = [...profile.photos, ...uploaded];
-
-    await profile.save();
-
-    return res.json({
-      message: "Zdjęcia dodane.",
-      photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
-    });
-  } catch (e) {
-    console.error("❌ upload photos:", e);
-    return res.status(500).json({ message: "Błąd uploadu zdjęć." });
   }
-});
+);
 
-// DELETE /api/profiles/:uid/photos/:publicId
-router.delete("/:uid/photos/:publicId", requireAuth, requireOwnerOrAdmin, async (req, res) => {
+// DELETE /api/profiles/:uid/photos/:photoKey
+router.delete("/:uid/photos/:photoKey", requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
-    const { uid, publicId } = req.params;
+    const { uid, photoKey } = req.params;
 
     const profile = await Profile.findOne({ userId: uid });
-    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
+    if (!profile) {
+      return res.status(404).json({ message: "Nie znaleziono profilu." });
+    }
 
-    const decoded = decodeURIComponent(publicId);
-
-    await cloudinary.uploader.destroy(decoded, { resource_type: "image" }).catch(() => { });
+    const decoded = String(photoKey || "");
+    const decodedWithoutQuery = decoded.split("?")[0];
 
     profile.photos = Array.isArray(profile.photos) ? profile.photos : [];
+
+    const photoToDelete = profile.photos.find((p) => {
+      if (typeof p === "string") {
+        const raw = p;
+        const publicUrl = toPublicUrl(req, raw);
+        const normalizedUrl = normalizeImageOut(req, { url: raw, publicId: "" }, profile.updatedAt).url;
+
+        return (
+          raw === decoded ||
+          raw === decodedWithoutQuery ||
+          publicUrl === decoded ||
+          publicUrl === decodedWithoutQuery ||
+          normalizedUrl === decoded
+        );
+      }
+
+      const rawUrl = p?.url || "";
+      const publicId = p?.publicId || "";
+      const publicUrl = toPublicUrl(req, rawUrl);
+      const normalizedUrl = normalizeImageOut(req, p, profile.updatedAt).url;
+
+      return (
+        publicId === decoded ||
+        rawUrl === decoded ||
+        rawUrl === decodedWithoutQuery ||
+        publicUrl === decoded ||
+        publicUrl === decodedWithoutQuery ||
+        normalizedUrl === decoded
+      );
+    });
+
+    if (!photoToDelete) {
+      return res.status(404).json({ message: "Nie znaleziono zdjęcia do usunięcia." });
+    }
+
+    const publicId =
+      typeof photoToDelete === "string"
+        ? ""
+        : photoToDelete?.publicId || "";
+
+    if (publicId) {
+      await cloudinary.uploader.destroy(publicId, {
+        resource_type: "image",
+      }).catch(() => { });
+    }
+
     profile.photos = profile.photos.filter((p) => {
-      if (typeof p === "string") return true;
-      return p?.publicId !== decoded;
+      if (typeof p === "string") {
+        const raw = p;
+        const publicUrl = toPublicUrl(req, raw);
+        const normalizedUrl = normalizeImageOut(req, { url: raw, publicId: "" }, profile.updatedAt).url;
+
+        return !(
+          raw === decoded ||
+          raw === decodedWithoutQuery ||
+          publicUrl === decoded ||
+          publicUrl === decodedWithoutQuery ||
+          normalizedUrl === decoded
+        );
+      }
+
+      const rawUrl = p?.url || "";
+      const currentPublicId = p?.publicId || "";
+      const publicUrl = toPublicUrl(req, rawUrl);
+      const normalizedUrl = normalizeImageOut(req, p, profile.updatedAt).url;
+
+      return !(
+        currentPublicId === decoded ||
+        rawUrl === decoded ||
+        rawUrl === decodedWithoutQuery ||
+        publicUrl === decoded ||
+        publicUrl === decodedWithoutQuery ||
+        normalizedUrl === decoded
+      );
     });
 
     await profile.save();
@@ -844,7 +967,7 @@ router.post(
   "/:uid/services/:serviceId/gallery",
   requireAuth,
   requireOwnerOrAdmin,
-  upload.array("files", 6),
+  upload.array("files", 10),
   async (req, res) => {
     try {
       const { uid, serviceId } = req.params;
@@ -864,14 +987,42 @@ router.post(
         return res.status(404).json({ message: "Nie znaleziono usługi." });
       }
 
-      const MAX = 6;
-      const currentCount = Array.isArray(service.gallery) ? service.gallery.length : 0;
-      if (currentCount + files.length > MAX) {
-        return res.status(400).json({ message: `Maksymalnie ${MAX} zdjęć w galerii usługi.` });
+      const maxServiceGallery = getLimit(profile, "serviceGallery", {
+        allowPastDue: true,
+      });
+
+      const currentCount = Array.isArray(service.gallery)
+        ? service.gallery.length
+        : 0;
+
+      if (currentCount + files.length > maxServiceGallery) {
+        return res.status(400).json({
+          message: `Maksymalnie ${maxServiceGallery} zdjęć w galerii usługi dla Twojego planu.`,
+        });
       }
 
+      service.gallery = Array.isArray(service.gallery) ? service.gallery : [];
+
+      const existingGalleryHashes = new Set(
+        service.gallery
+          .map((p) => p?.hash)
+          .filter(Boolean)
+      );
+
       const uploaded = [];
+      let skippedDuplicates = 0;
+
       for (const f of files) {
+        const fileHash = crypto
+          .createHash("sha256")
+          .update(f.buffer)
+          .digest("hex");
+
+        if (existingGalleryHashes.has(fileHash)) {
+          skippedDuplicates++;
+          continue;
+        }
+
         const r = await uploadBuffer(f.buffer, {
           folder: `showly/profiles/${uid}/services/${serviceId}/gallery`,
           resource_type: "image",
@@ -884,10 +1035,18 @@ router.post(
         uploaded.push({
           url: r.secure_url,
           publicId: r.public_id,
+          hash: fileHash,
+        });
+
+        existingGalleryHashes.add(fileHash);
+      }
+
+      if (!uploaded.length) {
+        return res.status(400).json({
+          message: "Te zdjęcia są już dodane w galerii usługi.",
         });
       }
 
-      service.gallery = Array.isArray(service.gallery) ? service.gallery : [];
       service.gallery = [...service.gallery, ...uploaded];
 
       await profile.save();
