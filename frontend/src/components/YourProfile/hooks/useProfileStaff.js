@@ -1,0 +1,164 @@
+import { useCallback, useState } from "react";
+import axios from "axios";
+
+const useProfileStaff = ({
+  profile,
+  authHeaders,
+  canUseTeam,
+  showAlert,
+}) => {
+  const [staff, setStaff] = useState([]);
+  const [staffLoading, setStaffLoading] = useState(false);
+
+  const [newStaff, setNewStaff] = useState({
+    name: "",
+    capacity: 1,
+    active: true,
+    serviceIds: [],
+  });
+
+  const [staffEdits, setStaffEdits] = useState({});
+  const [isCreatingStaff, setIsCreatingStaff] = useState(false);
+  const [deletingStaffIds, setDeletingStaffIds] = useState([]);
+
+  const fetchStaff = useCallback(
+    async (profileId) => {
+      if (!profileId) return;
+
+      try {
+        setStaffLoading(true);
+
+        const { data } = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/staff`,
+          {
+            params: { profileId },
+            headers: await authHeaders(),
+          }
+        );
+
+        setStaff(data || []);
+      } catch (e) {
+        console.error("Nie udało się pobrać pracowników", e);
+        showAlert("Nie udało się pobrać pracowników.", "error");
+      } finally {
+        setStaffLoading(false);
+      }
+    },
+    [authHeaders, showAlert]
+  );
+
+  const createStaff = useCallback(async () => {
+    if (isCreatingStaff) return;
+    if (!profile?._id) return;
+
+    if (!canUseTeam) {
+      showAlert("Zespół i pracownicy są dostępni tylko w planie Premium.", "warning");
+      return;
+    }
+
+    if (!newStaff.name.trim()) {
+      showAlert("Podaj imię pracownika.", "warning");
+      return;
+    }
+
+    setIsCreatingStaff(true);
+
+    try {
+      const payload = {
+        profileId: profile._id,
+        name: newStaff.name.trim(),
+        capacity: Number(newStaff.capacity) || 1,
+        active: !!newStaff.active,
+        serviceIds: newStaff.serviceIds || [],
+      };
+
+      await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/staff`,
+        payload,
+        {
+          headers: await authHeaders({
+            "Content-Type": "application/json",
+          }),
+        }
+      );
+
+      setNewStaff({
+        name: "",
+        capacity: 1,
+        active: true,
+        serviceIds: [],
+      });
+
+      await fetchStaff(profile._id);
+
+      showAlert("Dodano pracownika.", "success");
+    } catch (e) {
+      console.error("Błąd dodawania pracownika", e);
+      showAlert("Błąd dodawania pracownika.", "error");
+    } finally {
+      setIsCreatingStaff(false);
+    }
+  }, [
+    isCreatingStaff,
+    profile,
+    canUseTeam,
+    newStaff,
+    authHeaders,
+    fetchStaff,
+    showAlert,
+  ]);
+
+  const deleteStaff = useCallback(
+    async (id) => {
+      if (!id) return;
+      if (deletingStaffIds.includes(id)) return;
+
+      setDeletingStaffIds((prev) => [...prev, id]);
+      setStaff((prev) => prev.filter((s) => s._id !== id));
+
+      try {
+        await axios.delete(
+          `${process.env.REACT_APP_API_URL}/api/staff/${id}`,
+          {
+            headers: await authHeaders(),
+          }
+        );
+
+        showAlert("Usunięto pracownika.", "success");
+      } catch (e) {
+        console.error("Błąd usuwania pracownika", e);
+
+        if (profile?._id) {
+          await fetchStaff(profile._id);
+        }
+
+        showAlert("Błąd usuwania pracownika.", "error");
+      } finally {
+        setDeletingStaffIds((prev) => prev.filter((x) => x !== id));
+      }
+    },
+    [
+      deletingStaffIds,
+      profile,
+      authHeaders,
+      fetchStaff,
+      showAlert,
+    ]
+  );
+
+  return {
+    staff,
+    staffLoading,
+    newStaff,
+    setNewStaff,
+    staffEdits,
+    setStaffEdits,
+    isCreatingStaff,
+    deletingStaffIds,
+    fetchStaff,
+    createStaff,
+    deleteStaff,
+  };
+};
+
+export default useProfileStaff;
