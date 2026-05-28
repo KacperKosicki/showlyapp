@@ -255,12 +255,12 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   if (!user) return <Navigate to="/login" replace />;
   if (loading) return <div className={styles.wrapper}>⏳ Ładowanie profilu…</div>;
-  if (notFound) return <EmptyProfileState />;
+  if (notFound || !profile) return <EmptyProfileState />;
 
   const hasAvatarNow =
     Object.prototype.hasOwnProperty.call(editData, 'avatar')
       ? Boolean(editData.avatar)
-      : Boolean(profile.avatar);
+      : Boolean(profile?.avatar);
 
   const hasImageNow = (value) => {
     if (!value) return false;
@@ -271,7 +271,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const hasBannerNow =
     Object.prototype.hasOwnProperty.call(editData, 'banner')
       ? hasImageNow(editData.banner)
-      : hasImageNow(profile.banner);
+      : hasImageNow(profile?.banner);
 
   // =========================
   // Render
@@ -286,7 +286,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         />
       )}
 
-      <div className={styles.inner}>
+      <div className={styles.inner} id="profileWrapper">
         <ProfileHeader
           profile={profile}
           isEditing={isEditing}

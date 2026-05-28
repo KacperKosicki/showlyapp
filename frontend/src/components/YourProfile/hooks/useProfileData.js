@@ -116,6 +116,15 @@ const useProfileData = ({ user, authHeaders, fetchBillingStatus }) => {
       );
 
       const loadedProfile = res.data;
+
+      if (!loadedProfile || typeof loadedProfile !== "object") {
+        setProfile(null);
+        setEditData({});
+        setInitialEditData(null);
+        setNotFound(true);
+        return null;
+      }
+
       const now = new Date();
       const until = new Date(loadedProfile.visibleUntil);
 
@@ -135,6 +144,9 @@ const useProfileData = ({ user, authHeaders, fetchBillingStatus }) => {
       return loadedProfile;
     } catch (err) {
       if (err.response?.status === 404) {
+        setProfile(null);
+        setEditData({});
+        setInitialEditData(null);
         setNotFound(true);
       } else {
         console.error("Błąd podczas pobierania profilu:", err);

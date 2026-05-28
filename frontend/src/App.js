@@ -321,6 +321,12 @@ function App() {
     loadingProfileStatus,
   };
 
+  const footerProps = {
+    user: safeUser,
+    hasProfile,
+    loadingProfileStatus,
+  };
+
   return (
     <Router>
       <ScrollToTop />
@@ -363,7 +369,7 @@ function App() {
               <UserCardList currentUser={safeUser} setAlert={setAlert} />
               <WhyUs />
               <AllUsersList currentUser={safeUser} setAlert={setAlert} />
-              <Footer />
+              <Footer {...footerProps} />
             </>
           }
         />
@@ -402,7 +408,7 @@ function App() {
             <>
               <Hero {...heroProps} />
               <SearchResults currentUser={safeUser} />
-              <Footer />
+              <Footer {...footerProps} />
             </>
           }
         />
@@ -413,7 +419,7 @@ function App() {
             <>
               <Hero {...heroProps} />
               <BillingSuccess triggerRefresh={triggerRefresh} />
-              <Footer />
+              <Footer {...footerProps} />
             </>
           }
         />
@@ -424,7 +430,7 @@ function App() {
             <>
               <Hero {...heroProps} />
               <BillingCancel triggerRefresh={triggerRefresh} />
-              <Footer />
+              <Footer {...footerProps} />
             </>
           }
         />
@@ -436,7 +442,7 @@ function App() {
               <>
                 <Hero {...heroProps} />
                 <AdminPanel />
-                <Footer />
+                <Footer {...footerProps} />
               </>
             </AdminRoute>
           }
@@ -447,8 +453,20 @@ function App() {
           element={
             <>
               <Hero {...heroProps} />
-              <CreateProfile user={safeUser} setRefreshTrigger={setRefreshTrigger} />
-              <Footer />
+              {safeUser && loadingProfileStatus ? (
+                <p style={{ padding: "2rem", textAlign: "center" }}>
+                  Sprawdzanie profilu...
+                </p>
+              ) : safeUser && hasProfile ? (
+                <Navigate
+                  to="/profil"
+                  replace
+                  state={{ scrollToId: "profileWrapper" }}
+                />
+              ) : (
+                <CreateProfile user={safeUser} setRefreshTrigger={setRefreshTrigger} />
+              )}
+              <Footer {...footerProps} />
             </>
           }
         />
@@ -459,7 +477,7 @@ function App() {
             <>
               <Hero {...heroProps} />
               <YourProfile user={safeUser} setRefreshTrigger={setRefreshTrigger} />
-              <Footer />
+              <Footer {...footerProps} />
             </>
           }
         />
@@ -470,7 +488,7 @@ function App() {
             <>
               <Hero {...heroProps} />
               <PublicProfile />
-              <Footer />
+              <Footer {...footerProps} />
             </>
           }
         />
@@ -482,7 +500,7 @@ function App() {
               <>
                 <Hero {...heroProps} />
                 <MessageForm user={safeUser} />
-                <Footer />
+                <Footer {...footerProps} />
               </>
             ) : (
               <Navigate to="/login" replace />
@@ -497,7 +515,7 @@ function App() {
               <>
                 <Hero {...heroProps} />
                 <Notifications user={safeUser} setUnreadCount={setUnreadCount} />
-                <Footer />
+                <Footer {...footerProps} />
               </>
             ) : (
               <Navigate to="/login" replace />
@@ -512,7 +530,7 @@ function App() {
               <>
                 <Hero {...heroProps} />
                 <Favorites currentUser={safeUser} />
-                <Footer />
+                <Footer {...footerProps} />
               </>
             ) : (
               <Navigate to="/login" replace />
@@ -531,7 +549,7 @@ function App() {
                   setUnreadCount={setUnreadCount}
                   triggerRefresh={triggerRefresh}
                 />
-                <Footer />
+                <Footer {...footerProps} />
               </>
             ) : (
               <Navigate to="/login" replace />
@@ -546,7 +564,7 @@ function App() {
               <>
                 <Hero {...heroProps} />
                 <BookingForm user={safeUser} />
-                <Footer />
+                <Footer {...footerProps} />
               </>
             ) : (
               <Navigate to="/login" replace />
@@ -561,7 +579,7 @@ function App() {
               <>
                 <Hero {...heroProps} />
                 <AccountSettings />
-                <Footer />
+                <Footer {...footerProps} />
               </>
             ) : (
               <Navigate to="/login" replace />
@@ -579,7 +597,7 @@ function App() {
                   user={safeUser}
                   resetPendingReservationsCount={resetPendingReservationsCount}
                 />
-                <Footer />
+                <Footer {...footerProps} />
               </>
             ) : (
               <Navigate to="/login" replace />
@@ -593,7 +611,7 @@ function App() {
             <>
               <Hero {...heroProps} />
               <Contact />
-              <Footer />
+              <Footer {...footerProps} />
             </>
           }
         />
@@ -604,7 +622,7 @@ function App() {
             <>
               <Hero {...heroProps} />
               <ProfilesHub currentUser={safeUser} setAlert={setAlert} />
-              <Footer />
+              <Footer {...footerProps} />
             </>
           }
         />
@@ -615,7 +633,7 @@ function App() {
             <>
               <Hero {...heroProps} />
               <ShowlyJourney />
-              <Footer />
+              <Footer {...footerProps} />
             </>
           }
         />
@@ -626,7 +644,7 @@ function App() {
             <>
               <Hero {...heroProps} />
               <Regulations />
-              <Footer />
+              <Footer {...footerProps} />
             </>
           }
         />
@@ -637,7 +655,7 @@ function App() {
             <>
               <Hero {...heroProps} />
               <CookiesPolicy />
-              <Footer />
+              <Footer {...footerProps} />
             </>
           }
         />

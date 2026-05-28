@@ -3,8 +3,13 @@ import styles from '../YourProfile.module.scss';
 
 const EmptyProfileState = () => {
   return (
-    <div className={`${styles.wrapper} ${styles.emptyWrap}`}>
-      <div className={styles.emptyCard} role="status" aria-live="polite">
+    <div className={`${styles.wrapper} ${styles.emptyWrap}`} id="scrollToId">
+      <div
+        className={styles.emptyCard}
+        id="profileWrapper"
+        role="status"
+        aria-live="polite"
+      >
         <div className={styles.emptyBadge}>Brak profilu</div>
 
         <h2 className={styles.emptyTitle}>Nie masz jeszcze wizytówki</h2>
@@ -32,11 +37,15 @@ const EmptyProfileState = () => {
         </ul>
 
         <div className={styles.emptyCtas}>
-          <Link to="/stworz-profil" className={`${styles.primary} ${styles.ctaPrimary}`}>
+          <Link
+            to="/stworz-profil"
+            state={{ scrollToId: 'scrollToId' }}
+            className={`${styles.primary} ${styles.ctaPrimary}`}
+          >
             Stwórz swój profil
           </Link>
 
-          <Link to="/" className={styles.ghostLight}>
+          <Link to="/" state={{ scrollToId: 'hero' }} className={styles.ghostLight}>
             Wróć na stronę główną
           </Link>
         </div>

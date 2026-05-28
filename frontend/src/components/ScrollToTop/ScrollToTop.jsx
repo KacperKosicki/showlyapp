@@ -7,7 +7,43 @@ const ScrollToTop = () => {
   const scrollToId = location.state?.scrollToId;
 
   useLayoutEffect(() => {
-    if (scrollToId) return;
+    if (scrollToId) {
+      const targetIds = [
+        scrollToId,
+        scrollToId !== "scrollToId" ? "scrollToId" : null,
+      ].filter(Boolean);
+
+      let frame = null;
+      let attempts = 0;
+
+      const tryScroll = () => {
+        const el = targetIds
+          .map((targetId) => document.getElementById(targetId))
+          .find(Boolean);
+
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          window.history.replaceState(
+            {},
+            document.title,
+            `${location.pathname}${location.search}`
+          );
+          return;
+        }
+
+        attempts += 1;
+
+        if (attempts < 40) {
+          frame = requestAnimationFrame(tryScroll);
+        }
+      };
+
+      frame = requestAnimationFrame(tryScroll);
+
+      return () => {
+        if (frame) cancelAnimationFrame(frame);
+      };
+    }
 
     const html = document.documentElement;
     const body = document.body;

@@ -12,7 +12,7 @@ const BillingSection = ({
   onOpenBillingPortal,
 }) => {
   return (
-<section className={styles.billingPanel}>
+<section className={styles.billingPanel} id="billingSection">
   <div className={styles.billingGlowOne} aria-hidden="true" />
   <div className={styles.billingGlowTwo} aria-hidden="true" />
   <div className={styles.billingNoise} aria-hidden="true" />
