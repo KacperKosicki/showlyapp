@@ -174,10 +174,6 @@ const getDayOverride = (meta, dateStr) => {
   );
 };
 
-const isDayBlockedByOverride = (meta, dateStr) => {
-  return !!getDayOverride(meta, dateStr);
-};
-
 const getSlotOverride = (meta, dateStr, fromTime, toTime) => {
   const reqStart = timeToMin(fromTime);
   const reqEnd = timeToMin(toTime);
@@ -1829,10 +1825,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   }, [clientReservations, serviceReservations, hasProviderProfile, providerMeta]);
 
   const selectedIso = useMemo(() => toISODate(selectedDay), [selectedDay]);
-
-  const selectedDayOverride = useMemo(() => {
-    return getDayOverride(providerMeta, selectedIso);
-  }, [providerMeta, selectedIso]);
 
   const selectedDayAvailabilityInfo = useMemo(() => {
     return getDayAvailabilityInfo(providerMeta, selectedIso);
