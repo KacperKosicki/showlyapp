@@ -12,6 +12,7 @@ $page-max: 1240px;
 
   --pp-primary: #6f4ef2;
   --pp-secondary: #ff4081;
+  --pp-banner-image: none;
 
   background:
     linear-gradient(180deg,
@@ -343,6 +344,26 @@ $page-max: 1240px;
     0 16px 36px rgba(15, 23, 42, 0.16);
 }
 
+.heroWithBanner {
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.12), rgba(15, 23, 42, 0.72)),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.16), rgba(15, 23, 42, 0.5)),
+    var(--pp-banner-image) center / cover no-repeat,
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--pp-primary) 82%, #0f172a 18%),
+      color-mix(in srgb, var(--pp-secondary) 78%, #0f172a 22%));
+}
+
+.heroWithBanner .heroGrid {
+  opacity: 0.06;
+}
+
+.heroWithBanner .heroFade {
+  background:
+    radial-gradient(760px 260px at 18% 0%, rgba(255, 255, 255, 0.22), transparent 60%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.02), rgba(15, 23, 42, 0.5));
+}
+
 .heroPartner {
   &::after {
     content: "";
@@ -356,7 +377,7 @@ $page-max: 1240px;
   }
 }
 
-.heroOwner {
+.heroOwner:not(.heroWithBanner) {
   background:
     linear-gradient(135deg,
       color-mix(in srgb, var(--pp-primary) 74%, #111827 26%),

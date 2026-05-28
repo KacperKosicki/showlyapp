@@ -15,7 +15,12 @@ const { uploadBuffer } = require("../utils/cloudinaryUpload");
 const requireAuth = require("../middleware/requireAuth");
 const requireOwnerOrAdmin = require("../middleware/requireOwnerOrAdmin");
 
-const { getLimit, hasFeature } = require("../config/plans");
+const {
+  getLimit,
+  hasFeature,
+  getEffectivePlanKey,
+  getPublicBilling,
+} = require("../config/plans");
 
 // -----------------------------
 // Helpers: slug + public URLs
@@ -100,6 +105,12 @@ function getProfilePlan(profile = {}) {
 
 function canUsePrettyProfileSlug(profile = {}) {
   const plan = getProfilePlan(profile);
+
+  return plan === "standard" || plan === "premium";
+}
+
+function canUseProfileBanner(profile = {}) {
+  const plan = getEffectivePlanKey(profile, { allowPastDue: true });
 
   return plan === "standard" || plan === "premium";
 }
@@ -190,6 +201,10 @@ function normalizeImageOut(req, img, updatedAt) {
 
 function normalizeAvatarOut(req, avatar, updatedAt) {
   return normalizeImageOut(req, avatar, updatedAt);
+}
+
+function normalizeBannerOut(req, banner, updatedAt) {
+  return normalizeImageOut(req, banner, updatedAt);
 }
 
 function normalizePhotosOut(req, photos = [], updatedAt) {
@@ -543,6 +558,7 @@ router.get("/search", async (req, res) => {
       priceFrom: 1,
       priceTo: 1,
       avatar: 1,
+      banner: 1,
       photos: 1,
       profileType: 1,
       description: 1,
@@ -550,6 +566,7 @@ router.get("/search", async (req, res) => {
       services: 1,
       favoritesCount: 1,
       theme: 1,
+      billing: 1,
       updatedAt: 1,
       createdAt: 1,
     };
@@ -643,8 +660,10 @@ router.get("/search", async (req, res) => {
         return {
           ...profile,
           avatar: normalizeAvatarOut(req, profile.avatar, profile.updatedAt),
+          banner: normalizeBannerOut(req, profile.banner, profile.updatedAt),
           photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
           services: normalizeServicesOut(req, profile.services, profile.updatedAt),
+          billingPublic: getPublicBilling(profile),
           matchedServices,
         };
       })
@@ -720,6 +739,73 @@ router.delete("/:uid/avatar", requireAuth, requireOwnerOrAdmin, async (req, res)
   } catch (e) {
     console.error("❌ delete avatar:", e);
     return res.status(500).json({ message: "Błąd usuwania avatara." });
+  }
+});
+
+// POST /api/profiles/:uid/banner
+router.post("/:uid/banner", requireAuth, requireOwnerOrAdmin, upload.single("file"), async (req, res) => {
+  try {
+    const uid = req.params.uid;
+    if (!req.file) return res.status(400).json({ message: "Brak pliku." });
+
+    const profile = await Profile.findOne({ userId: uid });
+    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
+
+    if (!canUseProfileBanner(profile)) {
+      return res.status(403).json({
+        message: "Banner profilu jest dostępny tylko w planie Standard lub Premium.",
+      });
+    }
+
+    const oldPublicId = pickPublicIdField(profile.banner);
+    if (oldPublicId) {
+      await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => { });
+    }
+
+    const result = await uploadBuffer(req.file.buffer, {
+      folder: `showly/profiles/${uid}/banner`,
+      resource_type: "image",
+      transformation: [
+        { width: 1800, height: 720, crop: "fill", gravity: "auto" },
+        { quality: "auto", fetch_format: "auto" },
+      ],
+    });
+
+    profile.banner = { url: result.secure_url, publicId: result.public_id };
+    await profile.save();
+
+    return res.json({
+      message: "Banner zapisany.",
+      banner: normalizeBannerOut(req, profile.banner, profile.updatedAt),
+    });
+  } catch (e) {
+    console.error("❌ upload banner:", e);
+    return res.status(500).json({ message: "Błąd uploadu banneru." });
+  }
+});
+
+// DELETE /api/profiles/:uid/banner
+router.delete("/:uid/banner", requireAuth, requireOwnerOrAdmin, async (req, res) => {
+  try {
+    const uid = req.params.uid;
+    const profile = await Profile.findOne({ userId: uid });
+    if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
+
+    const oldPublicId = pickPublicIdField(profile.banner);
+    if (oldPublicId) {
+      await cloudinary.uploader.destroy(oldPublicId, { resource_type: "image" }).catch(() => { });
+    }
+
+    profile.banner = { url: "", publicId: "" };
+    await profile.save();
+
+    return res.json({
+      message: "Banner usunięty.",
+      banner: normalizeBannerOut(req, profile.banner, profile.updatedAt),
+    });
+  } catch (e) {
+    console.error("❌ delete banner:", e);
+    return res.status(500).json({ message: "Błąd usuwania banneru." });
   }
 });
 
@@ -1179,8 +1265,10 @@ router.get("/", async (req, res) => {
     const normalized = visible.map((profile) => ({
       ...profile,
       avatar: normalizeAvatarOut(req, profile.avatar, profile.updatedAt),
+      banner: normalizeBannerOut(req, profile.banner, profile.updatedAt),
       photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
       services: normalizeServicesOut(req, profile.services, profile.updatedAt),
+      billingPublic: getPublicBilling(profile),
     }));
 
     res.json(normalized);
@@ -1202,10 +1290,18 @@ router.get("/by-user/:uid", async (req, res) => {
     }
 
     const avatar = normalizeAvatarOut(req, profile.avatar, profile.updatedAt);
+    const banner = normalizeBannerOut(req, profile.banner, profile.updatedAt);
     const photos = normalizePhotosOut(req, profile.photos, profile.updatedAt);
     const services = normalizeServicesOut(req, profile.services, profile.updatedAt);
 
-    return res.json({ ...profile, avatar, photos, services });
+    return res.json({
+      ...profile,
+      avatar,
+      banner,
+      photos,
+      services,
+      billingPublic: getPublicBilling(profile),
+    });
   } catch (err) {
     console.error("❌ Błąd w GET /by-user/:uid:", err);
     res.status(500).json({ message: "Błąd serwera." });
@@ -1252,6 +1348,7 @@ router.get("/slug/:slug", async (req, res) => {
     });
 
     const avatar = normalizeAvatarOut(req, profile.avatar, profile.updatedAt);
+    const banner = normalizeBannerOut(req, profile.banner, profile.updatedAt);
     const photos = normalizePhotosOut(req, profile.photos, profile.updatedAt);
     const services = normalizeServicesOut(req, profile.services, profile.updatedAt);
 
@@ -1270,10 +1367,12 @@ router.get("/slug/:slug", async (req, res) => {
       ...profile,
       ratedBy,
       avatar,
+      banner,
       photos,
       services,
       isFavorite,
       favoritesCount,
+      billingPublic: getPublicBilling(profile),
     });
   } catch (err) {
     console.error("❌ Błąd w GET /slug/:slug:", err);
@@ -1426,6 +1525,7 @@ router.post("/", requireAuth, async (req, res) => {
       profile: {
         ...newProfile.toObject(),
         avatar: normalizeAvatarOut(req, newProfile.avatar, newProfile.updatedAt),
+        banner: normalizeBannerOut(req, newProfile.banner, newProfile.updatedAt),
         photos: normalizePhotosOut(req, newProfile.photos, newProfile.updatedAt),
         services: normalizeServicesOut(req, newProfile.services, newProfile.updatedAt),
       },
@@ -1528,6 +1628,7 @@ router.patch("/extend/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
       profile: {
         ...profile.toObject(),
         avatar: normalizeAvatarOut(req, profile.avatar, profile.updatedAt),
+        banner: normalizeBannerOut(req, profile.banner, profile.updatedAt),
         photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
         services: normalizeServicesOut(req, profile.services, profile.updatedAt),
       },
@@ -1821,6 +1922,7 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
       profile: {
         ...profile.toObject(),
         avatar: normalizeAvatarOut(req, profile.avatar, profile.updatedAt),
+        banner: normalizeBannerOut(req, profile.banner, profile.updatedAt),
         photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
         services: normalizeServicesOut(req, profile.services, profile.updatedAt),
       },

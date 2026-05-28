@@ -58,6 +58,11 @@ const BillingSection = ({
       <span>Usługi</span>
       <strong>{billingLimits.services || 3}</strong>
     </div>
+
+    <div>
+      <span>Pracownicy</span>
+      <strong>{billingLimits.staff || 0}</strong>
+    </div>
   </div>
 
   <div className={styles.planCards}>
@@ -120,7 +125,8 @@ const BillingSection = ({
 
       <ul>
         <li>Widoczność profilu w cenie subskrypcji</li>
-        <li>Ładny link po nazwie i roli</li>
+        <li>Własny link po nazwie i roli</li>
+        <li>Własny banner w tle profilu</li>
         <li>Do 6 zdjęć profilu</li>
         <li>Do 10 usług</li>
         <li>2 linki</li>
@@ -169,12 +175,15 @@ const BillingSection = ({
       </p>
 
       <ul>
-        <li>Wszystko ze Standard</li>
         <li>Widoczność profilu w cenie subskrypcji</li>
-        <li>Ładny link po nazwie i roli</li>
+        <li>Własny link po nazwie i roli</li>
+        <li>Własny banner w tle profilu</li>
         <li>Do 15 zdjęć profilu</li>
         <li>Do 20 usług</li>
         <li>3 linki</li>
+        <li>Wiadomości od klientów</li>
+        <li>Rozszerzone motywy profilu</li>
+        <li>Social media profilu</li>
         <li>5 szybkich odpowiedzi profilu</li>
         <li>Opis profilu do 1000 znaków</li>
         <li>Promowanie i lepsza widoczność w Showly</li>
@@ -182,7 +191,7 @@ const BillingSection = ({
         <li>Tryby rezerwacji: kalendarz, zapytania i blokowanie dni</li>
         <li>Automatyczna akceptacja rezerwacji</li>
         <li>Bufor (przerwa) między rezerwacjami</li>
-        <li>Zespół i pracownicy</li>
+        <li>Zespół i do 3 pracowników</li>
         <li>Wyjątki dostępności</li>
       </ul>
 

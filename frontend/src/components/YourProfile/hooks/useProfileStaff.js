@@ -33,6 +33,7 @@ const useProfileStaff = ({
     profile,
     authHeaders,
     canUseTeam,
+    maxStaff = 0,
     showAlert,
 }) => {
     const [staff, setStaff] = useState([]);
@@ -84,6 +85,11 @@ const useProfileStaff = ({
             return;
         }
 
+        if (staff.length >= maxStaff) {
+            showAlert(`Plan Premium pozwala dodać maksymalnie ${maxStaff} pracowników.`, "warning");
+            return;
+        }
+
         const staffNameError = validateStaffName(newStaff.name);
 
         if (staffNameError) {
@@ -124,7 +130,12 @@ const useProfileStaff = ({
             showAlert("Dodano pracownika.", "success");
         } catch (e) {
             console.error("Błąd dodawania pracownika", e);
-            showAlert("Błąd dodawania pracownika.", "error");
+            const apiMessage =
+                e?.response?.data?.errors?.[0]?.message ||
+                e?.response?.data?.message ||
+                "Błąd dodawania pracownika.";
+
+            showAlert(apiMessage, "error");
         } finally {
             setIsCreatingStaff(false);
         }
@@ -132,6 +143,8 @@ const useProfileStaff = ({
         isCreatingStaff,
         profile,
         canUseTeam,
+        maxStaff,
+        staff.length,
         newStaff,
         authHeaders,
         fetchStaff,

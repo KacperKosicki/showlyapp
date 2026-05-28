@@ -9,6 +9,7 @@ import {
 const DEFAULT_LIMITS = {
   photos: 3,
   services: 3,
+  staff: 0,
   serviceGallery: 2,
   links: 1,
   quickAnswers: 1,
@@ -151,6 +152,7 @@ const useProfileBilling = ({ showAlert }) => {
 
     const maxPhotos = Number(billingLimits.photos || DEFAULT_LIMITS.photos);
     const maxServices = Number(billingLimits.services || DEFAULT_LIMITS.services);
+    const maxStaff = Number(billingLimits.staff || DEFAULT_LIMITS.staff);
     const maxDescription = Number(
       billingLimits.descriptionLength || DEFAULT_LIMITS.descriptionLength
     );
@@ -174,6 +176,7 @@ const useProfileBilling = ({ showAlert }) => {
       isPaidActive,
       maxPhotos,
       maxServices,
+      maxStaff,
       maxDescription,
       maxLinks,
       maxQuickAnswers,

@@ -19,6 +19,10 @@ const useProfilePhotos = ({
   const [avatarPreview, setAvatarPreview] = useState("");
   const [avatarUploading, setAvatarUploading] = useState(false);
 
+  const [bannerFile, setBannerFile] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState("");
+  const [bannerUploading, setBannerUploading] = useState(false);
+
   const [newPhotoFiles, setNewPhotoFiles] = useState([]);
   const [newPhotoPreviews, setNewPhotoPreviews] = useState([]);
   const [newPhotoHashes, setNewPhotoHashes] = useState([]);
@@ -55,6 +59,18 @@ const useProfilePhotos = ({
     return "";
   }, []);
 
+  const getBannerUrl = useCallback(
+    (profile) => {
+      if (!profile) return "";
+      if (isEditing && bannerPreview) return bannerPreview;
+      if (profile.banner?.url) return profile.banner.url;
+      if (typeof profile.banner === "string" && profile.banner) return profile.banner;
+
+      return "";
+    },
+    [bannerPreview, isEditing]
+  );
+
   const getServiceImageUrl = useCallback((service) => {
     if (!service) return "";
     if (typeof service.image === "string") return service.image;
@@ -89,6 +105,16 @@ const useProfilePhotos = ({
     });
   };
 
+  const cleanupBannerPreview = () => {
+    if (!bannerPreview) return;
+
+    try {
+      URL.revokeObjectURL(bannerPreview);
+    } catch {
+      // ignore revoke errors
+    }
+  };
+
   const resetAvatarDraft = () => {
     cleanupAvatarPreview();
     setAvatarPreview("");
@@ -100,6 +126,12 @@ const useProfilePhotos = ({
     setNewPhotoFiles([]);
     setNewPhotoPreviews([]);
     setNewPhotoHashes([]);
+  };
+
+  const resetBannerDraft = () => {
+    cleanupBannerPreview();
+    setBannerPreview("");
+    setBannerFile(null);
   };
 
   const uploadServiceImage = async (serviceId, file) => {
@@ -167,6 +199,52 @@ const useProfilePhotos = ({
       showAlert("Nie udało się usunąć avatara.", "error");
     } finally {
       setAvatarUploading(false);
+    }
+  };
+
+  const handleBannerChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showAlert("Nieprawidłowy format. Wybierz obraz.", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      showAlert("Banner jest za duży (maks. 3MB).", "warning");
+      e.target.value = "";
+      return;
+    }
+
+    cleanupBannerPreview();
+
+    const blobUrl = URL.createObjectURL(file);
+    setBannerFile(file);
+    setBannerPreview(blobUrl);
+
+    e.target.value = "";
+  };
+
+  const handleRemoveBanner = async () => {
+    try {
+      setBannerUploading(true);
+      resetBannerDraft();
+
+      await axios.delete(
+        `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/banner`,
+        { headers: await authHeaders() }
+      );
+
+      await fetchProfile();
+      setRefreshTrigger(Date.now());
+      showAlert("Usunięto banner.", "success");
+    } catch (e) {
+      console.error(e);
+      showAlert("Nie udało się usunąć banneru.", "error");
+    } finally {
+      setBannerUploading(false);
     }
   };
 
@@ -420,6 +498,25 @@ const useProfilePhotos = ({
       resetAvatarDraft();
     }
 
+    if (bannerFile) {
+      setBannerUploading(true);
+
+      try {
+        const fd = new FormData();
+        fd.append("file", bannerFile);
+
+        await axios.post(
+          `${process.env.REACT_APP_API_URL}/api/profiles/${user.uid}/banner`,
+          fd,
+          { headers: await authHeaders({ "Content-Type": "multipart/form-data" }) }
+        );
+
+        resetBannerDraft();
+      } finally {
+        setBannerUploading(false);
+      }
+    }
+
     if (newPhotoFiles.length) {
       setPhotosUploading(true);
 
@@ -439,15 +536,19 @@ const useProfilePhotos = ({
 
   return {
     avatarUploading,
+    bannerUploading,
     photosUploading,
     serviceImageUploadingIds,
     newPhotoFiles,
     newPhotoPreviews,
     getAvatarUrl,
+    getBannerUrl,
     getPhotoUrl,
     getServiceImageUrl,
     handleImageChange,
+    handleBannerChange,
     handleRemoveAvatar,
+    handleRemoveBanner,
     openAddPhotoPicker,
     handleAddPhotosSelect,
     removePendingPhoto,

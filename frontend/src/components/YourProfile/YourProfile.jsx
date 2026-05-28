@@ -49,6 +49,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   const [formErrors, setFormErrors] = useState({});
 
   const fileInputRef = useRef(null);
+  const bannerInputRef = useRef(null);
   const location = useLocation();
   const addPhotoInputRef = useRef(null);
 
@@ -72,6 +73,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     isPaidActive,
     maxPhotos: MAX_PHOTOS,
     maxServices: MAX_SERVICES,
+    maxStaff: MAX_STAFF,
     maxDescription: MAX_DESCRIPTION,
     maxLinks: MAX_LINKS,
     maxQuickAnswers: MAX_QUICK_ANSWERS,
@@ -122,6 +124,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     profile,
     authHeaders,
     canUseTeam,
+    maxStaff: MAX_STAFF,
     showAlert,
   });
 
@@ -129,15 +132,19 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const {
     avatarUploading,
+    bannerUploading,
     photosUploading,
     serviceImageUploadingIds,
     newPhotoFiles,
     newPhotoPreviews,
     getAvatarUrl,
+    getBannerUrl,
     getPhotoUrl,
     getServiceImageUrl,
     handleImageChange,
+    handleBannerChange,
     handleRemoveAvatar,
+    handleRemoveBanner,
     openAddPhotoPicker,
     handleAddPhotosSelect,
     removePendingPhoto,
@@ -255,6 +262,17 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       ? Boolean(editData.avatar)
       : Boolean(profile.avatar);
 
+  const hasImageNow = (value) => {
+    if (!value) return false;
+    if (typeof value === 'string') return !!value.trim();
+    return !!String(value?.url || '').trim();
+  };
+
+  const hasBannerNow =
+    Object.prototype.hasOwnProperty.call(editData, 'banner')
+      ? hasImageNow(editData.banner)
+      : hasImageNow(profile.banner);
+
   // =========================
   // Render
   // =========================
@@ -305,11 +323,20 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           isEditing={isEditing}
           formErrors={formErrors}
           hasAvatarNow={hasAvatarNow}
+          hasBannerNow={hasBannerNow}
           fileInputRef={fileInputRef}
+          bannerInputRef={bannerInputRef}
           getAvatarUrl={getAvatarUrl}
+          getBannerUrl={getBannerUrl}
           onEditDataChange={setEditData}
           onImageChange={handleImageChange}
+          onBannerChange={handleBannerChange}
           onRemoveAvatar={handleRemoveAvatar}
+          onRemoveBanner={handleRemoveBanner}
+          canUseBanner={isPaidActive}
+          bannerUploading={bannerUploading}
+          onStartSubscription={handleStartSubscription}
+          billingActionLoading={billingActionLoading}
         />
 
         <DescriptionSection
@@ -355,6 +382,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           serviceImageUploadingIds={serviceImageUploadingIds}
           canUseBooking={canUseBooking}
           canUseTeam={canUseTeam}
+          maxStaff={MAX_STAFF}
           canUseAutoAccept={canUseAutoAccept}
           billingActionLoading={billingActionLoading}
           handleStartSubscription={handleStartSubscription}

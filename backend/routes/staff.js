@@ -4,6 +4,7 @@ const router = express.Router();
 
 const Staff = require("../models/Staff");
 const Profile = require("../models/Profile");
+const { getEffectivePlan, getEffectivePlanKey, getLimit, hasFeature } = require("../config/plans");
 
 const requireAuth = require("../middleware/requireAuth");
 
@@ -19,10 +20,10 @@ async function assertOwnerOrAdminByProfileId(profileId, authUid) {
   const uid = String(authUid || "");
   if (!uid) return { ok: false, code: 401, message: "Brak autoryzacji" };
 
-  if (isAdminUid(uid)) return { ok: true, isAdmin: true, isOwner: false };
-
-  const profile = await Profile.findById(profileId).select("userId").lean();
+  const profile = await Profile.findById(profileId).select("userId billing").lean();
   if (!profile) return { ok: false, code: 404, message: "Profil nie istnieje" };
+
+  if (isAdminUid(uid)) return { ok: true, isAdmin: true, isOwner: false, profile };
 
   const ownerUid = String(profile.userId || "");
   if (!ownerUid) return { ok: false, code: 403, message: "Profil bez właściciela" };
@@ -30,6 +31,48 @@ async function assertOwnerOrAdminByProfileId(profileId, authUid) {
   if (ownerUid !== uid) return { ok: false, code: 403, message: "Brak uprawnień" };
 
   return { ok: true, isAdmin: false, isOwner: true, profile };
+}
+
+async function validateStaffCreateLimit(profileId, profile) {
+  const planInfo = getEffectivePlan(profile);
+  const currentPlan = getEffectivePlanKey(profile);
+
+  if (!hasFeature(profile, "team")) {
+    return {
+      ok: false,
+      code: 403,
+      message: "Zespół i pracownicy są dostępni tylko w planie Premium.",
+      errorCode: "FEATURE_TEAM_REQUIRED",
+      limit: 0,
+      current: 0,
+      currentPlan,
+      plan: planInfo,
+    };
+  }
+
+  const maxStaff = getLimit(profile, "staff");
+  const currentStaff = await Staff.countDocuments({ profileId });
+
+  if (currentStaff >= maxStaff) {
+    return {
+      ok: false,
+      code: 403,
+      message: `Plan ${planInfo.label} pozwala dodać maksymalnie ${maxStaff} pracowników.`,
+      errorCode: "PLAN_LIMIT_STAFF",
+      limit: maxStaff,
+      current: currentStaff,
+      currentPlan,
+      plan: planInfo,
+    };
+  }
+
+  return {
+    ok: true,
+    limit: maxStaff,
+    current: currentStaff,
+    currentPlan,
+    plan: planInfo,
+  };
 }
 
 /**
@@ -69,7 +112,29 @@ router.post("/", requireAuth, async (req, res) => {
       return res.status(perm.code).json({ message: perm.message });
     }
 
-    // 🔒 twardo ustawiamy profileId z body (nie zmieniamy, ale walidujemy)
+    const limit = await validateStaffCreateLimit(profileId, perm.profile);
+    if (!limit.ok) {
+      return res.status(limit.code).json({
+        message: limit.message,
+        errors: [
+          {
+            field: "staff",
+            code: limit.errorCode,
+            message: limit.message,
+            limit: limit.limit,
+            current: limit.current,
+          },
+        ],
+        plan: {
+          currentPlan: limit.currentPlan,
+          label: limit.plan.label,
+          limits: limit.plan.limits,
+          features: limit.plan.features,
+        },
+      });
+    }
+
+    // Twardo ustawiamy profileId z body po walidacji uprawnień i limitu.
     const payload = { ...req.body, profileId };
 
     const s = await Staff.create(payload);

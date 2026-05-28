@@ -1,5 +1,5 @@
 import styles from '../YourProfile.module.scss';
-import { FaIdBadge, FaMapMarkerAlt, FaUserTie } from 'react-icons/fa';
+import { FaIdBadge, FaImage, FaMapMarkerAlt, FaUserTie } from 'react-icons/fa';
 
 const BasicInfoSection = ({
   profile,
@@ -7,13 +7,23 @@ const BasicInfoSection = ({
   isEditing,
   formErrors,
   hasAvatarNow,
+  hasBannerNow,
   fileInputRef,
+  bannerInputRef,
   getAvatarUrl,
+  getBannerUrl,
   onEditDataChange,
   onImageChange,
+  onBannerChange,
   onRemoveAvatar,
+  onRemoveBanner,
+  canUseBanner,
+  bannerUploading,
+  onStartSubscription,
+  billingActionLoading,
 }) => {
   const currentData = isEditing ? editData : profile;
+  const bannerUrl = getBannerUrl(currentData);
 
   const updateEditData = (field, value) => {
     onEditDataChange((prev) => ({
@@ -33,7 +43,7 @@ const BasicInfoSection = ({
           <h3 className={styles.sectionTitle}>Dane podstawowe</h3>
 
           <p className={styles.sectionLead}>
-            To pierwsze informacje, które widzą użytkownicy po wejściu na Twoją wizytówkę.
+            {'To pierwsze informacje, kt\u00f3re widz\u0105 u\u017cytkownicy po wej\u015bciu na Twoj\u0105 wizyt\u00f3wk\u0119.'}
           </p>
         </div>
 
@@ -45,6 +55,17 @@ const BasicInfoSection = ({
 
       <div className={styles.basicInfoRow}>
         <div className={styles.avatarColumn}>
+          <div className={styles.bannerPreview}>
+            {bannerUrl ? (
+              <img src={bannerUrl} alt="Banner profilu" className={styles.bannerImage} />
+            ) : (
+              <div className={styles.bannerEmpty}>
+                <FaImage />
+                <span>Banner profilu</span>
+              </div>
+            )}
+          </div>
+
           <div className={styles.avatarFrame}>
             <div className={styles.avatarRing} />
 
@@ -73,7 +94,7 @@ const BasicInfoSection = ({
                   ref={fileInputRef}
                   onChange={onImageChange}
                 />
-                Wybierz zdjęcie
+                {'Wybierz zdj\u0119cie'}
               </label>
 
               {hasAvatarNow && (
@@ -82,13 +103,57 @@ const BasicInfoSection = ({
                   className={styles.danger}
                   onClick={onRemoveAvatar}
                 >
-                  Usuń zdjęcie
+                  {'Usu\u0144 zdj\u0119cie'}
                 </button>
               )}
 
               <small className={styles.hint}>
-                Kwadratowe zdjęcie wygląda najlepiej. Maksymalnie ok. 2–3 MB.
+                {'Kwadratowe zdj\u0119cie wygl\u0105da najlepiej. Maksymalnie ok. 2-3 MB.'}
               </small>
+
+              <div className={styles.bannerControls}>
+                {canUseBanner ? (
+                  <>
+                    <label className={styles.fileBtn}>
+                      <input
+                        type="file"
+                        accept="image/*,heic,heif"
+                        ref={bannerInputRef}
+                        onChange={onBannerChange}
+                        disabled={bannerUploading}
+                      />
+                      {bannerUploading ? 'Zapisywanie...' : 'Wybierz banner'}
+                    </label>
+
+                    {hasBannerNow && (
+                      <button
+                        type="button"
+                        className={styles.danger}
+                        onClick={onRemoveBanner}
+                        disabled={bannerUploading}
+                      >
+                        {'Usu\u0144 banner'}
+                      </button>
+                    )}
+
+                    <small className={styles.hint}>
+                      {'Najlepiej sprawdza si\u0119 szerokie zdj\u0119cie, np. 1800 x 720 px.'}
+                    </small>
+                  </>
+                ) : (
+                  <div className={styles.bannerLocked}>
+                    <strong>{'Banner jest dost\u0119pny w planie Standard i Premium.'}</strong>
+                    <button
+                      type="button"
+                      className={styles.secondary}
+                      onClick={() => onStartSubscription?.('standard')}
+                      disabled={!!billingActionLoading}
+                    >
+                      {'W\u0142\u0105cz Standard'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -132,11 +197,11 @@ const BasicInfoSection = ({
                   onChange={(e) => updateEditData('profileType', e.target.value)}
                   aria-invalid={!!formErrors.profileType}
                 >
-                  <option value="">— wybierz —</option>
+                  <option value="">{'\u2014 wybierz \u2014'}</option>
                   <option value="hobbystyczny">Hobby</option>
-                  <option value="zawodowy">Zawód</option>
+                  <option value="zawodowy">{'Zaw\u00f3d'}</option>
                   <option value="serwis">Serwis</option>
-                  <option value="społeczność">Społeczność</option>
+                  <option value={'spo\u0142eczno\u015b\u0107'}>{'Spo\u0142eczno\u015b\u0107'}</option>
                 </select>
 
                 {formErrors.profileType && (
@@ -163,7 +228,7 @@ const BasicInfoSection = ({
                   maxLength={30}
                   onChange={(e) => updateEditData('location', e.target.value)}
                   aria-invalid={!!formErrors.location}
-                  placeholder="Np. Poznań / cała Polska"
+                  placeholder={'Np. Pozna\u0144 / ca\u0142a Polska'}
                 />
                 {formErrors.location && (
                   <small className={styles.error}>{formErrors.location}</small>

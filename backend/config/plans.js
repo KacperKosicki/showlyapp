@@ -21,6 +21,7 @@ const PLANS = {
     limits: {
       photos: 3,
       services: 3,
+      staff: 0,
       serviceGallery: 2,
       links: 1,
       quickAnswers: 1,
@@ -48,6 +49,7 @@ const PLANS = {
     limits: {
       photos: 6,
       services: 10,
+      staff: 0,
       serviceGallery: 4,
       links: 2,
       quickAnswers: 3,
@@ -75,6 +77,7 @@ const PLANS = {
     limits: {
       photos: 15,
       services: 20,
+      staff: 3,
       serviceGallery: 10,
       links: 3,
       quickAnswers: 5,

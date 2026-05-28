@@ -790,6 +790,7 @@ export default function PublicProfile() {
   const {
     name,
     avatar,
+    banner,
     role,
     rating,
     reviews,
@@ -810,6 +811,14 @@ export default function PublicProfile() {
   const hasPrice = Number.isFinite(pf) && Number.isFinite(pt) && pf > 0 && pt >= pf;
 
   const profileAvatarSrc = normalizeAvatar(avatar) || "/images/other/no-image.png";
+  const publicBilling = profile?.billingPublic || profile?.billing || {};
+  const publicPlan = String(
+    publicBilling?.effectivePlan ||
+    publicBilling?.plan ||
+    ""
+  ).toLowerCase();
+  const bannerSrc = normalizeAvatar(banner);
+  const showBanner = !!bannerSrc && ["standard", "premium"].includes(publicPlan);
 
   const gallery = normalizePhotos(profile.photos);
   const hasGallery = gallery.length > 0;
@@ -844,6 +853,7 @@ export default function PublicProfile() {
     "--pp-primary": themeVars.primary,
     "--pp-secondary": themeVars.secondary,
     "--pp-banner": themeVars.banner,
+    "--pp-banner-image": showBanner ? `url("${bannerSrc.replace(/"/g, "%22")}")` : "none",
     "--pp-partner": partner.color,
     "--pp-partner-soft": `color-mix(in srgb, ${partner.color} 16%, white)`,
     "--pp-partner-border": `color-mix(in srgb, ${partner.color} 42%, rgba(15, 23, 42, 0.12))`,
@@ -856,7 +866,6 @@ export default function PublicProfile() {
       .sort((a, b) => Number(a?.order ?? 0) - Number(b?.order ?? 0))
     : [];
 
-  const publicBilling = profile?.billingPublic || profile?.billing || {};
   const billingFeatures = publicBilling?.features || null;
 
   const hasBillingFeatures =
@@ -1012,6 +1021,7 @@ export default function PublicProfile() {
         <header
           className={cn(
             styles.hero,
+            showBanner && styles.heroWithBanner,
             partner.isPartner && styles.heroPartner,
             isOwner && styles.heroOwner
           )}

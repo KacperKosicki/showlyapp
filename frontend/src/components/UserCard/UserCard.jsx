@@ -142,6 +142,7 @@ const UserCard = ({
   const {
     name,
     avatar,
+    banner,
     role,
     rating,
     reviews,
@@ -248,6 +249,11 @@ const UserCard = ({
 
   const publicBilling = user?.billingPublic || user?.billing || {};
   const billingFeatures = publicBilling?.features || null;
+  const publicPlan = String(
+    publicBilling?.effectivePlan ||
+    publicBilling?.plan ||
+    ""
+  ).toLowerCase();
 
   const hasBillingFeatures =
     billingFeatures && Object.keys(billingFeatures).length > 0;
@@ -292,11 +298,14 @@ const UserCard = ({
 
   const t = resolveUserCardTheme(user?.theme);
   const partner = resolvePartnerData(partnership);
+  const bannerSrc = normalizeAvatar(banner);
+  const showBanner = !!bannerSrc && ["standard", "premium"].includes(publicPlan);
 
   const cssVars = {
     "--uc-primary": t.primary,
     "--uc-secondary": t.secondary,
     "--uc-banner": t.banner,
+    "--uc-banner-image": showBanner ? `url("${bannerSrc.replace(/"/g, "%22")}")` : "none",
 
     "--uc-p-06": `color-mix(in srgb, ${t.primary} 6%, transparent)`,
     "--uc-p-10": `color-mix(in srgb, ${t.primary} 10%, transparent)`,
@@ -443,7 +452,7 @@ const UserCard = ({
       className={`${styles.card} ${partner.isPartner ? styles.partnerCard : ""}`}
       style={cssVars}
     >
-      <header className={styles.hero}>
+      <header className={`${styles.hero} ${showBanner ? styles.heroWithBanner : ""}`}>
         <div className={styles.heroDecor} aria-hidden="true">
           <span className={styles.heroGlowA} />
           <span className={styles.heroGlowB} />

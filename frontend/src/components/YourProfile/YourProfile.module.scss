@@ -917,6 +917,68 @@ $panel-max: 820px;
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
+.bannerPreview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  overflow: hidden;
+  border-radius: 22px;
+  background:
+    linear-gradient(135deg, var(--yp-p-18), var(--yp-s-12)),
+    #f8fafc;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  box-shadow: 0 18px 42px rgba(17, 24, 39, 0.09);
+}
+
+.bannerImage {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.bannerEmpty {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.45rem;
+  color: rgba(17, 24, 39, 0.58);
+  font-family: $font-accent;
+  font-weight: 900;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  svg {
+    color: var(--yp-primary);
+    font-size: 1.35rem;
+  }
+}
+
+.bannerControls {
+  width: 100%;
+  display: grid;
+  gap: 0.55rem;
+  padding-top: 0.2rem;
+}
+
+.bannerLocked {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  border-radius: 18px;
+  background: var(--yp-p-06);
+  border: 1px solid var(--yp-p-18);
+  text-align: center;
+
+  strong {
+    color: #111827;
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+}
+
 .avatarFrame {
   position: relative;
   width: 152px;

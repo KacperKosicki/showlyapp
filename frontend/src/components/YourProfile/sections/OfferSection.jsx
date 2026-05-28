@@ -139,6 +139,7 @@ const OfferSection = ({
   serviceImageUploadingIds,
   canUseBooking,
   canUseTeam,
+  maxStaff,
   canUseAutoAccept,
   billingActionLoading,
   handleStartSubscription,
@@ -155,6 +156,9 @@ const OfferSection = ({
   showAlert,
 }) => {
   const MAX_SERVICES = maxServices;
+  const MAX_STAFF = Number(maxStaff || 0);
+  const currentStaffCount = staff?.length || 0;
+  const hasReachedStaffLimit = canUseTeam && currentStaffCount >= MAX_STAFF;
 
   const groupedEditAvailability = groupAvailabilityOverrides(
     editData.availabilityOverrides
@@ -1739,7 +1743,7 @@ const OfferSection = ({
 
           <div className={styles.sectionBadge}>
             <FaUsers />
-            <span>{canUseTeam ? "Premium" : "Zablokowane"}</span>
+            <span>{canUseTeam ? `Premium · max ${MAX_STAFF}` : "Zablokowane"}</span>
           </div>
         </div>
 
@@ -1770,7 +1774,7 @@ const OfferSection = ({
 
           <div className={styles.staffStatsGrid}>
             <div className={styles.staffStatCard}>
-              <strong>{staff?.length || 0}</strong>
+              <strong>{canUseTeam ? `${currentStaffCount}/${MAX_STAFF}` : currentStaffCount}</strong>
               <span>pracowników</span>
             </div>
 
@@ -2037,7 +2041,9 @@ const OfferSection = ({
                   <div>
                     <strong>Dodaj pracownika</strong>
                     <span>
-                      Nowa osoba będzie mogła obsługiwać wybrane usługi w systemie rezerwacji.
+                      {hasReachedStaffLimit
+                        ? `Osiągnięto limit ${MAX_STAFF} pracowników w planie Premium.`
+                        : "Nowa osoba będzie mogła obsługiwać wybrane usługi w systemie rezerwacji."}
                     </span>
                   </div>
 
@@ -2157,11 +2163,11 @@ const OfferSection = ({
                 <LoadingButton
                   type="button"
                   isLoading={isCreatingStaff}
-                  disabled={isCreatingStaff}
+                  disabled={isCreatingStaff || hasReachedStaffLimit}
                   className={styles.primary}
                   onClick={createStaff}
                 >
-                  <FaPlus /> Dodaj pracownika
+                  <FaPlus /> {hasReachedStaffLimit ? "Limit pracowników" : "Dodaj pracownika"}
                 </LoadingButton>
               </div>
             ) : (

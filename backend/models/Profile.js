@@ -423,6 +423,11 @@ const profileSchema = new mongoose.Schema(
       default: () => ({ url: "", publicId: "", hash: "" }),
     },
 
+    banner: {
+      type: imageSchema,
+      default: () => ({ url: "", publicId: "", hash: "" }),
+    },
+
     // Techniczny limit pod Premium.
     // Free/Standard/Premium pilnujemy w backend routes.
     photos: {

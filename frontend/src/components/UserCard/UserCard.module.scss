@@ -26,6 +26,7 @@
   --uc-primary: #6f4ef2;
   --uc-secondary: #ff4081;
   --uc-banner: linear-gradient(135deg, #6f4ef2, #ff4081);
+  --uc-banner-image: none;
 
   --uc-p-06: color-mix(in srgb, var(--uc-primary) 6%, transparent);
   --uc-p-10: color-mix(in srgb, var(--uc-primary) 10%, transparent);
@@ -81,6 +82,26 @@
       color-mix(in srgb, var(--uc-secondary) 72%, #111827 28%));
   border-bottom: 1px solid rgba(255, 255, 255, 0.14);
   isolation: isolate;
+}
+
+.heroWithBanner {
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.18), rgba(15, 23, 42, 0.7)),
+    linear-gradient(135deg, rgba(15, 23, 42, 0.22), rgba(15, 23, 42, 0.42)),
+    var(--uc-banner-image) center / cover no-repeat,
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--uc-primary) 82%, #111827 18%),
+      color-mix(in srgb, var(--uc-secondary) 72%, #111827 28%));
+}
+
+.heroWithBanner .heroGrid {
+  opacity: 0.06;
+}
+
+.heroWithBanner .heroFade {
+  background:
+    radial-gradient(680px 210px at 16% 4%, rgba(255, 255, 255, 0.18), transparent 56%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.08), rgba(15, 23, 42, 0.46));
 }
 
 .heroDecor {
