@@ -6,6 +6,7 @@ const Favorite = require("../models/Favorite");
 const Profile = require("../models/Profile");
 
 const requireAuth = require("../middleware/requireAuth");
+const { getPublicBilling } = require("../config/plans");
 
 /**
  * POST /api/favorites/toggle
@@ -100,6 +101,7 @@ router.get("/my", requireAuth, async (req, res) => {
         name: 1,
         role: 1,
         avatar: 1,
+        banner: 1,
         location: 1,
         rating: 1,
         reviews: 1,
@@ -114,13 +116,24 @@ router.get("/my", requireAuth, async (req, res) => {
         links: 1,
         theme: 1,
         partnership: 1,
+        billing: 1,
         slug: 1,
         bookingMode: 1,
         availableDates: 1,
       }
     ).lean();
 
-    return res.json(profiles.map((p) => ({ ...p, isFavorite: true })));
+    return res.json(
+      profiles.map((p) => {
+        const { billing, ...publicProfile } = p;
+
+        return {
+          ...publicProfile,
+          billingPublic: getPublicBilling(p),
+          isFavorite: true,
+        };
+      })
+    );
   } catch (e) {
     console.error("GET /favorites/my error", e);
     return res.status(500).json({ message: "Błąd serwera" });
