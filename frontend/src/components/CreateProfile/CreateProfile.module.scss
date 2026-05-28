@@ -901,6 +901,53 @@
   border: 1px solid rgba(17, 24, 39, 0.06);
 }
 
+.termsBox {
+  padding: 1rem;
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), var(--cp-p-06));
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  box-shadow:
+    0 14px 34px rgba(17, 24, 39, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.termsBoxError {
+  border-color: rgba(229, 57, 53, 0.34);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(229, 57, 53, 0.06));
+}
+
+.termsLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  text-align: left;
+  color: rgba(17, 24, 39, 0.78);
+  font-size: 0.93rem;
+  line-height: 1.55;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 0.15rem;
+    flex: 0 0 auto;
+    accent-color: $primary-color;
+  }
+
+  a {
+    color: $primary-color;
+    font-weight: 900;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(111, 78, 242, 0.28);
+
+    &:hover {
+      border-color: $primary-color;
+    }
+  }
+}
+
 /* =========================
    Preview
    ========================= */

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./CreateProfile.module.scss";
-import { useNavigate, useLocation, Navigate } from "react-router-dom";
+import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import UserCard from "../UserCard/UserCard";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
 import { api } from "../../api/api";
@@ -102,6 +102,7 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
   const [formErrors, setFormErrors] = useState({});
   const [serviceError, setServiceError] = useState("");
   const [previewMsg, setPreviewMsg] = useState("");
+  const [acceptedRegulations, setAcceptedRegulations] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
@@ -640,6 +641,10 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
 
     if (serviceValidationError) {
       errors.services = serviceValidationError;
+    }
+
+    if (!acceptedRegulations) {
+      errors.regulations = "Potwierdź, że rozumiesz i akceptujesz regulamin serwisu.";
     }
 
     setFormErrors(errors);
@@ -1449,6 +1454,41 @@ const CreateProfile = ({ user, setRefreshTrigger }) => {
                       placeholder="Np. 1234567890"
                     />
                   </label>
+                )}
+
+                <div
+                  className={`${styles.termsBox} ${formErrors.regulations ? styles.termsBoxError : ""}`}
+                >
+                  <label className={styles.termsLabel}>
+                    <input
+                      type="checkbox"
+                      checked={acceptedRegulations}
+                      onChange={(e) => {
+                        setAcceptedRegulations(e.target.checked);
+                        if (e.target.checked) {
+                          setFormErrors((prev) => ({ ...prev, regulations: "" }));
+                        }
+                      }}
+                      aria-invalid={!!formErrors.regulations}
+                    />
+
+                    <span>
+                      Potwierdzam, że rozumiem i akceptuję{" "}
+                      <Link
+                        to="/regulamin"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        regulamin serwisu
+                      </Link>
+                      .
+                    </span>
+                  </label>
+                </div>
+
+                {formErrors.regulations && (
+                  <small className={styles.error}>{formErrors.regulations}</small>
                 )}
 
                 <LoadingButton
