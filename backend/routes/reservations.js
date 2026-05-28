@@ -1497,6 +1497,72 @@ router.patch("/:id/cancel-by-client", requireAuth, async (req, res) => {
 
 /**
  * =====================
+ * PATCH /api/reservations/:id/cancel-offline-by-provider
+ * Provider usuwa/anuluje własną rezerwację offline
+ * =====================
+ */
+router.patch("/:id/cancel-offline-by-provider", requireAuth, async (req, res) => {
+  try {
+    const authUid = req.auth.uid;
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    const reservation = await Reservation.findById(id);
+
+    if (!reservation) {
+      return res.status(404).json({ message: "Rezerwacja nie istnieje." });
+    }
+
+    if (String(reservation.providerUserId) !== String(authUid)) {
+      return res.status(403).json({
+        message: "Możesz anulować tylko rezerwację przypisaną do Twojego profilu.",
+      });
+    }
+
+    if (!reservation.offline) {
+      return res.status(400).json({
+        message: "Na ten moment możesz usuwać tylko rezerwacje offline.",
+      });
+    }
+
+    if (["anulowana", "odrzucona"].includes(reservation.status)) {
+      return res.status(400).json({
+        message: "Ta rezerwacja jest już zamknięta.",
+      });
+    }
+
+    const text = String(reason || "").trim().slice(0, 500);
+    const now = new Date();
+
+    reservation.status = "anulowana";
+    reservation.closedAt = now;
+    reservation.closedBy = "provider";
+    reservation.closedReason = "cancelled";
+
+    reservation.cancelledBy = "provider";
+    reservation.cancellationReason = text || "Rezerwacja offline usunięta przez usługodawcę.";
+
+    reservation.pendingExpiresAt = null;
+    reservation.holdExpiresAt = null;
+
+    // Offline nie ma klienta w systemie, więc po anulowaniu może zniknąć z widoku providera.
+    reservation.providerSeen = true;
+    reservation.clientSeen = true;
+
+    await reservation.save();
+
+    return res.json({
+      message: "Rezerwacja offline została usunięta z kalendarza.",
+      reservation,
+    });
+  } catch (err) {
+    console.error("PATCH /reservations/:id/cancel-offline-by-provider error:", err);
+    return res.status(500).json({ message: "Błąd serwera" });
+  }
+});
+
+/**
+ * =====================
  * PATCH /api/reservations/:id/status
  * AUTH:
  *  - anulowana -> klient (authUid === reservation.userId)

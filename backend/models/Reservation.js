@@ -95,18 +95,18 @@ const reservationSchema = new mongoose.Schema(
     clientSeen: { type: Boolean, default: false },
     providerSeen: { type: Boolean, default: false },
 
-clientNote: {
-  message: {
-    type: String,
-    trim: true,
-    maxlength: 500,
-    default: "",
-  },
-  createdAt: {
-    type: Date,
-    default: null,
-  },
-},
+    clientNote: {
+      message: {
+        type: String,
+        trim: true,
+        maxlength: 500,
+        default: "",
+      },
+      createdAt: {
+        type: Date,
+        default: null,
+      },
+    },
 
     cancellationReason: {
       type: String,

@@ -1682,37 +1682,37 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
       updates.links = sanitizeStringArray(updates.links, 10);
     }
 
-if (updates.blockedDays) {
-  updates.blockedDays = sanitizeStringArray(updates.blockedDays, 365);
-}
+    if (updates.blockedDays) {
+      updates.blockedDays = sanitizeStringArray(updates.blockedDays, 365);
+    }
 
-if (updates.availabilityOverrides !== undefined) {
-  const canUseBooking = hasFeature(profile, "booking", {
-    allowPastDue: true,
-  });
+    if (updates.availabilityOverrides !== undefined) {
+      const canUseBooking = hasFeature(profile, "booking", {
+        allowPastDue: true,
+      });
 
-  const canUseRequestBlocking = hasFeature(profile, "requestBlocking", {
-    allowPastDue: true,
-  });
+      const canUseRequestBlocking = hasFeature(profile, "requestBlocking", {
+        allowPastDue: true,
+      });
 
-  const canUseAvailabilityOverrides = canUseBooking || canUseRequestBlocking;
+      const canUseAvailabilityOverrides = canUseBooking || canUseRequestBlocking;
 
-  updates.availabilityOverrides = canUseAvailabilityOverrides
-    ? sanitizeAvailabilityOverrides(updates.availabilityOverrides)
-    : [];
-}
+      updates.availabilityOverrides = canUseAvailabilityOverrides
+        ? sanitizeAvailabilityOverrides(updates.availabilityOverrides)
+        : [];
+    }
 
-if (updates.availableDates) {
-  updates.availableDates = Array.isArray(updates.availableDates)
-    ? updates.availableDates
-      .map((item) => ({
-        date: clean(item?.date),
-        fromTime: clean(item?.fromTime || item?.from),
-        toTime: clean(item?.toTime || item?.to),
-      }))
-      .filter((item) => item.date && item.fromTime && item.toTime)
-    : [];
-}
+    if (updates.availableDates) {
+      updates.availableDates = Array.isArray(updates.availableDates)
+        ? updates.availableDates
+          .map((item) => ({
+            date: clean(item?.date),
+            fromTime: clean(item?.fromTime || item?.from),
+            toTime: clean(item?.toTime || item?.to),
+          }))
+          .filter((item) => item.date && item.fromTime && item.toTime)
+        : [];
+    }
 
     if (updates.workingHours) {
       updates.workingHours = {

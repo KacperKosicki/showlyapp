@@ -78,20 +78,20 @@ const normalizeProfileForEdit = (profile = {}) => {
     theme: normalizedTheme,
     contact: normalizedContact,
     socials: normalizedSocials,
-bookingMode: profile.bookingMode || "request-open",
-workingHours: profile.workingHours || { from: "08:00", to: "20:00" },
-workingDays: profile.workingDays || [1, 2, 3, 4, 5],
-availabilityOverrides: Array.isArray(profile.availabilityOverrides)
-  ? profile.availabilityOverrides.map((item) => ({
-      _id: item?._id,
-      type: item?.type || "day",
-      date: item?.date || "",
-      fromTime: item?.fromTime || "",
-      toTime: item?.toTime || "",
-      reason: item?.reason || "",
-    }))
-  : [],
-team: profile.team || { enabled: false, assignmentMode: "user-pick" },
+    bookingMode: profile.bookingMode || "request-open",
+    workingHours: profile.workingHours || { from: "08:00", to: "20:00" },
+    workingDays: profile.workingDays || [1, 2, 3, 4, 5],
+    availabilityOverrides: Array.isArray(profile.availabilityOverrides)
+      ? profile.availabilityOverrides.map((item) => ({
+        _id: item?._id,
+        type: item?.type || "day",
+        date: item?.date || "",
+        fromTime: item?.fromTime || "",
+        toTime: item?.toTime || "",
+        reason: item?.reason || "",
+      }))
+      : [],
+    team: profile.team || { enabled: false, assignmentMode: "user-pick" },
     bookingBufferMin: Number.isFinite(Number(profile.bookingBufferMin))
       ? Number(profile.bookingBufferMin)
       : 0,

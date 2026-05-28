@@ -162,6 +162,109 @@ const minToTime = (mins) => {
 /** czy cało-dniowa rezerwacja */
 const isWholeDay = (r) => r?.dateOnly || (r?.fromTime === "00:00" && r?.toTime === "23:59");
 
+const getAvailabilityOverrides = (meta) => {
+  return Array.isArray(meta?.availabilityOverrides)
+    ? meta.availabilityOverrides
+    : [];
+};
+
+const getDayOverride = (meta, dateStr) => {
+  return getAvailabilityOverrides(meta).find(
+    (item) => item?.type === "day" && item?.date === dateStr
+  );
+};
+
+const isDayBlockedByOverride = (meta, dateStr) => {
+  return !!getDayOverride(meta, dateStr);
+};
+
+const getSlotOverride = (meta, dateStr, fromTime, toTime) => {
+  const reqStart = timeToMin(fromTime);
+  const reqEnd = timeToMin(toTime);
+
+  return getAvailabilityOverrides(meta).find((item) => {
+    if (!item || item.date !== dateStr) return false;
+
+    if (item.type === "day") return true;
+
+    if (item.type !== "slot") return false;
+    if (!item.fromTime || !item.toTime) return false;
+
+    const blockStart = timeToMin(item.fromTime);
+    const blockEnd = timeToMin(item.toTime);
+
+    return reqStart < blockEnd && reqEnd > blockStart;
+  });
+};
+
+const isSlotBlockedByOverride = (meta, dateStr, fromTime, toTime) => {
+  return !!getSlotOverride(meta, dateStr, fromTime, toTime);
+};
+
+const DAY_NAMES = ["niedziela", "poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota"];
+
+const getTodayIso = () => toISODate(new Date());
+
+const getDateDayNumber = (dateStr = "") => {
+  const date = new Date(`${dateStr}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.getDay(); // 0 niedziela, 1 poniedziałek...
+};
+
+const getWorkingDays = (meta) => {
+  return Array.isArray(meta?.workingDays)
+    ? meta.workingDays.map(Number)
+    : [1, 2, 3, 4, 5];
+};
+
+const isPastDate = (dateStr = "") => {
+  if (!dateStr) return false;
+  return dateStr < getTodayIso();
+};
+
+const isWorkingDay = (meta, dateStr = "") => {
+  const dayNumber = getDateDayNumber(dateStr);
+  if (dayNumber === null) return true;
+
+  return getWorkingDays(meta).includes(dayNumber);
+};
+
+const getDayAvailabilityInfo = (meta, dateStr = "") => {
+  if (!dateStr) return null;
+
+  if (isPastDate(dateStr)) {
+    return {
+      type: "past",
+      title: "Ten dzień już minął.",
+      reason: "Nie można dodawać rezerwacji offline wstecz.",
+    };
+  }
+
+  const override = getDayOverride(meta, dateStr);
+
+  if (override) {
+    return {
+      type: "override",
+      title: "Ten dzień jest oznaczony jako niedostępny.",
+      reason: override.reason || "Blokada ustawiona w profilu.",
+    };
+  }
+
+  if (!isWorkingDay(meta, dateStr)) {
+    const dayNumber = getDateDayNumber(dateStr);
+
+    return {
+      type: "nonWorkingDay",
+      title: "Ten dzień nie jest dniem pracy.",
+      reason: dayNumber !== null
+        ? `W grafiku pracy nie zaznaczono dnia: ${DAY_NAMES[dayNumber]}.`
+        : "Ten dzień nie jest dostępny w grafiku pracy.",
+    };
+  }
+
+  return null;
+};
+
 const ReservationList = ({ user, resetPendingReservationsCount }) => {
   const location = useLocation();
   const isLogged = !!user?.uid;
@@ -579,6 +682,16 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
       let status = "free";
 
+      const fromTime = minToTime(start);
+      const toTime = minToTime(end);
+
+      const blockedByOverride = isSlotBlockedByOverride(
+        providerMeta,
+        dateStr,
+        fromTime,
+        toTime
+      );
+
       const startDT = new Date(`${dateStr}T${minToTime(start)}`);
       const endBufDT = new Date(`${dateStr}T${minToTime(endWithBuf)}`);
 
@@ -652,7 +765,15 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         }
       }
 
-      slots.push({ label: minToTime(start), status });
+      if (blockedByOverride) {
+        status = "disabled";
+      }
+
+      slots.push({
+        label: minToTime(start),
+        status,
+        blockedByOverride,
+      });
       cursor += OFFLINE_STEP_MIN;
     }
 
@@ -727,7 +848,23 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   }, [offlineForm, serviceReservations, OFFLINE_BUFFER_MIN, isDayBlockingMode]);
 
   const openOfflineForDay = async (isoDate) => {
-    if (!isLogged) return;
+    if (!isLogged) return false;
+
+    const dayInfo = getDayAvailabilityInfo(providerMeta, isoDate);
+
+    if (dayInfo) {
+      setAlert({
+        show: true,
+        type: "warning",
+        message: dayInfo.reason
+          ? `${dayInfo.title} ${dayInfo.reason}`
+          : dayInfo.title,
+        onClose: null,
+      });
+
+      return false;
+    }
+
     if (!hasProviderProfile) {
       setAlert({
         show: true,
@@ -749,6 +886,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     setOfflineOpen(true);
 
     if (!providerMeta) await fetchProviderMeta();
+
+    return true;
   };
 
   const submitOffline = useCallback(async () => {
@@ -1276,6 +1415,62 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     setAlert({ show: true, type, message, onClose });
   };
 
+  const handleCancelOfflineByProvider = async (reservation) => {
+    if (!reservation?.offline) {
+      setAlert({
+        show: true,
+        type: "warning",
+        message: "Na ten moment możesz usuwać tylko rezerwacje offline.",
+        onClose: null,
+      });
+      return;
+    }
+
+    const ok = window.confirm(
+      "Czy na pewno chcesz usunąć tę rezerwację offline z kalendarza? Ten slot zostanie zwolniony."
+    );
+
+    if (!ok) return;
+
+    const reason = window.prompt(
+      "Opcjonalnie wpisz powód usunięcia, np. klient zadzwonił i zrezygnował:"
+    );
+
+    try {
+      setDisabledIds((prev) => new Set(prev).add(`offline-cancel-${reservation._id}`));
+
+      await api.patch(`/api/reservations/${reservation._id}/cancel-offline-by-provider`, {
+        reason: String(reason || "").trim(),
+      });
+
+      setAlert({
+        show: true,
+        type: "success",
+        message: "Rezerwacja offline została usunięta z kalendarza.",
+        onClose: null,
+      });
+
+      await refetch();
+    } catch (err) {
+      console.error("❌ Błąd usuwania rezerwacji offline:", err);
+
+      setAlert({
+        show: true,
+        type: "error",
+        message:
+          err?.response?.data?.message ||
+          "Nie udało się usunąć rezerwacji offline.",
+        onClose: null,
+      });
+    } finally {
+      setDisabledIds((prev) => {
+        const next = new Set(prev);
+        next.delete(`offline-cancel-${reservation._id}`);
+        return next;
+      });
+    }
+  };
+
   const handleStatusChange = async (reservationId, newStatus) => {
     try {
       setDisabledIds((prev) => new Set(prev).add(reservationId));
@@ -1510,6 +1705,14 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
             <div className={styles.bottomRow}>
               {variant === "sent" && !["anulowana", "odrzucona"].includes(res.status) ? (
                 <>
+                  <button
+                    onClick={() => handleClientCancelWithReason(res)}
+                    className={`${styles.actionBtn} ${styles.cancelBtn}`}
+                    disabled={disabledIds.has(`cancel-${res._id}`)}
+                  >
+                    ❌ Anuluj z powodem
+                  </button>
+
                   {!res.clientNote?.message ? (
                     <button
                       onClick={() => handleClientNote(res)}
@@ -1523,14 +1726,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                       Informacja dodana
                     </span>
                   )}
-
-                  <button
-                    onClick={() => handleClientCancelWithReason(res)}
-                    className={`${styles.actionBtn} ${styles.cancelBtn}`}
-                    disabled={disabledIds.has(`cancel-${res._id}`)}
-                  >
-                    ❌ Anuluj z powodem
-                  </button>
                 </>
               ) : null}
 
@@ -1543,6 +1738,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                   >
                     ✅ Potwierdź
                   </button>
+
                   <button
                     onClick={() => handleStatusChange(res._id, "odrzucona")}
                     className={`${styles.actionBtn} ${styles.rejectBtn}`}
@@ -1556,6 +1752,18 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                   Status: <strong>{res.status}</strong>
                 </span>
               )}
+
+              {variant === "received" &&
+                res.offline &&
+                !["anulowana", "odrzucona"].includes(res.status) && (
+                  <button
+                    onClick={() => handleCancelOfflineByProvider(res)}
+                    className={`${styles.actionBtn} ${styles.cancelBtn}`}
+                    disabled={disabledIds.has(`offline-cancel-${res._id}`)}
+                  >
+                    🗑 Usuń offline
+                  </button>
+                )}
             </div>
           </div>
         </div>
@@ -1595,10 +1803,40 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       serviceReservations.forEach((r) => push(r.date, "recv", r.status));
     }
 
+    if (hasProviderProfile) {
+      getAvailabilityOverrides(providerMeta)
+        .filter((item) => item?.type === "day" && item?.date)
+        .forEach((item) => {
+          const cur =
+            map.get(item.date) || {
+              sentTotal: 0,
+              recvTotal: 0,
+              pending: 0,
+              accepted: 0,
+              rejected: 0,
+              unavailable: 0,
+              unavailableReason: "",
+            };
+
+          cur.unavailable = (cur.unavailable || 0) + 1;
+          cur.unavailableReason = item.reason || "Dzień niedostępny";
+
+          map.set(item.date, cur);
+        });
+    }
+
     return map;
-  }, [clientReservations, serviceReservations, hasProviderProfile]);
+  }, [clientReservations, serviceReservations, hasProviderProfile, providerMeta]);
 
   const selectedIso = useMemo(() => toISODate(selectedDay), [selectedDay]);
+
+  const selectedDayOverride = useMemo(() => {
+    return getDayOverride(providerMeta, selectedIso);
+  }, [providerMeta, selectedIso]);
+
+  const selectedDayAvailabilityInfo = useMemo(() => {
+    return getDayAvailabilityInfo(providerMeta, selectedIso);
+  }, [providerMeta, selectedIso]);
 
   const selectedReservations = useMemo(() => {
     const sent = clientReservations.filter((r) => r.date === selectedIso);
@@ -1635,7 +1873,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   };
 
   const openOfflineForSlot = async (isoDate, startMin, endMin) => {
-    await openOfflineForDay(isoDate);
+    const opened = await openOfflineForDay(isoDate);
+
+    if (!opened) return;
+
     setOfflineForm((p) => ({
       ...p,
       dateOnly: false,
@@ -2155,24 +2396,54 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                   value={selectedDay}
                   onChange={(d) => setSelectedDay(d)}
                   locale="pl-PL"
+                  tileClassName={({ date, view }) => {
+                    if (view !== "month") return null;
+
+                    const iso = toISODate(date);
+                    const dayInfo = getDayAvailabilityInfo(providerMeta, iso);
+
+                    return dayInfo ? styles.calendarUnavailableDay : null;
+                  }}
                   tileContent={({ date, view }) => {
                     if (view !== "month") return null;
+
                     const iso = toISODate(date);
                     const v = dayMap.get(iso);
-                    if (!v || v.total === 0) return null;
+                    const dayInfo = getDayAvailabilityInfo(providerMeta, iso);
+
+                    const total = v?.total || 0;
+                    const unavailable = v?.unavailable || 0;
+                    const pending = v?.pending || 0;
+                    const accepted = v?.accepted || 0;
+                    const rejected = v?.rejected || 0;
+
+                    if (!v && !dayInfo) return null;
+
+                    if (total === 0 && unavailable === 0 && !dayInfo) {
+                      return null;
+                    }
 
                     return (
                       <div className={styles.tileBadges} aria-hidden="true">
-                        {v.pending > 0 && (
+                        {(dayInfo || unavailable > 0) && (
+                          <span className={`${styles.dotMini} ${styles.dotUnavailable}`} />
+                        )}
+
+                        {pending > 0 && (
                           <span className={`${styles.dotMini} ${styles.dotPending}`} />
                         )}
-                        {v.accepted > 0 && (
+
+                        {accepted > 0 && (
                           <span className={`${styles.dotMini} ${styles.dotAccepted}`} />
                         )}
-                        {v.rejected > 0 && (
+
+                        {rejected > 0 && (
                           <span className={`${styles.dotMini} ${styles.dotRejected}`} />
                         )}
-                        <span className={styles.tileCount}>{v.total}</span>
+
+                        {total > 0 && (
+                          <span className={styles.tileCount}>{total}</span>
+                        )}
                       </div>
                     );
                   }}
@@ -2188,6 +2459,18 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                     Rezerwacje z dnia <strong>{formatDatePL(selectedIso)}</strong>
                   </span>
                 </div>
+
+                {selectedDayAvailabilityInfo && (
+                  <div className={styles.unavailableNotice}>
+                    <FiAlertCircle />
+                    <div>
+                      <strong>{selectedDayAvailabilityInfo.title}</strong>
+                      {selectedDayAvailabilityInfo.reason && (
+                        <span>{selectedDayAvailabilityInfo.reason}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {isSlotMode && (
                   <div className={styles.daySection}>
@@ -2282,7 +2565,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                                 </div>
                               )}
 
-                              {b.isFree && (
+                              {b.isFree && !selectedDayAvailabilityInfo && (
                                 <div className={styles.tlActions}>
                                   <button
                                     type="button"
@@ -2355,18 +2638,22 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                   <button
                     className={styles.addOfflineBtn}
                     type="button"
+                    disabled={!!selectedDayAvailabilityInfo}
+                    title={selectedDayAvailabilityInfo?.reason || ""}
                     onClick={() => openOfflineForDay(selectedIso)}
                   >
                     <FiPlus />
-                    {isDayBlockingMode ? " Zablokuj dzień offline" : " Dodaj offline"}
+                    {selectedDayAvailabilityInfo
+                      ? " Niedostępne"
+                      : isDayBlockingMode
+                        ? " Zablokuj dzień offline"
+                        : " Dodaj offline"}
                   </button>
                 </div>
               )}
             </div>
           </div>
         </div>
-
-        {offlineModalEl}
       </div>
     );
   };
