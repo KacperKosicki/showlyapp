@@ -42,6 +42,46 @@ const ceilToStep = (dt, stepMin) => {
   return rem ? addMinutes(d, stepMin - rem) : d;
 };
 
+const timeToMinutes = (value = "") => {
+  const [h, m] = String(value).split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+};
+
+const rangesOverlap = (aStart, aEnd, bStart, bEnd) => {
+  return aStart < bEnd && aEnd > bStart;
+};
+
+const getAvailabilityOverrides = (provider) => {
+  return Array.isArray(provider?.availabilityOverrides)
+    ? provider.availabilityOverrides
+    : [];
+};
+
+const isDateBlockedByOverride = (provider, dateStr) => {
+  return getAvailabilityOverrides(provider).some(
+    (item) => item?.type === "day" && item?.date === dateStr
+  );
+};
+
+const isSlotBlockedByOverride = (provider, dateStr, fromTime, toTime) => {
+  const reqStart = timeToMinutes(fromTime);
+  const reqEnd = timeToMinutes(toTime);
+
+  return getAvailabilityOverrides(provider).some((item) => {
+    if (!item || item.date !== dateStr) return false;
+
+    if (item.type === "day") return true;
+
+    if (item.type !== "slot") return false;
+    if (!item.fromTime || !item.toTime) return false;
+
+    const blockStart = timeToMinutes(item.fromTime);
+    const blockEnd = timeToMinutes(item.toTime);
+
+    return rangesOverlap(reqStart, reqEnd, blockStart, blockEnd);
+  });
+};
+
 export default function BookingModeCalendar({
   user,
   provider,
@@ -297,6 +337,16 @@ export default function BookingModeCalendar({
       const end = addMinutes(start, durMin);
       const endWithBuffer = addMinutes(end, buffer);
 
+      const fromTime = format(start, "HH:mm");
+      const toTime = format(end, "HH:mm");
+
+      const blockedByOverride = isSlotBlockedByOverride(
+        provider,
+        dateStr,
+        fromTime,
+        toTime
+      );
+
       const slotStartMs = +start;
       const slotEndMs = +endWithBuffer;
 
@@ -367,9 +417,14 @@ export default function BookingModeCalendar({
         }
       }
 
+      if (blockedByOverride) status = "disabled";
       if (isToday && nowRoundedUp && start < nowRoundedUp) status = "disabled";
 
-      slots.push({ label: format(start, "HH:mm"), status });
+      slots.push({
+        label: format(start, "HH:mm"),
+        status,
+        blockedByOverride,
+      });
       cursor = addMinutes(cursor, step);
     }
 
@@ -444,11 +499,22 @@ export default function BookingModeCalendar({
       const fromTime = format(startDateTime, "HH:mm");
       const toTime = format(addMinutes(startDateTime, durationToMinutes(selectedService)), "HH:mm");
 
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+
+      if (isSlotBlockedByOverride(provider, dateStr, fromTime, toTime)) {
+        pushAlert?.({
+          show: true,
+          type: "error",
+          message: "Ten termin został oznaczony przez usługodawcę jako niedostępny.",
+        });
+        return;
+      }
+
       const payload = {
         userId: user.uid,
         providerUserId: provider.userId,
         providerProfileId: provider._id,
-        date: format(selectedDate, "yyyy-MM-dd"),
+        date: dateStr,
         fromTime,
         toTime,
         description,
@@ -640,15 +706,27 @@ export default function BookingModeCalendar({
                 const active = isDayActive(day);
                 const sel = selectedDate && isSameDay(day, selectedDate);
                 const isPast = isBefore(startOfDay(day), startOfDay(new Date()));
+                const dateStr = format(day, "yyyy-MM-dd");
+                const blockedByOverride = isDateBlockedByOverride(provider, dateStr);
+                const disabled = !active || isPast || blockedByOverride;
 
                 return (
                   <button
                     key={day.toISOString()}
                     type="button"
-                    className={`${styles.day} ${!active || isPast ? styles.disabledDay : ""} ${sel ? styles.selectedDay : ""
-                      }`}
-                    disabled={!active || isPast}
-                    onClick={() => active && !isPast && setDate(day)}
+                    className={`${styles.day} ${disabled ? styles.disabledDay : ""} ${blockedByOverride ? styles.overrideBlockedDay : ""
+                      } ${sel ? styles.selectedDay : ""}`}
+                    disabled={disabled}
+                    title={
+                      blockedByOverride
+                        ? "Ten dzień został oznaczony jako niedostępny przez usługodawcę."
+                        : undefined
+                    }
+                    onClick={() => {
+                      if (disabled) return;
+                      setDate(day);
+                      setSlot("");
+                    }}
                   >
                     {format(day, "d")}
                   </button>

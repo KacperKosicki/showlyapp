@@ -561,3 +561,13 @@
   color: rgba(0, 0, 0, 0.55);
   font-size: 0.95rem;
 }
+
+.overrideBlockedDay {
+  background: #ffe5e5 !important;
+  color: #d0293b !important;
+  border-color: #ffd4d4 !important;
+
+  &:hover {
+    transform: none;
+  }
+}

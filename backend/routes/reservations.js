@@ -74,6 +74,43 @@ const toMin = (hhmm) => {
 
 const overlap = (aStart, aEnd, bStart, bEnd) => aStart < bEnd && aEnd > bStart;
 
+const getAvailabilityOverrides = (profile) => {
+  return Array.isArray(profile?.availabilityOverrides)
+    ? profile.availabilityOverrides
+    : [];
+};
+
+const isDayUnavailableByOverride = (profile, date) => {
+  return getAvailabilityOverrides(profile).some(
+    (item) => item.type === "day" && item.date === date
+  );
+};
+
+const isSlotUnavailableByOverride = (profile, date, fromTime, toTime) => {
+  const reqStart = toMin(fromTime);
+  const reqEnd = toMin(toTime);
+
+  return getAvailabilityOverrides(profile).some((item) => {
+    if (!item || item.date !== date) return false;
+
+    if (item.type === "day") return true;
+
+    if (item.type !== "slot") return false;
+    if (!item.fromTime || !item.toTime) return false;
+
+    const blockStart = toMin(item.fromTime);
+    const blockEnd = toMin(item.toTime);
+
+    return overlap(reqStart, reqEnd, blockStart, blockEnd);
+  });
+};
+
+const getDayOverrideDates = (profile) => {
+  return getAvailabilityOverrides(profile)
+    .filter((item) => item?.type === "day" && item?.date)
+    .map((item) => item.date);
+};
+
 // ⚠️ Uwaga: to jest UTC "na sztywno" (Z). Jeśli liczysz lokalnie, musisz to ujednolicić.
 const toDateTime = (dateStr, hhmm) => new Date(`${dateStr}T${hhmm}:00.000Z`);
 
@@ -356,6 +393,12 @@ router.post("/", requireAuth, async (req, res) => {
       return res.status(403).json({ message: "Nieprawidłowy providerProfileId dla tego providerUserId" });
     }
 
+    if (isSlotUnavailableByOverride(profile, date, fromTime, toTime)) {
+      return res.status(409).json({
+        message: "Ten termin został oznaczony przez usługodawcę jako niedostępny.",
+      });
+    }
+
     const effectiveBufferMin = SLOT_BREAK_MIN + planAccess.bookingBufferMin;
 
     const serviceCheck = ensureServiceIsBookable(profile, serviceId);
@@ -626,6 +669,12 @@ router.post("/offline", requireAuth, async (req, res) => {
       });
     }
 
+    if (isSlotUnavailableByOverride(profile, date, fromTime, toTime)) {
+      return res.status(409).json({
+        message: "Ten termin został oznaczony jako niedostępny w wyjątkach dostępności.",
+      });
+    }
+
     const effectiveBufferMin = SLOT_BREAK_MIN + planAccess.bookingBufferMin;
 
     const isCalendarTeam =
@@ -837,11 +886,17 @@ router.post("/day", requireAuth, async (req, res) => {
 
     const profile = await Profile.findOne(
       { userId: providerUserId },
-      { blockedDays: 1, services: 1 }
+      { blockedDays: 1, availabilityOverrides: 1, services: 1 }
     ).lean();
 
     if (profile?.blockedDays?.includes(date)) {
       return res.status(409).json({ message: "Ten dzień jest zablokowany przez usługodawcę." });
+    }
+
+    if (isDayUnavailableByOverride(profile, date)) {
+      return res.status(409).json({
+        message: "Ten dzień został oznaczony przez usługodawcę jako niedostępny.",
+      });
     }
 
     const existsAccepted = await Reservation.findOne({
@@ -995,11 +1050,17 @@ router.post("/offline/day", requireAuth, async (req, res) => {
 
     const fullProfile = await Profile.findOne(
       { userId: providerUserId },
-      { blockedDays: 1, services: 1 }
+      { blockedDays: 1, availabilityOverrides: 1, services: 1 }
     ).lean();
 
     if (fullProfile?.blockedDays?.includes(date)) {
       return res.status(409).json({ message: "Ten dzień jest zablokowany przez usługodawcę." });
+    }
+
+    if (isDayUnavailableByOverride(fullProfile, date)) {
+      return res.status(409).json({
+        message: "Ten dzień został oznaczony jako niedostępny w wyjątkach dostępności.",
+      });
     }
 
     const existsAccepted = await Reservation.findOne({
@@ -1238,6 +1299,7 @@ router.get("/unavailable-days/:providerUid", async (req, res) => {
       { userId: providerUid },
       {
         blockedDays: 1,
+        availabilityOverrides: 1,
         bookingMode: 1,
         billing: 1,
       }
@@ -1245,22 +1307,30 @@ router.get("/unavailable-days/:providerUid", async (req, res) => {
 
     const planAccess = profile ? getReservationPlanAccess(profile) : null;
 
-    const canShowBlockedDays =
-      planAccess?.bookingMode === "request-blocking";
+    const canShowUnavailableDays =
+      planAccess?.bookingMode === "request-blocking" ||
+      planAccess?.bookingMode === "calendar";
 
     const blocked =
-      canShowBlockedDays && Array.isArray(profile?.blockedDays)
+      canShowUnavailableDays && Array.isArray(profile?.blockedDays)
         ? profile.blockedDays
         : [];
 
+    const overrideDays =
+      canShowUnavailableDays ? getDayOverrideDates(profile) : [];
+
     const takenDocs = await Reservation.find(
-      { providerUserId: providerUid, dateOnly: true, status: "zaakceptowana" },
+      {
+        providerUserId: providerUid,
+        dateOnly: true,
+        status: "zaakceptowana",
+      },
       { date: 1, _id: 0 }
     ).lean();
 
-    const taken = canShowBlockedDays ? takenDocs.map((d) => d.date) : [];
+    const taken = canShowUnavailableDays ? takenDocs.map((d) => d.date) : [];
 
-    const all = Array.from(new Set([...blocked, ...taken]));
+    const all = Array.from(new Set([...blocked, ...overrideDays, ...taken]));
 
     return res.json(all);
   } catch (e) {
@@ -1500,6 +1570,42 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
         return res.status(403).json({ message: "Tylko usługodawca może zaakceptować tę rezerwację" });
       }
 
+      const profile = await Profile.findById(reservation.providerProfileId);
+
+      if (!profile) {
+        return res.status(404).json({ message: "Profil usługodawcy nie istnieje." });
+      }
+
+      if (reservation.dateOnly) {
+        if (
+          Array.isArray(profile.blockedDays) &&
+          profile.blockedDays.includes(reservation.date)
+        ) {
+          return res.status(409).json({
+            message: "Nie możesz zaakceptować tej rezerwacji, bo ten dzień jest zablokowany.",
+          });
+        }
+
+        if (isDayUnavailableByOverride(profile, reservation.date)) {
+          return res.status(409).json({
+            message: "Nie możesz zaakceptować tej rezerwacji, bo ten dzień jest oznaczony jako niedostępny.",
+          });
+        }
+      } else {
+        if (
+          isSlotUnavailableByOverride(
+            profile,
+            reservation.date,
+            reservation.fromTime,
+            reservation.toTime
+          )
+        ) {
+          return res.status(409).json({
+            message: "Nie możesz zaakceptować tej rezerwacji, bo ten termin jest oznaczony jako niedostępny.",
+          });
+        }
+      }
+
       reservation.status = "zaakceptowana";
       reservation.pendingExpiresAt = null;
       reservation.closedAt = null;
@@ -1510,7 +1616,6 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
 
       // usuwamy slot z availableDates jeśli istnieje (tylko hourly)
       if (!reservation.dateOnly) {
-        const profile = await Profile.findById(reservation.providerProfileId);
         if (profile && Array.isArray(profile.availableDates)) {
           profile.availableDates = profile.availableDates.filter(
             (slot) =>
@@ -1573,6 +1678,7 @@ router.get("/meta/:providerUid", async (req, res) => {
         workingHours: 1,
         workingDays: 1,
         blockedDays: 1,
+        availabilityOverrides: 1,
         autoAcceptReservations: 1,
         billing: 1,
       }
@@ -1635,6 +1741,12 @@ router.get("/meta/:providerUid", async (req, res) => {
         planAccess.bookingMode === "request-blocking" &&
           Array.isArray(profile.blockedDays)
           ? profile.blockedDays
+          : [],
+
+      availabilityOverrides:
+        ["calendar", "request-blocking"].includes(planAccess.bookingMode) &&
+          Array.isArray(profile.availabilityOverrides)
+          ? profile.availabilityOverrides
           : [],
 
       billingPublic: planAccess.billingPublic,

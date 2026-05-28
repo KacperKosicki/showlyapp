@@ -19,14 +19,110 @@ import {
 
 const STAFF_NAME_MAX_LENGTH = 60;
 
+const formatDateLabel = (date = "") => {
+  if (!date) return "—";
+
+  const [year, month, day] = String(date).split("-");
+
+  if (!year || !month || !day) return date;
+
+  return `${day}.${month}.${year}`;
+};
+
+const addDaysToDateString = (dateStr, days = 1) => {
+  const date = new Date(`${dateStr}T00:00:00`);
+  date.setDate(date.getDate() + days);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const groupAvailabilityOverrides = (items = []) => {
+  if (!Array.isArray(items)) return [];
+
+  const normalized = items
+    .map((item, index) => ({
+      ...item,
+      originalIndex: index,
+    }))
+    .filter((item) => item?.date)
+    .sort((a, b) => {
+      if (a.type !== b.type) return String(a.type).localeCompare(String(b.type));
+      if (a.date !== b.date) return String(a.date).localeCompare(String(b.date));
+      if ((a.fromTime || "") !== (b.fromTime || "")) {
+        return String(a.fromTime || "").localeCompare(String(b.fromTime || ""));
+      }
+      return String(a.toTime || "").localeCompare(String(b.toTime || ""));
+    });
+
+  const groups = [];
+
+  normalized.forEach((item) => {
+    if (item.type === "slot") {
+      groups.push({
+        kind: "slot",
+        from: item.date,
+        to: item.date,
+        fromTime: item.fromTime || "",
+        toTime: item.toTime || "",
+        reason: item.reason || "",
+        indices: [item.originalIndex],
+      });
+
+      return;
+    }
+
+    const last = groups[groups.length - 1];
+
+    const canJoin =
+      last &&
+      last.kind === "day" &&
+      last.reason === (item.reason || "") &&
+      addDaysToDateString(last.to, 1) === item.date;
+
+    if (canJoin) {
+      last.to = item.date;
+      last.indices.push(item.originalIndex);
+      return;
+    }
+
+    groups.push({
+      kind: "day",
+      from: item.date,
+      to: item.date,
+      reason: item.reason || "",
+      indices: [item.originalIndex],
+    });
+  });
+
+  return groups;
+};
+
+const getAvailabilityGroupTitle = (group) => {
+  if (group.kind === "slot") {
+    return `${formatDateLabel(group.from)}, ${group.fromTime}–${group.toTime}`;
+  }
+
+  if (group.from === group.to) {
+    return `${formatDateLabel(group.from)} — cały dzień`;
+  }
+
+  return `${formatDateLabel(group.from)} – ${formatDateLabel(group.to)} — cały dzień`;
+};
+
 const OfferSection = ({
   profile,
   editData,
   isEditing,
   formErrors,
   setEditData,
-  newAvailableDate,
-  setNewAvailableDate,
+  newAvailabilityBlock,
+  setNewAvailabilityBlock,
+  handleAddAvailabilityBlock,
+  handleRemoveAvailabilityBlock,
   maxServices,
   newService,
   setNewService,
@@ -59,6 +155,25 @@ const OfferSection = ({
   showAlert,
 }) => {
   const MAX_SERVICES = maxServices;
+
+  const groupedEditAvailability = groupAvailabilityOverrides(
+    editData.availabilityOverrides
+  );
+
+  const groupedProfileAvailability = groupAvailabilityOverrides(
+    profile.availabilityOverrides
+  );
+
+  const handleRemoveAvailabilityGroup = (indices = []) => {
+    const toRemove = new Set(indices);
+
+    setEditData((prev) => ({
+      ...prev,
+      availabilityOverrides: Array.isArray(prev.availabilityOverrides)
+        ? prev.availabilityOverrides.filter((_, index) => !toRemove.has(index))
+        : [],
+    }));
+  };
 
   const cleanStaffName = (value) => {
     return String(value || "")
@@ -1368,7 +1483,7 @@ const OfferSection = ({
             )}
           </div>
 
-          {/* TERMINY DOSTĘPNOŚCI */}
+          {/* WYJĄTKI DOSTĘPNOŚCI */}
           <div className={`${styles.offerPanel} ${styles.datesPanel}`}>
             <div className={styles.offerPanelHead}>
               <div className={styles.offerIcon}>
@@ -1376,131 +1491,197 @@ const OfferSection = ({
               </div>
 
               <div>
-                <strong>Terminy dostępności</strong>
-                <span>Ręczne terminy, które możesz pokazać na profilu.</span>
+                <strong>Wyjątki dostępności</strong>
+                <span>
+                  Dodaj urlop, wyjazd, prywatną blokadę dnia albo konkretny zakres godzin,
+                  którego nie chcesz udostępniać klientom.
+                </span>
               </div>
             </div>
 
             {isEditing ? (
               <>
-                <label className={styles.switchRow}>
-                  <input
-                    type="checkbox"
-                    checked={!!editData.showAvailableDates}
-                    onChange={(e) =>
-                      setEditData({
-                        ...editData,
-                        showAvailableDates: e.target.checked,
-                      })
-                    }
-                  />
-
-                  <span>
-                    <strong>Pokazuj dostępne dni i terminy w profilu</strong>
-                    <small>
-                      Gdy wyłączone, klienci nadal mogą wysłać wiadomość.
-                    </small>
-                  </span>
-                </label>
-
-                {!editData.showAvailableDates ? (
-                  <div className={styles.infoMuted}>
-                    Twój profil nie pokazuje dostępnych terminów — klienci mogą tylko
-                    napisać wiadomość.
+                {!canUseBooking ? (
+                  <div className={styles.upgradeNotice}>
+                    <strong>Wyjątki dostępności są dostępne w planie Premium.</strong>
+                    <span>
+                      Po włączeniu rezerwacji możesz blokować całe dni lub konkretne godziny.
+                    </span>
                   </div>
                 ) : (
                   <>
-                    <div className={styles.availableDatesForm}>
-                      <input
-                        type="date"
-                        className={styles.formInput}
-                        value={newAvailableDate.date}
-                        onChange={(e) =>
-                          setNewAvailableDate((prev) => ({
-                            ...prev,
-                            date: e.target.value,
-                          }))
-                        }
-                      />
+                    <div className={styles.availabilityEditor}>
+                      <label className={styles.modernField}>
+                        <span>Typ blokady</span>
 
-                      <input
-                        type="time"
-                        className={styles.formInput}
-                        value={newAvailableDate.from}
-                        onChange={(e) =>
-                          setNewAvailableDate((prev) => ({
-                            ...prev,
-                            from: e.target.value,
-                          }))
-                        }
-                      />
+                        <select
+                          className={styles.formInput}
+                          value={newAvailabilityBlock.type}
+                          onChange={(e) =>
+                            setNewAvailabilityBlock((prev) => ({
+                              ...prev,
+                              type: e.target.value,
+                              date: "",
+                              dateFrom: "",
+                              dateTo: "",
+                              fromTime: e.target.value === "slot" ? prev.fromTime : "",
+                              toTime: e.target.value === "slot" ? prev.toTime : "",
+                            }))
+                          }
+                        >
+                          <option value="day">Cały dzień</option>
+                          <option value="dayRange">Zakres dni</option>
+                          <option value="slot">Konkretne godziny</option>
+                        </select>
+                      </label>
 
-                      <input
-                        type="time"
-                        className={styles.formInput}
-                        value={newAvailableDate.to}
-                        onChange={(e) =>
-                          setNewAvailableDate((prev) => ({
-                            ...prev,
-                            to: e.target.value,
-                          }))
-                        }
-                      />
+                      {newAvailabilityBlock.type !== "dayRange" ? (
+                        <label className={styles.modernField}>
+                          <span>Data</span>
+
+                          <input
+                            type="date"
+                            className={styles.formInput}
+                            value={newAvailabilityBlock.date}
+                            onChange={(e) =>
+                              setNewAvailabilityBlock((prev) => ({
+                                ...prev,
+                                date: e.target.value,
+                              }))
+                            }
+                          />
+                        </label>
+                      ) : (
+                        <>
+                          <label className={styles.modernField}>
+                            <span>Data od</span>
+
+                            <input
+                              type="date"
+                              className={styles.formInput}
+                              value={newAvailabilityBlock.dateFrom}
+                              onChange={(e) =>
+                                setNewAvailabilityBlock((prev) => ({
+                                  ...prev,
+                                  dateFrom: e.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+
+                          <label className={styles.modernField}>
+                            <span>Data do</span>
+
+                            <input
+                              type="date"
+                              className={styles.formInput}
+                              value={newAvailabilityBlock.dateTo}
+                              onChange={(e) =>
+                                setNewAvailabilityBlock((prev) => ({
+                                  ...prev,
+                                  dateTo: e.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                        </>
+                      )}
+
+                      {newAvailabilityBlock.type === "slot" && (
+                        <>
+                          <label className={styles.modernField}>
+                            <span>Od</span>
+
+                            <input
+                              type="time"
+                              className={styles.formInput}
+                              value={newAvailabilityBlock.fromTime}
+                              onChange={(e) =>
+                                setNewAvailabilityBlock((prev) => ({
+                                  ...prev,
+                                  fromTime: e.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+
+                          <label className={styles.modernField}>
+                            <span>Do</span>
+
+                            <input
+                              type="time"
+                              className={styles.formInput}
+                              value={newAvailabilityBlock.toTime}
+                              onChange={(e) =>
+                                setNewAvailabilityBlock((prev) => ({
+                                  ...prev,
+                                  toTime: e.target.value,
+                                }))
+                              }
+                            />
+                          </label>
+                        </>
+                      )}
+
+                      <label className={styles.modernField}>
+                        <span>Powód</span>
+
+                        <input
+                          type="text"
+                          className={styles.formInput}
+                          maxLength={120}
+                          placeholder="Np. urlop, wyjazd, sprawy prywatne"
+                          value={newAvailabilityBlock.reason}
+                          onChange={(e) =>
+                            setNewAvailabilityBlock((prev) => ({
+                              ...prev,
+                              reason: e.target.value,
+                            }))
+                          }
+                        />
+                      </label>
 
                       <button
                         type="button"
                         className={styles.primary}
-                        onClick={() => {
-                          if (!newAvailableDate.date) {
-                            showAlert("Wybierz datę terminu.", "warning");
-                            return;
-                          }
-
-                          setEditData((prev) => ({
-                            ...prev,
-                            availableDates: [
-                              ...(prev.availableDates || []),
-                              newAvailableDate,
-                            ],
-                          }));
-
-                          setNewAvailableDate({ date: "", from: "", to: "" });
-                        }}
+                        onClick={handleAddAvailabilityBlock}
                       >
-                        <FaPlus /> Dodaj termin
+                        <FaPlus />
+                        {newAvailabilityBlock.type === "dayRange" ? "Dodaj zakres" : "Dodaj blokadę"}
                       </button>
                     </div>
 
-                    <div className={styles.datesModernList}>
-                      {(editData.availableDates || []).length ? (
-                        editData.availableDates.map((dateItem, index) => (
-                          <div key={index} className={styles.dateModernItem}>
+                    <div className={styles.availabilityList}>
+                      {groupedEditAvailability.length > 0 ? (
+                        groupedEditAvailability.map((group, index) => (
+                          <div
+                            key={`${group.kind}-${group.from}-${group.to}-${group.fromTime}-${group.toTime}-${index}`}
+                            className={styles.availabilityItem}
+                          >
                             <div>
-                              <strong>{dateItem.date}</strong>
-                              <span>
-                                {dateItem.from || "—"} - {dateItem.to || "—"}
-                              </span>
+                              <strong>{getAvailabilityGroupTitle(group)}</strong>
+
+                              {group.reason && <span>{group.reason}</span>}
+
+                              {group.kind === "day" && group.indices.length > 1 && (
+                                <span>
+                                  Zakres obejmuje {group.indices.length} dni.
+                                </span>
+                              )}
                             </div>
 
                             <button
                               type="button"
-                              className={styles.serviceRemoveBtn}
-                              onClick={() =>
-                                setEditData((prev) => ({
-                                  ...prev,
-                                  availableDates: (prev.availableDates || []).filter(
-                                    (_, i) => i !== index
-                                  ),
-                                }))
-                              }
+                              className={styles.danger}
+                              onClick={() => handleRemoveAvailabilityGroup(group.indices)}
                             >
-                              <FaTrash />
+                              <FaTrash /> Usuń
                             </button>
                           </div>
                         ))
                       ) : (
                         <div className={styles.infoMuted}>
-                          Nie dodano jeszcze żadnych terminów.
+                          Nie dodano jeszcze żadnych wyjątków dostępności.
                         </div>
                       )}
                     </div>
@@ -1508,21 +1689,29 @@ const OfferSection = ({
                 )}
               </>
             ) : (
-              <div className={styles.datesModernList}>
-                {profile.showAvailableDates && profile.availableDates?.length ? (
-                  profile.availableDates.map((dateItem, index) => (
-                    <div key={index} className={styles.dateModernItem}>
+              <div className={styles.availabilityList}>
+                {groupedProfileAvailability.length > 0 ? (
+                  groupedProfileAvailability.map((group, index) => (
+                    <div
+                      key={`${group.kind}-${group.from}-${group.to}-${group.fromTime}-${group.toTime}-${index}`}
+                      className={styles.availabilityItem}
+                    >
                       <div>
-                        <strong>{dateItem.date}</strong>
-                        <span>
-                          {dateItem.from || "—"} - {dateItem.to || "—"}
-                        </span>
+                        <strong>{getAvailabilityGroupTitle(group)}</strong>
+
+                        {group.reason && <span>{group.reason}</span>}
+
+                        {group.kind === "day" && group.indices.length > 1 && (
+                          <span>
+                            Zakres obejmuje {group.indices.length} dni.
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))
                 ) : (
                   <div className={styles.infoMuted}>
-                    Terminy dostępności nie są obecnie pokazywane.
+                    Brak dodatkowych blokad dostępności.
                   </div>
                 )}
               </div>

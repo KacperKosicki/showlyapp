@@ -83,7 +83,6 @@ const BillingSection = ({
 
       <ul>
         <li>Widoczność przez 30 dni</li>
-        <li>Przedłużenie: 14,99 zł / 30 dni</li>
         <li>Losowy link do profilu</li>
         <li>Do 3 zdjęć profilu</li>
         <li>Do 3 usług</li>
@@ -182,8 +181,9 @@ const BillingSection = ({
         <li>Zaawansowany kalendarz rezerwacji</li>
         <li>Tryby rezerwacji: kalendarz, zapytania i blokowanie dni</li>
         <li>Automatyczna akceptacja rezerwacji</li>
-        <li>Bufor między rezerwacjami</li>
+        <li>Bufor (przerwa) między rezerwacjami</li>
         <li>Zespół i pracownicy</li>
+        <li>Wyjątki dostępności</li>
       </ul>
 
       {billingPlan === "premium" ? (

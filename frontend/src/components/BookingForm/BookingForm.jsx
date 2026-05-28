@@ -83,15 +83,84 @@ export default function BookingForm({ user }) {
 
   // 1) Załaduj profil
   useEffect(() => {
-    axios
-      .get(`${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`)
-      .then(({ data }) => {
-        data.workingDays = (data.workingDays || []).map(Number);
-        setProvider(data);
-      })
-      .catch(() => {
-        setAlert({ show: true, type: "error", message: "Nie udało się załadować profilu." });
-      });
+    let alive = true;
+
+    const loadProvider = async () => {
+      try {
+        const { data } = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/profiles/slug/${slug}`
+        );
+
+        let finalProvider = {
+          ...data,
+          workingDays: (data.workingDays || []).map(Number),
+          availabilityOverrides: Array.isArray(data.availabilityOverrides)
+            ? data.availabilityOverrides
+            : [],
+        };
+
+        if (data?.userId) {
+          try {
+            const { data: meta } = await axios.get(
+              `${process.env.REACT_APP_API_URL}/api/reservations/meta/${data.userId}`
+            );
+
+            if (meta) {
+              finalProvider = {
+                ...finalProvider,
+
+                _id: meta.providerProfileId || finalProvider._id,
+                name: finalProvider.name || meta.providerProfileName,
+                role: finalProvider.role || meta.providerProfileRole,
+
+                bookingMode: meta.bookingMode || finalProvider.bookingMode,
+                team: meta.team || finalProvider.team,
+                services: Array.isArray(meta.services)
+                  ? meta.services
+                  : finalProvider.services || [],
+
+                bookingBufferMin: Number.isFinite(Number(meta.bookingBufferMin))
+                  ? Number(meta.bookingBufferMin)
+                  : Number(finalProvider.bookingBufferMin || 0),
+
+                autoAcceptReservations: !!meta.autoAcceptReservations,
+
+                workingHours: meta.workingHours || finalProvider.workingHours,
+                workingDays: Array.isArray(meta.workingDays)
+                  ? meta.workingDays.map(Number)
+                  : finalProvider.workingDays,
+
+                blockedDays: Array.isArray(meta.blockedDays)
+                  ? meta.blockedDays
+                  : [],
+
+                availabilityOverrides: Array.isArray(meta.availabilityOverrides)
+                  ? meta.availabilityOverrides
+                  : [],
+              };
+            }
+          } catch (metaErr) {
+            console.warn("Nie udało się pobrać meta rezerwacji:", metaErr);
+          }
+        }
+
+        if (!alive) return;
+        setProvider(finalProvider);
+      } catch {
+        if (!alive) return;
+        setAlert({
+          show: true,
+          type: "error",
+          message: "Nie udało się załadować profilu.",
+        });
+      }
+    };
+
+    loadProvider();
+
+    return () => {
+      alive = false;
+    };
   }, [slug]);
 
   // 2) Redirect gdy ukryte (tylko calendar)

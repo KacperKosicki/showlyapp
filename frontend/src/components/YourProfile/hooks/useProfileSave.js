@@ -257,10 +257,10 @@ const useProfileSave = ({
       const safeTheme = canUsePremiumThemes
         ? mappedTheme
         : {
-            variant: currentTheme.variant || "system",
-            primary: currentTheme.primary || "#6f4ef2",
-            secondary: currentTheme.secondary || "#ff4081",
-          };
+          variant: currentTheme.variant || "system",
+          primary: currentTheme.primary || "#6f4ef2",
+          secondary: currentTheme.secondary || "#ff4081",
+        };
 
       const contact = payload.contact || {};
 
@@ -288,6 +288,44 @@ const useProfileSave = ({
         .filter((qa) => qa.title?.trim() || qa.answer?.trim())
         .slice(0, maxQuickAnswers);
 
+      const safeAvailabilityOverrides = Array.isArray(payload.availabilityOverrides)
+        ? payload.availabilityOverrides
+          .map((item) => {
+            const type = String(item?.type || "").trim();
+            const date = String(item?.date || "").trim();
+            const fromTime = String(item?.fromTime || "").trim();
+            const toTime = String(item?.toTime || "").trim();
+            const reason = String(item?.reason || "").trim().slice(0, 120);
+
+            if (!["day", "slot"].includes(type)) return null;
+            if (!date) return null;
+
+            if (type === "day") {
+              return {
+                type: "day",
+                date,
+                fromTime: "",
+                toTime: "",
+                reason,
+              };
+            }
+
+            if (!fromTime || !toTime || fromTime >= toTime) {
+              return null;
+            }
+
+            return {
+              type: "slot",
+              date,
+              fromTime,
+              toTime,
+              reason,
+            };
+          })
+          .filter(Boolean)
+          .slice(0, 365)
+        : [];
+
       await axios.patch(
         `${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`,
         {
@@ -295,6 +333,7 @@ const useProfileSave = ({
           services: safeServices,
           links: safeLinks,
           bookingMode: safeBookingMode,
+          availabilityOverrides: canUseBooking ? safeAvailabilityOverrides : [],
           bookingBufferMin: canUseBooking
             ? Number(payload.bookingBufferMin ?? 0)
             : 0,

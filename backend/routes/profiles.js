@@ -259,6 +259,63 @@ function sanitizeStringArray(arr = [], max = 20) {
     .slice(0, max);
 }
 
+function isValidDateString(value = "") {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(value));
+}
+
+function isValidTimeString(value = "") {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value));
+}
+
+function timeToMinutes(value = "") {
+  const [h, m] = String(value).split(":").map(Number);
+  return h * 60 + m;
+}
+
+function sanitizeAvailabilityOverrides(items = []) {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .map((item) => {
+      const type = clean(item?.type);
+      const date = clean(item?.date);
+      const fromTime = clean(item?.fromTime);
+      const toTime = clean(item?.toTime);
+      const reason = clean(item?.reason).slice(0, 120);
+
+      if (!["day", "slot"].includes(type)) return null;
+      if (!isValidDateString(date)) return null;
+
+      if (type === "day") {
+        return {
+          type,
+          date,
+          fromTime: "",
+          toTime: "",
+          reason,
+        };
+      }
+
+      if (!isValidTimeString(fromTime) || !isValidTimeString(toTime)) {
+        return null;
+      }
+
+      if (timeToMinutes(fromTime) >= timeToMinutes(toTime)) {
+        return null;
+      }
+
+      return {
+        type,
+        date,
+        fromTime,
+        toTime,
+        reason,
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 365);
+}
+
 function sanitizeImageObject(img = {}) {
   return {
     url: clean(img?.url),
@@ -1509,6 +1566,7 @@ const allowedFields = [
   "contact",
   "socials",
   "blockedDays",
+  "availabilityOverrides",
   "name",
   "hasBusiness",
   "nip",
@@ -1624,21 +1682,37 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
       updates.links = sanitizeStringArray(updates.links, 10);
     }
 
-    if (updates.blockedDays) {
-      updates.blockedDays = sanitizeStringArray(updates.blockedDays, 365);
-    }
+if (updates.blockedDays) {
+  updates.blockedDays = sanitizeStringArray(updates.blockedDays, 365);
+}
 
-    if (updates.availableDates) {
-      updates.availableDates = Array.isArray(updates.availableDates)
-        ? updates.availableDates
-          .map((item) => ({
-            date: clean(item?.date),
-            fromTime: clean(item?.fromTime),
-            toTime: clean(item?.toTime),
-          }))
-          .filter((item) => item.date && item.fromTime && item.toTime)
-        : [];
-    }
+if (updates.availabilityOverrides !== undefined) {
+  const canUseBooking = hasFeature(profile, "booking", {
+    allowPastDue: true,
+  });
+
+  const canUseRequestBlocking = hasFeature(profile, "requestBlocking", {
+    allowPastDue: true,
+  });
+
+  const canUseAvailabilityOverrides = canUseBooking || canUseRequestBlocking;
+
+  updates.availabilityOverrides = canUseAvailabilityOverrides
+    ? sanitizeAvailabilityOverrides(updates.availabilityOverrides)
+    : [];
+}
+
+if (updates.availableDates) {
+  updates.availableDates = Array.isArray(updates.availableDates)
+    ? updates.availableDates
+      .map((item) => ({
+        date: clean(item?.date),
+        fromTime: clean(item?.fromTime || item?.from),
+        toTime: clean(item?.toTime || item?.to),
+      }))
+      .filter((item) => item.date && item.fromTime && item.toTime)
+    : [];
+}
 
     if (updates.workingHours) {
       updates.workingHours = {

@@ -26,6 +26,7 @@ import useAlert from './hooks/useAlert';
 import useProfileVisibility from './hooks/useProfileVisibility';
 import useAuthHeaders from './hooks/useAuthHeaders';
 import useScrollToProfileSection from './hooks/useScrollToProfileSection';
+import useProfileAvailability from './hooks/useProfileAvailability';
 import useProfileLoader from './hooks/useProfileLoader';
 import useLightbox from './hooks/useLightbox';
 import {
@@ -45,7 +46,6 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   // =========================
 
   const [isEditing, setIsEditing] = useState(false);
-  const [newAvailableDate, setNewAvailableDate] = useState({ date: '', from: '', to: '' });
   const [formErrors, setFormErrors] = useState({});
 
   const fileInputRef = useRef(null);
@@ -94,6 +94,16 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     user,
     authHeaders,
     fetchBillingStatus,
+  });
+
+  const {
+    newAvailabilityBlock,
+    setNewAvailabilityBlock,
+    handleAddAvailabilityBlock,
+    handleRemoveAvailabilityBlock,
+  } = useProfileAvailability({
+    setEditData,
+    showAlert,
   });
 
   const {
@@ -325,8 +335,10 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           isEditing={isEditing}
           formErrors={formErrors}
           setEditData={setEditData}
-          newAvailableDate={newAvailableDate}
-          setNewAvailableDate={setNewAvailableDate}
+          newAvailabilityBlock={newAvailabilityBlock}
+          setNewAvailabilityBlock={setNewAvailabilityBlock}
+          handleAddAvailabilityBlock={handleAddAvailabilityBlock}
+          handleRemoveAvailabilityBlock={handleRemoveAvailabilityBlock}
           maxServices={MAX_SERVICES}
           newService={newService}
           setNewService={setNewService}

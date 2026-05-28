@@ -31,8 +31,11 @@ const ratedBySchema = new mongoose.Schema(
 );
 
 // =========================
-// TERMINY
+// TERMINY — STARE POLE / KOMPATYBILNOŚĆ
 // =========================
+// Zostawiamy na razie, żeby nie rozwalić obecnego frontu/routes.
+// Docelowo logika dostępności powinna iść przez:
+// workingDays + workingHours + availabilityOverrides + Reservation.
 const availableDateSchema = new mongoose.Schema(
   {
     date: { type: String, required: true }, // np. "2025-07-15"
@@ -40,6 +43,47 @@ const availableDateSchema = new mongoose.Schema(
     toTime: { type: String, required: true }, // np. "16:00"
   },
   { _id: false }
+);
+
+// =========================
+// WYJĄTKI / BLOKADY DOSTĘPNOŚCI — NOWE POLE
+// =========================
+// type: "day"  -> cały dzień niedostępny
+// type: "slot" -> konkretny zakres godzin niedostępny
+const availabilityOverrideSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ["day", "slot"],
+      required: true,
+    },
+
+    date: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    fromTime: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    toTime: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    reason: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 120,
+    },
+  },
+  { _id: true }
 );
 
 // =========================
@@ -186,11 +230,11 @@ const serviceSchema = new mongoose.Schema(
 
     image: {
       type: imageSchema,
-      default: () => ({ url: "", publicId: "" }),
+      default: () => ({ url: "", publicId: "", hash: "" }),
     },
 
     // Techniczny limit pod największy plan.
-    // Biznesowe limity Free/Standard/Premium sprawdzimy w routes.
+    // Biznesowe limity Free/Standard/Premium sprawdzamy w routes.
     gallery: {
       type: [imageSchema],
       default: [],
@@ -376,11 +420,11 @@ const profileSchema = new mongoose.Schema(
 
     avatar: {
       type: imageSchema,
-      default: () => ({ url: "", publicId: "" }),
+      default: () => ({ url: "", publicId: "", hash: "" }),
     },
 
     // Techniczny limit pod Premium.
-    // Free/Standard/Premium będziemy pilnować w backend routes.
+    // Free/Standard/Premium pilnujemy w backend routes.
     photos: {
       type: [imageSchema],
       default: [],
@@ -407,14 +451,30 @@ const profileSchema = new mongoose.Schema(
 
     visits: { type: Number, default: 0 },
 
+    // Stare ustawienie — zostawione dla kompatybilności.
     showAvailableDates: { type: Boolean, default: true },
 
+    // Stare ręczne terminy — zostawione dla kompatybilności.
     availableDates: {
       type: [availableDateSchema],
       default: [],
     },
 
-    blockedDays: { type: [String], default: [] },
+    // Stare blokowane dni — można później przenieść do availabilityOverrides.
+    blockedDays: {
+      type: [String],
+      default: [],
+    },
+
+    // Nowa, docelowa warstwa blokad/wyjątków dostępności.
+    availabilityOverrides: {
+      type: [availabilityOverrideSchema],
+      default: [],
+      validate: {
+        validator: (arr) => Array.isArray(arr) && arr.length <= 365,
+        message: "Maksymalnie 365 wyjątków dostępności.",
+      },
+    },
 
     services: {
       type: [serviceSchema],
@@ -605,7 +665,7 @@ const profileSchema = new mongoose.Schema(
       },
     },
 
-    // Nowe pole planów i płatności
+    // Plany i płatności
     billing: {
       type: billingSchema,
       default: () => ({
@@ -647,6 +707,46 @@ profileSchema.pre("validate", function (next) {
 
   if (!this?.partnership?.isPartner) {
     this.partnership.tier = "none";
+  }
+
+  // Walidacja availabilityOverrides.
+  // Dla type="day" godziny nie są wymagane.
+  // Dla type="slot" muszą być fromTime i toTime.
+  if (Array.isArray(this.availabilityOverrides)) {
+    for (const item of this.availabilityOverrides) {
+      if (!item?.type || !["day", "slot"].includes(item.type)) {
+        return next(
+          new Error("availabilityOverrides.type musi mieć wartość 'day' albo 'slot'.")
+        );
+      }
+
+      if (!item?.date) {
+        return next(new Error("availabilityOverrides.date jest wymagane."));
+      }
+
+      if (item.type === "slot") {
+        if (!item.fromTime || !item.toTime) {
+          return next(
+            new Error(
+              "Dla availabilityOverrides.type='slot' wymagane są fromTime i toTime."
+            )
+          );
+        }
+
+        if (item.fromTime >= item.toTime) {
+          return next(
+            new Error(
+              "availabilityOverrides.toTime musi być późniejsze niż fromTime."
+            )
+          );
+        }
+      }
+
+      if (item.type === "day") {
+        item.fromTime = "";
+        item.toTime = "";
+      }
+    }
   }
 
   // Jeżeli ktoś ma aktywny/płatny booking, ale plan nieaktywny,
@@ -706,5 +806,9 @@ profileSchema.index({ "billing.status": 1 });
 profileSchema.index({ "billing.stripeCustomerId": 1 });
 profileSchema.index({ "billing.stripeSubscriptionId": 1 });
 profileSchema.index({ "billing.currentPeriodEnd": 1 });
+
+// Przyda się przy pobieraniu profili z blokadami w kalendarzu/rezerwacjach.
+profileSchema.index({ "availabilityOverrides.date": 1 });
+profileSchema.index({ "availabilityOverrides.type": 1 });
 
 module.exports = mongoose.model("Profile", profileSchema);
