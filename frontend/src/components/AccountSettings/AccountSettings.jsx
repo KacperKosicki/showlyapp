@@ -3,7 +3,6 @@ import { useLocation } from "react-router-dom";
 import styles from "./AccountSettings.module.scss";
 import { auth } from "../../firebase";
 import AlertBox from "../AlertBox/AlertBox";
-import LoadingButton from "../ui/LoadingButton/LoadingButton";
 import {
   updateProfile,
   sendPasswordResetEmail,
@@ -37,11 +36,51 @@ const normalizeAvatar = (val = "") => {
   return val;
 };
 
-const ButtonContent = ({ icon, children }) => (
-  <span className={styles.btnContent}>
-    <span className={styles.btnIcon}>{icon}</span>
-    <span className={styles.btnText}>{children}</span>
+const LoadingDots = ({ active }) => (
+  <span
+    className={`${styles.loadingDots} ${active ? styles.loadingDotsActive : ""}`}
+    aria-hidden="true"
+  >
+    <span />
+    <span />
+    <span />
   </span>
+);
+
+const ButtonContent = ({ icon, children, isLoading }) => (
+  <span
+    className={styles.btnContent}
+    data-loading={isLoading ? "true" : "false"}
+  >
+    <span className={styles.btnNormalContent}>
+      <span className={styles.btnIcon}>{icon}</span>
+      <span className={styles.btnLabel}>{children}</span>
+    </span>
+
+    {typeof isLoading === "boolean" && <LoadingDots active={isLoading} />}
+  </span>
+);
+
+const ActionButton = ({
+  isLoading = false,
+  disabled = false,
+  onClick,
+  className = "",
+  icon,
+  children,
+}) => (
+  <button
+    type="button"
+    className={`${styles.btn} ${className}`}
+    disabled={disabled || isLoading}
+    onClick={onClick}
+    aria-busy={isLoading ? "true" : "false"}
+    data-loading={isLoading ? "true" : "false"}
+  >
+    <ButtonContent icon={icon} isLoading={isLoading}>
+      {children}
+    </ButtonContent>
+  </button>
 );
 
 export default function AccountSettings() {
@@ -77,7 +116,7 @@ export default function AccountSettings() {
 
         try {
           await u.reload();
-        } catch {}
+        } catch { }
 
         const freshUser = auth.currentUser;
 
@@ -199,7 +238,7 @@ export default function AccountSettings() {
       try {
         await updateProfile(user, { photoURL: url });
         await user.reload();
-      } catch {}
+      } catch { }
 
       setPreview(normalizeAvatar(url));
       setFile(null);
@@ -233,7 +272,7 @@ export default function AccountSettings() {
       try {
         await updateProfile(user, { photoURL: "" });
         await user.reload();
-      } catch {}
+      } catch { }
 
       setPreview(fallbackImg);
       setFile(null);
@@ -265,7 +304,7 @@ export default function AccountSettings() {
         method: "PATCH",
         headers,
         body: JSON.stringify({ displayName: clean }),
-      }).catch(() => {});
+      }).catch(() => { });
 
       setUser(auth.currentUser);
       showAlert("success", "Zaktualizowano nazwę wyświetlaną.");
@@ -392,24 +431,26 @@ export default function AccountSettings() {
                 </label>
 
                 <div className={styles.actionsRow}>
-                  <LoadingButton
+                  <ActionButton
                     isLoading={loadingAction === "saveAvatar"}
                     disabled={!file || loadingAction !== null}
                     onClick={handleSaveAvatar}
-                    className={`${styles.btn} ${styles.primary}`}
+                    className={styles.primary}
+                    icon={<FiSave />}
                   >
-                    <ButtonContent icon={<FiSave />}>Zapisz awatar</ButtonContent>
-                  </LoadingButton>
+                    Zapisz awatar
+                  </ActionButton>
 
                   {preview && preview !== fallbackImg && (
-                    <LoadingButton
+                    <ActionButton
                       isLoading={loadingAction === "removeAvatar"}
                       disabled={loadingAction !== null}
                       onClick={handleRemoveAvatar}
-                      className={`${styles.btn} ${styles.ghost}`}
+                      className={styles.ghost}
+                      icon={<FiTrash2 />}
                     >
-                      <ButtonContent icon={<FiTrash2 />}>Usuń awatar</ButtonContent>
-                    </LoadingButton>
+                      Usuń awatar
+                    </ActionButton>
                   )}
                 </div>
 
@@ -440,14 +481,15 @@ export default function AccountSettings() {
                 maxLength={40}
               />
 
-              <LoadingButton
+              <ActionButton
                 isLoading={loadingAction === "saveName"}
                 disabled={loadingAction !== null}
                 onClick={handleSaveDisplayName}
-                className={`${styles.btn} ${styles.primary}`}
+                className={styles.primary}
+                icon={<FiSave />}
               >
-                <ButtonContent icon={<FiSave />}>Zapisz</ButtonContent>
-              </LoadingButton>
+                Zapisz
+              </ActionButton>
             </div>
 
             <small className={styles.hint}>
@@ -469,16 +511,15 @@ export default function AccountSettings() {
               do zmiany hasła i zaktualizować dostęp do konta.
             </p>
 
-            <LoadingButton
+            <ActionButton
               isLoading={loadingAction === "resetPass"}
               disabled={loadingAction !== null}
               onClick={handlePasswordReset}
-              className={`${styles.btn} ${styles.secondary}`}
+              className={styles.secondary}
+              icon={<FiLock />}
             >
-              <ButtonContent icon={<FiLock />}>
-                Wyślij link do zmiany hasła
-              </ButtonContent>
-            </LoadingButton>
+              Wyślij link do zmiany hasła
+            </ActionButton>
           </div>
         </div>
       </div>
