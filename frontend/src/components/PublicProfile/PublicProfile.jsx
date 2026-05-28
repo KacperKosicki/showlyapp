@@ -1591,9 +1591,10 @@ export default function PublicProfile() {
                               {s.shortDescription}
                             </p>
                           ) : (
-                            <p className={styles.serviceDescriptionMuted}>
-                              Użytkownik nie dodał krótkiego opisu tej usługi.
-                            </p>
+                            <div className={cn(styles.emptyInline, styles.serviceEmptyInline)}>
+                              <FaInfoCircle />
+                              <p>Użytkownik nie dodał krótkiego opisu tej usługi.</p>
+                            </div>
                           )}
 
                           <div className={styles.serviceMetaGrid}>

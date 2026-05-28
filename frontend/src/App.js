@@ -30,6 +30,7 @@ import BillingSuccess from "./components/BillingSuccess/BillingSuccess";
 import BillingCancel from "./components/BillingCancel/BillingCancel";
 import SearchResults from "./components/SearchResults/SearchResults";
 import PartnersShowcase from "./components/PartnersShowcase/PartnersShowcase";
+import PromotedProfiles from "./components/PromotedProfiles/PromotedProfiles";
 import HowShowlyWorks from "./components/HowShowlyWorks/HowShowlyWorks";
 import DiscoverShowly from "./components/DiscoverShowly/DiscoverShowly";
 import AlertBox from "./components/AlertBox/AlertBox";
@@ -357,6 +358,7 @@ function App() {
               />
               <HowShowlyWorks />
               <PartnersShowcase currentUser={safeUser} setAlert={setAlert} />
+              <PromotedProfiles currentUser={safeUser} setAlert={setAlert} />
               <DiscoverShowly />
               <UserCardList currentUser={safeUser} setAlert={setAlert} />
               <WhyUs />

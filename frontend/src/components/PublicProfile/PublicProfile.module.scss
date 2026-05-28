@@ -1905,19 +1905,15 @@ $page-max: 1240px;
   color: var(--pp-text-strong);
 }
 
-.serviceDescription,
-.serviceDescriptionMuted {
+.serviceDescription {
   margin: 10px 0 14px;
   line-height: 1.58;
   font-size: 0.94rem;
-}
-
-.serviceDescription {
   color: var(--pp-text-main);
 }
 
-.serviceDescriptionMuted {
-  color: var(--pp-text-muted);
+.serviceEmptyInline {
+  margin: 10px 0 14px;
 }
 
 .serviceMetaGrid {
