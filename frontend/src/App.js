@@ -1,5 +1,5 @@
 // src/App.js
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
@@ -45,6 +45,12 @@ import AdminPanel from "./components/AdminPanel/AdminPanel";
 import AdminRoute from "./components/auth/AdminRoute";
 
 const API = process.env.REACT_APP_API_URL;
+
+function LegacyProfileRedirect() {
+  const { slug } = useParams();
+
+  return <Navigate to={`/${slug || ""}`} replace />;
+}
 
 function App() {
   const [user, setUser] = useState(null);
@@ -484,13 +490,7 @@ function App() {
 
         <Route
           path="/profil/:slug"
-          element={
-            <>
-              <Hero {...heroProps} />
-              <PublicProfile />
-              <Footer {...footerProps} />
-            </>
-          }
+          element={<LegacyProfileRedirect />}
         />
 
         <Route
@@ -655,6 +655,17 @@ function App() {
             <>
               <Hero {...heroProps} />
               <CookiesPolicy />
+              <Footer {...footerProps} />
+            </>
+          }
+        />
+
+        <Route
+          path="/:slug"
+          element={
+            <>
+              <Hero {...heroProps} />
+              <PublicProfile />
               <Footer {...footerProps} />
             </>
           }

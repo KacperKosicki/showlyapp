@@ -60,12 +60,42 @@ const slugify = (text = "") =>
     .replace(/-+/g, "-")
     .replace(/^-+|-+$/g, "");
 
+const RESERVED_PUBLIC_SLUGS = new Set([
+  "admin",
+  "api",
+  "billing",
+  "kontakt",
+  "konto",
+  "konwersacja",
+  "login",
+  "polityka-cookies",
+  "powiadomienia",
+  "profil",
+  "profile",
+  "register",
+  "regulamin",
+  "rezerwacja",
+  "rezerwacje",
+  "static",
+  "stworz-profil",
+  "szukaj",
+  "ulubione",
+  "verify-success",
+  "wiadomosc",
+  "jak-to-dziala",
+]);
+
+function isReservedPublicSlug(slug = "") {
+  return RESERVED_PUBLIC_SLUGS.has(String(slug || "").toLowerCase());
+}
+
 async function generateUniqueSlug(baseText, currentProfileId = null) {
   const baseSlug = slugify(baseText) || `profil-${Date.now()}`;
   let uniqueSlug = baseSlug;
   let i = 1;
 
   while (
+    isReservedPublicSlug(uniqueSlug) ||
     await Profile.findOne({
       slug: uniqueSlug,
       ...(currentProfileId ? { _id: { $ne: currentProfileId } } : {}),

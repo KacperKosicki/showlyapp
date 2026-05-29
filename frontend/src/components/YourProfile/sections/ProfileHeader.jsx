@@ -32,7 +32,7 @@ const ProfileHeader = ({ profile, isEditing, onEdit }) => {
         {!isEditing && (
           <div className={styles.headActions}>
             <Link
-              to={profile?.slug ? `/profil/${profile.slug}` : '#'}
+              to={profile?.slug ? `/${profile.slug}` : '#'}
               state={profile?.slug ? { scrollToId: 'profileWrapper' } : undefined}
               className={styles.primary}
               style={!profile?.slug ? { pointerEvents: 'none', opacity: 0.6 } : undefined}

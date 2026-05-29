@@ -740,7 +740,7 @@ export default function PublicProfile() {
   };
 
   const copyProfileLink = async () => {
-    const url = `https://www.showly.me/profil/${slug}`;
+    const url = `https://www.showly.me/${slug}`;
 
     try {
       await navigator.clipboard.writeText(url);
@@ -1226,7 +1226,7 @@ export default function PublicProfile() {
 
                 <span className={styles.shareProfileText}>
                   <strong>{copiedProfileLink ? "Skopiowano link" : "Skopiuj link do profilu"}</strong>
-                  <small>showly.me/profil/{slug}</small>
+                  <small>showly.me/{slug}</small>
                 </span>
               </button>
 

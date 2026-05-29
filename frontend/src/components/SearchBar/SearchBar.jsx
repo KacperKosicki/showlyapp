@@ -96,7 +96,7 @@ const SearchBar = () => {
 
   const handleGoToProfile = (slug) => {
     setOpen(false);
-    navigate(`/profil/${slug}`, {
+    navigate(`/${slug}`, {
       state: { scrollToId: "profileWrapper" },
     });
   };

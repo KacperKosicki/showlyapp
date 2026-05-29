@@ -404,7 +404,7 @@ const UserCard = ({
       // ignore
     }
 
-    navigate(`/profil/${slug}`, { state: { scrollToId: "profileWrapper" } });
+    navigate(`/${slug}`, { state: { scrollToId: "profileWrapper" } });
   };
 
   const startAccountToProfile = () => {

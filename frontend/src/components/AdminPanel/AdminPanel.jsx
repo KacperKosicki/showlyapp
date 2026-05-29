@@ -152,6 +152,34 @@ const normalizePartnerDraft = (profile) => {
   };
 };
 
+const buildPartnershipPayload = (draft) => {
+  const safeDraft = draft || {
+    isPartner: false,
+    tier: "none",
+    badgeText: "",
+    color: "",
+  };
+
+  return {
+    isPartner: !!safeDraft.isPartner,
+    tier: safeDraft.isPartner ? safeDraft.tier || "partner" : "none",
+    badgeText: safeDraft.isPartner ? String(safeDraft.badgeText || "").trim() : "",
+    color: safeDraft.isPartner ? String(safeDraft.color || "").trim() : "#59d0ff",
+  };
+};
+
+const isSamePartnership = (a, b) => {
+  const left = buildPartnershipPayload(a);
+  const right = buildPartnershipPayload(b);
+
+  return (
+    left.isPartner === right.isPartner &&
+    left.tier === right.tier &&
+    left.badgeText === right.badgeText &&
+    left.color === right.color
+  );
+};
+
 const getVisibleUntilDate = (profile) => {
   const raw = profile?.visibleUntil;
   if (!raw) return null;
@@ -409,6 +437,21 @@ export default function AdminPanel() {
     [reportsTotal]
   );
 
+  const changedPartnerProfiles = useMemo(() => {
+    return profiles.filter((profile) => {
+      if (!profile?._id) return false;
+
+      const originalDraft = normalizePartnerDraft(profile);
+      const currentDraft = partnerDrafts[profile._id];
+
+      if (!currentDraft) return false;
+
+      return !isSamePartnership(originalDraft, currentDraft);
+    });
+  }, [profiles, partnerDrafts]);
+
+  const changedPartnerCount = changedPartnerProfiles.length;
+
   const onQuickRefresh = async () => {
     try {
       setLoading(true);
@@ -580,12 +623,7 @@ export default function AdminPanel() {
       color: "",
     };
 
-    const partnership = {
-      isPartner: !!draft.isPartner,
-      tier: draft.isPartner ? draft.tier || "partner" : "none",
-      badgeText: draft.isPartner ? String(draft.badgeText || "").trim() : "",
-      color: draft.isPartner ? String(draft.color || "").trim() : "#59d0ff",
-    };
+    const partnership = buildPartnershipPayload(draft);
 
     try {
       setLoading(true);
@@ -603,6 +641,60 @@ export default function AdminPanel() {
         type: "error",
         message:
           e?.response?.data?.message || "Nie udało się zapisać partnerstwa.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onSaveAllPartnerships = async () => {
+    if (changedPartnerProfiles.length === 0) {
+      setAlert({
+        type: "info",
+        message: "Nie ma żadnych zmian do zapisania.",
+      });
+      return;
+    }
+
+    const ok = window.confirm(
+      `Zapisać zmiany partnerstwa dla ${changedPartnerProfiles.length} profili?`
+    );
+
+    if (!ok) return;
+
+    try {
+      setLoading(true);
+
+      const results = await Promise.allSettled(
+        changedPartnerProfiles.map((profile) => {
+          const draft = partnerDrafts[profile._id];
+          const partnership = buildPartnershipPayload(draft);
+
+          return adminApi.setProfilePartnership(profile._id, partnership);
+        })
+      );
+
+      const saved = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.filter((r) => r.status === "rejected").length;
+
+      if (failed > 0) {
+        setAlert({
+          type: "warning",
+          message: `Zapisano ${saved} zmian, ale ${failed} nie udało się zapisać.`,
+        });
+      } else {
+        setAlert({
+          type: "success",
+          message: `Zapisano wszystkie zmiany partnerstwa (${saved}).`,
+        });
+      }
+
+      await fetchProfiles(profilesPage);
+    } catch (e) {
+      setAlert({
+        type: "error",
+        message:
+          e?.response?.data?.message || "Nie udało się zapisać wszystkich zmian.",
       });
     } finally {
       setLoading(false);
@@ -869,13 +961,27 @@ export default function AdminPanel() {
           <div className={styles.contentBox}>
             <div className={styles.contentHeader}>
               <h2 className={styles.contentTitle}>Profile</h2>
-              <LoadingButton
-                isLoading={loading}
-                onClick={onQuickRefresh}
-                className={styles.primaryBtn}
-              >
-                Odśwież
-              </LoadingButton>
+
+              <div className={styles.headerActions}>
+                <LoadingButton
+                  isLoading={loading}
+                  onClick={onQuickRefresh}
+                  className={styles.secondaryBtn}
+                >
+                  Odśwież
+                </LoadingButton>
+
+                <LoadingButton
+                  isLoading={loading}
+                  onClick={onSaveAllPartnerships}
+                  className={styles.primaryBtn}
+                  disabled={loading || changedPartnerCount === 0}
+                >
+                  {changedPartnerCount > 0
+                    ? `Zapisz wszystko (${changedPartnerCount})`
+                    : "Zapisz wszystko"}
+                </LoadingButton>
+              </div>
             </div>
 
             <div className={styles.tableWrap}>
@@ -918,10 +1024,10 @@ export default function AdminPanel() {
                         <td>
                           <span
                             className={`${styles.pillState} ${profileStatus.key === "active"
-                                ? styles.pillOn
-                                : profileStatus.key === "hidden"
-                                  ? styles.pillWarn
-                                  : styles.pillOff
+                              ? styles.pillOn
+                              : profileStatus.key === "hidden"
+                                ? styles.pillWarn
+                                : styles.pillOff
                               }`}
                           >
                             {profileStatus.label}
@@ -1194,7 +1300,7 @@ export default function AdminPanel() {
                           <div className={styles.profileHint}>
                             <a
                               className={styles.linkLike}
-                              href={`/profil/${r._profileSlug}`}
+                              href={`/${r._profileSlug}`}
                               target="_blank"
                               rel="noreferrer"
                             >

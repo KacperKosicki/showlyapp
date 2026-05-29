@@ -133,7 +133,7 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
               klienta albo w ogłoszeniu.
             </p>
 
-            <code>showly.me/profil/twoja-nazwa</code>
+            <code>showly.me/twoja-nazwa</code>
           </article>
 
           <article className={styles.textCard}>
