@@ -66,10 +66,10 @@ const Regulations = () => {
           </h2>
 
           <p className={styles.description}>
-            Ten regulamin określa zasady korzystania z platformy Showly.me,
-            w tym zasady zakładania kont, publikowania profili, kontaktu między
-            użytkownikami, rezerwacji, opinii, płatności oraz odpowiedzialności
-            za treści i usługi prezentowane w serwisie.
+            Niniejszy regulamin określa zasady korzystania z platformy Showly.me,
+            w tym zakładania konta, tworzenia publicznych profili, publikowania treści,
+            korzystania z systemu wiadomości, rezerwacji, opinii oraz płatnych funkcji
+            dostępnych w Serwisie.
           </p>
 
           <div className={styles.metaRow}>
@@ -90,21 +90,6 @@ const Regulations = () => {
           </div>
         </div>
 
-        <div className={styles.noticeBox}>
-          <div className={styles.noticeIcon}>
-            <FiAlertCircle />
-          </div>
-          <div>
-            <p className={styles.noticeTitle}>Uzupełnij dane przed publikacją</p>
-            <p className={styles.noticeText}>
-              Przed wrzuceniem regulaminu na produkcję podmień pola:
-              <strong> [Nazwa firmy]</strong>, <strong>[adres]</strong>,{" "}
-              <strong>[NIP]</strong>, <strong>[e-mail]</strong>,{" "}
-              <strong>[telefon]</strong>, <strong>[data wejścia w życie]</strong>.
-            </p>
-          </div>
-        </div>
-
         <div className={styles.contentGrid}>
           <div className={styles.mainColumn}>
             <div className={styles.sectionCard}>
@@ -122,25 +107,32 @@ const Regulations = () => {
 
               <div className={styles.textBlock}>
                 <p>
-                  1. Niniejszy Regulamin określa zasady korzystania z platformy
-                  internetowej działającej pod adresem <strong>Showly.me</strong>,
-                  zwanej dalej „Serwisem”, „Platformą” lub „Showly”.
+                  1. Niniejszy regulamin określa zasady korzystania z platformy internetowej
+                  dostępnej pod adresem <strong>Showly.me</strong>, zwanej dalej
+                  „Serwisem”, „Platformą” lub „Showly”.
                 </p>
+
                 <p>
-                  2. Operatorem Serwisu jest <strong>[Nazwa firmy]</strong> z
-                  siedzibą pod adresem <strong>[adres]</strong>, NIP:
-                  <strong> [NIP]</strong>, e-mail: <strong>[e-mail]</strong>,
-                  telefon: <strong>[telefon]</strong>, dalej jako „Usługodawca”.
+                  2. Showly jest platformą umożliwiającą użytkownikom tworzenie publicznych
+                  profili internetowych, prezentowanie usług, publikowanie opisów, zdjęć,
+                  cenników, dostępności, linków oraz korzystanie z funkcji kontaktu,
+                  wiadomości i rezerwacji.
                 </p>
+
                 <p>
-                  3. Serwis służy do tworzenia i prowadzenia wizytówek online,
-                  prezentacji usług, publikacji galerii, cenników, dostępności,
-                  przyjmowania wiadomości, rezerwacji oraz obsługi dodatkowych
-                  funkcji konta.
+                  3. Kontakt z administratorem Serwisu jest możliwy pod adresem e-mail:
+                  <strong> kontakt@showly.me</strong>.
                 </p>
+
                 <p>
-                  4. Regulamin jest udostępniany nieodpłatnie w sposób
-                  umożliwiający jego pozyskanie, odtworzenie i utrwalenie.
+                  4. Regulamin jest udostępniany użytkownikom nieodpłatnie w sposób
+                  umożliwiający jego pozyskanie, odtworzenie, utrwalenie i zapoznanie się
+                  z jego treścią przed rozpoczęciem korzystania z Serwisu.
+                </p>
+
+                <p>
+                  5. Korzystanie z Serwisu oznacza akceptację Regulaminu w zakresie funkcji,
+                  z których użytkownik faktycznie korzysta.
                 </p>
               </div>
             </div>
@@ -160,44 +152,52 @@ const Regulations = () => {
 
               <div className={styles.listBlock}>
                 <div className={styles.definitionItem}>
-                  <strong>Serwis / Platforma</strong>
-                  <p>platforma internetowa dostępna pod adresem Showly.me.</p>
+                  <strong>Serwis / Platforma / Showly</strong>
+                  <p>
+                    platforma internetowa dostępna pod adresem Showly.me, umożliwiająca
+                    tworzenie profili, prezentowanie usług oraz korzystanie z funkcji
+                    komunikacyjnych i rezerwacyjnych.
+                  </p>
                 </div>
 
                 <div className={styles.definitionItem}>
                   <strong>Użytkownik</strong>
-                  <p>każda osoba korzystająca z Serwisu, zalogowana lub nie.</p>
+                  <p>
+                    każda osoba korzystająca z Serwisu, niezależnie od tego, czy posiada
+                    zarejestrowane konto.
+                  </p>
                 </div>
 
                 <div className={styles.definitionItem}>
                   <strong>Konto</strong>
                   <p>
-                    indywidualne konto użytkownika umożliwiające korzystanie z
-                    funkcji dostępnych po zalogowaniu.
+                    indywidualny panel użytkownika utworzony w Serwisie, umożliwiający
+                    korzystanie z funkcji dostępnych po zalogowaniu.
                   </p>
                 </div>
 
                 <div className={styles.definitionItem}>
                   <strong>Profil / Wizytówka</strong>
                   <p>
-                    publiczna prezentacja użytkownika, jego usług, danych,
-                    galerii, cennika, opinii i dostępności.
+                    publiczna strona użytkownika utworzona w Serwisie, zawierająca m.in.
+                    opis działalności, zdjęcia, usługi, cennik, dostępność, opinie oraz dane
+                    kontaktowe lub linki.
                   </p>
                 </div>
 
                 <div className={styles.definitionItem}>
-                  <strong>Klient</strong>
+                  <strong>Twórca profilu</strong>
                   <p>
-                    użytkownik korzystający z platformy w celu kontaktu,
-                    złożenia zapytania lub rezerwacji usługi.
+                    użytkownik, który tworzy i publikuje własny profil w Serwisie w celu
+                    prezentacji siebie, swojej działalności, usług, portfolio lub oferty.
                   </p>
                 </div>
 
                 <div className={styles.definitionItem}>
-                  <strong>Usługodawca Profilowy</strong>
+                  <strong>Odwiedzający / Klient</strong>
                   <p>
-                    użytkownik publikujący swój profil i oferujący usługi za
-                    pośrednictwem Showly.
+                    osoba korzystająca z Serwisu w celu przeglądania profili, kontaktu
+                    z twórcą profilu, wysłania wiadomości, zapytania lub rezerwacji.
                   </p>
                 </div>
               </div>
@@ -218,24 +218,32 @@ const Regulations = () => {
 
               <div className={styles.textBlock}>
                 <p>
-                  1. Założenie konta w Serwisie może wymagać podania adresu
-                  e-mail, hasła oraz innych danych niezbędnych do korzystania z
-                  funkcji Platformy.
+                  1. Założenie konta w Serwisie może wymagać podania adresu e-mail, hasła
+                  lub skorzystania z zewnętrznej metody logowania, jeżeli taka funkcja jest
+                  dostępna.
                 </p>
+
                 <p>
-                  2. Użytkownik zobowiązuje się do podawania danych zgodnych z
-                  prawdą, aktualnych i niewprowadzających w błąd.
+                  2. Użytkownik zobowiązuje się do podawania danych prawdziwych, aktualnych
+                  i niewprowadzających w błąd.
                 </p>
+
                 <p>
-                  3. Użytkownik ponosi odpowiedzialność za zabezpieczenie danych
-                  logowania i za działania wykonane z użyciem jego konta, chyba
-                  że doszło do naruszenia z przyczyn leżących po stronie
-                  Usługodawcy.
+                  3. Użytkownik odpowiada za zachowanie poufności danych logowania oraz za
+                  działania podejmowane z użyciem jego konta, chyba że naruszenie nastąpiło
+                  z przyczyn leżących po stronie Serwisu.
                 </p>
+
                 <p>
-                  4. Usługodawca może czasowo ograniczyć dostęp do konta lub
-                  wybranych funkcji w przypadku naruszenia Regulaminu, prawa lub
-                  bezpieczeństwa Serwisu.
+                  4. Zabronione jest udostępnianie konta osobom trzecim, korzystanie z konta
+                  w sposób sprzeczny z prawem, naruszający bezpieczeństwo Serwisu albo prawa
+                  innych użytkowników.
+                </p>
+
+                <p>
+                  5. Administrator może czasowo ograniczyć dostęp do konta lub wybranych
+                  funkcji, jeżeli zachodzi uzasadnione podejrzenie naruszenia Regulaminu,
+                  prawa, bezpieczeństwa Serwisu lub praw innych osób.
                 </p>
               </div>
             </div>
@@ -255,25 +263,35 @@ const Regulations = () => {
 
               <div className={styles.textBlock}>
                 <p>
-                  1. Użytkownik publikujący profil oświadcza, że ma prawo do
-                  zamieszczanych treści, zdjęć, grafik, logo, nazw, opisów,
-                  cenników i innych materiałów.
+                  1. Użytkownik tworzący profil odpowiada za wszystkie treści publikowane
+                  w ramach swojego profilu, w szczególności za opisy, zdjęcia, grafiki,
+                  nazwy, logo, cenniki, terminy, linki, dane kontaktowe oraz informacje
+                  o oferowanych usługach.
                 </p>
+
                 <p>
-                  2. Użytkownik ponosi pełną odpowiedzialność za treści
-                  opublikowane na swoim profilu, w szczególności za ich
-                  prawdziwość, zgodność z prawem i nienaruszanie praw osób
-                  trzecich.
+                  2. Publikując treści w Serwisie, użytkownik oświadcza, że posiada prawo
+                  do ich wykorzystania oraz że ich publikacja nie narusza praw osób trzecich,
+                  w tym praw autorskich, dóbr osobistych, praw do wizerunku ani znaków
+                  towarowych.
                 </p>
+
                 <p>
-                  3. Zabrania się publikowania treści bezprawnych, obraźliwych,
-                  wulgarnych, dyskryminujących, wprowadzających klientów w błąd
-                  lub naruszających dobre obyczaje.
+                  3. Zabronione jest publikowanie treści bezprawnych, obraźliwych,
+                  wulgarnych, dyskryminujących, erotycznych, nawołujących do przemocy,
+                  wprowadzających w błąd, naruszających dobre obyczaje lub godzących
+                  w dobre imię innych osób.
                 </p>
+
                 <p>
-                  4. Usługodawca może ukryć, ograniczyć widoczność albo usunąć
-                  profil lub jego część, jeżeli treści naruszają Regulamin,
-                  obowiązujące przepisy albo bezpieczeństwo Platformy.
+                  4. Użytkownik zobowiązuje się, aby informacje prezentowane na profilu były
+                  rzetelne, aktualne i zgodne z rzeczywistym zakresem oferowanych usług.
+                </p>
+
+                <p>
+                  5. Administrator może usunąć, ukryć lub ograniczyć widoczność profilu albo
+                  jego części, jeżeli treści naruszają Regulamin, obowiązujące przepisy,
+                  prawa osób trzecich lub bezpieczeństwo Platformy.
                 </p>
               </div>
             </div>
@@ -293,25 +311,33 @@ const Regulations = () => {
 
               <div className={styles.textBlock}>
                 <p>
-                  1. Serwis może umożliwiać wysyłanie wiadomości, zadawanie
-                  pytań, składanie zapytań ofertowych oraz rezerwowanie
-                  terminów.
+                  1. Serwis może umożliwiać użytkownikom wysyłanie wiadomości, zadawanie
+                  pytań, składanie zapytań ofertowych oraz dokonywanie rezerwacji terminów
+                  u twórców profili.
                 </p>
+
                 <p>
-                  2. Wysłanie wiadomości, zapytania lub rezerwacji przez
-                  użytkownika nie oznacza automatycznego zawarcia umowy o
-                  wykonanie usługi, chyba że konkretna funkcja wyraźnie stanowi
-                  inaczej.
+                  2. Wysłanie wiadomości, zapytania lub rezerwacji nie oznacza automatycznego
+                  zawarcia umowy pomiędzy odwiedzającym a twórcą profilu, chyba że strony
+                  wyraźnie ustalą inaczej poza Serwisem lub za pomocą dostępnych funkcji
+                  Platformy.
                 </p>
+
                 <p>
-                  3. Za sposób realizacji usługi, kontakt z klientem, terminy,
-                  jakość wykonania oraz zgodność oferty z rzeczywistością
-                  odpowiada usługodawca prowadzący swój profil.
+                  3. Za kontakt z klientem, realizację usługi, dostępność terminów, jakość
+                  wykonania, cenę oraz zgodność oferty z rzeczywistością odpowiada twórca
+                  profilu.
                 </p>
+
                 <p>
-                  4. Zabrania się wykorzystywania systemu wiadomości do spamu,
-                  phishingu, nękania, treści nielegalnych lub działań
-                  niezgodnych z celem platformy.
+                  4. Showly nie jest stroną umów zawieranych pomiędzy użytkownikami, chyba że
+                  w konkretnym przypadku wyraźnie wskazano inaczej.
+                </p>
+
+                <p>
+                  5. Zabronione jest wykorzystywanie systemu wiadomości do spamu, nękania,
+                  phishingu, wysyłania treści bezprawnych, reklam niezwiązanych z celem
+                  Serwisu lub działań naruszających bezpieczeństwo innych użytkowników.
                 </p>
               </div>
             </div>
@@ -331,25 +357,34 @@ const Regulations = () => {
 
               <div className={styles.textBlock}>
                 <p>
-                  1. Korzystanie z Serwisu może być w całości lub częściowo
-                  odpłatne. Informacje o cenach, planach, funkcjach premium i
-                  okresach rozliczeniowych są prezentowane przed dokonaniem
-                  zakupu.
+                  1. Korzystanie z podstawowych funkcji Serwisu może być bezpłatne, natomiast
+                  wybrane funkcje, plany, wyróżnienia, rozszerzenia lub usługi dodatkowe mogą
+                  być odpłatne.
                 </p>
+
                 <p>
-                  2. W przypadku subskrypcji odnawialnych użytkownik jest
-                  informowany o cyklu płatności, zakresie usługi oraz sposobie
-                  rezygnacji.
+                  2. Informacje o cenie, zakresie płatnej funkcji, okresie jej obowiązywania
+                  oraz warunkach korzystania są prezentowane użytkownikowi przed dokonaniem
+                  płatności.
                 </p>
+
                 <p>
-                  3. Płatności mogą być obsługiwane przez zewnętrznych
-                  operatorów płatności. Ich działanie odbywa się zgodnie z
-                  regulaminami tych dostawców.
+                  3. Płatności mogą być obsługiwane przez zewnętrznych operatorów płatności.
+                  W takim przypadku realizacja płatności odbywa się zgodnie z zasadami
+                  danego operatora.
                 </p>
+
                 <p>
-                  4. Brak płatności może skutkować ograniczeniem lub wyłączeniem
-                  płatnych funkcji konta, w tym obniżeniem widoczności profilu
-                  albo dezaktywacją funkcji premium.
+                  4. Brak płatności, cofnięcie płatności lub zakończenie okresu ważności
+                  płatnej funkcji może skutkować ograniczeniem dostępu do funkcji premium,
+                  wygaśnięciem wyróżnienia albo zmianą widoczności profilu.
+                </p>
+
+                <p>
+                  5. Jeżeli użytkownik jest konsumentem, przysługują mu prawa wynikające
+                  z powszechnie obowiązujących przepisów prawa, w tym dotyczące reklamacji
+                  oraz odstąpienia od umowy zawartej na odległość, o ile przepisy nie
+                  przewidują wyjątku.
                 </p>
               </div>
             </div>
@@ -369,23 +404,30 @@ const Regulations = () => {
 
               <div className={styles.textBlock}>
                 <p>
-                  1. Showly może umożliwiać dodawanie opinii, komentarzy i ocen
-                  dotyczących usługodawców lub wykonanych usług.
+                  1. Serwis może umożliwiać dodawanie ocen, opinii lub komentarzy dotyczących
+                  profili, kontaktu z twórcą profilu albo wykonanych usług.
                 </p>
+
                 <p>
-                  2. Opinie powinny być zgodne z prawdą, związane z realnym
-                  kontaktem, rezerwacją lub współpracą i nie mogą naruszać praw
-                  innych osób.
+                  2. Opinie powinny być rzetelne, zgodne z prawdą i związane z rzeczywistym
+                  kontaktem, zapytaniem, rezerwacją lub współpracą.
                 </p>
+
                 <p>
-                  3. Zakazane jest publikowanie opinii fikcyjnych, sztucznie
-                  zawyżających lub zaniżających ocenę, a także wystawianych na
-                  własną rzecz.
+                  3. Zabronione jest publikowanie opinii fikcyjnych, obraźliwych,
+                  wulgarnych, naruszających dobra osobiste, wystawianych na własną rzecz
+                  albo mających na celu sztuczne zawyżenie lub zaniżenie oceny profilu.
                 </p>
+
                 <p>
-                  4. Usługodawca może moderować, ukrywać lub usuwać opinie, jeśli
-                  naruszają Regulamin, przepisy prawa albo zasady rzetelności
-                  systemu ocen.
+                  4. Administrator może moderować, ukrywać lub usuwać opinie, które naruszają
+                  Regulamin, prawo, dobre obyczaje albo zasady rzetelności systemu ocen.
+                </p>
+
+                <p>
+                  5. Sam fakt niezadowolenia jednej ze stron ze współpracy nie jest podstawą
+                  do usunięcia opinii, jeżeli opinia jest zgodna z prawem, rzeczowa
+                  i nie narusza Regulaminu.
                 </p>
               </div>
             </div>
@@ -405,27 +447,41 @@ const Regulations = () => {
 
               <div className={styles.textBlock}>
                 <p>
-                  1. Reklamacje dotyczące działania Serwisu można zgłaszać na
-                  adres e-mail: <strong>[e-mail]</strong>.
+                  1. Reklamacje dotyczące działania Serwisu można zgłaszać drogą mailową na
+                  adres: <strong>kontakt@showly.me</strong>.
                 </p>
+
                 <p>
-                  2. Reklamacja powinna zawierać dane zgłaszającego, opis
-                  problemu oraz żądanie dotyczące sposobu jego rozwiązania.
+                  2. Zgłoszenie reklamacyjne powinno zawierać opis problemu, adres e-mail
+                  użytkownika oraz, jeżeli to możliwe, informacje pozwalające zidentyfikować
+                  konto, profil lub funkcję, której dotyczy zgłoszenie.
                 </p>
+
                 <p>
-                  3. Reklamacje dotyczące działania platformy rozpatrywane są w
-                  terminie do 14 dni, chyba że charakter sprawy wymaga dłuższego
-                  czasu.
+                  3. Reklamacje dotyczące działania Serwisu rozpatrywane są w terminie do
+                  14 dni od dnia otrzymania kompletnego zgłoszenia.
                 </p>
+
                 <p>
-                  4. Usługodawca może zawiesić lub usunąć konto użytkownika,
-                  który narusza Regulamin, przepisy prawa lub działa na szkodę
-                  Serwisu bądź innych użytkowników.
+                  4. Administrator może wprowadzać zmiany w Regulaminie, w szczególności
+                  w przypadku rozwoju Serwisu, dodania nowych funkcji, zmiany modelu
+                  płatności, zmiany przepisów prawa lub konieczności doprecyzowania zasad
+                  bezpieczeństwa.
                 </p>
+
                 <p>
-                  5. W sprawach nieuregulowanych zastosowanie mają przepisy
-                  prawa polskiego. Regulamin wchodzi w życie z dniem
-                  <strong> [data wejścia w życie]</strong>.
+                  5. O istotnych zmianach Regulaminu użytkownicy mogą zostać poinformowani
+                  poprzez komunikat w Serwisie, wiadomość e-mail lub inną dostępną formę
+                  kontaktu.
+                </p>
+
+                <p>
+                  6. W sprawach nieuregulowanych Regulaminem zastosowanie mają przepisy prawa
+                  polskiego.
+                </p>
+
+                <p>
+                  7. Regulamin obowiązuje od dnia <strong>23 czerwca 2026 r.</strong>.
                 </p>
               </div>
             </div>
@@ -482,11 +538,9 @@ const Regulations = () => {
               <h3 className={styles.sideTitle}>Dane operatora</h3>
 
               <div className={styles.companyBox}>
-                <p><strong>[Nazwa firmy]</strong></p>
-                <p>[adres]</p>
-                <p>NIP: [NIP]</p>
-                <p>E-mail: [e-mail]</p>
-                <p>Telefon: [telefon]</p>
+                <p><strong>Showly.me</strong></p>
+                <p>Platforma do tworzenia profili i wizytówek online</p>
+                <p>E-mail: kontakt@showly.me</p>
               </div>
             </div>
 
@@ -495,7 +549,7 @@ const Regulations = () => {
 
               <div className={styles.statusPill}>
                 <FiFileText />
-                <span>Wersja robocza do publikacji po uzupełnieniu danych</span>
+                <span>Regulamin obowiązuje od 23 czerwca 2026 r.</span>
               </div>
             </div>
           </aside>
