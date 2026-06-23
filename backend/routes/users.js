@@ -4,6 +4,8 @@ const router = express.Router();
 const multer = require('multer');
 
 const User = require('../models/User');
+const admin = require('../utils/firebaseAdmin');
+const { syncFirebaseUserToMongo } = require('../utils/syncFirebaseUser');
 const cloudinary = require('../config/cloudinary'); // ✅ popraw ścieżkę jeśli trzeba
 
 const requireAuth = require("../middleware/requireAuth");
@@ -57,59 +59,65 @@ const upload = multer({
  */
 router.post("/", requireAuth, async (req, res) => {
   try {
-    const firebaseUid = req.auth.uid; // ✅ tylko z tokena
+    const firebaseUid = req.auth.uid;
     const tokenEmail = req.auth.email?.toLowerCase() || "";
 
-    const { email, name, provider } = req.body;
+    const { email, name, provider } = req.body || {};
+    const normalizedEmail = String(email || tokenEmail || "").trim().toLowerCase();
 
-    if (!email || !provider) {
+    if (!normalizedEmail) {
       return res.status(400).json({
-        message: "Brakuje wymaganych danych (email lub provider)",
+        message: "Brakuje adresu e-mail.",
       });
     }
 
-    const normalizedEmail = String(email).toLowerCase();
-
-    // 🛑 dodatkowe zabezpieczenie – email z body musi być zgodny z tokenem
     if (tokenEmail && tokenEmail !== normalizedEmail) {
       return res.status(403).json({
-        message: "Email nie zgadza się z zalogowanym użytkownikiem.",
+        message: "Email nie zgadza sie z zalogowanym uzytkownikiem.",
       });
     }
 
-    const existingUser = await User.findOne({ email: normalizedEmail });
+    const firebaseUser = await admin.auth().getUser(firebaseUid);
 
-    if (existingUser) {
-      // jeśli email istnieje, ale UID inny → blokada
-      if (existingUser.firebaseUid !== firebaseUid) {
-        return res.status(409).json({
-          message: "E-mail jest już powiązany z innym kontem.",
-        });
-      }
-
-      return res.status(200).json({
-        message: "Użytkownik już istnieje",
-        user: existingUser.toObject(),
+    if (firebaseUser.email && firebaseUser.email.toLowerCase() !== normalizedEmail) {
+      return res.status(403).json({
+        message: "Email nie zgadza sie z kontem Firebase.",
       });
     }
 
-    const newUser = new User({
+    const result = await syncFirebaseUserToMongo(firebaseUser, {
       email: normalizedEmail,
-      name: String(name || "").trim(),
-      firebaseUid, // ✅ z tokena
-      provider,
+      name,
+      provider:
+        provider === "google" || provider === "password"
+          ? provider
+          : req.auth.provider === "google.com"
+            ? "google"
+            : "password",
+      emailVerified: req.auth.emailVerified,
     });
 
-    await newUser.save();
+    if (result.skipped) {
+      const status = result.reason === "identity_conflict" ? 409 : 400;
+      return res.status(status).json({
+        message:
+          result.reason === "identity_conflict"
+            ? "E-mail jest juz powiazany z innym kontem."
+            : "Nie udalo sie zsynchronizowac uzytkownika.",
+        reason: result.reason,
+      });
+    }
 
-    return res.status(201).json({
-      message: "Użytkownik dodany do bazy",
-      user: newUser.toObject(),
+    return res.status(result.created ? 201 : 200).json({
+      message: result.created
+        ? "Uzytkownik dodany do bazy"
+        : "Uzytkownik zsynchronizowany",
+      user: result.user.toObject(),
     });
   } catch (error) {
-    console.error("❌ Błąd w POST /api/users:", error);
+    console.error("POST /api/users sync error:", error);
     return res.status(500).json({
-      message: "Błąd serwera",
+      message: "Blad serwera",
       error: error.message,
     });
   }

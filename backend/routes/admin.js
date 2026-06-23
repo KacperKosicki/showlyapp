@@ -10,20 +10,41 @@ const Profile = require("../models/Profile");
 const Reservation = require("../models/Reservation");
 const Report = require("../models/Report");
 const { sendSystemMessage } = require("../utils/systemMessages");
+const { syncAllFirebaseUsersToMongo } = require("../utils/syncFirebaseUser");
+
+async function syncAuthUsersSafely() {
+  try {
+    return await syncAllFirebaseUsersToMongo();
+  } catch (error) {
+    console.error("Firebase users sync error:", error);
+    return {
+      scanned: 0,
+      created: 0,
+      updated: 0,
+      skipped: 0,
+      conflicts: 0,
+      error: error.message,
+    };
+  }
+}
 
 // ✅ Statystyki (admin only)
 router.get("/stats", requireAuth, requireRole(["admin"]), async (req, res) => {
+  const usersSync = await syncAuthUsersSafely();
+
   const [users, profiles, reservations] = await Promise.all([
     User.countDocuments(),
     Profile.countDocuments(),
     Reservation.countDocuments(),
   ]);
 
-  return res.json({ users, profiles, reservations });
+  return res.json({ users, profiles, reservations, usersSync });
 });
 
 // ✅ Lista userów (admin only)
 router.get("/users", requireAuth, requireRole(["admin"]), async (req, res) => {
+  const usersSync = await syncAuthUsersSafely();
+
   const limit = Math.min(Number(req.query.limit || 50), 200);
   const page = Math.max(Number(req.query.page || 1), 1);
   const skip = (page - 1) * limit;
@@ -33,7 +54,7 @@ router.get("/users", requireAuth, requireRole(["admin"]), async (req, res) => {
     User.countDocuments(),
   ]);
 
-  return res.json({ items, total, page, limit });
+  return res.json({ items, total, page, limit, usersSync });
 });
 
 // ✅ Zmiana roli (admin only)

@@ -153,6 +153,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
       const refreshedUser = auth.currentUser || firebaseUser;
 
       await sendEmailVerification(refreshedUser);
+      await syncUserWithMongo(refreshedUser, 'password');
 
       await signOut(auth);
 

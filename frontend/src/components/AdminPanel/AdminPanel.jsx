@@ -887,6 +887,7 @@ export default function AdminPanel() {
                     <th>Email</th>
                     <th>Nazwa</th>
                     <th>Provider</th>
+                    <th>Weryfikacja</th>
                     <th>Rola</th>
                     <th>Akcje</th>
                   </tr>
@@ -897,6 +898,13 @@ export default function AdminPanel() {
                       <td className={styles.mono}>{u.email}</td>
                       <td>{u.displayName || u.name || "—"}</td>
                       <td className={styles.badgeCell}>{u.provider}</td>
+                      <td>
+                        <span
+                          className={`${styles.pillState} ${u.emailVerified ? styles.pillOn : styles.pillOff}`}
+                        >
+                          {u.emailVerified ? "TAK" : "NIE"}
+                        </span>
+                      </td>
                       <td>
                         <select
                           className={styles.select}
@@ -924,7 +932,7 @@ export default function AdminPanel() {
 
                   {users.length === 0 && (
                     <tr>
-                      <td colSpan={5} className={styles.empty}>
+                      <td colSpan={6} className={styles.empty}>
                         Brak danych
                       </td>
                     </tr>

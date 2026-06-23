@@ -20,6 +20,7 @@ module.exports = async function requireAuth(req, res, next) {
       uid: decoded.uid,
       email: decoded.email || null,
       emailVerified: decoded.email_verified || false,
+      provider: decoded.firebase?.sign_in_provider || null,
     };
 
     return next();
