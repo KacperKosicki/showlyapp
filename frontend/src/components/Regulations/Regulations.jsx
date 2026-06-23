@@ -6,7 +6,6 @@ import {
   FiShield,
   FiCreditCard,
   FiUsers,
-  FiAlertCircle,
   FiCheckCircle,
   FiMail,
   FiClock,
