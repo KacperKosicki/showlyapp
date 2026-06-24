@@ -5,14 +5,10 @@ import styles from "./AboutApp.module.scss";
 import {
   FiArrowRight,
   FiCheck,
-  FiClock,
   FiEdit3,
   FiEye,
   FiGlobe,
-  FiMessageCircle,
   FiSmartphone,
-  FiStar,
-  FiUsers,
 } from "react-icons/fi";
 
 const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
