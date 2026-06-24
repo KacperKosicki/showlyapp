@@ -1,4 +1,3 @@
-// BookingModeDay.jsx — kalendarz “dniowy” (bez slotów) + usługa wymagana do rezerwacji dnia (gdy są usługi)
 import { useEffect, useMemo, useState } from "react";
 import {
   startOfMonth,
@@ -26,7 +25,7 @@ export default function BookingModeDay({
   pushAlert,
   preselectedServiceId,
 }) {
-  const [unavailableDays, setUnavailableDays] = useState([]); // ['YYYY-MM-DD']
+  const [unavailableDays, setUnavailableDays] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setDate] = useState(null);
   const [selectedService, setService] = useState(null);
@@ -36,7 +35,6 @@ export default function BookingModeDay({
 
   const navigate = useNavigate();
 
-  // ✅ tylko aktywne usługi
   const activeServices = useMemo(() => {
     return (provider?.services || []).filter((s) => s?.isActive !== false);
   }, [provider?.services]);
@@ -56,11 +54,9 @@ export default function BookingModeDay({
     }
   }, [preselectedServiceId, activeServices, selectedService?._id]);
 
-  // ✅ logika: jeśli profil ma aktywne usługi i NIE jest to "Tylko zapytanie" → usługa wymagana
   const hasServices = activeServices.length > 0;
   const serviceRequiredForBooking = hasServices && !onlyInquiry;
 
-  // ✅ jeśli wybrana usługa została wyłączona/usunięta → reset
   useEffect(() => {
     if (!selectedService?._id) return;
 
@@ -74,23 +70,26 @@ export default function BookingModeDay({
     }
   }, [activeServices, selectedService]);
 
-  // Dni niedostępne (PUBLIC endpoint)
   useEffect(() => {
     const loadUnavailable = async () => {
       try {
         if (!provider?.userId) return;
-        const { data } = await api.get(`/api/reservations/unavailable-days/${provider.userId}`);
+
+        const { data } = await api.get(
+          `/api/reservations/unavailable-days/${provider.userId}`
+        );
+
         setUnavailableDays(Array.isArray(data) ? data : []);
       } catch {
         setUnavailableDays([]);
       }
     };
+
     loadUnavailable();
   }, [provider?.userId]);
 
   const isUnavailable = (yyyyMmDd) => unavailableDays.includes(yyyyMmDd);
 
-  // Siatka miesięcy
   const daysInMonth = useMemo(
     () =>
       eachDayOfInterval({
@@ -100,7 +99,10 @@ export default function BookingModeDay({
     [currentMonth]
   );
 
-  const startDayIndex = useMemo(() => getDay(startOfMonth(currentMonth)), [currentMonth]);
+  const startDayIndex = useMemo(
+    () => getDay(startOfMonth(currentMonth)),
+    [currentMonth]
+  );
 
   const respectsWorkingDays = (day) => {
     return Array.isArray(provider?.workingDays) && provider.workingDays.length
@@ -114,11 +116,11 @@ export default function BookingModeDay({
     const blocked = isUnavailable(dateStr);
     const workingOk = respectsWorkingDays(day);
 
-    // jeśli mamy usługi i chcemy rezerwować dzień → bez usługi blokujemy wybór dnia
     if (serviceRequiredForBooking && !selectedService) return "locked";
     if (past) return "past";
     if (!workingOk) return "locked";
     if (blocked) return "unavailable";
+
     return "free";
   };
 
@@ -126,23 +128,32 @@ export default function BookingModeDay({
 
   const handleSubmit = async (e) => {
     e?.preventDefault?.();
+
     if (isSubmitting) return;
+
     setIsSubmitting(true);
 
     try {
       if (!user?.uid) {
-        pushAlert?.({ show: true, type: "error", message: "Musisz być zalogowany." });
+        pushAlert?.({
+          show: true,
+          type: "error",
+          message: "Musisz być zalogowany.",
+        });
         return;
       }
 
       if (!selectedDate) {
-        pushAlert?.({ show: true, type: "error", message: "Wybierz dzień." });
+        pushAlert?.({
+          show: true,
+          type: "error",
+          message: "Wybierz dzień.",
+        });
         return;
       }
 
       const dateStr = format(selectedDate, "yyyy-MM-dd");
 
-      // ✅ jeśli wybrana usługa już nie jest aktywna → blokada
       if (selectedService?._id) {
         const isServiceStillActive = activeServices.some(
           (s) => String(s._id) === String(selectedService._id)
@@ -158,7 +169,6 @@ export default function BookingModeDay({
         }
       }
 
-      // A) Tylko zapytanie → rozmowa (usługa opcjonalna)
       if (onlyInquiry) {
         const content = [
           `Zapytanie o dostępność dnia ${dateStr}`,
@@ -200,7 +210,9 @@ export default function BookingModeDay({
               })
             );
 
-            navigate(`/konwersacja/${data.id}`, { state: { scrollToId: "threadPageLayout" } });
+            navigate(`/konwersacja/${data.id}`, {
+              state: { scrollToId: "threadPageLayout" },
+            });
           }
         } catch (err) {
           if (err?.response?.status === 403) {
@@ -228,23 +240,35 @@ export default function BookingModeDay({
                 .join("\n\n")
             );
 
-            navigate(existingId ? `/konwersacja/${existingId}` : `/wiadomosc/${provider.userId}`, {
-              state: { scrollToId: "threadPageLayout" },
-            });
+            navigate(
+              existingId
+                ? `/konwersacja/${existingId}`
+                : `/wiadomosc/${provider.userId}`,
+              {
+                state: { scrollToId: "threadPageLayout" },
+              }
+            );
+
             return;
           }
 
           const msg =
             err?.response?.data?.message ||
-            (err?.response?.status === 401 ? "Brak autoryzacji (401). Zaloguj się ponownie." : null) ||
+            (err?.response?.status === 401
+              ? "Brak autoryzacji (401). Zaloguj się ponownie."
+              : null) ||
             "Nie udało się wysłać zapytania.";
-          pushAlert?.({ show: true, type: "error", message: msg });
+
+          pushAlert?.({
+            show: true,
+            type: "error",
+            message: msg,
+          });
         }
 
         return;
       }
 
-      // B) Rezerwacja całego dnia
       if (serviceRequiredForBooking && !selectedService) {
         pushAlert?.({
           show: true,
@@ -274,7 +298,10 @@ export default function BookingModeDay({
         date: dateStr,
         description: (description || "").trim(),
         ...(selectedService?._id
-          ? { serviceId: selectedService._id, serviceName: selectedService.name }
+          ? {
+            serviceId: selectedService._id,
+            serviceName: selectedService.name,
+          }
           : {}),
       };
 
@@ -284,7 +311,8 @@ export default function BookingModeDay({
         "flash",
         JSON.stringify({
           type: "success",
-          message: "Wysłano prośbę o rezerwację dnia – oczekuje na potwierdzenie.",
+          message:
+            "Wysłano prośbę o rezerwację dnia – oczekuje na potwierdzenie.",
           ttl: 6000,
           ts: Date.now(),
         })
@@ -294,23 +322,35 @@ export default function BookingModeDay({
     } catch (err) {
       const msg =
         err?.response?.data?.message ||
-        (err?.response?.status === 401 ? "Brak autoryzacji (401). Zaloguj się ponownie." : null) ||
+        (err?.response?.status === 401
+          ? "Brak autoryzacji (401). Zaloguj się ponownie."
+          : null) ||
         "Nie udało się utworzyć rezerwacji dnia.";
-      pushAlert?.({ show: true, type: "error", message: msg });
+
+      pushAlert?.({
+        show: true,
+        type: "error",
+        message: msg,
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const selectedDateStr = selectedDate ? format(selectedDate, "dd.MM.yyyy") : null;
+  const selectedDateStr = selectedDate
+    ? format(selectedDate, "dd.MM.yyyy")
+    : null;
 
   return (
     <>
-      {/* ========== TOP FIELDS ========== */}
       <div className={styles.topGrid}>
-        <label className={styles.field}>
+        <label className={`${styles.field} ${styles.fieldWide}`}>
           <div className={styles.fieldHeader}>
-            <h3 className={styles.fieldTitle}>Opis / uwagi</h3>
+            <div>
+              <span className={styles.fieldEyebrow}>01 / Informacje</span>
+              <h3 className={styles.fieldTitle}>Opis lub uwagi</h3>
+            </div>
+
             <span className={styles.fieldHint}>opcjonalnie</span>
           </div>
 
@@ -326,7 +366,11 @@ export default function BookingModeDay({
         {hasServices && (
           <label className={styles.field}>
             <div className={styles.fieldHeader}>
-              <h3 className={styles.fieldTitle}>Wybierz usługę</h3>
+              <div>
+                <span className={styles.fieldEyebrow}>02 / Usługa</span>
+                <h3 className={styles.fieldTitle}>Wybierz usługę</h3>
+              </div>
+
               <span className={styles.fieldHint}>
                 {onlyInquiry ? "opcjonalnie" : "wymagane"}
               </span>
@@ -340,11 +384,14 @@ export default function BookingModeDay({
                   const svc = activeServices.find(
                     (s) => String(s._id) === String(e.target.value)
                   );
+
                   setService(svc || null);
-                  setDate(null); // ✅ reset wyboru dnia po zmianie usługi
+                  setDate(null);
                 }}
               >
-                <option value="">{onlyInquiry ? "– bez wyboru –" : "— wybierz usługę —"}</option>
+                <option value="">
+                  {onlyInquiry ? "– bez wyboru –" : "— wybierz usługę —"}
+                </option>
 
                 {activeServices.map((s) => (
                   <option key={s._id} value={s._id}>
@@ -372,7 +419,11 @@ export default function BookingModeDay({
 
         <label className={styles.toggleField}>
           <div className={styles.fieldHeader}>
-            <h3 className={styles.fieldTitle}>Tryb</h3>
+            <div>
+              <span className={styles.fieldEyebrow}>03 / Tryb</span>
+              <h3 className={styles.fieldTitle}>Sposób kontaktu</h3>
+            </div>
+
             <span className={styles.fieldHint}>wybór</span>
           </div>
 
@@ -386,34 +437,43 @@ export default function BookingModeDay({
                   setDate(null);
                 }}
               />
-              Tylko zapytanie (bez blokowania dnia)
+
+              <span>Tylko zapytanie bez blokowania dnia</span>
             </label>
 
-            <div className={styles.toggleHint}>
+            <p className={styles.toggleHint}>
               {onlyInquiry
-                ? "Wyślesz wiadomość do usługodawcy z prośbą o potwierdzenie."
-                : "Zarezerwujesz cały dzień (prośba do akceptacji)."}
-            </div>
+                ? "Wyślesz wiadomość do usługodawcy z prośbą o potwierdzenie dostępności."
+                : "Wyślesz prośbę o rezerwację całego dnia do akceptacji."}
+            </p>
           </div>
         </label>
       </div>
 
-      {/* ✅ komunikat: blokada dni do czasu wyboru usługi */}
       {serviceRequiredForBooking && !selectedService && (
         <div className={styles.warnBox}>
-          Najpierw wybierz usługę — dopiero potem wybierzesz dzień do rezerwacji.
+          <strong>Najpierw wybierz usługę</strong>
+          <p>
+            Dopiero po wyborze usługi możesz wskazać dzień do rezerwacji.
+          </p>
         </div>
       )}
 
-      {/* ========== CALENDAR + INFO ========== */}
       <div className={styles.mainGrid}>
-        {/* LEFT: calendar */}
         <section className={styles.calendarCard}>
+          <div className={styles.cardHead}>
+            <div>
+              <span className={styles.cardLabel}>Kalendarz</span>
+              <h3>Wybierz dzień</h3>
+            </div>
+          </div>
+
           <div className={styles.monthNav}>
             <button
               type="button"
               disabled={isSubmitting}
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              aria-label="Poprzedni miesiąc"
             >
               &lt;
             </button>
@@ -426,6 +486,7 @@ export default function BookingModeDay({
               type="button"
               disabled={isSubmitting}
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+              aria-label="Następny miesiąc"
             >
               &gt;
             </button>
@@ -450,6 +511,7 @@ export default function BookingModeDay({
               const dateStr = format(day, "yyyy-MM-dd");
 
               const disabled = state !== "free" || isSubmitting;
+
               const title =
                 state === "unavailable"
                   ? "Dzień niedostępny"
@@ -458,8 +520,8 @@ export default function BookingModeDay({
                     : state === "locked"
                       ? serviceRequiredForBooking && !selectedService
                         ? "Najpierw wybierz usługę"
-                        : "Dzień poza harmonogramem (workingDays)"
-                      : "";
+                        : "Dzień poza harmonogramem"
+                      : dateStr;
 
               return (
                 <button
@@ -473,8 +535,10 @@ export default function BookingModeDay({
                     sel ? styles.selectedDay : "",
                   ].join(" ")}
                   disabled={disabled}
-                  onClick={() => !isSubmitting && canPickDay(day) && setDate(day)}
-                  title={title || dateStr}
+                  onClick={() =>
+                    !isSubmitting && canPickDay(day) && setDate(day)
+                  }
+                  title={title}
                 >
                   {format(day, "d")}
                 </button>
@@ -483,23 +547,30 @@ export default function BookingModeDay({
           </div>
         </section>
 
-        {/* RIGHT: info */}
         <section className={styles.infoCard}>
           {!selectedDate ? (
             <div className={styles.emptyState}>
-              <div className={styles.emptyIcon}>📅</div>
-              <div className={styles.emptyTitle}>Wybierz dzień</div>
-              <div className={styles.emptyText}>
-                Kliknij dzień w kalendarzu, a potem wyślij prośbę o rezerwację.
-              </div>
+              <span className={styles.emptyNumber}>04</span>
+
+              <strong>Wybierz dzień</strong>
+
+              <p>
+                Kliknij wolny dzień w kalendarzu, a następnie wyślij prośbę o
+                rezerwację albo samo zapytanie.
+              </p>
             </div>
           ) : (
             <>
               <div className={styles.infoHeader}>
                 <div>
+                  <span className={styles.cardLabel}>
+                    {onlyInquiry ? "Zapytanie" : "Rezerwacja"}
+                  </span>
+
                   <h3 className={styles.infoTitle}>
                     {onlyInquiry ? "Zapytanie o dzień" : "Rezerwacja dnia"}
                   </h3>
+
                   <p className={styles.infoSub}>
                     Dzień: <b>{selectedDateStr}</b>
                   </p>
@@ -513,49 +584,63 @@ export default function BookingModeDay({
 
               {hasServices && (
                 <div className={styles.summaryRow}>
-                  <div className={styles.summaryLabel}>Usługa:</div>
-                  <div className={styles.summaryValue}>
+                  <span className={styles.summaryLabel}>Usługa</span>
+
+                  <span className={styles.summaryValue}>
                     {selectedService ? (
                       <b>{selectedService.name}</b>
                     ) : (
                       <span className={styles.muted}>Nie wybrano</span>
                     )}
-                  </div>
+                  </span>
                 </div>
               )}
 
               {!!description?.trim() && (
                 <div className={styles.summaryRow}>
-                  <div className={styles.summaryLabel}>Opis:</div>
-                  <div className={styles.summaryValue}>{description.trim()}</div>
+                  <span className={styles.summaryLabel}>Opis</span>
+
+                  <span className={styles.summaryValue}>
+                    {description.trim()}
+                  </span>
                 </div>
               )}
 
-              {selectedDate && isUnavailable(format(selectedDate, "yyyy-MM-dd")) && !onlyInquiry && (
-                <div className={styles.warnBox}>
-                  Ten dzień jest niedostępny – prześlij „Tylko zapytanie”.
-                </div>
-              )}
+              {selectedDate &&
+                isUnavailable(format(selectedDate, "yyyy-MM-dd")) &&
+                !onlyInquiry && (
+                  <div className={styles.warnBox}>
+                    <strong>Dzień niedostępny</strong>
+                    <p>
+                      Ten dzień jest już oznaczony jako niedostępny. Możesz
+                      przełączyć się na tryb „Tylko zapytanie”.
+                    </p>
+                  </div>
+                )}
             </>
           )}
         </section>
       </div>
 
-      {/* ✅ LEGEND FULL WIDTH (JEDNA) */}
       <div className={styles.fullLegendBar}>
         <div className={styles.legendBadges}>
           <span className={styles.legendItem}>
             <span className={`${styles.legendBox} ${styles.legendFree}`} />
             wolne
           </span>
+
           <span className={styles.legendItem}>
             <span className={`${styles.legendBox} ${styles.legendSelected}`} />
             wybrane
           </span>
+
           <span className={styles.legendItem}>
-            <span className={`${styles.legendBox} ${styles.legendUnavailable}`} />
+            <span
+              className={`${styles.legendBox} ${styles.legendUnavailable}`}
+            />
             niedostępne
           </span>
+
           <span className={styles.legendItem}>
             <span className={`${styles.legendBox} ${styles.legendLocked}`} />
             nieaktywne
@@ -565,16 +650,15 @@ export default function BookingModeDay({
         <div className={styles.legendMetaFull}>
           {hasServices
             ? onlyInquiry
-              ? "Usługa opcjonalna • możesz wysłać zapytanie bez blokady"
+              ? "Usługa opcjonalna / zapytanie bez blokady"
               : "Usługa wymagana do rezerwacji dnia"
-            : "Brak usług • wybierasz tylko dzień"}
+            : "Brak usług / wybierasz tylko dzień"}
         </div>
       </div>
 
-      {/* ========== SUBMIT BAR (sticky on mobile) ========== */}
-      <div className={styles.submitBar}>
+      <form onSubmit={handleSubmit} className={styles.submitBar}>
         <LoadingButton
-          onClick={handleSubmit}
+          type="submit"
           isLoading={isSubmitting}
           disabled={
             !selectedDate ||
@@ -588,10 +672,10 @@ export default function BookingModeDay({
 
         <div className={styles.submitHint}>
           {onlyInquiry
-            ? "Wyślemy wiadomość do usługodawcy — odpowie w rozmowie."
+            ? "Wyślemy wiadomość do usługodawcy — odpowiedź pojawi się w rozmowie."
             : "Po wysłaniu prośba będzie oczekiwać na potwierdzenie."}
         </div>
-      </div>
+      </form>
     </>
   );
 }

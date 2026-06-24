@@ -1,4 +1,4 @@
-// BookingModeOpen.jsx — czyste zapytanie (bez kalendarza)
+// BookingModeOpen.jsx — czyste zapytanie bez kalendarza
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./BookingModeOpen.module.scss";
@@ -69,15 +69,15 @@ export default function BookingModeOpen({
       subject?.trim() ? `Temat: ${subject.trim()}` : null,
       selectedService?.name ? `Usługa: ${selectedService.name}` : null,
       phone?.trim() ? `Telefon: ${phone.trim()}` : null,
-      "",
-      body,
+      body ? `Wiadomość:\n${body}` : null,
     ]
       .filter(Boolean)
-      .join("\n");
+      .join("\n\n");
   };
 
   const handleSubmit = async (e) => {
     e?.preventDefault?.();
+
     if (sending) return;
 
     setSending(true);
@@ -207,12 +207,31 @@ export default function BookingModeOpen({
     }
   };
 
+  const messagePreview = buildContent();
+
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
+      <div className={styles.introBox}>
+        <span className={styles.introNumber}>01</span>
+
+        <div>
+          <strong>Wyślij zapytanie bez wybierania terminu</strong>
+
+          <p>
+            Ten profil działa w trybie otwartym — opisz, czego potrzebujesz, a
+            usługodawca odpowie Ci w konwersacji.
+          </p>
+        </div>
+      </div>
+
       <div className={styles.topGrid}>
         <label className={styles.field}>
           <div className={styles.fieldHeader}>
-            <h3 className={styles.fieldTitle}>Temat</h3>
+            <div>
+              <span className={styles.fieldEyebrow}>02 / Temat</span>
+              <h3 className={styles.fieldTitle}>Temat wiadomości</h3>
+            </div>
+
             <span className={styles.fieldHint}>opcjonalnie</span>
           </div>
 
@@ -228,7 +247,11 @@ export default function BookingModeOpen({
 
         <label className={styles.field}>
           <div className={styles.fieldHeader}>
-            <h3 className={styles.fieldTitle}>Telefon</h3>
+            <div>
+              <span className={styles.fieldEyebrow}>03 / Kontakt</span>
+              <h3 className={styles.fieldTitle}>Telefon</h3>
+            </div>
+
             <span className={styles.fieldHint}>opcjonalnie</span>
           </div>
 
@@ -245,31 +268,45 @@ export default function BookingModeOpen({
         {activeServices.length > 0 && (
           <label className={styles.field}>
             <div className={styles.fieldHeader}>
-              <h3 className={styles.fieldTitle}>Usługa</h3>
+              <div>
+                <span className={styles.fieldEyebrow}>04 / Usługa</span>
+                <h3 className={styles.fieldTitle}>Wybierz usługę</h3>
+              </div>
+
               <span className={styles.fieldHint}>opcjonalnie</span>
             </div>
 
-            <select
-              className={styles.input}
-              value={selectedService?._id || ""}
-              onChange={handleServiceChange}
-              disabled={sending}
-            >
-              <option value="">– bez wyboru –</option>
+            <div className={styles.selectWrap}>
+              <select
+                className={styles.select}
+                value={selectedService?._id || ""}
+                onChange={handleServiceChange}
+                disabled={sending}
+              >
+                <option value="">– bez wyboru –</option>
 
-              {activeServices.map((s) => (
-                <option key={s._id} value={s._id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+                {activeServices.map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+
+              <span className={styles.selectChevron} aria-hidden="true">
+                ▾
+              </span>
+            </div>
           </label>
         )}
       </div>
 
-      <label className={styles.field}>
+      <label className={`${styles.field} ${styles.messageField}`}>
         <div className={styles.fieldHeader}>
-          <h3 className={styles.fieldTitle}>Wiadomość</h3>
+          <div>
+            <span className={styles.fieldEyebrow}>05 / Treść</span>
+            <h3 className={styles.fieldTitle}>Wiadomość</h3>
+          </div>
+
           <span className={styles.fieldHint}>wymagane</span>
         </div>
 
@@ -282,6 +319,25 @@ export default function BookingModeOpen({
           disabled={sending}
         />
       </label>
+
+      <div className={styles.previewBox}>
+        <div className={styles.previewHead}>
+          <div>
+            <span className={styles.previewLabel}>Podgląd</span>
+            <strong>Co zostanie wysłane?</strong>
+          </div>
+
+          <span className={styles.previewNumber}>06</span>
+        </div>
+
+        {messagePreview ? (
+          <pre className={styles.previewContent}>{messagePreview}</pre>
+        ) : (
+          <p className={styles.previewEmpty}>
+            Uzupełnij wiadomość, aby zobaczyć podgląd zapytania.
+          </p>
+        )}
+      </div>
 
       <div className={styles.submitBar}>
         <LoadingButton

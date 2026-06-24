@@ -36,19 +36,19 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
   return (
     <section className={styles.hero} id="hero">
       <div className={styles.bg} aria-hidden="true">
-        <span className={styles.orbOne} />
-        <span className={styles.orbTwo} />
-        <span className={styles.noise} />
+        <span className={styles.blurOne} />
+        <span className={styles.blurTwo} />
+        <span className={styles.blurThree} />
       </div>
 
       <div className={styles.wrap}>
         <div className={styles.content}>
-          <div className={styles.eyebrow}>
+          <div className={styles.overline}>
             <span>Showly.me</span>
             <b>profil online w jednym linku</b>
           </div>
 
-          <h1>
+          <h1 className={styles.title}>
             Twoja oferta.
             <br />
             Jeden link.
@@ -57,14 +57,17 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
           </h1>
 
           <p className={styles.lead}>
-            Stwórz nowoczesną wizytówkę z usługami, galerią, cennikiem,
-            opiniami i kontaktem — gotową do wysłania klientowi.
+            Stwórz profil z usługami, galerią, cennikiem, opiniami i kontaktem.
+            Jedno miejsce, które możesz wysłać klientowi, dodać do bio albo
+            wkleić w ogłoszeniu.
           </p>
 
-          <div className={styles.searchCard}>
+          <div className={styles.searchBlock}>
             <div className={styles.searchHeader}>
-              <span>Szukaj profili</span>
-              <small>rola, usługa, miasto</small>
+              <div>
+                <span>Szukaj profili</span>
+                <small>rola, usługa albo miasto</small>
+              </div>
             </div>
 
             <SearchBar variant="hero" />
@@ -115,71 +118,65 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
               Zobacz jak działa Showly
             </button>
           </div>
+        </div>
 
-          <div className={styles.stats}>
+        <aside className={styles.side} aria-label="Co możesz pokazać w Showly">
+          <div className={styles.sideTop}>
+            <span>Profil publiczny</span>
+            <b>showly.me/twoja-nazwa</b>
+          </div>
+
+          <div className={styles.sideCard}>
+            <span>01</span>
             <div>
-              <strong>1</strong>
-              <span>link do wszystkiego</span>
+              <strong>Oferta bez dopytywania</strong>
+              <p>Usługi, cennik, opis i zdjęcia w jednym miejscu.</p>
             </div>
+          </div>
+
+          <div className={styles.sideCard}>
+            <span>02</span>
             <div>
-              <strong>24/7</strong>
-              <span>dostęp dla klientów</span>
+              <strong>Kontakt od razu z profilu</strong>
+              <p>Klient może wysłać pytanie, sprawdzić dane albo przejść dalej.</p>
             </div>
+          </div>
+
+          <div className={styles.sideCard}>
+            <span>03</span>
+            <div>
+              <strong>Link do bio, posta i ogłoszenia</strong>
+              <p>Nie wysyłasz osobno galerii, cen, opinii i sociali.</p>
+            </div>
+          </div>
+
+          <div className={styles.sideFooter}>
+            <div>
+              <strong>1 link</strong>
+              <span>do całej oferty</span>
+            </div>
+
             <div>
               <strong>mobile</strong>
               <span>gotowe na telefon</span>
             </div>
           </div>
-        </div>
+        </aside>
 
-        <div className={styles.visual}>
-          <div className={styles.phone}>
-            <div className={styles.phoneTop}>
-              <span />
-            </div>
-
-            <div className={styles.profileCard}>
-              <div className={styles.profileCover} />
-
-              <div className={styles.profileMain}>
-                <div className={styles.avatar}>
-                  <img src="/images/other/logo-showly.png" alt="Showly" />
-                </div>
-
-                <div>
-                  <h3>Twoja marka</h3>
-                  <p>Usługi lokalne • Cała Polska</p>
-                </div>
-              </div>
-
-              <div className={styles.tags}>
-                <span>Rezerwacje</span>
-                <span>Opinie</span>
-                <span>Galeria</span>
-              </div>
-
-              <div className={styles.list}>
-                <div>
-                  <span>Usługi</span>
-                  <b>od 150 zł</b>
-                </div>
-                <div>
-                  <span>Dostępność</span>
-                  <b>dzisiaj</b>
-                </div>
-                <div>
-                  <span>Ocena</span>
-                  <b>4.9 ★</b>
-                </div>
-              </div>
-
-              <button type="button">Zadaj pytanie</button>
-            </div>
+        <div className={styles.stats}>
+          <div>
+            <strong>1</strong>
+            <span>link do wszystkiego</span>
           </div>
 
-          <div className={styles.floatingCard}>
-            <strong>+ szybki kontakt</strong>
-            <span>klient widzi wszystko od razu</span>
+          <div>
+            <strong>24/7</strong>
+            <span>dostęp dla klientów</span>
+          </div>
+
+          <div>
+            <strong>mobile</strong>
+            <span>gotowe na telefon</span>
           </div>
         </div>
       </div>
@@ -187,7 +184,7 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
       <div className={styles.wave}>
         <svg viewBox="0 0 1440 220" preserveAspectRatio="none">
           <path
-            fill="#fff"
+            fill="#ffffff"
             d="M0,96L80,106.7C160,117,320,139,480,128C640,117,800,75,960,80C1120,85,1280,139,1360,165.3L1440,192L1440,220L0,220Z"
           />
         </svg>

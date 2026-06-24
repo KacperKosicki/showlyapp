@@ -568,11 +568,14 @@ export default function BookingModeCalendar({
 
   return (
     <>
-      {/* ========== TOP FIELDS ========== */}
       <div className={styles.topGrid}>
-        <label className={styles.field}>
+        <label className={`${styles.field} ${styles.fieldWide}`}>
           <div className={styles.fieldHeader}>
-            <h3 className={styles.fieldTitle}>Opis / uwagi</h3>
+            <div>
+              <span className={styles.fieldEyebrow}>01 / Informacje</span>
+              <h3 className={styles.fieldTitle}>Opis lub uwagi do rezerwacji</h3>
+            </div>
+
             <span className={styles.fieldHint}>opcjonalnie</span>
           </div>
 
@@ -587,7 +590,11 @@ export default function BookingModeCalendar({
 
         <label className={styles.field}>
           <div className={styles.fieldHeader}>
-            <h3 className={styles.fieldTitle}>Wybierz usługę</h3>
+            <div>
+              <span className={styles.fieldEyebrow}>02 / Usługa</span>
+              <h3 className={styles.fieldTitle}>Wybierz usługę</h3>
+            </div>
+
             <span className={styles.fieldHint}>wymagane</span>
           </div>
 
@@ -596,7 +603,10 @@ export default function BookingModeCalendar({
               className={styles.select}
               value={selectedService?._id || ""}
               onChange={(e) => {
-                const svc = activeServices.find((s) => String(s._id) === String(e.target.value));
+                const svc = activeServices.find(
+                  (s) => String(s._id) === String(e.target.value)
+                );
+
                 setService(svc || null);
                 setSlot("");
                 setDate(null);
@@ -604,6 +614,7 @@ export default function BookingModeCalendar({
               }}
             >
               <option value="">– wybierz –</option>
+
               {activeServices.map((s) => (
                 <option key={s._id} value={s._id}>
                   {s.name} {s.duration?.value}{" "}
@@ -624,11 +635,14 @@ export default function BookingModeCalendar({
           </div>
         </label>
 
-        {/* ✨ Wybór pracownika */}
         {isUserPick && selectedService && (
           <label className={styles.field}>
             <div className={styles.fieldHeader}>
-              <h3 className={styles.fieldTitle}>Wybierz osobę (pracownika)</h3>
+              <div>
+                <span className={styles.fieldEyebrow}>03 / Osoba</span>
+                <h3 className={styles.fieldTitle}>Wybierz pracownika</h3>
+              </div>
+
               <span className={styles.fieldHint}>wymagane</span>
             </div>
 
@@ -643,11 +657,14 @@ export default function BookingModeCalendar({
                 }}
               >
                 <option value="">– wybierz –</option>
+
                 {staffList
                   .filter(
                     (s) =>
                       s.active &&
-                      (s.serviceIds || []).some((id) => String(id) === String(selectedService?._id))
+                      (s.serviceIds || []).some(
+                        (id) => String(id) === String(selectedService?._id)
+                      )
                   )
                   .map((s) => (
                     <option key={s._id} value={s._id}>
@@ -665,26 +682,43 @@ export default function BookingModeCalendar({
         )}
       </div>
 
-      {/* Info dla auto-assign */}
       {isAutoAssign && selectedService && (
         <div className={styles.infoBox}>
-          <b>Auto-przydział:</b> pracownik zostanie dobrany automatycznie do wybranego terminu.
+          <strong>Auto-przydział</strong>
+          <p>
+            Pracownik zostanie dobrany automatycznie do wybranego terminu.
+          </p>
         </div>
       )}
 
-      {/* ========== CALENDAR + INFO (2 kolumny) ========== */}
       {selectedService ? (
         <div className={styles.mainGrid}>
-          {/* LEFT: calendar */}
           <section className={styles.calendarCard}>
+            <div className={styles.cardHead}>
+              <div>
+                <span className={styles.cardLabel}>Kalendarz</span>
+                <h3>Wybierz dzień</h3>
+              </div>
+            </div>
+
             <div className={styles.monthNav}>
-              <button type="button" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+              <button
+                type="button"
+                onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                aria-label="Poprzedni miesiąc"
+              >
                 &lt;
               </button>
+
               <span className={styles.monthLabel}>
                 {format(currentMonth, "LLLL yyyy", { locale: pl })}
               </span>
-              <button type="button" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+
+              <button
+                type="button"
+                onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                aria-label="Następny miesiąc"
+              >
                 &gt;
               </button>
             </div>
@@ -705,17 +739,29 @@ export default function BookingModeCalendar({
               {daysInMonth.map((day) => {
                 const active = isDayActive(day);
                 const sel = selectedDate && isSameDay(day, selectedDate);
-                const isPast = isBefore(startOfDay(day), startOfDay(new Date()));
+                const isPast = isBefore(
+                  startOfDay(day),
+                  startOfDay(new Date())
+                );
+
                 const dateStr = format(day, "yyyy-MM-dd");
-                const blockedByOverride = isDateBlockedByOverride(provider, dateStr);
+                const blockedByOverride = isDateBlockedByOverride(
+                  provider,
+                  dateStr
+                );
+
                 const disabled = !active || isPast || blockedByOverride;
 
                 return (
                   <button
                     key={day.toISOString()}
                     type="button"
-                    className={`${styles.day} ${disabled ? styles.disabledDay : ""} ${blockedByOverride ? styles.overrideBlockedDay : ""
-                      } ${sel ? styles.selectedDay : ""}`}
+                    className={`
+                      ${styles.day}
+                      ${disabled ? styles.disabledDay : ""}
+                      ${blockedByOverride ? styles.overrideBlockedDay : ""}
+                      ${sel ? styles.selectedDay : ""}
+                    `}
                     disabled={disabled}
                     title={
                       blockedByOverride
@@ -735,24 +781,25 @@ export default function BookingModeCalendar({
             </div>
           </section>
 
-          {/* RIGHT: info (wolne terminy + belka) */}
           <section className={styles.slotsInfoCard}>
             {!selectedDate ? (
               <div className={styles.emptyState}>
-                <div className={styles.emptyIcon}>📅</div>
-                <div className={styles.emptyTitle}>Wybierz dzień</div>
-                <div className={styles.emptyText}>
-                  Kliknij datę w kalendarzu, a pokażę dostępne sloty.
-                </div>
+                <span className={styles.emptyNumber}>03</span>
+                <strong>Wybierz dzień w kalendarzu</strong>
+                <p>
+                  Po kliknięciu daty pokażemy dostępne godziny dla wybranej
+                  usługi.
+                </p>
               </div>
             ) : (
               <>
                 <div className={styles.slotsHeader}>
                   <div>
-                    <h3 className={styles.slotsTitle}>Wolne terminy</h3>
-                    <p className={styles.slotsSub}>
-                      Dzień: <b>{format(selectedDate, "dd.MM.yyyy")}</b>
-                    </p>
+                    <span className={styles.cardLabel}>Wolne terminy</span>
+
+                    <h3 className={styles.slotsTitle}>
+                      {format(selectedDate, "dd.MM.yyyy")}
+                    </h3>
                   </div>
 
                   <div className={styles.pickedPill} title="Wybrany slot">
@@ -764,7 +811,9 @@ export default function BookingModeCalendar({
                         </span>
                       </>
                     ) : (
-                      <span className={styles.pickedMuted}>Nie wybrano godziny</span>
+                      <span className={styles.pickedMuted}>
+                        Nie wybrano godziny
+                      </span>
                     )}
                   </div>
                 </div>
@@ -772,19 +821,30 @@ export default function BookingModeCalendar({
                 <div className={styles.fullLegendBar}>
                   <div className={styles.legendBadges}>
                     <span className={styles.legendItem}>
-                      <span className={`${styles.legendBox} ${styles.legendReserved}`} />
+                      <span
+                        className={`${styles.legendBox} ${styles.legendReserved}`}
+                      />
                       zajęte
                     </span>
+
                     <span className={styles.legendItem}>
-                      <span className={`${styles.legendBox} ${styles.legendPending}`} />
+                      <span
+                        className={`${styles.legendBox} ${styles.legendPending}`}
+                      />
                       oczekujące
                     </span>
+
                     <span className={styles.legendItem}>
-                      <span className={`${styles.legendBox} ${styles.legendDisabled}`} />
+                      <span
+                        className={`${styles.legendBox} ${styles.legendDisabled}`}
+                      />
                       niedostępne
                     </span>
+
                     <span className={styles.legendItem}>
-                      <span className={`${styles.legendBox} ${styles.legendFree}`} />
+                      <span
+                        className={`${styles.legendBox} ${styles.legendFree}`}
+                      />
                       wolne
                     </span>
                   </div>
@@ -792,9 +852,9 @@ export default function BookingModeCalendar({
                   <div className={styles.legendMetaFull}>
                     Przerwa: <b>{effectiveBufferMin} min</b>
                     {bookingBufferMin > 0
-                      ? ` (5 min + ${bookingBufferMin} min z profilu)`
-                      : " (5 min stałej przerwy)"}
-                    {` • siatka: ${GRID_STEP_MIN} min`}
+                      ? ` / 5 min stałej przerwy + ${bookingBufferMin} min z profilu`
+                      : " / 5 min stałej przerwy"}
+                    {` / siatka: ${GRID_STEP_MIN} min`}
                   </div>
                 </div>
               </>
@@ -803,17 +863,26 @@ export default function BookingModeCalendar({
         </div>
       ) : (
         <div className={styles.preSelect}>
-          <div className={styles.preSelectIcon}>✨</div>
-          <div className={styles.preSelectTitle}>Najpierw wybierz usługę</div>
-          <div className={styles.preSelectText}>
-            Żeby pokazać wolne terminy, muszę znać czas trwania usługi.
-          </div>
+          <span className={styles.emptyNumber}>02</span>
+          <strong>Najpierw wybierz usługę</strong>
+          <p>
+            Żeby pokazać wolne terminy, musimy znać czas trwania konkretnej
+            usługi.
+          </p>
         </div>
       )}
 
-      {/* ========== SLOTS (FULL WIDTH POD SPODem) ========== */}
       {selectedService && selectedDate && (
         <section className={styles.slotsOnlyCard}>
+          <div className={styles.cardHead}>
+            <div>
+              <span className={styles.cardLabel}>Godziny</span>
+              <h3>Dostępne sloty</h3>
+            </div>
+
+            <span className={styles.cardNumber}>04</span>
+          </div>
+
           <form onSubmit={handleSubmit} className={styles.slotsForm}>
             <div className={styles.slotsGrid}>
               {timeSlots.map((s, i) => (
@@ -828,7 +897,9 @@ export default function BookingModeCalendar({
                     ${selectedSlot === s.label ? styles.slotSelected : ""}
                   `}
                   disabled={s.status !== "free" || isSubmitting}
-                  onClick={() => !isSubmitting && s.status === "free" && setSlot(s.label)}
+                  onClick={() =>
+                    !isSubmitting && s.status === "free" && setSlot(s.label)
+                  }
                 >
                   {s.label}
                 </button>

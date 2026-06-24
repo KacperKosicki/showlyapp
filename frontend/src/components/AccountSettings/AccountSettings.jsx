@@ -336,14 +336,8 @@ export default function AccountSettings() {
   if (loading) {
     return (
       <section className={styles.section}>
-        <div className={styles.sectionBackground} aria-hidden="true" />
-
         <div className={styles.inner}>
-          <div className={styles.contentBox}>
-            <div className={styles.loadingCard}>
-              Ładowanie ustawień konta…
-            </div>
-          </div>
+          <div className={styles.loadingCard}>Ładowanie ustawień konta…</div>
         </div>
       </section>
     );
@@ -351,175 +345,207 @@ export default function AccountSettings() {
 
   return (
     <section id="scrollToId" className={styles.section}>
-      <div className={styles.sectionBackground} aria-hidden="true" />
-
       <div className={styles.inner}>
         {alert && (
-          <AlertBox
-            type={alert.type}
-            message={alert.message}
-            onClose={() => setAlert(null)}
-          />
+          <div className={styles.alertSlot}>
+            <AlertBox
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert(null)}
+            />
+          </div>
         )}
 
-        <div className={styles.head}>
-          <div className={styles.labelRow}>
-            <span className={styles.label}>Showly Account</span>
-            <span className={styles.labelDot} />
-            <span className={styles.labelDesc}>Ustawienia konta i profilu</span>
-            <span className={styles.labelLine} />
-            <span className={styles.pill}>Awatar • Nazwa • Hasło</span>
-          </div>
+        <div className={styles.layout}>
+          <aside className={styles.side}>
+            <span className={styles.overline}>Showly Account</span>
 
-          <h2 className={styles.heading}>
-            Twoje <span className={styles.headingAccent}>konto</span> ⚙️
-          </h2>
+            <h2 className={styles.sideTitle}>Ustawienia konta</h2>
 
-          <p className={styles.description}>
-            Tutaj możesz zarządzać swoim{" "}
-            <strong className={styles.inlineStrong}>awatarem</strong>, nazwą
-            wyświetlaną oraz bezpieczeństwem konta powiązanego z adresem{" "}
-            <strong className={styles.inlineStrong}>
-              {user?.email || "—"}
-            </strong>
-            .
-          </p>
-
-          <div className={styles.metaRow}>
-            <div className={styles.metaCard}>
-              <strong>{user?.email ? "OK" : "—"}</strong>
-              <span>adres e-mail konta</span>
-            </div>
-
-            <div className={styles.metaCard}>
-              <strong>{preview && preview !== fallbackImg ? "Tak" : "Nie"}</strong>
-              <span>ustawiony awatar</span>
-            </div>
-
-            <div className={styles.metaCard}>
-              <strong>{displayName.trim() ? "Tak" : "Nie"}</strong>
-              <span>ustawiona nazwa</span>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.contentBox}>
-          <div className={styles.contentHeader}>
-            <h3 className={styles.contentTitle}>Awatar konta</h3>
-            <span className={styles.badge}>{file ? "do zapisu" : "OK"}</span>
-          </div>
-
-          <div className={styles.card}>
-            <div className={styles.avatarRow}>
-              <div className={styles.avatarWrap}>
-                <img
-                  src={preview || fallbackImg}
-                  alt="Avatar użytkownika"
-                  className={styles.avatar}
-                  decoding="async"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    e.currentTarget.src = fallbackImg;
-                  }}
-                />
-              </div>
-
-              <div className={styles.controls}>
-                <label className={styles.fileBtn}>
-                  <input type="file" accept="image/*" onChange={onFileChange} />
-                  <ButtonContent icon={<FiImage />}>Wybierz plik</ButtonContent>
-                </label>
-
-                <div className={styles.actionsRow}>
-                  <ActionButton
-                    isLoading={loadingAction === "saveAvatar"}
-                    disabled={!file || loadingAction !== null}
-                    onClick={handleSaveAvatar}
-                    className={styles.primary}
-                    icon={<FiSave />}
-                  >
-                    Zapisz awatar
-                  </ActionButton>
-
-                  {preview && preview !== fallbackImg && (
-                    <ActionButton
-                      isLoading={loadingAction === "removeAvatar"}
-                      disabled={loadingAction !== null}
-                      onClick={handleRemoveAvatar}
-                      className={styles.ghost}
-                      icon={<FiTrash2 />}
-                    >
-                      Usuń awatar
-                    </ActionButton>
-                  )}
-                </div>
-
-                <small className={styles.hint}>
-                  Obsługiwane obrazy, maksymalnie 2 MB.
-                </small>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.contentBox}>
-          <div className={styles.contentHeader}>
-            <h3 className={styles.contentTitle}>Nazwa wyświetlana</h3>
-            <span className={styles.badge}>
-              {displayName.trim() ? "OK" : "brak"}
-            </span>
-          </div>
-
-          <div className={styles.card}>
-            <div className={styles.inline}>
-              <input
-                className={styles.input}
-                type="text"
-                placeholder="Twoja nazwa"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                maxLength={40}
-              />
-
-              <ActionButton
-                isLoading={loadingAction === "saveName"}
-                disabled={loadingAction !== null}
-                onClick={handleSaveDisplayName}
-                className={styles.primary}
-                icon={<FiSave />}
-              >
-                Zapisz
-              </ActionButton>
-            </div>
-
-            <small className={styles.hint}>
-              Ta nazwa może pojawiać się przy opiniach, konwersacjach,
-              wiadomościach oraz rezerwacjach.
-            </small>
-          </div>
-        </div>
-
-        <div className={styles.contentBox}>
-          <div className={styles.contentHeader}>
-            <h3 className={styles.contentTitle}>Bezpieczeństwo hasła</h3>
-            <span className={styles.badge}>reset</span>
-          </div>
-
-          <div className={styles.card}>
-            <p className={styles.text}>
-              Jeśli logujesz się hasłem, możesz wysłać na swój adres e-mail link
-              do zmiany hasła i zaktualizować dostęp do konta.
+            <p className={styles.sideText}>
+              Zarządzaj podstawowymi danymi konta: awatarem, nazwą wyświetlaną
+              oraz dostępem do hasła. Prosto, bez przeładowanego panelu.
             </p>
 
-            <ActionButton
-              isLoading={loadingAction === "resetPass"}
-              disabled={loadingAction !== null}
-              onClick={handlePasswordReset}
-              className={styles.secondary}
-              icon={<FiLock />}
-            >
-              Wyślij link do zmiany hasła
-            </ActionButton>
+            <div className={styles.quickStats}>
+              <div>
+                <strong>{user?.email ? "OK" : "—"}</strong>
+                <span>adres e-mail</span>
+              </div>
+
+              <div>
+                <strong>{preview && preview !== fallbackImg ? "Tak" : "Nie"}</strong>
+                <span>awatar konta</span>
+              </div>
+
+              <div>
+                <strong>{displayName.trim() ? "Tak" : "Nie"}</strong>
+                <span>nazwa publiczna</span>
+              </div>
+            </div>
+          </aside>
+
+          <div className={styles.content}>
+            <article className={styles.chapter}>
+              <div className={styles.chapterNumber}>01</div>
+
+              <div className={styles.chapterMain}>
+                <div className={styles.chapterHead}>
+                  <div>
+                    <span className={styles.chapterLabel}>Awatar konta</span>
+                    <h3 className={styles.chapterTitle}>
+                      Zdjęcie, które będzie reprezentować Twoje konto.
+                    </h3>
+                  </div>
+
+                  <span className={styles.badge}>{file ? "do zapisu" : "OK"}</span>
+                </div>
+
+                <div className={styles.chapterBody}>
+                  <div className={styles.avatarRow}>
+                    <div className={styles.avatarPreview}>
+                      <img
+                        src={preview || fallbackImg}
+                        alt="Avatar użytkownika"
+                        className={styles.avatar}
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          e.currentTarget.src = fallbackImg;
+                        }}
+                      />
+                    </div>
+
+                    <div className={styles.controls}>
+                      <label className={styles.fileBtn}>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={onFileChange}
+                        />
+                        <ButtonContent icon={<FiImage />}>
+                          Wybierz plik
+                        </ButtonContent>
+                      </label>
+
+                      <div className={styles.actionsRow}>
+                        <ActionButton
+                          isLoading={loadingAction === "saveAvatar"}
+                          disabled={!file || loadingAction !== null}
+                          onClick={handleSaveAvatar}
+                          className={styles.primary}
+                          icon={<FiSave />}
+                        >
+                          Zapisz awatar
+                        </ActionButton>
+
+                        {preview && preview !== fallbackImg && (
+                          <ActionButton
+                            isLoading={loadingAction === "removeAvatar"}
+                            disabled={loadingAction !== null}
+                            onClick={handleRemoveAvatar}
+                            className={styles.ghost}
+                            icon={<FiTrash2 />}
+                          >
+                            Usuń awatar
+                          </ActionButton>
+                        )}
+                      </div>
+
+                      <small className={styles.hint}>
+                        Obsługiwane są pliki graficzne do 2 MB. Po wybraniu
+                        zdjęcia zapisz zmianę przyciskiem.
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className={styles.chapter}>
+              <div className={styles.chapterNumber}>02</div>
+
+              <div className={styles.chapterMain}>
+                <div className={styles.chapterHead}>
+                  <div>
+                    <span className={styles.chapterLabel}>
+                      Nazwa wyświetlana
+                    </span>
+                    <h3 className={styles.chapterTitle}>
+                      Nazwa, która może pojawiać się przy aktywności w Showly.
+                    </h3>
+                  </div>
+
+                  <span className={styles.badge}>
+                    {displayName.trim() ? "OK" : "brak"}
+                  </span>
+                </div>
+
+                <div className={styles.chapterBody}>
+                  <div className={styles.inline}>
+                    <input
+                      className={styles.input}
+                      type="text"
+                      placeholder="Twoja nazwa"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      maxLength={40}
+                    />
+
+                    <ActionButton
+                      isLoading={loadingAction === "saveName"}
+                      disabled={loadingAction !== null}
+                      onClick={handleSaveDisplayName}
+                      className={styles.primary}
+                      icon={<FiSave />}
+                    >
+                      Zapisz
+                    </ActionButton>
+                  </div>
+
+                  <small className={styles.hint}>
+                    Ta nazwa może pojawiać się przy opiniach, wiadomościach,
+                    konwersacjach oraz rezerwacjach.
+                  </small>
+                </div>
+              </div>
+            </article>
+
+            <article className={styles.chapter}>
+              <div className={styles.chapterNumber}>03</div>
+
+              <div className={styles.chapterMain}>
+                <div className={styles.chapterHead}>
+                  <div>
+                    <span className={styles.chapterLabel}>
+                      Bezpieczeństwo
+                    </span>
+                    <h3 className={styles.chapterTitle}>
+                      Reset hasła dla konta powiązanego z e-mailem.
+                    </h3>
+                  </div>
+
+                  <span className={styles.badge}>reset</span>
+                </div>
+
+                <div className={styles.chapterBody}>
+                  <p className={styles.text}>
+                    Jeśli logujesz się hasłem, możesz wysłać na swój adres
+                    e-mail link do zmiany hasła i zaktualizować dostęp do konta.
+                  </p>
+
+                  <ActionButton
+                    isLoading={loadingAction === "resetPass"}
+                    disabled={loadingAction !== null}
+                    onClick={handlePasswordReset}
+                    className={styles.secondary}
+                    icon={<FiLock />}
+                  >
+                    Wyślij link do zmiany hasła
+                  </ActionButton>
+                </div>
+              </div>
+            </article>
           </div>
         </div>
       </div>

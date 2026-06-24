@@ -8,7 +8,6 @@ import { auth } from "../../firebase";
 const API = process.env.REACT_APP_API_URL;
 const DEFAULT_AVATAR = "/images/other/no-image.png";
 
-// avatar może być string albo { url }
 const pickUrl = (val) => {
   if (!val) return "";
   if (typeof val === "string") return val;
@@ -19,6 +18,7 @@ const pickUrl = (val) => {
 const normalizeAvatar = (val) => {
   const raw = pickUrl(val);
   const v = String(raw || "").trim();
+
   if (!v) return "";
 
   if (v.startsWith("data:image/")) return v;
@@ -38,6 +38,7 @@ const Notifications = ({ user, setUnreadCount }) => {
   const [profileMetaMap, setProfileMetaMap] = useState({});
   const [myProfile, setMyProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+
   const location = useLocation();
 
   const authHeaders = useCallback(async () => {
@@ -45,6 +46,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     const uid = user?.uid || firebaseUser?.uid || "";
 
     let token = "";
+
     if (firebaseUser) {
       try {
         token = await firebaseUser.getIdToken();
@@ -59,10 +61,10 @@ const Notifications = ({ user, setUnreadCount }) => {
     };
   }, [user?.uid]);
 
-  // moja wizytówka
   useEffect(() => {
     const fetchMyProfile = async () => {
       const firebaseUid = user?.uid || auth.currentUser?.uid;
+
       if (!firebaseUid) {
         setMyProfile(null);
         return;
@@ -70,11 +72,12 @@ const Notifications = ({ user, setUnreadCount }) => {
 
       try {
         const headers = await authHeaders();
-        const r = await axios.get(`${API}/api/profiles/by-user/${firebaseUid}`, {
+
+        const res = await axios.get(`${API}/api/profiles/by-user/${firebaseUid}`, {
           headers,
         });
 
-        setMyProfile(r?.data || null);
+        setMyProfile(res?.data || null);
       } catch (err) {
         console.error("❌ Błąd pobierania mojego profilu:", err);
         setMyProfile(null);
@@ -84,14 +87,17 @@ const Notifications = ({ user, setUnreadCount }) => {
     fetchMyProfile();
   }, [user?.uid, authHeaders]);
 
-  // konwersacje
   useEffect(() => {
     const fetchConversations = async () => {
       const firebaseUid = user?.uid || auth.currentUser?.uid;
 
       if (!firebaseUid) {
         setConversations([]);
-        setUnreadCount(0);
+
+        if (typeof setUnreadCount === "function") {
+          setUnreadCount(0);
+        }
+
         setLoading(false);
         return;
       }
@@ -100,19 +106,28 @@ const Notifications = ({ user, setUnreadCount }) => {
 
       try {
         const headers = await authHeaders();
+
         const res = await axios.get(`${API}/api/conversations/by-uid/${firebaseUid}`, {
           headers,
         });
 
         const list = Array.isArray(res.data) ? res.data : [];
+
         setConversations(list);
 
         const unread = list.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
-        setUnreadCount(unread);
+
+        if (typeof setUnreadCount === "function") {
+          setUnreadCount(unread);
+        }
       } catch (err) {
         console.error("❌ Błąd pobierania konwersacji:", err);
+
         setConversations([]);
-        setUnreadCount(0);
+
+        if (typeof setUnreadCount === "function") {
+          setUnreadCount(0);
+        }
       } finally {
         setLoading(false);
       }
@@ -121,7 +136,6 @@ const Notifications = ({ user, setUnreadCount }) => {
     fetchConversations();
   }, [user?.uid, setUnreadCount, authHeaders]);
 
-  // unikalne uid drugiej strony
   const otherUids = useMemo(
     () =>
       conversations
@@ -134,7 +148,6 @@ const Notifications = ({ user, setUnreadCount }) => {
 
   const isProfileResolved = (uid) => profileMetaMap[uid] !== undefined;
 
-  // meta profili drugiej strony
   useEffect(() => {
     const fetchProfiles = async () => {
       if (otherUids.length === 0) return;
@@ -155,9 +168,9 @@ const Notifications = ({ user, setUnreadCount }) => {
         const entries = await Promise.all(
           otherUids.map(async (uid) => {
             try {
-              const r = await axios.get(`${API}/api/profiles/by-user/${uid}`);
-              const name = (r?.data?.name || "").trim() || null;
-              const avatar = normalizeAvatar(r?.data?.avatar) || null;
+              const res = await axios.get(`${API}/api/profiles/by-user/${uid}`);
+              const name = (res?.data?.name || "").trim() || null;
+              const avatar = normalizeAvatar(res?.data?.avatar) || null;
 
               return [uid, { name, avatar }];
             } catch {
@@ -168,18 +181,39 @@ const Notifications = ({ user, setUnreadCount }) => {
 
         setProfileMetaMap((prev) => {
           const next = { ...prev };
+
           entries.forEach(([uid, meta]) => {
             next[uid] = meta;
           });
+
           return next;
         });
-      } catch (e) {
-        console.error("❌ Błąd pobierania profili:", e);
+      } catch (err) {
+        console.error("❌ Błąd pobierania profili:", err);
       }
     };
 
     fetchProfiles();
   }, [otherUids]);
+
+  useEffect(() => {
+    const scrollTo = location.state?.scrollToId;
+
+    if (!scrollTo || loading) return;
+
+    const tryScroll = () => {
+      const el = document.getElementById(scrollTo);
+
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        window.history.replaceState({}, document.title, location.pathname);
+      } else {
+        requestAnimationFrame(tryScroll);
+      }
+    };
+
+    requestAnimationFrame(tryScroll);
+  }, [location.state, loading, location.pathname]);
 
   const getName = (otherUid, fallback, prefer = "profile") => {
     const account = (fallback || "").trim();
@@ -194,6 +228,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     }
 
     if (!isProfileResolved(otherUid)) return "";
+
     if (typeof profileMeta?.name === "string" && profileMeta.name.trim()) {
       return profileMeta.name.trim();
     }
@@ -211,6 +246,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     }
 
     const meta = profileMetaMap[otherUid];
+
     if (!isProfileResolved(otherUid)) return "";
 
     return normalizeAvatar(meta?.avatar) || "";
@@ -223,12 +259,18 @@ const Notifications = ({ user, setUnreadCount }) => {
 
   const inboxToMyProfile = useMemo(() => {
     const myUid = auth.currentUser?.uid || user?.uid;
-    return accountToProfile.filter((c) => c.firstFromUid && c.firstFromUid !== myUid);
+
+    return accountToProfile.filter(
+      (c) => c.firstFromUid && c.firstFromUid !== myUid
+    );
   }, [accountToProfile, user?.uid]);
 
   const myAccountToOtherProfiles = useMemo(() => {
     const myUid = auth.currentUser?.uid || user?.uid;
-    return accountToProfile.filter((c) => c.firstFromUid && c.firstFromUid === myUid);
+
+    return accountToProfile.filter(
+      (c) => c.firstFromUid && c.firstFromUid === myUid
+    );
   }, [accountToProfile, user?.uid]);
 
   const systemConversations = useMemo(
@@ -236,9 +278,25 @@ const Notifications = ({ user, setUnreadCount }) => {
     [conversations]
   );
 
-  const systemUnread = systemConversations.reduce((a, c) => a + (c.unreadCount || 0), 0);
-  const inboxUnread = inboxToMyProfile.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
-  const outboxUnread = myAccountToOtherProfiles.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
+  const hasMyProfile = !!(myProfile && myProfile._id);
+
+  const systemUnread = systemConversations.reduce(
+    (acc, c) => acc + (c.unreadCount || 0),
+    0
+  );
+
+  const inboxUnread = inboxToMyProfile.reduce(
+    (acc, c) => acc + (c.unreadCount || 0),
+    0
+  );
+
+  const outboxUnread = myAccountToOtherProfiles.reduce(
+    (acc, c) => acc + (c.unreadCount || 0),
+    0
+  );
+
+  const totalUnread = inboxUnread + outboxUnread + systemUnread;
+  const totalThreads = conversations.length;
 
   const renderNameNode = (rawName) =>
     rawName ? (
@@ -281,6 +339,7 @@ const Notifications = ({ user, setUnreadCount }) => {
 
   const renderItem = (convo, variant) => {
     const lastMsg = convo.lastMessage;
+
     if (!lastMsg) return null;
 
     const isUnread = (convo.unreadCount || 0) > 0;
@@ -291,19 +350,23 @@ const Notifications = ({ user, setUnreadCount }) => {
 
     if (variant === "inbox") {
       const rawName = getName(otherUid, convo.withDisplayName, "account");
+
       header = (
         <>
           <FiInbox className={styles.icon} />
+
           <span className={styles.metaText}>
-            Otrzymałeś/aś wiadomość do Twojego <b>profilu</b> od {renderNameNode(rawName)}
+            Wiadomość do Twojego <b>profilu</b> od {renderNameNode(rawName)}
           </span>
         </>
       );
     } else if (variant === "outbox") {
       const rawName = getName(otherUid, convo.withDisplayName, "profile");
+
       header = (
         <>
           <FiSend className={styles.icon} />
+
           <span className={styles.metaText}>
             Rozmowa Twojego <b>konta</b> z profilem {renderNameNode(rawName)}
           </span>
@@ -311,11 +374,14 @@ const Notifications = ({ user, setUnreadCount }) => {
       );
     } else {
       const sysName = (convo.withDisplayName || "Showly.me").trim();
+
       header = (
         <>
           <FiMail className={styles.icon} />
+
           <span className={styles.metaText}>
-            Wiadomość systemowa od <span className={styles.name}>{sysName}</span>
+            Wiadomość systemowa od{" "}
+            <span className={styles.name}>{sysName}</span>
           </span>
         </>
       );
@@ -335,17 +401,19 @@ const Notifications = ({ user, setUnreadCount }) => {
           <div className={styles.row}>
             <div className={styles.avatarWrap}>
               <AvatarNode src={avatarSrc} variant={variant} />
+
               {isUnread && <span className={styles.badgeDot} aria-hidden="true" />}
             </div>
 
             <div className={styles.itemHead}>
               <div className={styles.meta}>{header}</div>
+
               <div className={styles.date}>
                 {new Date(lastMsg.createdAt).toLocaleString()}
               </div>
             </div>
 
-            <p className={styles.content}>{lastMsg.content}</p>
+            <p className={styles.message}>{lastMsg.content}</p>
 
             <div className={styles.bottomRow}>
               {isUnread ? (
@@ -377,7 +445,7 @@ const Notifications = ({ user, setUnreadCount }) => {
             <span className={`${styles.dateSkel} ${styles.shimmer}`} />
           </div>
 
-          <p className={`${styles.content} ${styles.skeleton} ${styles.shimmer}`} />
+          <p className={`${styles.message} ${styles.skeleton} ${styles.shimmer}`} />
 
           <div className={styles.bottomRow}>
             <span className={`${styles.pillSkel} ${styles.shimmer}`} />
@@ -388,200 +456,199 @@ const Notifications = ({ user, setUnreadCount }) => {
     </li>
   );
 
-  useEffect(() => {
-    const scrollTo = location.state?.scrollToId;
-    if (!scrollTo || loading) return;
+  const EmptyBox = ({ icon, title, text }) => (
+    <div className={styles.emptyState}>
+      <div className={styles.emptyIconWrap}>{icon}</div>
 
-    const tryScroll = () => {
-      const el = document.getElementById(scrollTo);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        window.history.replaceState({}, document.title, location.pathname);
-      } else {
-        requestAnimationFrame(tryScroll);
-      }
-    };
+      <strong>{title}</strong>
 
-    requestAnimationFrame(tryScroll);
-  }, [location.state, loading, location.pathname]);
+      <p>{text}</p>
+    </div>
+  );
 
-  const hasMyProfile = !!(myProfile && myProfile._id);
+  const renderGroup = ({
+    title,
+    label,
+    badge,
+    icon,
+    items,
+    variant,
+    emptyTitle,
+    emptyText,
+    disabled = false,
+  }) => (
+    <section className={styles.messageGroup}>
+      <div className={styles.groupHeader}>
+        <div>
+          <span className={styles.groupLabel}>{label}</span>
+          <h4>{title}</h4>
+        </div>
+
+        <span className={styles.groupBadge}>{badge}</span>
+      </div>
+
+      {disabled ? (
+        <EmptyBox icon={icon} title={emptyTitle} text={emptyText} />
+      ) : items.length === 0 ? (
+        <EmptyBox icon={icon} title={emptyTitle} text={emptyText} />
+      ) : (
+        <ul className={styles.list}>
+          {items.map((conversation) => renderItem(conversation, variant))}
+        </ul>
+      )}
+    </section>
+  );
 
   return (
     <section id="scrollToId" className={styles.section}>
-      <div className={styles.sectionBackground} aria-hidden="true" />
-
       <div className={styles.inner}>
-        <div className={styles.head}>
-          <div className={styles.labelRow}>
-            <span className={styles.label}>Showly Notifications</span>
-            <span className={styles.labelDot} />
-            <span className={styles.labelDesc}>Twoje konwersacje i wiadomości</span>
-            <span className={styles.labelLine} />
-            <span className={styles.pill}>Inbox • Wątki • System</span>
-          </div>
+        <div className={styles.layout}>
+          <aside className={styles.side}>
+            <span className={styles.overline}>Showly Notifications</span>
 
-          <h2 className={styles.heading}>
-            Twoje <span className={styles.headingAccent}>powiadomienia</span> i wiadomości
-            ✉️
-          </h2>
+            <h2 className={styles.heading}>
+              Twoje <span>powiadomienia</span> i wiadomości.
+            </h2>
 
-          <p className={styles.description}>
-            {hasMyProfile ? (
-              <>
-                Zebraliśmy wiadomości do Twojego profilu
-                {myProfile?.name ? (
-                  <>
-                    {" "}
-                    <strong className={styles.inlineStrong}>{myProfile.name}</strong>
-                  </>
-                ) : null}{" "}
-                oraz wątki wysłane z{" "}
-                <strong className={styles.inlineStrong}>Twojego konta</strong>.
-              </>
-            ) : (
-              <>
-                Wątki wysłane z <strong className={styles.inlineStrong}>Twojego konta</strong>{" "}
-                są dostępne poniżej. Wiadomości do profilu pojawią się, gdy utworzysz swoją
-                wizytówkę.
-              </>
-            )}
-          </p>
+            <p className={styles.description}>
+              {hasMyProfile ? (
+                <>
+                  Zebraliśmy wiadomości do Twojego profilu
+                  {myProfile?.name ? (
+                    <>
+                      {" "}
+                      <strong>{myProfile.name}</strong>
+                    </>
+                  ) : null}{" "}
+                  oraz wątki wysłane z Twojego konta.
+                </>
+              ) : (
+                <>
+                  Wątki wysłane z Twojego konta są dostępne poniżej. Wiadomości
+                  do profilu pojawią się, gdy utworzysz swoją wizytówkę.
+                </>
+              )}
+            </p>
 
-          <div className={styles.metaRow}>
-            <div className={styles.metaCard}>
-              <strong>{hasMyProfile ? inboxUnread : "—"}</strong>
-              <span>
-                {hasMyProfile ? "nowych do Twojego profilu" : "profil jeszcze nieutworzony"}
+            <div className={styles.metaRow}>
+              <div className={styles.metaCard}>
+                <strong>{loading ? "—" : totalUnread}</strong>
+                <span>nieprzeczytanych wiadomości</span>
+              </div>
+
+              <div className={styles.metaCard}>
+                <strong>{loading ? "—" : totalThreads}</strong>
+                <span>wszystkich wątków</span>
+              </div>
+
+              <div className={styles.metaCard}>
+                <strong>{hasMyProfile ? "Profil" : "Konto"}</strong>
+                <span>
+                  {hasMyProfile
+                    ? "wiadomości do profilu aktywne"
+                    : "utwórz profil, aby odbierać zapytania"}
+                </span>
+              </div>
+            </div>
+
+            <div className={styles.infoBox}>
+              <span>Inbox • Wątki • System</span>
+
+              <p>
+                Tutaj znajdziesz wiadomości od klientów, rozmowy rozpoczęte z
+                innymi profilami oraz komunikaty systemowe Showly.
+              </p>
+            </div>
+          </aside>
+
+          <div className={styles.content}>
+            <div className={styles.chapterHead}>
+              <div>
+                <span className={styles.chapterLabel}>Centrum wiadomości</span>
+
+                <h3>Sprawdzaj rozmowy i otwieraj pełne wątki.</h3>
+              </div>
+
+              <span className={styles.chapterNumber}>
+                {loading ? "—" : totalUnread}
               </span>
             </div>
 
-            <div className={styles.metaCard}>
-              <strong>{outboxUnread}</strong>
-              <span>nowych z Twojego konta</span>
-            </div>
+            {loading ? (
+              <div className={styles.messagesStack}>
+                <section className={styles.messageGroup}>
+                  <div className={styles.groupHeader}>
+                    <div>
+                      <span className={styles.groupLabel}>Ładowanie</span>
+                      <h4>Pobieramy Twoje powiadomienia.</h4>
+                    </div>
 
-            <div className={styles.metaCard}>
-              <strong>{systemUnread}</strong>
-              <span>wiadomości systemowych</span>
-            </div>
+                    <span className={styles.groupBadge}>—</span>
+                  </div>
+
+                  <ul className={styles.list}>
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <SkeletonItem key={index} />
+                    ))}
+                  </ul>
+                </section>
+              </div>
+            ) : (
+              <div className={styles.messagesStack}>
+                {renderGroup({
+                  title: `Otrzymane wiadomości do Twojego profilu${myProfile?.name ? ` „${myProfile.name}”` : ""
+                    }`,
+                  label: "Do profilu",
+                  badge: hasMyProfile
+                    ? inboxUnread > 0
+                      ? `${inboxUnread} nowe`
+                      : inboxToMyProfile.length
+                    : "—",
+                  icon: <FiInbox className={styles.emptyIcon} />,
+                  items: inboxToMyProfile,
+                  variant: "inbox",
+                  disabled: !hasMyProfile,
+                  emptyTitle: hasMyProfile
+                    ? "Brak wiadomości do Twojego profilu"
+                    : "Nie masz jeszcze utworzonego profilu",
+                  emptyText: hasMyProfile
+                    ? "Gdy ktoś napisze do Twojej wizytówki, konwersacje pojawią się właśnie tutaj."
+                    : "Wiadomości do profilu będą dostępne dopiero po utworzeniu wizytówki usługodawcy.",
+                })}
+
+                {renderGroup({
+                  title: "Rozmowy z innymi profilami",
+                  label: "Twoje konto → profile",
+                  badge:
+                    outboxUnread > 0
+                      ? `${outboxUnread} nowe`
+                      : myAccountToOtherProfiles.length,
+                  icon: <FiSend className={styles.emptyIcon} />,
+                  items: myAccountToOtherProfiles,
+                  variant: "outbox",
+                  emptyTitle: "Brak rozmów z innymi profilami",
+                  emptyText:
+                    "Gdy rozpoczniesz rozmowę z inną wizytówką, pojawi się ona w tej sekcji.",
+                })}
+
+                {renderGroup({
+                  title: "Wiadomości systemowe",
+                  label: "System",
+                  badge:
+                    systemUnread > 0
+                      ? `${systemUnread} nowe`
+                      : systemConversations.length,
+                  icon: <FiMail className={styles.emptyIcon} />,
+                  items: systemConversations,
+                  variant: "system",
+                  emptyTitle: "Brak wiadomości systemowych",
+                  emptyText:
+                    "Komunikaty systemowe od Showly pojawią się tutaj, gdy będą dostępne.",
+                })}
+              </div>
+            )}
           </div>
         </div>
-
-        {loading ? (
-          <div className={styles.contentBox}>
-            <div className={styles.contentHeader}>
-              <h3 className={styles.contentTitle}>Ładowanie powiadomień</h3>
-              <span className={styles.badge}>—</span>
-            </div>
-
-            <ul className={styles.list}>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <SkeletonItem key={i} />
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <>
-            <div className={styles.contentBox}>
-              <div className={styles.contentHeader}>
-                <h3 className={styles.contentTitle}>
-                  Otrzymane wiadomości do Twojego profilu
-                  {myProfile?.name ? ` „${myProfile.name}”` : ""}
-                </h3>
-                <span className={styles.badge}>
-                  {hasMyProfile
-                    ? inboxUnread > 0
-                      ? `${inboxUnread} nieprze.`
-                      : `${inboxToMyProfile.length}`
-                    : "—"}
-                </span>
-              </div>
-
-              {!hasMyProfile ? (
-                <div className={styles.emptyBox}>
-                  <div className={styles.emptyIconWrap}>
-                    <FiInbox className={styles.emptyIcon} />
-                  </div>
-                  <p className={styles.emptyTitle}>Nie masz jeszcze utworzonego profilu</p>
-                  <p className={styles.emptyText}>
-                    Wiadomości do profilu będą dostępne dopiero po utworzeniu wizytówki usługodawcy.
-                  </p>
-                </div>
-              ) : inboxToMyProfile.length === 0 ? (
-                <div className={styles.emptyBox}>
-                  <div className={styles.emptyIconWrap}>
-                    <FiInbox className={styles.emptyIcon} />
-                  </div>
-                  <p className={styles.emptyTitle}>Brak wiadomości do Twojego profilu</p>
-                  <p className={styles.emptyText}>
-                    Gdy ktoś napisze do Twojej wizytówki, konwersacje pojawią się właśnie tutaj.
-                  </p>
-                </div>
-              ) : (
-                <ul className={styles.list}>
-                  {inboxToMyProfile.map((c) => renderItem(c, "inbox"))}
-                </ul>
-              )}
-            </div>
-
-            <div className={styles.contentBox}>
-              <div className={styles.contentHeader}>
-                <h3 className={styles.contentTitle}>
-                  Rozmowy z innymi profilami (Twoje konto → inne profile)
-                </h3>
-                <span className={styles.badge}>
-                  {outboxUnread > 0
-                    ? `${outboxUnread} nieprze.`
-                    : `${myAccountToOtherProfiles.length}`}
-                </span>
-              </div>
-
-              {myAccountToOtherProfiles.length === 0 ? (
-                <div className={styles.emptyBox}>
-                  <div className={styles.emptyIconWrap}>
-                    <FiSend className={styles.emptyIcon} />
-                  </div>
-                  <p className={styles.emptyTitle}>Brak rozmów z innymi profilami</p>
-                  <p className={styles.emptyText}>
-                    Gdy rozpoczniesz rozmowę z inną wizytówką, pojawi się ona w tej sekcji.
-                  </p>
-                </div>
-              ) : (
-                <ul className={styles.list}>
-                  {myAccountToOtherProfiles.map((c) => renderItem(c, "outbox"))}
-                </ul>
-              )}
-            </div>
-
-            <div className={styles.contentBox}>
-              <div className={styles.contentHeader}>
-                <h3 className={styles.contentTitle}>Wiadomości systemowe</h3>
-                <span className={styles.badge}>
-                  {systemUnread > 0
-                    ? `${systemUnread} nieprze.`
-                    : `${systemConversations.length}`}
-                </span>
-              </div>
-
-              {systemConversations.length === 0 ? (
-                <div className={styles.emptyBox}>
-                  <div className={styles.emptyIconWrap}>
-                    <FiMail className={styles.emptyIcon} />
-                  </div>
-                  <p className={styles.emptyTitle}>Brak wiadomości systemowych</p>
-                  <p className={styles.emptyText}>
-                    Komunikaty systemowe od Showly pojawią się tutaj, gdy będą dostępne.
-                  </p>
-                </div>
-              ) : (
-                <ul className={`${styles.list} ${styles.systemList}`}>
-                  {systemConversations.map((c) => renderItem(c, "system"))}
-                </ul>
-              )}
-            </div>
-          </>
-        )}
       </div>
     </section>
   );

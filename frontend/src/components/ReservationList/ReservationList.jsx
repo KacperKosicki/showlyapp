@@ -2677,86 +2677,55 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     </li>
   );
 
-  if (loading) {
-    return (
-      <section className={styles.page}>
-        <div className={styles.bgGlow} aria-hidden="true" />
+  const totalReservations = clientReservations.length + serviceReservations.length;
+  const totalPending = pendingSent + (hasProviderProfile ? pendingReceived : 0);
 
-        <div className={styles.shell}>
-          <div className={styles.pageHead}>
-            <div className={styles.labelRow}>
-              <span className={styles.label}>Showly Reservations</span>
-              <span className={styles.labelDot} />
-              <span className={styles.labelDesc}>Twoje rezerwacje i kalendarz</span>
-              <span className={styles.labelLine} />
-              <span className={styles.pill}>Lista • Terminy • Offline</span>
-            </div>
+  const bookingModeLabel =
+    bookingMode === "calendar"
+      ? "Kalendarz"
+      : bookingMode === "request-blocking"
+        ? "Blokowanie dni"
+        : "Zapytania";
 
-            <h2 className={styles.heading}>
-              Twoje <span className={styles.headingAccent}>rezerwacje</span> ⏳
-            </h2>
+  const receivedBadge = hasProviderProfile
+    ? pendingReceived > 0
+      ? `${pendingReceived} oczek.`
+      : `${serviceReservations.length}`
+    : "—";
 
-            <p className={styles.description}>Ładowanie danych rezerwacji…</p>
-          </div>
+  const sentBadge =
+    pendingSent > 0 ? `${pendingSent} oczek.` : `${clientReservations.length}`;
 
-          <div className={styles.contentBox}>
-            <div className={styles.contentHeader}>
-              <h3 className={styles.contentTitle}>Ładowanie rezerwacji</h3>
-              <span className={styles.badge}>—</span>
-            </div>
-
-            <ul className={styles.list}>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <SkeletonItem key={i} />
-              ))}
-            </ul>
-          </div>
+  const renderReservationGroup = ({
+    label,
+    title,
+    badge,
+    icon,
+    emptyTitle,
+    emptyText,
+    children,
+  }) => (
+    <section className={styles.reservationGroup}>
+      <div className={styles.groupHeader}>
+        <div>
+          <span className={styles.groupLabel}>{label}</span>
+          <h4>{title}</h4>
         </div>
-      </section>
-    );
-  }
 
-  if (!isLogged) {
-    return (
-      <section className={styles.page}>
-        <div className={styles.bgGlow} aria-hidden="true" />
+        <span className={styles.groupBadge}>{badge}</span>
+      </div>
 
-        <div className={styles.shell}>
-          <div className={styles.pageHead}>
-            <div className={styles.labelRow}>
-              <span className={styles.label}>Showly Reservations</span>
-              <span className={styles.labelDot} />
-              <span className={styles.labelDesc}>Twoje rezerwacje i kalendarz</span>
-              <span className={styles.labelLine} />
-              <span className={styles.pill}>Lista • Terminy • Offline</span>
-            </div>
+      {children || (
+        <div className={styles.emptyState}>
+          <div className={styles.emptyIconWrap}>{icon}</div>
 
-            <h2 className={styles.heading}>
-              Twoje <span className={styles.headingAccent}>rezerwacje</span> ⏳
-            </h2>
+          <strong>{emptyTitle}</strong>
 
-            <p className={styles.description}>
-              Musisz być <strong className={styles.inlineStrong}>zalogowany</strong>, żeby
-              zobaczyć rezerwacje i kalendarz.
-            </p>
-          </div>
-
-          <div className={styles.contentBox}>
-            <div className={styles.emptyBox}>
-              <div className={styles.emptyIconWrap}>
-                <FiCalendar className={styles.emptyIcon} />
-              </div>
-              <p className={styles.emptyTitle}>Brak dostępu do rezerwacji</p>
-              <p className={styles.emptyText}>
-                Zaloguj się, aby korzystać z listy rezerwacji, kalendarza i dodawania blokad
-                offline.
-              </p>
-            </div>
-          </div>
+          <p>{emptyText}</p>
         </div>
-      </section>
-    );
-  }
+      )}
+    </section>
+  );
 
   return (
     <section id="scrollToId" className={styles.page}>
@@ -2767,173 +2736,215 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
           <AlertBox
             type={alert.type}
             message={alert.message}
-            onClose={alert.onClose || (() => setAlert((a) => ({ ...a, show: false })))}
+            onClose={
+              alert.onClose ||
+              (() => setAlert((current) => ({ ...current, show: false })))
+            }
           />
         </div>
       )}
 
       <div className={styles.shell}>
-        <div className={styles.pageHead}>
-          <div className={styles.labelRow}>
-            <span className={styles.label}>Showly Reservations</span>
-            <span className={styles.labelDot} />
-            <span className={styles.labelDesc}>Twoje rezerwacje i kalendarz</span>
-            <span className={styles.labelLine} />
-            <span className={styles.pill}>Lista • Kalendarz • Offline</span>
-          </div>
+        <div className={styles.layout}>
+          <aside className={styles.side}>
+            <span className={styles.overline}>Showly Reservations</span>
 
-          <h2 className={styles.heading}>
-            Twoje <span className={styles.headingAccent}>rezerwacje</span> i terminy 📅
-          </h2>
+            <h2 className={styles.heading}>
+              Twoje <span>rezerwacje</span> i terminy.
+            </h2>
 
-          <p className={styles.description}>
-            Tutaj znajdziesz <strong className={styles.inlineStrong}>wysłane</strong>
-            {hasProviderProfile ? (
-              <>
-                {" "}
-                i <strong className={styles.inlineStrong}>otrzymane</strong> rezerwacje,
-                a także podgląd terminów w kalendarzu.
-              </>
-            ) : (
-              <>
-                . Sekcja <strong className={styles.inlineStrong}>otrzymanych</strong> będzie
-                dostępna po utworzeniu profilu usługodawcy.
-              </>
-            )}
-          </p>
+            <p className={styles.description}>
+              {!isLogged ? (
+                <>
+                  Musisz być <strong>zalogowany</strong>, żeby zobaczyć
+                  rezerwacje, kalendarz i obsługę terminów offline.
+                </>
+              ) : loading ? (
+                <>Ładujemy Twoje rezerwacje i sprawdzamy aktualne terminy.</>
+              ) : hasProviderProfile ? (
+                <>
+                  Tutaj znajdziesz rezerwacje <strong>wysłane</strong>,
+                  <strong> otrzymane</strong> oraz podgląd terminów w
+                  kalendarzu Twojego profilu.
+                </>
+              ) : (
+                <>
+                  Tutaj znajdziesz rezerwacje <strong>wysłane</strong>. Sekcja
+                  otrzymanych rezerwacji i kalendarz pojawią się po utworzeniu
+                  profilu usługodawcy.
+                </>
+              )}
+            </p>
 
-          <div className={styles.metaRow}>
-            <div className={styles.metaCard}>
-              <strong>{pendingSent}</strong>
-              <span>oczekujących wysłanych</span>
+            <div className={styles.metaRow}>
+              <div className={styles.metaCard}>
+                <strong>{loading ? "—" : totalPending}</strong>
+                <span>oczekujących rezerwacji</span>
+              </div>
+
+              <div className={styles.metaCard}>
+                <strong>{loading ? "—" : totalReservations}</strong>
+                <span>wszystkich rezerwacji</span>
+              </div>
+
+              <div className={styles.metaCard}>
+                <strong>
+                  {!isLogged ? "Gość" : hasProviderProfile ? bookingModeLabel : "Konto"}
+                </strong>
+                <span>
+                  {!isLogged
+                    ? "zaloguj się, aby zarządzać terminami"
+                    : hasProviderProfile
+                      ? "aktywny tryb rezerwacji"
+                      : "brak profilu usługodawcy"}
+                </span>
+              </div>
             </div>
 
-            <div className={styles.metaCard}>
-              <strong>{hasProviderProfile ? pendingReceived : "—"}</strong>
-              <span>
-                {hasProviderProfile ? "oczekujących otrzymanych" : "profil nieutworzony"}
+            <div className={styles.infoBox}>
+              <span>Lista • Kalendarz • Offline</span>
+
+              <p>
+                Rezerwacje możesz przeglądać jako listę, a przy aktywnym profilu
+                usługodawcy także w kalendarzu z możliwością dodawania terminów
+                offline.
+              </p>
+            </div>
+
+            {canUseCalendar && (
+              <div className={styles.viewToggle}>
+                <button
+                  className={`${styles.toggleBtn} ${viewMode === "list" ? styles.toggleActive : ""
+                    }`}
+                  onClick={() => setViewMode("list")}
+                  type="button"
+                >
+                  <FiList /> Lista
+                </button>
+
+                <button
+                  className={`${styles.toggleBtn} ${viewMode === "calendar" ? styles.toggleActive : ""
+                    }`}
+                  onClick={() => setViewMode("calendar")}
+                  type="button"
+                >
+                  <FiGrid /> Kalendarz
+                </button>
+              </div>
+            )}
+          </aside>
+
+          <div className={styles.contentPanel}>
+            <div className={styles.chapterHead}>
+              <div>
+                <span className={styles.chapterLabel}>
+                  Centrum rezerwacji
+                </span>
+
+                <h3>
+                  {!isLogged
+                    ? "Zaloguj się, aby zobaczyć swoje rezerwacje."
+                    : loading
+                      ? "Pobieramy Twoje rezerwacje i kalendarz."
+                      : canUseCalendar && viewMode === "calendar"
+                        ? "Sprawdzaj terminy w widoku kalendarza."
+                        : "Zarządzaj wysłanymi i otrzymanymi rezerwacjami."}
+                </h3>
+              </div>
+
+              <span className={styles.chapterNumber}>
+                {loading ? "—" : totalPending}
               </span>
             </div>
 
-            <div className={styles.metaCard}>
-              <strong>{clientReservations.length + serviceReservations.length}</strong>
-              <span>wszystkich rezerwacji</span>
-            </div>
+            {!isLogged ? (
+              <div className={styles.reservationsStack}>
+                {renderReservationGroup({
+                  label: "Brak dostępu",
+                  title: "Rezerwacje są dostępne po zalogowaniu.",
+                  badge: "—",
+                  icon: <FiCalendar className={styles.emptyIcon} />,
+                  emptyTitle: "Brak dostępu do rezerwacji",
+                  emptyText:
+                    "Zaloguj się, aby korzystać z listy rezerwacji, kalendarza i dodawania blokad offline.",
+                })}
+              </div>
+            ) : loading ? (
+              <div className={styles.reservationsStack}>
+                <section className={styles.reservationGroup}>
+                  <div className={styles.groupHeader}>
+                    <div>
+                      <span className={styles.groupLabel}>Ładowanie</span>
+                      <h4>Ładowanie rezerwacji</h4>
+                    </div>
 
-            {hasProviderProfile && (
-              <div className={styles.metaCard}>
-                <strong>{providerMeta?.bookingMode || "—"}</strong>
-                <span>tryb rezerwacji profilu</span>
+                    <span className={styles.groupBadge}>—</span>
+                  </div>
+
+                  <ul className={styles.list}>
+                    {Array.from({ length: 4 }).map((_, index) => (
+                      <SkeletonItem key={index} />
+                    ))}
+                  </ul>
+                </section>
+              </div>
+            ) : canUseCalendar && viewMode === "calendar" ? (
+              <div className={styles.calendarPanelWrap}>
+                <CalendarPanel />
+              </div>
+            ) : (
+              <div className={styles.reservationsStack}>
+                {hasProviderProfile &&
+                  renderReservationGroup({
+                    label: "Do Twojego profilu",
+                    title: "Otrzymane rezerwacje",
+                    badge: receivedBadge,
+                    icon: <FiInbox className={styles.emptyIcon} />,
+                    emptyTitle: "Brak otrzymanych rezerwacji",
+                    emptyText:
+                      "Gdy ktoś zarezerwuje termin w Twoim profilu, pojawi się on właśnie tutaj.",
+                    children:
+                      serviceReservations.length > 0 ? (
+                        <ul className={styles.list}>
+                          {serviceReservations.map((reservation) =>
+                            renderItem(reservation, "received")
+                          )}
+                        </ul>
+                      ) : null,
+                  })}
+
+                {renderReservationGroup({
+                  label: "Twoje konto → profile",
+                  title: "Wysłane rezerwacje",
+                  badge: sentBadge,
+                  icon: <FiSend className={styles.emptyIcon} />,
+                  emptyTitle: "Brak wysłanych rezerwacji",
+                  emptyText:
+                    "Gdy zarezerwujesz termin u innego usługodawcy, rezerwacja pojawi się w tej sekcji.",
+                  children:
+                    clientReservations.length > 0 ? (
+                      <ul className={styles.list}>
+                        {clientReservations.map((reservation) =>
+                          renderItem(reservation, "sent")
+                        )}
+                      </ul>
+                    ) : null,
+                })}
+
+                {!hasProviderProfile &&
+                  renderReservationGroup({
+                    label: "Profil usługodawcy",
+                    title: "Rezerwacje do Twojego profilu",
+                    badge: "—",
+                    icon: <FiCalendar className={styles.emptyIcon} />,
+                    emptyTitle: "Nie masz jeszcze profilu usługodawcy",
+                    emptyText:
+                      "Po utworzeniu profilu pojawią się tutaj otrzymane rezerwacje oraz kalendarz terminów.",
+                  })}
               </div>
             )}
           </div>
-
-          {canUseCalendar && (
-            <div className={styles.viewToggle}>
-              <button
-                className={`${styles.toggleBtn} ${viewMode === "list" ? styles.toggleActive : ""
-                  }`}
-                onClick={() => setViewMode("list")}
-                type="button"
-              >
-                <FiList /> Lista
-              </button>
-              <button
-                className={`${styles.toggleBtn} ${viewMode === "calendar" ? styles.toggleActive : ""
-                  }`}
-                onClick={() => setViewMode("calendar")}
-                type="button"
-              >
-                <FiGrid /> Kalendarz
-              </button>
-            </div>
-          )}
         </div>
-
-        {canUseCalendar && viewMode === "calendar" ? (
-          <CalendarPanel />
-        ) : (
-          <>
-            {hasProviderProfile && (
-              <div className={styles.contentBox}>
-                <div className={styles.contentHeader}>
-                  <h3 className={styles.contentTitle}>
-                    Otrzymane rezerwacje do Twojego profilu
-                  </h3>
-                  <span className={styles.badge}>
-                    {pendingReceived > 0
-                      ? `${pendingReceived} oczek.`
-                      : `${serviceReservations.length}`}
-                  </span>
-                </div>
-
-                {serviceReservations.length === 0 ? (
-                  <div className={styles.emptyBox}>
-                    <div className={styles.emptyIconWrap}>
-                      <FiInbox className={styles.emptyIcon} />
-                    </div>
-                    <p className={styles.emptyTitle}>Brak otrzymanych rezerwacji</p>
-                    <p className={styles.emptyText}>
-                      Gdy ktoś zarezerwuje termin w Twoim profilu, pojawi się on właśnie tutaj.
-                    </p>
-                  </div>
-                ) : (
-                  <ul className={styles.list}>
-                    {serviceReservations.map((r) => renderItem(r, "received"))}
-                  </ul>
-                )}
-              </div>
-            )}
-
-            <div className={styles.contentBox}>
-              <div className={styles.contentHeader}>
-                <h3 className={styles.contentTitle}>
-                  Wysłane rezerwacje (Twoje konto → inne profile)
-                </h3>
-                <span className={styles.badge}>
-                  {pendingSent > 0 ? `${pendingSent} oczek.` : `${clientReservations.length}`}
-                </span>
-              </div>
-
-              {clientReservations.length === 0 ? (
-                <div className={styles.emptyBox}>
-                  <div className={styles.emptyIconWrap}>
-                    <FiSend className={styles.emptyIcon} />
-                  </div>
-                  <p className={styles.emptyTitle}>Brak wysłanych rezerwacji</p>
-                  <p className={styles.emptyText}>
-                    Gdy zarezerwujesz termin u innego usługodawcy, rezerwacja pojawi się w tej
-                    sekcji.
-                  </p>
-                </div>
-              ) : (
-                <ul className={styles.list}>
-                  {clientReservations.map((r) => renderItem(r, "sent"))}
-                </ul>
-              )}
-            </div>
-
-            {!hasProviderProfile && (
-              <div className={styles.contentBox}>
-                <div className={styles.contentHeader}>
-                  <h3 className={styles.contentTitle}>Rezerwacje do Twojego profilu</h3>
-                  <span className={styles.badge}>—</span>
-                </div>
-
-                <div className={styles.emptyBox}>
-                  <div className={styles.emptyIconWrap}>
-                    <FiCalendar className={styles.emptyIcon} />
-                  </div>
-                  <p className={styles.emptyTitle}>Nie masz jeszcze profilu usługodawcy</p>
-                  <p className={styles.emptyText}>
-                    Po utworzeniu profilu pojawią się tutaj otrzymane rezerwacje oraz kalendarz
-                    terminów.
-                  </p>
-                </div>
-              </div>
-            )}
-          </>
-        )}
       </div>
 
       {offlineModalEl}

@@ -10,7 +10,11 @@ const Profile = require("../models/Profile");
 const Reservation = require("../models/Reservation");
 const Report = require("../models/Report");
 const { sendSystemMessage } = require("../utils/systemMessages");
-const { syncAllFirebaseUsersToMongo } = require("../utils/syncFirebaseUser");
+const firebaseAdmin = require("../utils/firebaseAdmin");
+const {
+  syncAllFirebaseUsersToMongo,
+  syncFirebaseUserToMongo,
+} = require("../utils/syncFirebaseUser");
 
 async function syncAuthUsersSafely() {
   try {
@@ -25,6 +29,53 @@ async function syncAuthUsersSafely() {
       conflicts: 0,
       error: error.message,
     };
+  }
+}
+
+function toCreatedByAccount(owner) {
+  if (!owner) return null;
+
+  return {
+    email: owner.email || "",
+    name: owner.displayName || owner.name || "",
+    firebaseUid: owner.firebaseUid || owner.uid || "",
+  };
+}
+
+async function addFirebaseOwnersToMap(ownersByUid, ownerUids) {
+  const missingUids = ownerUids.filter((uid) => !ownersByUid.has(uid));
+  if (missingUids.length === 0) return;
+
+  const batchSize = 100;
+
+  for (let i = 0; i < missingUids.length; i += batchSize) {
+    const batch = missingUids.slice(i, i + batchSize);
+
+    try {
+      const result = await firebaseAdmin
+        .auth()
+        .getUsers(batch.map((uid) => ({ uid })));
+
+      await Promise.all(
+        result.users.map(async (firebaseUser) => {
+          const syncResult = await syncFirebaseUserToMongo(firebaseUser);
+          const syncedUser =
+            syncResult?.user?.toObject?.() || syncResult?.user || null;
+
+          ownersByUid.set(firebaseUser.uid, {
+            email: syncedUser?.email || firebaseUser.email || "",
+            name:
+              syncedUser?.displayName ||
+              syncedUser?.name ||
+              firebaseUser.displayName ||
+              "",
+            firebaseUid: syncedUser?.firebaseUid || firebaseUser.uid,
+          });
+        })
+      );
+    } catch (error) {
+      console.error("Firebase profile owners lookup error:", error);
+    }
   }
 }
 
@@ -111,7 +162,36 @@ router.get("/profiles", requireAuth, requireRole(["admin", "mod"]), async (req, 
     Profile.countDocuments(),
   ]);
 
-  return res.json({ items, total, page, limit });
+  const ownerUids = [
+    ...new Set(
+      items
+        .map((profile) => String(profile.userId || "").trim())
+        .filter(Boolean)
+    ),
+  ];
+
+  const owners = ownerUids.length
+    ? await User.find({ firebaseUid: { $in: ownerUids } })
+        .select("email name displayName firebaseUid")
+        .lean()
+    : [];
+
+  const ownersByUid = new Map(
+    owners.map((owner) => [String(owner.firebaseUid || "").trim(), owner])
+  );
+
+  await addFirebaseOwnersToMap(ownersByUid, ownerUids);
+
+  const itemsWithAccounts = items.map((profile) => {
+    const owner = ownersByUid.get(String(profile.userId || "").trim());
+
+    return {
+      ...profile,
+      createdByAccount: toCreatedByAccount(owner),
+    };
+  });
+
+  return res.json({ items: itemsWithAccounts, total, page, limit });
 });
 
 // ✅ toggle isVisible (admin + mod)

@@ -18,7 +18,7 @@ const Navbar = ({
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 24);
+      setScrolled(window.scrollY > 18);
     };
 
     handleScroll();
@@ -33,25 +33,41 @@ const Navbar = ({
   };
 
   return (
-    <div className={`${styles.navbarShell} ${scrolled ? styles.scrolled : ""}`}>
-      <nav className={styles.navbar}>
-        <Link to="/" className={styles.logoWrap}>
+    <header className={`${styles.navbarShell} ${scrolled ? styles.scrolled : ""}`}>
+      <nav className={styles.navbar} aria-label="Główna nawigacja Showly">
+        <Link
+          to="/"
+          className={styles.logoWrap}
+          aria-label="Przejdź na stronę główną Showly"
+        >
           <span className={styles.logoMark}>S</span>
-          <span className={styles.logoText}>Showly.me</span>
+
+          <span className={styles.logoGroup}>
+            <span className={styles.logoText}>Showly.me</span>
+            <span className={styles.logoSub}>profil online</span>
+          </span>
+
           <span className={styles.beta}>Beta</span>
         </Link>
 
         <div className={styles.right}>
-          {user ? (
-            <UserDropdown
-              user={user}
-              loadingUser={loadingUser}
-              refreshTrigger={refreshTrigger}
-              unreadCount={unreadCount}
-              setUnreadCount={setUnreadCount}
-              pendingReservationsCount={pendingReservationsCount}
-              setAlert={setAlert}
-            />
+          {loadingUser && !user ? (
+            <div className={styles.loadingSlot} aria-label="Ładowanie użytkownika">
+              <span className={styles.loadingDot} />
+              <span className={styles.loadingLine} />
+            </div>
+          ) : user ? (
+            <div className={styles.userSlot}>
+              <UserDropdown
+                user={user}
+                loadingUser={loadingUser}
+                refreshTrigger={refreshTrigger}
+                unreadCount={unreadCount}
+                setUnreadCount={setUnreadCount}
+                pendingReservationsCount={pendingReservationsCount}
+                setAlert={setAlert}
+              />
+            </div>
           ) : (
             <div className={styles.authButtons}>
               <button
@@ -75,7 +91,7 @@ const Navbar = ({
           )}
         </div>
       </nav>
-    </div>
+    </header>
   );
 };
 

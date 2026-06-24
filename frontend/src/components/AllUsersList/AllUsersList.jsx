@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./AllUsersList.module.scss";
 import UserCard from "../UserCard/UserCard";
 import axios from "axios";
@@ -10,6 +10,7 @@ const API = process.env.REACT_APP_API_URL;
 async function getAuthHeader() {
   const u = auth.currentUser;
   if (!u) return {};
+
   const token = await u.getIdToken();
   return { Authorization: `Bearer ${token}` };
 }
@@ -20,20 +21,30 @@ const AllUsersList = ({ currentUser, setAlert }) => {
   const [loading, setLoading] = useState(true);
 
   const scrollerRef = useRef(null);
+  const rafRef = useRef(null);
+
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const run = async () => {
       try {
+        setLoading(true);
+
         const { data: profiles } = await axios.get(`${API}/api/profiles`);
+        const safeProfiles = Array.isArray(profiles) ? profiles : [];
 
         if (currentUser?.uid && auth.currentUser) {
           const authHeader = await getAuthHeader();
 
-          const { data: favProfiles } = await axios.get(`${API}/api/favorites/my`, {
-            headers: { ...authHeader },
-          });
+          const { data: favProfiles } = await axios.get(
+            `${API}/api/favorites/my`,
+            {
+              headers: { ...authHeader },
+            }
+          );
 
           const favSet = new Set(
             (Array.isArray(favProfiles) ? favProfiles : [])
@@ -41,180 +52,284 @@ const AllUsersList = ({ currentUser, setAlert }) => {
               .filter(Boolean)
           );
 
-          const merged = (Array.isArray(profiles) ? profiles : []).map((p) => ({
+          const merged = safeProfiles.map((p) => ({
             ...p,
             isFavorite: favSet.has(p.userId),
           }));
 
-          setUsers(merged);
-        } else {
-          setUsers(Array.isArray(profiles) ? profiles : []);
+          if (isMounted) setUsers(merged);
+          return;
         }
+
+        if (isMounted) setUsers(safeProfiles);
       } catch (err) {
         console.error("Błąd pobierania użytkowników:", err);
+
+        if (isMounted) {
+          setUsers([]);
+        }
+
+        if (typeof setAlert === "function") {
+          setAlert({
+            type: "error",
+            message: "Nie udało się pobrać profili.",
+          });
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     run();
-  }, [currentUser?.uid]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser?.uid, setAlert]);
 
   const filteredUsers = useMemo(() => {
     const q = search.toLowerCase().trim();
+
+    if (!q) return users;
 
     return users.filter((user) => {
       return (
         (user.name || "").toLowerCase().includes(q) ||
         (user.role || "").toLowerCase().includes(q) ||
-        (user.location || "").toLowerCase().includes(q)
+        (user.location || "").toLowerCase().includes(q) ||
+        (user.category?.label || "").toLowerCase().includes(q)
       );
     });
   }, [users, search]);
 
-  const updateArrows = () => {
+  const updateArrows = useCallback(() => {
     const el = scrollerRef.current;
     if (!el) return;
 
-    const max = el.scrollWidth - el.clientWidth;
-    const x = el.scrollLeft;
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+    }
 
-    setCanLeft(x > 2);
-    setCanRight(x < max - 2);
-  };
+    rafRef.current = requestAnimationFrame(() => {
+      const max = Math.max(0, el.scrollWidth - el.clientWidth);
+      const x = Math.max(0, el.scrollLeft);
+
+      setCanLeft(x > 4);
+      setCanRight(max > 4 && x < max - 4);
+    });
+  }, []);
 
   useEffect(() => {
-    updateArrows();
-
     const el = scrollerRef.current;
     if (!el) return;
 
-    const onScroll = () => updateArrows();
-    el.addEventListener("scroll", onScroll, { passive: true });
+    updateArrows();
 
-    const ro = new ResizeObserver(() => updateArrows());
-    ro.observe(el);
+    const handleScroll = () => updateArrows();
+
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll);
+
+    let resizeObserver;
+
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(handleScroll);
+      resizeObserver.observe(el);
+    }
 
     return () => {
-      el.removeEventListener("scroll", onScroll);
-      ro.disconnect();
+      el.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
     };
-  }, [filteredUsers.length]);
+  }, [filteredUsers.length, updateArrows]);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    const frame = requestAnimationFrame(() => {
+      el.scrollTo({
+        left: 0,
+        behavior: "auto",
+      });
+
+      updateArrows();
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [search, filteredUsers.length, updateArrows]);
 
   const scrollByCard = (dir = 1) => {
     const el = scrollerRef.current;
     if (!el) return;
 
-    const first = el.querySelector(":scope > *");
-    const cardW = first?.getBoundingClientRect().width || 400;
-    const gap =
-      parseFloat(getComputedStyle(el).columnGap || getComputedStyle(el).gap) || 24;
+    const firstCard = el.querySelector(`.${styles.cardWrap}`);
+    const cardW = firstCard?.getBoundingClientRect().width || 420;
 
-    const step = (cardW + gap) * 1.02;
-    el.scrollBy({ left: dir * step, behavior: "smooth" });
+    const computed = getComputedStyle(el);
+    const gap =
+      parseFloat(computed.columnGap || computed.gap || "0") || 24;
+
+    const step = cardW + gap;
+    const max = Math.max(0, el.scrollWidth - el.clientWidth);
+    const next = Math.min(Math.max(el.scrollLeft + dir * step, 0), max);
+
+    el.scrollTo({
+      left: next <= 8 ? 0 : next,
+      behavior: "smooth",
+    });
+
+    window.setTimeout(updateArrows, 320);
   };
 
   if (loading) {
     return (
       <section className={styles.section}>
-        <p className={styles.loading}>Ładowanie specjalistów...</p>
+        <div className={styles.inner}>
+          <div className={styles.loadingCard}>
+            <span>Showly Directory</span>
+            <strong>Ładowanie profili...</strong>
+            <p>
+              Sprawdzamy dostępnych specjalistów, twórców i usługodawców.
+            </p>
+          </div>
+        </div>
       </section>
     );
   }
 
   return (
     <section className={styles.section}>
-      <div className={styles.sectionBackground} aria-hidden="true" />
-
       <div className={styles.inner}>
-        <div className={styles.head}>
-          <div className={styles.labelRow}>
-            <span className={styles.label}>Showly Directory</span>
-            <span className={styles.labelDot} />
-            <span className={styles.labelDesc}>Wszyscy specjaliści</span>
-            <span className={styles.labelLine} />
-            <span className={styles.pill}>Szukaj • Porównuj • Wybieraj</span>
-          </div>
+        <div className={styles.layout}>
+          <aside className={styles.side}>
+            <span className={styles.overline}>Showly Directory</span>
 
-          <h2 className={styles.heading}>
-            Wszyscy <span className={styles.headingAccent}>specjaliści</span> 👀
-          </h2>
+            <h2 className={styles.heading}>
+              Wszyscy specjaliści w jednym miejscu.
+            </h2>
 
-          <p className={styles.description}>
-            Przeglądaj profile usługodawców, twórców i specjalistów dostępnych w Showly.
-            Szukaj po nazwie, roli lub lokalizacji i znajdź osoby najlepiej dopasowane
-            do swoich potrzeb.
-          </p>
+            <p className={styles.description}>
+              Przeglądaj profile usługodawców, twórców i specjalistów dostępnych
+              w Showly. Szukaj po nazwie, roli lub lokalizacji i znajdź osobę
+              najlepiej dopasowaną do swoich potrzeb.
+            </p>
 
-          <div className={styles.metaRow}>
-            <div className={styles.metaCard}>
-              <strong>{users.length}</strong>
-              <span>wszystkich profili</span>
-            </div>
-            <div className={styles.metaCard}>
-              <strong>{filteredUsers.length}</strong>
-              <span>wyników wyszukiwania</span>
-            </div>
-            <div className={styles.metaCard}>
-              <strong>Showly</strong>
-              <span>pełna baza specjalistów</span>
-            </div>
-          </div>
-
-          <div className={styles.searchWrap}>
-            <input
-              type="text"
-              placeholder="Szukaj po nazwie, roli lub lokalizacji..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={styles.search}
-            />
-          </div>
-        </div>
-
-        <div className={styles.carousel}>
-          <button
-            type="button"
-            className={`${styles.navBtn} ${styles.left} ${!canLeft ? styles.disabled : ""}`}
-            onClick={() => scrollByCard(-1)}
-            disabled={!canLeft}
-            aria-label="Przewiń w lewo"
-            title="Przewiń w lewo"
-          >
-            <FaChevronLeft />
-          </button>
-
-          <div
-            className={`${styles.grid} ${filteredUsers.length <= 3 ? styles.centerCards : ""}`}
-            ref={scrollerRef}
-          >
-            {filteredUsers.map((user, index) => (
-              <div className={styles.cardWrap} key={user._id || user.userId || index}>
-                <UserCard
-                  user={user}
-                  currentUser={currentUser}
-                  setAlert={setAlert}
-                />
+            <div className={styles.metaRow}>
+              <div className={styles.metaCard}>
+                <strong>{users.length}</strong>
+                <span>wszystkich profili</span>
               </div>
-            ))}
+
+              <div className={styles.metaCard}>
+                <strong>{filteredUsers.length}</strong>
+                <span>wyników</span>
+              </div>
+
+              <div className={styles.metaCard}>
+                <strong>01</strong>
+                <span>katalog Showly</span>
+              </div>
+            </div>
+
+            <div className={styles.searchWrap}>
+              <label className={styles.searchLabel} htmlFor="showly-search">
+                Szukaj profilu
+              </label>
+
+              <input
+                id="showly-search"
+                type="text"
+                placeholder="Nazwa, rola albo lokalizacja..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={styles.search}
+              />
+            </div>
+          </aside>
+
+          <div className={styles.content}>
+            <div className={styles.chapterHead}>
+              <div>
+                <span className={styles.chapterLabel}>Lista profili</span>
+                <h3>Przesuwaj katalog i porównuj profile.</h3>
+              </div>
+
+              <span className={styles.chapterNumber}>04</span>
+            </div>
+
+            <div className={styles.carousel}>
+              <button
+                type="button"
+                className={`${styles.navBtn} ${styles.left} ${!canLeft ? styles.disabled : ""
+                  }`}
+                onClick={() => scrollByCard(-1)}
+                disabled={!canLeft}
+                aria-label="Przewiń w lewo"
+                title="Przewiń w lewo"
+              >
+                <FaChevronLeft />
+              </button>
+
+              <div
+                className={`${styles.grid} ${filteredUsers.length === 0 ? styles.gridEmpty : ""
+                  }`}
+                ref={scrollerRef}
+                role="list"
+                aria-label="Lista profili Showly"
+              >
+                {filteredUsers.length > 0 ? (
+                  filteredUsers.map((user, index) => (
+                    <div
+                      className={styles.cardWrap}
+                      key={user._id || user.userId || index}
+                      role="listitem"
+                    >
+                      <UserCard
+                        user={user}
+                        currentUser={currentUser}
+                        setAlert={setAlert}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className={styles.emptyState}>
+                    <strong>Brak wyników</strong>
+                    <p>
+                      Nie znaleźliśmy profilu pasującego do wpisanej frazy.
+                      Spróbuj użyć innej nazwy, roli albo miasta.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.mobileHint}>
+                <span>←</span>
+                <p>Przesuń, aby zobaczyć więcej profili</p>
+                <span>→</span>
+              </div>
+
+              <button
+                type="button"
+                className={`${styles.navBtn} ${styles.right} ${!canRight ? styles.disabled : ""
+                  }`}
+                onClick={() => scrollByCard(1)}
+                disabled={!canRight}
+                aria-label="Przewiń w prawo"
+                title="Przewiń w prawo"
+              >
+                <FaChevronRight />
+              </button>
+            </div>
           </div>
-
-          <div className={styles.mobileHint}>
-  <span>←</span>
-  <p>Przesuń, aby zobaczyć więcej profili</p>
-  <span>→</span>
-</div>
-
-          <button
-            type="button"
-            className={`${styles.navBtn} ${styles.right} ${!canRight ? styles.disabled : ""}`}
-            onClick={() => scrollByCard(1)}
-            disabled={!canRight}
-            aria-label="Przewiń w prawo"
-            title="Przewiń w prawo"
-          >
-            <FaChevronRight />
-          </button>
         </div>
       </div>
     </section>

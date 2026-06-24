@@ -31,63 +31,85 @@ const items = [
 const DiscoverShowly = () => {
   return (
     <section className={styles.section} id="discover-showly">
-      <div className={styles.bg} aria-hidden="true">
-        <span className={styles.aurora} />
-        <span className={styles.aurora2} />
-        <span className={styles.grid} />
-        <span className={styles.glow} />
-        <span className={styles.vignette} />
-        <span className={styles.grain} />
-      </div>
-
-      <div className={styles.wrap}>
-        <header className={styles.head}>
-          <div className={styles.labelRow}>
-            <span className={styles.label}>Showly Explore</span>
-            <span className={styles.labelDot} />
-            <span className={styles.labelDesc}>Przestrzeń do odkrywania usług</span>
-            <span className={styles.labelLine} />
-            <span className={styles.pill}>Profile • Kontakt • Rezerwacje</span>
-          </div>
+      <div className={styles.inner}>
+        <aside className={styles.side}>
+          <span className={styles.overline}>Showly Explore</span>
 
           <h2 className={styles.title}>
-            Odkrywaj <span className={styles.titleAccent}>najlepsze profile</span>
+            Odkrywaj profile bez chaosu.
           </h2>
 
           <p className={styles.subtitle}>
             Showly pomaga szybko znaleźć odpowiednią osobę, porównać oferty i
-            przejść od zainteresowania do działania — bez chaosu i bez zbędnych kroków.
+            przejść od zainteresowania do działania — bez zbędnych kroków.
           </p>
-        </header>
 
-        <div className={styles.gridCards}>
-          {items.map((item) => (
-            <article key={item.title} className={styles.card}>
-              <div className={styles.cardTop}>
-                <div className={styles.icon}>{item.icon}</div>
-                <h3 className={styles.cardTitle}>{item.title}</h3>
-              </div>
+          <div className={styles.sideMeta}>
+            <div className={styles.metaItem}>
+              <strong>01</strong>
+              <span>profile i branże</span>
+            </div>
 
-              <p className={styles.cardText}>{item.text}</p>
+            <div className={styles.metaItem}>
+              <strong>02</strong>
+              <span>kontakt i wiadomości</span>
+            </div>
 
-              <div className={styles.cardMeta}>
-                {item.badges.map((badge) => (
-                  <span key={badge} className={styles.badge}>
-                    {badge}
+            <div className={styles.metaItem}>
+              <strong>03</strong>
+              <span>terminy i decyzje</span>
+            </div>
+          </div>
+        </aside>
+
+        <main className={styles.content}>
+          <div className={styles.chapterHead}>
+            <div>
+              <span className={styles.chapterLabel}>
+                Profile / Kontakt / Rezerwacje
+              </span>
+
+              <h3>Co możesz zrobić w Showly?</h3>
+            </div>
+
+            <span className={styles.chapterNumber}>04</span>
+          </div>
+
+          <div className={styles.gridCards}>
+            {items.map((item, index) => (
+              <article key={item.title} className={styles.card}>
+                <div className={styles.cardTop}>
+                  <span className={styles.cardNumber}>
+                    {String(index + 1).padStart(2, "0")}
                   </span>
-                ))}
-              </div>
-            </article>
-          ))}
-        </div>
 
-        <div className={styles.bottomPanel}>
-          <div className={styles.bottomLine} />
-          <p className={styles.bottomText}>
-            Przewijaj niżej i sprawdź wybrane wizytówki dostępne aktualnie na platformie.
-          </p>
-          <div className={styles.bottomLine} />
-        </div>
+                  <div className={styles.icon}>{item.icon}</div>
+                </div>
+
+                <h3 className={styles.cardTitle}>{item.title}</h3>
+
+                <p className={styles.cardText}>{item.text}</p>
+
+                <div className={styles.cardMeta}>
+                  {item.badges.map((badge) => (
+                    <span key={badge} className={styles.badge}>
+                      {badge}
+                    </span>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className={styles.bottomPanel}>
+            <span className={styles.bottomNumber}>05</span>
+
+            <p className={styles.bottomText}>
+              Przewijaj niżej i sprawdź wybrane wizytówki dostępne aktualnie na
+              platformie.
+            </p>
+          </div>
+        </main>
       </div>
     </section>
   );

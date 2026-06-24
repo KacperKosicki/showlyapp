@@ -26,9 +26,6 @@ import {
 
 const API = process.env.REACT_APP_API_URL;
 
-/** =========================
- * helpers
- * ========================= */
 const normalizeAvatar = (val = "") => {
   const v = String(val || "").trim();
   if (!v) return "";
@@ -47,13 +44,11 @@ const pickAvatar = ({ dbAvatar, firebasePhotoURL }) =>
 async function getAuthHeader() {
   const u = auth.currentUser;
   if (!u) return {};
+
   const token = await u.getIdToken();
   return { Authorization: `Bearer ${token}` };
 }
 
-/** =========================
- * component
- * ========================= */
 const UserDropdown = ({
   user,
   loadingUser,
@@ -65,7 +60,7 @@ const UserDropdown = ({
 }) => {
   const [open, setOpen] = useState(false);
 
-  const [profileStatus, setProfileStatus] = useState("loading"); // loading | has | none | error
+  const [profileStatus, setProfileStatus] = useState("loading");
   const [remainingDays, setRemainingDays] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
 
@@ -74,9 +69,9 @@ const UserDropdown = ({
     useState(false);
 
   const [photoURL, setPhotoURL] = useState("");
-  const [userRole, setUserRole] = useState("user"); // user | mod | admin
+  const [userRole, setUserRole] = useState("user");
 
-  const [pushState, setPushState] = useState("default"); // default | granted | denied | unsupported
+  const [pushState, setPushState] = useState("default");
   const [pushLoading, setPushLoading] = useState(false);
   const [pushSaved, setPushSaved] = useState(false);
 
@@ -108,7 +103,6 @@ const UserDropdown = ({
     setPushState(getBrowserNotificationState());
   }, []);
 
-  // Avatar + rola + stan push PER AKTUALNE URZĄDZENIE
   useEffect(() => {
     const run = async () => {
       if (!user?.uid) {
@@ -126,15 +120,15 @@ const UserDropdown = ({
         try {
           const authHeader = await getAuthHeader();
 
-          const r = await fetch(`${API}/api/users/${user.uid}`, {
+          const res = await fetch(`${API}/api/users/${user.uid}`, {
             headers: {
               Accept: "application/json",
               ...authHeader,
             },
           });
 
-          if (r.ok) {
-            const db = await r.json();
+          if (res.ok) {
+            const db = await res.json();
 
             dbAvatar = db?.avatar || "";
             dbRole = db?.role || "user";
@@ -175,7 +169,6 @@ const UserDropdown = ({
     run();
   }, [user?.uid, refreshTrigger]);
 
-  // Status wizytówki + billing
   useEffect(() => {
     if (!user?.uid) {
       setProfileStatus("none");
@@ -250,9 +243,7 @@ const UserDropdown = ({
         const billing = billingData?.billing || null;
 
         const visibleUntil =
-          billingVisibility?.visibleUntil ||
-          profile?.visibleUntil ||
-          null;
+          billingVisibility?.visibleUntil || profile?.visibleUntil || null;
 
         const daysLeft = countDaysLeft(visibleUntil);
 
@@ -264,11 +255,7 @@ const UserDropdown = ({
 
         setRemainingDays(daysLeft);
 
-        setProfilePlanLabel(
-          billing?.label ||
-          billingData?.plan?.label ||
-          ""
-        );
+        setProfilePlanLabel(billing?.label || billingData?.plan?.label || "");
 
         setAutoRenewedBySubscription(
           !!billingVisibility?.autoRenewedBySubscription
@@ -277,6 +264,7 @@ const UserDropdown = ({
         setProfileStatus(profile ? "has" : "none");
       } catch (err) {
         if (err?.name === "AbortError") return;
+
         setProfileStatus("error");
         console.error("❌ Błąd pobierania statusu profilu:", err);
       }
@@ -287,7 +275,6 @@ const UserDropdown = ({
     return () => controller.abort();
   }, [user?.uid, refreshTrigger]);
 
-  // Unread
   useEffect(() => {
     const fetchUnread = async () => {
       if (!user?.uid || !setUnreadCount) return;
@@ -314,7 +301,6 @@ const UserDropdown = ({
     fetchUnread();
   }, [user?.uid, refreshTrigger, location.pathname, setUnreadCount]);
 
-  // Rezerwacje usługodawcy — nowe / nieodczytane
   useEffect(() => {
     const fetchProviderReservationsCount = async () => {
       if (!user?.uid) {
@@ -337,8 +323,7 @@ const UserDropdown = ({
           const status = String(reservation.status || "").toLowerCase();
 
           const isRelevantStatus =
-            status === "oczekująca" ||
-            status === "zaakceptowana";
+            status === "oczekująca" || status === "zaakceptowana";
 
           return isRelevantStatus && reservation.providerSeen === false;
         }).length;
@@ -353,7 +338,6 @@ const UserDropdown = ({
     fetchProviderReservationsCount();
   }, [user?.uid, refreshTrigger, location.pathname]);
 
-  // Zamknięcie dropdown po kliknięciu poza
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -362,10 +346,10 @@ const UserDropdown = ({
     };
 
     document.addEventListener("mousedown", handleClickOutside);
+
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Escape to close
   useEffect(() => {
     const onKey = (e) => {
       if (!open) return;
@@ -377,6 +361,7 @@ const UserDropdown = ({
     };
 
     document.addEventListener("keydown", onKey);
+
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
@@ -385,7 +370,10 @@ const UserDropdown = ({
 
     if (location.pathname === path && scrollToId) {
       const el = document.getElementById(scrollToId);
-      if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 100);
+
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 100);
+      }
     } else {
       navigate(path, { state: { scrollToId } });
     }
@@ -463,11 +451,20 @@ const UserDropdown = ({
   const reservationBadgeCount =
     Number(pendingReservationsCount || 0) + Number(providerReservationsCount || 0);
 
+  const hasAnyBadge =
+    Number(unreadCount) > 0 || Number(reservationBadgeCount) > 0;
+
+  const pushLabel = pushSaved
+    ? "włączone"
+    : pushState === "granted"
+      ? "ready"
+      : "push";
+
   return (
     <div className={styles.dropdown} ref={dropdownRef}>
       <button
         type="button"
-        className={styles.trigger}
+        className={`${styles.trigger} ${open ? styles.triggerOpen : ""}`}
         ref={triggerRef}
         onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="menu"
@@ -484,14 +481,13 @@ const UserDropdown = ({
               e.currentTarget.src = "/images/other/no-image.png";
             }}
           />
+
           {roleLabel && <span className={styles.rolePill}>{roleLabel}</span>}
         </span>
 
         <span className={styles.email}>{displayEmail}</span>
 
-        {(Number(unreadCount) > 0 || Number(reservationBadgeCount) > 0) && (
-          <span className={styles.dotPulse} aria-hidden="true" />
-        )}
+        {hasAnyBadge && <span className={styles.dotPulse} aria-hidden="true" />}
 
         <FaChevronDown
           className={`${styles.icon} ${open ? styles.iconOpen : ""}`}
@@ -499,13 +495,51 @@ const UserDropdown = ({
         />
       </button>
 
-      <div className={`${styles.menu} ${open ? styles.visible : ""}`} role="menu">
+      <div
+        className={`${styles.menu} ${open ? styles.visible : ""}`}
+        role="menu"
+        onWheel={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+      >
         <div className={styles.menuTop}>
-          <div className={styles.menuTitle}>Twoje menu</div>
-          <div className={styles.menuSub}>Szybki dostęp do profilu i akcji</div>
+          <div className={styles.identity}>
+            <span className={styles.bigAvatarWrap} aria-hidden="true">
+              <img
+                src={avatarSrc}
+                alt=""
+                className={styles.bigAvatar}
+                decoding="async"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  e.currentTarget.src = "/images/other/no-image.png";
+                }}
+              />
+
+              {roleLabel && <span className={styles.bigRolePill}>{roleLabel}</span>}
+            </span>
+
+            <div className={styles.identityText}>
+              <div className={styles.menuTitle}>Twoje menu</div>
+              <div className={styles.menuSub}>{displayEmail}</div>
+            </div>
+          </div>
+
+          <div className={styles.quickStats}>
+            <span>
+              <b>{Number(unreadCount || 0)}</b>
+              wiadomości
+            </span>
+
+            <span>
+              <b>{Number(reservationBadgeCount || 0)}</b>
+              rezerwacje
+            </span>
+          </div>
         </div>
 
         <div className={styles.group}>
+          <span className={styles.groupTitle}>Konto</span>
+
           <button
             type="button"
             className={styles.item}
@@ -529,6 +563,7 @@ const UserDropdown = ({
                 <FiShield className={styles.itemIcon} aria-hidden="true" />
                 <span className={styles.itemText}>Panel admina</span>
               </span>
+
               <span className={styles.rightPill}>uprawnienia</span>
             </button>
           )}
@@ -537,6 +572,8 @@ const UserDropdown = ({
         <div className={styles.sep} role="separator" />
 
         <div className={styles.group}>
+          <span className={styles.groupTitle}>Profil</span>
+
           {showProfileActions && profileStatus === "none" && (
             <button
               type="button"
@@ -548,6 +585,7 @@ const UserDropdown = ({
                 <FiUser className={styles.itemIcon} aria-hidden="true" />
                 <span className={styles.itemText}>Stwórz profil</span>
               </span>
+
               <span className={styles.rightPill}>start</span>
             </button>
           )}
@@ -561,6 +599,7 @@ const UserDropdown = ({
             >
               <span className={styles.itemLeft}>
                 <FiUser className={styles.itemIcon} aria-hidden="true" />
+
                 <span className={styles.twoLine}>
                   <span className={styles.itemText}>Twój profil</span>
 
@@ -600,6 +639,8 @@ const UserDropdown = ({
         <div className={styles.sep} role="separator" />
 
         <div className={styles.group}>
+          <span className={styles.groupTitle}>Centrum aktywności</span>
+
           <button
             type="button"
             className={`${styles.item} ${styles.itemNotify}`}
@@ -609,6 +650,7 @@ const UserDropdown = ({
           >
             <span className={styles.itemLeft}>
               <FiBell className={styles.itemIcon} aria-hidden="true" />
+
               <span className={styles.twoLine}>
                 <span className={styles.itemText}>
                   {pushLoading
@@ -643,12 +685,8 @@ const UserDropdown = ({
               </span>
             </span>
 
-            <span className={styles.rightPill}>
-              {pushSaved ? "włączone" : pushState === "granted" ? "ready" : "push"}
-            </span>
+            <span className={styles.rightPill}>{pushLabel}</span>
           </button>
-
-          <div className={styles.sep} role="separator" />
 
           <button
             type="button"

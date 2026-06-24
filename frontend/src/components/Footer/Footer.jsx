@@ -159,6 +159,15 @@ const Footer = ({ user = null, hasProfile = false, loadingProfileStatus = false 
 
   return (
     <footer className={styles.footer} id="footer">
+      <div className={styles.topWave} aria-hidden="true">
+        <svg
+          viewBox="0 0 1440 120"
+          preserveAspectRatio="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M0,58 C180,98 330,18 520,48 C725,82 835,122 1040,72 C1210,30 1320,42 1440,74 L1440,0 L0,0 Z" />
+        </svg>
+      </div>
       <div className={styles.bg} aria-hidden="true">
         <span className={styles.gradientWash} />
         <span className={styles.glowOne} />

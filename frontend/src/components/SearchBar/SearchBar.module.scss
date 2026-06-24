@@ -1,56 +1,80 @@
 @import "../../styles/variables";
 
+$paper-bg: #ffffff;
+$paper-soft: #fbfbfd;
+$paper-muted: #f5f6fa;
+$paper-border: rgba(21, 21, 21, 0.1);
+$ink: #151515;
+
+/* =========================================================
+   SearchBar — papierowy styl Showly
+========================================================= */
+
 .wrapper {
-  width: 100%;
   position: relative;
   z-index: 99999;
+
+  width: 100%;
   overflow: visible;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 }
 
 .searchContainer {
   width: 100%;
+
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  padding: 0.7rem;
-  border-radius: 999px;
-  background: #fff;
-  border: 1px solid rgba(17, 24, 39, 0.08);
-  box-shadow:
-    0 18px 50px rgba(17, 24, 39, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+
+  padding: 0.55rem;
+
+  background: $paper-bg;
+  border: 1px solid rgba(21, 21, 21, 0.14);
+  box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.06);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
 
   &:hover {
-    transform: translateY(-1px);
-    border-color: rgba(17, 24, 39, 0.12);
-    box-shadow: 0 22px 64px rgba(17, 24, 39, 0.13);
+    border-color: rgba(21, 21, 21, 0.22);
+    background: #ffffff;
   }
 
   &:focus-within {
-    border-color: rgba(111, 78, 242, 0.35);
-    box-shadow:
-      0 22px 64px rgba(17, 24, 39, 0.14),
-      0 0 0 6px rgba(111, 78, 242, 0.12);
+    border-color: rgba(111, 78, 242, 0.34);
+    box-shadow: 7px 7px 0 rgba(111, 78, 242, 0.09);
+    transform: translate(-2px, -2px);
   }
 }
 
 .searchInput {
   flex: 1;
   min-width: 0;
+
   border: none;
   outline: none;
   background: transparent;
-  color: #111827;
+
+  color: $ink;
+
   font-family: $font-body;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 750;
   line-height: 1;
-  padding: 0.7rem 0.5rem 0.7rem 0.9rem;
+
+  padding: 0.78rem 0.55rem 0.78rem 0.9rem;
 
   &::placeholder {
-    color: rgba(17, 24, 39, 0.38);
-    font-weight: 600;
+    color: rgba(21, 21, 21, 0.42);
+    font-weight: 650;
   }
 }
 
@@ -58,74 +82,84 @@
   width: 48px;
   height: 48px;
   min-width: 48px;
-  border-radius: 999px;
-  border: none;
+
+  border-radius: 0;
+  border: 1px solid $ink;
+
   cursor: pointer;
+
   display: grid;
   place-items: center;
-  color: #fff;
-  background: linear-gradient(135deg, $primary-color, $secondary-color);
-  box-shadow:
-    0 14px 34px rgba(111, 78, 242, 0.22),
-    0 10px 24px rgba(255, 64, 129, 0.14);
-  transition: transform 0.16s ease, filter 0.16s ease, box-shadow 0.16s ease;
 
-  &:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.04);
-    box-shadow:
-      0 18px 44px rgba(111, 78, 242, 0.26),
-      0 12px 30px rgba(255, 64, 129, 0.18);
-  }
+  color: #ffffff;
+  background: $ink;
+  box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.08);
 
-  &:active {
-    transform: translateY(0);
-  }
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    opacity 0.18s ease;
 
   svg {
     font-size: 1rem;
   }
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    background: #000000;
+    box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.12);
+  }
+
+  &:active {
+    transform: translate(0, 0);
+    box-shadow: none;
+  }
 }
 
-/* DROPDOWN */
+/* =========================================================
+   Dropdown
+========================================================= */
+
 .dropdown {
   position: absolute;
   top: calc(100% + 12px);
   left: 0;
   right: 0;
   z-index: 999999;
-  border-radius: 26px;
+
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid rgba(17, 24, 39, 0.08);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  box-shadow:
-    0 34px 100px rgba(17, 24, 39, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+
+  background: $paper-bg;
+  border: 1px solid rgba(21, 21, 21, 0.14);
+  box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.07);
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .dropdownList {
   display: flex;
   flex-direction: column;
   gap: 0.55rem;
+
   padding: 0.7rem;
 
-  max-height: min(330px, 45vh);
+  max-height: min(340px, 45vh);
+
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
 
   scrollbar-width: thin;
-  scrollbar-color: rgba(111, 78, 242, 0.35) transparent;
+  scrollbar-color: rgba(21, 21, 21, 0.34) transparent;
 
   &::-webkit-scrollbar {
     width: 8px;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, $primary-color, $secondary-color);
-    border-radius: 999px;
+    background: rgba(21, 21, 21, 0.28);
   }
 
   &::-webkit-scrollbar-track {
@@ -135,55 +169,83 @@
 
 .dropdownState {
   padding: 1.15rem 1.25rem;
-  color: rgba(17, 24, 39, 0.58);
-  font-family: $font-body;
-  font-size: 0.96rem;
-  font-weight: 700;
+
+  color: rgba(21, 21, 21, 0.58);
+
+  font-family: $font-accent;
+  font-size: 0.8rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
+
+/* =========================================================
+   Result item
+========================================================= */
 
 .resultItem {
   --sb-primary: #6f4ef2;
   --sb-secondary: #ff4081;
   --sb-gradient: linear-gradient(135deg, #6f4ef2, #ff4081);
 
+  position: relative;
+
   width: 100%;
-  border: 1px solid rgba(17, 24, 39, 0.06);
-  background:
-    linear-gradient(135deg,
-      color-mix(in srgb, var(--sb-primary) 7%, #fff),
-      color-mix(in srgb, var(--sb-secondary) 5%, #fff));
+  border: 1px solid rgba(21, 21, 21, 0.1);
+  background: $paper-soft;
 
   text-align: left;
   cursor: pointer;
+
   display: flex;
   align-items: flex-start;
-  gap: 0.8rem;
-  padding: 0.85rem;
-  border-radius: 20px;
-  transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-}
+  gap: 0.85rem;
 
-.resultItem:hover {
-  transform: translateY(-2px);
-  background: #fff;
-  border-color: color-mix(in srgb, var(--sb-primary) 22%, transparent);
-  box-shadow: 0 16px 42px rgba(17, 24, 39, 0.1);
+  padding: 0.85rem;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    width: 4px;
+    background: var(--sb-primary);
+  }
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    background: #ffffff;
+    border-color: rgba(21, 21, 21, 0.18);
+    box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.055);
+  }
 }
 
 .resultAvatar {
-  width: 50px;
-  height: 50px;
-  flex: 0 0 50px;
-  border-radius: 17px;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+
   overflow: hidden;
+
   display: grid;
   place-items: center;
+
   background: var(--sb-gradient);
-  color: #fff;
-  font-weight: 900;
-  box-shadow:
-    0 12px 28px color-mix(in srgb, var(--sb-primary) 26%, transparent),
-    inset 0 0 0 2px rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+
+  border: 1px solid rgba(21, 21, 21, 0.12);
+  box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.045);
+
+  font-family: $font-accent;
+  font-weight: 950;
 
   img {
     width: 100%;
@@ -194,7 +256,8 @@
 
   span {
     font-size: 1rem;
-    font-family: $font-heading;
+    font-family: $font-accent;
+    font-weight: 950;
   }
 }
 
@@ -208,25 +271,36 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.45rem;
+
   margin-bottom: 0.35rem;
 
   strong {
-    color: #111827;
+    color: $ink;
+
+    font-family: $font-accent;
     font-size: 1rem;
-    font-family: $font-heading;
+    font-weight: 950;
     line-height: 1.2;
+    letter-spacing: -0.025em;
   }
 
   span {
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 24px;
+    padding: 0 0.5rem;
+
     color: var(--sb-primary);
-    background: color-mix(in srgb, var(--sb-primary) 9%, #fff);
-    border: 1px solid color-mix(in srgb, var(--sb-primary) 14%, transparent);
-    border-radius: 999px;
-    padding: 0.2rem 0.5rem;
-    font-size: 0.75rem;
+    background: #ffffff;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+
     font-family: $font-accent;
+    font-size: 0.7rem;
     font-weight: 950;
-    line-height: 1.2;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1;
   }
 }
 
@@ -234,12 +308,14 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
+
   margin-bottom: 0.55rem;
 
   span {
-    color: rgba(17, 24, 39, 0.56);
-    font-size: 0.82rem;
+    color: rgba(21, 21, 21, 0.56);
+
     font-family: $font-body;
+    font-size: 0.82rem;
     font-weight: 700;
     line-height: 1.3;
   }
@@ -254,51 +330,79 @@
 .serviceBadge {
   display: inline-flex;
   align-items: center;
+
   min-height: 27px;
   padding: 0 0.65rem;
-  border-radius: 999px;
-  background: rgba(17, 24, 39, 0.045);
-  border: 1px solid rgba(17, 24, 39, 0.06);
-  color: rgba(17, 24, 39, 0.68);
-  font-size: 0.78rem;
+
+  background: #ffffff;
+  border: 1px solid rgba(21, 21, 21, 0.1);
+  color: rgba(21, 21, 21, 0.68);
+
   font-family: $font-body;
+  font-size: 0.78rem;
   font-weight: 800;
 }
 
+/* =========================================================
+   Show all
+========================================================= */
+
 .showAllButton {
   width: 100%;
+
   border: none;
+  border-top: 1px solid rgba(21, 21, 21, 0.1);
+
   cursor: pointer;
+
   padding: 0.95rem 1rem;
-  background: rgba(17, 24, 39, 0.035);
-  color: #111827;
+
+  background: $paper-soft;
+  color: $ink;
+
   font-family: $font-accent;
-  font-size: 0.92rem;
+  font-size: 0.82rem;
   font-weight: 950;
-  border-top: 1px solid rgba(17, 24, 39, 0.07);
-  transition: background 0.18s ease, color 0.18s ease;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
 
   &:hover {
-    background: #111827;
-    color: #fff;
+    background: $ink;
+    color: #ffffff;
   }
 }
 
+/* =========================================================
+   Accessibility
+========================================================= */
+
 .srOnly {
   position: absolute;
+
   width: 1px;
   height: 1px;
+
   padding: 0;
   margin: -1px;
+
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
+
   border: 0;
 }
 
-/* MOBILE */
+/* =========================================================
+   RWD
+========================================================= */
+
 @media (max-width: 768px) {
   .searchContainer {
-    padding: 0.58rem;
+    padding: 0.5rem;
+    box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.055);
   }
 
   .searchInput {
@@ -314,20 +418,17 @@
 
   .dropdown {
     top: calc(100% + 10px);
-    border-radius: 22px;
+    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.065);
   }
 
   .dropdownList {
     padding: 0.55rem;
     gap: 0.5rem;
     max-height: min(315px, 42vh);
-    overflow-y: auto;
-    overflow-x: hidden;
   }
 
   .resultItem {
     padding: 0.75rem;
-    border-radius: 18px;
     gap: 0.7rem;
   }
 
@@ -335,7 +436,6 @@
     width: 44px;
     height: 44px;
     flex-basis: 44px;
-    border-radius: 15px;
   }
 
   .resultTop {
@@ -344,7 +444,7 @@
     }
 
     span {
-      font-size: 0.7rem;
+      font-size: 0.66rem;
     }
   }
 
@@ -364,11 +464,15 @@
 
   .showAllButton {
     padding: 0.9rem;
-    font-size: 0.86rem;
+    font-size: 0.76rem;
   }
 }
 
 @media (max-width: 430px) {
+  .searchContainer {
+    gap: 0.45rem;
+  }
+
   .searchInput {
     font-size: 0.9rem;
   }
@@ -377,17 +481,27 @@
     font-size: 0.88rem;
   }
 
-  .dropdown {
-    border-radius: 22px;
-  }
-
   .dropdownList {
     max-height: min(300px, 40vh);
-    overflow-y: auto;
-    overflow-x: hidden;
   }
 
   .resultItem {
     align-items: flex-start;
+  }
+
+  .resultAvatar {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .searchContainer,
+  .searchButton,
+  .resultItem,
+  .showAllButton {
+    transition: none;
   }
 }

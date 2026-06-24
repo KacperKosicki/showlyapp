@@ -6983,6 +6983,7 @@ button.mediaPhotoItem,
     right: 0.85rem;
   }
 }
+
 /* =========================
    PATCH po rozbiciu YourProfile.jsx na sekcje
    Te klasy są używane przez aktualne komponenty JSX jako styles.xxx.
@@ -7012,4 +7013,769 @@ button.mediaPhotoItem,
 
 .pricePanel {
   min-width: 0;
+}
+
+/* =========================================================
+   YOUR PROFILE — PAPER OVERRIDE
+   Wklej na sam dół YourProfile.module.scss
+========================================================= */
+
+$paper-bg: #ffffff;
+$paper-soft: #fbfbfd;
+$paper-muted: #f5f6fa;
+$paper-border: rgba(21, 21, 21, 0.1);
+$ink: #151515;
+
+.wrapper {
+  position: relative;
+  width: 100%;
+  padding: 5.5rem 1.25rem 7rem;
+  overflow: hidden;
+
+  background: #ffffff !important;
+  color: $ink;
+  font-family: $font-body;
+
+  isolation: isolate;
+
+  --yp-primary: #6f4ef2;
+  --yp-secondary: #ff4081;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 38%;
+    width: min(1480px, 94vw);
+    height: 720px;
+    transform: translate(-50%, -50%);
+    border-radius: 0;
+    filter: none;
+    opacity: 1;
+    background: radial-gradient(circle,
+        rgba(245, 246, 250, 0.95) 0%,
+        rgba(245, 246, 250, 0.42) 44%,
+        rgba(245, 246, 250, 0) 72%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    right: auto;
+    top: auto;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+    filter: none;
+    opacity: 0.28;
+    z-index: 0;
+    pointer-events: none;
+
+    background:
+      linear-gradient(to right, rgba(21, 21, 21, 0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(21, 21, 21, 0.02) 1px, transparent 1px);
+    background-size: 64px 64px;
+
+    mask-image: radial-gradient(circle at 50% 34%, #000 0%, transparent 68%);
+  }
+}
+
+.inner {
+  position: relative;
+  z-index: 2;
+
+  width: 100%;
+  max-width: 1480px;
+  margin: 0 auto;
+
+  display: grid;
+  gap: 1.15rem;
+}
+
+/* =========================================================
+   GLOBAL PAPER CARDS
+========================================================= */
+
+.card,
+.emptyCard,
+.noticeCard,
+.expiredNotice,
+.basicCard,
+.descriptionCard,
+.appearanceCard,
+.themePreviewCard,
+.themeSettingsPanel,
+.avatarColumn,
+.bannerPreview,
+.textareaShell,
+.descriptionPreview,
+.descriptionEmpty,
+.inputBlock,
+.themeGroupHeader,
+.colorField,
+.presetBtn,
+.priceView,
+.slotList,
+.contactView,
+.daysView,
+.faqList,
+.faqItem,
+.contactItem,
+.slotItem,
+.priceItem,
+.serviceCard,
+.serviceItem,
+.quickAnswerItem,
+.photoItem,
+.linkItem,
+.staffCard,
+.billingCard,
+.planCard,
+.limitCard {
+  border-radius: 0 !important;
+  background: $paper-bg !important;
+  border: 1px solid rgba(21, 21, 21, 0.12) !important;
+  box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.05) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+
+  &::before,
+  &::after {
+    display: none !important;
+  }
+}
+
+.card {
+  padding: clamp(1rem, 2vw, 1.35rem) !important;
+
+  &:hover {
+    transform: translate(-2px, -2px) !important;
+    border-color: rgba(21, 21, 21, 0.18) !important;
+    box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.075) !important;
+  }
+}
+
+.cardGlow,
+.bubble,
+.textareaDecor,
+.quoteMark {
+  display: none !important;
+}
+
+/* =========================================================
+   HEADER / TOP
+========================================================= */
+
+.head {
+  width: 100%;
+  margin: 0 auto 0.2rem !important;
+  padding: clamp(1.2rem, 2.2vw, 1.8rem);
+
+  background: $paper-bg;
+  border: 1px solid rgba(21, 21, 21, 0.12);
+  box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+
+  text-align: left;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0.75rem;
+}
+
+.labelBadge,
+.pill,
+.sectionKicker,
+.emptyBadge,
+.counterPill,
+.sectionBadge,
+.themePreviewPills span,
+.faqQBadge {
+  border-radius: 0 !important;
+  background: $paper-soft !important;
+  border: 1px solid rgba(21, 21, 21, 0.12) !important;
+  box-shadow: none !important;
+  color: rgba(21, 21, 21, 0.66) !important;
+
+  font-family: $font-accent;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.labelBadge,
+.sectionKicker,
+.emptyBadge {
+  color: $primary-color !important;
+  background: #ffffff !important;
+  box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.045) !important;
+}
+
+.labelDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 0 !important;
+  background: $ink !important;
+}
+
+.labelLine {
+  height: 1px !important;
+  border-radius: 0 !important;
+  background: rgba(21, 21, 21, 0.18) !important;
+}
+
+.headTop {
+  align-items: flex-start;
+}
+
+.heading,
+.profileTitle,
+.sectionTitle,
+.emptyTitle,
+.noticeTitle,
+.themeGroupHeader strong,
+.themePreviewText strong {
+  font-family: $font-accent !important;
+  color: $ink !important;
+  font-weight: 950 !important;
+  letter-spacing: -0.045em;
+}
+
+.heading {
+  font-size: clamp(2.45rem, 4.8vw, 4.8rem) !important;
+  line-height: 0.94 !important;
+  letter-spacing: -0.085em !important;
+}
+
+.description,
+.sectionLead,
+.noticeText,
+.emptyDesc,
+.themeGroupHeader span,
+.themePreviewText span {
+  color: rgba(21, 21, 21, 0.62) !important;
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.primary,
+.secondary,
+.ghost,
+.danger,
+.fileBtn,
+.ghostLight,
+.ctaPrimary,
+.themePreviewButton,
+.addBtn,
+.removeBtn,
+.saveBtn,
+.cancelBtn,
+.editBtn {
+  border-radius: 0 !important;
+
+  font-family: $font-accent;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease,
+    opacity 0.18s ease;
+}
+
+.primary,
+.ctaPrimary,
+.themePreviewButton,
+.saveBtn {
+  background: $ink !important;
+  color: #ffffff !important;
+  border: 1px solid $ink !important;
+  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.08) !important;
+
+  &:hover:not(:disabled) {
+    transform: translate(-2px, -2px) !important;
+    background: #000000 !important;
+    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.12) !important;
+  }
+}
+
+.secondary,
+.fileBtn,
+.ghostLight,
+.editBtn {
+  background: #ffffff !important;
+  color: $ink !important;
+  border: 1px solid rgba(21, 21, 21, 0.14) !important;
+  box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.045) !important;
+
+  &:hover:not(:disabled) {
+    transform: translate(-2px, -2px) !important;
+    background: $paper-soft !important;
+    box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.07) !important;
+  }
+}
+
+.ghost,
+.danger,
+.removeBtn,
+.cancelBtn {
+  background: #fff7f7 !important;
+  color: #c6283a !important;
+  border: 1px solid rgba(198, 40, 58, 0.28) !important;
+  box-shadow: 4px 4px 0 rgba(198, 40, 58, 0.055) !important;
+
+  &:hover:not(:disabled) {
+    transform: translate(-2px, -2px) !important;
+    background: #fff0f0 !important;
+    box-shadow: 6px 6px 0 rgba(198, 40, 58, 0.08) !important;
+  }
+}
+
+/* =========================================================
+   FORMS
+========================================================= */
+
+.formInput,
+.formTextarea,
+.descriptionTextarea,
+select,
+input,
+textarea {
+  border-radius: 0 !important;
+}
+
+.formInput,
+.formTextarea,
+.descriptionTextarea {
+  background: #ffffff !important;
+  color: $ink !important;
+  border: 1px solid rgba(21, 21, 21, 0.13) !important;
+  box-shadow: none !important;
+
+  font-family: $font-body;
+  font-weight: 650;
+
+  &:focus {
+    border-color: rgba(111, 78, 242, 0.34) !important;
+    box-shadow: 5px 5px 0 rgba(111, 78, 242, 0.08) !important;
+    transform: translate(-2px, -2px);
+    outline: none !important;
+  }
+
+  &::placeholder {
+    color: rgba(21, 21, 21, 0.38) !important;
+    font-style: normal !important;
+  }
+}
+
+.inputError {
+  border-color: rgba(198, 40, 58, 0.52) !important;
+  box-shadow: 5px 5px 0 rgba(198, 40, 58, 0.08) !important;
+}
+
+.hint,
+.helperText,
+.fieldCounter {
+  color: rgba(21, 21, 21, 0.52) !important;
+}
+
+/* =========================================================
+   BASIC INFO / AVATAR / BANNER
+========================================================= */
+
+.basicInfoRow {
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+}
+
+.avatarColumn {
+  background: $paper-soft !important;
+}
+
+.avatarFrame,
+.avatarRing,
+.avatar {
+  border-radius: 0 !important;
+}
+
+.avatarRing {
+  background: $ink !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+.avatar {
+  border: 5px solid #ffffff !important;
+  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.08) !important;
+}
+
+.avatarStatus {
+  border-radius: 0 !important;
+  background: $ink !important;
+  color: #ffffff !important;
+  box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.08) !important;
+}
+
+.bannerPreview,
+.bannerImage,
+.bannerEmpty {
+  border-radius: 0 !important;
+}
+
+.bannerPreview {
+  background:
+    linear-gradient(to right, rgba(21, 21, 21, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(21, 21, 21, 0.05) 1px, transparent 1px),
+    $paper-muted !important;
+  background-size: 24px 24px !important;
+}
+
+.bannerLocked {
+  border-radius: 0 !important;
+  background: $paper-soft !important;
+  border: 1px dashed rgba(21, 21, 21, 0.18) !important;
+}
+
+.basicInfoCol .inputBlock {
+  border-radius: 0 !important;
+  background: $paper-bg !important;
+  border: 1px solid rgba(21, 21, 21, 0.1) !important;
+  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.035) !important;
+
+  &:hover {
+    transform: translate(-2px, -2px) !important;
+    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.06) !important;
+  }
+
+  label svg {
+    border-radius: 0 !important;
+    background: $paper-soft !important;
+    border: 1px solid rgba(21, 21, 21, 0.1) !important;
+    color: $primary-color !important;
+  }
+}
+
+/* =========================================================
+   DESCRIPTION
+========================================================= */
+
+.textareaShell,
+.descriptionPreview,
+.descriptionEmpty {
+  border-radius: 0 !important;
+  background: $paper-bg !important;
+}
+
+.descriptionTextarea {
+  background: #ffffff !important;
+}
+
+.descProgress {
+  border-radius: 0 !important;
+  background: rgba(21, 21, 21, 0.08) !important;
+
+  span {
+    border-radius: 0 !important;
+    background: $ink !important;
+    box-shadow: none !important;
+  }
+}
+
+.descriptionText {
+  color: $ink !important;
+}
+
+/* =========================================================
+   APPEARANCE / THEME
+========================================================= */
+
+.appearanceBody {
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+}
+
+.themePreviewCard,
+.themePreviewCover,
+.themePreviewAvatar,
+.themePreviewButton,
+.presetBtn,
+.colorField,
+.colorRow input[type="color"]::-webkit-color-swatch {
+  border-radius: 0 !important;
+}
+
+.themePreviewCard {
+  background: $paper-bg !important;
+}
+
+.themePreviewCover {
+  background:
+    linear-gradient(to right, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    $ink !important;
+  background-size: 22px 22px !important;
+}
+
+.themePreviewAvatar {
+  background: $ink !important;
+  border: 5px solid #ffffff !important;
+}
+
+.themePreviewPills span {
+  background: $paper-soft !important;
+}
+
+.colorPresets,
+.colorGrid {
+  gap: 0.85rem;
+}
+
+.presetActive {
+  border-color: rgba(111, 78, 242, 0.34) !important;
+  box-shadow: 5px 5px 0 rgba(111, 78, 242, 0.08) !important;
+}
+
+.presetDots span,
+.themeCurrentBox>span {
+  border-radius: 0 !important;
+}
+
+/* =========================================================
+   OFFER / SERVICES / PRICE / DATES
+========================================================= */
+
+.priceView,
+.slotList,
+.daysView,
+.serviceList,
+.serviceGrid,
+.contactView,
+.faqList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.priceItem,
+.slotItem,
+.contactItem,
+.faqItem,
+.serviceItem,
+.staffCard,
+.quickAnswerItem,
+.linkItem {
+  border-radius: 0 !important;
+  background: $paper-soft !important;
+  border: 1px solid rgba(21, 21, 21, 0.1) !important;
+  box-shadow: none !important;
+}
+
+.priceAmount,
+.faqAnswer {
+  color: $ink !important;
+  font-family: $font-accent !important;
+  font-weight: 950 !important;
+}
+
+.tags span,
+.tag,
+.badge,
+.serviceBadge,
+.priceBadge,
+.slotBadge {
+  border-radius: 0 !important;
+  background: $paper-soft !important;
+  border: 1px solid rgba(21, 21, 21, 0.1) !important;
+  color: rgba(21, 21, 21, 0.66) !important;
+
+  font-family: $font-accent;
+  font-weight: 950;
+  letter-spacing: 0.05em;
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.emptyWrap {
+  position: relative;
+  z-index: 2;
+}
+
+.emptyCard {
+  max-width: 980px !important;
+  border-radius: 0 !important;
+  background: $paper-bg !important;
+  border: 1px solid rgba(21, 21, 21, 0.12) !important;
+  box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055) !important;
+}
+
+.emptyList li {
+  border-radius: 0 !important;
+  background: $paper-soft !important;
+  border: 1px dashed rgba(21, 21, 21, 0.18) !important;
+}
+
+.dot {
+  border-radius: 0 !important;
+  background: $primary-color !important;
+  box-shadow: none !important;
+}
+
+/* =========================================================
+   EDIT BAR
+========================================================= */
+
+.editBar {
+  background: #ffffff !important;
+  border-top: 1px solid rgba(21, 21, 21, 0.14) !important;
+  box-shadow: 0 -8px 0 rgba(21, 21, 21, 0.04) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.editBarInner {
+  max-width: 1480px !important;
+}
+
+.editHint {
+  color: rgba(21, 21, 21, 0.62) !important;
+  font-family: $font-accent;
+  font-weight: 950;
+}
+
+/* =========================================================
+   LIGHTBOX
+========================================================= */
+
+.lightbox,
+.lightboxOverlay {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.lightboxContent,
+.lightboxImage {
+  border-radius: 0 !important;
+}
+
+/* =========================================================
+   RWD
+========================================================= */
+
+@media (max-width: 1040px) {
+
+  .basicInfoRow,
+  .appearanceBody {
+    grid-template-columns: 1fr !important;
+  }
+
+  .avatarColumn,
+  .themePreviewCard {
+    max-width: 460px;
+    width: 100%;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .wrapper {
+    padding: 3.5rem 0.9rem 6rem !important;
+    background: #ffffff !important;
+  }
+
+  .inner {
+    max-width: 100%;
+    gap: 1rem;
+  }
+
+  .head {
+    padding: 1rem;
+  }
+
+  .labelDesc,
+  .labelLine {
+    display: none;
+  }
+
+  .heading {
+    font-size: clamp(2.1rem, 12vw, 3.1rem) !important;
+  }
+
+  .description {
+    font-size: 0.94rem !important;
+  }
+
+  .card,
+  .emptyCard,
+  .noticeCard,
+  .expiredNotice {
+    padding: 1rem !important;
+    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.055) !important;
+  }
+
+  .sectionTop,
+  .basicInfoRow,
+  .descriptionBlock,
+  .appearanceBody {
+    padding: 1rem !important;
+  }
+
+  .editBarInner {
+    padding: 0.75rem 0.9rem calc(0.75rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .wrapper {
+    padding: 3rem 0.75rem 6rem !important;
+  }
+
+  .head {
+    padding: 0.85rem;
+  }
+
+  .heading {
+    font-size: clamp(2rem, 14vw, 2.8rem) !important;
+  }
+
+  .description {
+    font-size: 0.88rem !important;
+  }
+
+  .basicInfoCol {
+    grid-template-columns: 1fr !important;
+  }
+
+  .editBarBtns {
+    width: 100%;
+
+    .primary,
+    .ghost {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
 }

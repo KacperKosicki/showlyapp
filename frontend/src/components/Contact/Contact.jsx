@@ -11,7 +11,12 @@ import {
   FiUser,
   FiBriefcase,
 } from "react-icons/fi";
-import { FaFacebookF, FaInstagram, FaXTwitter, FaLinkedinIn } from "react-icons/fa6";
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaXTwitter,
+  FaLinkedinIn,
+} from "react-icons/fa6";
 
 const Contact = () => {
   const location = useLocation();
@@ -39,7 +44,10 @@ const Contact = () => {
       const el = document.getElementById(scrollTo);
 
       if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        el.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
 
         window.history.replaceState({}, document.title, location.pathname);
         return;
@@ -113,14 +121,6 @@ const Contact = () => {
 
   return (
     <section id="scrollToId" className={styles.section}>
-      <div className={styles.sectionBackground} aria-hidden="true" />
-
-      <div className={styles.bg} aria-hidden="true">
-        <span className={styles.blur1} />
-        <span className={styles.blur2} />
-        <span className={styles.vignette} />
-      </div>
-
       <div className={styles.inner}>
         {alert && (
           <AlertBox
@@ -130,38 +130,39 @@ const Contact = () => {
           />
         )}
 
-        <div className={styles.head}>
-          <div className={styles.labelRow}>
-            <span className={styles.labelBadge}>Kontakt</span>
-            <span className={styles.labelDot} />
-            <span className={styles.labelDesc}>Porozmawiajmy o Twoim profilu i koncie</span>
-            <span className={styles.labelLine} />
-            <span className={styles.pill}>Showly • Wsparcie • Profil • Rezerwacje</span>
-          </div>
+        <div className={styles.layout}>
+          <aside className={styles.side}>
+            <span className={styles.overline}>Kontakt</span>
 
-          <h2 className={styles.heading}>
-            Porozmawiajmy o <span className={styles.headingAccent}>Twoim profilu</span> w Showly
-          </h2>
+            <h2 className={styles.heading}>
+              Porozmawiajmy o Twoim profilu w Showly.
+            </h2>
 
-          <p className={styles.description}>
-            Masz pytanie o działanie aplikacji, wizytówki, rezerwacje albo wdrożenie
-            konta? Napisz do nas — odpowiemy konkretnie i bez zbędnego zamieszania.
-          </p>
-        </div>
+            <p className={styles.description}>
+              Masz pytanie o działanie aplikacji, wizytówki, rezerwacje albo
+              konfigurację konta? Napisz do nas — odpowiemy konkretnie i bez
+              zbędnego zamieszania.
+            </p>
 
-        <div className={styles.gridWrap}>
-          <div className={styles.infoColumn}>
-            <div className={styles.infoCard}>
-              <h3 className={styles.cardTitle}>Dane kontaktowe</h3>
+            <div className={styles.infoBlock}>
+              <div className={styles.blockHead}>
+                <span className={styles.blockLabel}>Dane kontaktowe</span>
+                <span className={styles.blockNumber}>01</span>
+              </div>
 
               <div className={styles.infoList}>
                 <div className={styles.infoRow}>
                   <span className={styles.icon}>
                     <FiMail />
                   </span>
+
                   <div>
                     <span className={styles.infoLabel}>E-mail</span>
-                    <a className={styles.valueLink} href="mailto:kontakt@showly.me">
+
+                    <a
+                      className={styles.valueLink}
+                      href="mailto:kontakt@showly.me"
+                    >
                       kontakt@showly.me
                     </a>
                   </div>
@@ -171,9 +172,11 @@ const Contact = () => {
                   <span className={styles.icon}>
                     <FiPhone />
                   </span>
+
                   <div>
                     <span className={styles.infoLabel}>Telefon</span>
-                    <a className={styles.valueLink} href="tel:+48123456789">
+
+                    <a className={styles.valueLink} href="tel:+48">
                       +48 -
                     </a>
                   </div>
@@ -183,25 +186,37 @@ const Contact = () => {
                   <span className={styles.icon}>
                     <FiMapPin />
                   </span>
+
                   <div>
                     <span className={styles.infoLabel}>Obszar działania</span>
-                    <span className={styles.valueText}>Polska • działamy online</span>
+
+                    <span className={styles.valueText}>
+                      Polska / działamy online
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className={styles.infoCard}>
-              <h3 className={styles.cardTitle}>W czym pomagamy?</h3>
+            <div className={styles.infoBlock}>
+              <div className={styles.blockHead}>
+                <span className={styles.blockLabel}>Pomoc</span>
+                <span className={styles.blockNumber}>02</span>
+              </div>
 
               <div className={styles.featureList}>
                 <div className={styles.featureItem}>
                   <span className={styles.featureIcon}>
                     <FiUser />
                   </span>
+
                   <div>
                     <strong>Konfiguracja profilu</strong>
-                    <p>Pomagamy w ustawieniu wizytówki, galerii, usług i danych kontaktowych.</p>
+
+                    <p>
+                      Pomagamy w ustawieniu wizytówki, galerii, usług i danych
+                      kontaktowych.
+                    </p>
                   </div>
                 </div>
 
@@ -209,9 +224,14 @@ const Contact = () => {
                   <span className={styles.featureIcon}>
                     <FiBriefcase />
                   </span>
+
                   <div>
                     <strong>Wdrożenie dla usługodawców</strong>
-                    <p>Doradzimy, jak najlepiej pokazać ofertę i uprościć kontakt z klientem.</p>
+
+                    <p>
+                      Doradzimy, jak najlepiej pokazać ofertę i uprościć kontakt
+                      z klientem.
+                    </p>
                   </div>
                 </div>
 
@@ -219,45 +239,85 @@ const Contact = () => {
                   <span className={styles.featureIcon}>
                     <FiMessageSquare />
                   </span>
+
                   <div>
                     <strong>Wsparcie i feedback</strong>
-                    <p>Zbieramy uwagi użytkowników i stale rozwijamy UX całej aplikacji.</p>
+
+                    <p>
+                      Zbieramy uwagi użytkowników i stale rozwijamy UX całej
+                      aplikacji.
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className={styles.infoCard}>
-              <h3 className={styles.cardTitle}>Social media</h3>
+            <div className={styles.infoBlock}>
+              <div className={styles.blockHead}>
+                <span className={styles.blockLabel}>Social media</span>
+                <span className={styles.blockNumber}>03</span>
+              </div>
 
               <div className={styles.socials}>
-                <button type="button" className={styles.socialBtn} disabled title="Wkrótce">
+                <button
+                  type="button"
+                  className={styles.socialBtn}
+                  disabled
+                  title="Wkrótce"
+                >
                   <FaFacebookF />
                 </button>
-                <button type="button" className={styles.socialBtn} disabled title="Wkrótce">
+
+                <button
+                  type="button"
+                  className={styles.socialBtn}
+                  disabled
+                  title="Wkrótce"
+                >
                   <FaInstagram />
                 </button>
-                <button type="button" className={styles.socialBtn} disabled title="Wkrótce">
+
+                <button
+                  type="button"
+                  className={styles.socialBtn}
+                  disabled
+                  title="Wkrótce"
+                >
                   <FaXTwitter />
                 </button>
-                <button type="button" className={styles.socialBtn} disabled title="Wkrótce">
+
+                <button
+                  type="button"
+                  className={styles.socialBtn}
+                  disabled
+                  title="Wkrótce"
+                >
                   <FaLinkedinIn />
                 </button>
               </div>
 
               <p className={styles.socialNote}>
-                Profile społecznościowe uruchomimy wkrótce — teraz skupiamy się na dopięciu produktu.
+                Profile społecznościowe uruchomimy wkrótce — teraz skupiamy się
+                na dopięciu produktu.
               </p>
             </div>
-          </div>
+          </aside>
 
-          <div className={styles.formCard}>
-            <h3 className={styles.cardTitle}>Napisz wiadomość</h3>
+          <main className={styles.content}>
+            <div className={styles.chapterHead}>
+              <div>
+                <span className={styles.chapterLabel}>Formularz</span>
+                <h3>Napisz wiadomość do zespołu Showly.</h3>
+              </div>
+
+              <span className={styles.chapterNumber}>04</span>
+            </div>
 
             <form className={styles.form} onSubmit={handleSubmit}>
               <div className={styles.row}>
                 <div className={styles.field}>
                   <label htmlFor="name">Imię i nazwisko</label>
+
                   <input
                     id="name"
                     name="name"
@@ -271,6 +331,7 @@ const Contact = () => {
 
                 <div className={styles.field}>
                   <label htmlFor="email">Adres e-mail</label>
+
                   <input
                     id="email"
                     name="email"
@@ -286,6 +347,7 @@ const Contact = () => {
               <div className={styles.row}>
                 <div className={styles.field}>
                   <label htmlFor="company">Firma / marka</label>
+
                   <input
                     id="company"
                     name="company"
@@ -298,6 +360,7 @@ const Contact = () => {
 
                 <div className={styles.field}>
                   <label htmlFor="subject">Temat</label>
+
                   <input
                     id="subject"
                     name="subject"
@@ -312,6 +375,7 @@ const Contact = () => {
 
               <div className={styles.field}>
                 <label htmlFor="message">Wiadomość</label>
+
                 <textarea
                   id="message"
                   name="message"
@@ -332,7 +396,7 @@ const Contact = () => {
                 {status.loading ? "Wysyłanie..." : "Wyślij wiadomość"}
               </button>
             </form>
-          </div>
+          </main>
         </div>
       </div>
     </section>

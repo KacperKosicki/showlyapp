@@ -190,7 +190,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
         try {
           const f = JSON.parse(raw);
           setFlash(f);
-        } catch {}
+        } catch { }
       }
     }
   }, [location.key, location.state]);
@@ -224,7 +224,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
         if (optimistic && optimistic.content) {
           setMessages((prev) => [...prev, optimistic]);
         }
-      } catch {}
+      } catch { }
     }
 
     const rawDraft = location.state?.draft || sessionStorage.getItem("draft");
@@ -232,7 +232,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
     if (rawDraft) {
       try {
         setNewMessage(typeof rawDraft === "string" ? rawDraft : String(rawDraft));
-      } catch {}
+      } catch { }
     }
   }, [location.state]);
 
@@ -752,9 +752,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
                       return (
                         <div
                           key={i}
-                          className={`${styles.messageRow} ${
-                            isMe ? styles.me : styles.other
-                          } ${msg.isSystem ? styles.systemRow : ""}`}
+                          className={`${styles.messageRow} ${isMe ? styles.me : styles.other
+                            } ${msg.isSystem ? styles.systemRow : ""}`}
                         >
                           {!msg.isSystem && (
                             <div className={styles.msgAvatarWrap}>
@@ -778,9 +777,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
                           )}
 
                           <div
-                            className={`${styles.message} ${
-                              isMe ? styles.own : styles.their
-                            } ${msg.isSystem ? styles.system : ""}`}
+                            className={`${styles.message} ${isMe ? styles.own : styles.their
+                              } ${msg.isSystem ? styles.system : ""}`}
                           >
                             {!msg.isSystem && (
                               <p className={styles.author}>
@@ -799,9 +797,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
                             )}
 
                             <p
-                              className={`${styles.content} ${
-                                msg.isSystem ? styles.systemContent : ""
-                              }`}
+                              className={`${styles.content} ${msg.isSystem ? styles.systemContent : ""
+                                }`}
                             >
                               {displayContent}
                               {msg.pending && (
@@ -939,10 +936,10 @@ const ThreadView = ({ user, setUnreadCount }) => {
                   {profileStatus === "exists" && (
                     <>
                       {receiverProfile?.quickAnswers?.length > 0 &&
-                      receiverProfile.quickAnswers.some(
-                        (qa) =>
-                          (qa.title || "").trim() || (qa.answer || "").trim()
-                      ) ? (
+                        receiverProfile.quickAnswers.some(
+                          (qa) =>
+                            (qa.title || "").trim() || (qa.answer || "").trim()
+                        ) ? (
                         <ul>
                           {receiverProfile.quickAnswers
                             .filter(

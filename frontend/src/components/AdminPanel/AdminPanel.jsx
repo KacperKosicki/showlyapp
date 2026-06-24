@@ -68,8 +68,11 @@ const reasonLabel = (v) => {
 
 const formatDate = (iso) => {
   if (!iso) return "—";
+
   const d = new Date(iso);
+
   if (Number.isNaN(d.getTime())) return "—";
+
   return d.toLocaleString("pl-PL", {
     year: "numeric",
     month: "short",
@@ -77,6 +80,37 @@ const formatDate = (iso) => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+const getProfileCreatorAccount = (profile) => {
+  const account = profile?.createdByAccount || {};
+
+  const email =
+    profile?.createdByEmail ||
+    account.email ||
+    profile?.ownerEmail ||
+    profile?.userEmail ||
+    "";
+
+  const name =
+    profile?.createdByName ||
+    account.name ||
+    account.displayName ||
+    profile?.ownerName ||
+    "";
+
+  const uid =
+    account.firebaseUid ||
+    profile?.uid ||
+    profile?.userId ||
+    profile?.firebaseUid ||
+    "";
+
+  return {
+    email: String(email || "").trim(),
+    name: String(name || "").trim(),
+    uid: String(uid || "").trim(),
+  };
 };
 
 const normalizeReport = (r) => {
@@ -123,8 +157,11 @@ const normalizeReport = (r) => {
   const reporterEmail = r?.reporterEmail || r?.reporter?.email || "";
 
   const reviewUserName = r?.snapshot?.reviewUserName || "";
+
   const reviewRating =
-    typeof r?.snapshot?.reviewRating === "number" ? r.snapshot.reviewRating : null;
+    typeof r?.snapshot?.reviewRating === "number"
+      ? r.snapshot.reviewRating
+      : null;
 
   return {
     ...r,
@@ -163,8 +200,12 @@ const buildPartnershipPayload = (draft) => {
   return {
     isPartner: !!safeDraft.isPartner,
     tier: safeDraft.isPartner ? safeDraft.tier || "partner" : "none",
-    badgeText: safeDraft.isPartner ? String(safeDraft.badgeText || "").trim() : "",
-    color: safeDraft.isPartner ? String(safeDraft.color || "").trim() : "#59d0ff",
+    badgeText: safeDraft.isPartner
+      ? String(safeDraft.badgeText || "").trim()
+      : "",
+    color: safeDraft.isPartner
+      ? String(safeDraft.color || "").trim()
+      : "#59d0ff",
   };
 };
 
@@ -182,9 +223,11 @@ const isSamePartnership = (a, b) => {
 
 const getVisibleUntilDate = (profile) => {
   const raw = profile?.visibleUntil;
+
   if (!raw) return null;
 
   const d = new Date(raw);
+
   if (Number.isNaN(d.getTime())) return null;
 
   return d;
@@ -192,6 +235,7 @@ const getVisibleUntilDate = (profile) => {
 
 const isProfileExpired = (profile) => {
   const visibleUntil = getVisibleUntilDate(profile);
+
   if (!visibleUntil) return false;
 
   return visibleUntil.getTime() < Date.now();
@@ -229,6 +273,7 @@ const getProfileStatus = (profile) => {
 
 const getExpiryInfo = (profile) => {
   const visibleUntil = getVisibleUntilDate(profile);
+
   if (!visibleUntil) {
     return {
       dateLabel: "—",
@@ -330,9 +375,11 @@ export default function AdminPanel() {
     setProfilesPage(res.data.page || page);
 
     const nextDrafts = {};
+
     items.forEach((p) => {
       nextDrafts[p._id] = normalizePartnerDraft(p);
     });
+
     setPartnerDrafts(nextDrafts);
   };
 
@@ -353,6 +400,7 @@ export default function AdminPanel() {
 
     if (String(nextQ || "").trim()) {
       const qq = String(nextQ).trim().toLowerCase();
+
       items = items.filter((r) => {
         const hay = [
           r?._id,
@@ -396,7 +444,8 @@ export default function AdminPanel() {
       } catch (e) {
         setAlert({
           type: "error",
-          message: e?.response?.data?.message || "Błąd pobierania danych admina.",
+          message:
+            e?.response?.data?.message || "Błąd pobierania danych admina.",
         });
       } finally {
         setLoading(false);
@@ -409,6 +458,7 @@ export default function AdminPanel() {
 
   useEffect(() => {
     const scrollToId = location.state?.scrollToId;
+
     if (!scrollToId) return;
 
     const el = document.getElementById(scrollToId);
@@ -455,6 +505,7 @@ export default function AdminPanel() {
   const onQuickRefresh = async () => {
     try {
       setLoading(true);
+
       if (tab === "dashboard") await fetchStats();
       if (tab === "users") await fetchUsers(usersPage);
       if (tab === "profiles") await fetchProfiles(profilesPage);
@@ -478,7 +529,8 @@ export default function AdminPanel() {
     } catch (e) {
       setAlert({
         type: "error",
-        message: e?.response?.data?.message || "Nie udało się zmienić roli.",
+        message:
+          e?.response?.data?.message || "Nie udało się zmienić roli.",
       });
     } finally {
       setLoading(false);
@@ -489,6 +541,7 @@ export default function AdminPanel() {
     const ok = window.confirm(
       "Na pewno usunąć użytkownika z bazy? (Firebase zostanie, jeśli nie masz endpointu deleteUser w Firebase)"
     );
+
     if (!ok) return;
 
     try {
@@ -499,7 +552,8 @@ export default function AdminPanel() {
     } catch (e) {
       setAlert({
         type: "error",
-        message: e?.response?.data?.message || "Nie udało się usunąć użytkownika.",
+        message:
+          e?.response?.data?.message || "Nie udało się usunąć użytkownika.",
       });
     } finally {
       setLoading(false);
@@ -531,17 +585,17 @@ export default function AdminPanel() {
       await adminApi.setProfileVisible(profileId, !currentIsVisible);
       setAlert({
         type: "success",
-        message:
-          currentIsVisible
-            ? "Profil został ręcznie ukryty."
-            : "Profil został ponownie włączony.",
+        message: currentIsVisible
+          ? "Profil został ręcznie ukryty."
+          : "Profil został ponownie włączony.",
       });
       await fetchProfiles(profilesPage);
     } catch (e) {
       setAlert({
         type: "error",
         message:
-          e?.response?.data?.message || "Nie udało się zmienić widoczności profilu.",
+          e?.response?.data?.message ||
+          "Nie udało się zmienić widoczności profilu.",
       });
     } finally {
       setLoading(false);
@@ -570,7 +624,8 @@ export default function AdminPanel() {
           next.tier = "none";
         } else if (!next.tier || next.tier === "none") {
           next.tier = "partner";
-          next.badgeText = next.badgeText || PARTNER_DEFAULTS.partner.badgeText;
+          next.badgeText =
+            next.badgeText || PARTNER_DEFAULTS.partner.badgeText;
           next.color = next.color || PARTNER_DEFAULTS.partner.color;
         }
       }
@@ -581,6 +636,7 @@ export default function AdminPanel() {
         } else {
           next.isPartner = true;
           const defaults = PARTNER_DEFAULTS[value];
+
           if (defaults) {
             if (
               !current.badgeText ||
@@ -588,6 +644,7 @@ export default function AdminPanel() {
             ) {
               next.badgeText = defaults.badgeText;
             }
+
             if (
               !current.color ||
               current.color === PARTNER_DEFAULTS[current.tier]?.color
@@ -632,7 +689,8 @@ export default function AdminPanel() {
 
       setAlert({
         type: "success",
-        message: `Partnerstwo zapisane dla profilu: ${profile?.name || "—"}.`,
+        message: `Partnerstwo zapisane dla profilu: ${profile?.name || "—"
+          }.`,
       });
 
       await fetchProfiles(profilesPage);
@@ -694,7 +752,8 @@ export default function AdminPanel() {
       setAlert({
         type: "error",
         message:
-          e?.response?.data?.message || "Nie udało się zapisać wszystkich zmian.",
+          e?.response?.data?.message ||
+          "Nie udało się zapisać wszystkich zmian.",
       });
     } finally {
       setLoading(false);
@@ -714,12 +773,17 @@ export default function AdminPanel() {
         });
       }
 
-      setAlert({ type: "success", message: "Zaktualizowano status zgłoszenia." });
+      setAlert({
+        type: "success",
+        message: "Zaktualizowano status zgłoszenia.",
+      });
+
       await fetchReports(1);
     } catch (e) {
       setAlert({
         type: "error",
-        message: e?.response?.data?.message || "Nie udało się zmienić statusu.",
+        message:
+          e?.response?.data?.message || "Nie udało się zmienić statusu.",
       });
     } finally {
       setLoading(false);
@@ -727,18 +791,25 @@ export default function AdminPanel() {
   };
 
   const onRemoveReview = async (reportId) => {
-    const ok = window.confirm("Usunąć zgłoszoną opinię z profilu? (nieodwracalne)");
+    const ok = window.confirm(
+      "Usunąć zgłoszoną opinię z profilu? (nieodwracalne)"
+    );
+
     if (!ok) return;
 
     try {
       setLoading(true);
       await adminApi.removeReviewFromReport(reportId);
-      setAlert({ type: "success", message: "Usunięto opinię i zamknięto zgłoszenie." });
+      setAlert({
+        type: "success",
+        message: "Usunięto opinię i zamknięto zgłoszenie.",
+      });
       await fetchReports(1);
     } catch (e) {
       setAlert({
         type: "error",
-        message: e?.response?.data?.message || "Nie udało się usunąć opinii.",
+        message:
+          e?.response?.data?.message || "Nie udało się usunąć opinii.",
       });
     } finally {
       setLoading(false);
@@ -752,7 +823,8 @@ export default function AdminPanel() {
     } catch (e) {
       setAlert({
         type: "error",
-        message: e?.response?.data?.message || "Nie udało się pobrać zgłoszeń.",
+        message:
+          e?.response?.data?.message || "Nie udało się pobrać zgłoszeń.",
       });
     } finally {
       setLoading(false);
@@ -761,13 +833,15 @@ export default function AdminPanel() {
 
   const onChangeReportType = async (nextType) => {
     setReportTab(nextType);
+
     try {
       setLoading(true);
       await fetchReports(1, { type: nextType });
     } catch (e) {
       setAlert({
         type: "error",
-        message: e?.response?.data?.message || "Nie udało się pobrać zgłoszeń.",
+        message:
+          e?.response?.data?.message || "Nie udało się pobrać zgłoszeń.",
       });
     } finally {
       setLoading(false);
@@ -781,635 +855,812 @@ export default function AdminPanel() {
 
   return (
     <section id="adminPanel" className={styles.section}>
-      <div className={styles.sectionBackground} aria-hidden="true" />
-
-      {alert && <AlertBox type={alert.type} message={alert.message} onClose={closeAlert} />}
-
       <div className={styles.inner}>
-        <div className={styles.head}>
-          <div className={styles.labelRow}>
-            <span className={styles.label}>Showly Admin</span>
-            <span className={styles.labelDot} />
-            <span className={styles.labelDesc}>Panel zarządzania platformą</span>
-            <span className={styles.labelLine} />
-            <span className={styles.pill}>Dashboard • Users • Profiles • Reports</span>
-          </div>
-
-          <h1 className={styles.heading}>
-            Panel <span className={styles.headingAccent}>administratora</span> 🛠️
-          </h1>
-
-          <p className={styles.description}>
-            Tutaj zarządzasz użytkownikami, profilami, zgłoszeniami oraz danymi
-            operacyjnymi całej platformy <strong className={styles.inlineStrong}>Showly</strong>.
-          </p>
-
-          <div className={styles.metaRow}>
-            <div className={styles.metaCard}>
-              <strong>{stats?.users ?? "—"}</strong>
-              <span>użytkowników</span>
-            </div>
-
-            <div className={styles.metaCard}>
-              <strong>{stats?.profiles ?? "—"}</strong>
-              <span>profili</span>
-            </div>
-
-            <div className={styles.metaCard}>
-              <strong>{stats?.reservations ?? "—"}</strong>
-              <span>rezerwacji</span>
-            </div>
-          </div>
-
-          <div className={styles.tabs}>
-            {TABS.map((t) => (
-              <button
-                key={t.key}
-                className={`${styles.tabBtn} ${tab === t.key ? styles.active : ""}`}
-                onClick={() => setTab(t.key)}
-                type="button"
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {tab === "dashboard" && (
-          <div className={styles.contentBox}>
-            <div className={styles.contentHeader}>
-              <h2 className={styles.contentTitle}>Szybki podgląd platformy</h2>
-              <LoadingButton
-                isLoading={loading}
-                onClick={onQuickRefresh}
-                className={styles.primaryBtn}
-              >
-                Odśwież
-              </LoadingButton>
-            </div>
-
-            <div className={styles.cardGrid}>
-              <div className={styles.statCard}>
-                <div className={styles.cardLabel}>Użytkownicy</div>
-                <div className={styles.cardValue}>{stats?.users ?? "—"}</div>
-              </div>
-
-              <div className={styles.statCard}>
-                <div className={styles.cardLabel}>Profile</div>
-                <div className={styles.cardValue}>{stats?.profiles ?? "—"}</div>
-              </div>
-
-              <div className={styles.statCard}>
-                <div className={styles.cardLabel}>Rezerwacje</div>
-                <div className={styles.cardValue}>{stats?.reservations ?? "—"}</div>
-              </div>
-            </div>
+        {alert && (
+          <div className={styles.alertSlot}>
+            <AlertBox
+              type={alert.type}
+              message={alert.message}
+              onClose={closeAlert}
+            />
           </div>
         )}
 
-        {tab === "users" && (
-          <div className={styles.contentBox}>
-            <div className={styles.contentHeader}>
-              <h2 className={styles.contentTitle}>Użytkownicy</h2>
-              <LoadingButton
-                isLoading={loading}
-                onClick={onQuickRefresh}
-                className={styles.primaryBtn}
-              >
-                Odśwież
-              </LoadingButton>
-            </div>
+        <div className={styles.layout}>
+          <aside className={styles.side}>
+            <span className={styles.overline}>Showly Admin</span>
 
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Email</th>
-                    <th>Nazwa</th>
-                    <th>Provider</th>
-                    <th>Weryfikacja</th>
-                    <th>Rola</th>
-                    <th>Akcje</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((u) => (
-                    <tr key={u._id}>
-                      <td className={styles.mono}>{u.email}</td>
-                      <td>{u.displayName || u.name || "—"}</td>
-                      <td className={styles.badgeCell}>{u.provider}</td>
-                      <td>
-                        <span
-                          className={`${styles.pillState} ${u.emailVerified ? styles.pillOn : styles.pillOff}`}
-                        >
-                          {u.emailVerified ? "TAK" : "NIE"}
-                        </span>
-                      </td>
-                      <td>
-                        <select
-                          className={styles.select}
-                          value={u.role || "user"}
-                          onChange={(e) => onChangeRole(u._id, e.target.value)}
-                          disabled={loading}
-                        >
-                          <option value="user">user</option>
-                          <option value="mod">mod</option>
-                          <option value="admin">admin</option>
-                        </select>
-                      </td>
-                      <td className={styles.actions}>
-                        <button
-                          className={styles.dangerBtn}
-                          onClick={() => onDeleteUser(u._id)}
-                          disabled={loading}
-                          type="button"
-                        >
-                          Usuń
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+            <h1 className={styles.sideTitle}>Panel administratora</h1>
 
-                  {users.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className={styles.empty}>
-                        Brak danych
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <p className={styles.sideText}>
+              Zarządzaj użytkownikami, profilami, partnerstwami i zgłoszeniami
+              z jednego miejsca. Bez ozdobników — najważniejsze dane, szybkie
+              akcje i kontrola nad platformą.
+            </p>
 
-            <div className={styles.pagination}>
-              <button
-                className={styles.pageBtn}
-                disabled={loading || usersPage <= 1}
-                onClick={() => fetchUsers(usersPage - 1)}
-                type="button"
-              >
-                ◀
-              </button>
-              <span className={styles.pageInfo}>
-                Strona {usersPage} / {usersPages}
-              </span>
-              <button
-                className={styles.pageBtn}
-                disabled={loading || usersPage >= usersPages}
-                onClick={() => fetchUsers(usersPage + 1)}
-                type="button"
-              >
-                ▶
-              </button>
-            </div>
-          </div>
-        )}
+            <div className={styles.quickStats}>
+              <div>
+                <strong>{stats?.users ?? "—"}</strong>
+                <span>użytkowników</span>
+              </div>
 
-        {tab === "profiles" && (
-          <div className={styles.contentBox}>
-            <div className={styles.contentHeader}>
-              <h2 className={styles.contentTitle}>Profile</h2>
+              <div>
+                <strong>{stats?.profiles ?? "—"}</strong>
+                <span>profili</span>
+              </div>
 
-              <div className={styles.headerActions}>
-                <LoadingButton
-                  isLoading={loading}
-                  onClick={onQuickRefresh}
-                  className={styles.secondaryBtn}
-                >
-                  Odśwież
-                </LoadingButton>
-
-                <LoadingButton
-                  isLoading={loading}
-                  onClick={onSaveAllPartnerships}
-                  className={styles.primaryBtn}
-                  disabled={loading || changedPartnerCount === 0}
-                >
-                  {changedPartnerCount > 0
-                    ? `Zapisz wszystko (${changedPartnerCount})`
-                    : "Zapisz wszystko"}
-                </LoadingButton>
+              <div>
+                <strong>{stats?.reservations ?? "—"}</strong>
+                <span>rezerwacji</span>
               </div>
             </div>
 
-            <div className={styles.tableWrap}>
-              <table className={`${styles.table} ${styles.profilesTable}`}>
-                <thead>
-                  <tr>
-                    <th>Nazwa</th>
-                    <th>UID</th>
-                    <th>Status</th>
-                    <th>Ważny do</th>
-                    <th>Info</th>
-                    <th>Partner</th>
-                    <th>Tier</th>
-                    <th>Badge</th>
-                    <th>Kolor</th>
-                    <th>Akcje</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {profiles.map((p) => {
-                    const draft = partnerDrafts[p._id] || {
-                      isPartner: false,
-                      tier: "none",
-                      badgeText: "",
-                      color: "",
-                    };
-
-                    const profileStatus = getProfileStatus(p);
-                    const expiryInfo = getExpiryInfo(p);
-                    const canToggleVisibility = profileStatus.key !== "expired";
-
-                    return (
-                      <tr key={p._id}>
-                        <td>{p.name || "—"}</td>
-
-                        <td className={styles.mono}>
-                          {p.uid || p.userId || p.firebaseUid || "—"}
-                        </td>
-
-                        <td>
-                          <span
-                            className={`${styles.pillState} ${profileStatus.key === "active"
-                              ? styles.pillOn
-                              : profileStatus.key === "hidden"
-                                ? styles.pillWarn
-                                : styles.pillOff
-                              }`}
-                          >
-                            {profileStatus.label}
-                          </span>
-                        </td>
-
-                        <td className={styles.mono}>
-                          {expiryInfo.dateLabel}
-                        </td>
-
-                        <td>
-                          <div className={styles.profileInfoCell}>
-                            <strong>{expiryInfo.expiredLabel}</strong>
-                            {p.isVisible === false && !expiryInfo.expired && (
-                              <span className={styles.profileInfoSub}>Ukryty ręcznie przez admina</span>
-                            )}
-                            {expiryInfo.expired && (
-                              <span className={styles.profileInfoSub}>
-                                Profil wymaga przedłużenia ważności — samo włączenie jest zablokowane
-                              </span>
-                            )}
-                          </div>
-                        </td>
-
-                        <td>
-                          <label className={styles.switchWrap}>
-                            <input
-                              type="checkbox"
-                              checked={!!draft.isPartner}
-                              onChange={(e) =>
-                                onPartnerDraftChange(p._id, "isPartner", e.target.checked)
-                              }
-                              disabled={loading}
-                            />
-                            <span>{draft.isPartner ? "TAK" : "NIE"}</span>
-                          </label>
-                        </td>
-
-                        <td>
-                          <select
-                            className={styles.select}
-                            value={draft.tier || "none"}
-                            onChange={(e) =>
-                              onPartnerDraftChange(p._id, "tier", e.target.value)
-                            }
-                            disabled={loading}
-                          >
-                            {PARTNER_TIER_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-
-                        <td>
-                          <input
-                            className={styles.input}
-                            value={draft.badgeText}
-                            onChange={(e) =>
-                              onPartnerDraftChange(p._id, "badgeText", e.target.value)
-                            }
-                            placeholder="np. PARTNER SHOWLY"
-                            disabled={loading || !draft.isPartner}
-                          />
-                        </td>
-
-                        <td>
-                          <div className={styles.colorField}>
-                            <input
-                              type="color"
-                              className={styles.colorInput}
-                              value={draft.color || "#59d0ff"}
-                              onChange={(e) =>
-                                onPartnerDraftChange(p._id, "color", e.target.value)
-                              }
-                              disabled={loading || !draft.isPartner}
-                            />
-                            <input
-                              className={`${styles.input} ${styles.colorText}`}
-                              value={draft.color || ""}
-                              onChange={(e) =>
-                                onPartnerDraftChange(p._id, "color", e.target.value)
-                              }
-                              placeholder="#59d0ff"
-                              disabled={loading || !draft.isPartner}
-                            />
-                          </div>
-                        </td>
-
-                        <td className={styles.actions}>
-                          <button
-                            className={styles.secondaryBtn}
-                            onClick={() => onToggleProfileVisible(p._id, p.isVisible !== false)}
-                            disabled={loading || !canToggleVisibility}
-                            title={
-                              profileStatus.key === "expired"
-                                ? "Nie można włączyć profilu, który wygasł czasowo. Najpierw trzeba przedłużyć ważność."
-                                : profileStatus.key === "hidden"
-                                  ? "Przywróć ręcznie ukryty profil"
-                                  : "Ukryj profil ręcznie"
-                            }
-                            type="button"
-                          >
-                            {profileStatus.key === "hidden"
-                              ? "Włącz"
-                              : profileStatus.key === "expired"
-                                ? "Wygasł"
-                                : "Wyłącz"}
-                          </button>
-
-                          <button
-                            className={styles.primaryBtnInline}
-                            onClick={() => onSavePartnership(p)}
-                            disabled={loading}
-                            type="button"
-                          >
-                            Zapisz partnera
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-
-                  {profiles.length === 0 && (
-                    <tr>
-                      <td colSpan={10} className={styles.empty}>
-                        Brak danych
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            <div className={styles.pagination}>
-              <button
-                className={styles.pageBtn}
-                disabled={loading || profilesPage <= 1}
-                onClick={() => fetchProfiles(profilesPage - 1)}
-                type="button"
-              >
-                ◀
-              </button>
-              <span className={styles.pageInfo}>
-                Strona {profilesPage} / {profilesPages}
-              </span>
-              <button
-                className={styles.pageBtn}
-                disabled={loading || profilesPage >= profilesPages}
-                onClick={() => fetchProfiles(profilesPage + 1)}
-                type="button"
-              >
-                ▶
-              </button>
-            </div>
-          </div>
-        )}
-
-        {tab === "reports" && (
-          <div className={styles.contentBox}>
-            <div className={styles.contentHeader}>
-              <h2 className={styles.contentTitle}>Zgłoszenia</h2>
-              <LoadingButton
-                isLoading={loading}
-                onClick={onQuickRefresh}
-                className={styles.primaryBtn}
-              >
-                Odśwież
-              </LoadingButton>
-            </div>
-
-            <div className={styles.subTabs}>
-              {REPORT_TABS.map((t) => (
+            <nav className={styles.tabs} aria-label="Nawigacja panelu admina">
+              {TABS.map((t, index) => (
                 <button
                   key={t.key}
-                  className={`${styles.subTabBtn} ${reportTab === t.key ? styles.subActive : ""
+                  className={`${styles.tabBtn} ${tab === t.key ? styles.active : ""
                     }`}
-                  onClick={() => onChangeReportType(t.key)}
-                  disabled={loading}
+                  onClick={() => setTab(t.key)}
                   type="button"
                 >
+                  <span>{String(index + 1).padStart(2, "0")}</span>
                   {t.label}
                 </button>
               ))}
-            </div>
+            </nav>
+          </aside>
 
-            <div className={styles.reportsFilters}>
-              <div className={styles.filterItem}>
-                <label className={styles.filterLabel}>Status</label>
-                <select
-                  className={styles.select}
-                  value={reportsStatus}
-                  onChange={(e) => setReportsStatus(e.target.value)}
-                  disabled={loading}
-                >
-                  <option value="open">Otwarte</option>
-                  <option value="closed">Zamknięte</option>
-                  <option value="all">Wszystkie</option>
-                </select>
-              </div>
+          <div className={styles.content}>
+            {tab === "dashboard" && (
+              <article className={styles.chapter}>
+                <div className={styles.chapterNumber}>01</div>
 
-              <div className={styles.filterItemGrow}>
-                <label className={styles.filterLabel}>Szukaj</label>
-                <input
-                  className={styles.input}
-                  value={reportsQ}
-                  onChange={(e) => setReportsQ(e.target.value)}
-                  placeholder="np. UID, email, slug, id opinii, treść…"
-                  disabled={loading}
-                />
-              </div>
+                <div className={styles.chapterMain}>
+                  <div className={styles.chapterHead}>
+                    <div>
+                      <span className={styles.chapterLabel}>Dashboard</span>
+                      <h2 className={styles.chapterTitle}>
+                        Szybki podgląd platformy.
+                      </h2>
+                    </div>
 
-              <button
-                className={styles.secondaryBtn}
-                onClick={onApplyReportFilters}
-                disabled={loading}
-                type="button"
-              >
-                Filtruj
-              </button>
-            </div>
+                    <LoadingButton
+                      isLoading={loading}
+                      onClick={onQuickRefresh}
+                      className={styles.primaryBtn}
+                    >
+                      Odśwież
+                    </LoadingButton>
+                  </div>
 
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Data</th>
-                    <th>Powód</th>
-                    <th>Opis zgłoszenia</th>
-                    <th>Zgłaszający</th>
-                    <th>Nazwa profilu</th>
-                    <th>Profil (UID)</th>
-
-                    {reportTab === "review" && (
-                      <>
-                        <th>Opinia (ID)</th>
-                        <th>Treść opinii</th>
-                      </>
-                    )}
-
-                    <th>Status</th>
-                    <th>Akcje</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {pagedReports.map((r) => (
-                    <tr key={r._id}>
-                      <td className={styles.mono}>{formatDate(r.createdAt)}</td>
-                      <td>{reasonLabel(r.reason)}</td>
-
-                      <td
-                        className={`${styles.truncate} ${styles.reportMessage}`}
-                        title={r.message || ""}
-                      >
-                        {r.message || "—"}
-                      </td>
-
-                      <td className={styles.mono} title={r._reporterEmail || ""}>
-                        {r._reporterUid}
-                      </td>
-
-                      <td className={styles.profileCell}>
-                        <div className={styles.profileName} title={r._profileName}>
-                          {r._profileName}
+                  <div className={styles.chapterBody}>
+                    <div className={styles.cardGrid}>
+                      <div className={styles.statCard}>
+                        <div className={styles.cardLabel}>Użytkownicy</div>
+                        <div className={styles.cardValue}>
+                          {stats?.users ?? "—"}
                         </div>
+                      </div>
 
-                        {r._profileSlug ? (
-                          <div className={styles.profileHint}>
-                            <a
-                              className={styles.linkLike}
-                              href={`/${r._profileSlug}`}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              Otwórz profil
-                            </a>
-                          </div>
-                        ) : null}
-                      </td>
+                      <div className={styles.statCard}>
+                        <div className={styles.cardLabel}>Profile</div>
+                        <div className={styles.cardValue}>
+                          {stats?.profiles ?? "—"}
+                        </div>
+                      </div>
 
-                      <td className={styles.mono}>{r._profileUserId}</td>
+                      <div className={styles.statCard}>
+                        <div className={styles.cardLabel}>Rezerwacje</div>
+                        <div className={styles.cardValue}>
+                          {stats?.reservations ?? "—"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            )}
 
-                      {reportTab === "review" && (
-                        <>
-                          <td className={styles.mono}>{r._reviewId}</td>
+            {tab === "users" && (
+              <article className={styles.chapter}>
+                <div className={styles.chapterNumber}>02</div>
 
-                          <td className={styles.reviewTextCell} title={r._reviewText || ""}>
-                            {r._reviewText ? (
-                              <>
-                                {(r._reviewUserName || r._reviewRating != null) && (
-                                  <div className={styles.reviewMeta}>
-                                    {r._reviewUserName ? r._reviewUserName : "—"}
-                                    {r._reviewRating != null ? ` • ★${r._reviewRating}` : ""}
+                <div className={styles.chapterMain}>
+                  <div className={styles.chapterHead}>
+                    <div>
+                      <span className={styles.chapterLabel}>Użytkownicy</span>
+                      <h2 className={styles.chapterTitle}>
+                        Konta zarejestrowane w Showly.
+                      </h2>
+                    </div>
+
+                    <LoadingButton
+                      isLoading={loading}
+                      onClick={onQuickRefresh}
+                      className={styles.primaryBtn}
+                    >
+                      Odśwież
+                    </LoadingButton>
+                  </div>
+
+                  <div className={styles.chapterBody}>
+                    <div className={styles.tableWrap}>
+                      <table className={styles.table}>
+                        <thead>
+                          <tr>
+                            <th>Email</th>
+                            <th>Nazwa</th>
+                            <th>Provider</th>
+                            <th>Weryfikacja</th>
+                            <th>Rola</th>
+                            <th>Akcje</th>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          {users.map((u) => (
+                            <tr key={u._id}>
+                              <td className={styles.mono}>{u.email}</td>
+                              <td>{u.displayName || u.name || "—"}</td>
+                              <td className={styles.badgeCell}>
+                                {u.provider}
+                              </td>
+                              <td>
+                                <span
+                                  className={`${styles.pillState} ${u.emailVerified
+                                    ? styles.pillOn
+                                    : styles.pillOff
+                                    }`}
+                                >
+                                  {u.emailVerified ? "TAK" : "NIE"}
+                                </span>
+                              </td>
+                              <td>
+                                <select
+                                  className={styles.select}
+                                  value={u.role || "user"}
+                                  onChange={(e) =>
+                                    onChangeRole(u._id, e.target.value)
+                                  }
+                                  disabled={loading}
+                                >
+                                  <option value="user">user</option>
+                                  <option value="mod">mod</option>
+                                  <option value="admin">admin</option>
+                                </select>
+                              </td>
+                              <td className={styles.actions}>
+                                <button
+                                  className={styles.dangerBtn}
+                                  onClick={() => onDeleteUser(u._id)}
+                                  disabled={loading}
+                                  type="button"
+                                >
+                                  Usuń
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+
+                          {users.length === 0 && (
+                            <tr>
+                              <td colSpan={6} className={styles.empty}>
+                                Brak danych
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className={styles.pagination}>
+                      <button
+                        className={styles.pageBtn}
+                        disabled={loading || usersPage <= 1}
+                        onClick={() => fetchUsers(usersPage - 1)}
+                        type="button"
+                      >
+                        ◀
+                      </button>
+
+                      <span className={styles.pageInfo}>
+                        Strona {usersPage} / {usersPages}
+                      </span>
+
+                      <button
+                        className={styles.pageBtn}
+                        disabled={loading || usersPage >= usersPages}
+                        onClick={() => fetchUsers(usersPage + 1)}
+                        type="button"
+                      >
+                        ▶
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            )}
+
+            {tab === "profiles" && (
+              <article className={styles.chapter}>
+                <div className={styles.chapterNumber}>03</div>
+
+                <div className={styles.chapterMain}>
+                  <div className={styles.chapterHead}>
+                    <div>
+                      <span className={styles.chapterLabel}>Profile</span>
+                      <h2 className={styles.chapterTitle}>
+                        Widoczność, ważność i partnerstwa profili.
+                      </h2>
+                    </div>
+
+                    <div className={styles.headerActions}>
+                      <LoadingButton
+                        isLoading={loading}
+                        onClick={onQuickRefresh}
+                        className={styles.secondaryBtn}
+                      >
+                        Odśwież
+                      </LoadingButton>
+
+                      <LoadingButton
+                        isLoading={loading}
+                        onClick={onSaveAllPartnerships}
+                        className={styles.primaryBtn}
+                        disabled={loading || changedPartnerCount === 0}
+                      >
+                        {changedPartnerCount > 0
+                          ? `Zapisz wszystko (${changedPartnerCount})`
+                          : "Zapisz wszystko"}
+                      </LoadingButton>
+                    </div>
+                  </div>
+
+                  <div className={styles.chapterBody}>
+                    <div className={styles.tableWrap}>
+                      <table
+                        className={`${styles.table} ${styles.profilesTable}`}
+                      >
+                        <thead>
+                          <tr>
+                            <th>Nazwa</th>
+                            <th>Konto</th>
+                            <th>UID</th>
+                            <th>Status</th>
+                            <th>Ważny do</th>
+                            <th>Info</th>
+                            <th>Partner</th>
+                            <th>Tier</th>
+                            <th>Badge</th>
+                            <th>Kolor</th>
+                            <th>Akcje</th>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          {profiles.map((p) => {
+                            const draft = partnerDrafts[p._id] || {
+                              isPartner: false,
+                              tier: "none",
+                              badgeText: "",
+                              color: "",
+                            };
+
+                            const profileStatus = getProfileStatus(p);
+                            const expiryInfo = getExpiryInfo(p);
+                            const canToggleVisibility =
+                              profileStatus.key !== "expired";
+                            const creatorAccount =
+                              getProfileCreatorAccount(p);
+
+                            return (
+                              <tr key={p._id}>
+                                <td>{p.name || "—"}</td>
+
+                                <td className={styles.accountCell}>
+                                  {creatorAccount.email ? (
+                                    <>
+                                      <strong title={creatorAccount.email}>
+                                        {creatorAccount.email}
+                                      </strong>
+
+                                      {creatorAccount.name &&
+                                        creatorAccount.name !==
+                                        creatorAccount.email && (
+                                          <span>{creatorAccount.name}</span>
+                                        )}
+                                    </>
+                                  ) : (
+                                    <span className={styles.mutedCell}>
+                                      Brak konta
+                                    </span>
+                                  )}
+                                </td>
+
+                                <td className={styles.mono}>
+                                  {p.uid || p.userId || p.firebaseUid || "—"}
+                                </td>
+
+                                <td>
+                                  <span
+                                    className={`${styles.pillState} ${profileStatus.key === "active"
+                                      ? styles.pillOn
+                                      : profileStatus.key === "hidden"
+                                        ? styles.pillWarn
+                                        : styles.pillOff
+                                      }`}
+                                  >
+                                    {profileStatus.label}
+                                  </span>
+                                </td>
+
+                                <td className={styles.mono}>
+                                  {expiryInfo.dateLabel}
+                                </td>
+
+                                <td>
+                                  <div className={styles.profileInfoCell}>
+                                    <strong>{expiryInfo.expiredLabel}</strong>
+
+                                    {p.isVisible === false &&
+                                      !expiryInfo.expired && (
+                                        <span
+                                          className={styles.profileInfoSub}
+                                        >
+                                          Ukryty ręcznie przez admina
+                                        </span>
+                                      )}
+
+                                    {expiryInfo.expired && (
+                                      <span className={styles.profileInfoSub}>
+                                        Profil wymaga przedłużenia ważności —
+                                        samo włączenie jest zablokowane
+                                      </span>
+                                    )}
                                   </div>
-                                )}
-                                <div className={styles.reviewBody}>{r._reviewText}</div>
-                              </>
-                            ) : (
-                              "—"
-                            )}
-                          </td>
-                        </>
-                      )}
+                                </td>
 
-                      <td>
-                        <span
-                          className={`${styles.pillState} ${r.status === "closed" ? styles.pillOn : styles.pillWarn
-                            }`}
-                        >
-                          {r.status === "closed" ? "ZAMKNIĘTE" : "OTWARTE"}
-                        </span>
-                      </td>
+                                <td>
+                                  <label className={styles.switchWrap}>
+                                    <input
+                                      type="checkbox"
+                                      checked={!!draft.isPartner}
+                                      onChange={(e) =>
+                                        onPartnerDraftChange(
+                                          p._id,
+                                          "isPartner",
+                                          e.target.checked
+                                        )
+                                      }
+                                      disabled={loading}
+                                    />
+                                    <span>
+                                      {draft.isPartner ? "TAK" : "NIE"}
+                                    </span>
+                                  </label>
+                                </td>
 
-                      <td className={styles.actions}>
+                                <td>
+                                  <select
+                                    className={styles.select}
+                                    value={draft.tier || "none"}
+                                    onChange={(e) =>
+                                      onPartnerDraftChange(
+                                        p._id,
+                                        "tier",
+                                        e.target.value
+                                      )
+                                    }
+                                    disabled={loading}
+                                  >
+                                    {PARTNER_TIER_OPTIONS.map((opt) => (
+                                      <option
+                                        key={opt.value}
+                                        value={opt.value}
+                                      >
+                                        {opt.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </td>
+
+                                <td>
+                                  <input
+                                    className={styles.input}
+                                    value={draft.badgeText}
+                                    onChange={(e) =>
+                                      onPartnerDraftChange(
+                                        p._id,
+                                        "badgeText",
+                                        e.target.value
+                                      )
+                                    }
+                                    placeholder="np. PARTNER SHOWLY"
+                                    disabled={loading || !draft.isPartner}
+                                  />
+                                </td>
+
+                                <td>
+                                  <div className={styles.colorField}>
+                                    <input
+                                      type="color"
+                                      className={styles.colorInput}
+                                      value={draft.color || "#59d0ff"}
+                                      onChange={(e) =>
+                                        onPartnerDraftChange(
+                                          p._id,
+                                          "color",
+                                          e.target.value
+                                        )
+                                      }
+                                      disabled={loading || !draft.isPartner}
+                                    />
+
+                                    <input
+                                      className={`${styles.input} ${styles.colorText}`}
+                                      value={draft.color || ""}
+                                      onChange={(e) =>
+                                        onPartnerDraftChange(
+                                          p._id,
+                                          "color",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="#59d0ff"
+                                      disabled={loading || !draft.isPartner}
+                                    />
+                                  </div>
+                                </td>
+
+                                <td className={styles.actions}>
+                                  <button
+                                    className={styles.secondaryBtn}
+                                    onClick={() =>
+                                      onToggleProfileVisible(
+                                        p._id,
+                                        p.isVisible !== false
+                                      )
+                                    }
+                                    disabled={loading || !canToggleVisibility}
+                                    title={
+                                      profileStatus.key === "expired"
+                                        ? "Nie można włączyć profilu, który wygasł czasowo. Najpierw trzeba przedłużyć ważność."
+                                        : profileStatus.key === "hidden"
+                                          ? "Przywróć ręcznie ukryty profil"
+                                          : "Ukryj profil ręcznie"
+                                    }
+                                    type="button"
+                                  >
+                                    {profileStatus.key === "hidden"
+                                      ? "Włącz"
+                                      : profileStatus.key === "expired"
+                                        ? "Wygasł"
+                                        : "Wyłącz"}
+                                  </button>
+
+                                  <button
+                                    className={styles.primaryBtnInline}
+                                    onClick={() => onSavePartnership(p)}
+                                    disabled={loading}
+                                    type="button"
+                                  >
+                                    Zapisz partnera
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+
+                          {profiles.length === 0 && (
+                            <tr>
+                              <td colSpan={11} className={styles.empty}>
+                                Brak danych
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className={styles.pagination}>
+                      <button
+                        className={styles.pageBtn}
+                        disabled={loading || profilesPage <= 1}
+                        onClick={() => fetchProfiles(profilesPage - 1)}
+                        type="button"
+                      >
+                        ◀
+                      </button>
+
+                      <span className={styles.pageInfo}>
+                        Strona {profilesPage} / {profilesPages}
+                      </span>
+
+                      <button
+                        className={styles.pageBtn}
+                        disabled={loading || profilesPage >= profilesPages}
+                        onClick={() => fetchProfiles(profilesPage + 1)}
+                        type="button"
+                      >
+                        ▶
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            )}
+
+            {tab === "reports" && (
+              <article className={styles.chapter}>
+                <div className={styles.chapterNumber}>04</div>
+
+                <div className={styles.chapterMain}>
+                  <div className={styles.chapterHead}>
+                    <div>
+                      <span className={styles.chapterLabel}>Zgłoszenia</span>
+                      <h2 className={styles.chapterTitle}>
+                        Moderacja profili i opinii.
+                      </h2>
+                    </div>
+
+                    <LoadingButton
+                      isLoading={loading}
+                      onClick={onQuickRefresh}
+                      className={styles.primaryBtn}
+                    >
+                      Odśwież
+                    </LoadingButton>
+                  </div>
+
+                  <div className={styles.chapterBody}>
+                    <div className={styles.subTabs}>
+                      {REPORT_TABS.map((t) => (
                         <button
-                          className={styles.secondaryBtn}
-                          disabled={loading || r.status === "closed"}
-                          onClick={() => onSetReportStatus(r._id, "closed")}
+                          key={t.key}
+                          className={`${styles.subTabBtn} ${reportTab === t.key ? styles.subActive : ""
+                            }`}
+                          onClick={() => onChangeReportType(t.key)}
+                          disabled={loading}
                           type="button"
                         >
-                          Zamknij
+                          {t.label}
                         </button>
+                      ))}
+                    </div>
 
-                        {reportTab === "review" && (
-                          <button
-                            className={styles.dangerBtn}
-                            disabled={loading || r.status === "closed"}
-                            onClick={() => onRemoveReview(r._id)}
-                            title="Usuwa opinię z profilu i zamyka zgłoszenie"
-                            type="button"
-                          >
-                            Usuń opinię
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
+                    <div className={styles.reportsFilters}>
+                      <div className={styles.filterItem}>
+                        <label className={styles.filterLabel}>Status</label>
 
-                  {pagedReports.length === 0 && (
-                    <tr>
-                      <td colSpan={reportTab === "review" ? 10 : 8} className={styles.empty}>
-                        Brak zgłoszeń do wyświetlenia
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        <select
+                          className={styles.select}
+                          value={reportsStatus}
+                          onChange={(e) => setReportsStatus(e.target.value)}
+                          disabled={loading}
+                        >
+                          <option value="open">Otwarte</option>
+                          <option value="closed">Zamknięte</option>
+                          <option value="all">Wszystkie</option>
+                        </select>
+                      </div>
 
-            <div className={styles.pagination}>
-              <button
-                className={styles.pageBtn}
-                disabled={loading || reportsPage <= 1}
-                onClick={() => setReportsPage((p) => Math.max(1, p - 1))}
-                type="button"
-              >
-                ◀
-              </button>
-              <span className={styles.pageInfo}>
-                Strona {reportsPage} / {reportsPages}
-              </span>
-              <button
-                className={styles.pageBtn}
-                disabled={loading || reportsPage >= reportsPages}
-                onClick={() => setReportsPage((p) => Math.min(reportsPages, p + 1))}
-                type="button"
-              >
-                ▶
-              </button>
-            </div>
+                      <div className={styles.filterItemGrow}>
+                        <label className={styles.filterLabel}>Szukaj</label>
+
+                        <input
+                          className={styles.input}
+                          value={reportsQ}
+                          onChange={(e) => setReportsQ(e.target.value)}
+                          placeholder="np. UID, email, slug, id opinii, treść…"
+                          disabled={loading}
+                        />
+                      </div>
+
+                      <button
+                        className={styles.secondaryBtn}
+                        onClick={onApplyReportFilters}
+                        disabled={loading}
+                        type="button"
+                      >
+                        Filtruj
+                      </button>
+                    </div>
+
+                    <div className={styles.tableWrap}>
+                      <table className={styles.table}>
+                        <thead>
+                          <tr>
+                            <th>Data</th>
+                            <th>Powód</th>
+                            <th>Opis zgłoszenia</th>
+                            <th>Zgłaszający</th>
+                            <th>Nazwa profilu</th>
+                            <th>Profil UID</th>
+
+                            {reportTab === "review" && (
+                              <>
+                                <th>Opinia ID</th>
+                                <th>Treść opinii</th>
+                              </>
+                            )}
+
+                            <th>Status</th>
+                            <th>Akcje</th>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          {pagedReports.map((r) => (
+                            <tr key={r._id}>
+                              <td className={styles.mono}>
+                                {formatDate(r.createdAt)}
+                              </td>
+
+                              <td>{reasonLabel(r.reason)}</td>
+
+                              <td
+                                className={`${styles.truncate} ${styles.reportMessage}`}
+                                title={r.message || ""}
+                              >
+                                {r.message || "—"}
+                              </td>
+
+                              <td
+                                className={styles.mono}
+                                title={r._reporterEmail || ""}
+                              >
+                                {r._reporterUid}
+                              </td>
+
+                              <td className={styles.profileCell}>
+                                <div
+                                  className={styles.profileName}
+                                  title={r._profileName}
+                                >
+                                  {r._profileName}
+                                </div>
+
+                                {r._profileSlug ? (
+                                  <div className={styles.profileHint}>
+                                    <a
+                                      className={styles.linkLike}
+                                      href={`/${r._profileSlug}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                    >
+                                      Otwórz profil
+                                    </a>
+                                  </div>
+                                ) : null}
+                              </td>
+
+                              <td className={styles.mono}>
+                                {r._profileUserId}
+                              </td>
+
+                              {reportTab === "review" && (
+                                <>
+                                  <td className={styles.mono}>
+                                    {r._reviewId}
+                                  </td>
+
+                                  <td
+                                    className={styles.reviewTextCell}
+                                    title={r._reviewText || ""}
+                                  >
+                                    {r._reviewText ? (
+                                      <>
+                                        {(r._reviewUserName ||
+                                          r._reviewRating != null) && (
+                                            <div className={styles.reviewMeta}>
+                                              {r._reviewUserName
+                                                ? r._reviewUserName
+                                                : "—"}
+                                              {r._reviewRating != null
+                                                ? ` • ★${r._reviewRating}`
+                                                : ""}
+                                            </div>
+                                          )}
+
+                                        <div className={styles.reviewBody}>
+                                          {r._reviewText}
+                                        </div>
+                                      </>
+                                    ) : (
+                                      "—"
+                                    )}
+                                  </td>
+                                </>
+                              )}
+
+                              <td>
+                                <span
+                                  className={`${styles.pillState} ${r.status === "closed"
+                                    ? styles.pillOn
+                                    : styles.pillWarn
+                                    }`}
+                                >
+                                  {r.status === "closed"
+                                    ? "ZAMKNIĘTE"
+                                    : "OTWARTE"}
+                                </span>
+                              </td>
+
+                              <td className={styles.actions}>
+                                <button
+                                  className={styles.secondaryBtn}
+                                  disabled={loading || r.status === "closed"}
+                                  onClick={() =>
+                                    onSetReportStatus(r._id, "closed")
+                                  }
+                                  type="button"
+                                >
+                                  Zamknij
+                                </button>
+
+                                {reportTab === "review" && (
+                                  <button
+                                    className={styles.dangerBtn}
+                                    disabled={loading || r.status === "closed"}
+                                    onClick={() => onRemoveReview(r._id)}
+                                    title="Usuwa opinię z profilu i zamyka zgłoszenie"
+                                    type="button"
+                                  >
+                                    Usuń opinię
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+
+                          {pagedReports.length === 0 && (
+                            <tr>
+                              <td
+                                colSpan={reportTab === "review" ? 10 : 8}
+                                className={styles.empty}
+                              >
+                                Brak zgłoszeń do wyświetlenia
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className={styles.pagination}>
+                      <button
+                        className={styles.pageBtn}
+                        disabled={loading || reportsPage <= 1}
+                        onClick={() =>
+                          setReportsPage((p) => Math.max(1, p - 1))
+                        }
+                        type="button"
+                      >
+                        ◀
+                      </button>
+
+                      <span className={styles.pageInfo}>
+                        Strona {reportsPage} / {reportsPages}
+                      </span>
+
+                      <button
+                        className={styles.pageBtn}
+                        disabled={loading || reportsPage >= reportsPages}
+                        onClick={() =>
+                          setReportsPage((p) => Math.min(reportsPages, p + 1))
+                        }
+                        type="button"
+                      >
+                        ▶
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </section>
   );

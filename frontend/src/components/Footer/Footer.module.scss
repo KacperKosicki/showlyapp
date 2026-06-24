@@ -1,97 +1,139 @@
 @import "../../styles/variables";
 
+$paper-bg: #ffffff;
+$paper-soft: #fbfbfd;
+$paper-muted: #f5f6fa;
+$paper-border: rgba(21, 21, 21, 0.1);
+$ink: #151515;
+
+/* =========================================================
+   Footer — papierowy styl Showly
+========================================================= */
+
 .footer {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  padding: clamp(3.2rem, 6vw, 5.5rem) 1rem 1.35rem;
-  color: rgba(255, 255, 255, 0.86);
-  background: #07080d;
+
+  padding: clamp(7rem, 9vw, 9rem) 1.25rem 1.35rem;
+
+  background:
+    radial-gradient(circle at 50% 0%, rgba(111, 78, 242, 0.08) 0%, rgba(111, 78, 242, 0) 42%),
+    linear-gradient(180deg, #faf7ff 0%, #fbfbfd 48%, #ffffff 100%);
+  color: $ink;
+
   font-family: $font-body;
 
   --footer-primary: #6f4ef2;
   --footer-secondary: #ff4081;
-  --footer-cyan: #22d3ee;
-  --footer-border: rgba(255, 255, 255, 0.12);
-  --footer-card: rgba(255, 255, 255, 0.065);
-  --footer-card-strong: rgba(255, 255, 255, 0.1);
-  --footer-muted: rgba(255, 255, 255, 0.62);
-  --footer-soft: rgba(255, 255, 255, 0.78);
+  --footer-border: rgba(21, 21, 21, 0.1);
+  --footer-muted: rgba(21, 21, 21, 0.62);
+  --footer-soft: rgba(21, 21, 21, 0.72);
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 }
 
-.bg,
-.gradientWash,
-.glowOne,
-.glowTwo,
-.mesh,
-.noise {
+.topWave {
   position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+
+  width: 100%;
+  height: clamp(82px, 8vw, 125px);
+
+  pointer-events: none;
+  overflow: hidden;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  path {
+    fill: #ffffff;
+  }
+}
+
+/* ===== BACKGROUND — zostawiamy klasy z JSX, ale bez glass/aurory ===== */
+
+.bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   pointer-events: none;
 }
 
-.bg {
-  inset: 0;
-  z-index: 0;
-}
-
 .gradientWash {
+  position: absolute;
   inset: 0;
   background:
-    radial-gradient(900px 420px at 15% 0%, rgba(111, 78, 242, 0.38), transparent 62%),
-    radial-gradient(880px 420px at 86% 12%, rgba(255, 64, 129, 0.22), transparent 60%),
-    radial-gradient(760px 360px at 54% 88%, rgba(34, 211, 238, 0.11), transparent 66%),
-    linear-gradient(180deg, #0b0d16 0%, #07080d 58%, #050508 100%);
+    linear-gradient(180deg, rgba(250, 247, 255, 0.96) 0%, rgba(251, 251, 253, 0.96) 52%, #ffffff 100%);
 }
 
 .glowOne,
 .glowTwo {
+  position: absolute;
   border-radius: 999px;
-  filter: blur(34px);
-  opacity: 0.72;
-  animation: footerFloat 13s ease-in-out infinite;
+  pointer-events: none;
+  background: radial-gradient(circle,
+      rgba(245, 246, 250, 0.95) 0%,
+      rgba(245, 246, 250, 0.42) 44%,
+      rgba(245, 246, 250, 0) 72%);
+  filter: none;
+  opacity: 1;
+  animation: none;
 }
 
 .glowOne {
-  width: 36rem;
-  height: 18rem;
-  left: -10rem;
-  top: -4rem;
-  background: linear-gradient(135deg, rgba(111, 78, 242, 0.32), rgba(34, 211, 238, 0.14));
+  width: min(980px, 90vw);
+  height: 420px;
+  left: 50%;
+  top: 18%;
+  transform: translateX(-50%);
 }
 
 .glowTwo {
-  width: 34rem;
-  height: 20rem;
-  right: -9rem;
-  top: 7rem;
-  background: linear-gradient(135deg, rgba(255, 64, 129, 0.26), rgba(245, 158, 11, 0.1));
-  animation-delay: -4s;
+  width: min(760px, 86vw);
+  height: 360px;
+  right: -14%;
+  bottom: 8%;
 }
 
 .mesh {
+  position: absolute;
   inset: 0;
-  opacity: 0.08;
-  background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
-  background-size: 92px 92px;
-  mask-image: radial-gradient(circle at 42% 4%, #000 0%, #000 42%, transparent 82%);
+  opacity: 0.26;
+  background:
+    linear-gradient(to right, rgba(21, 21, 21, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(21, 21, 21, 0.02) 1px, transparent 1px);
+  background-size: 68px 68px;
+  mask-image: radial-gradient(circle at 50% 20%, #000 0%, transparent 70%);
 }
 
 .noise {
-  inset: -30%;
-  opacity: 0.18;
-  mix-blend-mode: soft-light;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.52'/%3E%3C/svg%3E");
-  transform: rotate(2deg);
+  display: none;
 }
 
 .wrap {
   position: relative;
   z-index: 1;
-  width: min(1220px, 100%);
+
+  width: min(1380px, 100%);
   margin: 0 auto;
+
+  padding-top: clamp(1.25rem, 2.5vw, 2.75rem);
 }
+
+/* =========================================================
+   HERO BAND
+========================================================= */
 
 .heroBand {
   display: grid;
@@ -108,15 +150,16 @@
 .contactCard {
   position: relative;
   overflow: hidden;
-  border-radius: 28px;
+
+  border-radius: 0;
   border: 1px solid var(--footer-border);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.035));
-  box-shadow:
-    0 30px 90px rgba(0, 0, 0, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  background: $paper-bg;
+  color: $ink;
+
+  box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.055);
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .brandPanel::before,
@@ -124,20 +167,14 @@
 .infoCard::before,
 .linkCard::before,
 .contactCard::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(520px 170px at 12% 0%, rgba(255, 255, 255, 0.12), transparent 58%),
-    radial-gradient(460px 180px at 92% 12%, rgba(111, 78, 242, 0.14), transparent 60%);
+  display: none;
 }
 
-.brandPanel > *,
-.signalPanel > *,
-.infoCard > *,
-.linkCard > *,
-.contactCard > * {
+.brandPanel>*,
+.signalPanel>*,
+.infoCard>*,
+.linkCard>*,
+.contactCard>* {
   position: relative;
   z-index: 1;
 }
@@ -145,6 +182,7 @@
 .brandPanel {
   min-height: 310px;
   padding: clamp(1.35rem, 3vw, 2.25rem);
+
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -161,58 +199,66 @@
   width: 58px;
   height: 58px;
   flex: 0 0 auto;
+
   display: grid;
   place-items: center;
-  border-radius: 20px;
-  background:
-    linear-gradient(135deg, rgba(111, 78, 242, 0.96), rgba(255, 64, 129, 0.88));
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  box-shadow:
-    0 24px 54px rgba(111, 78, 242, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+
+  border-radius: 0;
+  background: $ink;
+  border: 1px solid $ink;
+  box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.08);
 
   span {
-    width: 26px;
-    height: 26px;
-    border-radius: 9px;
-    background: rgba(255, 255, 255, 0.94);
-    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.12);
+    width: 24px;
+    height: 24px;
+    border-radius: 0;
+    background: #ffffff;
+    box-shadow: none;
   }
 }
 
 .kicker {
   width: fit-content;
-  margin: 0 0 0.55rem;
-  padding: 0.42rem 0.68rem;
-  border-radius: 999px;
-  color: rgba(255, 255, 255, 0.76);
-  background: rgba(255, 255, 255, 0.075);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  margin: 0 0 0.65rem;
+  padding: 0.48rem 0.72rem;
+
+  border-radius: 0;
+  color: $primary-color;
+  background: $paper-soft;
+  border: 1px solid rgba(21, 21, 21, 0.1);
+
   font-family: $font-accent;
   font-size: 0.72rem;
   font-weight: 950;
-  letter-spacing: 0;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .brandTitle {
   max-width: 780px;
   margin: 0;
-  color: #fff;
+
+  color: $ink;
+
   font-family: $font-heading;
-  font-size: 3.8rem;
+  font-size: clamp(2.6rem, 5.2vw, 4.9rem);
   font-weight: 950;
-  line-height: 0.98;
-  letter-spacing: 0;
+  line-height: 0.92;
+  letter-spacing: -0.085em;
 }
 
 .brandText {
   max-width: 760px;
   margin: 0;
-  color: var(--footer-soft);
-  font-size: 1.08rem;
+
+  color: rgba(21, 21, 21, 0.66);
+  font-size: 1.04rem;
   line-height: 1.78;
 }
+
+/* =========================================================
+   CTA
+========================================================= */
 
 .ctaRow {
   display: flex;
@@ -235,45 +281,61 @@
 .secondaryCta {
   min-height: 50px;
   padding: 0 1.05rem;
-  border-radius: 16px;
+
+  border-radius: 0;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
+
   font-family: $font-accent;
+  font-size: 0.82rem;
   font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
     background 0.18s ease,
-    border-color 0.18s ease;
+    border-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .primaryCta {
-  color: #111827;
-  background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.82));
-  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+  color: #ffffff;
+  background: $ink;
+  border: 1px solid $ink;
+  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.08);
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 22px 50px rgba(0, 0, 0, 0.34);
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.12);
+    background: #000000;
   }
 }
 
 .secondaryCta {
-  color: rgba(255, 255, 255, 0.9);
-  background: rgba(255, 255, 255, 0.075);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(21, 21, 21, 0.72);
+  background: $paper-soft;
+  border: 1px solid rgba(21, 21, 21, 0.12);
 
   &:hover {
-    transform: translateY(-2px);
-    background: rgba(255, 255, 255, 0.11);
-    border-color: rgba(255, 255, 255, 0.22);
+    transform: translate(-2px, -2px);
+    background: #ffffff;
+    color: $ink;
+    box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.06);
   }
 }
 
+/* =========================================================
+   SIGNAL PANEL
+========================================================= */
+
 .signalPanel {
   padding: 1.2rem;
+
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -282,38 +344,48 @@
 
 .signalTop {
   padding: 1rem;
-  border-radius: 22px;
+
   display: flex;
   align-items: center;
   gap: 0.85rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  background: $paper-soft;
+  border: 1px solid rgba(21, 21, 21, 0.1);
 }
 
 .signalIcon {
   width: 48px;
   height: 48px;
   flex: 0 0 auto;
-  border-radius: 17px;
+
   display: grid;
   place-items: center;
-  color: #fff;
-  background: linear-gradient(135deg, var(--footer-primary), var(--footer-secondary));
-  box-shadow: 0 18px 40px rgba(111, 78, 242, 0.26);
+
+  color: #ffffff;
+  background: $ink;
+  border: 1px solid $ink;
+
+  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.08);
 }
 
 .signalLabel {
   display: block;
-  margin-bottom: 0.2rem;
-  color: var(--footer-muted);
-  font-size: 0.78rem;
-  font-weight: 800;
+  margin-bottom: 0.25rem;
+
+  color: rgba(21, 21, 21, 0.52);
+
+  font-family: $font-accent;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .signalTop strong {
-  color: #fff;
+  color: $ink;
   font-family: $font-accent;
   font-size: 1rem;
+  font-weight: 950;
 }
 
 .signalGrid {
@@ -324,19 +396,28 @@
 .signalItem {
   min-height: 48px;
   padding: 0.72rem 0.78rem;
-  border-radius: 17px;
+
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  color: var(--footer-soft);
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+
+  color: rgba(21, 21, 21, 0.68);
+  background: #ffffff;
+  border: 1px solid rgba(21, 21, 21, 0.1);
+
+  font-family: $font-body;
+  font-size: 0.94rem;
+  line-height: 1.45;
 
   svg {
-    color: var(--footer-cyan);
+    color: $primary-color;
     flex: 0 0 auto;
   }
 }
+
+/* =========================================================
+   MAIN GRID
+========================================================= */
 
 .mainGrid {
   display: grid;
@@ -353,16 +434,19 @@
 
 .cardTitle {
   margin: 0 0 0.95rem;
-  color: #fff;
+
+  color: $ink;
+
   font-family: $font-accent;
   font-size: 1rem;
   font-weight: 950;
-  letter-spacing: 0;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
 }
 
 .infoCard p {
   margin: 0;
-  color: var(--footer-soft);
+  color: rgba(21, 21, 21, 0.66);
   line-height: 1.68;
 }
 
@@ -374,17 +458,22 @@
 
   span {
     padding: 0.42rem 0.62rem;
-    border-radius: 999px;
-    color: rgba(255, 255, 255, 0.78);
-    background: rgba(255, 255, 255, 0.065);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    color: rgba(21, 21, 21, 0.62);
+    background: $paper-soft;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+
     font-family: $font-accent;
-    font-size: 0.7rem;
-    font-weight: 900;
-    letter-spacing: 0;
+    font-size: 0.68rem;
+    font-weight: 950;
+    letter-spacing: 0.07em;
     text-transform: uppercase;
   }
 }
+
+/* =========================================================
+   NAV LINKS
+========================================================= */
 
 .linkList {
   display: grid;
@@ -398,45 +487,57 @@
   width: 100%;
   min-height: 44px;
   padding: 0.55rem 0.58rem;
-  border-radius: 15px;
+
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr) 24px;
   align-items: center;
   gap: 0.55rem;
+
   text-align: left;
-  color: var(--footer-soft);
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.085);
+
+  color: rgba(21, 21, 21, 0.72);
+  background: $paper-soft;
+  border: 1px solid rgba(21, 21, 21, 0.09);
+
+  font-family: $font-body;
+  font-size: 0.93rem;
+
   transition:
     transform 0.16s ease,
     color 0.16s ease,
     background 0.16s ease,
-    border-color 0.16s ease;
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 
   &:hover {
-    transform: translateY(-1px);
-    color: #fff;
-    background: rgba(255, 255, 255, 0.075);
-    border-color: rgba(255, 255, 255, 0.15);
+    transform: translate(-2px, -2px);
+    color: $ink;
+    background: #ffffff;
+    border-color: rgba(21, 21, 21, 0.16);
+    box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.05);
   }
 }
 
 .navIcon {
   width: 34px;
   height: 34px;
-  border-radius: 13px;
+
   display: grid;
   place-items: center;
-  color: #fff;
-  background:
-    linear-gradient(135deg, rgba(111, 78, 242, 0.28), rgba(255, 64, 129, 0.16));
-  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  color: $primary-color;
+  background: #ffffff;
+  border: 1px solid rgba(21, 21, 21, 0.1);
 }
 
 .navArrow {
   justify-self: end;
-  color: rgba(255, 255, 255, 0.46);
+  color: rgba(21, 21, 21, 0.36);
 }
+
+/* =========================================================
+   CONTACT
+========================================================= */
 
 .contactCard {
   display: flex;
@@ -446,29 +547,36 @@
 .contactRow {
   min-height: 58px;
   padding: 0.72rem;
-  border-radius: 18px;
+
   display: flex;
   align-items: center;
   gap: 0.7rem;
+
   color: inherit;
   text-decoration: none;
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.085);
 
-  & + & {
+  background: $paper-soft;
+  border: 1px solid rgba(21, 21, 21, 0.09);
+
+  &+& {
     margin-top: 0.65rem;
   }
 
   small {
     display: block;
     margin-bottom: 0.12rem;
-    color: var(--footer-muted);
-    font-size: 0.74rem;
-    font-weight: 800;
+
+    color: rgba(21, 21, 21, 0.52);
+
+    font-family: $font-accent;
+    font-size: 0.7rem;
+    font-weight: 950;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   strong {
-    color: #fff;
+    color: $ink;
     font-family: $font-accent;
     font-size: 0.93rem;
     font-weight: 950;
@@ -479,12 +587,14 @@ a.contactRow {
   transition:
     transform 0.16s ease,
     border-color 0.16s ease,
-    background 0.16s ease;
+    background 0.16s ease,
+    box-shadow 0.16s ease;
 
   &:hover {
-    transform: translateY(-1px);
-    background: rgba(255, 255, 255, 0.075);
-    border-color: rgba(255, 255, 255, 0.15);
+    transform: translate(-2px, -2px);
+    background: #ffffff;
+    border-color: rgba(21, 21, 21, 0.16);
+    box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.05);
   }
 }
 
@@ -492,12 +602,13 @@ a.contactRow {
   width: 40px;
   height: 40px;
   flex: 0 0 auto;
-  border-radius: 15px;
+
   display: grid;
   place-items: center;
-  color: var(--footer-cyan);
-  background: rgba(255, 255, 255, 0.065);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  color: $primary-color;
+  background: #ffffff;
+  border: 1px solid rgba(21, 21, 21, 0.1);
 }
 
 .socials {
@@ -510,21 +621,29 @@ a.contactRow {
 .socialBtn {
   width: 42px;
   height: 42px;
-  border-radius: 15px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  opacity: 0.72;
+
+  color: rgba(21, 21, 21, 0.42);
+  background: $paper-soft;
+  border: 1px solid rgba(21, 21, 21, 0.1);
+
+  opacity: 0.82;
   cursor: not-allowed;
 }
+
+/* =========================================================
+   BOTTOM
+========================================================= */
 
 .bottom {
   margin-top: 1rem;
   padding: 1rem 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  border-top: 1px solid rgba(21, 21, 21, 0.1);
+
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -534,6 +653,7 @@ a.contactRow {
 
 .bottomLeft {
   min-width: 0;
+
   display: inline-flex;
   align-items: center;
   gap: 0.8rem;
@@ -541,16 +661,14 @@ a.contactRow {
 }
 
 .copy {
-  color: var(--footer-muted);
+  color: rgba(21, 21, 21, 0.58);
   font-size: 0.92rem;
 }
 
 .separator {
   width: 42px;
-  height: 2px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--footer-primary), var(--footer-secondary));
-  opacity: 0.9;
+  height: 1px;
+  background: rgba(21, 21, 21, 0.22);
 }
 
 .legalLinks {
@@ -562,10 +680,13 @@ a.contactRow {
 
 .legalLink {
   padding: 0;
-  color: rgba(255, 255, 255, 0.68);
+
+  color: rgba(21, 21, 21, 0.62);
   background: transparent;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(21, 21, 21, 0.18);
+
   font-size: 0.92rem;
+
   transition:
     color 0.16s ease,
     border-color 0.16s ease,
@@ -573,45 +694,57 @@ a.contactRow {
 
   &:hover {
     transform: translateY(-1px);
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.34);
+    color: $ink;
+    border-color: rgba(21, 21, 21, 0.36);
   }
 }
 
 .toTop {
   min-height: 44px;
   padding: 0 0.95rem;
-  border-radius: 15px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.55rem;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  color: #ffffff;
+  background: $ink;
+  border: 1px solid $ink;
+  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.08);
+
   font-family: $font-accent;
+  font-size: 0.78rem;
   font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
   transition:
     transform 0.16s ease,
     background 0.16s ease,
-    border-color 0.16s ease;
+    box-shadow 0.16s ease;
 
   span {
     width: 24px;
     height: 24px;
-    border-radius: 10px;
+
     display: grid;
     place-items: center;
-    color: #111827;
-    background: #fff;
+
+    color: $ink;
+    background: #ffffff;
   }
 
   &:hover {
-    transform: translateY(-1px);
-    background: rgba(255, 255, 255, 0.09);
-    border-color: rgba(255, 255, 255, 0.2);
+    transform: translate(-2px, -2px);
+    background: #000000;
+    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.12);
   }
 }
+
+/* =========================================================
+   RWD
+========================================================= */
 
 @media (max-width: 1100px) {
   .heroBand {
@@ -629,15 +762,15 @@ a.contactRow {
 
 @media (max-width: 720px) {
   .footer {
-    padding: 2.8rem 1rem 1.15rem;
+    padding: 6.25rem 1rem 1.15rem;
   }
 
-  .brandPanel,
-  .signalPanel,
-  .infoCard,
-  .linkCard,
-  .contactCard {
-    border-radius: 22px;
+  .topWave {
+    height: 82px;
+  }
+
+  .wrap {
+    padding-top: 1.25rem;
   }
 
   .brandTop {
@@ -647,15 +780,14 @@ a.contactRow {
   .logoMark {
     width: 54px;
     height: 54px;
-    border-radius: 18px;
   }
 
   .brandTitle {
-    font-size: 2.85rem;
+    font-size: clamp(2.35rem, 12vw, 3.35rem);
   }
 
   .brandText {
-    font-size: 1rem;
+    font-size: 0.96rem;
   }
 
   .ctaRow,
@@ -671,6 +803,15 @@ a.contactRow {
 
   .mainGrid {
     gap: 0.85rem;
+  }
+
+  .brandPanel,
+  .signalPanel,
+  .infoCard,
+  .linkCard,
+  .contactCard {
+    padding: 1rem;
+    box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.05);
   }
 
   .bottom {
@@ -699,16 +840,17 @@ a.contactRow {
 
 @media (max-width: 420px) {
   .footer {
+    padding-top: 5.75rem;
     padding-left: 0.8rem;
     padding-right: 0.8rem;
   }
 
-  .brandPanel,
-  .signalPanel,
-  .infoCard,
-  .linkCard,
-  .contactCard {
-    padding: 0.95rem;
+  .topWave {
+    height: 70px;
+  }
+
+  .wrap {
+    padding-top: 1rem;
   }
 
   .signalTop {
@@ -724,15 +866,16 @@ a.contactRow {
   }
 
   .brandTitle {
-    font-size: 2.35rem;
+    font-size: clamp(2.15rem, 14vw, 2.85rem);
+  }
+
+  .primaryCta,
+  .secondaryCta {
+    font-size: 0.74rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .glowOne,
-  .glowTwo {
-    animation: none;
-  }
 
   .primaryCta,
   .secondaryCta,
@@ -741,19 +884,5 @@ a.contactRow {
   .toTop,
   a.contactRow {
     transition: none;
-  }
-}
-
-@keyframes footerFloat {
-  0% {
-    transform: translate3d(-1%, -1%, 0) scale(1);
-  }
-
-  50% {
-    transform: translate3d(1.6%, 1.2%, 0) scale(1.04);
-  }
-
-  100% {
-    transform: translate3d(-1%, -1%, 0) scale(1);
   }
 }

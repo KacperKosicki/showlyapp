@@ -35,82 +35,103 @@ const steps = [
 const HowShowlyWorks = () => {
   return (
     <section className={styles.section} id="how-showly-works">
-      <div className={styles.bg} aria-hidden="true">
-        <span className={styles.aurora} />
-        <span className={styles.aurora2} />
-        <span className={styles.grid} />
-        <span className={styles.ring} />
-        <span className={styles.vignette} />
-        <span className={styles.grain} />
-      </div>
+      <div className={styles.inner}>
+        <aside className={styles.side}>
+          <span className={styles.overline}>Showly Flow</span>
 
-      <div className={styles.wrap}>
-        <header className={styles.head}>
-          <div className={styles.labelRow}>
-            <span className={styles.label}>Showly Flow</span>
-            <span className={styles.labelDot} />
-            <span className={styles.labelDesc}>Od wejścia do działania</span>
-            <span className={styles.labelLine} />
-            <span className={styles.pill}>4 kroki • Intuicyjnie • Bez stresu</span>
-          </div>
-
-          <h2 className={styles.title}>
-            Jak działa <span className={styles.titleAccent}>Showly?</span>
-          </h2>
+          <h2 className={styles.title}>Od znalezienia profilu do działania.</h2>
 
           <p className={styles.subtitle}>
-            Pokazujemy użytkownikowi jasną ścieżkę: od znalezienia odpowiedniej osoby,
-            przez porównanie profili, aż po kontakt lub rezerwację. Wszystko w jednym miejscu.
+            Showly prowadzi użytkownika prostą ścieżką: szukanie, porównanie,
+            kontakt i rezerwacja. Bez przeładowania, bez chaosu i bez zbędnych
+            kroków.
           </p>
-        </header>
 
-        <div className={styles.timeline}>
-          {steps.map((item, index) => (
-            <article className={styles.card} key={item.step}>
-              <div className={styles.stepLine} aria-hidden="true">
-                <span className={styles.stepDot} />
-                {index !== steps.length - 1 && <span className={styles.stepConnector} />}
-              </div>
+          <div className={styles.sideMeta}>
+            <div className={styles.metaItem}>
+              <strong>01</strong>
+              <span>znajdź odpowiednią osobę</span>
+            </div>
 
-              <div className={styles.cardInner}>
-                <div className={styles.cardTop}>
-                  <div className={styles.icon}>{item.icon}</div>
+            <div className={styles.metaItem}>
+              <strong>02</strong>
+              <span>sprawdź ofertę i opinie</span>
+            </div>
 
-                  <div className={styles.cardHead}>
-                    <span className={styles.step}>{item.step}</span>
-                    <h3 className={styles.cardTitle}>{item.title}</h3>
+            <div className={styles.metaItem}>
+              <strong>03</strong>
+              <span>napisz albo zarezerwuj termin</span>
+            </div>
+          </div>
+        </aside>
+
+        <main className={styles.content}>
+          <div className={styles.chapterHead}>
+            <div>
+              <span className={styles.chapterLabel}>
+                4 kroki / Intuicyjnie / Bez stresu
+              </span>
+
+              <h3>Jak działa Showly?</h3>
+            </div>
+
+            <span className={styles.chapterNumber}>04</span>
+          </div>
+
+          <div className={styles.timeline}>
+            {steps.map((item, index) => (
+              <article className={styles.card} key={item.step}>
+                <div className={styles.stepRail} aria-hidden="true">
+                  <span className={styles.stepDot}>{item.step}</span>
+
+                  {index !== steps.length - 1 && (
+                    <span className={styles.stepConnector} />
+                  )}
+                </div>
+
+                <div className={styles.cardInner}>
+                  <div className={styles.cardTop}>
+                    <span className={styles.icon}>{item.icon}</span>
+
+                    <div>
+                      <span className={styles.stepLabel}>Krok {item.step}</span>
+                      <h3 className={styles.cardTitle}>{item.title}</h3>
+                    </div>
+                  </div>
+
+                  <p className={styles.cardText}>{item.text}</p>
+
+                  <div className={styles.cardMeta}>
+                    {item.badges.map((badge) => (
+                      <span key={badge} className={styles.badge}>
+                        {badge}
+                      </span>
+                    ))}
                   </div>
                 </div>
+              </article>
+            ))}
+          </div>
 
-                <p className={styles.cardText}>{item.text}</p>
+          <div className={styles.summary}>
+            <span className={styles.summaryNumber}>05</span>
 
-                <div className={styles.cardMeta}>
-                  {item.badges.map((badge) => (
-                    <span key={badge} className={styles.badge}>
-                      {badge}
-                    </span>
-                  ))}
-                </div>
+            <div>
+              <span className={styles.summaryKicker}>Efekt?</span>
+
+              <p className={styles.summaryText}>
+                Użytkownik szybciej rozumie platformę, dłużej zostaje na stronie
+                i łatwiej przechodzi do działania.
+              </p>
+
+              <div className={styles.summaryMini}>
+                <span>mniej chaosu</span>
+                <span>lepsze decyzje</span>
+                <span>szybszy kontakt</span>
               </div>
-            </article>
-          ))}
-        </div>
-
-        <div className={styles.summary}>
-          <div className={styles.summaryCard}>
-            <span className={styles.summaryKicker}>Efekt?</span>
-            <p className={styles.summaryText}>
-              Użytkownik szybciej rozumie platformę, dłużej zostaje na stronie
-              i łatwiej przechodzi do działania.
-            </p>
+            </div>
           </div>
-
-          <div className={styles.summaryMini}>
-            <span>mniej chaosu</span>
-            <span>lepsze decyzje</span>
-            <span>szybszy kontakt</span>
-          </div>
-        </div>
+        </main>
       </div>
     </section>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styles from "./ProfilesHub.module.scss";
 import UserCard from "../UserCard/UserCard";
@@ -38,6 +38,7 @@ const getBookingLabel = (mode) => {
 const ProfilesHub = ({ currentUser, setAlert }) => {
     const location = useLocation();
     const scrollerRef = useRef(null);
+    const rafRef = useRef(null);
 
     const [profiles, setProfiles] = useState([]);
     const [activeCategory, setActiveCategory] = useState("Wszystkie");
@@ -299,16 +300,22 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
         return list;
     }, [profiles, activeCategory, activeType, activeBooking, query, sort]);
 
-    const updateArrows = () => {
+    const updateArrows = useCallback(() => {
         const el = scrollerRef.current;
         if (!el) return;
 
-        const max = el.scrollWidth - el.clientWidth;
-        const x = el.scrollLeft;
+        if (rafRef.current) {
+            cancelAnimationFrame(rafRef.current);
+        }
 
-        setCanLeft(x > 2);
-        setCanRight(x < max - 2);
-    };
+        rafRef.current = requestAnimationFrame(() => {
+            const max = Math.max(0, el.scrollWidth - el.clientWidth);
+            const x = Math.max(0, el.scrollLeft);
+
+            setCanLeft(x > 4);
+            setCanRight(max > 4 && x < max - 4);
+        });
+    }, []);
 
     useEffect(() => {
         const el = scrollerRef.current;
@@ -316,40 +323,64 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
 
         updateArrows();
 
-        const onScroll = () => updateArrows();
-        el.addEventListener("scroll", onScroll, { passive: true });
+        const handleScroll = () => updateArrows();
 
-        const ro = new ResizeObserver(updateArrows);
-        ro.observe(el);
+        el.addEventListener("scroll", handleScroll, { passive: true });
+        window.addEventListener("resize", handleScroll);
+
+        let resizeObserver;
+
+        if (typeof ResizeObserver !== "undefined") {
+            resizeObserver = new ResizeObserver(handleScroll);
+            resizeObserver.observe(el);
+        }
 
         return () => {
-            el.removeEventListener("scroll", onScroll);
-            ro.disconnect();
+            el.removeEventListener("scroll", handleScroll);
+            window.removeEventListener("resize", handleScroll);
+
+            if (resizeObserver) {
+                resizeObserver.disconnect();
+            }
+
+            if (rafRef.current) {
+                cancelAnimationFrame(rafRef.current);
+            }
         };
-    }, [filteredProfiles.length]);
+    }, [filteredProfiles.length, loading, updateArrows]);
 
     useEffect(() => {
         const el = scrollerRef.current;
         if (!el) return;
 
-        el.scrollTo({ left: 0, behavior: "smooth" });
+        const frame = requestAnimationFrame(() => {
+            el.scrollTo({ left: 0, behavior: "auto" });
+            updateArrows();
+        });
 
-        setTimeout(updateArrows, 250);
-    }, [query, activeCategory, activeType, activeBooking, sort]);
+        return () => cancelAnimationFrame(frame);
+    }, [query, activeCategory, activeType, activeBooking, sort, updateArrows]);
 
     const scrollByCard = (dir = 1) => {
         const el = scrollerRef.current;
         if (!el) return;
 
-        const first = el.querySelector(":scope > *");
-        const cardW = first?.getBoundingClientRect().width || 430;
-        const gap =
-            parseFloat(getComputedStyle(el).columnGap || getComputedStyle(el).gap) || 24;
+        const firstCard = el.querySelector(`.${styles.cardShell}`);
+        const cardW = firstCard?.getBoundingClientRect().width || 455;
 
-        el.scrollBy({
-            left: dir * (cardW + gap),
+        const computed = getComputedStyle(el);
+        const gap = parseFloat(computed.columnGap || computed.gap || "0") || 24;
+
+        const step = cardW + gap;
+        const max = Math.max(0, el.scrollWidth - el.clientWidth);
+        const next = Math.min(Math.max(el.scrollLeft + dir * step, 0), max);
+
+        el.scrollTo({
+            left: next <= 8 ? 0 : next,
             behavior: "smooth",
         });
+
+        window.setTimeout(updateArrows, 320);
     };
 
     const resetFilters = () => {
@@ -362,57 +393,69 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
 
     return (
         <section className={styles.section} id="profilesHub">
-            <div className={styles.bg}>
-                <div className={styles.blur1} />
-                <div className={styles.blur2} />
-                <div className={styles.vignette} />
-            </div>
-
             <div className={styles.inner}>
-                <header className={styles.head}>
-                    <div className={styles.labelRow}>
-                        <span className={styles.label}>Profile Showly</span>
-                        <span className={styles.labelDot} />
-                        <span className={styles.labelDesc}>Katalog wizytówek online</span>
-                        <span className={styles.labelLine} />
-                        <span className={styles.pill}>Kategorie • Opinie • Rezerwacje</span>
-                    </div>
+                <div className={styles.layout}>
+                    <aside className={styles.side}>
+                        <span className={styles.overline}>Profile Showly</span>
 
-                    <h2 className={styles.heading}>
-                        Odkrywaj profile <span className={styles.headingAccent}>bez chaosu</span>
-                    </h2>
+                        <h2 className={styles.heading}>
+                            Odkrywaj profile <span>bez chaosu.</span>
+                        </h2>
 
-                    <p className={styles.description}>
-                        Przeglądaj wizytówki usługodawców, twórców i lokalnych marek.
-                        Filtruj po branży, typie profilu, trybie rezerwacji albo wyszukuj po
-                        mieście, usłudze i tagach.
-                    </p>
+                        <p className={styles.description}>
+                            Przeglądaj wizytówki usługodawców, twórców i lokalnych marek.
+                            Filtruj po branży, typie profilu, trybie rezerwacji albo wyszukuj
+                            po mieście, usłudze i tagach.
+                        </p>
 
-                    <div className={styles.metaRow}>
-                        <div className={styles.metaCard}>
-                            <strong>{profiles.length}</strong>
-                            <span>aktywnych profili</span>
+                        <div className={styles.metaRow}>
+                            <div className={styles.metaCard}>
+                                <strong>{profiles.length}</strong>
+                                <span>aktywnych profili</span>
+                            </div>
+
+                            <div className={styles.metaCard}>
+                                <strong>{Math.max(categories.length - 1, 0)}</strong>
+                                <span>kategorii</span>
+                            </div>
+
+                            <div className={styles.metaCard}>
+                                <strong>{filteredProfiles.length}</strong>
+                                <span>wyników po filtrach</span>
+                            </div>
                         </div>
 
-                        <div className={styles.metaCard}>
-                            <strong>{Math.max(categories.length - 1, 0)}</strong>
-                            <span>kategorii</span>
+                        <div className={styles.infoBox}>
+                            <span>Kategorie • Opinie • Rezerwacje</span>
+
+                            <p>
+                                Użyj filtrów, aby szybko znaleźć profil pasujący do konkretnej
+                                usługi, lokalizacji albo sposobu kontaktu.
+                            </p>
+                        </div>
+                    </aside>
+
+                    <div className={styles.content}>
+                        <div className={styles.chapterHead}>
+                            <div>
+                                <span className={styles.chapterLabel}>Katalog wizytówek</span>
+
+                                <h3>
+                                    {filteredProfiles.length === 1
+                                        ? "1 dopasowany profil."
+                                        : `${filteredProfiles.length} dopasowanych profili.`}
+                                </h3>
+                            </div>
+
+                            <span className={styles.chapterNumber}>
+                                {loading ? "..." : filteredProfiles.length}
+                            </span>
                         </div>
 
-                        <div className={styles.metaCard}>
-                            <strong>{filteredProfiles.length}</strong>
-                            <span>wyników po filtrach</span>
-                        </div>
-                    </div>
-                </header>
-
-                <div className={styles.contentGrid}>
-                    <aside className={styles.sideColumn}>
-                        <div className={styles.sideCard}>
-                            <h3 className={styles.sideTitle}>Szukaj profilu</h3>
-
+                        <div className={styles.filtersPanel}>
                             <div className={styles.searchBox}>
                                 <FiSearch />
+
                                 <input
                                     type="text"
                                     value={query}
@@ -420,113 +463,114 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
                                     placeholder="Np. fryzjer, DJ, Poznań..."
                                 />
                             </div>
-                        </div>
 
-                        <div className={styles.sideCard}>
-                            <h3 className={styles.sideTitle}>Sortowanie</h3>
+                            <div className={styles.filterSection}>
+                                <span className={styles.filterTitle}>Sortowanie</span>
 
-                            <div className={styles.sortGrid}>
-                                <button
-                                    type="button"
-                                    className={sort === "popular" ? styles.activeFilter : ""}
-                                    onClick={() => setSort("popular")}
-                                >
-                                    <FiUsers />
-                                    Popularne
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className={sort === "rating" ? styles.activeFilter : ""}
-                                    onClick={() => setSort("rating")}
-                                >
-                                    <FiStar />
-                                    Najlepiej oceniane
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className={sort === "newest" ? styles.activeFilter : ""}
-                                    onClick={() => setSort("newest")}
-                                >
-                                    <FiClock />
-                                    Najnowsze
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className={styles.sideCard}>
-                            <h3 className={styles.sideTitle}>Kategorie</h3>
-
-                            <div className={styles.filterList}>
-                                {categories.map((category) => (
+                                <div className={styles.sortGrid}>
                                     <button
-                                        key={category.label}
                                         type="button"
-                                        className={
-                                            activeCategory === category.label ? styles.activeFilter : ""
-                                        }
-                                        onClick={() => setActiveCategory(category.label)}
+                                        className={sort === "popular" ? styles.activeFilter : ""}
+                                        onClick={() => setSort("popular")}
                                     >
-                                        <span>{category.label}</span>
-                                        <b>{category.count}</b>
+                                        <FiUsers />
+                                        Popularne
                                     </button>
-                                ))}
-                            </div>
-                        </div>
 
-                        <div className={styles.sideCard}>
-                            <h3 className={styles.sideTitle}>Typ profilu</h3>
-
-                            <div className={styles.filterList}>
-                                {profileTypes.map((type) => (
                                     <button
-                                        key={type.label}
                                         type="button"
-                                        className={activeType === type.label ? styles.activeFilter : ""}
-                                        onClick={() => setActiveType(type.label)}
+                                        className={sort === "rating" ? styles.activeFilter : ""}
+                                        onClick={() => setSort("rating")}
                                     >
-                                        <span>{type.label}</span>
-                                        <b>{type.count}</b>
+                                        <FiStar />
+                                        Najlepiej oceniane
                                     </button>
-                                ))}
-                            </div>
-                        </div>
 
-                        <div className={styles.sideCard}>
-                            <h3 className={styles.sideTitle}>Rezerwacje</h3>
-
-                            <div className={styles.filterList}>
-                                {bookingModes.map((mode) => (
                                     <button
-                                        key={mode.label}
                                         type="button"
-                                        className={
-                                            activeBooking === mode.label ? styles.activeFilter : ""
-                                        }
-                                        onClick={() => setActiveBooking(mode.label)}
+                                        className={sort === "newest" ? styles.activeFilter : ""}
+                                        onClick={() => setSort("newest")}
                                     >
-                                        <span>{mode.label}</span>
-                                        <b>{mode.count}</b>
+                                        <FiClock />
+                                        Najnowsze
                                     </button>
-                                ))}
+                                </div>
                             </div>
+
+                            <div className={styles.filterSection}>
+                                <span className={styles.filterTitle}>Kategorie</span>
+
+                                <div className={styles.filterList}>
+                                    {categories.map((category) => (
+                                        <button
+                                            key={category.label}
+                                            type="button"
+                                            className={
+                                                activeCategory === category.label ? styles.activeFilter : ""
+                                            }
+                                            onClick={() => setActiveCategory(category.label)}
+                                        >
+                                            <span>{category.label}</span>
+                                            <b>{category.count}</b>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className={styles.filterSection}>
+                                <span className={styles.filterTitle}>Typ profilu</span>
+
+                                <div className={styles.filterList}>
+                                    {profileTypes.map((type) => (
+                                        <button
+                                            key={type.label}
+                                            type="button"
+                                            className={activeType === type.label ? styles.activeFilter : ""}
+                                            onClick={() => setActiveType(type.label)}
+                                        >
+                                            <span>{type.label}</span>
+                                            <b>{type.count}</b>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className={styles.filterSection}>
+                                <span className={styles.filterTitle}>Rezerwacje</span>
+
+                                <div className={styles.filterList}>
+                                    {bookingModes.map((mode) => (
+                                        <button
+                                            key={mode.label}
+                                            type="button"
+                                            className={
+                                                activeBooking === mode.label ? styles.activeFilter : ""
+                                            }
+                                            onClick={() => setActiveBooking(mode.label)}
+                                        >
+                                            <span>{mode.label}</span>
+                                            <b>{mode.count}</b>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <button type="button" className={styles.resetButton} onClick={resetFilters}>
+                                <FiRefreshCw />
+                                Wyczyść filtry
+                            </button>
                         </div>
 
-                        <button type="button" className={styles.resetButton} onClick={resetFilters}>
-                            <FiRefreshCw />
-                            Wyczyść filtry
-                        </button>
-                    </aside>
-
-                    <main className={styles.mainColumn}>
                         <div className={styles.resultsTop}>
                             <div>
                                 <span className={styles.resultsLabel}>Wyniki</span>
+
                                 <h3>
-                                    {filteredProfiles.length === 1
-                                        ? "1 dopasowany profil"
-                                        : `${filteredProfiles.length} dopasowanych profili`}
+                                    {loading
+                                        ? "Ładowanie profili..."
+                                        : filteredProfiles.length === 1
+                                            ? "1 profil w katalogu"
+                                            : `${filteredProfiles.length} profili w katalogu`}
                                 </h3>
                             </div>
 
@@ -555,11 +599,17 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
                                     <FaChevronLeft />
                                 </button>
 
-                                <div className={styles.cardsTrack} ref={scrollerRef}>
+                                <div
+                                    className={styles.cardsTrack}
+                                    ref={scrollerRef}
+                                    role="list"
+                                    aria-label="Lista profili Showly"
+                                >
                                     {filteredProfiles.map((profile) => (
                                         <div
                                             className={styles.cardShell}
                                             key={profile._id || profile.userId || profile.id}
+                                            role="listitem"
                                         >
                                             <UserCard
                                                 user={profile}
@@ -588,7 +638,7 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
                                 </button>
                             </div>
                         )}
-                    </main>
+                    </div>
                 </div>
             </div>
         </section>

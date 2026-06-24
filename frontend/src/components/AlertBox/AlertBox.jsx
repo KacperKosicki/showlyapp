@@ -17,29 +17,40 @@ const icons = {
 
 const AlertBox = ({ type = "info", message, onClose }) => {
   useEffect(() => {
-    if (!onClose) return;
+    if (!onClose || !message) return;
 
     const timer = setTimeout(onClose, 5000);
+
     return () => clearTimeout(timer);
   }, [onClose, message]);
 
   if (!message) return null;
 
+  const safeType = styles[type] ? type : "info";
+
   const alert = (
     <div className={styles.alertBox}>
-      <div className={`${styles.alert} ${styles[type] || styles.info}`}>
-        <span className={styles.icon}>{icons[type] || icons.info}</span>
+      <div
+        className={`${styles.alert} ${styles[safeType]}`}
+        role="alert"
+        aria-live="polite"
+      >
+        <span className={styles.icon} aria-hidden="true">
+          {icons[safeType] || icons.info}
+        </span>
 
         <span className={styles.message}>{message}</span>
 
-        <button
-          type="button"
-          className={styles.close}
-          onClick={onClose}
-          aria-label="Zamknij komunikat"
-        >
-          ×
-        </button>
+        {onClose && (
+          <button
+            type="button"
+            className={styles.close}
+            onClick={onClose}
+            aria-label="Zamknij komunikat"
+          >
+            ×
+          </button>
+        )}
       </div>
     </div>
   );
