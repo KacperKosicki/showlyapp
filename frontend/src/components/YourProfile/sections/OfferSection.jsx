@@ -1,4 +1,4 @@
-import styles from '../YourProfile.module.scss';
+import styles from "./OfferSection.module.scss";
 import LoadingButton from '../../ui/LoadingButton/LoadingButton';
 import {
   FaCalendarAlt,

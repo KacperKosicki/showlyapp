@@ -1,0 +1,816 @@
+@import "../../../styles/variables";
+
+$paper-bg: #ffffff;
+$paper-soft: #fbfbfd;
+$paper-muted: #f5f6fa;
+$paper-border: rgba(21, 21, 21, 0.1);
+$ink: #151515;
+
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
+
+$danger: #c6283a;
+
+/* =========================================================
+   DescriptionSection
+========================================================= */
+
+.card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+
+  width: 100%;
+  padding: clamp(1.15rem, 2vw, 1.8rem);
+
+  background: $paper-bg;
+  color: $ink;
+  border: 1px solid rgba(21, 21, 21, 0.12);
+  box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+
+  font-family: $font-body;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    color: $dark-text;
+    border-color: $dark-border;
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+.descriptionCard {
+  margin-top: 1rem;
+}
+
+.cardGlow {
+  position: absolute;
+  right: -160px;
+  top: -180px;
+  z-index: 0;
+
+  width: 440px;
+  height: 440px;
+
+  pointer-events: none;
+  border-radius: 999px;
+  filter: blur(18px);
+
+  background: radial-gradient(
+    circle,
+    rgba(111, 78, 242, 0.12) 0%,
+    rgba(255, 79, 154, 0.07) 42%,
+    rgba(255, 255, 255, 0) 72%
+  );
+
+  :global(html[data-theme="dark"]) & {
+    background: radial-gradient(
+      circle,
+      rgba(168, 149, 255, 0.18) 0%,
+      rgba(255, 79, 154, 0.11) 42%,
+      rgba(17, 18, 22, 0) 72%
+    );
+  }
+}
+
+/* =========================================================
+   Header
+========================================================= */
+
+.sectionTop {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.4rem;
+
+  margin-bottom: 1.25rem;
+}
+
+.sectionKicker {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 30px;
+  padding: 0 0.7rem;
+  margin-bottom: 0.85rem;
+
+  background: rgba(111, 78, 242, 0.08);
+  color: $primary-color;
+  border: 1px solid rgba(111, 78, 242, 0.16);
+
+  font-family: $font-accent;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(168, 149, 255, 0.12);
+    color: $dark-primary;
+    border-color: rgba(168, 149, 255, 0.24);
+  }
+}
+
+.sectionTitle {
+  margin: 0;
+
+  font-family: $font-accent;
+  font-size: clamp(2rem, 3vw, 3.35rem);
+  line-height: 0.95;
+  letter-spacing: -0.075em;
+  color: $ink;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
+}
+
+.sectionLead {
+  max-width: 780px;
+  margin: 0.9rem 0 0;
+
+  font-size: 1rem;
+  line-height: 1.72;
+  color: rgba(21, 21, 21, 0.66);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
+}
+
+.sectionBadge {
+  flex: 0 0 auto;
+
+  min-height: 42px;
+  padding: 0 0.9rem;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+
+  background: $paper-soft;
+  color: $ink;
+  border: 1px solid rgba(21, 21, 21, 0.11);
+  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.045);
+
+  font-family: $font-accent;
+  font-size: 0.74rem;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    color: $dark-text;
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+  }
+
+  svg {
+    color: $primary-color;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
+  }
+}
+
+/* =========================================================
+   Description block
+========================================================= */
+
+.descriptionBlock {
+  position: relative;
+  z-index: 1;
+
+  min-width: 0;
+  padding: 1.1rem;
+
+  background: $paper-soft;
+  border: 1px solid rgba(21, 21, 21, 0.1);
+  box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.035);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.7);
+    border-color: $dark-border;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* =========================================================
+   Editor
+========================================================= */
+
+.descriptionEditor {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.textareaShell {
+  position: relative;
+  overflow: hidden;
+
+  background: #ffffff;
+  border: 1px solid rgba(21, 21, 21, 0.12);
+
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.7);
+    border-color: $dark-border;
+  }
+
+  &:hover {
+    border-color: rgba(21, 21, 21, 0.22);
+
+    :global(html[data-theme="dark"]) & {
+      border-color: rgba(244, 241, 234, 0.24);
+    }
+  }
+
+  &:focus-within {
+    transform: translate(-2px, -2px);
+    border-color: rgba(111, 78, 242, 0.34);
+    box-shadow: 6px 6px 0 rgba(111, 78, 242, 0.08);
+
+    :global(html[data-theme="dark"]) & {
+      border-color: rgba(168, 149, 255, 0.38);
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.26);
+    }
+  }
+}
+
+.descriptionTextarea {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  min-height: 190px;
+  resize: vertical;
+
+  padding: 1.1rem 1.15rem 1.35rem;
+
+  display: block;
+
+  border: none;
+  outline: none;
+  background: transparent;
+  color: $ink;
+
+  font-family: $font-body;
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.72;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
+
+  &::placeholder {
+    color: rgba(21, 21, 21, 0.38);
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.36);
+    }
+  }
+}
+
+.textareaDecor {
+  position: absolute;
+  right: 1rem;
+  bottom: 0.9rem;
+  z-index: 0;
+
+  display: flex;
+  gap: 0.35rem;
+
+  opacity: 0.35;
+  pointer-events: none;
+
+  span {
+    width: 7px;
+    height: 7px;
+
+    display: block;
+
+    background: $primary-color;
+
+    :global(html[data-theme="dark"]) & {
+      background: $dark-primary;
+    }
+
+    &:nth-child(2) {
+      background: rgba(255, 79, 154, 0.8);
+
+      :global(html[data-theme="dark"]) & {
+        background: $dark-pink;
+      }
+    }
+
+    &:nth-child(3) {
+      background: rgba(21, 21, 21, 0.22);
+
+      :global(html[data-theme="dark"]) & {
+        background: rgba(244, 241, 234, 0.28);
+      }
+    }
+  }
+}
+
+.descMeta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.descLeft {
+  min-width: 0;
+}
+
+.descRight {
+  flex: 0 0 auto;
+}
+
+.hint {
+  display: block;
+
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: rgba(21, 21, 21, 0.5);
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.44);
+  }
+}
+
+.error {
+  display: block;
+
+  padding: 0.78rem 0.9rem;
+
+  background: #fff7f7;
+  color: $danger;
+  border: 1px solid rgba(198, 40, 58, 0.24);
+
+  font-size: 0.86rem;
+  line-height: 1.45;
+  font-weight: 800;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(255, 79, 122, 0.13);
+    color: #ff8fa8;
+    border-color: rgba(255, 143, 168, 0.34);
+  }
+}
+
+.counterPill {
+  min-height: 32px;
+  padding: 0 0.75rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+  color: rgba(21, 21, 21, 0.58);
+  border: 1px solid rgba(21, 21, 21, 0.1);
+
+  font-family: $font-accent;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.62);
+    color: rgba(244, 241, 234, 0.58);
+    border-color: $dark-border;
+  }
+}
+
+.descProgress {
+  position: relative;
+  overflow: hidden;
+
+  width: 100%;
+  height: 8px;
+
+  background: rgba(21, 21, 21, 0.07);
+  border: 1px solid rgba(21, 21, 21, 0.08);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(244, 241, 234, 0.07);
+    border-color: rgba(244, 241, 234, 0.1);
+  }
+
+  span {
+    height: 100%;
+
+    display: block;
+
+    background: linear-gradient(135deg, $primary-color, #ff4f9a);
+
+    transition: width 0.18s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    }
+  }
+}
+
+/* =========================================================
+   Preview
+========================================================= */
+
+.descriptionPreview {
+  position: relative;
+  overflow: hidden;
+
+  min-height: 210px;
+  padding: clamp(1.15rem, 2vw, 1.6rem);
+
+  display: grid;
+  align-content: space-between;
+  gap: 1rem;
+
+  background: #ffffff;
+  border: 1px solid rgba(21, 21, 21, 0.1);
+  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.035);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.58);
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.22);
+  }
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.055);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.28);
+    }
+  }
+}
+
+.quoteMark {
+  position: absolute;
+  right: 1rem;
+  top: 0.4rem;
+
+  font-family: $font-accent;
+  font-size: clamp(5rem, 10vw, 8rem);
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -0.08em;
+
+  color: rgba(111, 78, 242, 0.08);
+  pointer-events: none;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(168, 149, 255, 0.11);
+  }
+}
+
+.descriptionText {
+  position: relative;
+  z-index: 1;
+
+  max-width: 980px;
+  margin: 0;
+
+  color: $ink;
+
+  font-family: $font-body;
+  font-size: clamp(1.02rem, 1.4vw, 1.18rem);
+  font-weight: 750;
+  line-height: 1.78;
+  white-space: pre-wrap;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
+}
+
+.descriptionFooter {
+  position: relative;
+  z-index: 1;
+
+  padding-top: 0.9rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  border-top: 1px solid rgba(21, 21, 21, 0.1);
+
+  transition: border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    border-top-color: $dark-border;
+  }
+
+  span {
+    font-family: $font-accent;
+    font-size: 0.72rem;
+    font-weight: 950;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(21, 21, 21, 0.48);
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.45);
+    }
+  }
+
+  strong {
+    font-family: $font-accent;
+    font-size: 0.78rem;
+    font-weight: 950;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $primary-color;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
+  }
+}
+
+/* =========================================================
+   Empty state
+========================================================= */
+
+.descriptionEmpty {
+  min-height: 190px;
+  padding: 1.2rem;
+
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  background: #ffffff;
+  border: 1px dashed rgba(21, 21, 21, 0.18);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.52);
+    border-color: rgba(244, 241, 234, 0.2);
+  }
+
+  > div:last-child {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  strong {
+    font-family: $font-accent;
+    font-size: 1.15rem;
+    font-weight: 950;
+    line-height: 1.15;
+    color: $ink;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
+  }
+
+  p {
+    max-width: 680px;
+    margin: 0;
+
+    font-size: 0.94rem;
+    line-height: 1.55;
+    color: rgba(21, 21, 21, 0.58);
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
+  }
+}
+
+.emptyIcon {
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: $paper-soft;
+  color: $primary-color;
+  border: 1px solid rgba(21, 21, 21, 0.1);
+  box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.04);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    color: $dark-primary;
+    border-color: $dark-border;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
+
+  svg {
+    font-size: 1.1rem;
+  }
+}
+
+/* =========================================================
+   RWD
+========================================================= */
+
+@media (max-width: 760px) {
+  .card {
+    padding: 1rem;
+    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.055);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.26);
+    }
+  }
+
+  .sectionTop {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .sectionBadge {
+    width: fit-content;
+  }
+
+  .sectionTitle {
+    font-size: clamp(2rem, 11vw, 3rem);
+  }
+
+  .sectionLead {
+    font-size: 0.94rem;
+  }
+
+  .descriptionBlock {
+    padding: 1rem;
+  }
+
+  .descMeta {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .descRight {
+    justify-self: start;
+  }
+
+  .descriptionEmpty {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .card {
+    padding: 0.85rem;
+  }
+
+  .sectionKicker {
+    font-size: 0.64rem;
+  }
+
+  .sectionBadge {
+    min-height: 38px;
+    font-size: 0.68rem;
+  }
+
+  .descriptionBlock {
+    padding: 0.85rem;
+  }
+
+  .descriptionTextarea {
+    min-height: 170px;
+    padding: 1rem;
+    font-size: 0.92rem;
+  }
+
+  .descriptionPreview {
+    min-height: 180px;
+    padding: 1rem;
+  }
+
+  .descriptionText {
+    font-size: 0.95rem;
+  }
+
+  .descriptionFooter {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .descriptionEmpty {
+    display: grid;
+    gap: 0.85rem;
+    text-align: left;
+  }
+
+  .emptyIcon {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .cardGlow,
+  .sectionKicker,
+  .sectionTitle,
+  .sectionLead,
+  .sectionBadge,
+  .descriptionBlock,
+  .textareaShell,
+  .descriptionTextarea,
+  .textareaDecor span,
+  .counterPill,
+  .descProgress,
+  .descProgress span,
+  .descriptionPreview,
+  .quoteMark,
+  .descriptionText,
+  .descriptionFooter,
+  .descriptionEmpty,
+  .emptyIcon {
+    animation: none;
+    transition: none;
+  }
+}

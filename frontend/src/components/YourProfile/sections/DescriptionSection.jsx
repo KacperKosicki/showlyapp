@@ -1,4 +1,4 @@
-import styles from '../YourProfile.module.scss';
+import styles from "./DescriptionSection.module.scss";
 import { FaBriefcase } from 'react-icons/fa';
 
 const DescriptionSection = ({

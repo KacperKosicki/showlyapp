@@ -1,5 +1,5 @@
 import LoadingButton from '../../ui/LoadingButton/LoadingButton';
-import styles from '../YourProfile.module.scss';
+import styles from "./VisibilityNotice.module.scss";
 
 const VisibilityNotice = ({
   isAdminHidden,

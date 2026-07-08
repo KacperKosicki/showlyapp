@@ -1,4 +1,4 @@
-import styles from '../YourProfile.module.scss';
+import styles from "./ContactSocialSection.module.scss";
 import {
   FaMapMarkerAlt,
   FaEnvelope,

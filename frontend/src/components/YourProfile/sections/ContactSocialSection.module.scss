@@ -1,0 +1,923 @@
+@import "../../../styles/variables";
+
+$paper-bg: #ffffff;
+$paper-soft: #fbfbfd;
+$paper-muted: #f5f6fa;
+$paper-border: rgba(21, 21, 21, 0.1);
+$ink: #151515;
+
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
+
+$danger: #c6283a;
+
+/* =========================================================
+   ContactSocialSection
+========================================================= */
+
+.card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+
+  width: 100%;
+  padding: clamp(1.15rem, 2vw, 1.8rem);
+
+  background: $paper-bg;
+  color: $ink;
+  border: 1px solid rgba(21, 21, 21, 0.12);
+  box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+
+  font-family: $font-body;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    color: $dark-text;
+    border-color: $dark-border;
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+.contactSocialCard {
+  margin-top: 1rem;
+}
+
+.cardGlow {
+  position: absolute;
+  right: -160px;
+  top: -180px;
+  z-index: 0;
+
+  width: 440px;
+  height: 440px;
+
+  pointer-events: none;
+  border-radius: 999px;
+  filter: blur(18px);
+
+  background: radial-gradient(
+    circle,
+    rgba(111, 78, 242, 0.12) 0%,
+    rgba(255, 79, 154, 0.07) 42%,
+    rgba(255, 255, 255, 0) 72%
+  );
+
+  :global(html[data-theme="dark"]) & {
+    background: radial-gradient(
+      circle,
+      rgba(168, 149, 255, 0.18) 0%,
+      rgba(255, 79, 154, 0.11) 42%,
+      rgba(17, 18, 22, 0) 72%
+    );
+  }
+}
+
+/* =========================================================
+   Header
+========================================================= */
+
+.sectionTop {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.4rem;
+
+  margin-bottom: 1.25rem;
+}
+
+.sectionKicker {
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 30px;
+  padding: 0 0.7rem;
+  margin-bottom: 0.85rem;
+
+  background: rgba(111, 78, 242, 0.08);
+  color: $primary-color;
+  border: 1px solid rgba(111, 78, 242, 0.16);
+
+  font-family: $font-accent;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(168, 149, 255, 0.12);
+    color: $dark-primary;
+    border-color: rgba(168, 149, 255, 0.24);
+  }
+}
+
+.sectionTitle {
+  margin: 0;
+
+  font-family: $font-accent;
+  font-size: clamp(2rem, 3vw, 3.35rem);
+  line-height: 0.95;
+  letter-spacing: -0.075em;
+  color: $ink;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
+}
+
+.sectionLead {
+  max-width: 780px;
+  margin: 0.9rem 0 0;
+
+  font-size: 1rem;
+  line-height: 1.72;
+  color: rgba(21, 21, 21, 0.66);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
+}
+
+.sectionBadge {
+  flex: 0 0 auto;
+
+  min-height: 42px;
+  padding: 0 0.9rem;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+
+  background: $paper-soft;
+  color: $ink;
+  border: 1px solid rgba(21, 21, 21, 0.11);
+  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.045);
+
+  font-family: $font-accent;
+  font-size: 0.74rem;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    color: $dark-text;
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+  }
+
+  svg {
+    color: $primary-color;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
+  }
+}
+
+/* =========================================================
+   Body
+========================================================= */
+
+.contactSocialBody {
+  position: relative;
+  z-index: 1;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.contactPanel {
+  min-width: 0;
+  padding: 1.1rem;
+
+  background: $paper-soft;
+  border: 1px solid rgba(21, 21, 21, 0.1);
+  box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.035);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.7);
+    border-color: $dark-border;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+  }
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.055);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.26);
+    }
+  }
+}
+
+.contactPanelHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+
+  margin-bottom: 1rem;
+
+  > div:last-child {
+    min-width: 0;
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  strong {
+    font-family: $font-accent;
+    font-size: 1.05rem;
+    font-weight: 950;
+    line-height: 1.15;
+    color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
+  }
+
+  span {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: rgba(21, 21, 21, 0.58);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
+  }
+}
+
+.contactIcon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+  color: $primary-color;
+  border: 1px solid rgba(21, 21, 21, 0.1);
+  box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.04);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.72);
+    color: $dark-primary;
+    border-color: $dark-border;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
+
+  svg {
+    font-size: 1rem;
+  }
+}
+
+/* =========================================================
+   Contact edit
+========================================================= */
+
+.contactModernGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.contactWideField {
+  grid-column: 1 / -1;
+}
+
+.modernField {
+  min-width: 0;
+
+  display: grid;
+  gap: 0.5rem;
+
+  > span {
+    font-family: $font-accent;
+    font-size: 0.74rem;
+    font-weight: 950;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(21, 21, 21, 0.58);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.5);
+    }
+  }
+}
+
+.formInput {
+  width: 100%;
+  min-height: 52px;
+  padding: 0.95rem 1rem;
+
+  border-radius: 0;
+  outline: none;
+
+  background: #ffffff;
+  color: $ink;
+  border: 1px solid rgba(21, 21, 21, 0.13);
+
+  font-family: $font-body;
+  font-size: 0.96rem;
+  font-weight: 800;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    opacity 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.72);
+    color: $dark-text;
+    border-color: $dark-border;
+  }
+
+  &::placeholder {
+    color: rgba(21, 21, 21, 0.38);
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.36);
+    }
+  }
+
+  &:hover:not(:disabled) {
+    border-color: rgba(21, 21, 21, 0.22);
+
+    :global(html[data-theme="dark"]) & {
+      border-color: rgba(244, 241, 234, 0.24);
+    }
+  }
+
+  &:focus:not(:disabled) {
+    transform: translate(-2px, -2px);
+    border-color: rgba(111, 78, 242, 0.34);
+    box-shadow: 5px 5px 0 rgba(111, 78, 242, 0.08);
+
+    :global(html[data-theme="dark"]) & {
+      border-color: rgba(168, 149, 255, 0.38);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.68;
+    cursor: not-allowed;
+    background: rgba(21, 21, 21, 0.035);
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(244, 241, 234, 0.045);
+    }
+  }
+}
+
+.inputError {
+  border-color: rgba(198, 40, 58, 0.45);
+  background: #fffafa;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(255, 79, 122, 0.08);
+    border-color: rgba(255, 143, 168, 0.38);
+  }
+
+  &:focus {
+    border-color: rgba(198, 40, 58, 0.58);
+    box-shadow: 5px 5px 0 rgba(198, 40, 58, 0.08);
+
+    :global(html[data-theme="dark"]) & {
+      border-color: rgba(255, 143, 168, 0.46);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
+  }
+}
+
+.error {
+  display: block;
+
+  padding: 0.78rem 0.9rem;
+
+  background: #fff7f7;
+  color: $danger;
+  border: 1px solid rgba(198, 40, 58, 0.24);
+
+  font-size: 0.86rem;
+  line-height: 1.45;
+  font-weight: 800;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(255, 79, 122, 0.13);
+    color: #ff8fa8;
+    border-color: rgba(255, 143, 168, 0.34);
+  }
+}
+
+.hint {
+  display: block;
+
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: rgba(21, 21, 21, 0.46);
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.42);
+  }
+}
+
+/* =========================================================
+   Contact view
+========================================================= */
+
+.contactViewGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.contactInfoCard {
+  min-width: 0;
+  min-height: 112px;
+  padding: 1rem;
+
+  display: grid;
+  align-content: space-between;
+  gap: 0.5rem;
+
+  background: #ffffff;
+  border: 1px solid rgba(21, 21, 21, 0.1);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.58);
+    border-color: $dark-border;
+  }
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.045);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.22);
+    }
+  }
+
+  > svg {
+    font-size: 1rem;
+    color: $primary-color;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
+  }
+
+  span {
+    font-family: $font-accent;
+    font-size: 0.68rem;
+    font-weight: 950;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(21, 21, 21, 0.48);
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.45);
+    }
+  }
+
+  strong {
+    min-width: 0;
+
+    font-family: $font-body;
+    font-size: 0.96rem;
+    font-weight: 900;
+    line-height: 1.4;
+    color: $ink;
+    word-break: break-word;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
+  }
+}
+
+.contactAddressCard {
+  grid-column: 1 / -1;
+}
+
+/* =========================================================
+   Upgrade / disabled
+========================================================= */
+
+.upgradeNotice {
+  margin-bottom: 1rem;
+  padding: 1rem;
+
+  display: grid;
+  gap: 0.45rem;
+
+  background: rgba(111, 78, 242, 0.07);
+  border: 1px solid rgba(111, 78, 242, 0.16);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(168, 149, 255, 0.1);
+    border-color: rgba(168, 149, 255, 0.24);
+  }
+
+  strong {
+    font-family: $font-accent;
+    font-size: 0.98rem;
+    font-weight: 950;
+    line-height: 1.25;
+    color: $ink;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
+  }
+
+  span {
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: rgba(21, 21, 21, 0.62);
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
+  }
+}
+
+.disabledOption {
+  opacity: 0.62;
+
+  input {
+    cursor: not-allowed;
+  }
+}
+
+/* =========================================================
+   Social edit
+========================================================= */
+
+.socialEditorGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+/* =========================================================
+   Social view
+========================================================= */
+
+.socialLinksGrid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.socialLinkCard {
+  min-width: 0;
+  min-height: 72px;
+  padding: 0.9rem;
+
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+
+  color: $ink;
+  text-decoration: none;
+
+  background: #ffffff;
+  border: 1px solid rgba(21, 21, 21, 0.1);
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+    background: rgba(17, 18, 22, 0.58);
+    border-color: $dark-border;
+  }
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    color: $primary-color;
+    border-color: rgba(111, 78, 242, 0.24);
+    box-shadow: 5px 5px 0 rgba(111, 78, 242, 0.06);
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+      background: rgba(168, 149, 255, 0.1);
+      border-color: rgba(168, 149, 255, 0.28);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
+  }
+
+  &:active {
+    transform: translate(0, 0);
+    box-shadow: none;
+  }
+
+  > span {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    background: $paper-soft;
+    border: 1px solid rgba(21, 21, 21, 0.09);
+    color: $primary-color;
+
+    transition:
+      background 0.18s ease,
+      border-color 0.18s ease,
+      color 0.18s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(35, 38, 48, 0.78);
+      border-color: $dark-border;
+      color: $dark-primary;
+    }
+  }
+
+  div {
+    min-width: 0;
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  strong {
+    font-family: $font-accent;
+    font-size: 0.95rem;
+    font-weight: 950;
+    color: inherit;
+  }
+
+  small {
+    max-width: 100%;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    font-size: 0.84rem;
+    line-height: 1.35;
+    color: rgba(21, 21, 21, 0.54);
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.52);
+    }
+  }
+}
+
+/* =========================================================
+   Empty state
+========================================================= */
+
+.mediaEmpty {
+  min-height: 180px;
+  padding: 1.2rem;
+
+  display: grid;
+  place-items: center;
+  text-align: center;
+  gap: 0.45rem;
+
+  background: #ffffff;
+  border: 1px dashed rgba(21, 21, 21, 0.18);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.52);
+    border-color: rgba(244, 241, 234, 0.2);
+  }
+
+  svg {
+    font-size: 1.35rem;
+    color: $primary-color;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
+  }
+
+  strong {
+    margin-top: 0.15rem;
+
+    font-family: $font-accent;
+    font-size: 1.05rem;
+    font-weight: 950;
+    color: $ink;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
+  }
+
+  span {
+    max-width: 420px;
+
+    font-size: 0.92rem;
+    line-height: 1.5;
+    color: rgba(21, 21, 21, 0.58);
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
+  }
+}
+
+/* =========================================================
+   RWD
+========================================================= */
+
+@media (max-width: 1180px) {
+  .contactSocialBody {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .card {
+    padding: 1rem;
+    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.055);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.26);
+    }
+  }
+
+  .sectionTop {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .sectionBadge {
+    width: fit-content;
+  }
+
+  .sectionTitle {
+    font-size: clamp(2rem, 11vw, 3rem);
+  }
+
+  .sectionLead {
+    font-size: 0.94rem;
+  }
+
+  .contactPanel {
+    padding: 1rem;
+  }
+
+  .contactModernGrid,
+  .contactViewGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .contactWideField,
+  .contactAddressCard {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .card {
+    padding: 0.85rem;
+  }
+
+  .sectionKicker {
+    font-size: 0.64rem;
+  }
+
+  .sectionBadge {
+    min-height: 38px;
+    font-size: 0.68rem;
+  }
+
+  .contactPanel {
+    padding: 0.85rem;
+  }
+
+  .contactPanelHead {
+    gap: 0.7rem;
+  }
+
+  .contactIcon,
+  .socialLinkCard > span {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .formInput {
+    min-height: 50px;
+    font-size: 0.92rem;
+  }
+
+  .socialLinkCard {
+    padding: 0.8rem;
+  }
+
+  .mediaEmpty {
+    min-height: 160px;
+    padding: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .cardGlow,
+  .sectionKicker,
+  .sectionTitle,
+  .sectionLead,
+  .sectionBadge,
+  .contactPanel,
+  .contactPanelHead strong,
+  .contactPanelHead span,
+  .contactIcon,
+  .modernField > span,
+  .formInput,
+  .inputError,
+  .error,
+  .contactInfoCard,
+  .upgradeNotice,
+  .socialLinkCard,
+  .socialLinkCard > span,
+  .mediaEmpty {
+    animation: none;
+    transition: none;
+  }
+}

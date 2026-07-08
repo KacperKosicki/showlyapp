@@ -1,0 +1,510 @@
+@import "../../../styles/variables";
+
+$paper-bg: #ffffff;
+$paper-soft: #fbfbfd;
+$paper-muted: #f5f6fa;
+$ink: #151515;
+
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
+
+/* =========================================================
+   ProfileHeader
+========================================================= */
+
+.head {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+
+  width: 100%;
+  padding: clamp(1.15rem, 2.4vw, 2rem);
+
+  background: $paper-bg;
+  color: $ink;
+  border: 1px solid rgba(21, 21, 21, 0.12);
+  box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+
+  font-family: $font-body;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    color: $dark-text;
+    border-color: $dark-border;
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  &::before {
+    content: "";
+
+    position: absolute;
+    right: -170px;
+    top: -190px;
+    z-index: 0;
+
+    width: 460px;
+    height: 460px;
+
+    pointer-events: none;
+    border-radius: 999px;
+    filter: blur(18px);
+
+    background: radial-gradient(
+      circle,
+      rgba(111, 78, 242, 0.13) 0%,
+      rgba(255, 79, 154, 0.07) 42%,
+      rgba(255, 255, 255, 0) 72%
+    );
+
+    :global(html[data-theme="dark"]) & {
+      background: radial-gradient(
+        circle,
+        rgba(168, 149, 255, 0.18) 0%,
+        rgba(255, 79, 154, 0.11) 42%,
+        rgba(17, 18, 22, 0) 72%
+      );
+    }
+  }
+
+  &::after {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+
+    pointer-events: none;
+    opacity: 0.28;
+
+    background-image:
+      linear-gradient(rgba(21, 21, 21, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(21, 21, 21, 0.035) 1px, transparent 1px);
+    background-size: 26px 26px;
+
+    :global(html[data-theme="dark"]) & {
+      opacity: 0.16;
+      background-image:
+        linear-gradient(rgba(244, 241, 234, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(244, 241, 234, 0.055) 1px, transparent 1px);
+    }
+  }
+}
+
+/* =========================================================
+   Top label row
+========================================================= */
+
+.labelRow {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+
+  margin-bottom: 1.35rem;
+}
+
+.labelBadge {
+  min-height: 30px;
+  padding: 0 0.75rem;
+
+  display: inline-flex;
+  align-items: center;
+
+  background: rgba(111, 78, 242, 0.08);
+  color: $primary-color;
+  border: 1px solid rgba(111, 78, 242, 0.16);
+
+  font-family: $font-accent;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(168, 149, 255, 0.12);
+    color: $dark-primary;
+    border-color: rgba(168, 149, 255, 0.24);
+  }
+}
+
+.labelDot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+
+  display: inline-flex;
+
+  background: $primary-color;
+  box-shadow: 0 0 0 4px rgba(111, 78, 242, 0.1);
+
+  transition:
+    background 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-primary;
+    box-shadow: 0 0 0 4px rgba(168, 149, 255, 0.14);
+  }
+}
+
+.labelDesc {
+  color: rgba(21, 21, 21, 0.58);
+
+  font-size: 0.9rem;
+  line-height: 1.45;
+  font-weight: 750;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
+}
+
+.labelLine {
+  flex: 1 1 80px;
+  height: 1px;
+
+  background: rgba(21, 21, 21, 0.1);
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-border;
+  }
+}
+
+.pill {
+  min-height: 30px;
+  padding: 0 0.75rem;
+
+  display: inline-flex;
+  align-items: center;
+
+  background: $paper-soft;
+  color: rgba(21, 21, 21, 0.58);
+  border: 1px solid rgba(21, 21, 21, 0.1);
+
+  font-family: $font-accent;
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.76);
+    color: rgba(244, 241, 234, 0.58);
+    border-color: $dark-border;
+  }
+}
+
+/* =========================================================
+   Main header
+========================================================= */
+
+.headTop {
+  position: relative;
+  z-index: 1;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.4rem;
+}
+
+.headText {
+  min-width: 0;
+}
+
+.heading {
+  max-width: 860px;
+  margin: 0;
+
+  font-family: $font-accent;
+  font-size: clamp(2.45rem, 5vw, 5.35rem);
+  line-height: 0.9;
+  letter-spacing: -0.09em;
+  font-weight: 950;
+  color: $ink;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
+}
+
+.description {
+  max-width: 740px;
+  margin: 1rem 0 0;
+
+  color: rgba(21, 21, 21, 0.66);
+
+  font-size: 1rem;
+  line-height: 1.7;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
+
+  strong {
+    font-weight: 950;
+    color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
+  }
+}
+
+/* =========================================================
+   Actions
+========================================================= */
+
+.headActions {
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.primary {
+  min-height: 50px;
+  padding: 0 1.05rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 0;
+  text-decoration: none;
+
+  color: #ffffff;
+  background: $ink;
+  border: 1px solid $ink;
+  box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.08);
+
+  font-family: $font-accent;
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    opacity 0.18s ease,
+    filter 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-bg;
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.28);
+  }
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    background: #000000;
+    box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.12);
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(135deg, #b8a9ff, #ff68aa);
+      box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.34);
+    }
+  }
+
+  &:active {
+    transform: translate(0, 0);
+    box-shadow: none;
+  }
+
+  &:disabled {
+    opacity: 0.62;
+    cursor: wait;
+  }
+
+  &:first-child {
+    color: $ink;
+    background: #ffffff;
+    border-color: rgba(21, 21, 21, 0.13);
+    box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.045);
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+      background: rgba(17, 18, 22, 0.72);
+      border-color: $dark-border;
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
+
+    &:hover {
+      color: $primary-color;
+      background: $paper-soft;
+      border-color: rgba(111, 78, 242, 0.24);
+      box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.075);
+
+      :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+        background: rgba(168, 149, 255, 0.12);
+        border-color: rgba(168, 149, 255, 0.28);
+        box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.3);
+      }
+    }
+  }
+}
+
+/* =========================================================
+   RWD
+========================================================= */
+
+@media (max-width: 1180px) {
+  .headTop {
+    display: grid;
+    gap: 1.2rem;
+  }
+
+  .headActions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 760px) {
+  .head {
+    padding: 1rem;
+    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.055);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.26);
+    }
+  }
+
+  .labelRow {
+    gap: 0.55rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .labelDesc {
+    flex: 1 1 100%;
+    font-size: 0.86rem;
+  }
+
+  .labelLine {
+    display: none;
+  }
+
+  .pill {
+    max-width: 100%;
+    white-space: normal;
+    line-height: 1.35;
+    padding-top: 0.45rem;
+    padding-bottom: 0.45rem;
+  }
+
+  .heading {
+    font-size: clamp(2.25rem, 13vw, 3.9rem);
+  }
+
+  .description {
+    font-size: 0.94rem;
+  }
+
+  .headActions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .primary {
+    width: 100%;
+    min-height: 48px;
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 460px) {
+  .head {
+    padding: 0.85rem;
+  }
+
+  .labelBadge,
+  .pill {
+    min-height: 28px;
+    font-size: 0.62rem;
+  }
+
+  .labelDesc {
+    font-size: 0.82rem;
+  }
+
+  .heading {
+    font-size: clamp(2rem, 14vw, 3.15rem);
+  }
+
+  .primary {
+    min-height: 46px;
+    padding: 0 0.8rem;
+    font-size: 0.66rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .head,
+  .labelBadge,
+  .labelDot,
+  .labelDesc,
+  .labelLine,
+  .pill,
+  .heading,
+  .description,
+  .primary {
+    animation: none;
+    transition: none;
+  }
+}

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import styles from '../YourProfile.module.scss';
+import styles from "./ProfileHeader.module.scss";
 
 const ProfileHeader = ({ profile, isEditing, onEdit }) => {
   return (

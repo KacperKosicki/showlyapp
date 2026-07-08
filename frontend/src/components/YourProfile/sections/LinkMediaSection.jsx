@@ -1,4 +1,4 @@
-import styles from '../YourProfile.module.scss';
+import styles from "./LinkMediaSection.module.scss";
 import { FaBriefcase, FaGlobe, FaLink, FaPlus, FaTags } from 'react-icons/fa';
 
 const LinkMediaSection = ({

@@ -1,0 +1,563 @@
+@import "../../../styles/variables";
+
+$paper-bg: #ffffff;
+$paper-soft: #fbfbfd;
+$paper-muted: #f5f6fa;
+$ink: #151515;
+
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
+
+/* =========================================================
+   EmptyProfileState
+========================================================= */
+
+.wrapper {
+  position: relative;
+
+  width: 100%;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+
+  font-family: $font-body;
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
+.emptyWrap {
+  min-height: min(760px, calc(100vh - 120px));
+
+  display: grid;
+  place-items: center;
+
+  padding-top: clamp(3.5rem, 7vw, 6rem);
+  padding-bottom: clamp(4rem, 7vw, 7rem);
+
+  scroll-margin-top: 10rem;
+}
+
+.emptyCard {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+
+  width: min(880px, 100%);
+  padding: clamp(1.35rem, 3vw, 2.6rem);
+
+  background: $paper-bg;
+  color: $ink;
+  border: 1px solid rgba(21, 21, 21, 0.12);
+  box-shadow: 14px 14px 0 rgba(21, 21, 21, 0.065);
+
+  text-align: left;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    color: $dark-text;
+    border-color: $dark-border;
+    box-shadow: 14px 14px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  &::before {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+
+    pointer-events: none;
+    opacity: 0.38;
+
+    background-image:
+      linear-gradient(rgba(21, 21, 21, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(21, 21, 21, 0.035) 1px, transparent 1px);
+    background-size: 26px 26px;
+
+    transition: opacity 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      opacity: 0.18;
+      background-image:
+        linear-gradient(rgba(244, 241, 234, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(244, 241, 234, 0.06) 1px, transparent 1px);
+    }
+  }
+}
+
+.emptyBadge,
+.emptyTitle,
+.emptyDesc,
+.emptyList,
+.emptyCtas {
+  position: relative;
+  z-index: 2;
+}
+
+.emptyBadge {
+  width: fit-content;
+  min-height: 32px;
+  padding: 0 0.75rem;
+  margin-bottom: 1rem;
+
+  display: inline-flex;
+  align-items: center;
+
+  background: rgba(111, 78, 242, 0.08);
+  color: $primary-color;
+  border: 1px solid rgba(111, 78, 242, 0.16);
+
+  font-family: $font-accent;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(168, 149, 255, 0.12);
+    color: $dark-primary;
+    border-color: rgba(168, 149, 255, 0.24);
+  }
+}
+
+.emptyTitle {
+  max-width: 760px;
+  margin: 0;
+
+  font-family: $font-accent;
+  font-size: clamp(2.45rem, 5.2vw, 5rem);
+  line-height: 0.92;
+  letter-spacing: -0.085em;
+  font-weight: 950;
+  color: $ink;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
+}
+
+.emptyDesc {
+  max-width: 720px;
+  margin: 1.15rem 0 0;
+
+  font-size: clamp(0.96rem, 1.25vw, 1.08rem);
+  line-height: 1.75;
+  color: rgba(21, 21, 21, 0.66);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
+}
+
+.emptyList {
+  max-width: 760px;
+
+  margin: 1.35rem 0 0;
+  padding: 0;
+
+  display: grid;
+  gap: 0.7rem;
+
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+
+    padding: 0.85rem 0.95rem;
+
+    background: $paper-soft;
+    border: 1px solid rgba(21, 21, 21, 0.09);
+
+    transition:
+      background 0.22s ease,
+      border-color 0.22s ease,
+      transform 0.18s ease,
+      box-shadow 0.18s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(35, 38, 48, 0.7);
+      border-color: $dark-border;
+    }
+
+    &:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.045);
+
+      :global(html[data-theme="dark"]) & {
+        box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.22);
+      }
+    }
+
+    span:last-child {
+      font-size: 0.95rem;
+      line-height: 1.45;
+      color: rgba(21, 21, 21, 0.68);
+
+      transition: color 0.22s ease;
+
+      :global(html[data-theme="dark"]) & {
+        color: $dark-muted;
+      }
+    }
+  }
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  margin-top: 0.42rem;
+
+  display: block;
+
+  background: $primary-color;
+  box-shadow: 0 0 0 4px rgba(111, 78, 242, 0.1);
+
+  transition:
+    background 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-primary;
+    box-shadow: 0 0 0 4px rgba(168, 149, 255, 0.14);
+  }
+}
+
+/* =========================================================
+   CTA
+========================================================= */
+
+.emptyCtas {
+  margin-top: 1.6rem;
+
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.primary,
+.ghostLight {
+  min-height: 52px;
+  padding: 0 1.15rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 0;
+  text-decoration: none;
+
+  font-family: $font-accent;
+  font-size: 0.8rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.primary {
+  color: #ffffff;
+  background: $ink;
+  border: 1px solid $ink;
+  box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.08);
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-bg;
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.28);
+  }
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    background: #000000;
+    box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.12);
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(135deg, #b8a9ff, #ff68aa);
+      box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.34);
+    }
+  }
+
+  &:active {
+    transform: translate(0, 0);
+    box-shadow: none;
+  }
+}
+
+.ctaPrimary {
+  min-width: 220px;
+}
+
+.ghostLight {
+  color: $ink;
+  background: $paper-soft;
+  border: 1px solid rgba(21, 21, 21, 0.12);
+  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.045);
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+    background: rgba(35, 38, 48, 0.74);
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+  }
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    color: $primary-color;
+    background: #ffffff;
+    border-color: rgba(111, 78, 242, 0.22);
+    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.07);
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+      background: rgba(168, 149, 255, 0.12);
+      border-color: rgba(168, 149, 255, 0.28);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  &:active {
+    transform: translate(0, 0);
+    box-shadow: none;
+  }
+}
+
+/* =========================================================
+   Decorative art
+========================================================= */
+
+.emptyArt {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bubble {
+  position: absolute;
+  right: -70px;
+  top: -70px;
+
+  width: 230px;
+  height: 230px;
+
+  border-radius: 999px;
+
+  background: radial-gradient(
+    circle,
+    rgba(111, 78, 242, 0.14) 0%,
+    rgba(111, 78, 242, 0.055) 48%,
+    rgba(111, 78, 242, 0) 72%
+  );
+
+  :global(html[data-theme="dark"]) & {
+    background: radial-gradient(
+      circle,
+      rgba(168, 149, 255, 0.2) 0%,
+      rgba(168, 149, 255, 0.08) 48%,
+      rgba(168, 149, 255, 0) 72%
+    );
+  }
+}
+
+.two {
+  right: auto;
+  left: -90px;
+  top: auto;
+  bottom: -90px;
+
+  width: 250px;
+  height: 250px;
+
+  background: radial-gradient(
+    circle,
+    rgba(255, 79, 154, 0.11) 0%,
+    rgba(255, 79, 154, 0.045) 48%,
+    rgba(255, 79, 154, 0) 72%
+  );
+
+  :global(html[data-theme="dark"]) & {
+    background: radial-gradient(
+      circle,
+      rgba(255, 79, 154, 0.17) 0%,
+      rgba(255, 79, 154, 0.07) 48%,
+      rgba(255, 79, 154, 0) 72%
+    );
+  }
+}
+
+.three {
+  right: 12%;
+  top: auto;
+  bottom: 12%;
+
+  width: 96px;
+  height: 96px;
+
+  border: 1px solid rgba(21, 21, 21, 0.08);
+  background: rgba(255, 255, 255, 0.4);
+
+  :global(html[data-theme="dark"]) & {
+    border-color: rgba(244, 241, 234, 0.12);
+    background: rgba(244, 241, 234, 0.04);
+  }
+}
+
+/* =========================================================
+   RWD
+========================================================= */
+
+@media (max-width: 760px) {
+  .wrapper {
+    padding: 0 1rem;
+  }
+
+  .emptyWrap {
+    min-height: auto;
+    padding-top: 4rem;
+    padding-bottom: 5rem;
+  }
+
+  .emptyCard {
+    padding: 1.15rem;
+    box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.06);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.28);
+    }
+  }
+
+  .emptyTitle {
+    font-size: clamp(2.25rem, 12vw, 3.65rem);
+  }
+
+  .emptyDesc {
+    font-size: 0.94rem;
+  }
+
+  .emptyCtas {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .primary,
+  .ghostLight {
+    width: 100%;
+    min-height: 48px;
+    font-size: 0.72rem;
+  }
+
+  .ctaPrimary {
+    min-width: 0;
+  }
+
+  .bubble {
+    right: -110px;
+    top: -110px;
+  }
+
+  .two {
+    left: -130px;
+    bottom: -130px;
+  }
+}
+
+@media (max-width: 460px) {
+  .wrapper {
+    padding: 0 0.75rem;
+  }
+
+  .emptyWrap {
+    padding-top: 3.25rem;
+    padding-bottom: 4rem;
+  }
+
+  .emptyCard {
+    padding: 0.95rem;
+  }
+
+  .emptyBadge {
+    min-height: 28px;
+    font-size: 0.64rem;
+  }
+
+  .emptyTitle {
+    font-size: clamp(2rem, 14vw, 3rem);
+  }
+
+  .emptyList li {
+    padding: 0.78rem 0.85rem;
+
+    span:last-child {
+      font-size: 0.88rem;
+    }
+  }
+
+  .emptyCtas {
+    gap: 0.65rem;
+  }
+
+  .primary,
+  .ghostLight {
+    min-height: 46px;
+    padding: 0 0.8rem;
+    font-size: 0.66rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emptyCard,
+  .emptyBadge,
+  .emptyTitle,
+  .emptyDesc,
+  .emptyList li,
+  .dot,
+  .primary,
+  .ghostLight,
+  .bubble,
+  .two,
+  .three {
+    animation: none;
+    transition: none;
+  }
+}

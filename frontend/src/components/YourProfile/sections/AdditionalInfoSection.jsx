@@ -1,5 +1,5 @@
 import { FaBriefcase, FaEnvelope, FaIdBadge, FaStar, FaTimes } from 'react-icons/fa';
-import styles from '../YourProfile.module.scss';
+import styles from "./AdditionalInfoSection.module.scss";
 
 const AdditionalInfoSection = ({
   profile,

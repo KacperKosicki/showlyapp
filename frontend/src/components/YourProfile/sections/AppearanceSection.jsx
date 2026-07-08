@@ -1,5 +1,5 @@
 import { FaTools } from 'react-icons/fa';
-import styles from '../YourProfile.module.scss';
+import styles from "./AppearanceSection.module.scss";
 
 const THEME_PRESETS = [
   { name: "Systemowy", primary: "#6f4ef2", secondary: "#ff4081", variant: "system" },

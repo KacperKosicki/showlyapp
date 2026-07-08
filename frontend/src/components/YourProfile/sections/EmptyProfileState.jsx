@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import styles from '../YourProfile.module.scss';
+import styles from "./EmptyProfileState.module.scss";
 
 const EmptyProfileState = () => {
   return (

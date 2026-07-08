@@ -1,4 +1,4 @@
-import styles from '../YourProfile.module.scss';
+import styles from "./BasicInfoSection.module.scss";
 import { FaIdBadge, FaImage, FaMapMarkerAlt, FaUserTie } from 'react-icons/fa';
 
 const BasicInfoSection = ({

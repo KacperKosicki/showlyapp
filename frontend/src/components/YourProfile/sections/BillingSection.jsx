@@ -1,4 +1,4 @@
-import styles from "../YourProfile.module.scss";
+import styles from "./BillingSection.module.scss";
 
 const BillingSection = ({
   billingLoading,

@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import styles from '../YourProfile.module.scss';
+import styles from "./Lightbox.module.scss";
 
 const Lightbox = ({ image, onClose }) => {
   if (!image) return null;
