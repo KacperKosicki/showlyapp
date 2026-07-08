@@ -40,6 +40,7 @@ import CookieBanner from "./components/CookieBanner/CookieBanner";
 import CookiesPolicy from "./components/CookiesPolicy/CookiesPolicy";
 import ShowlyJourney from "./components/ShowlyJourney/ShowlyJourney";
 import ProfilesHub from "./components/ProfilesHub/ProfilesHub";
+import AppLoader from "./components/AppLoader/AppLoader";
 
 import AdminPanel from "./components/AdminPanel/AdminPanel";
 import AdminRoute from "./components/auth/AdminRoute";
@@ -305,11 +306,7 @@ function App() {
   }, [safeUser?.uid, token, refreshTrigger, authFetch]);
 
   if (!isAuthFlow && (loadingUser || loadingToken || loadingRole)) {
-    return (
-      <p style={{ padding: "2rem", textAlign: "center" }}>
-        ⏳ Trwa ładowanie aplikacji...
-      </p>
-    );
+    return <AppLoader />;
   }
 
   const heroProps = {

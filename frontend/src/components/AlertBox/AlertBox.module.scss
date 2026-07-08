@@ -23,14 +23,15 @@ $dark-warning: #facc15;
 $dark-info: #93c5fd;
 
 .alertBox {
-  position: fixed;
-
   /*
-    Desktop navbar:
-    padding + nav + cień = okolice 95–110px.
-    Alert zaczyna się niżej, żeby nie nachodził na latającą nawigację.
+    Desktop:
+    nowy navbar ma fixed shell + box z cieniem, więc alert startuje
+    od razu pod nim, ale z lekkim oddechem.
   */
-  top: calc(env(safe-area-inset-top, 0px) + 112px);
+  --alert-nav-offset: 106px;
+
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + var(--alert-nav-offset));
   left: 50%;
   transform: translateX(-50%);
 
@@ -39,7 +40,6 @@ $dark-info: #93c5fd;
   width: min(92vw, 620px);
 
   pointer-events: none;
-
   font-family: $font-body;
 
   *,
@@ -51,14 +51,14 @@ $dark-info: #93c5fd;
 
 .alert {
   --alert-color: #{$info};
-  --alert-soft: rgba(37, 99, 235, 0.07);
-  --alert-border: rgba(37, 99, 235, 0.22);
+  --alert-soft: rgba(37, 99, 235, 0.075);
+  --alert-border: rgba(37, 99, 235, 0.24);
 
   position: relative;
 
   width: 100%;
   min-height: 70px;
-  padding: 0.8rem 0.85rem;
+  padding: 0.82rem 0.86rem;
 
   pointer-events: auto;
 
@@ -67,7 +67,7 @@ $dark-info: #93c5fd;
   align-items: center;
   gap: 0.85rem;
 
-  background: $paper-bg;
+  background: rgba(255, 255, 255, 0.97);
   color: $ink;
 
   border: 1px solid var(--alert-border);
@@ -78,6 +78,8 @@ $dark-info: #93c5fd;
     0 20px 54px rgba(21, 21, 21, 0.13);
 
   overflow: hidden;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 
   animation: alertIn 0.24s ease both;
 
@@ -88,7 +90,10 @@ $dark-info: #93c5fd;
     box-shadow 0.22s ease;
 
   :global(html[data-theme="dark"]) & {
-    background: rgba(26, 28, 34, 0.94);
+    background:
+      radial-gradient(circle at 8% 0%, rgba(168, 149, 255, 0.12), transparent 34%),
+      rgba(26, 28, 34, 0.94);
+
     color: $dark-text;
 
     box-shadow:
@@ -101,18 +106,20 @@ $dark-info: #93c5fd;
     position: absolute;
     inset: 0;
 
-    background: linear-gradient(90deg,
-        var(--alert-soft) 0%,
-        rgba(255, 255, 255, 0) 62%);
+    background: linear-gradient(
+      90deg,
+      var(--alert-soft) 0%,
+      rgba(255, 255, 255, 0) 64%
+    );
 
     pointer-events: none;
 
-    transition: background 0.22s ease;
-
     :global(html[data-theme="dark"]) & {
-      background: linear-gradient(90deg,
-          var(--alert-soft) 0%,
-          rgba(26, 28, 34, 0) 68%);
+      background: linear-gradient(
+        90deg,
+        var(--alert-soft) 0%,
+        rgba(26, 28, 34, 0) 68%
+      );
     }
   }
 
@@ -125,15 +132,19 @@ $dark-info: #93c5fd;
     width: 100%;
     height: 3px;
 
-    background: linear-gradient(90deg,
-        var(--alert-color),
-        rgba(255, 255, 255, 0));
+    background: linear-gradient(
+      90deg,
+      var(--alert-color),
+      rgba(255, 255, 255, 0)
+    );
 
-    opacity: 0.55;
+    opacity: 0.65;
     pointer-events: none;
+    transform-origin: left;
+    animation: alertProgress 5s linear forwards;
 
     :global(html[data-theme="dark"]) & {
-      opacity: 0.72;
+      opacity: 0.78;
     }
   }
 }
@@ -158,11 +169,6 @@ $dark-info: #93c5fd;
     background 0.22s ease,
     color 0.22s ease,
     border-color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: var(--alert-soft);
-    border-color: var(--alert-border);
-  }
 }
 
 .message {
@@ -172,7 +178,7 @@ $dark-info: #93c5fd;
   min-width: 0;
 
   font-family: $font-body;
-  font-weight: 800;
+  font-weight: 850;
   font-size: 0.95rem;
   line-height: 1.45;
   letter-spacing: -0.01em;
@@ -184,7 +190,7 @@ $dark-info: #93c5fd;
   transition: color 0.22s ease;
 
   :global(html[data-theme="dark"]) & {
-    color: rgba(244, 241, 234, 0.82);
+    color: rgba(244, 241, 234, 0.84);
   }
 }
 
@@ -313,40 +319,51 @@ $dark-info: #93c5fd;
 @keyframes alertIn {
   from {
     opacity: 0;
-    transform: translateY(-12px);
+    transform: translateY(-12px) scale(0.985);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes alertProgress {
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
   }
 }
 
 /* =========================================================
-   Tablet / mobile — pod dwurzędową nawigację
+   Mobile — pod nowy kompaktowy navbar
 ========================================================= */
 
-@media (max-width: 900px) {
+@media (max-width: 760px) {
   .alertBox {
     /*
-      Mobile navbar ma logo w pierwszym rzędzie i user/dropdown w drugim,
-      więc alert musi zejść niżej.
+      Nowy mobile navbar jest jednorzędowy i kompaktowy:
+      nie ustawiamy już 158–170px, bo alert robił się za nisko.
     */
-    top: calc(env(safe-area-inset-top, 0px) + 158px);
-    width: calc(100vw - 24px);
+    --alert-nav-offset: 82px;
+
+    width: min(430px, calc(100vw - 1.44rem));
   }
 
   .alert {
-    grid-template-columns: 40px minmax(0, 1fr) 32px;
-    gap: 0.75rem;
+    grid-template-columns: 40px minmax(0, 1fr) 34px;
+    gap: 0.72rem;
 
-    min-height: 66px;
-    padding: 0.72rem;
+    min-height: 64px;
+    padding: 0.7rem;
 
     border-left-width: 6px;
 
     box-shadow:
-      7px 7px 0 rgba(21, 21, 21, 0.08),
+      7px 7px 0 rgba(21, 21, 21, 0.075),
       0 16px 44px rgba(21, 21, 21, 0.12);
 
     :global(html[data-theme="dark"]) & {
@@ -359,40 +376,34 @@ $dark-info: #93c5fd;
   .icon {
     width: 40px;
     height: 40px;
-    font-size: 1.04rem;
+    font-size: 1.02rem;
   }
 
   .message {
-    font-size: 0.88rem;
-    line-height: 1.42;
+    font-size: 0.86rem;
+    line-height: 1.38;
   }
 
   .close {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     font-size: 1.18rem;
-  }
-}
-
-@media (max-width: 680px) {
-  .alertBox {
-    top: calc(env(safe-area-inset-top, 0px) + 166px);
-    width: calc(100vw - 20px);
   }
 }
 
 @media (max-width: 520px) {
   .alertBox {
-    top: calc(env(safe-area-inset-top, 0px) + 170px);
-    width: calc(100vw - 18px);
+    --alert-nav-offset: 78px;
+
+    width: calc(100vw - 1.5rem);
   }
 
   .alert {
-    grid-template-columns: 38px minmax(0, 1fr) 30px;
-    gap: 0.65rem;
+    grid-template-columns: 38px minmax(0, 1fr) 32px;
+    gap: 0.62rem;
 
-    min-height: 64px;
-    padding: 0.65rem;
+    min-height: 62px;
+    padding: 0.62rem;
 
     border-left-width: 5px;
   }
@@ -400,52 +411,53 @@ $dark-info: #93c5fd;
   .icon {
     width: 38px;
     height: 38px;
-    font-size: 1rem;
+    font-size: 0.98rem;
   }
 
   .message {
-    font-size: 0.84rem;
-    line-height: 1.4;
+    font-size: 0.82rem;
+    line-height: 1.36;
   }
 
   .close {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     font-size: 1.1rem;
   }
 }
 
 @media (max-width: 390px) {
   .alertBox {
-    top: calc(env(safe-area-inset-top, 0px) + 162px);
-    width: calc(100vw - 14px);
+    --alert-nav-offset: 74px;
+
+    width: calc(100vw - 1.1rem);
   }
 
   .alert {
-    grid-template-columns: 34px minmax(0, 1fr) 28px;
+    grid-template-columns: 34px minmax(0, 1fr) 30px;
     gap: 0.55rem;
-    padding: 0.6rem;
+    padding: 0.58rem;
   }
 
   .icon {
     width: 34px;
     height: 34px;
-    font-size: 0.92rem;
+    font-size: 0.9rem;
   }
 
   .message {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
   }
 
   .close {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   .alert,
+  .alert::after,
   .close,
   .icon,
   .message {
