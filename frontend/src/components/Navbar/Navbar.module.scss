@@ -1153,3 +1153,9 @@ $dark-pink: #ff4f9a;
       0 16px 44px rgba(0, 0, 0, 0.32);
   }
 }
+
+@media (max-width: 760px) {
+  .navbarShell.scrolled::before {
+    top: calc(-1 * env(safe-area-inset-top, 0px));
+  }
+}

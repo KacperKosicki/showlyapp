@@ -56,6 +56,36 @@ const Navbar = ({
     }
   }, [theme]);
 
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const lightTop = "#ffffff";
+    const lightScrolled = "#f7f3ff";
+
+    const darkTop = "#111216";
+    const darkScrolled = "#191923";
+
+    const statusColor = isDarkTheme
+      ? scrolled
+        ? darkScrolled
+        : darkTop
+      : scrolled
+        ? lightScrolled
+        : lightTop;
+
+    let metaTheme = document.querySelector('meta[name="theme-color"]');
+
+    if (!metaTheme) {
+      metaTheme = document.createElement("meta");
+      metaTheme.setAttribute("name", "theme-color");
+      document.head.appendChild(metaTheme);
+    }
+
+    metaTheme.setAttribute("content", statusColor);
+
+    document.documentElement.style.setProperty("--app-status-bg", statusColor);
+  }, [isDarkTheme, scrolled]);
+
   const handleAuthNavigate = (path, scrollToId) => {
     navigate(path, { state: { scrollToId } });
   };
