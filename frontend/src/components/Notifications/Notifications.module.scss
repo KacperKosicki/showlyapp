@@ -6,9 +6,14 @@ $paper-muted: #f5f6fa;
 $paper-border: rgba(21, 21, 21, 0.1);
 $ink: #151515;
 
-/* =========================================================
-   Notifications — layout jak AllUsersList
-========================================================= */
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
 
 .section {
   position: relative;
@@ -18,6 +23,15 @@ $ink: #151515;
   color: $ink;
   overflow: hidden;
   font-family: $font-body;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-bg;
+    color: $dark-text;
+  }
 
   *,
   *::before,
@@ -39,6 +53,15 @@ $ink: #151515;
         rgba(245, 246, 250, 0) 72%);
     pointer-events: none;
     z-index: 0;
+
+    transition: background 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: radial-gradient(circle,
+          rgba(168, 149, 255, 0.16) 0%,
+          rgba(255, 79, 154, 0.08) 44%,
+          rgba(17, 18, 22, 0) 72%);
+    }
   }
 }
 
@@ -70,6 +93,17 @@ $ink: #151515;
   border: 1px solid $paper-border;
   box-shadow: 12px 12px 0 rgba(21, 21, 21, 0.075);
   text-align: left;
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.28);
+  }
 }
 
 .overline {
@@ -81,6 +115,12 @@ $ink: #151515;
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .heading {
@@ -91,8 +131,20 @@ $ink: #151515;
   letter-spacing: -0.075em;
   color: $ink;
 
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
+
   span {
     color: $primary-color;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
   }
 }
 
@@ -104,10 +156,22 @@ $ink: #151515;
   line-height: 1.78;
   color: rgba(21, 21, 21, 0.68);
 
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
+
   strong {
     color: $ink;
     font-family: $font-accent;
     font-weight: 950;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -127,6 +191,15 @@ $ink: #151515;
   align-content: space-between;
   gap: 0.65rem;
 
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
+
   strong {
     display: block;
     font-family: $font-accent;
@@ -134,6 +207,12 @@ $ink: #151515;
     font-weight: 950;
     line-height: 1;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   span {
@@ -142,6 +221,12 @@ $ink: #151515;
     font-size: 0.83rem;
     line-height: 1.35;
     color: rgba(21, 21, 21, 0.58);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -149,6 +234,12 @@ $ink: #151515;
   margin-top: 1.9rem;
   padding-top: 1.45rem;
   border-top: 1px solid rgba(21, 21, 21, 0.11);
+
+  transition: border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    border-top-color: $dark-border;
+  }
 
   span {
     display: block;
@@ -159,6 +250,12 @@ $ink: #151515;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: rgba(21, 21, 21, 0.58);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.5);
+    }
   }
 
   p {
@@ -167,6 +264,12 @@ $ink: #151515;
     font-size: 0.95rem;
     line-height: 1.65;
     color: rgba(21, 21, 21, 0.62);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -181,6 +284,17 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.12);
   box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
+  }
 }
 
 .chapterHead {
@@ -199,6 +313,12 @@ $ink: #151515;
     line-height: 1.06;
     letter-spacing: -0.045em;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -211,6 +331,12 @@ $ink: #151515;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .chapterNumber {
@@ -226,6 +352,19 @@ $ink: #151515;
   font-family: $font-accent;
   font-size: 0.9rem;
   font-weight: 950;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 /* =========================================================
@@ -242,6 +381,17 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.1);
   box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.04);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.42);
+    border-color: $dark-border;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.22);
+  }
 }
 
 .groupHeader {
@@ -261,6 +411,12 @@ $ink: #151515;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: rgba(21, 21, 21, 0.52);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.48);
+  }
 }
 
 .groupBadge {
@@ -279,6 +435,19 @@ $ink: #151515;
   font-weight: 950;
   line-height: 1;
   white-space: nowrap;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 /* =========================================================
@@ -299,6 +468,15 @@ $ink: #151515;
   background: $paper-soft;
   border: 1px dashed rgba(21, 21, 21, 0.18);
 
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.5);
+    border-color: rgba(244, 241, 234, 0.2);
+  }
+
   strong {
     display: block;
     margin-bottom: 0.35rem;
@@ -307,6 +485,12 @@ $ink: #151515;
     line-height: 1.08;
     letter-spacing: -0.04em;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   p {
@@ -316,6 +500,12 @@ $ink: #151515;
     font-size: 0.95rem;
     line-height: 1.65;
     color: rgba(21, 21, 21, 0.62);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -328,11 +518,28 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.1);
   box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.04);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 .emptyIcon {
   font-size: 1.45rem;
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 /* =========================================================
@@ -349,7 +556,14 @@ $ink: #151515;
     transform 0.18s ease,
     box-shadow 0.18s ease,
     border-color 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    opacity 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.86);
+    border-color: $dark-border;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 .item:hover {
@@ -357,18 +571,39 @@ $ink: #151515;
   border-color: rgba(21, 21, 21, 0.18);
   background: $paper-soft;
   box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.075);
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(168, 149, 255, 0.1);
+    border-color: rgba(168, 149, 255, 0.28);
+    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
+  }
 }
 
 .unread {
   border-color: rgba(255, 64, 129, 0.34);
+
+  :global(html[data-theme="dark"]) & {
+    border-color: rgba(255, 79, 154, 0.42);
+    box-shadow:
+      6px 6px 0 rgba(0, 0, 0, 0.24),
+      inset 4px 0 0 rgba(255, 79, 154, 0.52);
+  }
 }
 
 .read {
   opacity: 0.98;
+
+  :global(html[data-theme="dark"]) & {
+    opacity: 0.9;
+  }
 }
 
 .itemSystem {
   background: $paper-soft;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+  }
 }
 
 .link {
@@ -403,6 +638,17 @@ $ink: #151515;
   border: 1px solid rgba(21, 21, 21, 0.1);
   box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.04);
   overflow: hidden;
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 .avatar {
@@ -419,11 +665,26 @@ $ink: #151515;
   font-size: 1.35rem;
   color: $primary-color;
   background: #ffffff;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+    background: rgba(17, 18, 22, 0.72);
+  }
 }
 
 .avatarSkeleton {
   background: $paper-muted;
   position: relative;
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(244, 241, 234, 0.08);
+  }
 }
 
 .badgeDot {
@@ -434,6 +695,15 @@ $ink: #151515;
   height: 10px;
   background: $secondary-color;
   border: 2px solid #ffffff;
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-pink;
+    border-color: $dark-surface;
+  }
 }
 
 /* =========================================================
@@ -460,6 +730,12 @@ $ink: #151515;
   font-size: 1.05rem;
   color: $primary-color;
   margin-top: 0.15rem;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .metaText {
@@ -473,11 +749,23 @@ $ink: #151515;
   font-size: 0.95rem;
   line-height: 1.5;
 
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
+
   b,
   strong {
     color: $ink;
     font-weight: 950;
     font-family: $font-accent;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -487,6 +775,12 @@ $ink: #151515;
   letter-spacing: -0.2px;
   white-space: normal;
   font-family: $font-accent;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .date {
@@ -495,6 +789,12 @@ $ink: #151515;
   font-size: 0.86rem;
   line-height: 1.35;
   text-align: left;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.42);
+  }
 }
 
 .message {
@@ -514,6 +814,12 @@ $ink: #151515;
   text-overflow: ellipsis;
   overflow-wrap: anywhere;
   word-break: break-word;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.78);
+  }
 }
 
 /* =========================================================
@@ -547,27 +853,58 @@ $ink: #151515;
   text-transform: uppercase;
   white-space: nowrap;
   line-height: 1;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 .unreadPill {
   color: rgba(21, 21, 21, 0.68);
 
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+    background: rgba(17, 18, 22, 0.72);
+    border-color: $dark-border;
+  }
+
   strong {
     color: $secondary-color;
     font-weight: 950;
     font-family: $font-accent;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-pink;
+    }
   }
 }
 
 .readPill {
   color: rgba(21, 21, 21, 0.45);
   background: $paper-soft;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.44);
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
 }
 
 .openPill {
   color: #ffffff;
   background: $ink;
   border-color: $ink;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-bg;
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.22);
+  }
 }
 
 /* =========================================================
@@ -583,6 +920,12 @@ $ink: #151515;
   background: $paper-muted;
   display: inline-block;
   min-height: 14px;
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(244, 241, 234, 0.08);
+  }
 }
 
 .shimmer {
@@ -599,6 +942,13 @@ $ink: #151515;
         rgba(255, 255, 255, 0.76),
         transparent);
     animation: shimmer 1.2s infinite;
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(90deg,
+          transparent,
+          rgba(244, 241, 234, 0.14),
+          transparent);
+    }
   }
 }
 
@@ -609,6 +959,12 @@ $ink: #151515;
   vertical-align: middle;
   background: $paper-muted;
   position: relative;
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(244, 241, 234, 0.08);
+  }
 }
 
 .metaSkel {
@@ -616,6 +972,12 @@ $ink: #151515;
   width: min(520px, 100%);
   background: $paper-muted;
   position: relative;
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(244, 241, 234, 0.08);
+  }
 }
 
 .dateSkel {
@@ -623,6 +985,12 @@ $ink: #151515;
   width: 170px;
   background: $paper-muted;
   position: relative;
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(244, 241, 234, 0.08);
+  }
 }
 
 .pillSkel {
@@ -630,6 +998,12 @@ $ink: #151515;
   height: 30px;
   background: $paper-muted;
   position: relative;
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(244, 241, 234, 0.08);
+  }
 }
 
 /* =========================================================
@@ -771,6 +1145,10 @@ $ink: #151515;
   .side,
   .content {
     box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.06);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.26);
+    }
   }
 
   .messageGroup,
@@ -824,7 +1202,52 @@ $ink: #151515;
 
 @media (prefers-reduced-motion: reduce) {
 
+  .section,
+  .section::before,
+  .side,
+  .overline,
+  .heading,
+  .heading span,
+  .description,
+  .description strong,
+  .metaCard,
+  .metaCard strong,
+  .metaCard span,
+  .infoBox,
+  .infoBox span,
+  .infoBox p,
+  .content,
+  .chapterHead h3,
+  .chapterLabel,
+  .chapterNumber,
+  .messageGroup,
+  .groupLabel,
+  .groupBadge,
+  .emptyState,
+  .emptyState strong,
+  .emptyState p,
+  .emptyIconWrap,
+  .emptyIcon,
   .item,
+  .avatarWrap,
+  .avatarSystem,
+  .avatarSkeleton,
+  .badgeDot,
+  .icon,
+  .metaText,
+  .metaText b,
+  .metaText strong,
+  .name,
+  .date,
+  .message,
+  .unreadPill,
+  .readPill,
+  .openPill,
+  .skeleton,
+  .nameSkeleton,
+  .metaSkel,
+  .dateSkel,
+  .pillSkel,
   .shimmer::after {
     animation: none;
     transition: none;

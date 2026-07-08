@@ -5,6 +5,15 @@ $paper-soft: #fbfbfd;
 $paper-muted: #f5f6fa;
 $ink: #151515;
 
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
+
 .navbarShell {
   position: fixed;
   top: 0;
@@ -43,10 +52,22 @@ $ink: #151515;
   box-shadow: 0 12px 34px rgba(21, 21, 21, 0.075);
   backdrop-filter: blur(14px);
 
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.9);
+    border-bottom-color: $dark-border;
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.34);
+  }
+
   .navbar {
     max-width: 1160px;
     min-height: 56px;
     box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.055);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow:
+        6px 6px 0 rgba(0, 0, 0, 0.24),
+        0 18px 48px rgba(0, 0, 0, 0.26);
+    }
   }
 
   .logoMark {
@@ -71,7 +92,8 @@ $ink: #151515;
 
   .authButtons,
   .userSlot,
-  .loadingSlot {
+  .loadingSlot,
+  .themeToggle {
     box-shadow: none;
   }
 }
@@ -98,7 +120,20 @@ $ink: #151515;
     max-width 0.22s ease,
     min-height 0.22s ease,
     box-shadow 0.22s ease,
-    border-color 0.22s ease;
+    border-color 0.22s ease,
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background:
+      radial-gradient(circle at 12% 0%, rgba(168, 149, 255, 0.11), transparent 34%),
+      radial-gradient(circle at 92% 18%, rgba(255, 79, 154, 0.08), transparent 32%),
+      $dark-surface;
+    border-color: $dark-border;
+    box-shadow:
+      8px 8px 0 rgba(0, 0, 0, 0.24),
+      0 18px 55px rgba(0, 0, 0, 0.22);
+  }
 }
 
 /* =========================
@@ -118,7 +153,12 @@ $ink: #151515;
 
   transition:
     transform 0.18s ease,
-    opacity 0.18s ease;
+    opacity 0.18s ease,
+    color 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 
   &:hover {
     transform: translate(-2px, -2px);
@@ -127,6 +167,10 @@ $ink: #151515;
   &:focus-visible {
     outline: 3px solid rgba(111, 78, 242, 0.22);
     outline-offset: 4px;
+  }
+
+  :global(html[data-theme="dark"]) &:focus-visible {
+    outline-color: rgba(168, 149, 255, 0.32);
   }
 }
 
@@ -151,7 +195,17 @@ $ink: #151515;
   transition:
     width 0.22s ease,
     height 0.22s ease,
-    box-shadow 0.22s ease;
+    box-shadow 0.22s ease,
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+  }
 }
 
 .logoGroup {
@@ -174,6 +228,10 @@ $ink: #151515;
   transition:
     font-size 0.22s ease,
     color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .logoSub {
@@ -193,7 +251,12 @@ $ink: #151515;
     opacity 0.22s ease,
     transform 0.22s ease,
     max-height 0.22s ease,
-    margin 0.22s ease;
+    margin 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .beta {
@@ -215,6 +278,17 @@ $ink: #151515;
   text-transform: uppercase;
   line-height: 1;
   white-space: nowrap;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(255, 255, 255, 0.045);
+    color: $dark-muted;
+    border-color: $dark-border;
+  }
 }
 
 /* =========================
@@ -227,9 +301,102 @@ $ink: #151515;
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  gap: 0.55rem;
 
   position: relative;
   z-index: 20;
+}
+
+/* =========================
+   Theme toggle
+========================= */
+
+.themeToggle {
+  appearance: none;
+  flex: 0 0 auto;
+
+  min-height: 48px;
+  padding: 0 0.85rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.48rem;
+
+  border-radius: 0;
+  border: 1px solid rgba(21, 21, 21, 0.12);
+  background: $paper-bg;
+  color: rgba(21, 21, 21, 0.74);
+  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.05);
+
+  cursor: pointer;
+
+  font-family: $font-accent;
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+
+  &:hover {
+    transform: translate(-2px, -2px);
+    background: $paper-muted;
+    color: $ink;
+    box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.1);
+  }
+
+  &:active {
+    transform: translate(0, 0);
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: 3px solid rgba(111, 78, 242, 0.22);
+    outline-offset: 3px;
+  }
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-surface-soft;
+    color: $dark-text;
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.22);
+
+    &:hover {
+      background: rgba(168, 149, 255, 0.16);
+      color: $dark-primary;
+      border-color: rgba(168, 149, 255, 0.34);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.32);
+    }
+
+    &:focus-visible {
+      outline-color: rgba(168, 149, 255, 0.32);
+    }
+  }
+}
+
+.themeIcon {
+  width: 1rem;
+  height: 1rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+}
+
+.themeLabel {
+  display: inline-block;
 }
 
 /* =========================
@@ -242,6 +409,17 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.1);
   box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.05);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.92);
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.22);
+  }
 }
 
 .userSlot {
@@ -273,6 +451,10 @@ $ink: #151515;
   background: $paper-muted;
   border: 1px solid rgba(21, 21, 21, 0.06);
 
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
   &::after {
     content: "";
     position: absolute;
@@ -283,6 +465,18 @@ $ink: #151515;
         rgba(255, 255, 255, 0.75),
         transparent);
     animation: shimmer 1.15s infinite;
+  }
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-surface-soft;
+    border-color: $dark-border;
+
+    &::after {
+      background: linear-gradient(90deg,
+          transparent,
+          rgba(255, 255, 255, 0.08),
+          transparent);
+    }
   }
 }
 
@@ -298,15 +492,11 @@ $ink: #151515;
 
 .authButtons {
   padding: 0.25rem;
+  min-width: 0;
 
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-
-  transition:
-    box-shadow 0.22s ease,
-    background 0.22s ease,
-    border-color 0.22s ease;
 }
 
 .loginPrompt,
@@ -349,6 +539,10 @@ $ink: #151515;
     outline-offset: 3px;
   }
 
+  :global(html[data-theme="dark"]) &:focus-visible {
+    outline-color: rgba(168, 149, 255, 0.32);
+  }
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -371,6 +565,18 @@ $ink: #151515;
     transform: translate(0, 0);
     box-shadow: none;
   }
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-surface-soft;
+    color: $dark-text;
+    border-color: $dark-border;
+
+    &:hover {
+      background: rgba(168, 149, 255, 0.14);
+      color: $dark-primary;
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28);
+    }
+  }
 }
 
 .registerPrompt {
@@ -386,6 +592,16 @@ $ink: #151515;
   &:active {
     transform: translate(0, 0);
     box-shadow: none;
+  }
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+
+    &:hover {
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.34);
+    }
   }
 }
 
@@ -418,13 +634,18 @@ $ink: #151515;
     width: 100%;
     min-width: 0;
     justify-content: center;
+    gap: 0.5rem;
     position: relative;
     z-index: 100;
   }
 
+  .themeToggle {
+    min-height: 48px;
+  }
+
   .userSlot,
   .loadingSlot {
-    width: 100%;
+    width: calc(100% - 126px);
     max-width: 100%;
   }
 
@@ -438,8 +659,26 @@ $ink: #151515;
   }
 
   .authButtons {
-    width: 100%;
+    width: calc(100% - 126px);
     max-width: 420px;
+  }
+}
+
+@media (max-width: 620px) {
+  .themeToggle {
+    width: 48px;
+    min-width: 48px;
+    padding: 0;
+  }
+
+  .themeLabel {
+    display: none;
+  }
+
+  .userSlot,
+  .loadingSlot,
+  .authButtons {
+    width: calc(100% - 58px);
   }
 }
 
@@ -480,8 +719,14 @@ $ink: #151515;
     width: 100%;
   }
 
+  .themeToggle {
+    width: 46px;
+    min-width: 46px;
+    min-height: 44px;
+  }
+
   .userSlot {
-    width: 100%;
+    width: calc(100% - 56px);
     max-width: 100%;
     padding: 0.25rem;
   }
@@ -491,7 +736,7 @@ $ink: #151515;
   }
 
   .authButtons {
-    width: 100%;
+    width: calc(100% - 56px);
     max-width: 100%;
     display: grid;
     grid-template-columns: 1fr 1.25fr;
@@ -511,7 +756,7 @@ $ink: #151515;
   }
 
   .loadingSlot {
-    width: 100%;
+    width: calc(100% - 56px);
     justify-content: center;
   }
 }
@@ -561,6 +806,7 @@ $ink: #151515;
   .logoText,
   .logoSub,
   .beta,
+  .themeToggle,
   .authButtons,
   .userSlot,
   .loadingSlot,

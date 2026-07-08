@@ -8,9 +8,16 @@ $paper-muted: #f5f6fa;
 $paper-border: rgba(21, 21, 21, 0.1);
 $ink: #151515;
 
-/* =========================================================
-   MessageForm — papierowy styl Showly
-========================================================= */
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
+$dark-disabled-bg: rgba(244, 241, 234, 0.06);
+$dark-disabled-text: rgba(244, 241, 234, 0.34);
 
 .page {
   min-height: 100vh;
@@ -24,6 +31,15 @@ $ink: #151515;
   background: #ffffff;
 
   isolation: isolate;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-bg;
+    color: $dark-text;
+  }
 
   :is(button, input, textarea, a) {
     font-family: inherit;
@@ -49,6 +65,15 @@ $ink: #151515;
         rgba(245, 246, 250, 0) 72%);
     pointer-events: none;
     z-index: 0;
+
+    transition: background 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: radial-gradient(circle,
+          rgba(168, 149, 255, 0.16) 0%,
+          rgba(255, 79, 154, 0.08) 44%,
+          rgba(17, 18, 22, 0) 72%);
+    }
   }
 }
 
@@ -65,6 +90,18 @@ $ink: #151515;
   background-size: 64px 64px;
   opacity: 0.28;
   mask-image: radial-gradient(circle at 50% 34%, #000 0%, transparent 68%);
+
+  transition:
+    background 0.22s ease,
+    opacity 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background:
+      linear-gradient(to right, rgba(244, 241, 234, 0.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(244, 241, 234, 0.04) 1px, transparent 1px);
+    opacity: 0.22;
+    mask-image: radial-gradient(circle at 50% 34%, #000 0%, transparent 70%);
+  }
 }
 
 .noiseLayer {
@@ -119,11 +156,25 @@ $ink: #151515;
     box-shadow 0.18s ease,
     color 0.18s ease,
     background 0.18s ease,
-    border-color 0.18s ease;
+    border-color 0.18s ease,
+    opacity 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+  }
 
   svg {
     color: $primary-color;
     flex-shrink: 0;
+
+    transition: color 0.18s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
   }
 
   &:hover {
@@ -132,6 +183,13 @@ $ink: #151515;
     background: #ffffff;
     border-color: rgba(21, 21, 21, 0.18);
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.07);
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+      background: rgba(168, 149, 255, 0.12);
+      border-color: rgba(168, 149, 255, 0.28);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.3);
+    }
   }
 
   &.disabled {
@@ -151,6 +209,17 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.12);
   box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
+  }
 }
 
 .heroDecor {
@@ -176,6 +245,17 @@ $ink: #151515;
   background-size: 56px 56px;
   opacity: 0.22;
   mask-image: radial-gradient(circle at 32% 18%, #000 0%, transparent 72%);
+
+  transition:
+    background 0.22s ease,
+    opacity 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background:
+      linear-gradient(to right, rgba(244, 241, 234, 0.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(244, 241, 234, 0.04) 1px, transparent 1px);
+    opacity: 0.18;
+  }
 }
 
 .heroTopBar {
@@ -209,14 +289,35 @@ $ink: #151515;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
+
   svg {
     color: $primary-color;
     flex-shrink: 0;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
   }
 }
 
 .heroBadgeSoft {
   background: #ffffff;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.62);
+  }
 }
 
 .heroInner {
@@ -255,6 +356,17 @@ $ink: #151515;
   letter-spacing: 0.09em;
   text-transform: uppercase;
 
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+    background: rgba(168, 149, 255, 0.12);
+    border-color: rgba(168, 149, 255, 0.28);
+  }
+
   svg {
     flex-shrink: 0;
   }
@@ -271,10 +383,22 @@ $ink: #151515;
   letter-spacing: -0.085em;
   color: $ink;
   font-weight: 950;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .receiverName {
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .heroText {
@@ -284,6 +408,12 @@ $ink: #151515;
   color: rgba(21, 21, 21, 0.66);
   line-height: 1.7;
   font-size: 1rem;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .metaRow {
@@ -297,12 +427,24 @@ $ink: #151515;
   color: rgba(21, 21, 21, 0.56);
   font-size: 0.9rem;
   line-height: 1.5;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.52);
+  }
 }
 
 .dot {
   width: 6px;
   height: 6px;
   background: rgba(21, 21, 21, 0.22);
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(244, 241, 234, 0.22);
+  }
 }
 
 .heroRight {
@@ -320,6 +462,17 @@ $ink: #151515;
   background: $paper-soft;
   border: 1px solid rgba(21, 21, 21, 0.1);
   box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.05);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+    box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.26);
+  }
 }
 
 .avatar {
@@ -332,6 +485,15 @@ $ink: #151515;
   border-radius: 0;
   border: 1px solid rgba(21, 21, 21, 0.08);
   background: #ffffff;
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.72);
+    border-color: rgba(244, 241, 234, 0.12);
+  }
 }
 
 .avatarSkeleton {
@@ -341,6 +503,15 @@ $ink: #151515;
   color: rgba(21, 21, 21, 0.32);
   background: #ffffff;
   font-size: 2.5rem;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.34);
+    background: rgba(17, 18, 22, 0.72);
+  }
 }
 
 .avatarRing {
@@ -360,6 +531,17 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.12);
   box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
+  }
 
   >* {
     position: relative;
@@ -399,6 +581,12 @@ $ink: #151515;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .formTitle {
@@ -410,6 +598,12 @@ $ink: #151515;
   letter-spacing: -0.045em;
   color: $ink;
   font-weight: 950;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .formSub {
@@ -419,6 +613,12 @@ $ink: #151515;
   font-size: 0.94rem;
   color: rgba(21, 21, 21, 0.58);
   line-height: 1.55;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .senderHint {
@@ -440,10 +640,27 @@ $ink: #151515;
   font-size: 0.9rem;
   font-weight: 700;
 
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
+
   strong {
     color: $ink;
     font-family: $font-accent;
     font-weight: 950;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -471,22 +688,46 @@ $ink: #151515;
     border-color 0.18s ease,
     box-shadow 0.18s ease,
     transform 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    color 0.18s ease,
+    opacity 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+    background: rgba(17, 18, 22, 0.72);
+    border-color: $dark-border;
+  }
 
   &::placeholder {
     color: rgba(21, 21, 21, 0.38);
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.36);
+    }
   }
 
   &:focus {
     border-color: rgba(111, 78, 242, 0.34);
     box-shadow: 5px 5px 0 rgba(111, 78, 242, 0.08);
     transform: translate(-2px, -2px);
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(17, 18, 22, 0.86);
+      border-color: rgba(168, 149, 255, 0.38);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
   }
 
   &:disabled {
     opacity: 0.68;
     cursor: not-allowed;
     background: $paper-muted;
+
+    :global(html[data-theme="dark"]) & {
+      background: $dark-disabled-bg;
+      color: $dark-disabled-text;
+      border-color: rgba(244, 241, 234, 0.08);
+    }
   }
 }
 
@@ -500,11 +741,23 @@ $ink: #151515;
   font-size: 0.84rem;
   line-height: 1.45;
 
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.5);
+  }
+
   strong {
     flex: 0 0 auto;
     color: $primary-color;
     font-family: $font-accent;
     font-weight: 950;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
   }
 }
 
@@ -536,12 +789,27 @@ $ink: #151515;
     transform 0.18s ease,
     box-shadow 0.18s ease,
     background 0.18s ease,
-    opacity 0.18s ease;
+    color 0.18s ease,
+    border-color 0.18s ease,
+    opacity 0.18s ease,
+    filter 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-bg;
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.28);
+  }
 
   &:hover:not(:disabled) {
     transform: translate(-2px, -2px);
     background: #000000;
     box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.12);
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(135deg, #b8a9ff, #ff68aa);
+      box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.34);
+    }
   }
 
   &:active:not(:disabled) {
@@ -552,6 +820,10 @@ $ink: #151515;
   &:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+
+    :global(html[data-theme="dark"]) & {
+      filter: saturate(0.65);
+    }
   }
 }
 
@@ -569,6 +841,17 @@ $ink: #151515;
   color: rgba(21, 21, 21, 0.58);
   line-height: 1.55;
 
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.5);
+    border-color: rgba(244, 241, 234, 0.2);
+    color: $dark-muted;
+  }
+
   p {
     margin: 0;
   }
@@ -585,6 +868,17 @@ $ink: #151515;
   color: $primary-color;
   background: #ffffff;
   border: 1px solid rgba(21, 21, 21, 0.1);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
 }
 
 /* =========================================================
@@ -599,6 +893,12 @@ $ink: #151515;
   background: rgba(21, 21, 21, 0.1);
   position: relative;
   vertical-align: middle;
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(244, 241, 234, 0.1);
+  }
 }
 
 .shimmer {
@@ -618,6 +918,13 @@ $ink: #151515;
         transparent);
 
     animation: shimmer 1.2s infinite;
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(90deg,
+          transparent,
+          rgba(244, 241, 234, 0.14),
+          transparent);
+    }
   }
 }
 
@@ -672,6 +979,10 @@ $ink: #151515;
   .hero,
   .formCard {
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.055);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.26);
+    }
   }
 
   .heroTopBar {

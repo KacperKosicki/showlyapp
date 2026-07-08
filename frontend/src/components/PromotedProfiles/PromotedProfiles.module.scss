@@ -6,9 +6,14 @@ $paper-muted: #f5f6fa;
 $paper-border: rgba(21, 21, 21, 0.1);
 $ink: #151515;
 
-/* =========================================================
-   PromotedProfiles — layout jak AllUsersList
-========================================================= */
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-teal: #5eead4;
+$dark-gold: #fbbf24;
 
 .section {
   position: relative;
@@ -25,6 +30,21 @@ $ink: #151515;
 
   --promoted-primary: #0f766e;
   --promoted-secondary: #f59e0b;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    --promoted-primary: #5eead4;
+    --promoted-secondary: #fbbf24;
+
+    background:
+      radial-gradient(620px 420px at 10% 18%, rgba(94, 234, 212, 0.08), transparent 68%),
+      radial-gradient(700px 460px at 88% 34%, rgba(251, 191, 36, 0.055), transparent 70%),
+      linear-gradient(180deg, $dark-bg 0%, #151720 48%, $dark-bg 100%);
+    color: $dark-text;
+  }
 
   *,
   *::before,
@@ -46,6 +66,18 @@ $ink: #151515;
         rgba(245, 246, 250, 0) 72%);
     pointer-events: none;
     z-index: 0;
+
+    transition:
+      background 0.22s ease,
+      opacity 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: radial-gradient(circle,
+          rgba(94, 234, 212, 0.1) 0%,
+          rgba(251, 191, 36, 0.04) 45%,
+          rgba(17, 18, 22, 0) 72%);
+      opacity: 0.9;
+    }
   }
 }
 
@@ -77,6 +109,19 @@ $ink: #151515;
   border: 1px solid $paper-border;
   box-shadow: 12px 12px 0 rgba(21, 21, 21, 0.075);
   text-align: left;
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.88);
+    border-color: $dark-border;
+    box-shadow:
+      12px 12px 0 rgba(0, 0, 0, 0.26),
+      0 22px 62px rgba(0, 0, 0, 0.18);
+  }
 }
 
 .overline {
@@ -88,6 +133,8 @@ $ink: #151515;
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: var(--promoted-primary);
+
+  transition: color 0.22s ease;
 }
 
 .heading {
@@ -98,8 +145,15 @@ $ink: #151515;
   letter-spacing: -0.075em;
   color: $ink;
 
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
+
   span {
     color: var(--promoted-primary);
+    transition: color 0.22s ease;
   }
 }
 
@@ -110,6 +164,12 @@ $ink: #151515;
   font-size: 1rem;
   line-height: 1.78;
   color: rgba(21, 21, 21, 0.68);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .metaRow {
@@ -128,6 +188,17 @@ $ink: #151515;
   align-content: space-between;
   gap: 0.65rem;
 
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.74);
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.18);
+  }
+
   strong {
     display: block;
     font-family: $font-accent;
@@ -135,6 +206,12 @@ $ink: #151515;
     font-weight: 950;
     line-height: 1;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   span {
@@ -143,6 +220,12 @@ $ink: #151515;
     font-size: 0.83rem;
     line-height: 1.35;
     color: rgba(21, 21, 21, 0.58);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -150,6 +233,12 @@ $ink: #151515;
   margin-top: 1.9rem;
   padding-top: 1.45rem;
   border-top: 1px solid rgba(21, 21, 21, 0.11);
+
+  transition: border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    border-top-color: $dark-border;
+  }
 
   span {
     display: inline-flex;
@@ -163,6 +252,12 @@ $ink: #151515;
     text-transform: uppercase;
     color: rgba(21, 21, 21, 0.58);
 
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
+
     svg {
       color: var(--promoted-primary);
       font-size: 0.85rem;
@@ -175,6 +270,12 @@ $ink: #151515;
     font-size: 0.95rem;
     line-height: 1.65;
     color: rgba(21, 21, 21, 0.62);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -189,6 +290,19 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.12);
   box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.88);
+    border-color: $dark-border;
+    box-shadow:
+      10px 10px 0 rgba(0, 0, 0, 0.24),
+      0 20px 58px rgba(0, 0, 0, 0.16);
+  }
 }
 
 .chapterHead {
@@ -207,6 +321,12 @@ $ink: #151515;
     line-height: 1.06;
     letter-spacing: -0.045em;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -233,6 +353,19 @@ $ink: #151515;
   font-family: $font-accent;
   font-size: 0.9rem;
   font-weight: 950;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, var(--promoted-primary), var(--promoted-secondary));
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 /* =========================================================
@@ -255,16 +388,26 @@ $ink: #151515;
   width: var(--sidePad);
   pointer-events: none;
   z-index: 2;
+
+  transition: background 0.22s ease;
 }
 
 .carousel::before {
   left: 0;
   background: linear-gradient(90deg, #ffffff 18%, rgba(255, 255, 255, 0));
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(90deg, rgba(26, 28, 34, 0.98) 18%, rgba(26, 28, 34, 0));
+  }
 }
 
 .carousel::after {
   right: 0;
   background: linear-gradient(270deg, #ffffff 18%, rgba(255, 255, 255, 0));
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(270deg, rgba(26, 28, 34, 0.98) 18%, rgba(26, 28, 34, 0));
+  }
 }
 
 .grid {
@@ -347,6 +490,21 @@ $ink: #151515;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+    background: rgba(35, 38, 48, 0.94);
+    border-color: $dark-border;
+    box-shadow:
+      5px 5px 0 rgba(0, 0, 0, 0.26),
+      0 0 0 3px rgba(244, 241, 234, 0.03);
+  }
+
   svg {
     color: var(--promoted-secondary);
   }
@@ -357,8 +515,18 @@ $ink: #151515;
   background: #fffbeb;
   border-color: rgba(245, 158, 11, 0.34);
 
+  :global(html[data-theme="dark"]) & {
+    color: #fde68a;
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(251, 191, 36, 0.34);
+  }
+
   svg {
     color: #f59e0b;
+
+    :global(html[data-theme="dark"]) & {
+      color: #fbbf24;
+    }
   }
 }
 
@@ -367,8 +535,18 @@ $ink: #151515;
   background: #f0fdfa;
   border-color: rgba(15, 118, 110, 0.28);
 
+  :global(html[data-theme="dark"]) & {
+    color: #99f6e4;
+    background: rgba(15, 118, 110, 0.14);
+    border-color: rgba(94, 234, 212, 0.28);
+  }
+
   svg {
     color: #0f766e;
+
+    :global(html[data-theme="dark"]) & {
+      color: #5eead4;
+    }
   }
 }
 
@@ -401,16 +579,42 @@ $ink: #151515;
     transform 0.18s ease,
     box-shadow 0.18s ease,
     background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
     opacity 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-surface-soft;
+    color: $dark-text;
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+  }
 
   svg {
     color: $ink;
     font-size: 1rem;
+
+    transition: color 0.18s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   &:hover {
     background: $paper-muted;
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.12);
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(94, 234, 212, 0.12);
+      color: var(--promoted-primary);
+      border-color: rgba(94, 234, 212, 0.28);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.3);
+
+      svg {
+        color: var(--promoted-primary);
+      }
+    }
   }
 
   &:active {
@@ -420,6 +624,10 @@ $ink: #151515;
   &:focus-visible {
     outline: 3px solid rgba(15, 118, 110, 0.2);
     outline-offset: 3px;
+
+    :global(html[data-theme="dark"]) & {
+      outline-color: rgba(94, 234, 212, 0.3);
+    }
   }
 }
 
@@ -470,6 +678,19 @@ $ink: #151515;
   box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.06);
   text-align: center;
 
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.88);
+    border-color: $dark-border;
+    box-shadow:
+      8px 8px 0 rgba(0, 0, 0, 0.24),
+      0 20px 58px rgba(0, 0, 0, 0.16);
+  }
+
   span {
     display: inline-flex;
     margin-bottom: 0.75rem;
@@ -488,6 +709,12 @@ $ink: #151515;
     line-height: 1.05;
     letter-spacing: -0.04em;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   p {
@@ -495,6 +722,12 @@ $ink: #151515;
     margin: 0.75rem auto 0;
     color: rgba(21, 21, 21, 0.62);
     line-height: 1.6;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -588,6 +821,12 @@ $ink: #151515;
 
     animation: mobileHintFade 2s ease-in-out infinite;
 
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
+
     span {
       font-size: 1rem;
       color: var(--promoted-primary);
@@ -645,6 +884,12 @@ $ink: #151515;
   .side,
   .content {
     box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.06);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow:
+        6px 6px 0 rgba(0, 0, 0, 0.24),
+        0 16px 42px rgba(0, 0, 0, 0.14);
+    }
   }
 
   .mobileHint {
@@ -654,9 +899,33 @@ $ink: #151515;
 
 @media (prefers-reduced-motion: reduce) {
 
+  .section,
+  .section::before,
+  .side,
+  .overline,
+  .heading,
+  .heading span,
+  .description,
+  .metaCard,
+  .metaCard strong,
+  .metaCard span,
+  .infoBox,
+  .infoBox span,
+  .infoBox p,
+  .content,
+  .chapterHead h3,
+  .chapterLabel,
+  .chapterNumber,
+  .carousel::before,
+  .carousel::after,
+  .planBadge,
   .navBtn,
+  .navBtn svg,
   .grid,
-  .mobileHint {
+  .mobileHint,
+  .loadingCard,
+  .loadingCard strong,
+  .loadingCard p {
     animation: none;
     transition: none;
     scroll-behavior: auto;

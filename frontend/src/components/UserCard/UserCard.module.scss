@@ -1288,3 +1288,373 @@ $warning: #a16207;
     outline-color: color-mix(in srgb, var(--uc-primary) 32%, transparent);
   }
 }
+
+/* =========================================================
+   DARK MODE — UserCard
+   Doklej na sam dół pliku
+========================================================= */
+
+:global(html[data-theme="dark"]) {
+  .card {
+    background: #1a1c22;
+    color: #f4f1ea;
+    border-color: color-mix(in srgb,
+        var(--uc-primary) 34%,
+        rgba(244, 241, 234, 0.14));
+
+    box-shadow:
+      10px 10px 0 rgba(0, 0, 0, 0.28),
+      0 20px 58px rgba(0, 0, 0, 0.22);
+  }
+
+  .partnerCard {
+    border-color: var(--uc-partner-border);
+
+    box-shadow:
+      10px 10px 0 rgba(0, 0, 0, 0.28),
+      0 0 0 4px color-mix(in srgb, var(--uc-partner) 18%, transparent),
+      0 22px 62px rgba(0, 0, 0, 0.18);
+  }
+
+  /* HERO */
+
+  .hero {
+    background:
+      linear-gradient(135deg,
+        color-mix(in srgb, var(--uc-primary) 18%, #1a1c22) 0%,
+        #1a1c22 46%,
+        color-mix(in srgb, var(--uc-secondary) 14%, #1a1c22) 100%);
+
+    border-bottom-color: color-mix(in srgb,
+        var(--uc-primary) 30%,
+        rgba(244, 241, 234, 0.14));
+  }
+
+  .heroWithBanner {
+    background:
+      linear-gradient(135deg,
+        color-mix(in srgb, var(--uc-primary) 24%, transparent),
+        color-mix(in srgb, var(--uc-secondary) 18%, transparent)),
+      linear-gradient(180deg,
+        rgba(17, 18, 22, 0.64),
+        rgba(26, 28, 34, 0.96)),
+      var(--uc-banner-image) center / cover no-repeat,
+      #1a1c22;
+  }
+
+  .heroTop,
+  .heroInner,
+  .heroInfo {
+    color: #f4f1ea;
+  }
+
+  .locPill,
+  .ratingPill {
+    background: rgba(35, 38, 48, 0.78);
+    color: rgba(244, 241, 234, 0.72);
+    border-color: color-mix(in srgb,
+        var(--uc-primary) 28%,
+        rgba(244, 241, 234, 0.14));
+
+    svg {
+      color: var(--uc-primary);
+    }
+  }
+
+  .ratingPill strong {
+    color: #f4f1ea;
+  }
+
+  .dot {
+    background: color-mix(in srgb,
+        var(--uc-primary) 52%,
+        rgba(244, 241, 234, 0.32));
+  }
+
+  .avatarWrap {
+    background: #232630;
+    border-color: color-mix(in srgb,
+        var(--uc-primary) 34%,
+        rgba(244, 241, 234, 0.14));
+
+    box-shadow:
+      5px 5px 0 rgba(0, 0, 0, 0.28),
+      0 0 0 4px color-mix(in srgb, var(--uc-primary) 10%, transparent);
+  }
+
+  .avatar {
+    background: #111216;
+    border-color: rgba(244, 241, 234, 0.12);
+  }
+
+  .name {
+    color: color-mix(in srgb, var(--uc-primary) 26%, #f4f1ea);
+  }
+
+  .profileBadge,
+  .role {
+    color: color-mix(in srgb, var(--uc-primary) 42%, #f4f1ea);
+    background: color-mix(in srgb, var(--uc-primary) 13%, #232630);
+    border-color: color-mix(in srgb,
+        var(--uc-primary) 28%,
+        rgba(244, 241, 234, 0.14));
+  }
+
+  .partnerBadge {
+    color: #f4f1ea;
+    background: color-mix(in srgb, var(--uc-partner) 18%, #232630);
+    border-color: var(--uc-partner-border);
+  }
+
+  .partner_partner,
+  .partner_verified,
+  .partner_ambassador,
+  .partner_founding-partner {
+    color: #f4f1ea;
+  }
+
+  .type_zawodowy,
+  .type_hobbystyczny,
+  .type_serwis,
+  .type_społeczność {
+    background: color-mix(in srgb, var(--uc-primary) 12%, #232630);
+  }
+
+  /* BODY */
+
+  .body {
+    background: #1a1c22;
+  }
+
+  .descBox,
+  .pricePill,
+  .linkTile,
+  .statBox {
+    background:
+      linear-gradient(135deg,
+        rgba(35, 38, 48, 0.92),
+        color-mix(in srgb, var(--uc-primary) 7%, #232630));
+
+    border-color: color-mix(in srgb,
+        var(--uc-primary) 22%,
+        rgba(244, 241, 234, 0.14));
+  }
+
+  .description {
+    color: rgba(244, 241, 234, 0.72);
+  }
+
+  .toggleButton {
+    color: color-mix(in srgb, var(--uc-primary) 72%, #f4f1ea);
+
+    &:focus-visible {
+      outline-color: color-mix(in srgb, var(--uc-primary) 38%, transparent);
+    }
+  }
+
+  .emptyBox {
+    background: rgba(35, 38, 48, 0.74);
+    border-color: color-mix(in srgb,
+        var(--uc-primary) 24%,
+        rgba(244, 241, 234, 0.16));
+  }
+
+  .emptyIcon,
+  .linkBadge,
+  .statIcon {
+    color: color-mix(in srgb, var(--uc-primary) 76%, #f4f1ea);
+    background: color-mix(in srgb, var(--uc-primary) 10%, #232630);
+    border-color: color-mix(in srgb,
+        var(--uc-primary) 28%,
+        rgba(244, 241, 234, 0.14));
+  }
+
+  .emptyContent strong,
+  .linkText strong,
+  .statBox strong,
+  .pricePill strong {
+    color: color-mix(in srgb, var(--uc-primary) 22%, #f4f1ea);
+  }
+
+  .emptyContent span,
+  .pricePill small,
+  .pricePill em,
+  .linkText small,
+  .statBox small {
+    color: rgba(244, 241, 234, 0.58);
+  }
+
+  .splitLine {
+    background: rgba(244, 241, 234, 0.13);
+  }
+
+  .tag {
+    color: color-mix(in srgb, var(--uc-primary) 42%, #f4f1ea);
+    background: color-mix(in srgb, var(--uc-primary) 11%, #232630);
+    border-color: color-mix(in srgb,
+        var(--uc-primary) 26%,
+        rgba(244, 241, 234, 0.14));
+
+    &:hover {
+      background: color-mix(in srgb, var(--uc-primary) 16%, #232630);
+      box-shadow:
+        4px 4px 0 color-mix(in srgb, var(--uc-primary) 18%, rgba(0, 0, 0, 0.28));
+    }
+  }
+
+  /* PRICE */
+
+  .priceIcon {
+    background: linear-gradient(135deg, var(--uc-primary), var(--uc-secondary));
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #111216;
+  }
+
+  .noReservationInfo {
+    color: color-mix(in srgb, var(--uc-secondary) 42%, #f4f1ea);
+    background: color-mix(in srgb, var(--uc-secondary) 10%, #232630);
+    border-color: color-mix(in srgb,
+        var(--uc-secondary) 30%,
+        rgba(244, 241, 234, 0.14));
+  }
+
+  /* LINKS */
+
+  .linkTile {
+    color: rgba(244, 241, 234, 0.72);
+
+    &:hover {
+      background: color-mix(in srgb, var(--uc-primary) 12%, #232630);
+      border-color: color-mix(in srgb,
+          var(--uc-primary) 32%,
+          rgba(244, 241, 234, 0.16));
+
+      box-shadow:
+        5px 5px 0 color-mix(in srgb, var(--uc-primary) 16%, rgba(0, 0, 0, 0.3));
+    }
+  }
+
+  .linkDisabled {
+    opacity: 0.7;
+    border-color: rgba(244, 241, 234, 0.1);
+
+    &:hover {
+      background: rgba(35, 38, 48, 0.72);
+    }
+  }
+
+  .linkArrow {
+    background: linear-gradient(135deg, var(--uc-primary), var(--uc-secondary));
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #111216;
+  }
+
+  /* BUTTONS */
+
+  .calendarToggle {
+    background: linear-gradient(135deg, var(--uc-primary), var(--uc-secondary));
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #111216;
+
+    &:hover {
+      box-shadow:
+        6px 6px 0 color-mix(in srgb, var(--uc-primary) 26%, rgba(0, 0, 0, 0.36));
+    }
+
+    &:disabled {
+      opacity: 0.55;
+    }
+  }
+
+  .buttonSecondary,
+  .buttonGhost {
+    background: rgba(35, 38, 48, 0.82);
+    color: #f4f1ea;
+    border-color: color-mix(in srgb,
+        var(--uc-primary) 26%,
+        rgba(244, 241, 234, 0.14));
+
+    svg {
+      color: color-mix(in srgb, var(--uc-primary) 70%, #f4f1ea);
+    }
+
+    &:hover {
+      background: color-mix(in srgb, var(--uc-primary) 13%, #232630);
+      box-shadow:
+        6px 6px 0 color-mix(in srgb, var(--uc-primary) 16%, rgba(0, 0, 0, 0.32));
+    }
+  }
+
+  .buttonGhost {
+    background: rgba(35, 38, 48, 0.66);
+  }
+
+  /* STATS */
+
+  .cardStats {
+    border-left-color: color-mix(in srgb,
+        var(--uc-primary) 20%,
+        rgba(244, 241, 234, 0.12));
+    border-top-color: color-mix(in srgb,
+        var(--uc-primary) 20%,
+        rgba(244, 241, 234, 0.12));
+  }
+
+  .statBox {
+    border-right-color: color-mix(in srgb,
+        var(--uc-primary) 20%,
+        rgba(244, 241, 234, 0.12));
+    border-bottom-color: color-mix(in srgb,
+        var(--uc-primary) 20%,
+        rgba(244, 241, 234, 0.12));
+  }
+
+  .statBox:nth-child(even) {
+    background: color-mix(in srgb, var(--uc-primary) 7%, #232630);
+  }
+
+  .favoriteStat {
+    color: #f4f1ea;
+
+    &:hover {
+      background: color-mix(in srgb, var(--uc-primary) 12%, #232630);
+    }
+  }
+
+  .favoriteStat.active {
+    background: color-mix(in srgb, var(--uc-secondary) 13%, #232630);
+
+    .statIcon {
+      color: #111216;
+      background: linear-gradient(135deg, var(--uc-secondary), var(--uc-primary));
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+  }
+
+  /* FOCUS */
+
+  .calendarToggle,
+  .buttonSecondary,
+  .buttonGhost,
+  .favoriteStat,
+  .toggleButton,
+  .linkDisabled {
+    &:focus-visible {
+      outline-color: color-mix(in srgb, var(--uc-primary) 38%, transparent);
+    }
+  }
+}
+
+/* =========================================================
+   DARK MODE MOBILE — UserCard
+========================================================= */
+
+@media (max-width: 520px) {
+  :global(html[data-theme="dark"]) {
+    .card {
+      box-shadow:
+        6px 6px 0 rgba(0, 0, 0, 0.28),
+        0 18px 48px rgba(0, 0, 0, 0.18);
+    }
+  }
+}

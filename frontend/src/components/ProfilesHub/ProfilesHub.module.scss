@@ -6,9 +6,14 @@ $paper-muted: #f5f6fa;
 $paper-border: rgba(21, 21, 21, 0.1);
 $ink: #151515;
 
-/* =========================================================
-   ProfilesHub — layout jak Favorites / SearchResults
-========================================================= */
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
 
 .section {
   position: relative;
@@ -26,6 +31,15 @@ $ink: #151515;
   --cardW: clamp(430px, 29vw, 490px);
   --gap: clamp(1rem, 1.3vw, 1.35rem);
   --sidePad: clamp(3.3rem, 4vw, 4.5rem);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-bg;
+    color: $dark-text;
+  }
 
   *,
   *::before,
@@ -47,6 +61,15 @@ $ink: #151515;
         rgba(245, 246, 250, 0) 72%);
     pointer-events: none;
     z-index: 0;
+
+    transition: background 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: radial-gradient(circle,
+          rgba(168, 149, 255, 0.16) 0%,
+          rgba(255, 79, 154, 0.08) 44%,
+          rgba(17, 18, 22, 0) 72%);
+    }
   }
 }
 
@@ -82,6 +105,17 @@ $ink: #151515;
   box-shadow: 12px 12px 0 rgba(21, 21, 21, 0.075);
 
   text-align: left;
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.28);
+  }
 }
 
 .overline {
@@ -94,6 +128,12 @@ $ink: #151515;
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .heading {
@@ -105,8 +145,20 @@ $ink: #151515;
   letter-spacing: -0.075em;
   color: $ink;
 
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
+
   span {
     color: $primary-color;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
   }
 }
 
@@ -118,6 +170,12 @@ $ink: #151515;
   font-size: 1rem;
   line-height: 1.78;
   color: rgba(21, 21, 21, 0.68);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .metaRow {
@@ -139,6 +197,15 @@ $ink: #151515;
   background: $paper-soft;
   border: 1px solid rgba(21, 21, 21, 0.1);
 
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
+
   strong {
     display: block;
 
@@ -147,6 +214,12 @@ $ink: #151515;
     font-weight: 950;
     line-height: 1;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   span {
@@ -156,6 +229,12 @@ $ink: #151515;
     font-size: 0.83rem;
     line-height: 1.35;
     color: rgba(21, 21, 21, 0.58);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -164,6 +243,12 @@ $ink: #151515;
   padding-top: 1.45rem;
 
   border-top: 1px solid rgba(21, 21, 21, 0.11);
+
+  transition: border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    border-top-color: $dark-border;
+  }
 
   span {
     display: block;
@@ -175,6 +260,12 @@ $ink: #151515;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: rgba(21, 21, 21, 0.58);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.5);
+    }
   }
 
   p {
@@ -184,6 +275,12 @@ $ink: #151515;
     font-size: 0.95rem;
     line-height: 1.65;
     color: rgba(21, 21, 21, 0.62);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -200,6 +297,17 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.12);
   box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
+  }
 }
 
 .chapterHead {
@@ -220,6 +328,12 @@ $ink: #151515;
     line-height: 1.06;
     letter-spacing: -0.045em;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -233,6 +347,12 @@ $ink: #151515;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .chapterNumber {
@@ -252,6 +372,19 @@ $ink: #151515;
   font-family: $font-accent;
   font-size: 0.9rem;
   font-weight: 950;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 /* =========================================================
@@ -267,6 +400,15 @@ $ink: #151515;
 
   background: $paper-soft;
   border: 1px solid rgba(21, 21, 21, 0.1);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
 }
 
 .searchBox {
@@ -283,11 +425,23 @@ $ink: #151515;
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease,
-    transform 0.18s ease;
+    transform 0.18s ease,
+    background 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.72);
+    border-color: $dark-border;
+  }
 
   svg {
     color: rgba(21, 21, 21, 0.45);
     flex-shrink: 0;
+
+    transition: color 0.18s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.42);
+    }
   }
 
   &:focus-within {
@@ -295,8 +449,18 @@ $ink: #151515;
     border-color: rgba(111, 78, 242, 0.34);
     box-shadow: 5px 5px 0 rgba(111, 78, 242, 0.08);
 
+    :global(html[data-theme="dark"]) & {
+      background: rgba(17, 18, 22, 0.86);
+      border-color: rgba(168, 149, 255, 0.38);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
+
     svg {
       color: $primary-color;
+
+      :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+      }
     }
   }
 
@@ -311,8 +475,18 @@ $ink: #151515;
     font-size: 0.94rem;
     font-weight: 700;
 
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
+
     &::placeholder {
       color: rgba(21, 21, 21, 0.38);
+
+      :global(html[data-theme="dark"]) & {
+        color: rgba(244, 241, 234, 0.36);
+      }
     }
   }
 }
@@ -331,6 +505,12 @@ $ink: #151515;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: rgba(21, 21, 21, 0.56);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.5);
+  }
 }
 
 .sortGrid,
@@ -373,9 +553,21 @@ $ink: #151515;
     border-color 0.18s ease,
     color 0.18s ease;
 
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.72);
+    border-color: $dark-border;
+    color: $dark-muted;
+  }
+
   svg {
     flex-shrink: 0;
     color: $primary-color;
+
+    transition: color 0.18s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
   }
 
   b {
@@ -393,6 +585,17 @@ $ink: #151515;
     font-family: $font-accent;
     font-size: 0.72rem;
     font-weight: 950;
+
+    transition:
+      background 0.18s ease,
+      color 0.18s ease,
+      border-color 0.18s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(35, 38, 48, 0.78);
+      border-color: $dark-border;
+      color: $dark-text;
+    }
   }
 
   &:hover {
@@ -400,6 +603,13 @@ $ink: #151515;
     background: #ffffff;
     border-color: rgba(21, 21, 21, 0.16);
     box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.05);
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(168, 149, 255, 0.12);
+      border-color: rgba(168, 149, 255, 0.28);
+      color: $dark-primary;
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
   }
 }
 
@@ -409,15 +619,32 @@ $ink: #151515;
   border-color: $ink !important;
   box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.1) !important;
 
+  :global(html[data-theme="dark"]) & {
+    color: $dark-bg !important;
+    background: linear-gradient(135deg, $dark-primary, $dark-pink) !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28) !important;
+  }
+
   svg,
   span {
     color: #ffffff !important;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-bg !important;
+    }
   }
 
   b {
     color: $ink !important;
     background: #ffffff !important;
     border-color: #ffffff !important;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-bg !important;
+      background: rgba(255, 255, 255, 0.74) !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+    }
   }
 }
 
@@ -445,7 +672,16 @@ $ink: #151515;
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-bg;
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28);
+  }
 
   svg {
     flex-shrink: 0;
@@ -455,6 +691,11 @@ $ink: #151515;
     transform: translate(-2px, -2px);
     background: #000000;
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.12);
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(135deg, #b8a9ff, #ff68aa);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.34);
+    }
   }
 }
 
@@ -475,6 +716,17 @@ $ink: #151515;
   border: 1px solid rgba(21, 21, 21, 0.12);
   box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.045);
 
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.42);
+    border-color: $dark-border;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.22);
+  }
+
   h3 {
     margin: 0.2rem 0 0;
 
@@ -484,6 +736,12 @@ $ink: #151515;
     line-height: 1.05;
     letter-spacing: -0.045em;
     font-weight: 950;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -495,6 +753,12 @@ $ink: #151515;
   font-weight: 950;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .resultsPill {
@@ -516,8 +780,25 @@ $ink: #151515;
   text-transform: uppercase;
   white-space: nowrap;
 
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+    color: $dark-muted;
+  }
+
   svg {
     color: $primary-color;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
   }
 }
 
@@ -541,16 +822,26 @@ $ink: #151515;
   width: var(--sidePad);
   pointer-events: none;
   z-index: 2;
+
+  transition: background 0.22s ease;
 }
 
 .carousel::before {
   left: 0;
   background: linear-gradient(90deg, #ffffff 18%, rgba(255, 255, 255, 0));
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(90deg, rgba(26, 28, 34, 0.94) 18%, rgba(26, 28, 34, 0));
+  }
 }
 
 .carousel::after {
   right: 0;
   background: linear-gradient(270deg, #ffffff 18%, rgba(255, 255, 255, 0));
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(270deg, rgba(26, 28, 34, 0.94) 18%, rgba(26, 28, 34, 0));
+  }
 }
 
 .cardsTrack {
@@ -631,16 +922,41 @@ $ink: #151515;
     transform 0.18s ease,
     box-shadow 0.18s ease,
     background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
     opacity 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.88);
+    color: $dark-text;
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28);
+  }
 
   svg {
     color: $ink;
     font-size: 1rem;
+
+    transition: color 0.18s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   &:hover {
     background: $paper-muted;
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.12);
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(168, 149, 255, 0.14);
+      border-color: rgba(168, 149, 255, 0.32);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.34);
+
+      svg {
+        color: $dark-primary;
+      }
+    }
   }
 
   &:active {
@@ -650,6 +966,10 @@ $ink: #151515;
   &:focus-visible {
     outline: 3px solid rgba(111, 78, 242, 0.22);
     outline-offset: 3px;
+
+    :global(html[data-theme="dark"]) & {
+      outline-color: rgba(168, 149, 255, 0.34);
+    }
   }
 }
 
@@ -703,6 +1023,17 @@ $ink: #151515;
   letter-spacing: 0.06em;
   line-height: 1.5;
   text-transform: uppercase;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.5);
+    border-color: rgba(244, 241, 234, 0.2);
+    color: $dark-muted;
+  }
 }
 
 .mobileHint {
@@ -807,9 +1138,21 @@ $ink: #151515;
 
     animation: mobileHintFade 2s ease-in-out infinite;
 
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.48);
+    }
+
     span {
       font-size: 1rem;
       color: $ink;
+
+      transition: color 0.22s ease;
+
+      :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+      }
     }
 
     p {
@@ -893,6 +1236,10 @@ $ink: #151515;
   .side,
   .content {
     box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.06);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.26);
+    }
   }
 
   .heading {
@@ -938,13 +1285,48 @@ $ink: #151515;
 
 @media (prefers-reduced-motion: reduce) {
 
-  .cardsTrack,
-  .navBtn,
+  .section,
+  .section::before,
+  .side,
+  .overline,
+  .heading,
+  .heading span,
+  .description,
+  .metaCard,
+  .metaCard strong,
+  .metaCard span,
+  .infoBox,
+  .infoBox span,
+  .infoBox p,
+  .content,
+  .chapterHead h3,
+  .chapterLabel,
+  .chapterNumber,
+  .filtersPanel,
   .searchBox,
+  .searchBox svg,
+  .searchBox input,
+  .filterTitle,
   .sortGrid button,
   .filterList button,
+  .sortGrid button svg,
+  .filterList button svg,
+  .sortGrid button b,
+  .filterList button b,
   .resetButton,
-  .mobileHint {
+  .resultsTop,
+  .resultsTop h3,
+  .resultsLabel,
+  .resultsPill,
+  .resultsPill svg,
+  .carousel::before,
+  .carousel::after,
+  .cardsTrack,
+  .navBtn,
+  .navBtn svg,
+  .empty,
+  .mobileHint,
+  .mobileHint span {
     animation: none;
     transition: none;
     scroll-behavior: auto;

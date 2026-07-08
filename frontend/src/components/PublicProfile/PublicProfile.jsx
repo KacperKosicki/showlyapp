@@ -1122,132 +1122,134 @@ export default function PublicProfile() {
                 </div>
               </div>
             </div>
+          </div>
+        </header>
 
-            <div
-              className={cn(
-                styles.heroPanel,
-                partner.isPartner && styles.heroPanelPartner
-              )}
-            >
-              <div className={styles.heroPanelTop}>
-                <span className={styles.panelEyebrow}>Szybki podgląd</span>
-                <span className={styles.panelStatus}>
-                  <span />
-                  Aktywny
+        <section className={styles.heroPanelDock} aria-label="Statystyki i szybkie akcje profilu">
+          <div
+            className={cn(
+              styles.heroPanel,
+              partner.isPartner && styles.heroPanelPartner
+            )}
+          >
+            <div className={styles.heroPanelTop}>
+              <span className={styles.panelEyebrow}>Szybki podgląd</span>
+              <span className={styles.panelStatus}>
+                <span />
+                Aktywny
+              </span>
+            </div>
+
+            <div className={styles.metricRow}>
+              <div className={styles.metricCard}>
+                <span className={styles.metricIcon}>
+                  <FaRegEye />
                 </span>
-              </div>
 
-              <div className={styles.metricRow}>
-                <div className={styles.metricCard}>
-                  <span className={styles.metricIcon}>
-                    <FaRegEye />
-                  </span>
-
-                  <div className={styles.metricContent}>
-                    <strong>{Number(profile?.visits ?? 0).toLocaleString("pl-PL")}</strong>
-                    <span>Odwiedzin</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className={cn(
-                    styles.metricCard,
-                    styles.favoriteMetric,
-                    isFav && styles.favActive
-                  )}
-                  onClick={toggleFavorite}
-                >
-                  <span className={styles.metricIcon}>
-                    {isFav ? <FaHeart /> : <FaRegHeart />}
-                  </span>
-
-                  <div className={styles.metricContent}>
-                    <strong>{isFav ? "W ulubionych" : "Dodaj"}</strong>
-                    <span>Ulubione</span>
-                  </div>
-                </button>
-
-                <div className={styles.metricCard}>
-                  <span className={styles.metricIcon}>
-                    <FaShieldAlt />
-                  </span>
-
-                  <div className={styles.metricContent}>
-                    <strong>{statusLabel}</strong>
-                    <span>Status</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.quickStats}>
-                <div className={styles.quickStat}>
-                  <span>
-                    <FaMoneyBillWave />
-                  </span>
-
-                  <div>
-                    <strong>{priceShortLabel}</strong>
-                    <small>Cennik</small>
-                  </div>
-                </div>
-
-                <div className={styles.quickStat}>
-                  <span>
-                    <FaListUl />
-                  </span>
-
-                  <div>
-                    <strong>{visibleServices.length}</strong>
-                    <small>Usług</small>
-                  </div>
-                </div>
-
-                <div className={styles.quickStat}>
-                  <span>
-                    <FaImage />
-                  </span>
-
-                  <div>
-                    <strong>{gallery.length}</strong>
-                    <small>Zdjęć</small>
-                  </div>
+                <div className={styles.metricContent}>
+                  <strong>{Number(profile?.visits ?? 0).toLocaleString("pl-PL")}</strong>
+                  <span>Odwiedzin</span>
                 </div>
               </div>
 
               <button
                 type="button"
-                className={cn(styles.shareProfileBtn, copiedProfileLink && styles.shareProfileBtnCopied)}
-                onClick={copyProfileLink}
+                className={cn(
+                  styles.metricCard,
+                  styles.favoriteMetric,
+                  isFav && styles.favActive
+                )}
+                onClick={toggleFavorite}
               >
-                <span className={styles.shareProfileIcon}>
-                  {copiedProfileLink ? <FaCheck /> : <FaCopy />}
+                <span className={styles.metricIcon}>
+                  {isFav ? <FaHeart /> : <FaRegHeart />}
                 </span>
 
-                <span className={styles.shareProfileText}>
-                  <strong>{copiedProfileLink ? "Skopiowano link" : "Skopiuj link do profilu"}</strong>
-                  <small>showly.me/{slug}</small>
-                </span>
+                <div className={styles.metricContent}>
+                  <strong>{isFav ? "W ulubionych" : "Dodaj"}</strong>
+                  <span>Ulubione</span>
+                </div>
               </button>
 
-              <div className={styles.ctaRow}>
-                {showBookButton && (
-                  <button type="button" className={styles.ctaPrimary} onClick={goToBooking}>
-                    <FaRegCalendarAlt />
-                    {bookBtnLabel}
-                  </button>
-                )}
+              <div className={styles.metricCard}>
+                <span className={styles.metricIcon}>
+                  <FaShieldAlt />
+                </span>
 
-                {!isOwner && (
-                  <button type="button" className={styles.ctaSecondary} onClick={startMessage}>
-                    <FaPaperPlane />
-                    Zadaj pytanie
-                  </button>
-                )}
+                <div className={styles.metricContent}>
+                  <strong>{statusLabel}</strong>
+                  <span>Status</span>
+                </div>
               </div>
             </div>
+
+            <div className={styles.quickStats}>
+              <div className={styles.quickStat}>
+                <span>
+                  <FaMoneyBillWave />
+                </span>
+
+                <div>
+                  <strong>{priceShortLabel}</strong>
+                  <small>Cennik</small>
+                </div>
+              </div>
+
+              <div className={styles.quickStat}>
+                <span>
+                  <FaListUl />
+                </span>
+
+                <div>
+                  <strong>{visibleServices.length}</strong>
+                  <small>Usług</small>
+                </div>
+              </div>
+
+              <div className={styles.quickStat}>
+                <span>
+                  <FaImage />
+                </span>
+
+                <div>
+                  <strong>{gallery.length}</strong>
+                  <small>Zdjęć</small>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className={cn(styles.shareProfileBtn, copiedProfileLink && styles.shareProfileBtnCopied)}
+              onClick={copyProfileLink}
+            >
+              <span className={styles.shareProfileIcon}>
+                {copiedProfileLink ? <FaCheck /> : <FaCopy />}
+              </span>
+
+              <span className={styles.shareProfileText}>
+                <strong>{copiedProfileLink ? "Skopiowano link" : "Skopiuj link do profilu"}</strong>
+                <small>showly.me/{slug}</small>
+              </span>
+            </button>
+
+            <div className={styles.ctaRow}>
+              {showBookButton && (
+                <button type="button" className={styles.ctaPrimary} onClick={goToBooking}>
+                  <FaRegCalendarAlt />
+                  {bookBtnLabel}
+                </button>
+              )}
+
+              {!isOwner && (
+                <button type="button" className={styles.ctaSecondary} onClick={startMessage}>
+                  <FaPaperPlane />
+                  Zadaj pytanie
+                </button>
+              )}
+            </div>
           </div>
-        </header>
+        </section>
 
         <main className={styles.grid}>
           <section className={styles.mainCol}>

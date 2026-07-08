@@ -8,355 +8,580 @@ $paper-muted: #f5f6fa;
 $paper-border: rgba(21, 21, 21, 0.1);
 $ink: #151515;
 
-/* =========================================================
-   ReservationList — papierowy, szeroki layout Showly
-========================================================= */
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
+
+$dark-success-bg: rgba(66, 211, 146, 0.12);
+$dark-success-text: #7ee2b8;
+$dark-success-border: rgba(126, 226, 184, 0.28);
+
+$dark-danger-bg: rgba(255, 79, 122, 0.13);
+$dark-danger-text: #ff8fa8;
+$dark-danger-border: rgba(255, 143, 168, 0.34);
+
+$dark-warning-bg: rgba(255, 209, 102, 0.13);
+$dark-warning-text: #ffd166;
+$dark-warning-border: rgba(255, 209, 102, 0.32);
+
+$dark-info-bg: rgba(45, 212, 191, 0.12);
+$dark-info-text: #7ddbd3;
+$dark-info-border: rgba(125, 219, 211, 0.26);
+
+$dark-disabled-bg: rgba(244, 241, 234, 0.06);
+$dark-disabled-text: rgba(244, 241, 234, 0.34);
+$dark-disabled-border: rgba(244, 241, 234, 0.08);
 
 .page {
-  position: relative;
-  width: 100%;
-  padding: 5.5rem 1.25rem 6.5rem;
-  overflow: hidden;
+    position: relative;
+    width: 100%;
+    padding: 5.5rem 1.25rem 6.5rem;
+    overflow: hidden;
 
-  font-family: $font-body;
-  color: $ink;
-  background: #ffffff;
+    font-family: $font-body;
+    color: $ink;
+    background: #ffffff;
 
-  isolation: isolate;
+    isolation: isolate;
 
-  --rs-primary: #6f4ef2;
-  --rs-secondary: #ff4081;
+    --rs-primary: #6f4ef2;
+    --rs-secondary: #ff4081;
 
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
+    transition:
+        background 0.22s ease,
+        color 0.22s ease;
 
-  &::before {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 42%;
-    width: min(1480px, 94vw);
-    height: 720px;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(circle,
-        rgba(245, 246, 250, 0.95) 0%,
-        rgba(245, 246, 250, 0.42) 44%,
-        rgba(245, 246, 250, 0) 72%);
-    pointer-events: none;
-    z-index: 0;
-  }
+    :global(html[data-theme="dark"]) & {
+        color: $dark-text;
+        background: $dark-bg;
+
+        --rs-primary: #{$dark-primary};
+        --rs-secondary: #{$dark-pink};
+    }
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    &::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 42%;
+        width: min(1480px, 94vw);
+        height: 720px;
+        transform: translate(-50%, -50%);
+        background: radial-gradient(circle,
+                rgba(245, 246, 250, 0.95) 0%,
+                rgba(245, 246, 250, 0.42) 44%,
+                rgba(245, 246, 250, 0) 72%);
+        pointer-events: none;
+        z-index: 0;
+
+        transition: background 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            background: radial-gradient(circle,
+                    rgba(168, 149, 255, 0.16) 0%,
+                    rgba(255, 79, 154, 0.08) 44%,
+                    rgba(17, 18, 22, 0) 72%);
+        }
+    }
 }
 
 .bgGlow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
 
-  background:
-    linear-gradient(to right, rgba(21, 21, 21, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(21, 21, 21, 0.02) 1px, transparent 1px);
-  background-size: 64px 64px;
+    background:
+        linear-gradient(to right, rgba(21, 21, 21, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(21, 21, 21, 0.02) 1px, transparent 1px);
+    background-size: 64px 64px;
 
-  opacity: 0.28;
-  mask-image: radial-gradient(circle at 50% 34%, #000 0%, transparent 68%);
+    opacity: 0.28;
+    mask-image: radial-gradient(circle at 50% 34%, #000 0%, transparent 68%);
+
+    transition:
+        background 0.22s ease,
+        opacity 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background:
+            linear-gradient(to right, rgba(244, 241, 234, 0.055) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(244, 241, 234, 0.04) 1px, transparent 1px);
+        opacity: 0.22;
+        mask-image: radial-gradient(circle at 50% 34%, #000 0%, transparent 70%);
+    }
 }
 
 .shell {
-  position: relative;
-  z-index: 1;
+    position: relative;
+    z-index: 1;
 
-  width: 100%;
-  max-width: $page-max;
-  margin: 0 auto;
+    width: 100%;
+    max-width: $page-max;
+    margin: 0 auto;
 }
 
 .alertWrap {
-  position: relative;
-  z-index: 5;
+    position: relative;
+    z-index: 5;
 
-  width: 100%;
-  max-width: $page-max;
-  margin: 0 auto 1rem;
+    width: 100%;
+    max-width: $page-max;
+    margin: 0 auto 1rem;
 }
-
 
 /* =========================================================
    LAYOUT — jak AllUsersList
 ========================================================= */
 
 .layout {
-  display: grid;
-  grid-template-columns: minmax(430px, 520px) minmax(0, 1fr);
-  gap: clamp(2rem, 3.4vw, 4.5rem);
-  align-items: start;
+    display: grid;
+    grid-template-columns: minmax(430px, 520px) minmax(0, 1fr);
+    gap: clamp(2rem, 3.4vw, 4.5rem);
+    align-items: start;
 }
 
 .side {
-  position: sticky;
-  top: 110px;
-  width: 100%;
-  padding: clamp(1.65rem, 2.5vw, 2.4rem);
+    position: sticky;
+    top: 110px;
+    width: 100%;
+    padding: clamp(1.65rem, 2.5vw, 2.4rem);
 
-  background: $paper-bg;
-  border: 1px solid $paper-border;
-  box-shadow: 12px 12px 0 rgba(21, 21, 21, 0.075);
-  text-align: left;
+    background: $paper-bg;
+    border: 1px solid $paper-border;
+    box-shadow: 12px 12px 0 rgba(21, 21, 21, 0.075);
+    text-align: left;
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(26, 28, 34, 0.94);
+        border-color: $dark-border;
+        box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.28);
+    }
 }
 
 .overline {
-  display: inline-flex;
-  margin-bottom: 1.05rem;
+    display: inline-flex;
+    margin-bottom: 1.05rem;
 
-  font-family: $font-accent;
-  font-size: 0.75rem;
-  font-weight: 950;
-  letter-spacing: 0.11em;
-  text-transform: uppercase;
-  color: $primary-color;
+    font-family: $font-accent;
+    font-size: 0.75rem;
+    font-weight: 950;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: $primary-color;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+    }
 }
 
 .heading {
-  margin: 0;
-
-  font-family: $font-accent;
-  font-size: clamp(2.65rem, 3.25vw, 4.25rem);
-  line-height: 0.96;
-  letter-spacing: -0.075em;
-  color: $ink;
-  font-weight: 950;
-  text-align: left;
-
-  span {
-    color: $primary-color;
-  }
-}
-
-.description {
-  margin: 1.35rem 0 0;
-  max-width: 560px;
-
-  font-family: $font-body;
-  font-size: 1rem;
-  line-height: 1.78;
-  color: rgba(21, 21, 21, 0.68);
-  text-align: left;
-
-  strong {
-    color: $ink;
-    font-family: $font-accent;
-    font-weight: 950;
-  }
-}
-
-.metaRow {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.7rem;
-  margin-top: 2.1rem;
-}
-
-.metaCard {
-  min-height: 92px;
-  padding: 1rem;
-
-  display: grid;
-  align-content: space-between;
-  gap: 0.65rem;
-
-  background: $paper-soft;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-
-  strong {
-    display: block;
     margin: 0;
 
     font-family: $font-accent;
-    font-size: clamp(1.35rem, 2vw, 1.7rem);
-    font-weight: 950;
-    line-height: 1;
-    letter-spacing: -0.035em;
+    font-size: clamp(2.65rem, 3.25vw, 4.25rem);
+    line-height: 0.96;
+    letter-spacing: -0.075em;
     color: $ink;
-    text-transform: none;
-  }
+    font-weight: 950;
+    text-align: left;
 
-  span {
-    display: block;
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-text;
+    }
+
+    span {
+        color: $primary-color;
+
+        transition: color 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-primary;
+        }
+    }
+}
+
+.description {
+    margin: 1.35rem 0 0;
+    max-width: 560px;
 
     font-family: $font-body;
-    font-size: 0.83rem;
-    line-height: 1.35;
-    color: rgba(21, 21, 21, 0.58);
-  }
+    font-size: 1rem;
+    line-height: 1.78;
+    color: rgba(21, 21, 21, 0.68);
+    text-align: left;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-muted;
+    }
+
+    strong {
+        color: $ink;
+        font-family: $font-accent;
+        font-weight: 950;
+
+        transition: color 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-text;
+        }
+    }
+}
+
+.metaRow {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+    margin-top: 2.1rem;
+}
+
+.metaCard {
+    min-height: 92px;
+    padding: 1rem;
+
+    display: grid;
+    align-content: space-between;
+    gap: 0.65rem;
+
+    background: $paper-soft;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(35, 38, 48, 0.78);
+        border-color: $dark-border;
+    }
+
+    strong {
+        display: block;
+        margin: 0;
+
+        font-family: $font-accent;
+        font-size: clamp(1.35rem, 2vw, 1.7rem);
+        font-weight: 950;
+        line-height: 1;
+        letter-spacing: -0.035em;
+        color: $ink;
+        text-transform: none;
+
+        transition: color 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-text;
+        }
+    }
+
+    span {
+        display: block;
+
+        font-family: $font-body;
+        font-size: 0.83rem;
+        line-height: 1.35;
+        color: rgba(21, 21, 21, 0.58);
+
+        transition: color 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-muted;
+        }
+    }
 }
 
 .infoBox {
-  margin-top: 1.9rem;
-  padding-top: 1.45rem;
-  border-top: 1px solid rgba(21, 21, 21, 0.11);
+    margin-top: 1.9rem;
+    padding-top: 1.45rem;
+    border-top: 1px solid rgba(21, 21, 21, 0.11);
 
-  span {
+    transition: border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        border-top-color: $dark-border;
+    }
+
+    span {
+        display: block;
+        margin-bottom: 0.55rem;
+
+        font-family: $font-accent;
+        font-size: 0.74rem;
+        font-weight: 950;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(21, 21, 21, 0.58);
+
+        transition: color 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            color: rgba(244, 241, 234, 0.5);
+        }
+    }
+
+    p {
+        margin: 0;
+
+        font-family: $font-body;
+        font-size: 0.95rem;
+        line-height: 1.65;
+        color: rgba(21, 21, 21, 0.62);
+
+        transition: color 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-muted;
+        }
+    }
+}
+
+.contentPanel {
+    min-width: 0;
+    width: 100%;
+    padding: clamp(1.35rem, 2.25vw, 2rem);
+
+    background: $paper-bg;
+    border: 1px solid rgba(21, 21, 21, 0.12);
+    box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(26, 28, 34, 0.94);
+        border-color: $dark-border;
+        box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
+    }
+}
+
+.chapterHead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.35rem;
+    text-align: left;
+
+    h3 {
+        margin: 0;
+        max-width: 720px;
+
+        font-family: $font-accent;
+        font-size: clamp(1.55rem, 2.45vw, 2.45rem);
+        line-height: 1.06;
+        letter-spacing: -0.045em;
+        color: $ink;
+        font-weight: 950;
+
+        transition: color 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-text;
+        }
+    }
+}
+
+.chapterLabel {
     display: block;
     margin-bottom: 0.55rem;
 
     font-family: $font-accent;
-    font-size: 0.74rem;
+    font-size: 0.75rem;
     font-weight: 950;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: rgba(21, 21, 21, 0.58);
-  }
+    color: $primary-color;
 
-  p {
-    margin: 0;
+    transition: color 0.22s ease;
 
-    font-family: $font-body;
-    font-size: 0.95rem;
-    line-height: 1.65;
-    color: rgba(21, 21, 21, 0.62);
-  }
-}
-
-.contentPanel {
-  min-width: 0;
-  width: 100%;
-  padding: clamp(1.35rem, 2.25vw, 2rem);
-
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
-}
-
-.chapterHead {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.35rem;
-  text-align: left;
-
-  h3 {
-    margin: 0;
-    max-width: 720px;
-
-    font-family: $font-accent;
-    font-size: clamp(1.55rem, 2.45vw, 2.45rem);
-    line-height: 1.06;
-    letter-spacing: -0.045em;
-    color: $ink;
-    font-weight: 950;
-  }
-}
-
-.chapterLabel {
-  display: block;
-  margin-bottom: 0.55rem;
-
-  font-family: $font-accent;
-  font-size: 0.75rem;
-  font-weight: 950;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: $primary-color;
+    :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+    }
 }
 
 .chapterNumber {
-  flex: 0 0 auto;
-  min-width: 54px;
-  height: 54px;
-  padding: 0 0.8rem;
+    flex: 0 0 auto;
+    min-width: 54px;
+    height: 54px;
+    padding: 0 0.8rem;
 
-  display: grid;
-  place-items: center;
+    display: grid;
+    place-items: center;
 
-  background: $ink;
-  color: $paper-bg;
-  border: 1px solid $ink;
+    background: $ink;
+    color: $paper-bg;
+    border: 1px solid $ink;
 
-  font-family: $font-accent;
-  font-size: 0.9rem;
-  font-weight: 950;
+    font-family: $font-accent;
+    font-size: 0.9rem;
+    font-weight: 950;
+
+    transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: linear-gradient(135deg, $dark-primary, $dark-pink);
+        color: $dark-bg;
+        border-color: rgba(255, 255, 255, 0.16);
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+    }
 }
 
 .reservationsStack {
-  display: grid;
-  gap: 1rem;
+    display: grid;
+    gap: 1rem;
 }
 
 .reservationGroup {
-  padding: 1rem;
+    padding: 1rem;
 
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-  box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.04);
+    background: $paper-bg;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+    box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.04);
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(17, 18, 22, 0.42);
+        border-color: $dark-border;
+        box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.22);
+    }
 }
 
 .groupLabel {
-  display: block;
-  margin-bottom: 0.45rem;
+    display: block;
+    margin-bottom: 0.45rem;
 
-  font-family: $font-accent;
-  font-size: 0.7rem;
-  font-weight: 950;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: rgba(21, 21, 21, 0.52);
+    font-family: $font-accent;
+    font-size: 0.7rem;
+    font-weight: 950;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: rgba(21, 21, 21, 0.52);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: rgba(244, 241, 234, 0.48);
+    }
 }
 
 .groupBadge {
-  flex: 0 0 auto;
-  min-height: 42px;
-  min-width: 42px;
-  padding: 0 0.75rem;
+    flex: 0 0 auto;
+    min-height: 42px;
+    min-width: 42px;
+    padding: 0 0.75rem;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
-  background: $ink;
-  color: #ffffff;
-  border: 1px solid $ink;
+    background: $ink;
+    color: #ffffff;
+    border: 1px solid $ink;
 
-  font-family: $font-accent;
-  font-size: 0.74rem;
-  font-weight: 950;
-  line-height: 1;
-  white-space: nowrap;
+    font-family: $font-accent;
+    font-size: 0.74rem;
+    font-weight: 950;
+    line-height: 1;
+    white-space: nowrap;
+
+    transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: linear-gradient(135deg, $dark-primary, $dark-pink);
+        color: $dark-bg;
+        border-color: rgba(255, 255, 255, 0.16);
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+    }
 }
 
 .emptyState {
-  padding: clamp(1.15rem, 2vw, 1.5rem);
-  text-align: left;
-  background: $paper-soft;
-  border: 1px dashed rgba(21, 21, 21, 0.18);
+    padding: clamp(1.15rem, 2vw, 1.5rem);
+    text-align: left;
+    background: $paper-soft;
+    border: 1px dashed rgba(21, 21, 21, 0.18);
 
-  strong {
-    display: block;
-    margin-bottom: 0.35rem;
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease;
 
-    font-family: $font-accent;
-    font-size: clamp(1.2rem, 1.8vw, 1.55rem);
-    line-height: 1.08;
-    letter-spacing: -0.04em;
-    color: $ink;
-  }
+    :global(html[data-theme="dark"]) & {
+        background: rgba(17, 18, 22, 0.5);
+        border-color: rgba(244, 241, 234, 0.2);
+    }
 
-  p {
-    max-width: 720px;
-    margin: 0;
+    strong {
+        display: block;
+        margin-bottom: 0.35rem;
 
-    font-family: $font-body;
-    font-size: 0.95rem;
-    line-height: 1.65;
-    color: rgba(21, 21, 21, 0.62);
-  }
+        font-family: $font-accent;
+        font-size: clamp(1.2rem, 1.8vw, 1.55rem);
+        line-height: 1.08;
+        letter-spacing: -0.04em;
+        color: $ink;
+
+        transition: color 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-text;
+        }
+    }
+
+    p {
+        max-width: 720px;
+        margin: 0;
+
+        font-family: $font-body;
+        font-size: 0.95rem;
+        line-height: 1.65;
+        color: rgba(21, 21, 21, 0.62);
+
+        transition: color 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-muted;
+        }
+    }
 }
 
 .calendarPanelWrap {
-  width: 100%;
+    width: 100%;
 }
 
 /* =========================================================
@@ -364,170 +589,213 @@ $ink: #151515;
 ========================================================= */
 
 .pageHead {
-  width: 100%;
-  margin: 0 auto 1.4rem;
-  padding: clamp(1.2rem, 2.2vw, 1.8rem);
+    width: 100%;
+    margin: 0 auto 1.4rem;
+    padding: clamp(1.2rem, 2.2vw, 1.8rem);
 
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+    background: $paper-bg;
+    border: 1px solid rgba(21, 21, 21, 0.12);
+    box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
 
-  text-align: left;
+    text-align: left;
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(26, 28, 34, 0.94);
+        border-color: $dark-border;
+        box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
+    }
 }
 
 .labelRow {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
 }
 
 .label,
 .pill,
 .hintPill {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
 
-  border-radius: 0;
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  background: $paper-bg;
+    border-radius: 0;
+    border: 1px solid rgba(21, 21, 21, 0.12);
+    background: $paper-bg;
 
-  font-family: $font-accent;
-  font-size: 0.72rem;
-  font-weight: 950;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+    font-family: $font-accent;
+    font-size: 0.72rem;
+    font-weight: 950;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+
+    transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
 }
 
 .label {
-  padding: 0.48rem 0.75rem;
-  color: $primary-color;
-  box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.045);
+    padding: 0.48rem 0.75rem;
+    color: $primary-color;
+    box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.045);
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+        background: rgba(168, 149, 255, 0.12);
+        border-color: rgba(168, 149, 255, 0.28);
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.22);
+    }
 }
 
 .pill,
 .hintPill {
-  padding: 0.48rem 0.75rem;
-  color: rgba(21, 21, 21, 0.62);
-  background: $paper-soft;
+    padding: 0.48rem 0.75rem;
+    color: rgba(21, 21, 21, 0.62);
+    background: $paper-soft;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-muted;
+        background: rgba(35, 38, 48, 0.78);
+        border-color: $dark-border;
+    }
 }
 
 .labelDot {
-  width: 7px;
-  height: 7px;
-  display: inline-block;
-  background: $ink;
+    width: 7px;
+    height: 7px;
+    display: inline-block;
+    background: $ink;
+
+    transition: background 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    }
 }
 
 .labelDesc {
-  font-family: $font-body;
-  font-size: 0.95rem;
-  color: rgba(21, 21, 21, 0.62);
+    font-family: $font-body;
+    font-size: 0.95rem;
+    color: rgba(21, 21, 21, 0.62);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-muted;
+    }
 }
 
 .labelLine {
-  width: 54px;
-  height: 1px;
-  background: rgba(21, 21, 21, 0.18);
+    width: 54px;
+    height: 1px;
+    background: rgba(21, 21, 21, 0.18);
+
+    transition: background 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-border;
+    }
 }
 
 .heading,
 .sectionTitle {
-  max-width: 1080px;
-  margin: 0;
+    max-width: 1080px;
+    margin: 0;
 
-  font-family: $font-accent;
-  font-size: clamp(2.45rem, 4.8vw, 4.8rem);
-  line-height: 0.94;
-  letter-spacing: -0.085em;
-  color: $ink;
-  font-weight: 950;
-  text-align: left;
+    font-family: $font-accent;
+    font-size: clamp(2.45rem, 4.8vw, 4.8rem);
+    line-height: 0.94;
+    letter-spacing: -0.085em;
+    color: $ink;
+    font-weight: 950;
+    text-align: left;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-text;
+    }
 }
 
 .headingAccent {
-  color: $primary-color;
-  background: none;
-  -webkit-background-clip: initial;
-  background-clip: initial;
+    color: $primary-color;
+    background: none;
+    -webkit-background-clip: initial;
+    background-clip: initial;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+    }
 }
 
 .description,
 .subTitle {
-  max-width: 980px;
-  margin: 1rem 0 0;
+    max-width: 980px;
+    margin: 1rem 0 0;
 
-  font-family: $font-body;
-  font-size: clamp(1rem, 1.25vw, 1.1rem);
-  line-height: 1.75;
-  color: rgba(21, 21, 21, 0.66);
-  text-align: left;
+    font-family: $font-body;
+    font-size: clamp(1rem, 1.25vw, 1.1rem);
+    line-height: 1.75;
+    color: rgba(21, 21, 21, 0.66);
+    text-align: left;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-muted;
+    }
 }
 
 .inlineStrong,
 .subStrong {
-  color: $ink;
-  font-family: $font-accent;
-  font-weight: 950;
-}
-
-.metaRow {
-  margin-top: 1.35rem;
-
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.9rem;
-}
-
-.metaCard {
-  padding: 1rem;
-
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-  box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.045);
-
-  strong {
-    display: block;
-    margin-bottom: 0.25rem;
-
-    font-family: $font-accent;
-    font-size: clamp(1.1rem, 1.6vw, 1.45rem);
-    font-weight: 950;
-    line-height: 1;
-    letter-spacing: -0.04em;
     color: $ink;
-    text-transform: capitalize;
-  }
+    font-family: $font-accent;
+    font-weight: 950;
 
-  span {
-    display: block;
+    transition: color 0.22s ease;
 
-    font-family: $font-body;
-    font-size: 0.9rem;
-    line-height: 1.5;
-    color: rgba(21, 21, 21, 0.6);
-  }
+    :global(html[data-theme="dark"]) & {
+        color: $dark-text;
+    }
 }
-
-/* kompatybilność ze starszym JSX */
 
 .headerRow {
-  position: relative;
-  z-index: 1;
+    position: relative;
+    z-index: 1;
 
-  width: 100%;
-  margin: 0 auto 1.4rem;
-  padding: clamp(1.2rem, 2.2vw, 1.8rem);
+    width: 100%;
+    margin: 0 auto 1.4rem;
+    padding: clamp(1.2rem, 2.2vw, 1.8rem);
 
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+    background: $paper-bg;
+    border: 1px solid rgba(21, 21, 21, 0.12);
+    box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
 
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(26, 28, 34, 0.94);
+        border-color: $dark-border;
+        box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
+    }
 }
 
 /* =========================================================
@@ -535,56 +803,85 @@ $ink: #151515;
 ========================================================= */
 
 .viewToggle {
-  margin: 1.25rem 0 0;
+    margin: 1.25rem 0 0;
 
-  display: inline-flex;
-  gap: 0.5rem;
+    display: inline-flex;
+    gap: 0.5rem;
 
-  padding: 0.4rem;
+    padding: 0.4rem;
 
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.045);
+    background: $paper-bg;
+    border: 1px solid rgba(21, 21, 21, 0.12);
+    box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.045);
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(17, 18, 22, 0.56);
+        border-color: $dark-border;
+        box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
 }
 
 .toggleBtn {
-  min-width: 132px;
-  min-height: 44px;
+    min-width: 132px;
+    min-height: 44px;
 
-  border: 1px solid transparent;
-  background: transparent;
-  color: rgba(21, 21, 21, 0.62);
+    border: 1px solid transparent;
+    background: transparent;
+    color: rgba(21, 21, 21, 0.62);
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 
-  cursor: pointer;
+    cursor: pointer;
 
-  font-family: $font-accent;
-  font-size: 0.78rem;
-  font-weight: 950;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+    font-family: $font-accent;
+    font-size: 0.78rem;
+    font-weight: 950;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease,
-    color 0.18s ease;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease,
+        color 0.18s ease,
+        border-color 0.18s ease;
 
-  &:hover {
-    background: $paper-soft;
-    color: $ink;
-  }
+    :global(html[data-theme="dark"]) & {
+        color: $dark-muted;
+    }
+
+    &:hover {
+        background: $paper-soft;
+        color: $ink;
+
+        :global(html[data-theme="dark"]) & {
+            background: rgba(168, 149, 255, 0.12);
+            color: $dark-primary;
+            border-color: rgba(168, 149, 255, 0.22);
+        }
+    }
 }
 
 .toggleActive {
-  background: $ink;
-  color: #ffffff;
-  border-color: $ink;
-  box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.08);
+    background: $ink;
+    color: #ffffff;
+    border-color: $ink;
+    box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.08);
+
+    :global(html[data-theme="dark"]) & {
+        background: linear-gradient(135deg, $dark-primary, $dark-pink);
+        color: $dark-bg;
+        border-color: rgba(255, 255, 255, 0.16);
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.26);
+    }
 }
 
 /* =========================================================
@@ -594,45 +891,68 @@ $ink: #151515;
 .contentBox,
 .sectionGroup,
 .calendarCard {
-  width: 100%;
-  margin: 1.2rem auto 0;
-  padding: clamp(1rem, 2vw, 1.35rem);
+    width: 100%;
+    margin: 1.2rem auto 0;
+    padding: clamp(1rem, 2vw, 1.35rem);
 
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.05);
+    background: $paper-bg;
+    border: 1px solid rgba(21, 21, 21, 0.12);
+    box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.05);
 
-  text-align: left;
+    text-align: left;
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(26, 28, 34, 0.94);
+        border-color: $dark-border;
+        box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.26);
+    }
 }
 
 .contentHeader,
 .groupHeader,
 .calendarHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.15rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.15rem;
 }
 
 .contentTitle,
 .groupTitle,
 .calendarTitle {
-  margin: 0;
+    margin: 0;
 
-  font-family: $font-accent;
-  font-size: clamp(1.35rem, 2.2vw, 2rem);
-  line-height: 1.05;
-  letter-spacing: -0.045em;
-  color: $ink;
-  font-weight: 950;
+    font-family: $font-accent;
+    font-size: clamp(1.35rem, 2.2vw, 2rem);
+    line-height: 1.05;
+    letter-spacing: -0.045em;
+    color: $ink;
+    font-weight: 950;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-text;
+    }
 }
 
 .calendarSub {
-  margin-top: 0.35rem;
-  color: rgba(21, 21, 21, 0.58);
-  font-size: 0.94rem;
-  line-height: 1.55;
+    margin-top: 0.35rem;
+    color: rgba(21, 21, 21, 0.58);
+    font-size: 0.94rem;
+    line-height: 1.55;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-muted;
+    }
 }
 
 .badge,
@@ -640,47 +960,72 @@ $ink: #151515;
 .dayCount,
 .tileCount,
 .statePill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
-  border: 1px solid rgba(21, 21, 21, 0.1);
-  background: $paper-soft;
-  color: rgba(21, 21, 21, 0.66);
+    border: 1px solid rgba(21, 21, 21, 0.1);
+    background: $paper-soft;
+    color: rgba(21, 21, 21, 0.66);
 
-  font-family: $font-accent;
-  font-size: 0.76rem;
-  font-weight: 950;
-  letter-spacing: 0.05em;
-  line-height: 1;
+    font-family: $font-accent;
+    font-size: 0.76rem;
+    font-weight: 950;
+    letter-spacing: 0.05em;
+    line-height: 1;
 
-  strong {
-    color: $ink;
-  }
+    transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(35, 38, 48, 0.78);
+        color: $dark-muted;
+        border-color: $dark-border;
+    }
+
+    strong {
+        color: $ink;
+
+        transition: color 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-text;
+        }
+    }
 }
 
 .badge {
-  flex: 0 0 auto;
-  min-width: 48px;
-  min-height: 48px;
-  padding: 0 0.8rem;
+    flex: 0 0 auto;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0 0.8rem;
 
-  background: $ink;
-  color: #ffffff;
-  border-color: $ink;
+    background: $ink;
+    color: #ffffff;
+    border-color: $ink;
+
+    :global(html[data-theme="dark"]) & {
+        background: linear-gradient(135deg, $dark-primary, $dark-pink);
+        color: $dark-bg;
+        border-color: rgba(255, 255, 255, 0.16);
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+    }
 }
 
 .calendarPills {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.55rem;
-  flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    flex-wrap: wrap;
 }
 
 .calendarPill {
-  min-height: 38px;
-  padding: 0 0.75rem;
+    min-height: 38px;
+    padding: 0 0.75rem;
 }
 
 /* =========================================================
@@ -691,54 +1036,94 @@ $ink: #151515;
 .emptyGroup,
 .dayEmpty,
 .timelineEmpty {
-  padding: clamp(1.25rem, 2vw, 1.7rem);
+    padding: clamp(1.25rem, 2vw, 1.7rem);
 
-  text-align: left;
-  background: $paper-soft;
-  border: 1px dashed rgba(21, 21, 21, 0.18);
+    text-align: left;
+    background: $paper-soft;
+    border: 1px dashed rgba(21, 21, 21, 0.18);
 
-  color: rgba(21, 21, 21, 0.62);
-  font-size: 0.95rem;
-  line-height: 1.6;
+    color: rgba(21, 21, 21, 0.62);
+    font-size: 0.95rem;
+    line-height: 1.6;
+
+    transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(17, 18, 22, 0.5);
+        border-color: rgba(244, 241, 234, 0.2);
+        color: $dark-muted;
+    }
 }
 
 .emptyIconWrap {
-  width: 62px;
-  height: 62px;
-  margin-bottom: 1rem;
+    width: 62px;
+    height: 62px;
+    margin-bottom: 1rem;
 
-  display: grid;
-  place-items: center;
+    display: grid;
+    place-items: center;
 
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.04);
+    background: $paper-bg;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+    box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.04);
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(35, 38, 48, 0.78);
+        border-color: $dark-border;
+        box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
 }
 
 .emptyIcon {
-  font-size: 1.55rem;
-  color: $primary-color;
+    font-size: 1.55rem;
+    color: $primary-color;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+    }
 }
 
 .emptyTitle {
-  margin: 0 0 0.35rem;
+    margin: 0 0 0.35rem;
 
-  font-family: $font-accent;
-  font-size: clamp(1.3rem, 2vw, 1.75rem);
-  font-weight: 950;
-  line-height: 1.05;
-  letter-spacing: -0.045em;
-  color: $ink;
+    font-family: $font-accent;
+    font-size: clamp(1.3rem, 2vw, 1.75rem);
+    font-weight: 950;
+    line-height: 1.05;
+    letter-spacing: -0.045em;
+    color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-text;
+    }
 }
 
 .emptyText {
-  max-width: 720px;
-  margin: 0;
+    max-width: 720px;
+    margin: 0;
 
-  font-family: $font-body;
-  font-size: 0.95rem;
-  line-height: 1.65;
-  color: rgba(21, 21, 21, 0.62);
+    font-family: $font-body;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: rgba(21, 21, 21, 0.62);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-muted;
+    }
 }
 
 /* =========================================================
@@ -746,193 +1131,293 @@ $ink: #151515;
 ========================================================= */
 
 .list {
-  list-style: none;
-  display: grid;
-  gap: 0.95rem;
-  padding: 0;
-  margin: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.95rem;
+    padding: 0;
+    margin: 0;
 }
 
 .item {
-  overflow: hidden;
+    overflow: hidden;
 
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-  box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.045);
+    background: $paper-bg;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+    box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.045);
 
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    border-color 0.18s ease,
-    background 0.18s ease;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        border-color 0.18s ease,
+        background 0.18s ease,
+        opacity 0.18s ease;
 
-  &:hover {
-    transform: translate(-2px, -2px);
-    border-color: rgba(21, 21, 21, 0.18);
-    background: $paper-soft;
-    box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.075);
-  }
+    :global(html[data-theme="dark"]) & {
+        background: rgba(26, 28, 34, 0.86);
+        border-color: $dark-border;
+        box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.24);
+    }
+
+    &:hover {
+        transform: translate(-2px, -2px);
+        border-color: rgba(21, 21, 21, 0.18);
+        background: $paper-soft;
+        box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.075);
+
+        :global(html[data-theme="dark"]) & {
+            background: rgba(168, 149, 255, 0.1);
+            border-color: rgba(168, 149, 255, 0.28);
+            box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
+        }
+    }
 }
 
 .unread {
-  border-color: rgba(255, 64, 129, 0.36);
+    border-color: rgba(255, 64, 129, 0.36);
+
+    :global(html[data-theme="dark"]) & {
+        border-color: rgba(255, 79, 154, 0.42);
+        box-shadow:
+            6px 6px 0 rgba(0, 0, 0, 0.24),
+            inset 4px 0 0 rgba(255, 79, 154, 0.52);
+    }
 }
 
 .read {
-  opacity: 0.98;
+    opacity: 0.98;
+
+    :global(html[data-theme="dark"]) & {
+        opacity: 0.9;
+    }
 }
 
 .link {
-  display: block;
-  padding: 1rem;
-  text-decoration: none;
-  color: inherit;
-  font-family: $font-body;
+    display: block;
+    padding: 1rem;
+    text-decoration: none;
+    color: inherit;
+    font-family: $font-body;
 }
 
 .row {
-  display: grid;
-  grid-template-columns: 64px minmax(0, 1fr);
-  grid-template-areas:
-    "avatar head"
-    "content content"
-    "actions actions";
-  column-gap: 1rem;
-  row-gap: 0.8rem;
-  align-items: start;
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    grid-template-areas:
+        "avatar head"
+        "content content"
+        "actions actions";
+    column-gap: 1rem;
+    row-gap: 0.8rem;
+    align-items: start;
 }
 
 .avatarWrap {
-  grid-area: avatar;
-  position: relative;
+    grid-area: avatar;
+    position: relative;
 
-  width: 64px;
-  height: 64px;
+    width: 64px;
+    height: 64px;
 
-  background: $paper-soft;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.04);
+    background: $paper-soft;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+    box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.04);
 
-  overflow: hidden;
+    overflow: hidden;
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(35, 38, 48, 0.78);
+        border-color: $dark-border;
+        box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
 }
 
 .avatar {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 
-  display: grid;
-  place-items: center;
+    display: grid;
+    place-items: center;
 
-  font-size: 1.25rem;
-  color: rgba(21, 21, 21, 0.58);
-  background: #ffffff;
+    font-size: 1.25rem;
+    color: rgba(21, 21, 21, 0.58);
+    background: #ffffff;
+
+    transition:
+        background 0.22s ease,
+        color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-muted;
+        background: rgba(17, 18, 22, 0.72);
+    }
 }
 
 .avatarRecv {
-  color: $primary-color;
+    color: $primary-color;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+    }
 }
 
 .avatarSent {
-  color: $secondary-color;
+    color: $secondary-color;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-pink;
+    }
 }
 
 .avatarOffline {
-  background: #f0fdfa;
-  color: #0f766e;
+    background: #f0fdfa;
+    color: #0f766e;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-info-bg;
+        color: $dark-info-text;
+    }
 }
 
 .avatarSkeleton {
-  background: $paper-muted;
-  position: relative;
+    background: $paper-muted;
+    position: relative;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(244, 241, 234, 0.08);
+    }
 }
 
 .badgeDot {
-  position: absolute;
-  right: 7px;
-  bottom: 7px;
+    position: absolute;
+    right: 7px;
+    bottom: 7px;
 
-  width: 10px;
-  height: 10px;
+    width: 10px;
+    height: 10px;
 
-  background: $secondary-color;
-  border: 2px solid #ffffff;
+    background: $secondary-color;
+    border: 2px solid #ffffff;
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-pink;
+        border-color: $dark-surface;
+    }
 }
 
 .head {
-  grid-area: head;
-  min-width: 0;
+    grid-area: head;
+    min-width: 0;
 
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
 }
 
 .meta {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.55rem;
-  width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    width: 100%;
 }
 
 .icon {
-  flex-shrink: 0;
-  font-size: 1.05rem;
-  color: $primary-color;
-  margin-top: 0.15rem;
+    flex-shrink: 0;
+    font-size: 1.05rem;
+    color: $primary-color;
+    margin-top: 0.15rem;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+    }
 }
 
 .metaText {
-  display: block;
+    display: block;
 
-  color: rgba(21, 21, 21, 0.58);
-  word-break: break-word;
-  text-align: left;
+    color: rgba(21, 21, 21, 0.58);
+    word-break: break-word;
+    text-align: left;
 
-  font-family: $font-body;
-  font-size: 0.95rem;
-  line-height: 1.5;
+    font-family: $font-body;
+    font-size: 0.95rem;
+    line-height: 1.5;
 
-  b,
-  strong {
-    color: $ink;
-    font-family: $font-accent;
-    font-weight: 950;
-  }
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-muted;
+    }
+
+    b,
+    strong {
+        color: $ink;
+        font-family: $font-accent;
+        font-weight: 950;
+
+        transition: color 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-text;
+        }
+    }
 }
 
 .name {
-  color: $primary-color;
-  font-weight: 950;
-  letter-spacing: -0.2px;
-  white-space: normal;
-  font-family: $font-accent;
+    color: $primary-color;
+    font-weight: 950;
+    letter-spacing: -0.2px;
+    white-space: normal;
+    font-family: $font-accent;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+    }
 }
 
 .date {
-  color: rgba(21, 21, 21, 0.45);
+    color: rgba(21, 21, 21, 0.45);
 
-  font-family: $font-body;
-  font-size: 0.86rem;
-  line-height: 1.35;
-  text-align: left;
+    font-family: $font-body;
+    font-size: 0.86rem;
+    line-height: 1.35;
+    text-align: left;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: rgba(244, 241, 234, 0.42);
+    }
 }
 
 .content {
-  grid-area: content;
-  margin: 0;
+    grid-area: content;
+    margin: 0;
 
-  display: grid;
-  gap: 0.7rem;
+    display: grid;
+    gap: 0.7rem;
 }
 
 .bottomRow {
-  grid-area: actions;
+    grid-area: actions;
 
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 0.65rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.65rem;
 }
 
 /* =========================================================
@@ -940,150 +1425,256 @@ $ink: #151515;
 ========================================================= */
 
 .info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
 
-  padding: 0.5rem 0.65rem;
+    padding: 0.5rem 0.65rem;
 
-  background: #ffffff;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-  color: rgba(21, 21, 21, 0.72);
+    background: #ffffff;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+    color: rgba(21, 21, 21, 0.72);
 
-  font-family: $font-accent;
-  font-size: 0.76rem;
-  font-weight: 950;
-  letter-spacing: 0.03em;
+    font-family: $font-accent;
+    font-size: 0.76rem;
+    font-weight: 950;
+    letter-spacing: 0.03em;
+
+    transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(17, 18, 22, 0.72);
+        border-color: $dark-border;
+        color: $dark-muted;
+    }
 }
 
 .chipIcon {
-  opacity: 0.82;
+    opacity: 0.82;
 }
 
 .chipAccepted {
-  background: #f0fff6;
-  border-color: rgba(29, 124, 69, 0.24);
+    background: #f0fff6;
+    border-color: rgba(29, 124, 69, 0.24);
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-success-bg;
+        border-color: $dark-success-border;
+        color: $dark-success-text;
+    }
 }
 
 .chipRejected {
-  background: #fff7f7;
-  border-color: rgba(198, 40, 58, 0.28);
+    background: #fff7f7;
+    border-color: rgba(198, 40, 58, 0.28);
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-danger-bg;
+        border-color: $dark-danger-border;
+        color: $dark-danger-text;
+    }
 }
 
 .chipPending {
-  background: #fffbeb;
-  border-color: rgba(245, 158, 11, 0.3);
+    background: #fffbeb;
+    border-color: rgba(245, 158, 11, 0.3);
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-warning-bg;
+        border-color: $dark-warning-border;
+        color: $dark-warning-text;
+    }
 }
 
 .chipOffline {
-  background: #f0fdfa;
-  border-color: rgba(15, 118, 110, 0.24);
+    background: #f0fdfa;
+    border-color: rgba(15, 118, 110, 0.24);
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-info-bg;
+        border-color: $dark-info-border;
+        color: $dark-info-text;
+    }
 }
 
 .note,
 .closedInfo,
 .countdown {
-  padding: 0.8rem 0.9rem;
+    padding: 0.8rem 0.9rem;
 
-  background: $paper-soft;
-  border: 1px solid rgba(21, 21, 21, 0.1);
+    background: $paper-soft;
+    border: 1px solid rgba(21, 21, 21, 0.1);
 
-  color: rgba(21, 21, 21, 0.72);
+    color: rgba(21, 21, 21, 0.72);
+
+    transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(35, 38, 48, 0.78);
+        border-color: $dark-border;
+        color: $dark-muted;
+    }
 }
 
 .noteHeader {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 
-  margin-bottom: 0.4rem;
+    margin-bottom: 0.4rem;
 
-  font-family: $font-accent;
-  font-size: 0.76rem;
-  font-weight: 950;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: $ink;
+    font-family: $font-accent;
+    font-size: 0.76rem;
+    font-weight: 950;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-text;
+    }
 }
 
 .noteIcon {
-  color: $primary-color;
+    color: $primary-color;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+    }
 }
 
 .noteBody {
-  font-size: 0.9rem;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
 }
 
 .countdown {
-  margin-top: 0.65rem;
-  display: grid;
-  gap: 0.25rem;
+    margin-top: 0.65rem;
+    display: grid;
+    gap: 0.25rem;
 }
 
 .countdownTop {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
 
-  strong {
-    font-family: $font-accent;
-    font-size: 0.9rem;
-    font-weight: 950;
-    color: $ink;
-  }
+    strong {
+        font-family: $font-accent;
+        font-size: 0.9rem;
+        font-weight: 950;
+        color: $ink;
+
+        transition: color 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-text;
+        }
+    }
 }
 
 .countdownIcon {
-  color: $primary-color;
-  flex-shrink: 0;
+    color: $primary-color;
+    flex-shrink: 0;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+    }
 }
 
 .countdown span {
-  font-size: 0.82rem;
-  color: rgba(21, 21, 21, 0.58);
+    font-size: 0.82rem;
+    color: rgba(21, 21, 21, 0.58);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: rgba(244, 241, 234, 0.48);
+    }
 }
 
 .countdownUrgent {
-  background: #fffbeb;
-  border-color: rgba(245, 158, 11, 0.34);
+    background: #fffbeb;
+    border-color: rgba(245, 158, 11, 0.34);
 
-  .countdownIcon {
-    color: #d97706;
-  }
+    :global(html[data-theme="dark"]) & {
+        background: $dark-warning-bg;
+        border-color: $dark-warning-border;
+    }
+
+    .countdownIcon {
+        color: #d97706;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-warning-text;
+        }
+    }
 }
 
 .countdownExpired {
-  background: #fff7f7;
-  border-color: rgba(198, 40, 58, 0.28);
+    background: #fff7f7;
+    border-color: rgba(198, 40, 58, 0.28);
 
-  .countdownIcon {
-    color: #c6283a;
-  }
+    :global(html[data-theme="dark"]) & {
+        background: $dark-danger-bg;
+        border-color: $dark-danger-border;
+    }
+
+    .countdownIcon {
+        color: #c6283a;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-danger-text;
+        }
+    }
 }
 
 .closedInfo {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
 
-  background: #fff7f7;
-  border-color: rgba(198, 40, 58, 0.24);
+    background: #fff7f7;
+    border-color: rgba(198, 40, 58, 0.24);
 
-  font-size: 0.88rem;
+    font-size: 0.88rem;
 
-  strong {
-    color: $ink;
-    font-family: $font-accent;
-  }
+    :global(html[data-theme="dark"]) & {
+        background: $dark-danger-bg;
+        border-color: $dark-danger-border;
+        color: $dark-danger-text;
+    }
+
+    strong {
+        color: $ink;
+        font-family: $font-accent;
+
+        transition: color 0.22s ease;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-danger-text;
+        }
+    }
 }
 
 /* =========================================================
@@ -1095,55 +1686,84 @@ $ink: #151515;
 .addOfflineBtn,
 .modalPrimary,
 .modalSecondary {
-  border-radius: 0;
-  cursor: pointer;
+    border-radius: 0;
+    cursor: pointer;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
 
-  font-family: $font-accent;
-  font-size: 0.76rem;
-  font-weight: 950;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+    font-family: $font-accent;
+    font-size: 0.76rem;
+    font-weight: 950;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
 
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease,
-    opacity 0.18s ease;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background 0.18s ease,
+        color 0.18s ease,
+        border-color 0.18s ease,
+        opacity 0.18s ease,
+        filter 0.18s ease;
 }
 
 .actionBtn,
 .seenBtn,
 .addOfflineBtn,
 .modalSecondary {
-  padding: 0.65rem 0.85rem;
+    padding: 0.65rem 0.85rem;
 
-  color: $ink;
-  background: #ffffff;
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.045);
+    color: $ink;
+    background: #ffffff;
+    border: 1px solid rgba(21, 21, 21, 0.12);
+    box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.045);
 
-  &:hover:not(:disabled) {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.075);
-  }
+    :global(html[data-theme="dark"]) & {
+        color: $dark-text;
+        background: rgba(17, 18, 22, 0.72);
+        border-color: $dark-border;
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+    }
+
+    &:hover:not(:disabled) {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.075);
+
+        :global(html[data-theme="dark"]) & {
+            background: rgba(168, 149, 255, 0.12);
+            border-color: rgba(168, 149, 255, 0.28);
+            color: $dark-primary;
+            box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.3);
+        }
+    }
 }
 
 .acceptBtn {
-  background: #f0fff6;
-  border-color: rgba(29, 124, 69, 0.24);
-  color: #1d7c45;
+    background: #f0fff6;
+    border-color: rgba(29, 124, 69, 0.24);
+    color: #1d7c45;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-success-bg;
+        border-color: $dark-success-border;
+        color: $dark-success-text;
+    }
 }
 
 .rejectBtn,
 .cancelBtn {
-  background: #fff7f7;
-  border-color: rgba(198, 40, 58, 0.26);
-  color: #c6283a;
+    background: #fff7f7;
+    border-color: rgba(198, 40, 58, 0.26);
+    color: #c6283a;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-danger-bg;
+        border-color: $dark-danger-border;
+        color: $dark-danger-text;
+    }
 }
 
 .actionBtn:disabled,
@@ -1151,14 +1771,14 @@ $ink: #151515;
 .addOfflineBtn:disabled,
 .modalPrimary:disabled,
 .modalSecondary:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .statePill {
-  padding: 0.62rem 0.8rem;
+    padding: 0.62rem 0.8rem;
 }
 
 /* =========================================================
@@ -1166,201 +1786,310 @@ $ink: #151515;
 ========================================================= */
 
 .calendarWrap {
-  width: 100%;
+    width: 100%;
 }
 
 .calendarCard {
-  margin-top: 1.2rem;
+    margin-top: 1.2rem;
 }
 
 .calendarLeft,
 .calendarRight {
-  min-width: 0;
+    min-width: 0;
 }
 
 .calendarGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.72fr);
-  gap: 1.1rem;
-  align-items: start;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.72fr);
+    gap: 1.1rem;
+    align-items: start;
 }
 
 .calendarUnavailableDay {
-  opacity: 0.55;
+    opacity: 0.55;
 }
 
 .calSkin {
-  width: 100%;
-
-  :global(.react-calendar) {
     width: 100%;
-    border: 1px solid rgba(21, 21, 21, 0.12);
-    background: #ffffff;
-    font-family: $font-body;
-  }
 
-  :global(.react-calendar__navigation) {
-    margin: 0;
-    min-height: 54px;
-    border-bottom: 1px solid rgba(21, 21, 21, 0.1);
-  }
+    :global(.react-calendar) {
+        width: 100%;
+        border: 1px solid rgba(21, 21, 21, 0.12);
+        background: #ffffff;
+        font-family: $font-body;
 
-  :global(.react-calendar__navigation button) {
-    min-height: 54px;
-    border: 0;
-    background: #ffffff;
-    color: $ink;
-    font-family: $font-accent;
-    font-weight: 950;
-    cursor: pointer;
-  }
+        :global(html[data-theme="dark"]) & {
+            background: rgba(17, 18, 22, 0.72);
+            border-color: $dark-border;
+            color: $dark-text;
+        }
+    }
 
-  :global(.react-calendar__navigation button:enabled:hover),
-  :global(.react-calendar__navigation button:enabled:focus) {
-    background: $paper-soft;
-  }
+    :global(.react-calendar__navigation) {
+        margin: 0;
+        min-height: 54px;
+        border-bottom: 1px solid rgba(21, 21, 21, 0.1);
 
-  :global(.react-calendar__month-view__weekdays) {
-    text-transform: uppercase;
-    font-family: $font-accent;
-    font-size: 0.72rem;
-    color: rgba(21, 21, 21, 0.54);
-    border-bottom: 1px solid rgba(21, 21, 21, 0.1);
-  }
+        :global(html[data-theme="dark"]) & {
+            border-bottom-color: $dark-border;
+        }
+    }
 
-  :global(.react-calendar__month-view__weekdays__weekday) {
-    padding: 0.7rem 0.2rem;
-  }
+    :global(.react-calendar__navigation button) {
+        min-height: 54px;
+        border: 0;
+        background: #ffffff;
+        color: $ink;
+        font-family: $font-accent;
+        font-weight: 950;
+        cursor: pointer;
 
-  :global(.react-calendar__tile) {
-    position: relative;
-    min-height: 72px;
-    padding: 0.6rem 0.4rem;
-    background: #ffffff;
-    color: $ink;
-    border: 1px solid rgba(21, 21, 21, 0.055);
-    font-family: $font-accent;
-    font-weight: 900;
-  }
+        :global(html[data-theme="dark"]) & {
+            background: rgba(17, 18, 22, 0.72);
+            color: $dark-text;
+        }
+    }
 
-  :global(.react-calendar__tile:enabled:hover),
-  :global(.react-calendar__tile:enabled:focus) {
-    background: $paper-soft;
-  }
+    :global(.react-calendar__navigation button:enabled:hover),
+    :global(.react-calendar__navigation button:enabled:focus) {
+        background: $paper-soft;
 
-  :global(.react-calendar__tile--now) {
-    background: #fffbeb !important;
-    color: $ink !important;
-  }
+        :global(html[data-theme="dark"]) & {
+            background: rgba(168, 149, 255, 0.12);
+            color: $dark-primary;
+        }
+    }
 
-  :global(.react-calendar__tile--active) {
-    background: $ink !important;
-    color: #ffffff !important;
-  }
+    :global(.react-calendar__month-view__weekdays) {
+        text-transform: uppercase;
+        font-family: $font-accent;
+        font-size: 0.72rem;
+        color: rgba(21, 21, 21, 0.54);
+        border-bottom: 1px solid rgba(21, 21, 21, 0.1);
+
+        :global(html[data-theme="dark"]) & {
+            color: rgba(244, 241, 234, 0.5);
+            border-bottom-color: $dark-border;
+        }
+    }
+
+    :global(.react-calendar__month-view__weekdays__weekday) {
+        padding: 0.7rem 0.2rem;
+    }
+
+    :global(.react-calendar__tile) {
+        position: relative;
+        min-height: 72px;
+        padding: 0.6rem 0.4rem;
+        background: #ffffff;
+        color: $ink;
+        border: 1px solid rgba(21, 21, 21, 0.055);
+        font-family: $font-accent;
+        font-weight: 900;
+
+        :global(html[data-theme="dark"]) & {
+            background: rgba(17, 18, 22, 0.72);
+            color: $dark-text;
+            border-color: rgba(244, 241, 234, 0.08);
+        }
+    }
+
+    :global(.react-calendar__tile:enabled:hover),
+    :global(.react-calendar__tile:enabled:focus) {
+        background: $paper-soft;
+
+        :global(html[data-theme="dark"]) & {
+            background: rgba(168, 149, 255, 0.12);
+            color: $dark-primary;
+        }
+    }
+
+    :global(.react-calendar__tile--now) {
+        background: #fffbeb !important;
+        color: $ink !important;
+
+        :global(html[data-theme="dark"]) & {
+            background: $dark-warning-bg !important;
+            color: $dark-warning-text !important;
+        }
+    }
+
+    :global(.react-calendar__tile--active) {
+        background: $ink !important;
+        color: #ffffff !important;
+
+        :global(html[data-theme="dark"]) & {
+            background: linear-gradient(135deg, $dark-primary, $dark-pink) !important;
+            color: $dark-bg !important;
+        }
+    }
+
+    :global(.react-calendar__month-view__days__day--neighboringMonth) {
+        :global(html[data-theme="dark"]) & {
+            color: rgba(244, 241, 234, 0.28);
+        }
+    }
 }
 
 .tileBadges {
-  position: absolute;
-  right: 6px;
-  bottom: 6px;
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
 
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .dotMini {
-  width: 7px;
-  height: 7px;
+    width: 7px;
+    height: 7px;
 }
 
 .dotPending {
-  background: #f59e0b;
+    background: #f59e0b;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-warning-text;
+    }
 }
 
 .dotAccepted {
-  background: #1d7c45;
+    background: #1d7c45;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-success-text;
+    }
 }
 
 .dotRejected {
-  background: #c6283a;
+    background: #c6283a;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-danger-text;
+    }
 }
 
 .dotUnavailable {
-  background: rgba(21, 21, 21, 0.32);
+    background: rgba(21, 21, 21, 0.32);
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(244, 241, 234, 0.32);
+    }
 }
 
 .dayBox {
-  padding: 1rem;
+    padding: 1rem;
 
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.045);
+    background: $paper-bg;
+    border: 1px solid rgba(21, 21, 21, 0.12);
+    box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.045);
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(26, 28, 34, 0.86);
+        border-color: $dark-border;
+        box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.24);
+    }
 }
 
 .dayBoxHead,
 .daySectionTitle,
 .slotHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
 
-  margin-bottom: 0.85rem;
+    margin-bottom: 0.85rem;
 
-  font-family: $font-accent;
-  font-weight: 950;
-  color: $ink;
+    font-family: $font-accent;
+    font-weight: 950;
+    color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-text;
+    }
 }
 
 .dayBoxHead {
-  justify-content: flex-start;
+    justify-content: flex-start;
 }
 
 .daySection {
-  margin-top: 1rem;
+    margin-top: 1rem;
 }
 
 .dayActions {
-  margin-top: 1rem;
-  display: flex;
-  justify-content: flex-end;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .unavailableNotice {
-  margin-bottom: 1rem;
-  padding: 0.9rem;
+    margin-bottom: 1rem;
+    padding: 0.9rem;
 
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  gap: 0.75rem;
-  align-items: start;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: start;
 
-  background: #fff7f7;
-  border: 1px solid rgba(198, 40, 58, 0.24);
-  color: #c6283a;
+    background: #fff7f7;
+    border: 1px solid rgba(198, 40, 58, 0.24);
+    color: #c6283a;
 
-  svg {
-    width: 42px;
-    height: 42px;
-    padding: 0.7rem;
-    background: #ffffff;
-    border: 1px solid rgba(198, 40, 58, 0.18);
-  }
+    transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        border-color 0.22s ease;
 
-  strong {
-    display: block;
-    font-family: $font-accent;
-    color: #991b1b;
-  }
+    :global(html[data-theme="dark"]) & {
+        background: $dark-danger-bg;
+        border-color: $dark-danger-border;
+        color: $dark-danger-text;
+    }
 
-  span {
-    display: block;
-    margin-top: 0.25rem;
-    color: rgba(153, 27, 27, 0.72);
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
+    svg {
+        width: 42px;
+        height: 42px;
+        padding: 0.7rem;
+        background: #ffffff;
+        border: 1px solid rgba(198, 40, 58, 0.18);
+
+        :global(html[data-theme="dark"]) & {
+            background: rgba(17, 18, 22, 0.72);
+            border-color: $dark-danger-border;
+        }
+    }
+
+    strong {
+        display: block;
+        font-family: $font-accent;
+        color: #991b1b;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-danger-text;
+        }
+    }
+
+    span {
+        display: block;
+        margin-top: 0.25rem;
+        color: rgba(153, 27, 27, 0.72);
+        font-size: 0.9rem;
+        line-height: 1.5;
+
+        :global(html[data-theme="dark"]) & {
+            color: rgba(255, 143, 168, 0.72);
+        }
+    }
 }
 
 /* =========================================================
@@ -1368,153 +2097,258 @@ $ink: #151515;
 ========================================================= */
 
 .timeline {
-  display: grid;
-  gap: 0.7rem;
+    display: grid;
+    gap: 0.7rem;
 }
 
 .tlRow {
-  display: grid;
-  grid-template-columns: 118px minmax(0, 1fr);
-  gap: 0.85rem;
-  align-items: stretch;
+    display: grid;
+    grid-template-columns: 118px minmax(0, 1fr);
+    gap: 0.85rem;
+    align-items: stretch;
 }
 
 .tlTime {
-  display: grid;
-  align-content: start;
-  gap: 0.45rem;
+    display: grid;
+    align-content: start;
+    gap: 0.45rem;
 }
 
 .tlTimeTxt {
-  padding: 0.55rem 0.65rem;
+    padding: 0.55rem 0.65rem;
 
-  background: $paper-soft;
-  border: 1px solid rgba(21, 21, 21, 0.1);
+    background: $paper-soft;
+    border: 1px solid rgba(21, 21, 21, 0.1);
 
-  font-family: $font-accent;
-  font-size: 0.76rem;
-  font-weight: 950;
-  color: rgba(21, 21, 21, 0.7);
-  text-align: center;
+    font-family: $font-accent;
+    font-size: 0.76rem;
+    font-weight: 950;
+    color: rgba(21, 21, 21, 0.7);
+    text-align: center;
+
+    transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(35, 38, 48, 0.78);
+        border-color: $dark-border;
+        color: $dark-muted;
+    }
 }
 
 .tlDot {
-  width: 12px;
-  height: 12px;
-  margin: 0 auto;
-  background: rgba(21, 21, 21, 0.24);
+    width: 12px;
+    height: 12px;
+    margin: 0 auto;
+    background: rgba(21, 21, 21, 0.24);
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(244, 241, 234, 0.24);
+    }
 }
 
 .tlDotAccepted,
 .tlAccepted {
-  background: #1d7c45;
+    background: #1d7c45;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-success-text;
+    }
 }
 
 .tlDotPending,
 .tlPending {
-  background: #f59e0b;
+    background: #f59e0b;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-warning-text;
+    }
 }
 
 .tlDotRejected,
 .tlRejected {
-  background: #c6283a;
+    background: #c6283a;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-danger-text;
+    }
 }
 
 .tlDotFree {
-  background: rgba(21, 21, 21, 0.18);
+    background: rgba(21, 21, 21, 0.18);
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(244, 241, 234, 0.18);
+    }
 }
 
 .tlCard {
-  padding: 0.9rem;
+    padding: 0.9rem;
 
-  background: #ffffff;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-  box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.035);
+    background: #ffffff;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+    box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.035);
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(26, 28, 34, 0.86);
+        border-color: $dark-border;
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.22);
+    }
 }
 
 .tlCardFree {
-  background: $paper-soft;
-  border-style: dashed;
+    background: $paper-soft;
+    border-style: dashed;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(17, 18, 22, 0.5);
+    }
 }
 
 .tlTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .tlKind,
 .tlStatus,
 .tlChip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
 
-  padding: 0.45rem 0.6rem;
+    padding: 0.45rem 0.6rem;
 
-  background: $paper-soft;
-  border: 1px solid rgba(21, 21, 21, 0.1);
+    background: $paper-soft;
+    border: 1px solid rgba(21, 21, 21, 0.1);
 
-  font-family: $font-accent;
-  font-size: 0.72rem;
-  font-weight: 950;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+    font-family: $font-accent;
+    font-size: 0.72rem;
+    font-weight: 950;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+
+    transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(35, 38, 48, 0.78);
+        border-color: $dark-border;
+        color: $dark-muted;
+    }
 }
 
 .tlKindRecv {
-  color: $primary-color;
+    color: $primary-color;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+    }
 }
 
 .tlKindSent {
-  color: $secondary-color;
+    color: $secondary-color;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-pink;
+    }
 }
 
 .tlOffline {
-  color: #0f766e;
-  background: #f0fdfa;
-  border-color: rgba(15, 118, 110, 0.24);
+    color: #0f766e;
+    background: #f0fdfa;
+    border-color: rgba(15, 118, 110, 0.24);
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-info-text;
+        background: $dark-info-bg;
+        border-color: $dark-info-border;
+    }
 }
 
 .tlTitle {
-  margin: 0 0 0.25rem;
+    margin: 0 0 0.25rem;
 
-  font-family: $font-accent;
-  font-size: 1rem;
-  font-weight: 950;
-  color: $ink;
+    font-family: $font-accent;
+    font-size: 1rem;
+    font-weight: 950;
+    color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-text;
+    }
 }
 
 .tlDesc,
 .tlMeta {
-  margin: 0;
+    margin: 0;
 
-  color: rgba(21, 21, 21, 0.62);
-  font-size: 0.9rem;
-  line-height: 1.55;
+    color: rgba(21, 21, 21, 0.62);
+    font-size: 0.9rem;
+    line-height: 1.55;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-muted;
+    }
 }
 
 .tlActions {
-  margin-top: 0.75rem;
+    margin-top: 0.75rem;
 
-  display: flex;
-  justify-content: flex-end;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .tlAddBtn {
-  padding: 0.55rem 0.7rem;
-  border: 1px solid $ink;
-  background: $ink;
-  color: #ffffff;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid $ink;
+    background: $ink;
+    color: #ffffff;
 
-  font-family: $font-accent;
-  font-size: 0.72rem;
-  font-weight: 950;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
+    font-family: $font-accent;
+    font-size: 0.72rem;
+    font-weight: 950;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+
+    transition:
+        background 0.18s ease,
+        color 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: linear-gradient(135deg, $dark-primary, $dark-pink);
+        color: $dark-bg;
+        border-color: rgba(255, 255, 255, 0.16);
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+    }
+
+    &:hover {
+        transform: translate(-2px, -2px);
+
+        :global(html[data-theme="dark"]) & {
+            background: linear-gradient(135deg, #b8a9ff, #ff68aa);
+        }
+    }
 }
 
 /* =========================================================
@@ -1522,300 +2356,465 @@ $ink: #151515;
 ========================================================= */
 
 .modalOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 2147483647;
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
 
-  padding: clamp(10px, 2vw, 18px);
+    padding: clamp(10px, 2vw, 18px);
 
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
 
-  overflow-y: auto;
-  overscroll-behavior: contain;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 
-  background: rgba(0, 0, 0, 0.62);
+    background: rgba(0, 0, 0, 0.62);
 
-  font-family: $font-body;
-  color: $ink;
+    font-family: $font-body;
+    color: $ink;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(0, 0, 0, 0.74);
+        color: $dark-text;
+    }
 }
 
 .modalOverlay * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 .modalCard {
-  width: min(820px, 100%);
-  max-height: calc(100dvh - 2 * clamp(10px, 2vw, 18px));
+    width: min(820px, 100%);
+    max-height: calc(100dvh - 2 * clamp(10px, 2vw, 18px));
 
-  display: flex;
-  flex-direction: column;
+    display: flex;
+    flex-direction: column;
 
-  overflow: hidden;
+    overflow: hidden;
 
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.14);
-  box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.18);
+    background: $paper-bg;
+    border: 1px solid rgba(21, 21, 21, 0.14);
+    box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.18);
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-surface;
+        border-color: $dark-border;
+        box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.34);
+    }
 }
 
 .modalHead {
-  padding: 1rem;
+    padding: 1rem;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
 
-  border-bottom: 1px solid rgba(21, 21, 21, 0.1);
-  background: #ffffff;
+    border-bottom: 1px solid rgba(21, 21, 21, 0.1);
+    background: #ffffff;
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(26, 28, 34, 0.94);
+        border-bottom-color: $dark-border;
+    }
 }
 
 .modalTitle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
 
-  font-family: $font-accent;
-  font-size: clamp(1.25rem, 2vw, 1.65rem);
-  font-weight: 950;
-  letter-spacing: -0.045em;
-  color: $ink;
+    font-family: $font-accent;
+    font-size: clamp(1.25rem, 2vw, 1.65rem);
+    font-weight: 950;
+    letter-spacing: -0.045em;
+    color: $ink;
 
-  svg {
-    color: $primary-color;
-  }
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-text;
+    }
+
+    svg {
+        color: $primary-color;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-primary;
+        }
+    }
 }
 
 .modalClose {
-  width: 42px;
-  height: 42px;
+    width: 42px;
+    height: 42px;
 
-  display: grid;
-  place-items: center;
+    display: grid;
+    place-items: center;
 
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  background: $paper-soft;
-  color: $ink;
+    border: 1px solid rgba(21, 21, 21, 0.12);
+    background: $paper-soft;
+    color: $ink;
 
-  cursor: pointer;
+    cursor: pointer;
 
-  &:hover {
-    background: #fff7f7;
-    color: #c6283a;
-  }
+    transition:
+        background 0.18s ease,
+        color 0.18s ease,
+        border-color 0.18s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(35, 38, 48, 0.78);
+        color: $dark-text;
+        border-color: $dark-border;
+    }
+
+    &:hover {
+        background: #fff7f7;
+        color: #c6283a;
+
+        :global(html[data-theme="dark"]) & {
+            background: $dark-danger-bg;
+            color: $dark-danger-text;
+            border-color: $dark-danger-border;
+        }
+    }
 }
 
 .modalBody {
-  padding: 1rem;
-  overflow-y: auto;
+    padding: 1rem;
+    overflow-y: auto;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-surface;
+    }
 }
 
 .modalHint,
 .modalInfo,
 .modalWarn {
-  padding: 0.9rem;
+    padding: 0.9rem;
 
-  display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
-  gap: 0.75rem;
-  align-items: start;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: start;
 
-  background: $paper-soft;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-
-  color: rgba(21, 21, 21, 0.68);
-  line-height: 1.55;
-
-  svg {
-    width: 42px;
-    height: 42px;
-    padding: 0.7rem;
-    background: #ffffff;
+    background: $paper-soft;
     border: 1px solid rgba(21, 21, 21, 0.1);
-    color: $primary-color;
-  }
 
-  b {
-    color: $ink;
-    font-family: $font-accent;
-    font-weight: 950;
-  }
+    color: rgba(21, 21, 21, 0.68);
+    line-height: 1.55;
+
+    transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(35, 38, 48, 0.78);
+        border-color: $dark-border;
+        color: $dark-muted;
+    }
+
+    svg {
+        width: 42px;
+        height: 42px;
+        padding: 0.7rem;
+        background: #ffffff;
+        border: 1px solid rgba(21, 21, 21, 0.1);
+        color: $primary-color;
+
+        :global(html[data-theme="dark"]) & {
+            background: rgba(17, 18, 22, 0.72);
+            border-color: $dark-border;
+            color: $dark-primary;
+        }
+    }
+
+    b {
+        color: $ink;
+        font-family: $font-accent;
+        font-weight: 950;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-text;
+        }
+    }
 }
 
 .modalHint {
-  display: block;
-  margin-bottom: 0.8rem;
+    display: block;
+    margin-bottom: 0.8rem;
 }
 
 .modalInfo,
 .modalWarn {
-  margin-bottom: 0.9rem;
+    margin-bottom: 0.9rem;
 }
 
 .modalWarn {
-  background: #fffbeb;
-  border-color: rgba(245, 158, 11, 0.32);
+    background: #fffbeb;
+    border-color: rgba(245, 158, 11, 0.32);
 
-  svg {
-    color: #d97706;
-    border-color: rgba(245, 158, 11, 0.22);
-  }
+    :global(html[data-theme="dark"]) & {
+        background: $dark-warning-bg;
+        border-color: $dark-warning-border;
+    }
+
+    svg {
+        color: #d97706;
+        border-color: rgba(245, 158, 11, 0.22);
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-warning-text;
+            border-color: $dark-warning-border;
+        }
+    }
 }
 
 .modalWarnTitle {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 
-  margin-bottom: 0.4rem;
+    margin-bottom: 0.4rem;
 
-  font-family: $font-accent;
-  font-weight: 950;
-  color: #92400e;
+    font-family: $font-accent;
+    font-weight: 950;
+    color: #92400e;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-warning-text;
+    }
 }
 
 .modalWarnText {
-  color: rgba(146, 64, 14, 0.72);
-  font-size: 0.9rem;
+    color: rgba(146, 64, 14, 0.72);
+    font-size: 0.9rem;
+
+    :global(html[data-theme="dark"]) & {
+        color: rgba(255, 209, 102, 0.72);
+    }
 }
 
 .conflictList {
-  margin: 0.7rem 0 0;
-  padding-left: 1.2rem;
+    margin: 0.7rem 0 0;
+    padding-left: 1.2rem;
 
-  color: rgba(146, 64, 14, 0.82);
-  font-size: 0.88rem;
-  line-height: 1.55;
+    color: rgba(146, 64, 14, 0.82);
+    font-size: 0.88rem;
+    line-height: 1.55;
+
+    :global(html[data-theme="dark"]) & {
+        color: rgba(255, 209, 102, 0.78);
+    }
 }
 
 .conflictMore {
-  margin-top: 0.4rem;
-  font-family: $font-accent;
-  font-size: 0.82rem;
-  font-weight: 950;
-  color: #92400e;
+    margin-top: 0.4rem;
+    font-family: $font-accent;
+    font-size: 0.82rem;
+    font-weight: 950;
+    color: #92400e;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-warning-text;
+    }
 }
 
 .modalGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
 }
 
 .field,
 .fieldWide,
 .fieldToggle {
-  display: grid;
-  gap: 0.45rem;
+    display: grid;
+    gap: 0.45rem;
 
-  span {
-    font-family: $font-accent;
-    font-size: 0.76rem;
-    font-weight: 950;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: rgba(21, 21, 21, 0.62);
-  }
+    span {
+        font-family: $font-accent;
+        font-size: 0.76rem;
+        font-weight: 950;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(21, 21, 21, 0.62);
+
+        :global(html[data-theme="dark"]) & {
+            color: rgba(244, 241, 234, 0.52);
+        }
+    }
 }
 
 .fieldWide {
-  grid-column: 1 / -1;
+    grid-column: 1 / -1;
 }
 
 .fieldToggle {
-  align-content: end;
+    align-content: end;
 
-  min-height: 52px;
-  padding: 0 0.85rem;
+    min-height: 52px;
+    padding: 0 0.85rem;
 
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
 
-  background: $paper-soft;
-  border: 1px solid rgba(21, 21, 21, 0.1);
+    background: $paper-soft;
+    border: 1px solid rgba(21, 21, 21, 0.1);
 
-  input {
-    accent-color: $primary-color;
-  }
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(35, 38, 48, 0.78);
+        border-color: $dark-border;
+    }
+
+    input {
+        accent-color: $primary-color;
+
+        :global(html[data-theme="dark"]) & {
+            accent-color: $dark-primary;
+        }
+    }
 }
 
 .formInput,
 .formTextarea {
-  width: 100%;
+    width: 100%;
 
-  border-radius: 0;
-  border: 1px solid rgba(21, 21, 21, 0.13);
-  background: #ffffff;
-  color: $ink;
+    border-radius: 0;
+    border: 1px solid rgba(21, 21, 21, 0.13);
+    background: #ffffff;
+    color: $ink;
 
-  font-family: $font-body;
-  font-size: 0.95rem;
+    font-family: $font-body;
+    font-size: 0.95rem;
 
-  outline: none;
+    outline: none;
 
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s ease,
+        background 0.18s ease,
+        color 0.18s ease,
+        opacity 0.18s ease;
 
-  &:focus {
-    border-color: rgba(111, 78, 242, 0.34);
-    box-shadow: 5px 5px 0 rgba(111, 78, 242, 0.08);
-    transform: translate(-2px, -2px);
-  }
+    :global(html[data-theme="dark"]) & {
+        background: rgba(17, 18, 22, 0.72);
+        border-color: $dark-border;
+        color: $dark-text;
+    }
 
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    background: $paper-muted;
-  }
+    &:focus {
+        border-color: rgba(111, 78, 242, 0.34);
+        box-shadow: 5px 5px 0 rgba(111, 78, 242, 0.08);
+        transform: translate(-2px, -2px);
+
+        :global(html[data-theme="dark"]) & {
+            background: rgba(17, 18, 22, 0.86);
+            border-color: rgba(168, 149, 255, 0.38);
+            box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+        }
+    }
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background: $paper-muted;
+
+        :global(html[data-theme="dark"]) & {
+            background: $dark-disabled-bg;
+            color: $dark-disabled-text;
+            border-color: $dark-disabled-border;
+        }
+    }
+
+    &::placeholder {
+        color: rgba(21, 21, 21, 0.38);
+
+        :global(html[data-theme="dark"]) & {
+            color: rgba(244, 241, 234, 0.36);
+        }
+    }
 }
 
 .formInput {
-  min-height: 52px;
-  padding: 0 0.85rem;
+    min-height: 52px;
+    padding: 0 0.85rem;
 }
 
 .formTextarea {
-  min-height: 110px;
-  padding: 0.85rem;
-  resize: vertical;
-  line-height: 1.6;
+    min-height: 110px;
+    padding: 0.85rem;
+    resize: vertical;
+    line-height: 1.6;
 }
 
 .modalActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 
-  margin-top: 1rem;
-  padding-top: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
 
-  border-top: 1px solid rgba(21, 21, 21, 0.1);
+    border-top: 1px solid rgba(21, 21, 21, 0.1);
+
+    :global(html[data-theme="dark"]) & {
+        border-top-color: $dark-border;
+    }
 }
 
 .modalPrimary {
-  min-height: 48px;
-  padding: 0 1rem;
+    min-height: 48px;
+    padding: 0 1rem;
 
-  background: $ink;
-  color: #ffffff;
-  border: 1px solid $ink;
-  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.08);
+    background: $ink;
+    color: #ffffff;
+    border: 1px solid $ink;
+    box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.08);
 
-  &:hover:not(:disabled) {
-    transform: translate(-2px, -2px);
-    background: #000000;
-    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.12);
-  }
+    :global(html[data-theme="dark"]) & {
+        background: linear-gradient(135deg, $dark-primary, $dark-pink);
+        color: $dark-bg;
+        border-color: rgba(255, 255, 255, 0.16);
+        box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28);
+    }
+
+    &:hover:not(:disabled) {
+        transform: translate(-2px, -2px);
+        background: #000000;
+        box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.12);
+
+        :global(html[data-theme="dark"]) & {
+            background: linear-gradient(135deg, #b8a9ff, #ff68aa);
+            box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.34);
+        }
+    }
 }
 
 .modalSecondary {
-  min-height: 48px;
-  padding: 0 1rem;
+    min-height: 48px;
+    padding: 0 1rem;
 }
 
 /* =========================================================
@@ -1823,135 +2822,221 @@ $ink: #151515;
 ========================================================= */
 
 .slotBox {
-  grid-column: 1 / -1;
+    grid-column: 1 / -1;
 
-  padding: 1rem;
+    padding: 1rem;
 
-  background: $paper-soft;
-  border: 1px solid rgba(21, 21, 21, 0.1);
+    background: $paper-soft;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(35, 38, 48, 0.78);
+        border-color: $dark-border;
+    }
 }
 
 .slotHint,
 .slotInfo,
 .slotSummary {
-  color: rgba(21, 21, 21, 0.62);
-  font-size: 0.9rem;
-  line-height: 1.55;
+    color: rgba(21, 21, 21, 0.62);
+    font-size: 0.9rem;
+    line-height: 1.55;
 
-  b {
-    color: $ink;
-    font-family: $font-accent;
-  }
+    :global(html[data-theme="dark"]) & {
+        color: $dark-muted;
+    }
+
+    b {
+        color: $ink;
+        font-family: $font-accent;
+
+        :global(html[data-theme="dark"]) & {
+            color: $dark-text;
+        }
+    }
 }
 
 .slotGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
-  gap: 0.55rem;
-  margin-top: 0.75rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+    gap: 0.55rem;
+    margin-top: 0.75rem;
 }
 
 .slotBtn {
-  min-height: 42px;
+    min-height: 42px;
 
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  background: #ffffff;
-  color: $ink;
+    border: 1px solid rgba(21, 21, 21, 0.12);
+    background: #ffffff;
+    color: $ink;
 
-  cursor: pointer;
+    cursor: pointer;
 
-  font-family: $font-accent;
-  font-size: 0.78rem;
-  font-weight: 950;
+    font-family: $font-accent;
+    font-size: 0.78rem;
+    font-weight: 950;
 
-  transition:
-    transform 0.15s ease,
-    background 0.15s ease,
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+    transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease,
+        box-shadow 0.15s ease,
+        color 0.15s ease;
 
-  &:hover:not(:disabled) {
-    transform: translate(-2px, -2px);
-    box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.055);
-  }
+    :global(html[data-theme="dark"]) & {
+        background: rgba(17, 18, 22, 0.72);
+        border-color: $dark-border;
+        color: $dark-text;
+    }
 
-  &:disabled {
-    cursor: not-allowed;
-  }
+    &:hover:not(:disabled) {
+        transform: translate(-2px, -2px);
+        box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.055);
+
+        :global(html[data-theme="dark"]) & {
+            background: rgba(168, 149, 255, 0.12);
+            border-color: rgba(168, 149, 255, 0.28);
+            color: $dark-primary;
+            box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+        }
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+    }
 }
 
 .slotSelected {
-  background: $ink;
-  color: #ffffff;
-  border-color: $ink;
+    background: $ink;
+    color: #ffffff;
+    border-color: $ink;
+
+    :global(html[data-theme="dark"]) & {
+        background: linear-gradient(135deg, $dark-primary, $dark-pink);
+        color: $dark-bg;
+        border-color: rgba(255, 255, 255, 0.16);
+    }
 }
 
 .slotReserved {
-  background: #fff7f7;
-  color: #c6283a;
-  border-color: rgba(198, 40, 58, 0.28);
+    background: #fff7f7;
+    color: #c6283a;
+    border-color: rgba(198, 40, 58, 0.28);
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-danger-bg;
+        color: $dark-danger-text;
+        border-color: $dark-danger-border;
+    }
 }
 
 .slotPending {
-  background: #fffbeb;
-  color: #92400e;
-  border-color: rgba(245, 158, 11, 0.34);
+    background: #fffbeb;
+    color: #92400e;
+    border-color: rgba(245, 158, 11, 0.34);
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-warning-bg;
+        color: $dark-warning-text;
+        border-color: $dark-warning-border;
+    }
 }
 
 .slotDisabled {
-  background: $paper-muted;
-  color: rgba(21, 21, 21, 0.34);
-  border-color: rgba(21, 21, 21, 0.08);
+    background: $paper-muted;
+    color: rgba(21, 21, 21, 0.34);
+    border-color: rgba(21, 21, 21, 0.08);
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-disabled-bg;
+        color: $dark-disabled-text;
+        border-color: $dark-disabled-border;
+    }
 }
 
 .slotLegend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 0.85rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 0.85rem;
 }
 
 .legBox {
-  width: 12px;
-  height: 12px;
-  display: inline-block;
-  border: 1px solid rgba(21, 21, 21, 0.12);
+    width: 12px;
+    height: 12px;
+    display: inline-block;
+    border: 1px solid rgba(21, 21, 21, 0.12);
+
+    :global(html[data-theme="dark"]) & {
+        border-color: $dark-border;
+    }
 }
 
 .legFree {
-  background: #ffffff;
+    background: #ffffff;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(17, 18, 22, 0.72);
+    }
 }
 
 .legReserved {
-  background: #fff7f7;
+    background: #fff7f7;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-danger-bg;
+    }
 }
 
 .legPending {
-  background: #fffbeb;
+    background: #fffbeb;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-warning-bg;
+    }
 }
 
 .legDisabled {
-  background: $paper-muted;
+    background: $paper-muted;
+
+    :global(html[data-theme="dark"]) & {
+        background: $dark-disabled-bg;
+    }
 }
 
 .durationMini,
 .durationPill {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
 
-  padding: 0.45rem 0.6rem;
+    padding: 0.45rem 0.6rem;
 
-  background: $paper-soft;
-  border: 1px solid rgba(21, 21, 21, 0.1);
+    background: $paper-soft;
+    border: 1px solid rgba(21, 21, 21, 0.1);
 
-  color: rgba(21, 21, 21, 0.64);
+    color: rgba(21, 21, 21, 0.64);
 
-  font-family: $font-accent;
-  font-size: 0.72rem;
-  font-weight: 950;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+    font-family: $font-accent;
+    font-size: 0.72rem;
+    font-weight: 950;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+
+    transition:
+        background 0.22s ease,
+        color 0.22s ease,
+        border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(35, 38, 48, 0.78);
+        border-color: $dark-border;
+        color: $dark-muted;
+    }
 }
 
 /* =========================================================
@@ -1959,7 +3044,7 @@ $ink: #151515;
 ========================================================= */
 
 .skeletonItem {
-  pointer-events: none;
+    pointer-events: none;
 }
 
 .skeleton,
@@ -1969,63 +3054,76 @@ $ink: #151515;
 .dateSkel,
 .pillSkel,
 .blockSkel {
-  position: relative;
-  display: inline-block;
-  overflow: hidden;
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
 
-  background: $paper-muted;
+    background: $paper-muted;
+
+    transition: background 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(244, 241, 234, 0.08);
+    }
 }
 
 .nameSkeleton {
-  width: 140px;
-  height: 1em;
-  vertical-align: middle;
+    width: 140px;
+    height: 1em;
+    vertical-align: middle;
 }
 
 .metaSkel {
-  height: 14px;
-  width: min(520px, 100%);
+    height: 14px;
+    width: min(520px, 100%);
 }
 
 .dateSkel {
-  height: 12px;
-  width: 170px;
+    height: 12px;
+    width: 170px;
 }
 
 .pillSkel {
-  width: 120px;
-  height: 30px;
+    width: 120px;
+    height: 30px;
 }
 
 .blockSkel {
-  width: 100%;
-  height: 42px;
+    width: 100%;
+    height: 42px;
 }
 
 .shimmer {
-  overflow: hidden;
-  position: relative;
+    overflow: hidden;
+    position: relative;
 
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
 
-    transform: translateX(-100%);
+        transform: translateX(-100%);
 
-    background: linear-gradient(90deg,
-        transparent,
-        rgba(255, 255, 255, 0.76),
-        transparent);
+        background: linear-gradient(90deg,
+                transparent,
+                rgba(255, 255, 255, 0.76),
+                transparent);
 
-    animation: shimmer 1.2s infinite;
-  }
+        animation: shimmer 1.2s infinite;
+
+        :global(html[data-theme="dark"]) & {
+            background: linear-gradient(90deg,
+                    transparent,
+                    rgba(244, 241, 234, 0.14),
+                    transparent);
+        }
+    }
 }
 
 @keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
+    100% {
+        transform: translateX(100%);
+    }
 }
 
 /* =========================================================
@@ -2033,62 +3131,103 @@ $ink: #151515;
 ========================================================= */
 
 .wholeDayList {
-  display: grid;
-  gap: 0.75rem;
+    display: grid;
+    gap: 0.75rem;
 }
 
 .wholeDayItem {
-  padding: 0.9rem;
+    padding: 0.9rem;
 
-  background: $paper-soft;
-  border: 1px solid rgba(21, 21, 21, 0.1);
+    background: $paper-soft;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(35, 38, 48, 0.78);
+        border-color: $dark-border;
+    }
 }
 
 .wholeDayTop {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .wholeDayName,
 .wholeDayService,
 .wholeDayStatus {
-  font-family: $font-accent;
-  font-weight: 950;
-  color: $ink;
+    font-family: $font-accent;
+    font-weight: 950;
+    color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-text;
+    }
 }
 
 .wholeDayDesc,
 .wholeDayNoteText {
-  margin-top: 0.4rem;
-  color: rgba(21, 21, 21, 0.62);
-  line-height: 1.55;
+    margin-top: 0.4rem;
+    color: rgba(21, 21, 21, 0.62);
+    line-height: 1.55;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        color: $dark-muted;
+    }
 }
 
 .wholeDayBadge {
-  padding: 0.45rem 0.6rem;
-  background: #ffffff;
-  border: 1px solid rgba(21, 21, 21, 0.1);
+    padding: 0.45rem 0.6rem;
+    background: #ffffff;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(17, 18, 22, 0.72);
+        border-color: $dark-border;
+    }
 }
 
 .wholeDayNote {
-  margin-top: 0.75rem;
+    margin-top: 0.75rem;
 
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr);
-  gap: 0.65rem;
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 0.65rem;
 }
 
 .wholeDayNoteIcon {
-  width: 36px;
-  height: 36px;
+    width: 36px;
+    height: 36px;
 
-  display: grid;
-  place-items: center;
+    display: grid;
+    place-items: center;
 
-  background: #ffffff;
-  border: 1px solid rgba(21, 21, 21, 0.1);
+    background: #ffffff;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+
+    transition:
+        background 0.22s ease,
+        border-color 0.22s ease,
+        color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(17, 18, 22, 0.72);
+        border-color: $dark-border;
+        color: $dark-primary;
+    }
 }
 
 /* =========================================================
@@ -2096,291 +3235,1487 @@ $ink: #151515;
 ========================================================= */
 
 @media (max-width: 1180px) {
-  .layout {
-    grid-template-columns: 1fr;
-    gap: 1.35rem;
-  }
+    .layout {
+        grid-template-columns: 1fr;
+        gap: 1.35rem;
+    }
 
-  .side {
-    position: relative;
-    top: auto;
-  }
+    .side {
+        position: relative;
+        top: auto;
+    }
 
-  .description {
-    max-width: 780px;
-  }
+    .description {
+        max-width: 780px;
+    }
 
-  .metaRow {
-    max-width: 760px;
-  }
+    .metaRow {
+        max-width: 760px;
+    }
 
-  .calendarGrid {
-    grid-template-columns: 1fr;
-  }
+    .calendarGrid {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 980px) {
-  .contentPanel {
-    padding: 1.15rem;
-  }
+    .contentPanel {
+        padding: 1.15rem;
+    }
 
-  .page {
-    padding: 4rem 1rem 5rem;
-  }
+    .page {
+        padding: 4rem 1rem 5rem;
+    }
 
-  .metaRow {
-    grid-template-columns: 1fr;
-  }
+    .metaRow {
+        grid-template-columns: 1fr;
+    }
 
-  .side,
-  .contentPanel,
-  .pageHead,
-  .headerRow,
-  .contentBox,
-  .sectionGroup,
-  .calendarCard {
-    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.055);
-  }
+    .side,
+    .contentPanel,
+    .pageHead,
+    .headerRow,
+    .contentBox,
+    .sectionGroup,
+    .calendarCard {
+        box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.055);
+
+        :global(html[data-theme="dark"]) & {
+            box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.26);
+        }
+    }
 }
 
 @media (max-width: 760px) {
 
-  .side,
-  .contentPanel {
-    padding: 1rem;
-  }
-
-  .chapterHead,
-  .groupHeader,
-  .calendarHeader {
-    display: grid;
-    gap: 0.8rem;
-  }
-
-  .chapterNumber,
-  .groupBadge {
-    order: -1;
-    width: fit-content;
-    min-width: 48px;
-    height: 48px;
-  }
-
-  .reservationGroup {
-    padding: 0.85rem;
-  }
-
-  .page {
-    padding: 3.5rem 0.9rem 4.5rem;
-  }
-
-  .pageHead,
-  .headerRow {
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .labelRow {
-    gap: 0.55rem;
-  }
-
-  .labelDesc,
-  .labelLine {
-    display: none;
-  }
-
-  .label,
-  .pill,
-  .hintPill {
-    font-size: 0.66rem;
-  }
-
-  .heading,
-  .sectionTitle {
-    font-size: clamp(2.1rem, 12vw, 3.1rem);
-  }
-
-  .description,
-  .subTitle {
-    font-size: 0.94rem;
-  }
-
-  .contentHeader,
-  .groupHeader,
-  .calendarHeader {
-    display: grid;
-    gap: 0.8rem;
-  }
-
-  .calendarPills {
-    justify-content: flex-start;
-  }
-
-  .viewToggle {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .toggleBtn {
-    min-width: 0;
-    width: 100%;
-  }
-
-  .row {
-    grid-template-columns: 54px minmax(0, 1fr);
-    column-gap: 0.75rem;
-    row-gap: 0.75rem;
-  }
-
-  .avatarWrap {
-    width: 54px;
-    height: 54px;
-  }
-
-  .bottomRow {
-    justify-content: flex-start;
-  }
-
-  .tlRow {
-    grid-template-columns: 1fr;
-  }
-
-  .tlTime {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-  }
-
-  .tlTimeTxt {
-    width: fit-content;
-  }
-
-  .tlDot {
-    margin: 0;
-  }
-
-  .modalGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .modalActions {
-    display: grid;
-
-    >* {
-      width: 100%;
+    .side,
+    .contentPanel {
+        padding: 1rem;
     }
-  }
+
+    .chapterHead,
+    .groupHeader,
+    .calendarHeader {
+        display: grid;
+        gap: 0.8rem;
+    }
+
+    .chapterNumber,
+    .groupBadge {
+        order: -1;
+        width: fit-content;
+        min-width: 48px;
+        height: 48px;
+    }
+
+    .reservationGroup {
+        padding: 0.85rem;
+    }
+
+    .page {
+        padding: 3.5rem 0.9rem 4.5rem;
+    }
+
+    .pageHead,
+    .headerRow {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .labelRow {
+        gap: 0.55rem;
+    }
+
+    .labelDesc,
+    .labelLine {
+        display: none;
+    }
+
+    .label,
+    .pill,
+    .hintPill {
+        font-size: 0.66rem;
+    }
+
+    .heading,
+    .sectionTitle {
+        font-size: clamp(2.1rem, 12vw, 3.1rem);
+    }
+
+    .description,
+    .subTitle {
+        font-size: 0.94rem;
+    }
+
+    .contentHeader,
+    .groupHeader,
+    .calendarHeader {
+        display: grid;
+        gap: 0.8rem;
+    }
+
+    .calendarPills {
+        justify-content: flex-start;
+    }
+
+    .viewToggle {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .toggleBtn {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .row {
+        grid-template-columns: 54px minmax(0, 1fr);
+        column-gap: 0.75rem;
+        row-gap: 0.75rem;
+    }
+
+    .avatarWrap {
+        width: 54px;
+        height: 54px;
+    }
+
+    .bottomRow {
+        justify-content: flex-start;
+    }
+
+    .tlRow {
+        grid-template-columns: 1fr;
+    }
+
+    .tlTime {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+    }
+
+    .tlTimeTxt {
+        width: fit-content;
+    }
+
+    .tlDot {
+        margin: 0;
+    }
+
+    .modalGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .modalActions {
+        display: grid;
+
+        >* {
+            width: 100%;
+        }
+    }
 }
 
 @media (max-width: 480px) {
 
-  .side,
-  .contentPanel {
-    box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.06);
-  }
+    .side,
+    .contentPanel {
+        box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.06);
 
-  .reservationGroup,
-  .emptyState {
-    padding: 0.85rem;
-  }
-
-  .page {
-    padding: 3rem 0.75rem 4rem;
-  }
-
-  .pageHead,
-  .headerRow,
-  .contentBox,
-  .sectionGroup,
-  .calendarCard {
-    padding: 0.85rem;
-  }
-
-  .heading,
-  .sectionTitle {
-    font-size: clamp(2rem, 14vw, 2.8rem);
-  }
-
-  .description,
-  .subTitle {
-    font-size: 0.88rem;
-  }
-
-  .contentTitle,
-  .groupTitle,
-  .calendarTitle {
-    font-size: clamp(1.25rem, 8vw, 1.75rem);
-  }
-
-  .link {
-    padding: 0.85rem;
-  }
-
-  .row {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "avatar"
-      "head"
-      "content"
-      "actions";
-  }
-
-  .avatarWrap {
-    width: 58px;
-    height: 58px;
-  }
-
-  .info,
-  .bottomRow {
-    align-items: stretch;
-
-    .chip,
-    .actionBtn,
-    .seenBtn,
-    .statePill {
-      width: 100%;
-      justify-content: center;
+        :global(html[data-theme="dark"]) & {
+            box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.26);
+        }
     }
-  }
 
-  .closedInfo {
-    display: grid;
-  }
-
-  .calSkin {
-    :global(.react-calendar__tile) {
-      min-height: 58px;
-      padding: 0.45rem 0.25rem;
-      font-size: 0.78rem;
+    .reservationGroup,
+    .emptyState {
+        padding: 0.85rem;
     }
-  }
 
-  .tileBadges {
-    right: 4px;
-    bottom: 4px;
-  }
+    .page {
+        padding: 3rem 0.75rem 4rem;
+    }
 
-  .modalCard {
-    box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.18);
-  }
+    .pageHead,
+    .headerRow,
+    .contentBox,
+    .sectionGroup,
+    .calendarCard {
+        padding: 0.85rem;
+    }
 
-  .modalHead,
-  .modalBody {
-    padding: 0.85rem;
-  }
+    .heading,
+    .sectionTitle {
+        font-size: clamp(2rem, 14vw, 2.8rem);
+    }
 
-  .slotGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+    .description,
+    .subTitle {
+        font-size: 0.88rem;
+    }
+
+    .contentTitle,
+    .groupTitle,
+    .calendarTitle {
+        font-size: clamp(1.25rem, 8vw, 1.75rem);
+    }
+
+    .link {
+        padding: 0.85rem;
+    }
+
+    .row {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "avatar"
+            "head"
+            "content"
+            "actions";
+    }
+
+    .avatarWrap {
+        width: 58px;
+        height: 58px;
+    }
+
+    .info,
+    .bottomRow {
+        align-items: stretch;
+
+        .chip,
+        .actionBtn,
+        .seenBtn,
+        .statePill {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    .closedInfo {
+        display: grid;
+    }
+
+    .calSkin {
+        :global(.react-calendar__tile) {
+            min-height: 58px;
+            padding: 0.45rem 0.25rem;
+            font-size: 0.78rem;
+        }
+    }
+
+    .tileBadges {
+        right: 4px;
+        bottom: 4px;
+    }
+
+    .modalCard {
+        box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.18);
+
+        :global(html[data-theme="dark"]) & {
+            box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.34);
+        }
+    }
+
+    .modalHead,
+    .modalBody {
+        padding: 0.85rem;
+    }
+
+    .slotGrid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
 
-  *,
-  *::before,
-  *::after {
-    transition: none !important;
-    animation: none !important;
-    scroll-behavior: auto !important;
-  }
+    *,
+    *::before,
+    *::after {
+        transition: none !important;
+        animation: none !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* =========================================================
+   FINAL RESPONSIVE LAYOUT — desktop + mobile
+   Wersja z planem dnia pod kalendarzem
+========================================================= */
+
+/* ===== Safety / width ===== */
+
+.page {
+    overflow-x: hidden;
+}
+
+.shell,
+.alertWrap {
+    width: 100%;
+    max-width: min(1720px, calc(100vw - 2.5rem));
+}
+
+.layout,
+.side,
+.contentPanel,
+.reservationsStack,
+.reservationGroup,
+.list,
+.item,
+.link,
+.row,
+.head,
+.content,
+.bottomRow,
+.calendarPanelWrap,
+.calendarCard,
+.calendarGrid,
+.calendarLeft,
+.calendarRight,
+.calendarWrap,
+.calSkin,
+.dayBox,
+.timeline,
+.tlRow,
+.tlCard,
+.modalCard,
+.modalBody,
+.modalGrid,
+.slotBox,
+.slotGrid {
+    min-width: 0;
+}
+
+.metaText,
+.name,
+.date,
+.chip,
+.noteBody,
+.closedInfo,
+.countdown,
+.tlTitle,
+.tlDesc,
+.tlMeta,
+.emptyText,
+.description,
+.subTitle,
+.calendarSub,
+.calendarTitle,
+.slotHint,
+.slotInfo,
+.slotSummary {
+    word-break: normal !important;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+/* ===== Main desktop layout ===== */
+
+.layout {
+    grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+    gap: clamp(1.15rem, 2vw, 2.4rem);
+}
+
+.side {
+    top: 96px;
+    padding: clamp(1.25rem, 2vw, 1.75rem);
+}
+
+.side .heading,
+.heading {
+    font-size: clamp(2.25rem, 3vw, 3.7rem);
+}
+
+.description {
+    font-size: 0.96rem;
+    line-height: 1.72;
+}
+
+.metaRow {
+    gap: 0.55rem;
+    margin-top: 1.55rem;
+}
+
+.metaCard {
+    min-height: 82px;
+    padding: 0.85rem;
+}
+
+.infoBox {
+    margin-top: 1.45rem;
+    padding-top: 1.15rem;
+}
+
+.contentPanel {
+    overflow: visible;
+    padding: clamp(1.15rem, 1.8vw, 1.65rem);
+    container-type: inline-size;
+    container-name: reservationContent;
+}
+
+.chapterHead {
+    align-items: flex-start;
+
+    h3 {
+        max-width: 860px;
+        font-size: clamp(1.45rem, 2vw, 2.2rem);
+    }
+}
+
+/* ===== View toggle ===== */
+
+.viewToggle {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.toggleBtn {
+    min-width: 0;
+    width: 100%;
+    white-space: nowrap;
+}
+
+/* ===== Calendar header ===== */
+
+.calendarCard {
+    overflow: hidden;
+}
+
+.calendarHeader {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 1rem;
+}
+
+.calendarHeader>div {
+    min-width: 0;
+}
+
+.calendarTitle {
+    font-size: clamp(1.35rem, 2vw, 1.9rem);
+    overflow-wrap: anywhere;
+}
+
+.calendarSub {
+    max-width: 760px;
+}
+
+.calendarPills {
+    justify-content: flex-end;
+    align-items: flex-start;
+    gap: 0.45rem;
+}
+
+.calendarPill,
+.dayCount,
+.tileCount,
+.statePill {
+    min-height: 34px;
+    padding: 0.45rem 0.65rem;
+    white-space: nowrap;
+    font-size: 0.7rem;
+}
+
+/* ===== Najważniejsze: plan dnia POD kalendarzem ===== */
+
+.calendarGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 1rem;
+    align-items: start;
+}
+
+.calendarLeft,
+.calendarRight {
+    width: 100%;
+    max-width: 100%;
+    overflow: visible;
+}
+
+.dayBox {
+    width: 100%;
+    margin-top: 0;
+    padding: clamp(0.9rem, 1.4vw, 1.15rem);
+    overflow: hidden;
+}
+
+.dayBoxHead,
+.daySectionTitle,
+.slotHead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.dayBoxHead {
+    justify-content: flex-start;
+}
+
+.daySection {
+    min-width: 0;
+}
+
+/* ===== React calendar — desktop ===== */
+
+.calSkin {
+    width: 100%;
+    overflow: hidden;
+
+    :global(.react-calendar) {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    :global(.react-calendar__navigation) {
+        min-height: 48px;
+    }
+
+    :global(.react-calendar__navigation button) {
+        min-height: 48px;
+        padding: 0.35rem;
+        font-size: 0.78rem;
+    }
+
+    :global(.react-calendar__month-view__weekdays) {
+        font-size: 0.66rem;
+    }
+
+    :global(.react-calendar__month-view__weekdays__weekday) {
+        padding: 0.55rem 0.1rem;
+    }
+
+    :global(.react-calendar__tile) {
+        min-height: 66px;
+        padding: 0.45rem 0.25rem;
+        font-size: 0.82rem;
+    }
+}
+
+.tileBadges {
+    right: 4px;
+    bottom: 4px;
+    gap: 4px;
+}
+
+.dotMini {
+    width: 6px;
+    height: 6px;
+}
+
+/* ===== Plan dnia / timeline under calendar ===== */
+
+.timeline {
+    gap: 0.7rem;
+}
+
+.tlRow {
+    grid-template-columns: 118px minmax(0, 1fr);
+    gap: 0.75rem;
+}
+
+.tlTimeTxt {
+    padding: 0.5rem 0.55rem;
+    font-size: 0.7rem;
+}
+
+.tlCard {
+    min-width: 0;
+    padding: 0.85rem;
+    overflow: hidden;
+}
+
+.tlTop {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tlKind,
+.tlStatus,
+.tlChip {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    line-height: 1.25;
+    padding: 0.42rem 0.52rem;
+    font-size: 0.66rem;
+}
+
+.tlTitle,
+.tlDesc,
+.tlMeta {
+    overflow-wrap: anywhere;
+}
+
+.tlTitle {
+    font-size: 0.96rem;
+}
+
+.tlActions {
+    justify-content: stretch;
+}
+
+.tlAddBtn {
+    width: 100%;
+}
+
+/* ===== Reservation list cards ===== */
+
+.row {
+    min-width: 0;
+}
+
+.head,
+.content,
+.meta,
+.metaText,
+.noteBody,
+.closedInfo {
+    min-width: 0;
+}
+
+.metaText,
+.noteBody,
+.closedInfo,
+.chip,
+.statePill {
+    overflow-wrap: break-word;
+}
+
+.info {
+    align-items: flex-start;
+}
+
+.chip {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    line-height: 1.3;
+}
+
+/* ===== Modal desktop ===== */
+
+.modalOverlay {
+    align-items: center;
+    padding: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.modalCard {
+    width: min(920px, 100%);
+    max-height: min(900px, calc(100dvh - 2rem));
+}
+
+.modalHead {
+    flex: 0 0 auto;
+}
+
+.modalBody {
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem;
+}
+
+.modalGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+}
+
+.field,
+.fieldWide,
+.fieldToggle,
+.formInput,
+.formTextarea {
+    min-width: 0;
+}
+
+.modalInfo,
+.modalWarn {
+    grid-template-columns: 40px minmax(0, 1fr);
+    overflow-wrap: anywhere;
+}
+
+.modalInfo svg,
+.modalWarn svg {
+    width: 40px;
+    height: 40px;
+}
+
+.conflictList {
+    max-height: 140px;
+    overflow-y: auto;
+    padding-right: 0.4rem;
+}
+
+/* ===== Offline slots ===== */
+
+.slotBox {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.slotGrid {
+    grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+    gap: 0.45rem;
+
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+
+    scrollbar-width: thin;
+}
+
+.slotBtn {
+    min-width: 0;
+    min-height: 38px;
+    padding: 0.3rem 0.4rem;
+    font-size: 0.72rem;
+}
+
+.slotLegend {
+    gap: 0.45rem 0.75rem;
+    font-size: 0.82rem;
+}
+
+.slotLegend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.slotSummary {
+    margin-top: 0.75rem;
+    padding: 0.65rem 0.75rem;
+
+    background: rgba(111, 78, 242, 0.08);
+    border: 1px solid rgba(111, 78, 242, 0.18);
+
+    :global(html[data-theme="dark"]) & {
+        background: rgba(168, 149, 255, 0.12);
+        border-color: rgba(168, 149, 255, 0.24);
+    }
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1500px) {
+
+    .shell,
+    .alertWrap {
+        max-width: min(100%, calc(100vw - 2rem));
+    }
+
+    .layout {
+        grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+        gap: 1.25rem;
+    }
+
+    .side {
+        padding: 1.25rem;
+    }
+
+    .contentPanel {
+        padding: 1.15rem;
+    }
+}
+
+@media (max-width: 1180px) {
+    .page {
+        padding: 4.75rem 1rem 5rem;
+    }
+
+    .layout {
+        grid-template-columns: 1fr;
+    }
+
+    .side {
+        position: relative;
+        top: auto;
+    }
+
+    .side .heading,
+    .heading {
+        font-size: clamp(2.15rem, 8vw, 3.4rem);
+    }
+
+    .metaRow {
+        max-width: none;
+    }
+
+    .calendarHeader {
+        grid-template-columns: 1fr;
+    }
+
+    .calendarPills {
+        justify-content: flex-start;
+    }
+}
+
+@container reservationContent (max-width: 720px) {
+    .chapterHead {
+        display: grid;
+        gap: 0.85rem;
+    }
+
+    .chapterNumber {
+        order: -1;
+        width: fit-content;
+    }
+
+    .calendarHeader,
+    .contentHeader,
+    .groupHeader {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .calendarPills {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .calendarPill,
+    .dayCount,
+    .tileCount {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .tlRow {
+        grid-template-columns: 1fr;
+    }
+
+    .tlTime {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .tlTimeTxt {
+        width: fit-content;
+    }
+
+    .tlDot {
+        margin: 0;
+    }
+}
+
+/* ===== Mobile general ===== */
+
+@media (max-width: 760px) {
+    .page {
+        padding: 9.75rem 0.8rem 4.5rem !important;
+    }
+
+    .shell,
+    .alertWrap {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .side,
+    .contentPanel {
+        width: 100%;
+        max-width: 100%;
+        padding: 0.85rem;
+    }
+
+    .side {
+        box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.055);
+
+        :global(html[data-theme="dark"]) & {
+            box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.26);
+        }
+    }
+
+    .overline {
+        font-size: 0.62rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .heading,
+    .sectionTitle {
+        font-size: clamp(1.9rem, 12vw, 2.55rem) !important;
+        line-height: 0.98;
+        letter-spacing: -0.065em;
+    }
+
+    .description,
+    .subTitle {
+        margin-top: 0.75rem;
+        font-size: 0.86rem !important;
+        line-height: 1.6;
+    }
+
+    .metaRow {
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
+        margin-top: 1rem;
+    }
+
+    .metaCard {
+        min-height: auto;
+        padding: 0.75rem;
+    }
+
+    .infoBox {
+        margin-top: 1rem;
+        padding-top: 0.9rem;
+    }
+
+    .viewToggle {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.35rem;
+        padding: 0.35rem;
+    }
+
+    .toggleBtn {
+        width: 100%;
+        min-width: 0;
+        min-height: 40px;
+        padding: 0 0.45rem;
+        font-size: 0.68rem;
+    }
+
+    .chapterHead {
+        display: grid;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .chapterNumber {
+        order: -1;
+        width: fit-content;
+        min-width: 42px;
+        height: 42px;
+        min-height: 42px;
+        font-size: 0.76rem;
+    }
+
+    .chapterHead h3 {
+        max-width: 100%;
+        font-size: clamp(1.25rem, 7vw, 1.65rem);
+        line-height: 1.08;
+    }
+
+    .reservationGroup {
+        padding: 0.75rem;
+    }
+
+    .groupHeader {
+        display: grid;
+        gap: 0.65rem;
+    }
+
+    .groupBadge {
+        order: -1;
+        width: fit-content;
+        min-width: 40px;
+        min-height: 40px;
+        height: 40px;
+    }
+}
+
+/* ===== Mobile reservation cards ===== */
+
+@media (max-width: 760px) {
+    .list {
+        gap: 0.75rem;
+    }
+
+    .item {
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .link {
+        padding: 0.75rem;
+    }
+
+    .row {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        grid-template-areas:
+            "avatar"
+            "head"
+            "content"
+            "actions" !important;
+        gap: 0.75rem !important;
+        align-items: start;
+    }
+
+    .avatarWrap {
+        grid-area: avatar;
+        width: 48px !important;
+        height: 48px !important;
+    }
+
+    .head {
+        grid-area: head;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .meta {
+        width: 100%;
+        display: grid !important;
+        grid-template-columns: 18px minmax(0, 1fr);
+        align-items: start;
+        gap: 0.5rem;
+    }
+
+    .icon {
+        width: 18px;
+        min-width: 18px;
+        margin-top: 0.2rem;
+    }
+
+    .metaText {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        white-space: normal;
+    }
+
+    .name {
+        display: inline;
+        white-space: normal;
+    }
+
+    .date {
+        font-size: 0.78rem;
+        line-height: 1.45;
+        margin-left: 28px;
+    }
+
+    .content {
+        grid-area: content;
+        width: 100%;
+        max-width: 100%;
+        gap: 0.6rem;
+    }
+
+    .info {
+        width: 100%;
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .chip {
+        width: 100% !important;
+        max-width: 100%;
+        justify-content: flex-start !important;
+        text-align: left;
+        white-space: normal;
+        line-height: 1.35;
+        padding: 0.6rem 0.65rem;
+        font-size: 0.72rem;
+    }
+
+    .chipIcon {
+        flex: 0 0 auto;
+    }
+
+    .note,
+    .closedInfo,
+    .countdown {
+        width: 100%;
+        padding: 0.75rem;
+    }
+
+    .noteHeader,
+    .countdownTop {
+        align-items: flex-start;
+    }
+
+    .bottomRow {
+        grid-area: actions;
+        width: 100%;
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        justify-content: stretch;
+    }
+
+    .actionBtn,
+    .seenBtn,
+    .addOfflineBtn,
+    .statePill {
+        width: 100% !important;
+        min-height: 42px;
+        justify-content: center !important;
+        text-align: center;
+    }
+
+    .closedInfo {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 0.65rem;
+    }
+}
+
+/* ===== Mobile calendar ===== */
+
+@media (max-width: 760px) {
+    .calendarPanelWrap {
+        width: 100%;
+        overflow: visible;
+    }
+
+    .calendarCard {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        overflow: hidden;
+    }
+
+    .calendarHeader {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem;
+    }
+
+    .calendarTitle {
+        font-size: clamp(1.2rem, 7vw, 1.55rem);
+        line-height: 1.1;
+    }
+
+    .calendarSub {
+        font-size: 0.82rem;
+        line-height: 1.5;
+    }
+
+    .calendarPills {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 0.45rem;
+        justify-content: stretch;
+    }
+
+    .calendarPill,
+    .dayCount,
+    .tileCount {
+        width: 100%;
+        min-height: 34px;
+        justify-content: center;
+        font-size: 0.68rem;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.25;
+    }
+
+    .calendarGrid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0.85rem;
+    }
+
+    .calendarLeft,
+    .calendarRight {
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .calSkin {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 0.35rem;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .calSkin :global(.react-calendar) {
+        width: 100%;
+        min-width: 360px !important;
+        max-width: none;
+    }
+
+    .calSkin :global(.react-calendar__navigation) {
+        min-height: 42px;
+    }
+
+    .calSkin :global(.react-calendar__navigation button) {
+        min-height: 42px;
+        padding: 0.25rem;
+        font-size: 0.68rem;
+    }
+
+    .calSkin :global(.react-calendar__month-view__weekdays) {
+        font-size: 0.6rem;
+    }
+
+    .calSkin :global(.react-calendar__month-view__weekdays__weekday) {
+        padding: 0.45rem 0.1rem;
+    }
+
+    .calSkin :global(.react-calendar__tile) {
+        min-height: 48px !important;
+        padding: 0.35rem 0.2rem !important;
+        font-size: 0.68rem !important;
+    }
+
+    .tileBadges {
+        right: 3px;
+        bottom: 3px;
+        gap: 3px;
+    }
+
+    .dotMini {
+        width: 5px;
+        height: 5px;
+    }
+
+    .dayBox {
+        width: 100%;
+        padding: 0.75rem;
+        overflow: hidden;
+    }
+
+    .dayBoxHead,
+    .daySectionTitle,
+    .slotHead {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        align-items: start;
+        justify-content: stretch;
+    }
+
+    .timeline {
+        gap: 0.65rem;
+    }
+
+    .tlRow {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem;
+    }
+
+    .tlTime {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .tlTimeTxt {
+        width: fit-content;
+        padding: 0.45rem 0.55rem;
+        font-size: 0.68rem;
+    }
+
+    .tlDot {
+        margin: 0;
+        width: 10px;
+        height: 10px;
+    }
+
+    .tlCard {
+        width: 100%;
+        padding: 0.7rem;
+    }
+
+    .tlTop {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 0.45rem;
+    }
+
+    .tlKind,
+    .tlStatus,
+    .tlChip {
+        width: 100%;
+        justify-content: flex-start;
+        white-space: normal;
+        line-height: 1.25;
+        font-size: 0.66rem;
+    }
+
+    .tlActions {
+        justify-content: stretch;
+    }
+
+    .tlAddBtn {
+        width: 100%;
+        min-height: 40px;
+    }
+}
+
+/* ===== Mobile modal ===== */
+
+@media (max-width: 760px) {
+    .modalOverlay {
+        align-items: flex-start !important;
+        padding: 0.65rem;
+    }
+
+    .modalCard {
+        width: 100%;
+        max-height: calc(100dvh - 1.3rem);
+    }
+
+    .modalHead {
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+
+    .modalTitle {
+        font-size: 1.05rem;
+        line-height: 1.1;
+    }
+
+    .modalClose {
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+    }
+
+    .modalBody {
+        padding: 0.75rem;
+        overflow-x: hidden;
+    }
+
+    .modalGrid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem;
+    }
+
+    .field,
+    .fieldWide,
+    .fieldToggle {
+        width: 100%;
+    }
+
+    .modalInfo,
+    .modalWarn {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 0.65rem;
+        padding: 0.75rem;
+    }
+
+    .modalInfo svg,
+    .modalWarn svg {
+        width: 36px;
+        height: 36px;
+    }
+
+    .formInput {
+        min-height: 46px;
+    }
+
+    .formTextarea {
+        min-height: 96px;
+    }
+
+    .slotBox {
+        padding: 0.75rem;
+        overflow: hidden;
+    }
+
+    .slotGrid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.45rem;
+        max-height: 230px;
+        overflow-y: auto;
+        padding-right: 0.2rem;
+    }
+
+    .slotBtn {
+        min-height: 38px;
+        padding: 0.35rem 0.4rem;
+        font-size: 0.68rem;
+    }
+
+    .slotLegend {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 0.45rem;
+        font-size: 0.78rem;
+    }
+
+    .slotSummary,
+    .slotHint,
+    .slotInfo {
+        font-size: 0.82rem;
+        line-height: 1.5;
+    }
+
+    .modalActions {
+        display: grid !important;
+        grid-template-columns: 1fr;
+        gap: 0.55rem;
+    }
+
+    .modalPrimary,
+    .modalSecondary {
+        width: 100%;
+        min-height: 44px;
+    }
+}
+
+/* ===== Very small ===== */
+
+@media (max-width: 430px) {
+    .page {
+        padding-left: 0.65rem !important;
+        padding-right: 0.65rem !important;
+    }
+
+    .side,
+    .contentPanel,
+    .calendarCard,
+    .reservationGroup,
+    .dayBox {
+        padding: 0.65rem;
+    }
+
+    .link {
+        padding: 0.65rem;
+    }
+
+    .heading,
+    .sectionTitle {
+        font-size: clamp(1.8rem, 12vw, 2.35rem) !important;
+    }
+
+    .metaText {
+        font-size: 0.86rem;
+    }
+
+    .date {
+        margin-left: 28px;
+        font-size: 0.74rem;
+    }
+
+    .chip {
+        font-size: 0.68rem;
+    }
+
+    .calSkin :global(.react-calendar) {
+        min-width: 340px !important;
+    }
+
+    .slotGrid {
+        grid-template-columns: 1fr 1fr !important;
+    }
 }

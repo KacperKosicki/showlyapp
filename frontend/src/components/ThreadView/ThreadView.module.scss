@@ -8,9 +8,22 @@ $paper-muted: #f5f6fa;
 $paper-border: rgba(21, 21, 21, 0.1);
 $ink: #151515;
 
-/* =========================================================
-   ThreadView — papierowy widok rozmowy Showly
-========================================================= */
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
+
+$dark-warning-bg: rgba(255, 209, 102, 0.13);
+$dark-warning-text: #ffd166;
+$dark-warning-border: rgba(255, 209, 102, 0.32);
+
+$dark-danger-bg: rgba(255, 79, 122, 0.13);
+$dark-danger-text: #ff8fa8;
+$dark-danger-border: rgba(255, 143, 168, 0.34);
 
 .page {
   position: relative;
@@ -27,6 +40,18 @@ $ink: #151515;
 
   --tv-primary: #6f4ef2;
   --tv-secondary: #ff4081;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+    background: $dark-bg;
+
+    --tv-primary: #{$dark-primary};
+    --tv-secondary: #{$dark-pink};
+  }
 
   *,
   *::before,
@@ -54,6 +79,15 @@ $ink: #151515;
 
     pointer-events: none;
     z-index: 0;
+
+    transition: background 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: radial-gradient(circle,
+          rgba(168, 149, 255, 0.16) 0%,
+          rgba(255, 79, 154, 0.08) 44%,
+          rgba(17, 18, 22, 0) 72%);
+    }
   }
 }
 
@@ -75,6 +109,18 @@ $ink: #151515;
 
   opacity: 0.28;
   mask-image: radial-gradient(circle at 50% 34%, #000 0%, transparent 68%);
+
+  transition:
+    background 0.22s ease,
+    opacity 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background:
+      linear-gradient(to right, rgba(244, 241, 234, 0.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(244, 241, 234, 0.04) 1px, transparent 1px);
+    opacity: 0.22;
+    mask-image: radial-gradient(circle at 50% 34%, #000 0%, transparent 70%);
+  }
 }
 
 .noiseLayer {
@@ -145,10 +191,24 @@ $ink: #151515;
     transform 0.18s ease,
     box-shadow 0.18s ease,
     background 0.18s ease,
-    color 0.18s ease;
+    color 0.18s ease,
+    border-color 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+  }
 
   svg {
     color: $primary-color;
+
+    transition: color 0.18s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
   }
 
   &:hover {
@@ -156,6 +216,13 @@ $ink: #151515;
     background: $paper-soft;
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.075);
     color: $primary-color;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+      background: rgba(168, 149, 255, 0.12);
+      border-color: rgba(168, 149, 255, 0.28);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.3);
+    }
   }
 
   &:active {
@@ -177,6 +244,17 @@ $ink: #151515;
   box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
 
   isolation: isolate;
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
+  }
 }
 
 .heroDecor {
@@ -202,6 +280,17 @@ $ink: #151515;
 
   opacity: 0.45;
   mask-image: radial-gradient(circle at 28% 28%, #000 0%, transparent 72%);
+
+  transition:
+    background 0.22s ease,
+    opacity 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background:
+      linear-gradient(to right, rgba(244, 241, 234, 0.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(244, 241, 234, 0.04) 1px, transparent 1px);
+    opacity: 0.18;
+  }
 }
 
 .heroTopBar {
@@ -238,13 +327,37 @@ $ink: #151515;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
+
   strong {
     color: $ink;
     font-weight: 950;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   svg {
     color: $primary-color;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
   }
 }
 
@@ -253,9 +366,20 @@ $ink: #151515;
   color: #ffffff;
   border-color: $ink;
 
+  :global(html[data-theme="dark"]) & {
+    color: $dark-bg;
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
+
   strong,
   svg {
     color: #ffffff;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-bg;
+    }
   }
 }
 
@@ -280,6 +404,13 @@ $ink: #151515;
   margin-bottom: 0.85rem;
   background: #ffffff;
   box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.04);
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+    background: rgba(168, 149, 255, 0.12);
+    border-color: rgba(168, 149, 255, 0.28);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.22);
+  }
 }
 
 .titleRow {
@@ -300,16 +431,33 @@ $ink: #151515;
   letter-spacing: -0.085em;
   color: $ink;
   font-weight: 950;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .receiverName {
   color: $primary-color;
   font-weight: 950;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .titlePill {
   background: $paper-soft;
   color: rgba(21, 21, 21, 0.62);
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    color: $dark-muted;
+  }
 }
 
 .metaRow {
@@ -323,6 +471,12 @@ $ink: #151515;
   color: rgba(21, 21, 21, 0.62);
   font-size: 0.95rem;
   line-height: 1.5;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .dot {
@@ -330,6 +484,12 @@ $ink: #151515;
   height: 7px;
   background: $ink;
   opacity: 0.3;
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(244, 241, 234, 0.7);
+  }
 }
 
 .heroRight {
@@ -346,6 +506,17 @@ $ink: #151515;
   background: $paper-soft;
   border: 1px solid rgba(21, 21, 21, 0.12);
   box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.055);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+    box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.26);
+  }
 }
 
 .avatar {
@@ -357,6 +528,15 @@ $ink: #151515;
 
   background: #ffffff;
   border: 1px solid rgba(21, 21, 21, 0.08);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.72);
+    border-color: rgba(244, 241, 234, 0.12);
+  }
 }
 
 .avatarSkeleton {
@@ -366,6 +546,15 @@ $ink: #151515;
   color: rgba(21, 21, 21, 0.42);
   background: $paper-muted;
   font-size: 2.4rem;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.34);
+    background: rgba(244, 241, 234, 0.08);
+  }
 }
 
 .avatarRing {
@@ -374,6 +563,12 @@ $ink: #151515;
   pointer-events: none;
 
   border: 1px solid rgba(21, 21, 21, 0.08);
+
+  transition: border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    border-color: rgba(244, 241, 234, 0.12);
+  }
 }
 
 /* =========================================================
@@ -388,6 +583,17 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.12);
   box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.05);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.26);
+  }
 }
 
 .thread {
@@ -437,6 +643,17 @@ $ink: #151515;
   background: $paper-soft;
   border: 1px solid rgba(21, 21, 21, 0.1);
   box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.035);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.22);
+  }
 }
 
 .msgAvatar {
@@ -458,11 +675,24 @@ $ink: #151515;
 
   border: 1px solid rgba(21, 21, 21, 0.1);
   box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.04);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 
 .their {
   background: $paper-soft;
   color: rgba(21, 21, 21, 0.74);
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    color: rgba(244, 241, 234, 0.78);
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.22);
+  }
 }
 
 .own {
@@ -473,20 +703,41 @@ $ink: #151515;
   border-color: $ink;
   box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.09);
 
+  :global(html[data-theme="dark"]) & {
+    color: $dark-bg;
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28);
+  }
+
   .author,
   .content,
   .time {
     color: rgba(255, 255, 255, 0.9);
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(17, 18, 22, 0.86);
+    }
   }
 
   .time {
     color: rgba(255, 255, 255, 0.62);
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(17, 18, 22, 0.58);
+    }
   }
 
   .senderTag {
     color: $ink;
     background: #ffffff;
     border-color: #ffffff;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-bg;
+      background: rgba(255, 255, 255, 0.72);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
   }
 }
 
@@ -498,6 +749,12 @@ $ink: #151515;
   box-shadow: none;
 
   color: #92400e;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-warning-bg;
+    border-color: $dark-warning-border;
+    color: $dark-warning-text;
+  }
 }
 
 .author {
@@ -512,6 +769,12 @@ $ink: #151515;
   font-weight: 950;
   font-size: 0.82rem;
   color: rgba(21, 21, 21, 0.52);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.52);
+  }
 }
 
 .senderTag {
@@ -529,6 +792,17 @@ $ink: #151515;
   font-weight: 950;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+    background: rgba(17, 18, 22, 0.72);
+    border-color: $dark-border;
+  }
 }
 
 .content {
@@ -542,12 +816,24 @@ $ink: #151515;
 
   font-size: 0.98rem;
   line-height: 1.65;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.78);
+  }
 }
 
 .systemContent {
   white-space: pre-line;
   color: #92400e;
   font-weight: 700;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-warning-text;
+  }
 }
 
 .time {
@@ -557,6 +843,12 @@ $ink: #151515;
 
   font-size: 0.76rem;
   line-height: 1.3;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.42);
+  }
 }
 
 .pending {
@@ -595,6 +887,17 @@ $ink: #151515;
   font-size: 0.78rem;
   font-weight: 950;
   letter-spacing: 0.04em;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
 }
 
 .textarea {
@@ -617,16 +920,35 @@ $ink: #151515;
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease,
-    transform 0.18s ease;
+    transform 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease,
+    opacity 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+    background: rgba(17, 18, 22, 0.72);
+    border-color: $dark-border;
+  }
 
   &::placeholder {
     color: rgba(21, 21, 21, 0.38);
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.36);
+    }
   }
 
   &:focus {
     border-color: rgba(111, 78, 242, 0.34);
     box-shadow: 5px 5px 0 rgba(111, 78, 242, 0.08);
     transform: translate(-2px, -2px);
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(17, 18, 22, 0.86);
+      border-color: rgba(168, 149, 255, 0.38);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
   }
 }
 
@@ -639,11 +961,23 @@ $ink: #151515;
   color: rgba(21, 21, 21, 0.52);
   font-size: 0.84rem;
 
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.5);
+  }
+
   strong {
     flex: 0 0 auto;
     color: $primary-color;
     font-family: $font-accent;
     font-weight: 950;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
   }
 }
 
@@ -674,12 +1008,27 @@ $ink: #151515;
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    opacity 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-bg;
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28);
+  }
 
   &:hover {
     transform: translate(-2px, -2px);
     background: #000000;
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.12);
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(135deg, #b8a9ff, #ff68aa);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.34);
+    }
   }
 
   &:active {
@@ -701,6 +1050,17 @@ $ink: #151515;
   color: rgba(21, 21, 21, 0.62);
   line-height: 1.55;
 
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+    background: rgba(17, 18, 22, 0.5);
+    border-color: rgba(244, 241, 234, 0.2);
+  }
+
   p {
     margin: 0;
   }
@@ -717,6 +1077,17 @@ $ink: #151515;
   color: $primary-color;
   background: #ffffff;
   border: 1px solid rgba(21, 21, 21, 0.1);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
 }
 
 .error {
@@ -726,6 +1097,12 @@ $ink: #151515;
   font-family: $font-accent;
   font-weight: 950;
   color: #c6283a;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-danger-text;
+  }
 }
 
 /* =========================================================
@@ -770,6 +1147,17 @@ $ink: #151515;
   font-weight: 950;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+    background: rgba(168, 149, 255, 0.12);
+    border-color: rgba(168, 149, 255, 0.28);
+  }
 }
 
 .quickAnswers h3 {
@@ -781,11 +1169,23 @@ $ink: #151515;
   letter-spacing: -0.045em;
   color: $ink;
   font-weight: 950;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .faqReceiverName {
   color: $primary-color;
   font-weight: 950;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .quickAnswers ul {
@@ -808,6 +1208,17 @@ $ink: #151515;
   color: rgba(21, 21, 21, 0.72);
   line-height: 1.62;
 
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
+
   &::before {
     content: "";
     position: absolute;
@@ -817,6 +1228,12 @@ $ink: #151515;
 
     width: 4px;
     background: $primary-color;
+
+    transition: background 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(180deg, $dark-primary, $dark-pink);
+    }
   }
 
   strong {
@@ -826,10 +1243,22 @@ $ink: #151515;
     font-family: $font-accent;
     font-weight: 950;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   span {
     color: rgba(21, 21, 21, 0.66);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -846,6 +1275,17 @@ $ink: #151515;
 
   font-weight: 700;
   line-height: 1.55;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+    background: rgba(17, 18, 22, 0.5);
+    border-color: rgba(244, 241, 234, 0.2);
+  }
 }
 
 /* =========================================================
@@ -867,6 +1307,12 @@ $ink: #151515;
 .skeletonSend,
 .nameSkeleton {
   background: $paper-muted;
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(244, 241, 234, 0.08);
+  }
 }
 
 .skeletonBubble {
@@ -925,6 +1371,13 @@ $ink: #151515;
         transparent);
 
     animation: shimmer 1.2s infinite;
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(90deg,
+          transparent,
+          rgba(244, 241, 234, 0.14),
+          transparent);
+    }
   }
 }
 
@@ -1102,6 +1555,10 @@ $ink: #151515;
   .threadCard,
   .quickAnswers {
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.055);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.26);
+    }
   }
 
   .titlePill {

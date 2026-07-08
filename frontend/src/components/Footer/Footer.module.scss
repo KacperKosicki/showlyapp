@@ -6,9 +6,14 @@ $paper-muted: #f5f6fa;
 $paper-border: rgba(21, 21, 21, 0.1);
 $ink: #151515;
 
-/* =========================================================
-   Footer — papierowy styl Showly
-========================================================= */
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
 
 .footer {
   position: relative;
@@ -29,6 +34,24 @@ $ink: #151515;
   --footer-border: rgba(21, 21, 21, 0.1);
   --footer-muted: rgba(21, 21, 21, 0.62);
   --footer-soft: rgba(21, 21, 21, 0.72);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    --footer-primary: #a895ff;
+    --footer-secondary: #ff4f9a;
+    --footer-border: rgba(244, 241, 234, 0.16);
+    --footer-muted: rgba(244, 241, 234, 0.68);
+    --footer-soft: rgba(244, 241, 234, 0.78);
+
+    background:
+      radial-gradient(circle at 50% 0%, rgba(168, 149, 255, 0.11) 0%, rgba(168, 149, 255, 0) 42%),
+      radial-gradient(circle at 84% 28%, rgba(255, 79, 154, 0.07) 0%, rgba(255, 79, 154, 0) 42%),
+      linear-gradient(180deg, $dark-bg 0%, #151720 48%, $dark-bg 100%);
+    color: $dark-text;
+  }
 
   *,
   *::before,
@@ -58,6 +81,11 @@ $ink: #151515;
 
   path {
     fill: #ffffff;
+    transition: fill 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      fill: $dark-bg;
+    }
   }
 }
 
@@ -75,6 +103,13 @@ $ink: #151515;
   inset: 0;
   background:
     linear-gradient(180deg, rgba(250, 247, 255, 0.96) 0%, rgba(251, 251, 253, 0.96) 52%, #ffffff 100%);
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background:
+      linear-gradient(180deg, rgba(17, 18, 22, 0.92) 0%, rgba(21, 23, 32, 0.96) 52%, rgba(17, 18, 22, 0.98) 100%);
+  }
 }
 
 .glowOne,
@@ -89,6 +124,18 @@ $ink: #151515;
   filter: none;
   opacity: 1;
   animation: none;
+
+  transition:
+    background 0.22s ease,
+    opacity 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: radial-gradient(circle,
+        rgba(168, 149, 255, 0.12) 0%,
+        rgba(255, 79, 154, 0.045) 44%,
+        rgba(17, 18, 22, 0) 72%);
+    opacity: 0.9;
+  }
 }
 
 .glowOne {
@@ -115,6 +162,17 @@ $ink: #151515;
     linear-gradient(to bottom, rgba(21, 21, 21, 0.02) 1px, transparent 1px);
   background-size: 68px 68px;
   mask-image: radial-gradient(circle at 50% 20%, #000 0%, transparent 70%);
+
+  transition:
+    background 0.22s ease,
+    opacity 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background:
+      linear-gradient(to right, rgba(244, 241, 234, 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(244, 241, 234, 0.025) 1px, transparent 1px);
+    opacity: 0.16;
+  }
 }
 
 .noise {
@@ -160,6 +218,21 @@ $ink: #151515;
 
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.88);
+    color: $dark-text;
+    border-color: $dark-border;
+    box-shadow:
+      8px 8px 0 rgba(0, 0, 0, 0.24),
+      0 18px 48px rgba(0, 0, 0, 0.16);
+  }
 }
 
 .brandPanel::before,
@@ -208,12 +281,27 @@ $ink: #151515;
   border: 1px solid $ink;
   box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.08);
 
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.28);
+  }
+
   span {
     width: 24px;
     height: 24px;
     border-radius: 0;
     background: #ffffff;
     box-shadow: none;
+
+    :global(html[data-theme="dark"]) & {
+      background: $dark-bg;
+    }
   }
 }
 
@@ -232,6 +320,17 @@ $ink: #151515;
   font-weight: 950;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+    background: rgba(35, 38, 48, 0.74);
+    border-color: rgba(168, 149, 255, 0.22);
+  }
 }
 
 .brandTitle {
@@ -245,6 +344,12 @@ $ink: #151515;
   font-weight: 950;
   line-height: 0.92;
   letter-spacing: -0.085em;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .brandText {
@@ -254,6 +359,12 @@ $ink: #151515;
   color: rgba(21, 21, 21, 0.66);
   font-size: 1.04rem;
   line-height: 1.78;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 /* =========================================================
@@ -314,6 +425,18 @@ $ink: #151515;
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.12);
     background: #000000;
   }
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-bg;
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28);
+
+    &:hover {
+      background: linear-gradient(135deg, #b8a9ff, #ff68aa);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.36);
+    }
+  }
 }
 
 .secondaryCta {
@@ -326,6 +449,19 @@ $ink: #151515;
     background: #ffffff;
     color: $ink;
     box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.06);
+  }
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+    background: $dark-surface-soft;
+    border-color: $dark-border;
+
+    &:hover {
+      background: rgba(168, 149, 255, 0.14);
+      color: $dark-primary;
+      border-color: rgba(168, 149, 255, 0.32);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.26);
+    }
   }
 }
 
@@ -351,6 +487,15 @@ $ink: #151515;
 
   background: $paper-soft;
   border: 1px solid rgba(21, 21, 21, 0.1);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.74);
+    border-color: $dark-border;
+  }
 }
 
 .signalIcon {
@@ -366,6 +511,19 @@ $ink: #151515;
   border: 1px solid $ink;
 
   box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.08);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-bg;
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28);
+  }
 }
 
 .signalLabel {
@@ -379,6 +537,12 @@ $ink: #151515;
   font-weight: 950;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .signalTop strong {
@@ -386,6 +550,12 @@ $ink: #151515;
   font-family: $font-accent;
   font-size: 1rem;
   font-weight: 950;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .signalGrid {
@@ -409,9 +579,26 @@ $ink: #151515;
   font-size: 0.94rem;
   line-height: 1.45;
 
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+    background: rgba(35, 38, 48, 0.74);
+    border-color: $dark-border;
+  }
+
   svg {
     color: $primary-color;
     flex: 0 0 auto;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
   }
 }
 
@@ -442,12 +629,24 @@ $ink: #151515;
   font-weight: 950;
   line-height: 1.2;
   letter-spacing: -0.025em;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .infoCard p {
   margin: 0;
   color: rgba(21, 21, 21, 0.66);
   line-height: 1.68;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .badges {
@@ -468,6 +667,17 @@ $ink: #151515;
     font-weight: 950;
     letter-spacing: 0.07em;
     text-transform: uppercase;
+
+    transition:
+      background 0.22s ease,
+      color 0.22s ease,
+      border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+      background: rgba(17, 18, 22, 0.42);
+      border-color: $dark-border;
+    }
   }
 }
 
@@ -516,6 +726,19 @@ $ink: #151515;
     border-color: rgba(21, 21, 21, 0.16);
     box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.05);
   }
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+    background: rgba(35, 38, 48, 0.74);
+    border-color: $dark-border;
+
+    &:hover {
+      color: $dark-text;
+      background: rgba(168, 149, 255, 0.14);
+      border-color: rgba(168, 149, 255, 0.3);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
+  }
 }
 
 .navIcon {
@@ -528,11 +751,28 @@ $ink: #151515;
   color: $primary-color;
   background: #ffffff;
   border: 1px solid rgba(21, 21, 21, 0.1);
+
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+    background: rgba(17, 18, 22, 0.42);
+    border-color: $dark-border;
+  }
 }
 
 .navArrow {
   justify-self: end;
   color: rgba(21, 21, 21, 0.36);
+
+  transition: color 0.16s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.36);
+  }
 }
 
 /* =========================================================
@@ -558,6 +798,19 @@ $ink: #151515;
   background: $paper-soft;
   border: 1px solid rgba(21, 21, 21, 0.09);
 
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.74);
+    border-color: $dark-border;
+    color: $dark-text;
+  }
+
   &+& {
     margin-top: 0.65rem;
   }
@@ -573,6 +826,12 @@ $ink: #151515;
     font-weight: 950;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+
+    transition: color 0.16s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 
   strong {
@@ -580,6 +839,12 @@ $ink: #151515;
     font-family: $font-accent;
     font-size: 0.93rem;
     font-weight: 950;
+
+    transition: color 0.16s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -596,6 +861,14 @@ a.contactRow {
     border-color: rgba(21, 21, 21, 0.16);
     box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.05);
   }
+
+  :global(html[data-theme="dark"]) & {
+    &:hover {
+      background: rgba(168, 149, 255, 0.14);
+      border-color: rgba(168, 149, 255, 0.3);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
+  }
 }
 
 .contactIcon {
@@ -609,6 +882,17 @@ a.contactRow {
   color: $primary-color;
   background: #ffffff;
   border: 1px solid rgba(21, 21, 21, 0.1);
+
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+    background: rgba(17, 18, 22, 0.42);
+    border-color: $dark-border;
+  }
 }
 
 .socials {
@@ -632,6 +916,17 @@ a.contactRow {
 
   opacity: 0.82;
   cursor: not-allowed;
+
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.42);
+    background: rgba(35, 38, 48, 0.6);
+    border-color: rgba(244, 241, 234, 0.1);
+  }
 }
 
 /* =========================================================
@@ -649,6 +944,12 @@ a.contactRow {
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
+
+  transition: border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    border-top-color: $dark-border;
+  }
 }
 
 .bottomLeft {
@@ -663,12 +964,24 @@ a.contactRow {
 .copy {
   color: rgba(21, 21, 21, 0.58);
   font-size: 0.92rem;
+
+  transition: color 0.16s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .separator {
   width: 42px;
   height: 1px;
   background: rgba(21, 21, 21, 0.22);
+
+  transition: background 0.16s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-border;
+  }
 }
 
 .legalLinks {
@@ -697,6 +1010,16 @@ a.contactRow {
     color: $ink;
     border-color: rgba(21, 21, 21, 0.36);
   }
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+    border-color: rgba(244, 241, 234, 0.18);
+
+    &:hover {
+      color: $dark-primary;
+      border-color: rgba(168, 149, 255, 0.42);
+    }
+  }
 }
 
 .toTop {
@@ -722,6 +1045,8 @@ a.contactRow {
   transition:
     transform 0.16s ease,
     background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease,
     box-shadow 0.16s ease;
 
   span {
@@ -733,12 +1058,33 @@ a.contactRow {
 
     color: $ink;
     background: #ffffff;
+
+    transition:
+      background 0.16s ease,
+      color 0.16s ease;
   }
 
   &:hover {
     transform: translate(-2px, -2px);
     background: #000000;
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.12);
+  }
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-bg;
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28);
+
+    span {
+      color: $dark-text;
+      background: rgba(17, 18, 22, 0.7);
+    }
+
+    &:hover {
+      background: linear-gradient(135deg, #b8a9ff, #ff68aa);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.36);
+    }
   }
 }
 
@@ -812,6 +1158,12 @@ a.contactRow {
   .contactCard {
     padding: 1rem;
     box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.05);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow:
+        6px 6px 0 rgba(0, 0, 0, 0.24),
+        0 16px 42px rgba(0, 0, 0, 0.14);
+    }
   }
 
   .bottom {
@@ -877,12 +1229,48 @@ a.contactRow {
 
 @media (prefers-reduced-motion: reduce) {
 
+  .footer,
+  .topWave path,
+  .gradientWash,
+  .glowOne,
+  .glowTwo,
+  .mesh,
+  .brandPanel,
+  .signalPanel,
+  .infoCard,
+  .linkCard,
+  .contactCard,
+  .logoMark,
+  .logoMark span,
+  .kicker,
+  .brandTitle,
+  .brandText,
   .primaryCta,
   .secondaryCta,
+  .signalTop,
+  .signalIcon,
+  .signalLabel,
+  .signalTop strong,
+  .signalItem,
+  .signalItem svg,
+  .cardTitle,
+  .infoCard p,
+  .badges span,
   .navLink,
+  .navIcon,
+  .navArrow,
+  .contactRow,
+  .contactRow small,
+  .contactRow strong,
+  a.contactRow,
+  .contactIcon,
+  .socialBtn,
+  .bottom,
+  .copy,
+  .separator,
   .legalLink,
   .toTop,
-  a.contactRow {
+  .toTop span {
     transition: none;
   }
 }

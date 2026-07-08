@@ -6,9 +6,14 @@ $paper-muted: #f5f6fa;
 $paper-border: rgba(21, 21, 21, 0.1);
 $ink: #151515;
 
-/* =========================================================
-   HowShowlyWorks — papierowy styl Showly
-========================================================= */
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
 
 .section {
   position: relative;
@@ -18,6 +23,18 @@ $ink: #151515;
   color: $ink;
   overflow: hidden;
   font-family: $font-body;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background:
+      radial-gradient(620px 420px at 10% 18%, rgba(168, 149, 255, 0.09), transparent 68%),
+      radial-gradient(700px 460px at 88% 34%, rgba(255, 79, 154, 0.06), transparent 70%),
+      linear-gradient(180deg, $dark-bg 0%, #151720 48%, $dark-bg 100%);
+    color: $dark-text;
+  }
 
   *,
   *::before,
@@ -33,14 +50,24 @@ $ink: #151515;
     width: min(1260px, 92vw);
     height: 640px;
     transform: translate(-50%, -50%);
-    background: radial-gradient(
-      circle,
-      rgba(245, 246, 250, 0.95) 0%,
-      rgba(245, 246, 250, 0.42) 44%,
-      rgba(245, 246, 250, 0) 72%
-    );
+    background: radial-gradient(circle,
+        rgba(245, 246, 250, 0.95) 0%,
+        rgba(245, 246, 250, 0.42) 44%,
+        rgba(245, 246, 250, 0) 72%);
     pointer-events: none;
     z-index: 0;
+
+    transition:
+      background 0.22s ease,
+      opacity 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: radial-gradient(circle,
+          rgba(168, 149, 255, 0.12) 0%,
+          rgba(255, 79, 154, 0.045) 44%,
+          rgba(17, 18, 22, 0) 72%);
+      opacity: 0.9;
+    }
   }
 }
 
@@ -70,6 +97,19 @@ $ink: #151515;
   box-shadow: 12px 12px 0 rgba(21, 21, 21, 0.075);
 
   text-align: left;
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.88);
+    border-color: $dark-border;
+    box-shadow:
+      12px 12px 0 rgba(0, 0, 0, 0.26),
+      0 22px 62px rgba(0, 0, 0, 0.18);
+  }
 }
 
 .overline {
@@ -82,6 +122,12 @@ $ink: #151515;
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .title {
@@ -92,6 +138,12 @@ $ink: #151515;
   line-height: 0.96;
   letter-spacing: -0.075em;
   color: $ink;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .subtitle {
@@ -102,6 +154,12 @@ $ink: #151515;
   font-size: 1rem;
   line-height: 1.75;
   color: rgba(21, 21, 21, 0.68);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .sideMeta {
@@ -114,6 +172,12 @@ $ink: #151515;
   padding: 0.9rem 0;
   border-top: 1px solid rgba(21, 21, 21, 0.1);
 
+  transition: border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    border-top-color: $dark-border;
+  }
+
   strong {
     display: block;
     margin-bottom: 0.25rem;
@@ -122,6 +186,12 @@ $ink: #151515;
     font-size: 1rem;
     font-weight: 950;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   span {
@@ -131,6 +201,12 @@ $ink: #151515;
     font-size: 0.9rem;
     line-height: 1.55;
     color: rgba(21, 21, 21, 0.6);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -144,6 +220,19 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.12);
   box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.88);
+    border-color: $dark-border;
+    box-shadow:
+      10px 10px 0 rgba(0, 0, 0, 0.24),
+      0 20px 58px rgba(0, 0, 0, 0.16);
+  }
 }
 
 .chapterHead {
@@ -163,6 +252,12 @@ $ink: #151515;
     line-height: 1.06;
     letter-spacing: -0.045em;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -176,6 +271,12 @@ $ink: #151515;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .chapterNumber {
@@ -193,6 +294,19 @@ $ink: #151515;
   font-family: $font-accent;
   font-size: 0.9rem;
   font-weight: 950;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 /* ===== TIMELINE ===== */
@@ -234,6 +348,19 @@ $ink: #151515;
   font-family: $font-accent;
   font-size: 0.82rem;
   font-weight: 950;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-surface-soft;
+    color: $dark-primary;
+    border-color: rgba(168, 149, 255, 0.28);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 .stepConnector {
@@ -242,6 +369,12 @@ $ink: #151515;
   bottom: 0;
   width: 1px;
   background: rgba(21, 21, 21, 0.14);
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-border;
+  }
 }
 
 .cardInner {
@@ -258,6 +391,12 @@ $ink: #151515;
     box-shadow 0.18s ease,
     border-color 0.18s ease,
     background 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.74);
+    border-color: $dark-border;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.22);
+  }
 }
 
 .card:hover {
@@ -266,6 +405,14 @@ $ink: #151515;
     box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.075);
     border-color: rgba(21, 21, 21, 0.18);
     background: $paper-soft;
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(45, 49, 62, 0.9);
+      border-color: rgba(168, 149, 255, 0.28);
+      box-shadow:
+        8px 8px 0 rgba(0, 0, 0, 0.28),
+        0 18px 46px rgba(0, 0, 0, 0.18);
+    }
   }
 }
 
@@ -287,6 +434,17 @@ $ink: #151515;
   border: 1px solid rgba(21, 21, 21, 0.1);
   color: $primary-color;
 
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.42);
+    border-color: $dark-border;
+    color: $dark-primary;
+  }
+
   svg {
     font-size: 1.05rem;
   }
@@ -302,6 +460,12 @@ $ink: #151515;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .cardTitle {
@@ -313,6 +477,12 @@ $ink: #151515;
   line-height: 1.08;
   letter-spacing: -0.045em;
   color: $ink;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .cardText {
@@ -322,6 +492,12 @@ $ink: #151515;
   font-size: 0.96rem;
   line-height: 1.7;
   color: rgba(21, 21, 21, 0.64);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .cardMeta {
@@ -346,6 +522,17 @@ $ink: #151515;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: rgba(21, 21, 21, 0.58);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.42);
+    border-color: $dark-border;
+    color: $dark-muted;
+  }
 }
 
 /* ===== SUMMARY ===== */
@@ -362,6 +549,19 @@ $ink: #151515;
   background: $paper-soft;
   border: 1px solid rgba(21, 21, 21, 0.1);
   text-align: left;
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background:
+      linear-gradient(90deg, rgba(168, 149, 255, 0.08), transparent 34%),
+      rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.22);
+  }
 }
 
 .summaryNumber {
@@ -378,6 +578,19 @@ $ink: #151515;
   font-family: $font-accent;
   font-size: 0.86rem;
   font-weight: 950;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 .summaryKicker {
@@ -390,6 +603,12 @@ $ink: #151515;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .summaryText {
@@ -400,6 +619,12 @@ $ink: #151515;
   font-size: 0.96rem;
   line-height: 1.65;
   color: rgba(21, 21, 21, 0.66);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .summaryMini {
@@ -421,6 +646,17 @@ $ink: #151515;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: rgba(21, 21, 21, 0.58);
+
+    transition:
+      background 0.22s ease,
+      color 0.22s ease,
+      border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(17, 18, 22, 0.42);
+      border-color: $dark-border;
+      color: $dark-muted;
+    }
   }
 }
 
@@ -455,6 +691,12 @@ $ink: #151515;
   .content {
     padding: 1rem;
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.055);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow:
+        7px 7px 0 rgba(0, 0, 0, 0.24),
+        0 16px 42px rgba(0, 0, 0, 0.14);
+    }
   }
 
   .title {
@@ -533,7 +775,32 @@ $ink: #151515;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cardInner {
+
+  .section,
+  .section::before,
+  .side,
+  .overline,
+  .title,
+  .subtitle,
+  .metaItem,
+  .metaItem strong,
+  .metaItem span,
+  .content,
+  .chapterHead h3,
+  .chapterLabel,
+  .chapterNumber,
+  .stepDot,
+  .stepConnector,
+  .cardInner,
+  .icon,
+  .stepLabel,
+  .cardTitle,
+  .cardText,
+  .badge,
+  .summaryNumber,
+  .summaryKicker,
+  .summaryText,
+  .summaryMini span {
     transition: none;
   }
 }

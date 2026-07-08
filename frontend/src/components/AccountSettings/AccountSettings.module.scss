@@ -7,6 +7,16 @@ $paper-border: rgba(21, 21, 21, 0.1);
 $ink: #151515;
 $danger: #b91c1c;
 
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
+$dark-danger: #ff9aa6;
+
 .section {
   position: relative;
   padding: 5rem 1rem 7rem;
@@ -14,6 +24,18 @@ $danger: #b91c1c;
   color: $ink;
   overflow: hidden;
   font-family: $font-body;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background:
+      radial-gradient(620px 420px at 10% 18%, rgba(168, 149, 255, 0.1), transparent 68%),
+      radial-gradient(700px 460px at 88% 34%, rgba(255, 79, 154, 0.07), transparent 70%),
+      linear-gradient(180deg, $dark-bg 0%, #151720 48%, $dark-bg 100%);
+    color: $dark-text;
+  }
 
   &::before {
     content: "";
@@ -29,6 +51,18 @@ $danger: #b91c1c;
         rgba(245, 246, 250, 0) 72%);
     pointer-events: none;
     z-index: 0;
+
+    transition:
+      background 0.22s ease,
+      opacity 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: radial-gradient(circle,
+          rgba(168, 149, 255, 0.12) 0%,
+          rgba(255, 79, 154, 0.045) 44%,
+          rgba(17, 18, 22, 0) 72%);
+      opacity: 0.9;
+    }
   }
 }
 
@@ -59,6 +93,19 @@ $danger: #b91c1c;
   border: 1px solid $paper-border;
   background: $paper-bg;
   box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.08);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.88);
+    border-color: $dark-border;
+    box-shadow:
+      10px 10px 0 rgba(0, 0, 0, 0.26),
+      0 22px 62px rgba(0, 0, 0, 0.18);
+  }
 }
 
 .overline {
@@ -70,6 +117,12 @@ $danger: #b91c1c;
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .sideTitle {
@@ -79,6 +132,12 @@ $danger: #b91c1c;
   line-height: 0.95;
   letter-spacing: -0.07em;
   color: $ink;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .sideText {
@@ -88,6 +147,12 @@ $danger: #b91c1c;
   font-size: 1.02rem;
   line-height: 1.75;
   color: rgba(21, 21, 21, 0.68);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .quickStats {
@@ -103,6 +168,12 @@ $danger: #b91c1c;
     gap: 1rem;
     padding: 0.85rem 0;
     border-top: 1px solid rgba(21, 21, 21, 0.11);
+
+    transition: border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      border-top-color: $dark-border;
+    }
   }
 
   strong {
@@ -110,6 +181,12 @@ $danger: #b91c1c;
     font-size: 1.35rem;
     font-weight: 900;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   span {
@@ -117,6 +194,12 @@ $danger: #b91c1c;
     font-size: 0.9rem;
     color: rgba(21, 21, 21, 0.58);
     text-align: right;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -133,6 +216,19 @@ $danger: #b91c1c;
   border: 1px solid rgba(21, 21, 21, 0.12);
   background: $paper-bg;
   box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.06);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.88);
+    border-color: $dark-border;
+    box-shadow:
+      8px 8px 0 rgba(0, 0, 0, 0.24),
+      0 20px 58px rgba(0, 0, 0, 0.16);
+  }
 }
 
 .chapterNumber {
@@ -146,6 +242,19 @@ $danger: #b91c1c;
   font-family: $font-accent;
   font-size: 0.95rem;
   font-weight: 900;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 .chapterMain {
@@ -168,6 +277,12 @@ $danger: #b91c1c;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .chapterTitle {
@@ -178,6 +293,12 @@ $danger: #b91c1c;
   line-height: 1.08;
   letter-spacing: -0.04em;
   color: $ink;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .chapterBody {
@@ -199,6 +320,17 @@ $danger: #b91c1c;
   font-weight: 900;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.42);
+    color: $dark-muted;
+    border-color: $dark-border;
+  }
 }
 
 .avatarRow {
@@ -215,6 +347,19 @@ $danger: #b91c1c;
   background: $paper-muted;
   overflow: hidden;
   box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.06);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-surface-soft;
+    border-color: $dark-border;
+    box-shadow:
+      6px 6px 0 rgba(0, 0, 0, 0.24),
+      0 0 0 4px rgba(168, 149, 255, 0.08);
+  }
 }
 
 .avatar {
@@ -223,6 +368,12 @@ $danger: #b91c1c;
   display: block;
   object-fit: cover;
   background: $paper-muted;
+
+  transition: background 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-surface;
+  }
 }
 
 .controls {
@@ -256,19 +407,40 @@ $danger: #b91c1c;
   outline: none;
   font-family: $font-body;
   font-size: 0.96rem;
+
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    color 0.18s ease;
 
   &::placeholder {
     color: rgba(21, 21, 21, 0.42);
+    transition: color 0.18s ease;
   }
 
   &:focus {
     border-color: rgba(111, 78, 242, 0.45);
     box-shadow: 5px 5px 0 rgba(111, 78, 242, 0.1);
     background: #ffffff;
+  }
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    color: $dark-text;
+    border-color: $dark-border;
+
+    &::placeholder {
+      color: rgba(244, 241, 234, 0.42);
+    }
+
+    &:focus {
+      background: rgba(45, 49, 62, 0.94);
+      border-color: rgba(168, 149, 255, 0.42);
+      box-shadow:
+        5px 5px 0 rgba(0, 0, 0, 0.24),
+        0 0 0 4px rgba(168, 149, 255, 0.1);
+    }
   }
 }
 
@@ -279,6 +451,12 @@ $danger: #b91c1c;
   font-size: 0.88rem;
   line-height: 1.55;
   color: rgba(21, 21, 21, 0.54);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .text {
@@ -288,6 +466,12 @@ $danger: #b91c1c;
   font-size: 1rem;
   line-height: 1.75;
   color: rgba(21, 21, 21, 0.66);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .loadingCard {
@@ -302,6 +486,21 @@ $danger: #b91c1c;
   font-weight: 900;
   text-align: center;
   color: rgba(21, 21, 21, 0.72);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.88);
+    color: $dark-muted;
+    border-color: $dark-border;
+    box-shadow:
+      8px 8px 0 rgba(0, 0, 0, 0.24),
+      0 20px 58px rgba(0, 0, 0, 0.16);
+  }
 }
 
 /* Buttons */
@@ -333,11 +532,19 @@ $danger: #b91c1c;
   font-size: 0.92rem;
   font-weight: 900;
   user-select: none;
+
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
     border-color 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    color 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    color: $dark-text;
+    border-color: rgba(244, 241, 234, 0.2);
+  }
 
   input {
     display: none;
@@ -347,6 +554,12 @@ $danger: #b91c1c;
     transform: translate(-3px, -3px);
     border-color: rgba(111, 78, 242, 0.35);
     box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.1);
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(168, 149, 255, 0.14);
+      border-color: rgba(168, 149, 255, 0.34);
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.28);
+    }
   }
 }
 
@@ -366,6 +579,7 @@ $danger: #b91c1c;
   font-weight: 900;
   line-height: 1;
   white-space: nowrap;
+
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
@@ -384,6 +598,16 @@ $danger: #b91c1c;
     transform: translate(-3px, -3px);
     box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.18);
   }
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-bg;
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.16);
+
+    &:hover:not(:disabled) {
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.34);
+    }
+  }
 }
 
 .secondary {
@@ -396,6 +620,18 @@ $danger: #b91c1c;
     background: $paper-muted;
     box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.12);
   }
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+
+    &:hover:not(:disabled) {
+      background: rgba(168, 149, 255, 0.14);
+      border-color: rgba(168, 149, 255, 0.32);
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.28);
+    }
+  }
 }
 
 .ghost {
@@ -407,6 +643,17 @@ $danger: #b91c1c;
     transform: translate(-3px, -3px);
     background: rgba(185, 28, 28, 0.045);
     box-shadow: 6px 6px 0 rgba(185, 28, 28, 0.09);
+  }
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-danger;
+    background: rgba(35, 38, 48, 0.78);
+    border-color: rgba(255, 154, 166, 0.26);
+
+    &:hover:not(:disabled) {
+      background: rgba(185, 28, 28, 0.14);
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.28);
+    }
   }
 }
 
@@ -425,6 +672,10 @@ $danger: #b91c1c;
 .fileBtn:focus-within {
   outline: 3px solid rgba(111, 78, 242, 0.22);
   outline-offset: 3px;
+
+  :global(html[data-theme="dark"]) & {
+    outline-color: rgba(168, 149, 255, 0.32);
+  }
 }
 
 /* Button content */
@@ -447,6 +698,7 @@ $danger: #b91c1c;
   gap: 0.55rem;
   min-width: max-content;
   line-height: 1;
+
   transition:
     opacity 0.16s ease,
     transform 0.16s ease;
@@ -495,6 +747,7 @@ $danger: #b91c1c;
   opacity: 0;
   visibility: hidden;
   transform: translateY(-4px) scale(0.96);
+
   transition:
     opacity 0.16s ease,
     transform 0.16s ease,
@@ -565,6 +818,12 @@ $danger: #b91c1c;
   .chapter,
   .loadingCard {
     box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.07);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow:
+        6px 6px 0 rgba(0, 0, 0, 0.24),
+        0 16px 42px rgba(0, 0, 0, 0.14);
+    }
   }
 
   .chapter {
@@ -646,6 +905,26 @@ $danger: #b91c1c;
 
 @media (prefers-reduced-motion: reduce) {
 
+  .section,
+  .section::before,
+  .side,
+  .overline,
+  .sideTitle,
+  .sideText,
+  .quickStats div,
+  .quickStats strong,
+  .quickStats span,
+  .chapter,
+  .chapterNumber,
+  .chapterLabel,
+  .chapterTitle,
+  .badge,
+  .avatarPreview,
+  .avatar,
+  .input,
+  .hint,
+  .text,
+  .loadingCard,
   .primary,
   .secondary,
   .ghost,

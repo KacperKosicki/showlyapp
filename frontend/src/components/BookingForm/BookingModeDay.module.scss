@@ -6,9 +6,29 @@ $paper-muted: #f5f6fa;
 $paper-border: rgba(21, 21, 21, 0.1);
 $ink: #151515;
 
-/* =========================================================
-   BookingModeDay — papierowy styl Showly
-========================================================= */
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
+
+$dark-danger-bg: rgba(255, 79, 122, 0.13);
+$dark-danger-text: #ff8fa8;
+$dark-danger-border: rgba(255, 143, 168, 0.34);
+
+$dark-disabled-bg: rgba(244, 241, 234, 0.06);
+$dark-disabled-text: rgba(244, 241, 234, 0.3);
+$dark-disabled-border: rgba(244, 241, 234, 0.08);
+
+:global(html[data-theme="dark"]) {
+  --bf-primary: #{$dark-primary};
+  --bf-secondary: #{$dark-pink};
+  --bf-primary-soft: rgba(168, 149, 255, 0.14);
+  --bf-primary-line: rgba(168, 149, 255, 0.34);
+}
 
 /* ===== TOP FIELDS ===== */
 
@@ -32,6 +52,17 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.1);
   box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.045);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 .fieldWide {
@@ -66,6 +97,12 @@ $ink: #151515;
   line-height: 1.08;
   letter-spacing: -0.035em;
   color: $ink;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .fieldHint {
@@ -81,6 +118,17 @@ $ink: #151515;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(21, 21, 21, 0.52);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+    color: rgba(244, 241, 234, 0.5);
+  }
 }
 
 .textarea,
@@ -106,10 +154,21 @@ $ink: #151515;
     border-color 0.18s ease,
     box-shadow 0.18s ease,
     transform 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    color 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.72);
+    color: $dark-text;
+    border-color: $dark-border;
+  }
 
   &::placeholder {
     color: rgba(21, 21, 21, 0.38);
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.36);
+    }
   }
 
   &:focus {
@@ -117,6 +176,12 @@ $ink: #151515;
     box-shadow: 5px 5px 0 var(--bf-primary-soft, rgba(111, 78, 242, 0.08));
     transform: translate(-2px, -2px);
     background: #ffffff;
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(17, 18, 22, 0.86);
+      border-color: var(--bf-primary-line, rgba(168, 149, 255, 0.34));
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
   }
 }
 
@@ -135,6 +200,16 @@ $ink: #151515;
   padding-right: 2.4rem;
   cursor: pointer;
   font-weight: 700;
+
+  option {
+    background: #ffffff;
+    color: $ink;
+
+    :global(html[data-theme="dark"]) & {
+      background: $dark-surface;
+      color: $dark-text;
+    }
+  }
 }
 
 .selectChevron {
@@ -149,6 +224,12 @@ $ink: #151515;
   color: rgba(21, 21, 21, 0.42);
 
   pointer-events: none;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.46);
+  }
 }
 
 /* ===== TOGGLE ===== */
@@ -170,6 +251,12 @@ $ink: #151515;
   line-height: 1.35;
   color: $ink;
 
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
+
   input {
     width: 18px;
     height: 18px;
@@ -189,6 +276,17 @@ $ink: #151515;
   font-size: 0.92rem;
   line-height: 1.55;
   color: rgba(21, 21, 21, 0.62);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+    color: $dark-muted;
+  }
 }
 
 /* ===== WARN ===== */
@@ -203,6 +301,17 @@ $ink: #151515;
   background: var(--bf-primary-soft, rgba(111, 78, 242, 0.08));
   border: 1px solid var(--bf-primary-line, rgba(111, 78, 242, 0.34));
   box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.045);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(168, 149, 255, 0.12);
+    border-color: rgba(168, 149, 255, 0.3);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.24);
+  }
 
   strong {
     font-family: $font-accent;
@@ -219,6 +328,12 @@ $ink: #151515;
     font-size: 0.95rem;
     line-height: 1.55;
     color: rgba(21, 21, 21, 0.66);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -239,6 +354,17 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.1);
   box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.045);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 /* ===== CARD HEAD ===== */
@@ -257,6 +383,12 @@ $ink: #151515;
     line-height: 1.05;
     letter-spacing: -0.045em;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -296,6 +428,12 @@ $ink: #151515;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .monthNav button {
@@ -325,12 +463,26 @@ $ink: #151515;
     border-color 0.18s ease,
     opacity 0.18s ease;
 
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.72);
+    color: $dark-text;
+    border-color: $dark-border;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.22);
+  }
+
   &:hover:not(:disabled) {
     transform: translate(-2px, -2px);
     box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.08);
     background: $paper-soft;
     border-color: var(--bf-primary-line, rgba(111, 78, 242, 0.34));
     color: var(--bf-primary, #6f4ef2);
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(168, 149, 255, 0.14);
+      color: $dark-primary;
+      border-color: rgba(168, 149, 255, 0.34);
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.28);
+    }
   }
 
   &:active:not(:disabled) {
@@ -362,6 +514,12 @@ $ink: #151515;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(21, 21, 21, 0.5);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.46);
+  }
 }
 
 .blankDay {
@@ -391,11 +549,23 @@ $ink: #151515;
     color 0.18s ease,
     border-color 0.18s ease;
 
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.72);
+    color: $dark-text;
+    border-color: $dark-border;
+  }
+
   &:hover:not(:disabled) {
     transform: translate(-2px, -2px);
     box-shadow: 4px 4px 0 var(--bf-primary-soft, rgba(111, 78, 242, 0.08));
     border-color: var(--bf-primary-line, rgba(111, 78, 242, 0.34));
     color: var(--bf-primary, #6f4ef2);
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(168, 149, 255, 0.12);
+      color: $dark-primary;
+      box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.22);
+    }
   }
 
   &:disabled {
@@ -407,18 +577,36 @@ $ink: #151515;
   background: #fff1f1 !important;
   color: #c6283a !important;
   border-color: #f3b6bd !important;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-danger-bg !important;
+    color: $dark-danger-text !important;
+    border-color: $dark-danger-border !important;
+  }
 }
 
 .dayPast {
   background: $paper-muted !important;
   color: rgba(21, 21, 21, 0.32) !important;
   border-color: rgba(21, 21, 21, 0.06) !important;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-disabled-bg !important;
+    color: $dark-disabled-text !important;
+    border-color: $dark-disabled-border !important;
+  }
 }
 
 .dayLocked {
   background: #f1f1f1 !important;
   color: rgba(21, 21, 21, 0.4) !important;
   border-color: rgba(21, 21, 21, 0.06) !important;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(244, 241, 234, 0.075) !important;
+    color: rgba(244, 241, 234, 0.36) !important;
+    border-color: rgba(244, 241, 234, 0.1) !important;
+  }
 }
 
 .selectedDay {
@@ -426,6 +614,13 @@ $ink: #151515;
   color: #ffffff !important;
   border-color: $ink !important;
   box-shadow: 4px 4px 0 var(--bf-primary-soft, rgba(111, 78, 242, 0.08));
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink) !important;
+    color: $dark-bg !important;
+    border-color: rgba(255, 255, 255, 0.16) !important;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.26);
+  }
 }
 
 /* ===== INFO CARD ===== */
@@ -446,6 +641,12 @@ $ink: #151515;
   line-height: 1.05;
   letter-spacing: -0.045em;
   color: $ink;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .infoSub {
@@ -456,8 +657,20 @@ $ink: #151515;
   line-height: 1.55;
   color: rgba(21, 21, 21, 0.6);
 
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
+
   b {
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -478,6 +691,17 @@ $ink: #151515;
   font-size: 0.78rem;
   font-weight: 900;
   color: rgba(21, 21, 21, 0.62);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+    color: $dark-muted;
+  }
 }
 
 .modeDot {
@@ -485,6 +709,12 @@ $ink: #151515;
   height: 10px;
   background: var(--bf-primary, #6f4ef2);
   border: 1px solid rgba(21, 21, 21, 0.18);
+
+  transition: border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    border-color: rgba(255, 255, 255, 0.18);
+  }
 }
 
 .summaryRow {
@@ -497,6 +727,15 @@ $ink: #151515;
 
   background: $paper-soft;
   border: 1px solid rgba(21, 21, 21, 0.09);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
 }
 
 .summaryLabel {
@@ -506,6 +745,12 @@ $ink: #151515;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(21, 21, 21, 0.52);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.48);
+  }
 }
 
 .summaryValue {
@@ -517,13 +762,31 @@ $ink: #151515;
   color: rgba(21, 21, 21, 0.72);
   overflow-wrap: anywhere;
 
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
+
   b {
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
 .muted {
   color: rgba(21, 21, 21, 0.48);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.44);
+  }
 }
 
 /* ===== EMPTY ===== */
@@ -541,6 +804,15 @@ $ink: #151515;
   border: 1px dashed rgba(21, 21, 21, 0.16);
   text-align: left;
 
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.5);
+    border-color: rgba(244, 241, 234, 0.2);
+  }
+
   strong {
     display: block;
 
@@ -549,6 +821,12 @@ $ink: #151515;
     line-height: 1.08;
     letter-spacing: -0.045em;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   p {
@@ -559,6 +837,12 @@ $ink: #151515;
     font-size: 0.95rem;
     line-height: 1.65;
     color: rgba(21, 21, 21, 0.62);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -576,6 +860,19 @@ $ink: #151515;
   font-family: $font-accent;
   font-size: 0.78rem;
   font-weight: 950;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 /* ===== LEGEND ===== */
@@ -592,6 +889,17 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.1);
   box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.045);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 .legendBadges {
@@ -617,6 +925,17 @@ $ink: #151515;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: rgba(21, 21, 21, 0.58);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.62);
+    border-color: $dark-border;
+    color: $dark-muted;
+  }
 }
 
 .legendBox {
@@ -624,26 +943,50 @@ $ink: #151515;
   height: 0.85rem;
   border: 1px solid rgba(21, 21, 21, 0.14);
   display: inline-block;
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
 }
 
 .legendFree {
   background: #ffffff;
   border-color: rgba(21, 21, 21, 0.14);
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.72);
+    border-color: $dark-border;
+  }
 }
 
 .legendSelected {
   background: $ink;
   border-color: $ink;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    border-color: rgba(255, 255, 255, 0.16);
+  }
 }
 
 .legendUnavailable {
   background: #fff1f1;
   border-color: #f3b6bd;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-danger-bg;
+    border-color: $dark-danger-border;
+  }
 }
 
 .legendLocked {
   background: #eeeeee;
   border-color: #d7d7d7;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-disabled-bg;
+    border-color: $dark-disabled-border;
+  }
 }
 
 .legendMetaFull {
@@ -654,6 +997,12 @@ $ink: #151515;
   font-size: 0.9rem;
   line-height: 1.55;
   color: rgba(21, 21, 21, 0.6);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 /* ===== SUBMIT ===== */
@@ -688,12 +1037,26 @@ $ink: #151515;
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
-    background 0.18s ease;
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.28);
+  }
 
   &:hover {
     transform: translate(-2px, -2px);
     box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.12);
     background: #000000;
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(135deg, #b8a9ff, #ff68aa);
+      box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.34);
+    }
   }
 
   &:active {
@@ -707,6 +1070,12 @@ $ink: #151515;
   font-size: 0.9rem;
   line-height: 1.55;
   color: rgba(21, 21, 21, 0.58);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 /* ===== RWD ===== */
@@ -750,6 +1119,10 @@ $ink: #151515;
   .warnBox,
   .fullLegendBar {
     box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.04);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
   }
 
   .fieldHeader,
@@ -791,6 +1164,17 @@ $ink: #151515;
     background: rgba(255, 255, 255, 0.94);
     border: 1px solid rgba(21, 21, 21, 0.1);
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.065);
+
+    transition:
+      background 0.22s ease,
+      border-color 0.22s ease,
+      box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(26, 28, 34, 0.94);
+      border-color: $dark-border;
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.28);
+    }
   }
 }
 
@@ -847,11 +1231,45 @@ $ink: #151515;
 
 @media (prefers-reduced-motion: reduce) {
 
+  .field,
+  .toggleField,
+  .fieldTitle,
+  .fieldHint,
   .textarea,
   .select,
+  .selectChevron,
+  .toggleLabel,
+  .toggleHint,
+  .warnBox,
+  .warnBox p,
+  .calendarCard,
+  .infoCard,
+  .cardHead h3,
+  .monthLabel,
   .monthNav button,
+  .weekday,
   .day,
-  .submit {
+  .infoTitle,
+  .infoSub,
+  .infoSub b,
+  .modePill,
+  .modeDot,
+  .summaryRow,
+  .summaryLabel,
+  .summaryValue,
+  .summaryValue b,
+  .muted,
+  .emptyState,
+  .emptyState strong,
+  .emptyState p,
+  .emptyNumber,
+  .fullLegendBar,
+  .legendItem,
+  .legendBox,
+  .legendMetaFull,
+  .submit,
+  .submitHint,
+  .submitBar {
     transition: none;
   }
 }

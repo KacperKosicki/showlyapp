@@ -6,9 +6,14 @@ $paper-muted: #f5f6fa;
 $paper-border: rgba(21, 21, 21, 0.1);
 $ink: #151515;
 
-/* =========================================================
-   BookingForm — papierowy product brief / Showly style
-========================================================= */
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
 
 .pageWrap {
   position: relative;
@@ -23,6 +28,20 @@ $ink: #151515;
   --bf-secondary: #ff4081;
   --bf-primary-soft: rgba(111, 78, 242, 0.08);
   --bf-primary-line: rgba(111, 78, 242, 0.34);
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-bg;
+    color: $dark-text;
+
+    --bf-primary: #{$dark-primary};
+    --bf-secondary: #{$dark-pink};
+    --bf-primary-soft: rgba(168, 149, 255, 0.14);
+    --bf-primary-line: rgba(168, 149, 255, 0.34);
+  }
 
   *,
   *::before,
@@ -44,6 +63,14 @@ $ink: #151515;
         rgba(245, 246, 250, 0) 72%);
     pointer-events: none;
     z-index: 0;
+    transition: background 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: radial-gradient(circle,
+          rgba(168, 149, 255, 0.16) 0%,
+          rgba(255, 79, 154, 0.08) 42%,
+          rgba(17, 18, 22, 0) 72%);
+    }
   }
 }
 
@@ -71,6 +98,17 @@ $ink: #151515;
   border: 1px solid $paper-border;
   box-shadow: 12px 12px 0 rgba(21, 21, 21, 0.075);
   text-align: left;
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.28);
+  }
 }
 
 .backButton {
@@ -99,7 +137,14 @@ $ink: #151515;
     transform 0.18s ease,
     box-shadow 0.18s ease,
     background 0.18s ease,
-    color 0.18s ease;
+    color 0.18s ease,
+    border-color 0.18s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    color: $dark-muted;
+    border-color: $dark-border;
+  }
 
   svg {
     font-size: 0.8rem;
@@ -110,6 +155,13 @@ $ink: #151515;
     box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.08);
     background: #ffffff;
     color: $ink;
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(168, 149, 255, 0.14);
+      color: $dark-text;
+      border-color: rgba(168, 149, 255, 0.3);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.26);
+    }
   }
 
   &:active {
@@ -136,6 +188,12 @@ $ink: #151515;
   line-height: 0.96;
   letter-spacing: -0.075em;
   color: $ink;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .description {
@@ -145,6 +203,12 @@ $ink: #151515;
   font-size: 1rem;
   line-height: 1.75;
   color: rgba(21, 21, 21, 0.68);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 /* Provider */
@@ -158,6 +222,15 @@ $ink: #151515;
   align-items: center;
   background: $paper-soft;
   border: 1px solid rgba(21, 21, 21, 0.1);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
 }
 
 .avatarBox {
@@ -166,6 +239,15 @@ $ink: #151515;
   padding: 0.45rem;
   background: #ffffff;
   border: 1px solid rgba(21, 21, 21, 0.1);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.72);
+    border-color: $dark-border;
+  }
 }
 
 .avatar {
@@ -189,6 +271,12 @@ $ink: #151515;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: rgba(21, 21, 21, 0.52);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.48);
+  }
 }
 
 .providerName {
@@ -203,6 +291,12 @@ $ink: #151515;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .providerRole {
@@ -215,6 +309,12 @@ $ink: #151515;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 /* Meta */
@@ -234,8 +334,18 @@ $ink: #151515;
   padding: 0.9rem 0;
   border-top: 1px solid rgba(21, 21, 21, 0.1);
 
+  transition: border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    border-top-color: $dark-border;
+  }
+
   &:last-child {
     border-bottom: 1px solid rgba(21, 21, 21, 0.1);
+
+    :global(html[data-theme="dark"]) & {
+      border-bottom-color: $dark-border;
+    }
   }
 
   strong {
@@ -247,6 +357,12 @@ $ink: #151515;
     letter-spacing: 0.07em;
     text-transform: uppercase;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   p {
@@ -257,6 +373,12 @@ $ink: #151515;
     color: rgba(21, 21, 21, 0.62);
 
     overflow-wrap: anywhere;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -284,6 +406,17 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.12);
   box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
+  }
 }
 
 .chapterHead {
@@ -302,6 +435,12 @@ $ink: #151515;
     line-height: 1.06;
     letter-spacing: -0.045em;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -328,6 +467,19 @@ $ink: #151515;
   font-family: $font-accent;
   font-size: 0.9rem;
   font-weight: 950;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
 }
 
 .body {
@@ -338,6 +490,17 @@ $ink: #151515;
     linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 1)),
     $paper-soft;
   border: 1px solid rgba(21, 21, 21, 0.1);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background:
+      linear-gradient(180deg, rgba(35, 38, 48, 0.82), rgba(26, 28, 34, 0.96)),
+      $dark-surface-soft;
+    border-color: $dark-border;
+  }
 }
 
 .unavailableBox {
@@ -346,6 +509,15 @@ $ink: #151515;
   border: 1px dashed rgba(21, 21, 21, 0.18);
   text-align: left;
 
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.58);
+    border-color: rgba(244, 241, 234, 0.2);
+  }
+
   strong {
     display: block;
     margin-bottom: 0.45rem;
@@ -353,6 +525,12 @@ $ink: #151515;
     font-size: 1.25rem;
     line-height: 1.1;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   p {
@@ -361,6 +539,12 @@ $ink: #151515;
     font-size: 0.95rem;
     line-height: 1.65;
     color: rgba(21, 21, 21, 0.62);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -374,6 +558,17 @@ $ink: #151515;
   border: 1px solid rgba(21, 21, 21, 0.12);
   box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.06);
   text-align: center;
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.26);
+  }
 
   span {
     display: inline-flex;
@@ -393,6 +588,12 @@ $ink: #151515;
     line-height: 1.05;
     letter-spacing: -0.04em;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   p {
@@ -400,6 +601,12 @@ $ink: #151515;
     margin: 0.75rem auto 0;
     color: rgba(21, 21, 21, 0.62);
     line-height: 1.6;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -435,8 +642,16 @@ $ink: #151515;
     padding: 1rem;
     border: 1px solid rgba(21, 21, 21, 0.1);
 
+    :global(html[data-theme="dark"]) & {
+      border-color: $dark-border;
+    }
+
     &:last-child {
       border-bottom: 1px solid rgba(21, 21, 21, 0.1);
+
+      :global(html[data-theme="dark"]) & {
+        border-bottom-color: $dark-border;
+      }
     }
   }
 }
@@ -450,6 +665,10 @@ $ink: #151515;
   .content {
     padding: 1rem;
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.055);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.26);
+    }
   }
 
   .heading {
@@ -516,7 +735,31 @@ $ink: #151515;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .backButton {
+
+  .pageWrap,
+  .pageWrap::before,
+  .side,
+  .backButton,
+  .heading,
+  .description,
+  .providerBox,
+  .avatarBox,
+  .providerLabel,
+  .providerName,
+  .providerRole,
+  .metaItem,
+  .metaItem strong,
+  .metaItem p,
+  .content,
+  .chapterHead h2,
+  .chapterNumber,
+  .body,
+  .unavailableBox,
+  .unavailableBox strong,
+  .unavailableBox p,
+  .loadingCard,
+  .loadingCard strong,
+  .loadingCard p {
     transition: none;
   }
 }

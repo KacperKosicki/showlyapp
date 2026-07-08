@@ -7,9 +7,14 @@ $ink: #11131a;
 $violet: #7b4df2;
 $pink: #e83e96;
 
-/* =========================================================
-   HERO — Showly / pastel + sharp product brief
-========================================================= */
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
 
 .hero {
   position: relative;
@@ -26,6 +31,18 @@ $pink: #e83e96;
   color: $ink;
   overflow: visible;
   isolation: isolate;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background:
+      radial-gradient(620px 420px at 10% 22%, rgba(168, 149, 255, 0.14), transparent 68%),
+      radial-gradient(680px 460px at 88% 28%, rgba(255, 79, 154, 0.11), transparent 70%),
+      linear-gradient(180deg, #111216 0%, #151720 48%, #111216 100%);
+    color: $dark-text;
+  }
 
   *,
   *::before,
@@ -53,6 +70,9 @@ $pink: #e83e96;
   border-radius: 999px;
   filter: blur(70px);
   opacity: 0.55;
+  transition:
+    background 0.22s ease,
+    opacity 0.22s ease;
 }
 
 .blurOne {
@@ -61,6 +81,11 @@ $pink: #e83e96;
   left: -120px;
   top: 120px;
   background: rgba(123, 77, 242, 0.18);
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(168, 149, 255, 0.18);
+    opacity: 0.42;
+  }
 }
 
 .blurTwo {
@@ -69,6 +94,11 @@ $pink: #e83e96;
   right: -130px;
   top: 170px;
   background: rgba(232, 62, 150, 0.16);
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(255, 79, 154, 0.14);
+    opacity: 0.38;
+  }
 }
 
 .blurThree {
@@ -78,6 +108,11 @@ $pink: #e83e96;
   bottom: 140px;
   transform: translateX(-50%);
   background: rgba(123, 77, 242, 0.07);
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(168, 149, 255, 0.09);
+    opacity: 0.34;
+  }
 }
 
 /* =========================================================
@@ -143,6 +178,17 @@ $pink: #e83e96;
 
     border: 1px solid rgba(17, 19, 26, 0.12);
     background: rgba(255, 255, 255, 0.9);
+
+    transition:
+      background 0.22s ease,
+      color 0.22s ease,
+      border-color 0.22s ease,
+      box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      border-color: $dark-border;
+      background: rgba(26, 28, 34, 0.86);
+    }
   }
 
   span {
@@ -151,6 +197,11 @@ $pink: #e83e96;
     font-weight: 950;
     letter-spacing: 0.02em;
     box-shadow: 4px 4px 0 rgba(17, 19, 26, 0.045);
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+      box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.22);
+    }
   }
 
   b {
@@ -158,6 +209,11 @@ $pink: #e83e96;
     background: rgba(251, 251, 253, 0.9);
     font-size: 0.78rem;
     font-weight: 800;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+      background: rgba(35, 38, 48, 0.72);
+    }
   }
 }
 
@@ -173,6 +229,12 @@ $pink: #e83e96;
 
   color: #090a10;
 
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
+
   span {
     display: inline-block;
 
@@ -180,6 +242,13 @@ $pink: #e83e96;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(135deg, $dark-primary 0%, $dark-pink 82%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
   }
 }
 
@@ -191,6 +260,12 @@ $pink: #e83e96;
   font-size: clamp(1rem, 1.18vw, 1.08rem);
   line-height: 1.75;
   color: rgba(17, 19, 26, 0.66);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 /* =========================================================
@@ -210,6 +285,19 @@ $pink: #e83e96;
   background: rgba(255, 255, 255, 0.88);
   border: 1px solid rgba(17, 19, 26, 0.1);
   box-shadow: 8px 8px 0 rgba(17, 19, 26, 0.055);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.88);
+    border-color: $dark-border;
+    box-shadow:
+      8px 8px 0 rgba(0, 0, 0, 0.24),
+      0 20px 58px rgba(0, 0, 0, 0.22);
+  }
 }
 
 .searchHeader {
@@ -231,12 +319,24 @@ $pink: #e83e96;
     font-size: 0.98rem;
     font-weight: 950;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   small {
     font-family: $font-body;
     font-size: 0.84rem;
     color: rgba(17, 19, 26, 0.52);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -247,10 +347,22 @@ $pink: #e83e96;
   font-size: 0.88rem;
   color: rgba(17, 19, 26, 0.52);
 
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
+
   b {
     color: $ink;
     font-family: $font-accent;
     font-weight: 950;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -298,6 +410,15 @@ $pink: #e83e96;
     color 0.18s ease,
     border-color 0.18s ease,
     opacity 0.18s ease;
+
+  &:focus-visible {
+    outline: 3px solid rgba(123, 77, 242, 0.22);
+    outline-offset: 3px;
+  }
+
+  :global(html[data-theme="dark"]) &:focus-visible {
+    outline-color: rgba(168, 149, 255, 0.32);
+  }
 }
 
 .primaryBtn {
@@ -311,6 +432,18 @@ $pink: #e83e96;
     background: #0b1120;
     box-shadow: 7px 7px 0 rgba(17, 24, 39, 0.16);
   }
+
+  :global(html[data-theme="dark"]) & {
+    border-color: rgba(255, 255, 255, 0.16);
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28);
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #b8a9ff, #ff68aa);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.36);
+    }
+  }
 }
 
 .secondaryBtn {
@@ -323,6 +456,20 @@ $pink: #e83e96;
     transform: translate(-2px, -2px);
     background: #ffffff;
     box-shadow: 7px 7px 0 rgba(17, 19, 26, 0.07);
+  }
+
+  :global(html[data-theme="dark"]) & {
+    border-color: $dark-border;
+    background: $dark-surface-soft;
+    color: $dark-text;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.22);
+
+    &:hover:not(:disabled) {
+      background: rgba(168, 149, 255, 0.14);
+      color: $dark-primary;
+      border-color: rgba(168, 149, 255, 0.34);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.32);
+    }
   }
 }
 
@@ -351,6 +498,19 @@ $pink: #e83e96;
   background: rgba(255, 255, 255, 0.68);
   border: 1px solid rgba(17, 19, 26, 0.1);
   box-shadow: 10px 10px 0 rgba(17, 19, 26, 0.045);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.78);
+    border-color: $dark-border;
+    box-shadow:
+      10px 10px 0 rgba(0, 0, 0, 0.24),
+      0 20px 58px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .sideTop {
@@ -365,6 +525,17 @@ $pink: #e83e96;
   background: #111827;
   color: #ffffff;
 
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, rgba(168, 149, 255, 0.18), rgba(255, 79, 154, 0.14));
+    color: $dark-text;
+    border: 1px solid rgba(168, 149, 255, 0.2);
+  }
+
   span {
     font-family: $font-accent;
     font-size: 0.72rem;
@@ -372,6 +543,10 @@ $pink: #e83e96;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.68);
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 
   b {
@@ -388,6 +563,10 @@ $pink: #e83e96;
     font-weight: 800;
     color: #ffffff;
     white-space: nowrap;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 }
 
@@ -401,6 +580,15 @@ $pink: #e83e96;
 
   background: rgba(255, 255, 255, 0.88);
   border: 1px solid rgba(17, 19, 26, 0.1);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.74);
+    border-color: $dark-border;
+  }
 
   span {
     width: 42px;
@@ -416,6 +604,17 @@ $pink: #e83e96;
     font-family: $font-accent;
     font-size: 0.78rem;
     font-weight: 950;
+
+    transition:
+      background 0.22s ease,
+      color 0.22s ease,
+      border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(135deg, rgba(168, 149, 255, 0.16), rgba(255, 79, 154, 0.12));
+      border-color: rgba(168, 149, 255, 0.22);
+      color: $dark-primary;
+    }
   }
 
   strong {
@@ -428,6 +627,12 @@ $pink: #e83e96;
     font-weight: 950;
     letter-spacing: -0.025em;
     line-height: 1.2;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   p {
@@ -438,6 +643,12 @@ $pink: #e83e96;
     font-family: $font-body;
     font-size: 0.9rem;
     line-height: 1.5;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -451,6 +662,15 @@ $pink: #e83e96;
 
     background: rgba(255, 255, 255, 0.74);
     border: 1px solid rgba(17, 19, 26, 0.09);
+
+    transition:
+      background 0.22s ease,
+      border-color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(35, 38, 48, 0.72);
+      border-color: $dark-border;
+    }
   }
 
   strong {
@@ -462,6 +682,12 @@ $pink: #e83e96;
     font-size: 1.05rem;
     font-weight: 950;
     line-height: 1;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   span {
@@ -473,6 +699,12 @@ $pink: #e83e96;
     font-family: $font-body;
     font-size: 0.82rem;
     line-height: 1.35;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -496,6 +728,17 @@ $pink: #e83e96;
     background: rgba(255, 255, 255, 0.74);
     border: 1px solid rgba(17, 19, 26, 0.09);
     box-shadow: 4px 4px 0 rgba(17, 19, 26, 0.035);
+
+    transition:
+      background 0.22s ease,
+      border-color 0.22s ease,
+      box-shadow 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(35, 38, 48, 0.72);
+      border-color: $dark-border;
+      box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.22);
+    }
   }
 
   strong {
@@ -506,6 +749,12 @@ $pink: #e83e96;
     line-height: 1;
     font-weight: 950;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   span {
@@ -516,6 +765,12 @@ $pink: #e83e96;
     font-size: 0.84rem;
     line-height: 1.4;
     color: rgba(17, 19, 26, 0.52);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -538,6 +793,15 @@ $pink: #e83e96;
     display: block;
     width: 100%;
     height: 86px;
+  }
+
+  path {
+    fill: #ffffff;
+    transition: fill 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      fill: $dark-bg;
+    }
   }
 }
 
@@ -606,6 +870,12 @@ $pink: #e83e96;
   .searchBlock {
     padding: 0.85rem;
     box-shadow: 6px 6px 0 rgba(17, 19, 26, 0.055);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow:
+        6px 6px 0 rgba(0, 0, 0, 0.24),
+        0 16px 46px rgba(0, 0, 0, 0.18);
+    }
   }
 
   .searchHeader {
@@ -627,6 +897,12 @@ $pink: #e83e96;
   .side {
     padding: 0.8rem;
     box-shadow: 7px 7px 0 rgba(17, 19, 26, 0.045);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow:
+        7px 7px 0 rgba(0, 0, 0, 0.24),
+        0 16px 46px rgba(0, 0, 0, 0.18);
+    }
   }
 
   .sideTop {

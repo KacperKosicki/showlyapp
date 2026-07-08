@@ -11,6 +11,31 @@ $danger: #b91c1c;
 $success: #15803d;
 $warning: #a16207;
 $blue: #2563eb;
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
+
+$dark-danger-bg: rgba(255, 79, 122, 0.13);
+$dark-danger-text: #ff8fa8;
+$dark-danger-border: rgba(255, 143, 168, 0.34);
+
+$dark-success-bg: rgba(66, 211, 146, 0.12);
+$dark-success-text: #7ee2b8;
+$dark-success-border: rgba(126, 226, 184, 0.28);
+
+$dark-warning-bg: rgba(255, 209, 102, 0.13);
+$dark-warning-text: #ffd166;
+$dark-warning-border: rgba(255, 209, 102, 0.32);
+
+$dark-info-bg: rgba(89, 208, 255, 0.12);
+$dark-info-text: #8bddff;
+$dark-info-border: rgba(139, 221, 255, 0.28);
+
 
 .page {
   min-height: 100vh;
@@ -1462,6 +1487,7 @@ $blue: #2563eb;
 
 .textareaMeta {
   margin-top: 0.45rem;
+  margin-bottom: 1rem;
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -1546,8 +1572,9 @@ $blue: #2563eb;
 
 .reviewRight {
   display: grid;
-  justify-items: end;
-  gap: 0.35rem;
+  align-items: baseline;
+  grid-auto-flow: column;
+  gap: 0.75rem;
 }
 
 .reviewStars {
@@ -2292,4 +2319,960 @@ $blue: #2563eb;
     background: #15803d;
     border-color: #15803d;
   }
+}
+
+/* =========================================================
+   DARK MODE — Public Profile / Profile Page
+   Dopisane jako finalny blok, żeby nie ruszać logiki JSX
+========================================================= */
+
+:global(html[data-theme="dark"]) .page {
+  color: $dark-text;
+  background: $dark-bg;
+
+  --pp-primary: #{$dark-primary};
+  --pp-secondary: #{$dark-pink};
+
+  --pp-partner: #8bddff;
+  --pp-partner-soft: rgba(139, 221, 255, 0.12);
+  --pp-partner-border: rgba(139, 221, 255, 0.3);
+  --pp-partner-glow: rgba(139, 221, 255, 0.16);
+
+  --pp-text-strong: #{$dark-text};
+  --pp-text-main: rgba(244, 241, 234, 0.78);
+  --pp-text-soft: #{$dark-muted};
+  --pp-text-muted: rgba(244, 241, 234, 0.52);
+  --pp-border: #{$dark-border};
+
+  &::before {
+    background: radial-gradient(circle,
+        rgba(168, 149, 255, 0.16) 0%,
+        rgba(255, 79, 154, 0.08) 44%,
+        rgba(17, 18, 22, 0) 72%);
+  }
+}
+
+:global(html[data-theme="dark"]) .bgGlow {
+  background:
+    linear-gradient(to right, rgba(244, 241, 234, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(244, 241, 234, 0.04) 1px, transparent 1px);
+  opacity: 0.22;
+  mask-image: radial-gradient(circle at 50% 34%, #000 0%, transparent 70%);
+}
+
+/* ===== Loading / empty ===== */
+
+:global(html[data-theme="dark"]) .loadingCard,
+:global(html[data-theme="dark"]) .emptyCard {
+  background: rgba(26, 28, 34, 0.94);
+  border-color: $dark-border;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.28);
+
+  strong {
+    color: $dark-text;
+  }
+
+  p {
+    color: $dark-muted;
+  }
+}
+
+:global(html[data-theme="dark"]) .loadingOrb {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: linear-gradient(135deg, $dark-primary, $dark-pink);
+}
+
+/* ===== Base cards ===== */
+
+:global(html[data-theme="dark"]) .mainCard,
+:global(html[data-theme="dark"]) .sideCard,
+:global(html[data-theme="dark"]) .sectionCard,
+:global(html[data-theme="dark"]) .hero,
+:global(html[data-theme="dark"]) .heroPanel,
+:global(html[data-theme="dark"]) .pricePill,
+:global(html[data-theme="dark"]) .descBox,
+:global(html[data-theme="dark"]) .linkTile,
+:global(html[data-theme="dark"]) .socialTile,
+:global(html[data-theme="dark"]) .infoRow,
+:global(html[data-theme="dark"]) .serviceCard,
+:global(html[data-theme="dark"]) .review,
+:global(html[data-theme="dark"]) .reportModal {
+  background: rgba(26, 28, 34, 0.94);
+  border-color: $dark-border;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.26);
+}
+
+:global(html[data-theme="dark"]) .mainCard,
+:global(html[data-theme="dark"]) .sideCard,
+:global(html[data-theme="dark"]) .sectionCard {
+  >* {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+:global(html[data-theme="dark"]) .partnerShell {
+
+  .hero,
+  .mainCard,
+  .sideCard,
+  .sectionCard {
+    border-color: var(--pp-partner-border);
+    box-shadow:
+      8px 8px 0 rgba(0, 0, 0, 0.26),
+      0 0 0 4px var(--pp-partner-soft);
+  }
+}
+
+:global(html[data-theme="dark"]) .ownerShell {
+  .hero {
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* ===== Text ===== */
+
+:global(html[data-theme="dark"]) .sectionTitle,
+:global(html[data-theme="dark"]) .heroTitle,
+:global(html[data-theme="dark"]) .blockTitle,
+:global(html[data-theme="dark"]) .serviceCardTitle,
+:global(html[data-theme="dark"]) .reviewName,
+:global(html[data-theme="dark"]) .reportTitle,
+:global(html[data-theme="dark"]) .linkText strong,
+:global(html[data-theme="dark"]) .socialText strong,
+:global(html[data-theme="dark"]) .shareProfileText strong,
+:global(html[data-theme="dark"]) .metricContent strong,
+:global(html[data-theme="dark"]) .quickStat strong,
+:global(html[data-theme="dark"]) .pricePill strong,
+:global(html[data-theme="dark"]) .serviceMetaValue,
+:global(html[data-theme="dark"]) .rateScore,
+:global(html[data-theme="dark"]) .emptyInline strong {
+  color: $dark-text;
+}
+
+:global(html[data-theme="dark"]) .sectionKicker,
+:global(html[data-theme="dark"]) .panelEyebrow,
+:global(html[data-theme="dark"]) .counter,
+:global(html[data-theme="dark"]) .galleryNumber {
+  color: $dark-primary;
+}
+
+:global(html[data-theme="dark"]) .sectionSub,
+:global(html[data-theme="dark"]) .muted,
+:global(html[data-theme="dark"]) .mutedSmall,
+:global(html[data-theme="dark"]) .heroRole,
+:global(html[data-theme="dark"]) .locPill,
+:global(html[data-theme="dark"]) .ratingPill,
+:global(html[data-theme="dark"]) .panelStatus,
+:global(html[data-theme="dark"]) .blockSub,
+:global(html[data-theme="dark"]) .blockHint,
+:global(html[data-theme="dark"]) .desc,
+:global(html[data-theme="dark"]) .serviceDescription,
+:global(html[data-theme="dark"]) .reviewText,
+:global(html[data-theme="dark"]) .reviewDate,
+:global(html[data-theme="dark"]) .rateHint,
+:global(html[data-theme="dark"]) .textareaMeta,
+:global(html[data-theme="dark"]) .reportLabel,
+:global(html[data-theme="dark"]) .reportHint,
+:global(html[data-theme="dark"]) .linkText small,
+:global(html[data-theme="dark"]) .socialText small,
+:global(html[data-theme="dark"]) .shareProfileText small,
+:global(html[data-theme="dark"]) .metricContent span,
+:global(html[data-theme="dark"]) .quickStat small,
+:global(html[data-theme="dark"]) .pricePill small,
+:global(html[data-theme="dark"]) .pricePill em,
+:global(html[data-theme="dark"]) .serviceMetaLabel,
+:global(html[data-theme="dark"]) .emptyInline span,
+:global(html[data-theme="dark"]) .emptyInline p,
+:global(html[data-theme="dark"]) .emptyInline small {
+  color: $dark-muted;
+}
+
+:global(html[data-theme="dark"]) .splitLine {
+  background: $dark-border;
+}
+
+/* ===== Hero ===== */
+
+:global(html[data-theme="dark"]) .hero {
+  border-color: rgba(168, 149, 255, 0.28);
+  border-top-color: $dark-primary;
+  background:
+    linear-gradient(135deg, rgba(168, 149, 255, 0.12) 0%, rgba(26, 28, 34, 0.94) 46%, rgba(255, 79, 154, 0.08) 100%),
+    $dark-surface;
+}
+
+:global(html[data-theme="dark"]) .heroWithBanner {
+  background:
+    linear-gradient(135deg, rgba(168, 149, 255, 0.18), rgba(255, 79, 154, 0.12)),
+    linear-gradient(180deg, rgba(17, 18, 22, 0.62), rgba(17, 18, 22, 0.9)),
+    var(--pp-banner-image) center / cover no-repeat,
+    $dark-surface;
+}
+
+:global(html[data-theme="dark"]) .heroOwner:not(.heroWithBanner) {
+  background:
+    linear-gradient(135deg, rgba(168, 149, 255, 0.1), rgba(255, 79, 154, 0.06)),
+    $dark-surface;
+}
+
+:global(html[data-theme="dark"]) .heroPanelPartner,
+:global(html[data-theme="dark"]) .heroPartner {
+  border-color: var(--pp-partner-border);
+}
+
+:global(html[data-theme="dark"]) .heroTopRight {
+  color: $dark-muted;
+}
+
+:global(html[data-theme="dark"]) .locPill,
+:global(html[data-theme="dark"]) .ratingPill {
+  background: rgba(17, 18, 22, 0.72);
+  border-color: $dark-border;
+  color: $dark-muted;
+
+  svg {
+    color: $dark-primary;
+  }
+}
+
+:global(html[data-theme="dark"]) .reportTopBtn,
+:global(html[data-theme="dark"]) .reportMiniBtn {
+  color: $dark-danger-text;
+  background: $dark-danger-bg;
+  border-color: $dark-danger-border;
+
+  svg {
+    color: $dark-danger-text;
+  }
+
+  &:hover {
+    background: rgba(255, 79, 122, 0.18);
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+  }
+}
+
+:global(html[data-theme="dark"]) .dot {
+  background: rgba(244, 241, 234, 0.36);
+}
+
+:global(html[data-theme="dark"]) .avatarWrap {
+  background: rgba(35, 38, 48, 0.78);
+  border-color: rgba(168, 149, 255, 0.28);
+  box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.28);
+}
+
+:global(html[data-theme="dark"]) .avatar,
+:global(html[data-theme="dark"]) .reviewAvatar {
+  background: rgba(244, 241, 234, 0.08);
+  border-color: rgba(244, 241, 234, 0.12);
+}
+
+:global(html[data-theme="dark"]) .avatarStatus {
+  color: $dark-bg;
+  background: linear-gradient(135deg, $dark-primary, $dark-pink);
+  border-color: $dark-surface;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* ===== Pills / badges ===== */
+
+:global(html[data-theme="dark"]) .heroRole,
+:global(html[data-theme="dark"]) .partnerBadge,
+:global(html[data-theme="dark"]) .roleBadge,
+:global(html[data-theme="dark"]) .titlePill,
+:global(html[data-theme="dark"]) .chip,
+:global(html[data-theme="dark"]) .serviceCategoryBadge,
+:global(html[data-theme="dark"]) .mobileSwipeHint {
+  color: $dark-muted;
+  background: rgba(35, 38, 48, 0.78);
+  border-color: $dark-border;
+}
+
+:global(html[data-theme="dark"]) .partnerBadge {
+  color: $dark-info-text;
+  background: var(--pp-partner-soft);
+  border-color: var(--pp-partner-border);
+}
+
+:global(html[data-theme="dark"]) .partner_verified,
+:global(html[data-theme="dark"]) .partner_ambassador,
+:global(html[data-theme="dark"]) .partner_founding-partner,
+:global(html[data-theme="dark"]) .type_zawodowy,
+:global(html[data-theme="dark"]) .type_hobbystyczny,
+:global(html[data-theme="dark"]) .type_serwis,
+:global(html[data-theme="dark"]) .type_społeczność {
+  color: $dark-text;
+}
+
+/* ===== Metrics / stats ===== */
+
+:global(html[data-theme="dark"]) .metricRow,
+:global(html[data-theme="dark"]) .quickStats {
+  border-top-color: $dark-border;
+  border-left-color: $dark-border;
+}
+
+:global(html[data-theme="dark"]) .metricCard,
+:global(html[data-theme="dark"]) .quickStat {
+  color: $dark-text;
+  background: rgba(17, 18, 22, 0.52);
+  border-right-color: $dark-border;
+  border-bottom-color: $dark-border;
+}
+
+:global(html[data-theme="dark"]) .favoriteMetric:hover,
+:global(html[data-theme="dark"]) .quickStat:hover {
+  background: rgba(168, 149, 255, 0.1);
+}
+
+:global(html[data-theme="dark"]) .metricIcon,
+:global(html[data-theme="dark"]) .priceIcon,
+:global(html[data-theme="dark"]) .shareProfileIcon,
+:global(html[data-theme="dark"]) .linkBadge,
+:global(html[data-theme="dark"]) .socialIcon,
+:global(html[data-theme="dark"]) .infoIcon,
+:global(html[data-theme="dark"]) .serviceMetaIcon,
+:global(html[data-theme="dark"]) .badgeCount {
+  color: $dark-bg;
+  background: linear-gradient(135deg, $dark-primary, $dark-pink);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+:global(html[data-theme="dark"]) .quickStat>span,
+:global(html[data-theme="dark"]) .linkArrow {
+  color: $dark-primary;
+  background: rgba(168, 149, 255, 0.12);
+  border-color: rgba(168, 149, 255, 0.28);
+}
+
+:global(html[data-theme="dark"]) .favActive {
+  background: $dark-danger-bg;
+
+  .metricIcon {
+    color: #ffffff;
+    background: $dark-danger-text;
+    border-color: $dark-danger-text;
+  }
+}
+
+/* ===== Buttons ===== */
+
+:global(html[data-theme="dark"]) .shareProfileBtn,
+:global(html[data-theme="dark"]) .ctaSecondary,
+:global(html[data-theme="dark"]) .reportGhost,
+:global(html[data-theme="dark"]) .disabledBtn {
+  color: $dark-text;
+  background: rgba(17, 18, 22, 0.72);
+  border-color: $dark-border;
+}
+
+:global(html[data-theme="dark"]) .shareProfileBtn:hover,
+:global(html[data-theme="dark"]) .ctaSecondary:hover:not(:disabled),
+:global(html[data-theme="dark"]) .reportGhost:hover:not(:disabled),
+:global(html[data-theme="dark"]) .linkTile:hover,
+:global(html[data-theme="dark"]) .socialTile:hover,
+:global(html[data-theme="dark"]) .infoLink:hover,
+:global(html[data-theme="dark"]) .chip:hover {
+  color: $dark-primary;
+  background: rgba(168, 149, 255, 0.12);
+  border-color: rgba(168, 149, 255, 0.28);
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28);
+}
+
+:global(html[data-theme="dark"]) .ctaPrimary,
+:global(html[data-theme="dark"]) .primaryBtn,
+:global(html[data-theme="dark"]) .serviceCta,
+:global(html[data-theme="dark"]) .reportPrimary {
+  color: $dark-bg;
+  background: linear-gradient(135deg, $dark-primary, $dark-pink);
+  border-color: rgba(255, 255, 255, 0.16);
+
+  &:hover:not(:disabled) {
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.34);
+  }
+}
+
+:global(html[data-theme="dark"]) .disabledBtn {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
+/* ===== Description / empty / chips ===== */
+
+:global(html[data-theme="dark"]) .quoteIcon {
+  color: rgba(244, 241, 234, 0.08);
+}
+
+:global(html[data-theme="dark"]) .emptyInline,
+:global(html[data-theme="dark"]) .rateBox,
+:global(html[data-theme="dark"]) .serviceMetaItem {
+  background: rgba(35, 38, 48, 0.78);
+  border-color: $dark-border;
+}
+
+:global(html[data-theme="dark"]) .emptyInline svg {
+  color: $dark-primary;
+  background: rgba(17, 18, 22, 0.72);
+  border-color: $dark-border;
+}
+
+/* ===== Links / info / social ===== */
+
+:global(html[data-theme="dark"]) .linkTile,
+:global(html[data-theme="dark"]) .socialTile,
+:global(html[data-theme="dark"]) .infoRow {
+  color: $dark-muted;
+}
+
+/* ===== Gallery ===== */
+
+:global(html[data-theme="dark"]) .galleryItem {
+  background: rgba(35, 38, 48, 0.78);
+  border-color: $dark-border;
+
+  img {
+    filter: grayscale(8%) brightness(0.82);
+  }
+
+  &:hover {
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.3);
+  }
+}
+
+:global(html[data-theme="dark"]) .galleryNumber {
+  color: $dark-primary;
+  background: rgba(17, 18, 22, 0.82);
+  border-color: rgba(168, 149, 255, 0.28);
+}
+
+:global(html[data-theme="dark"]) .galleryOverlay,
+:global(html[data-theme="dark"]) .serviceFeaturedBadge {
+  color: $dark-bg;
+  background: linear-gradient(135deg, $dark-primary, $dark-pink);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* ===== Services ===== */
+
+:global(html[data-theme="dark"]) .serviceCardFeatured {
+  border-color: rgba(168, 149, 255, 0.34);
+  box-shadow:
+    6px 6px 0 rgba(0, 0, 0, 0.28),
+    0 0 0 4px rgba(168, 149, 255, 0.1);
+}
+
+:global(html[data-theme="dark"]) .serviceMedia,
+:global(html[data-theme="dark"]) .serviceImagePlaceholder {
+  background: rgba(17, 18, 22, 0.72);
+  border-bottom-color: $dark-border;
+  color: $dark-muted;
+}
+
+:global(html[data-theme="dark"]) .serviceBadges {
+  color: $dark-text;
+}
+
+:global(html[data-theme="dark"]) .serviceCategoryBadge {
+  color: $dark-primary;
+  background: rgba(17, 18, 22, 0.82);
+  border-color: rgba(168, 149, 255, 0.28);
+}
+
+/* ===== Rating / reviews ===== */
+
+:global(html[data-theme="dark"]) .star {
+  color: rgba(244, 241, 234, 0.22);
+
+  &:hover {
+    color: $dark-primary;
+  }
+}
+
+:global(html[data-theme="dark"]) .starOn,
+:global(html[data-theme="dark"]) .starMiniOn {
+  color: $dark-primary;
+}
+
+:global(html[data-theme="dark"]) .starOff,
+:global(html[data-theme="dark"]) .starMiniOff {
+  color: rgba(244, 241, 234, 0.22);
+}
+
+:global(html[data-theme="dark"]) .myReview {
+  border-color: $dark-success-border;
+  background: $dark-success-bg;
+}
+
+:global(html[data-theme="dark"]) .reviewRight {
+  color: $dark-muted;
+}
+
+/* ===== Inputs / textarea ===== */
+
+:global(html[data-theme="dark"]) .textarea,
+:global(html[data-theme="dark"]) .reportSelect,
+:global(html[data-theme="dark"]) .reportTextarea {
+  color: $dark-text;
+  background: rgba(17, 18, 22, 0.72);
+  border-color: $dark-border;
+
+  &::placeholder {
+    color: rgba(244, 241, 234, 0.36);
+  }
+
+  &:focus {
+    background: rgba(17, 18, 22, 0.86);
+    border-color: rgba(168, 149, 255, 0.38);
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+  }
+}
+
+/* ===== Lightbox / report modal ===== */
+
+:global(html[data-theme="dark"]) .lightbox {
+  background: rgba(0, 0, 0, 0.84);
+
+  img {
+    background: $dark-surface;
+    border-color: $dark-border;
+  }
+}
+
+:global(html[data-theme="dark"]) .lightboxClose,
+:global(html[data-theme="dark"]) .reportClose {
+  color: $dark-text;
+  background: rgba(35, 38, 48, 0.92);
+  border-color: $dark-border;
+}
+
+:global(html[data-theme="dark"]) .reportModalBackdrop {
+  background: rgba(0, 0, 0, 0.76);
+}
+
+:global(html[data-theme="dark"]) .reportModal {
+  background: $dark-surface;
+  border-color: $dark-border;
+  box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.34);
+}
+
+/* ===== Share copied / success / danger ===== */
+
+:global(html[data-theme="dark"]) .shareProfileBtnCopied {
+  background: $dark-success-bg;
+  border-color: $dark-success-border;
+
+  .shareProfileIcon {
+    color: $dark-bg;
+    background: $dark-success-text;
+    border-color: $dark-success-text;
+  }
+}
+
+:global(html[data-theme="dark"]) .panelStatus span {
+  background: $dark-success-text;
+  box-shadow: 0 0 0 5px rgba(126, 226, 184, 0.12);
+}
+
+/* =========================================================
+   DARK MODE — profile color accents override
+   Ten blok nadpisuje jasne color-mixy z końcówki pliku
+========================================================= */
+
+:global(html[data-theme="dark"]) .hero {
+  border-color: color-mix(in srgb, var(--pp-primary) 42%, rgba(244, 241, 234, 0.16));
+  border-top-color: var(--pp-primary);
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--pp-primary) 16%, transparent) 0%,
+      rgba(26, 28, 34, 0.94) 46%,
+      color-mix(in srgb, var(--pp-secondary) 12%, transparent) 100%);
+}
+
+:global(html[data-theme="dark"]) .heroWithBanner {
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--pp-primary) 22%, transparent),
+      color-mix(in srgb, var(--pp-secondary) 16%, transparent)),
+    linear-gradient(180deg, rgba(17, 18, 22, 0.64), rgba(17, 18, 22, 0.92)),
+    var(--pp-banner-image) center / cover no-repeat,
+    $dark-surface;
+}
+
+:global(html[data-theme="dark"]) .heroPanel,
+:global(html[data-theme="dark"]) .mainCard,
+:global(html[data-theme="dark"]) .sideCard,
+:global(html[data-theme="dark"]) .sectionCard {
+  border-color: color-mix(in srgb, var(--pp-primary) 26%, rgba(244, 241, 234, 0.14));
+}
+
+:global(html[data-theme="dark"]) .mainCard,
+:global(html[data-theme="dark"]) .sideCard,
+:global(html[data-theme="dark"]) .sectionCard {
+  box-shadow:
+    8px 8px 0 color-mix(in srgb, var(--pp-primary) 14%, rgba(0, 0, 0, 0.26));
+}
+
+:global(html[data-theme="dark"]) .heroPanel {
+  box-shadow:
+    7px 7px 0 color-mix(in srgb, var(--pp-primary) 16%, rgba(0, 0, 0, 0.26));
+}
+
+:global(html[data-theme="dark"]) .heroTitle,
+:global(html[data-theme="dark"]) .metricContent strong,
+:global(html[data-theme="dark"]) .quickStat strong,
+:global(html[data-theme="dark"]) .blockTitle,
+:global(html[data-theme="dark"]) .sectionTitle,
+:global(html[data-theme="dark"]) .serviceCardTitle,
+:global(html[data-theme="dark"]) .reviewName,
+:global(html[data-theme="dark"]) .linkText strong,
+:global(html[data-theme="dark"]) .socialText strong,
+:global(html[data-theme="dark"]) .shareProfileText strong {
+  color: color-mix(in srgb, var(--pp-primary) 18%, #{$dark-text});
+}
+
+:global(html[data-theme="dark"]) .heroRole,
+:global(html[data-theme="dark"]) .roleBadge,
+:global(html[data-theme="dark"]) .titlePill,
+:global(html[data-theme="dark"]) .chip {
+  color: color-mix(in srgb, var(--pp-primary) 68%, #{$dark-text});
+  background: color-mix(in srgb, var(--pp-primary) 14%, rgba(35, 38, 48, 0.78));
+  border-color: color-mix(in srgb, var(--pp-primary) 28%, rgba(244, 241, 234, 0.14));
+}
+
+:global(html[data-theme="dark"]) .partnerBadge {
+  color: $dark-info-text;
+  background: color-mix(in srgb, var(--pp-partner) 20%, rgba(35, 38, 48, 0.78));
+}
+
+:global(html[data-theme="dark"]) .locPill,
+:global(html[data-theme="dark"]) .ratingPill {
+  border-color: color-mix(in srgb, var(--pp-primary) 24%, rgba(244, 241, 234, 0.14));
+
+  svg {
+    color: var(--pp-primary);
+  }
+}
+
+:global(html[data-theme="dark"]) .avatarWrap {
+  border-color: color-mix(in srgb, var(--pp-primary) 32%, rgba(244, 241, 234, 0.14));
+  box-shadow:
+    7px 7px 0 color-mix(in srgb, var(--pp-primary) 16%, rgba(0, 0, 0, 0.28));
+}
+
+:global(html[data-theme="dark"]) .avatarStatus,
+:global(html[data-theme="dark"]) .metricIcon,
+:global(html[data-theme="dark"]) .priceIcon,
+:global(html[data-theme="dark"]) .shareProfileIcon,
+:global(html[data-theme="dark"]) .linkBadge,
+:global(html[data-theme="dark"]) .socialIcon,
+:global(html[data-theme="dark"]) .infoIcon,
+:global(html[data-theme="dark"]) .serviceMetaIcon,
+:global(html[data-theme="dark"]) .badgeCount {
+  background: color-mix(in srgb, var(--pp-primary) 82%, #{$dark-pink});
+  border-color: color-mix(in srgb, var(--pp-primary) 82%, #{$dark-pink});
+  color: $dark-bg;
+}
+
+:global(html[data-theme="dark"]) .quickStat>span {
+  color: var(--pp-primary);
+  background: color-mix(in srgb, var(--pp-primary) 14%, rgba(35, 38, 48, 0.78));
+  border-color: color-mix(in srgb, var(--pp-primary) 26%, rgba(244, 241, 234, 0.14));
+}
+
+:global(html[data-theme="dark"]) .metricCard,
+:global(html[data-theme="dark"]) .quickStat,
+:global(html[data-theme="dark"]) .pricePill,
+:global(html[data-theme="dark"]) .descBox,
+:global(html[data-theme="dark"]) .linkTile,
+:global(html[data-theme="dark"]) .socialTile,
+:global(html[data-theme="dark"]) .infoRow,
+:global(html[data-theme="dark"]) .serviceCard,
+:global(html[data-theme="dark"]) .review,
+:global(html[data-theme="dark"]) .rateBox,
+:global(html[data-theme="dark"]) .emptyInline {
+  border-color: color-mix(in srgb, var(--pp-primary) 22%, rgba(244, 241, 234, 0.14));
+}
+
+:global(html[data-theme="dark"]) .metricCard:nth-child(even),
+:global(html[data-theme="dark"]) .quickStat:nth-child(even),
+:global(html[data-theme="dark"]) .serviceMetaItem,
+:global(html[data-theme="dark"]) .emptyInline,
+:global(html[data-theme="dark"]) .rateBox {
+  background: color-mix(in srgb, var(--pp-primary) 8%, rgba(35, 38, 48, 0.78));
+}
+
+:global(html[data-theme="dark"]) .pricePill strong,
+:global(html[data-theme="dark"]) .serviceMetaValue {
+  color: color-mix(in srgb, var(--pp-primary) 68%, #{$dark-text});
+}
+
+:global(html[data-theme="dark"]) .ctaPrimary,
+:global(html[data-theme="dark"]) .primaryBtn,
+:global(html[data-theme="dark"]) .serviceCta,
+:global(html[data-theme="dark"]) .reportPrimary {
+  background: color-mix(in srgb, var(--pp-primary) 82%, #{$dark-pink});
+  border-color: color-mix(in srgb, var(--pp-primary) 82%, #{$dark-pink});
+  color: $dark-bg;
+
+  &:hover:not(:disabled) {
+    box-shadow:
+      6px 6px 0 color-mix(in srgb, var(--pp-primary) 28%, rgba(0, 0, 0, 0.34));
+  }
+}
+
+:global(html[data-theme="dark"]) .ctaSecondary,
+:global(html[data-theme="dark"]) .reportGhost {
+  border-color: color-mix(in srgb, var(--pp-primary) 28%, rgba(244, 241, 234, 0.14));
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--pp-primary) 14%, rgba(35, 38, 48, 0.78));
+    box-shadow:
+      6px 6px 0 color-mix(in srgb, var(--pp-primary) 18%, rgba(0, 0, 0, 0.28));
+  }
+}
+
+:global(html[data-theme="dark"]) .starOn,
+:global(html[data-theme="dark"]) .starMiniOn,
+:global(html[data-theme="dark"]) .star:hover {
+  color: var(--pp-primary);
+}
+
+:global(html[data-theme="dark"]) .galleryNumber {
+  color: var(--pp-primary);
+  border-color: color-mix(in srgb, var(--pp-primary) 28%, rgba(244, 241, 234, 0.14));
+}
+
+:global(html[data-theme="dark"]) .galleryOverlay,
+:global(html[data-theme="dark"]) .serviceFeaturedBadge {
+  background: color-mix(in srgb, var(--pp-primary) 82%, #{$dark-pink});
+  border-color: color-mix(in srgb, var(--pp-primary) 82%, #{$dark-pink});
+  color: $dark-bg;
+}
+
+:global(html[data-theme="dark"]) .serviceCardFeatured {
+  border-color: color-mix(in srgb, var(--pp-primary) 38%, rgba(244, 241, 234, 0.14));
+  box-shadow:
+    6px 6px 0 color-mix(in srgb, var(--pp-primary) 18%, rgba(0, 0, 0, 0.28)),
+    0 0 0 4px color-mix(in srgb, var(--pp-primary) 12%, rgba(35, 38, 48, 0.78));
+}
+
+:global(html[data-theme="dark"]) .serviceCategoryBadge {
+  color: color-mix(in srgb, var(--pp-primary) 68%, #{$dark-text});
+  background: color-mix(in srgb, var(--pp-primary) 14%, rgba(17, 18, 22, 0.82));
+  border-color: color-mix(in srgb, var(--pp-primary) 26%, rgba(244, 241, 234, 0.14));
+}
+
+:global(html[data-theme="dark"]) .textarea:focus,
+:global(html[data-theme="dark"]) .reportSelect:focus,
+:global(html[data-theme="dark"]) .reportTextarea:focus {
+  border-color: color-mix(in srgb, var(--pp-primary) 52%, rgba(244, 241, 234, 0.22));
+  box-shadow:
+    5px 5px 0 color-mix(in srgb, var(--pp-primary) 16%, rgba(0, 0, 0, 0.24));
+}
+
+:global(html[data-theme="dark"]) .favActive {
+  background: color-mix(in srgb, var(--pp-secondary) 16%, rgba(35, 38, 48, 0.78));
+
+  .metricIcon {
+    background: color-mix(in srgb, var(--pp-secondary) 78%, #{$dark-pink});
+    border-color: color-mix(in srgb, var(--pp-secondary) 78%, #{$dark-pink});
+    color: $dark-bg;
+  }
+}
+
+:global(html[data-theme="dark"]) .shareProfileBtnCopied {
+  background: color-mix(in srgb, #7ee2b8 14%, rgba(35, 38, 48, 0.78));
+  border-color: color-mix(in srgb, #7ee2b8 34%, rgba(244, 241, 234, 0.14));
+
+  .shareProfileIcon {
+    background: $dark-success-text;
+    border-color: $dark-success-text;
+    color: $dark-bg;
+  }
+}
+
+/* =========================================================
+   HERO PANEL — oddzielona karta z obramowaniem jak reszta divów
+   Dopiszane na końcu, żeby nadpisać wcześniejsze style bez ruszania JSX
+========================================================= */
+
+.heroInner {
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: 1.15rem;
+  padding-bottom: 1.75rem;
+}
+
+.heroPanel {
+  position: relative;
+  min-width: 0;
+  margin: 1.35rem 0 1rem;
+  padding: 1.15rem;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(251, 251, 253, 0.96));
+  border: 1px solid color-mix(in srgb, var(--pp-primary) 24%, rgba(21, 21, 21, 0.14));
+  box-shadow:
+    8px 8px 0 color-mix(in srgb, var(--pp-primary) 16%, rgba(21, 21, 21, 0.07)),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 1rem;
+    right: 1rem;
+    top: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--pp-primary), var(--pp-secondary));
+    opacity: 0.9;
+    pointer-events: none;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    right: -90px;
+    bottom: -110px;
+    width: 240px;
+    height: 240px;
+    background: radial-gradient(circle, color-mix(in srgb, var(--pp-primary) 10%, transparent), transparent 66%);
+    pointer-events: none;
+  }
+
+  >* {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.heroPanelPartner {
+  border-color: var(--pp-partner-border);
+  box-shadow:
+    8px 8px 0 rgba(21, 21, 21, 0.07),
+    0 0 0 4px var(--pp-partner-soft),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+.heroPanelTop {
+  margin-bottom: 0.95rem;
+  padding: 0.75rem 0.85rem;
+  background: color-mix(in srgb, var(--pp-primary) 5%, #ffffff);
+  border: 1px solid color-mix(in srgb, var(--pp-primary) 18%, rgba(21, 21, 21, 0.12));
+}
+
+.metricRow,
+.quickStats {
+  gap: 0.72rem;
+  border: 0;
+}
+
+.quickStats {
+  margin-top: 0.72rem;
+}
+
+.metricCard,
+.quickStat {
+  border: 1px solid color-mix(in srgb, var(--pp-primary) 18%, rgba(21, 21, 21, 0.12));
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 4px 4px 0 color-mix(in srgb, var(--pp-primary) 10%, rgba(21, 21, 21, 0.045));
+}
+
+.metricCard {
+  min-height: 74px;
+}
+
+.quickStat {
+  min-height: 66px;
+}
+
+.shareProfileBtn {
+  margin-top: 0.95rem;
+  border-color: color-mix(in srgb, var(--pp-primary) 22%, rgba(21, 21, 21, 0.13));
+}
+
+.ctaRow {
+  margin-top: 0.95rem;
+}
+
+@media (max-width: 760px) {
+  .heroInner {
+    padding: 1rem 1rem 1.25rem;
+    gap: 1rem;
+  }
+
+  .heroPanel {
+    margin-top: 1rem;
+    margin-bottom: 0.85rem;
+    padding: 1rem;
+  }
+
+  .metricRow,
+  .quickStats {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .heroInner {
+    padding: 0.85rem 0.75rem 1.15rem;
+  }
+
+  .heroPanel {
+    margin-top: 0.85rem;
+    margin-bottom: 0.75rem;
+    padding: 0.85rem;
+  }
+
+  .heroPanel::before {
+    left: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .heroPanelTop {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.65rem;
+  }
+
+  .metricCard,
+  .quickStat,
+  .shareProfileBtn {
+    padding: 0.72rem;
+  }
+}
+
+:global(html[data-theme="dark"]) .heroPanel {
+  background:
+    linear-gradient(180deg, rgba(26, 28, 34, 0.96), rgba(35, 38, 48, 0.9));
+  border-color: color-mix(in srgb, var(--pp-primary) 28%, rgba(244, 241, 234, 0.14));
+  box-shadow:
+    8px 8px 0 color-mix(in srgb, var(--pp-primary) 14%, rgba(0, 0, 0, 0.28)),
+    inset 0 0 0 1px rgba(244, 241, 234, 0.04);
+}
+
+:global(html[data-theme="dark"]) .heroPanel::after {
+  background: radial-gradient(circle, color-mix(in srgb, var(--pp-primary) 16%, transparent), transparent 66%);
+}
+
+:global(html[data-theme="dark"]) .heroPanelPartner {
+  border-color: var(--pp-partner-border);
+  box-shadow:
+    8px 8px 0 rgba(0, 0, 0, 0.26),
+    0 0 0 4px var(--pp-partner-soft),
+    inset 0 0 0 1px rgba(244, 241, 234, 0.04);
+}
+
+:global(html[data-theme="dark"]) .heroPanelTop,
+:global(html[data-theme="dark"]) .metricCard,
+:global(html[data-theme="dark"]) .quickStat {
+  background: rgba(17, 18, 22, 0.54);
+  border-color: color-mix(in srgb, var(--pp-primary) 22%, rgba(244, 241, 234, 0.14));
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.22);
+}
+
+:global(html[data-theme="dark"]) .metricRow,
+:global(html[data-theme="dark"]) .quickStats {
+  border: 0;
 }

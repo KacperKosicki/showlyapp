@@ -6,10 +6,6 @@ $paper-muted: #f5f6fa;
 $paper-border: rgba(21, 21, 21, 0.1);
 $ink: #151515;
 
-/* =========================================================
-   Favorites — layout jak AllUsersList
-========================================================= */
-
 .section {
   position: relative;
   width: 100%;
@@ -758,5 +754,211 @@ $ink: #151515;
 
   100% {
     opacity: 0.45;
+  }
+}
+
+/* =========================================================
+   DARK MODE — Favorites
+========================================================= */
+
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
+$dark-danger: #ff9aa6;
+
+:global(html[data-theme="dark"]) {
+  .section {
+    background:
+      radial-gradient(620px 420px at 10% 18%, rgba(168, 149, 255, 0.1), transparent 68%),
+      radial-gradient(700px 460px at 88% 34%, rgba(255, 79, 154, 0.07), transparent 70%),
+      linear-gradient(180deg, $dark-bg 0%, #151720 48%, $dark-bg 100%);
+    color: $dark-text;
+
+    &::before {
+      background: radial-gradient(circle,
+          rgba(168, 149, 255, 0.12) 0%,
+          rgba(255, 79, 154, 0.045) 45%,
+          rgba(17, 18, 22, 0) 72%);
+      opacity: 0.9;
+    }
+  }
+
+  .side,
+  .content {
+    background: rgba(26, 28, 34, 0.88);
+    border-color: $dark-border;
+    box-shadow:
+      10px 10px 0 rgba(0, 0, 0, 0.24),
+      0 20px 58px rgba(0, 0, 0, 0.16);
+  }
+
+  .overline,
+  .heading span,
+  .chapterLabel,
+  .emptyIcon {
+    color: $dark-primary;
+  }
+
+  .heading,
+  .metaCard strong,
+  .chapterHead h3,
+  .emptyState strong {
+    color: $dark-text;
+  }
+
+  .description,
+  .metaCard span,
+  .infoBox span,
+  .infoBox p,
+  .emptyState p,
+  .mobileHint {
+    color: $dark-muted;
+  }
+
+  .infoBox {
+    border-top-color: $dark-border;
+  }
+
+  .metaCard {
+    background: rgba(35, 38, 48, 0.74);
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.18);
+  }
+
+  .chapterNumber {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
+  }
+
+  /* ===== Carousel fade ===== */
+
+  .carousel::before {
+    background: linear-gradient(90deg, rgba(26, 28, 34, 0.98) 18%, rgba(26, 28, 34, 0));
+  }
+
+  .carousel::after {
+    background: linear-gradient(270deg, rgba(26, 28, 34, 0.98) 18%, rgba(26, 28, 34, 0));
+  }
+
+  /* ===== Empty / error ===== */
+
+  .emptyState {
+    background: rgba(35, 38, 48, 0.74);
+    border-color: rgba(244, 241, 234, 0.18);
+  }
+
+  .errorState {
+    background: rgba(185, 28, 28, 0.12);
+    border-color: rgba(255, 154, 166, 0.3);
+
+    strong {
+      color: $dark-danger;
+    }
+  }
+
+  .emptyIconWrap {
+    background: rgba(17, 18, 22, 0.42);
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.22);
+  }
+
+  .cta {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.28);
+
+    &:hover {
+      background: linear-gradient(135deg, #b8a9ff, #ff68aa);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.34);
+    }
+  }
+
+  /* ===== Arrows ===== */
+
+  .navBtn {
+    background: $dark-surface-soft;
+    color: $dark-text;
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+
+    svg {
+      color: $dark-text;
+    }
+
+    &:hover {
+      background: rgba(168, 149, 255, 0.14);
+      color: $dark-primary;
+      border-color: rgba(168, 149, 255, 0.32);
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.3);
+
+      svg {
+        color: $dark-primary;
+      }
+    }
+
+    &:focus-visible {
+      outline-color: rgba(168, 149, 255, 0.32);
+    }
+  }
+
+  .disabled {
+    opacity: 0.3;
+  }
+
+  .mobileHint {
+    span {
+      color: $dark-primary;
+    }
+  }
+
+  /* ===== Skeleton ===== */
+
+  .skeletonCard {
+    background: rgba(26, 28, 34, 0.88);
+    border-color: $dark-border;
+    box-shadow:
+      6px 6px 0 rgba(0, 0, 0, 0.24),
+      0 16px 42px rgba(0, 0, 0, 0.14);
+  }
+
+  .skeletonThumb,
+  .skeletonLineLg,
+  .skeletonLineMd,
+  .skeletonLineSm {
+    background: rgba(35, 38, 48, 0.9);
+    border-color: rgba(244, 241, 234, 0.08);
+  }
+
+  .shimmer {
+    &::after {
+      background: linear-gradient(90deg,
+          transparent,
+          rgba(244, 241, 234, 0.12),
+          transparent);
+    }
+  }
+}
+
+/* =========================================================
+   DARK MODE MOBILE — Favorites
+========================================================= */
+
+@media (max-width: 480px) {
+  :global(html[data-theme="dark"]) {
+
+    .side,
+    .content {
+      box-shadow:
+        6px 6px 0 rgba(0, 0, 0, 0.24),
+        0 16px 42px rgba(0, 0, 0, 0.14);
+    }
   }
 }

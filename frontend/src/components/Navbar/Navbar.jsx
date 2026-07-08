@@ -1,8 +1,22 @@
 import { useEffect, useState } from "react";
-import { FaUser, FaUserPlus } from "react-icons/fa";
+import { FaMoon, FaSun, FaUser, FaUserPlus } from "react-icons/fa";
 import styles from "./Navbar.module.scss";
 import { Link, useNavigate } from "react-router-dom";
 import UserDropdown from "../UserDropdown/UserDropdown";
+
+const THEME_STORAGE_KEY = "theme";
+
+const getInitialTheme = () => {
+  if (typeof window === "undefined") return "light";
+
+  try {
+    const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+
+    return savedTheme === "dark" || savedTheme === "light" ? savedTheme : "light";
+  } catch {
+    return "light";
+  }
+};
 
 const Navbar = ({
   user,
@@ -14,7 +28,11 @@ const Navbar = ({
   setAlert,
 }) => {
   const navigate = useNavigate();
+
   const [scrolled, setScrolled] = useState(false);
+  const [theme, setTheme] = useState(getInitialTheme);
+
+  const isDarkTheme = theme === "dark";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,8 +46,22 @@ const Navbar = ({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      // Motyw nadal działa w bieżącej sesji, nawet jeśli zapis jest zablokowany.
+    }
+  }, [theme]);
+
   const handleAuthNavigate = (path, scrollToId) => {
     navigate(path, { state: { scrollToId } });
+  };
+
+  const toggleTheme = () => {
+    setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
   };
 
   return (
@@ -51,6 +83,23 @@ const Navbar = ({
         </Link>
 
         <div className={styles.right}>
+          <button
+            type="button"
+            className={styles.themeToggle}
+            onClick={toggleTheme}
+            aria-label={isDarkTheme ? "Włącz jasny motyw" : "Włącz ciemny motyw"}
+            aria-pressed={isDarkTheme}
+            title={isDarkTheme ? "Jasny motyw" : "Ciemny motyw"}
+          >
+            <span className={styles.themeIcon}>
+              {isDarkTheme ? <FaSun /> : <FaMoon />}
+            </span>
+
+            <span className={styles.themeLabel}>
+              {isDarkTheme ? "Jasny" : "Ciemny"}
+            </span>
+          </button>
+
           {loadingUser && !user ? (
             <div className={styles.loadingSlot} aria-label="Ładowanie użytkownika">
               <span className={styles.loadingDot} />

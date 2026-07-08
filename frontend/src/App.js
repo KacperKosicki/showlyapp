@@ -368,8 +368,8 @@ function App() {
                 hasProfile={hasProfile}
                 loadingProfileStatus={loadingProfileStatus}
               />
-              <HowShowlyWorks />
               <PartnersShowcase currentUser={safeUser} setAlert={setAlert} />
+              <HowShowlyWorks />
               <PromotedProfiles currentUser={safeUser} setAlert={setAlert} />
               <DiscoverShowly />
               <UserCardList currentUser={safeUser} setAlert={setAlert} />

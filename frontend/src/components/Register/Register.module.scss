@@ -6,9 +6,22 @@ $paper-muted: #f5f6fa;
 $paper-border: rgba(21, 21, 21, 0.1);
 $ink: #151515;
 
-/* =========================================================
-   Register — szeroki układ jak Login / Favorites / SearchResults
-========================================================= */
+$dark-bg: #111216;
+$dark-surface: #1a1c22;
+$dark-surface-soft: #232630;
+$dark-text: #f4f1ea;
+$dark-muted: rgba(244, 241, 234, 0.68);
+$dark-border: rgba(244, 241, 234, 0.16);
+$dark-primary: #a895ff;
+$dark-pink: #ff4f9a;
+
+$dark-danger-bg: rgba(255, 79, 122, 0.13);
+$dark-danger-text: #ff8fa8;
+$dark-danger-border: rgba(255, 143, 168, 0.34);
+
+$dark-success-bg: rgba(66, 211, 146, 0.12);
+$dark-success-text: #7ee2b8;
+$dark-success-border: rgba(126, 226, 184, 0.28);
 
 .authSection {
   position: relative;
@@ -20,6 +33,15 @@ $ink: #151515;
   background: #ffffff;
   isolation: isolate;
   font-family: $font-body;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+    background: $dark-bg;
+  }
 
   *,
   *::before,
@@ -41,6 +63,15 @@ $ink: #151515;
         rgba(245, 246, 250, 0) 72%);
     pointer-events: none;
     z-index: 0;
+
+    transition: background 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: radial-gradient(circle,
+          rgba(168, 149, 255, 0.16) 0%,
+          rgba(255, 79, 154, 0.08) 44%,
+          rgba(17, 18, 22, 0) 72%);
+    }
   }
 }
 
@@ -80,6 +111,17 @@ $ink: #151515;
   box-shadow: 12px 12px 0 rgba(21, 21, 21, 0.075);
 
   text-align: left;
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.28);
+  }
 }
 
 .overline {
@@ -92,6 +134,12 @@ $ink: #151515;
   letter-spacing: 0.11em;
   text-transform: uppercase;
   color: $primary-color;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-primary;
+  }
 }
 
 .heading {
@@ -103,8 +151,20 @@ $ink: #151515;
   letter-spacing: -0.075em;
   color: $ink;
 
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
+
   span {
     color: $primary-color;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-primary;
+    }
   }
 }
 
@@ -116,6 +176,12 @@ $ink: #151515;
   font-size: 1rem;
   line-height: 1.78;
   color: rgba(21, 21, 21, 0.68);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .metaRow {
@@ -137,6 +203,15 @@ $ink: #151515;
   background: $paper-soft;
   border: 1px solid rgba(21, 21, 21, 0.1);
 
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
+
   strong {
     display: block;
 
@@ -145,6 +220,12 @@ $ink: #151515;
     font-weight: 950;
     line-height: 1;
     color: $ink;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
   }
 
   span {
@@ -154,6 +235,12 @@ $ink: #151515;
     font-size: 0.83rem;
     line-height: 1.35;
     color: rgba(21, 21, 21, 0.58);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
   }
 }
 
@@ -162,6 +249,12 @@ $ink: #151515;
   padding-top: 1.45rem;
 
   border-top: 1px solid rgba(21, 21, 21, 0.11);
+
+  transition: border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    border-top-color: $dark-border;
+  }
 
   >span {
     display: block;
@@ -173,6 +266,12 @@ $ink: #151515;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: rgba(21, 21, 21, 0.58);
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.5);
+    }
   }
 }
 
@@ -192,10 +291,22 @@ $ink: #151515;
     line-height: 1.55;
     color: rgba(21, 21, 21, 0.64);
 
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-muted;
+    }
+
     svg {
       margin-top: 0.13rem;
       flex: 0 0 auto;
       color: $primary-color;
+
+      transition: color 0.22s ease;
+
+      :global(html[data-theme="dark"]) & {
+        color: $dark-primary;
+      }
     }
   }
 }
@@ -220,6 +331,17 @@ $ink: #151515;
   background: $paper-bg;
   border: 1px solid rgba(21, 21, 21, 0.12);
   box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(26, 28, 34, 0.94);
+    border-color: $dark-border;
+    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
+  }
 }
 
 .glow,
@@ -249,6 +371,19 @@ $ink: #151515;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: rgba(168, 149, 255, 0.12);
+    border-color: rgba(168, 149, 255, 0.28);
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.22);
+    color: $dark-primary;
+  }
+
   svg {
     flex-shrink: 0;
   }
@@ -270,6 +405,12 @@ $ink: #151515;
   letter-spacing: -0.08em;
   color: $ink;
   font-weight: 950;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .subtitle {
@@ -281,6 +422,12 @@ $ink: #151515;
   font-family: $font-body;
   font-size: 1rem;
   line-height: 1.7;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 /* =========================================================
@@ -310,6 +457,12 @@ $ink: #151515;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(21, 21, 21, 0.64);
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.54);
+  }
 }
 
 .inputWrap {
@@ -330,8 +483,17 @@ $ink: #151515;
     transform 0.18s ease,
     background 0.18s ease;
 
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.72);
+    border-color: $dark-border;
+  }
+
   &:hover {
     border-color: rgba(21, 21, 21, 0.22);
+
+    :global(html[data-theme="dark"]) & {
+      border-color: rgba(244, 241, 234, 0.24);
+    }
   }
 
   &:focus-within {
@@ -339,6 +501,12 @@ $ink: #151515;
     border-color: rgba(111, 78, 242, 0.34);
     background: #ffffff;
     box-shadow: 5px 5px 0 rgba(111, 78, 242, 0.08);
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(17, 18, 22, 0.86);
+      border-color: rgba(168, 149, 255, 0.38);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+    }
   }
 
   input {
@@ -356,8 +524,18 @@ $ink: #151515;
     font-family: $font-body;
     font-weight: 700;
 
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-text;
+    }
+
     &::placeholder {
       color: rgba(21, 21, 21, 0.38);
+
+      :global(html[data-theme="dark"]) & {
+        color: rgba(244, 241, 234, 0.36);
+      }
     }
 
     &:disabled {
@@ -375,6 +553,12 @@ $ink: #151515;
   color: rgba(21, 21, 21, 0.42);
 
   pointer-events: none;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: rgba(244, 241, 234, 0.42);
+  }
 }
 
 /* =========================================================
@@ -410,7 +594,10 @@ $ink: #151515;
     transform 0.18s ease,
     box-shadow 0.18s ease,
     background 0.18s ease,
-    opacity 0.18s ease;
+    color 0.18s ease,
+    border-color 0.18s ease,
+    opacity 0.18s ease,
+    filter 0.18s ease;
 
   &:disabled {
     opacity: 0.62;
@@ -426,15 +613,33 @@ $ink: #151515;
   color: #ffffff;
   box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.08);
 
+  :global(html[data-theme="dark"]) & {
+    background: linear-gradient(135deg, $dark-primary, $dark-pink);
+    color: $dark-bg;
+    border-color: rgba(255, 255, 255, 0.16);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.28);
+  }
+
   &:hover:not(:disabled) {
     transform: translate(-2px, -2px);
     background: #000000;
     box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.12);
+
+    :global(html[data-theme="dark"]) & {
+      background: linear-gradient(135deg, #b8a9ff, #ff68aa);
+      box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.34);
+    }
   }
 
   &:active:not(:disabled) {
     transform: translate(0, 0);
     box-shadow: none;
+  }
+
+  &:disabled {
+    :global(html[data-theme="dark"]) & {
+      filter: saturate(0.65);
+    }
   }
 }
 
@@ -446,10 +651,24 @@ $ink: #151515;
   color: $ink;
   box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.045);
 
+  :global(html[data-theme="dark"]) & {
+    background: rgba(17, 18, 22, 0.72);
+    color: $dark-text;
+    border-color: $dark-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+  }
+
   &:hover:not(:disabled) {
     transform: translate(-2px, -2px);
     background: $paper-soft;
     box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.075);
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(168, 149, 255, 0.12);
+      border-color: rgba(168, 149, 255, 0.28);
+      color: $dark-primary;
+      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.3);
+    }
   }
 
   &:active:not(:disabled) {
@@ -523,6 +742,11 @@ $ink: #151515;
   font-weight: 800;
 
   animation: fadeIn 0.25s ease-out;
+
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease;
 }
 
 .error {
@@ -531,6 +755,12 @@ $ink: #151515;
   background: #fff7f7;
   color: #c6283a;
   border: 1px solid rgba(198, 40, 58, 0.28);
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-danger-bg;
+    color: $dark-danger-text;
+    border-color: $dark-danger-border;
+  }
 }
 
 .success {
@@ -539,6 +769,12 @@ $ink: #151515;
   background: #f0fff6;
   color: #1d7c45;
   border: 1px solid rgba(29, 124, 69, 0.24);
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-success-bg;
+    color: $dark-success-text;
+    border-color: $dark-success-border;
+  }
 }
 
 .successLarge {
@@ -552,6 +788,19 @@ $ink: #151515;
 
   font-family: $font-body;
 
+  transition:
+    background 0.22s ease,
+    color 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    background: $dark-success-bg;
+    color: $dark-success-text;
+    border-color: $dark-success-border;
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
+  }
+
   strong {
     display: block;
     margin-bottom: 0.4rem;
@@ -561,6 +810,12 @@ $ink: #151515;
     line-height: 1.1;
     letter-spacing: -0.03em;
     color: #166534;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: $dark-success-text;
+    }
   }
 
   p {
@@ -569,6 +824,12 @@ $ink: #151515;
     font-size: 0.96rem;
     line-height: 1.65;
     color: #1d7c45;
+
+    transition: color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(126, 226, 184, 0.82);
+    }
   }
 }
 
@@ -598,6 +859,12 @@ $ink: #151515;
   gap: 1rem;
 
   border-top: 1px solid rgba(21, 21, 21, 0.1);
+
+  transition: border-color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    border-top-color: $dark-border;
+  }
 }
 
 .loginLink {
@@ -609,6 +876,12 @@ $ink: #151515;
   font-size: 1rem;
   font-weight: 950;
   letter-spacing: -0.02em;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+  }
 }
 
 .loginHint {
@@ -620,6 +893,12 @@ $ink: #151515;
   font-family: $font-body;
   font-size: 0.9rem;
   line-height: 1.45;
+
+  transition: color 0.22s ease;
+
+  :global(html[data-theme="dark"]) & {
+    color: $dark-muted;
+  }
 }
 
 .linkButton {
@@ -652,6 +931,12 @@ $ink: #151515;
     box-shadow 0.18s ease,
     color 0.18s ease;
 
+  :global(html[data-theme="dark"]) & {
+    color: $dark-text;
+    background: rgba(35, 38, 48, 0.78);
+    border-color: $dark-border;
+  }
+
   svg {
     flex-shrink: 0;
   }
@@ -662,6 +947,13 @@ $ink: #151515;
     border-color: rgba(21, 21, 21, 0.18);
     box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.06);
     color: $primary-color;
+
+    :global(html[data-theme="dark"]) & {
+      background: rgba(168, 149, 255, 0.12);
+      border-color: rgba(168, 149, 255, 0.28);
+      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.26);
+      color: $dark-primary;
+    }
   }
 
   &:active {
@@ -694,6 +986,15 @@ $ink: #151515;
     font-weight: 950;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+
+    transition:
+      background 0.22s ease,
+      color 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      color: rgba(244, 241, 234, 0.46);
+      background: rgba(26, 28, 34, 0.94);
+    }
   }
 
   &::before {
@@ -707,6 +1008,12 @@ $ink: #151515;
     background: rgba(21, 21, 21, 0.1);
 
     transform: translateY(-50%);
+
+    transition: background 0.22s ease;
+
+    :global(html[data-theme="dark"]) & {
+      background: $dark-border;
+    }
   }
 }
 
@@ -805,6 +1112,10 @@ $ink: #151515;
   .side,
   .card {
     box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.06);
+
+    :global(html[data-theme="dark"]) & {
+      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.26);
+    }
   }
 
   .heading {
@@ -884,12 +1195,40 @@ $ink: #151515;
 
 @media (prefers-reduced-motion: reduce) {
 
+  .authSection,
+  .authSection::before,
+  .side,
+  .overline,
+  .heading,
+  .heading span,
+  .description,
+  .metaCard,
+  .metaCard strong,
+  .metaCard span,
+  .infoBox,
+  .infoBox>span,
+  .featureList p,
+  .featureList p svg,
+  .card,
+  .topBadge,
+  .title,
+  .subtitle,
+  .inputLabel,
   .inputWrap,
+  .inputWrap input,
+  .inputIcon,
   .submitButton,
   .googleButton,
-  .linkButton,
   .messageBox,
-  .successLarge {
+  .successLarge,
+  .successLarge strong,
+  .successLarge p,
+  .bottomBox,
+  .loginLink,
+  .loginHint,
+  .linkButton,
+  .orSeparator span,
+  .orSeparator::before {
     animation: none;
     transition: none;
   }
