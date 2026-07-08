@@ -824,3 +824,332 @@ $dark-pink: #ff4f9a;
     transform: translateX(100%);
   }
 }
+
+/* =========================================================
+   MOBILE NAVBAR FIX — kompaktowa góra, bez dolnego docka
+   Doklejone na sam dół pliku. Nie wymaga zmian w JSX.
+========================================================= */
+
+@media (max-width: 760px) {
+  .navbarShell {
+    padding: calc(env(safe-area-inset-top, 0px) + 0.72rem) 0.72rem 0;
+    background: transparent;
+    border-bottom: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .scrolled {
+    padding: calc(env(safe-area-inset-top, 0px) + 0.5rem) 0.72rem 0;
+    background: transparent;
+    border-bottom: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .navbar {
+    width: min(430px, calc(100vw - 1.44rem));
+    max-width: min(430px, calc(100vw - 1.44rem));
+    min-height: 54px;
+    margin: 0 auto;
+    padding: 0.42rem;
+
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.55rem;
+
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(21, 21, 21, 0.12);
+    box-shadow:
+      6px 6px 0 rgba(21, 21, 21, 0.06),
+      0 16px 38px rgba(21, 21, 21, 0.08);
+    backdrop-filter: blur(14px);
+
+    :global(html[data-theme="dark"]) & {
+      background:
+        radial-gradient(circle at 10% 0%, rgba(168, 149, 255, 0.13), transparent 34%),
+        rgba(26, 28, 34, 0.95);
+      border-color: $dark-border;
+      box-shadow:
+        6px 6px 0 rgba(0, 0, 0, 0.26),
+        0 16px 42px rgba(0, 0, 0, 0.32);
+    }
+  }
+
+  .scrolled .navbar {
+    width: min(410px, calc(100vw - 1.44rem));
+    max-width: min(410px, calc(100vw - 1.44rem));
+    min-height: 52px;
+  }
+
+  .logoWrap {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 auto;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  .logoWrap:hover {
+    transform: none;
+  }
+
+  .logoMark {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    box-shadow: 3px 3px 0 rgba(21, 21, 21, 0.08);
+  }
+
+  .logoGroup {
+    min-width: 0;
+  }
+
+  .logoText {
+    max-width: 128px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.04rem;
+  }
+
+  .logoSub,
+  .beta {
+    display: none;
+  }
+
+  .right {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    z-index: 20;
+    width: auto;
+    min-width: 0;
+    flex: 0 0 auto;
+    padding: 0;
+    transform: none;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.38rem;
+
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+
+  .themeToggle {
+    width: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    padding: 0;
+    box-shadow: none;
+    background: $paper-muted;
+    border-color: rgba(21, 21, 21, 0.1);
+
+    :global(html[data-theme="dark"]) & {
+      background: $dark-surface-soft;
+      border-color: $dark-border;
+      box-shadow: none;
+    }
+  }
+
+  .themeToggle:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .themeLabel {
+    display: none;
+  }
+
+  .userSlot,
+  .loadingSlot,
+  .authButtons {
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    min-height: 42px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .userSlot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  .userSlot>* {
+    width: auto;
+  }
+
+  .loadingSlot {
+    width: 88px;
+    justify-content: center;
+    border: 1px solid rgba(21, 21, 21, 0.1);
+    background: $paper-muted;
+
+    :global(html[data-theme="dark"]) & {
+      background: $dark-surface-soft;
+      border-color: $dark-border;
+    }
+  }
+
+  .loadingLine {
+    width: 38px;
+  }
+
+  .authButtons {
+    display: inline-flex;
+    gap: 0.35rem;
+  }
+
+  .loginPrompt,
+  .registerPrompt {
+    width: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .loginPrompt:hover,
+  .registerPrompt:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .loginPrompt span,
+  .registerPrompt span {
+    display: none;
+  }
+
+  .loginPrompt svg,
+  .registerPrompt svg {
+    display: block;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .navbarShell {
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  .navbar {
+    width: calc(100vw - 1.1rem);
+    max-width: calc(100vw - 1.1rem);
+    padding: 0.38rem;
+    gap: 0.42rem;
+  }
+
+  .logoText {
+    max-width: 108px;
+    font-size: 0.98rem;
+  }
+
+  .themeToggle,
+  .loginPrompt,
+  .registerPrompt {
+    width: 40px;
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
+
+/* =========================================================
+   MOBILE NAVBAR — jednolity blur bez białego paska
+========================================================= */
+
+@media (max-width: 760px) {
+  .navbarShell {
+    isolation: isolate;
+  }
+
+  .navbarShell.scrolled {
+    position: fixed;
+    padding: calc(env(safe-area-inset-top, 0px) + 0.5rem) 0.72rem 0.72rem;
+
+    background: transparent !important;
+    border-bottom: 0 !important;
+    box-shadow: none !important;
+
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .navbarShell.scrolled::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: -34px;
+    z-index: 0;
+    pointer-events: none;
+
+    background: rgba(255, 255, 255, 0.62);
+
+    backdrop-filter: blur(20px) saturate(155%);
+    -webkit-backdrop-filter: blur(20px) saturate(155%);
+
+    mask-image: linear-gradient(180deg,
+        #000 0%,
+        #000 68%,
+        rgba(0, 0, 0, 0.78) 82%,
+        transparent 100%);
+
+    -webkit-mask-image: linear-gradient(180deg,
+        #000 0%,
+        #000 68%,
+        rgba(0, 0, 0, 0.78) 82%,
+        transparent 100%);
+  }
+
+  .navbarShell.scrolled::after {
+    display: none !important;
+  }
+
+  .navbarShell.scrolled .navbar {
+    position: relative;
+    z-index: 2;
+
+    background: rgba(255, 255, 255, 0.66);
+    border-color: rgba(21, 21, 21, 0.1);
+
+    box-shadow:
+      6px 6px 0 rgba(21, 21, 21, 0.055),
+      0 12px 36px rgba(21, 21, 21, 0.08);
+
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+  }
+
+  :global(html[data-theme="dark"]) .navbarShell.scrolled::before {
+    background: rgba(17, 18, 22, 0.62);
+  }
+
+  :global(html[data-theme="dark"]) .navbarShell.scrolled .navbar {
+    background:
+      linear-gradient(135deg,
+        rgba(168, 149, 255, 0.1),
+        rgba(255, 79, 154, 0.06)),
+      rgba(26, 28, 34, 0.66);
+
+    border-color: rgba(244, 241, 234, 0.14);
+
+    box-shadow:
+      6px 6px 0 rgba(0, 0, 0, 0.26),
+      0 16px 44px rgba(0, 0, 0, 0.32);
+  }
+}
