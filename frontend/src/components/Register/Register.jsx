@@ -271,11 +271,10 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
     <>
       <Hero user={user} setUser={setUser} />
 
-      <section className={styles.authSection}>
-        <div id="registerBox" className={styles.registerContainer}>
-          <div className={styles.authLayout}>
+      <section className={styles.section}>
+        <div id="registerBox" className={styles.inner}>
+          <div className={styles.layout}>
             <aside className={styles.side}>
-              <span className={styles.overline}>Showly Account</span>
 
               <h1 className={styles.heading}>
                 Stwórz konto i pokaż ofertę <span>w jednym linku.</span>
@@ -335,23 +334,28 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
               </div>
             </aside>
 
-            <div className={styles.card}>
-              <div className={styles.topBadge}>
-                <FiZap />
-                <span>Dołącz do Showly</span>
+            <div className={styles.content}>
+              <div className={styles.chapterHead}>
+                <div>
+                  <span className={styles.chapterLabel}>Rejestracja konta</span>
+                  <h2 className={styles.title}>Utwórz konto w Showly</h2>
+
+                  <p className={styles.subtitle}>
+                    Wypełnij dane albo kontynuuj przez Google. Konto pozwoli Ci
+                    stworzyć profil, zarządzać ofertą i odbierać kontakt od klientów.
+                  </p>
+                </div>
+
+                <span className={styles.chapterNumber}>01</span>
               </div>
 
-              <div className={styles.cardHeader}>
-                <h2 className={styles.title}>Utwórz konto w Showly</h2>
+              <div className={styles.registerPanel}>
+                <div className={styles.registerBadge}>
+                  <FiZap />
+                  <span>Dołącz do Showly</span>
+                </div>
 
-                <p className={styles.subtitle}>
-                  Wypełnij dane albo kontynuuj przez Google. Konto pozwoli Ci
-                  stworzyć profil, zarządzać ofertą i odbierać kontakt od klientów.
-                </p>
-              </div>
-
-              {!emailSent ? (
-                <>
+                {!emailSent ? (
                   <form onSubmit={handleSubmit} className={styles.form}>
                     <div className={styles.formGrid}>
                       <div className={styles.inputGroup}>
@@ -457,49 +461,51 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
                             <img src="/images/icons/google.png" alt="Google" />
                           </span>
 
-                          <span className={styles.buttonLabel}>KONTYNUUJ PRZEZ GOOGLE</span>
+                          <span className={styles.buttonLabel}>
+                            KONTYNUUJ PRZEZ GOOGLE
+                          </span>
                         </span>
                       </LoadingButton>
                     </div>
                   </form>
-                </>
-              ) : (
-                <div className={styles.successLarge}>
-                  <strong>Sprawdź skrzynkę e-mail</strong>
+                ) : (
+                  <div className={styles.successLarge}>
+                    <strong>Sprawdź skrzynkę e-mail</strong>
 
-                  <p>
-                    Rejestracja zakończona. Kliknij link aktywacyjny, aby
-                    aktywować konto. Następnie możesz przejść do logowania.
-                  </p>
+                    <p>
+                      Rejestracja zakończona. Kliknij link aktywacyjny, aby
+                      aktywować konto. Następnie możesz przejść do logowania.
+                    </p>
+                  </div>
+                )}
+
+                {(error || (message && !emailSent)) && (
+                  <div className={styles.statusStack}>
+                    {error && <div className={styles.error}>{error}</div>}
+                    {message && !emailSent && (
+                      <div className={styles.success}>{message}</div>
+                    )}
+                  </div>
+                )}
+
+                <div className={styles.bottomBox}>
+                  <div>
+                    <p className={styles.loginLink}>Masz już konto?</p>
+
+                    <span className={styles.loginHint}>
+                      Zaloguj się i wróć do swojego profilu Showly.
+                    </span>
+                  </div>
+
+                  <Link
+                    to="/login"
+                    state={{ scrollToId: "loginBox" }}
+                    className={styles.linkButton}
+                  >
+                    <FiArrowRight />
+                    Przejdź do logowania
+                  </Link>
                 </div>
-              )}
-
-              {(error || (message && !emailSent)) && (
-                <div className={styles.statusStack}>
-                  {error && <div className={styles.error}>{error}</div>}
-                  {message && !emailSent && (
-                    <div className={styles.success}>{message}</div>
-                  )}
-                </div>
-              )}
-
-              <div className={styles.bottomBox}>
-                <div>
-                  <p className={styles.loginLink}>Masz już konto?</p>
-
-                  <span className={styles.loginHint}>
-                    Zaloguj się i wróć do swojego profilu Showly.
-                  </span>
-                </div>
-
-                <Link
-                  to="/login"
-                  state={{ scrollToId: "loginBox" }}
-                  className={styles.linkButton}
-                >
-                  <FiArrowRight />
-                  Przejdź do logowania
-                </Link>
               </div>
             </div>
           </div>

@@ -43,11 +43,6 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
 
       <div className={styles.wrap}>
         <div className={styles.content}>
-          <div className={styles.overline}>
-            <span>Showly.me</span>
-            <b>profil online w jednym linku</b>
-          </div>
-
           <h1 className={styles.title}>
             Twoja oferta.
             <br />
@@ -162,23 +157,6 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
             </div>
           </div>
         </aside>
-
-        <div className={styles.stats}>
-          <div>
-            <strong>1</strong>
-            <span>link do wszystkiego</span>
-          </div>
-
-          <div>
-            <strong>24/7</strong>
-            <span>dostęp dla klientów</span>
-          </div>
-
-          <div>
-            <strong>mobile</strong>
-            <span>gotowe na telefon</span>
-          </div>
-        </div>
       </div>
 
       <div className={styles.wave}>

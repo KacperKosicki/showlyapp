@@ -290,11 +290,11 @@ const Login = ({ setUser, setRefreshTrigger }) => {
     <>
       <Hero />
 
-      <section className={styles.authSection}>
-        <div className={styles.container} id="loginBox">
-          <div className={styles.authLayout}>
+      <section className={styles.section}>
+        <div className={styles.inner} id="loginBox">
+          <div className={styles.layout}>
             <aside className={styles.side}>
-              <span className={styles.overline}>Showly Account</span>
+              <span className={styles.chapterLabel}>Showly Account</span>
 
               <h1 className={styles.heading}>
                 Wróć do swojego <span>profilu online.</span>
@@ -349,133 +349,140 @@ const Login = ({ setUser, setRefreshTrigger }) => {
               </div>
             </aside>
 
-            <div className={styles.card}>
-              <div className={styles.topBadge}>
-                <FiZap />
-                <span>Witaj ponownie</span>
-              </div>
-
-              <div className={styles.cardHeader}>
-                <h2 className={styles.loginTitle}>Zaloguj się do Showly</h2>
-
-                <p className={styles.subtitle}>
-                  Wpisz dane konta albo kontynuuj przez Google. Po zalogowaniu
-                  wrócisz do zarządzania swoim profilem.
-                </p>
-              </div>
-
-              <form onSubmit={handleSubmit} className={styles.form}>
-                <div className={styles.formGrid}>
-                  <div className={styles.inputGroup}>
-                    <label className={styles.inputLabel}>Adres e-mail</label>
-
-                    <div className={styles.inputWrap}>
-                      <FiMail className={styles.inputIcon} />
-
-                      <input
-                        name="email"
-                        type="email"
-                        placeholder="twoj@email.com"
-                        required
-                        value={form.email}
-                        onChange={handleChange}
-                        disabled={isBusy}
-                      />
-                    </div>
-                  </div>
-
-                  <div className={styles.inputGroup}>
-                    <label className={styles.inputLabel}>Hasło</label>
-
-                    <div className={styles.inputWrap}>
-                      <FiLock className={styles.inputIcon} />
-
-                      <input
-                        name="password"
-                        type="password"
-                        placeholder="Wpisz swoje hasło"
-                        required
-                        value={form.password}
-                        onChange={handleChange}
-                        disabled={isBusy}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className={styles.actionsRow}>
-                  <button
-                    type="button"
-                    className={styles.forgotPassword}
-                    onClick={handlePasswordReset}
-                    disabled={isBusy}
-                  >
-                    {isResettingPassword
-                      ? "Wysyłanie linku..."
-                      : "Nie pamiętasz hasła?"}
-                  </button>
-                </div>
-
-                <div className={styles.buttonGrid}>
-                  <LoadingButton
-                    type="submit"
-                    isLoading={isLoggingEmail}
-                    disabled={isBusy}
-                    className={styles.submitButton}
-                  >
-                    <span className={styles.buttonInner}>
-                      <span className={styles.buttonLabel}>Zaloguj się</span>
-
-                      {!isLoggingEmail && (
-                        <span className={styles.buttonIcon}>
-                          <FiArrowRight />
-                        </span>
-                      )}
-                    </span>
-                  </LoadingButton>
-
-                  <LoadingButton
-                    type="button"
-                    onClick={handleGoogleLogin}
-                    isLoading={isLoggingGoogle}
-                    disabled={isBusy}
-                    className={styles.googleButton}
-                  >
-                    <span className={styles.buttonInner}>
-                      <span className={styles.googleIconWrap}>
-                        <img src="/images/icons/google.png" alt="Google" />
-                      </span>
-
-                      <span className={styles.buttonLabel}>KONTYNUUJ PRZEZ GOOGLE</span>
-                    </span>
-                  </LoadingButton>
-                </div>
-              </form>
-
-              {(error || message) && (
-                <div className={styles.statusStack}>
-                  {error && <div className={styles.error}>{error}</div>}
-                  {message && <div className={styles.success}>{message}</div>}
-                </div>
-              )}
-
-              <div className={styles.bottomBox}>
+            <div className={styles.content}>
+              <div className={styles.chapterHead}>
                 <div>
-                  <p className={styles.registerLink}>Nie masz jeszcze konta?</p>
+                  <span className={styles.chapterLabel}>Logowanie do konta</span>
+                  <h2 className={styles.loginTitle}>Zaloguj się do Showly</h2>
 
-                  <span className={styles.registerHint}>
-                    Utwórz profil i zacznij zbierać swoją ofertę w jednym linku.
-                  </span>
+                  <p className={styles.subtitle}>
+                    Wpisz dane konta albo kontynuuj przez Google. Po zalogowaniu
+                    wrócisz do zarządzania swoim profilem.
+                  </p>
                 </div>
 
-                <Link
-                  to="/register"
-                  state={{ scrollToId: "registerBox" }}
-                  className={styles.linkButton}
-                >
-                  <FiUserPlus />
-                  Załóż konto
-                </Link>
+                <span className={styles.chapterNumber}>01</span>
+              </div>
+
+              <div className={styles.loginPanel}>
+                <div className={styles.loginBadge}>
+                  <FiZap />
+                  <span>Witaj ponownie</span>
+                </div>
+
+                <form onSubmit={handleSubmit} className={styles.form}>
+                  <div className={styles.formGrid}>
+                    <div className={styles.inputGroup}>
+                      <label className={styles.inputLabel}>Adres e-mail</label>
+
+                      <div className={styles.inputWrap}>
+                        <FiMail className={styles.inputIcon} />
+
+                        <input
+                          name="email"
+                          type="email"
+                          placeholder="twoj@email.com"
+                          required
+                          value={form.email}
+                          onChange={handleChange}
+                          disabled={isBusy}
+                        />
+                      </div>
+                    </div>
+
+                    <div className={styles.inputGroup}>
+                      <label className={styles.inputLabel}>Hasło</label>
+
+                      <div className={styles.inputWrap}>
+                        <FiLock className={styles.inputIcon} />
+
+                        <input
+                          name="password"
+                          type="password"
+                          placeholder="Wpisz swoje hasło"
+                          required
+                          value={form.password}
+                          onChange={handleChange}
+                          disabled={isBusy}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.actionsRow}>
+                    <button
+                      type="button"
+                      className={styles.forgotPassword}
+                      onClick={handlePasswordReset}
+                      disabled={isBusy}
+                    >
+                      {isResettingPassword
+                        ? "Wysyłanie linku..."
+                        : "Nie pamiętasz hasła?"}
+                    </button>
+                  </div>
+
+                  <div className={styles.buttonGrid}>
+                    <LoadingButton
+                      type="submit"
+                      isLoading={isLoggingEmail}
+                      disabled={isBusy}
+                      className={styles.submitButton}
+                    >
+                      <span className={styles.buttonInner}>
+                        <span className={styles.buttonLabel}>Zaloguj się</span>
+
+                        {!isLoggingEmail && (
+                          <span className={styles.buttonIcon}>
+                            <FiArrowRight />
+                          </span>
+                        )}
+                      </span>
+                    </LoadingButton>
+
+                    <LoadingButton
+                      type="button"
+                      onClick={handleGoogleLogin}
+                      isLoading={isLoggingGoogle}
+                      disabled={isBusy}
+                      className={styles.googleButton}
+                    >
+                      <span className={styles.buttonInner}>
+                        <span className={styles.googleIconWrap}>
+                          <img src="/images/icons/google.png" alt="Google" />
+                        </span>
+
+                        <span className={styles.buttonLabel}>KONTYNUUJ PRZEZ GOOGLE</span>
+                      </span>
+                    </LoadingButton>
+                  </div>
+                </form>
+
+                {(error || message) && (
+                  <div className={styles.statusStack}>
+                    {error && <div className={styles.error}>{error}</div>}
+                    {message && <div className={styles.success}>{message}</div>}
+                  </div>
+                )}
+
+                <div className={styles.bottomBox}>
+                  <div>
+                    <p className={styles.registerLink}>Nie masz jeszcze konta?</p>
+
+                    <span className={styles.registerHint}>
+                      Utwórz profil i zacznij zbierać swoją ofertę w jednym linku.
+                    </span>
+                  </div>
+
+                  <Link
+                    to="/register"
+                    state={{ scrollToId: "registerBox" }}
+                    className={styles.linkButton}
+                  >
+                    <FiUserPlus />
+                    Załóż konto
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

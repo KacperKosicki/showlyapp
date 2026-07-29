@@ -44,54 +44,130 @@ const Regulations = () => {
 
   return (
     <section id="scrollToId" className={styles.section}>
-      <div className={styles.bg}>
-        <div className={styles.blur1}></div>
-        <div className={styles.blur2}></div>
-        <div className={styles.vignette}></div>
-      </div>
-
       <div className={styles.inner}>
-        <div className={styles.head}>
-          <div className={styles.labelRow}>
-            <span className={styles.label}>Showly Legal</span>
-            <span className={styles.labelDot} />
-            <span className={styles.labelDesc}>Zasady korzystania z platformy</span>
-            <span className={styles.labelLine} />
-            <span className={styles.pill}>Regulamin • Konto • Profile • Rezerwacje</span>
-          </div>
+        <div className={styles.layout}>
+          <aside className={styles.side}>
 
-          <h2 className={styles.heading}>
-            Regulamin <span className={styles.headingAccent}>Showly.me</span>
-          </h2>
+            <h1 className={styles.heading}>
+              Regulamin <span>Showly.me</span>
+            </h1>
 
-          <p className={styles.description}>
-            Niniejszy regulamin określa zasady korzystania z platformy Showly.me,
-            w tym zakładania konta, tworzenia publicznych profili, publikowania treści,
-            korzystania z systemu wiadomości, rezerwacji, opinii oraz płatnych funkcji
-            dostępnych w Serwisie.
-          </p>
+            <p className={styles.description}>
+              Niniejszy regulamin określa zasady korzystania z platformy
+              Showly.me, w tym zakładania konta, tworzenia publicznych profili,
+              publikowania treści, korzystania z wiadomości, rezerwacji, opinii
+              oraz płatnych funkcji.
+            </p>
 
-          <div className={styles.metaRow}>
-            <div className={styles.metaCard}>
-              <strong>Konta</strong>
-              <span>rejestracja, logowanie i bezpieczeństwo użytkownika</span>
+            <div className={styles.metaRow}>
+              <div className={styles.metaCard}>
+                <strong>Konta</strong>
+                <span>rejestracja, logowanie i bezpieczeństwo</span>
+              </div>
+
+              <div className={styles.metaCard}>
+                <strong>Profile</strong>
+                <span>wizytówki, oferta, galerie i cenniki</span>
+              </div>
+
+              <div className={styles.metaCard}>
+                <strong>Płatności</strong>
+                <span>plany, subskrypcje i rozliczenia</span>
+              </div>
             </div>
 
-            <div className={styles.metaCard}>
-              <strong>Profile</strong>
-              <span>publikacja wizytówek, usług, galerii i cenników</span>
+            <div className={styles.infoBox}>
+              <span>
+                <FiShield />
+                Najważniejsze zasady
+              </span>
+
+              <p>
+                Publikuj rzetelne dane, szanuj innych użytkowników i korzystaj
+                z platformy zgodnie z prawem oraz przeznaczeniem Serwisu.
+              </p>
             </div>
 
-            <div className={styles.metaCard}>
-              <strong>Płatności</strong>
-              <span>subskrypcje, plany premium i rozliczenia</span>
-            </div>
-          </div>
-        </div>
+            <div className={styles.sideStack}>
+              <div className={styles.sideCard}>
+              <h3 className={styles.sideTitle}>Najważniejsze zasady</h3>
 
-        <div className={styles.contentGrid}>
-          <div className={styles.mainColumn}>
-            <div className={styles.sectionCard}>
+              <div className={styles.sideList}>
+                <div className={styles.sideItem}>
+                  <span className={styles.sideItemIcon}>
+                    <FiShield />
+                  </span>
+                  <div>
+                    <strong>Publikuj rzetelne dane</strong>
+                    <p>Profil i oferta muszą być zgodne z rzeczywistością.</p>
+                  </div>
+                </div>
+
+                <div className={styles.sideItem}>
+                  <span className={styles.sideItemIcon}>
+                    <FiUsers />
+                  </span>
+                  <div>
+                    <strong>Szanuj innych użytkowników</strong>
+                    <p>Zakazane są spam, nękanie i treści naruszające prawo.</p>
+                  </div>
+                </div>
+
+                <div className={styles.sideItem}>
+                  <span className={styles.sideItemIcon}>
+                    <FiCreditCard />
+                  </span>
+                  <div>
+                    <strong>Sprawdzaj warunki planu</strong>
+                    <p>Przed zakupem premium zapoznaj się z ceną i okresem rozliczeń.</p>
+                  </div>
+                </div>
+
+                <div className={styles.sideItem}>
+                  <span className={styles.sideItemIcon}>
+                    <FiClock />
+                  </span>
+                  <div>
+                    <strong>Reaguj na wiadomości i rezerwacje</strong>
+                    <p>Dbaj o sprawną komunikację z klientami i terminowość.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.sideCard}>
+              <h3 className={styles.sideTitle}>Dane operatora</h3>
+
+              <div className={styles.companyBox}>
+                <p><strong>Showly.me</strong></p>
+                <p>Platforma do tworzenia profili i wizytówek online</p>
+                <p>E-mail: kontakt@showly.me</p>
+              </div>
+            </div>
+
+            <div className={styles.sideCard}>
+              <h3 className={styles.sideTitle}>Status dokumentu</h3>
+
+              <div className={styles.statusPill}>
+                <FiFileText />
+                <span>Regulamin obowiązuje od 23 czerwca 2026 r.</span>
+              </div>
+            </div>
+            </div>
+          </aside>
+
+          <main className={styles.content}>
+            <div className={styles.chapterHead}>
+              <div>
+                <span className={styles.chapterLabel}>Dokument prawny</span>
+                <h2>Zasady korzystania z platformy Showly.</h2>
+              </div>
+
+              <span className={styles.chapterNumber}>01</span>
+            </div>
+
+            <div className={styles.documentStack}>
+              <div className={styles.sectionCard}>
               <div className={styles.sectionTop}>
                 <div className={styles.sectionIcon}>
                   <FiFileText />
@@ -484,74 +560,8 @@ const Regulations = () => {
                 </p>
               </div>
             </div>
-          </div>
-
-          <aside className={styles.sideColumn}>
-            <div className={styles.sideCard}>
-              <h3 className={styles.sideTitle}>Najważniejsze zasady</h3>
-
-              <div className={styles.sideList}>
-                <div className={styles.sideItem}>
-                  <span className={styles.sideItemIcon}>
-                    <FiShield />
-                  </span>
-                  <div>
-                    <strong>Publikuj rzetelne dane</strong>
-                    <p>Profil i oferta muszą być zgodne z rzeczywistością.</p>
-                  </div>
-                </div>
-
-                <div className={styles.sideItem}>
-                  <span className={styles.sideItemIcon}>
-                    <FiUsers />
-                  </span>
-                  <div>
-                    <strong>Szanuj innych użytkowników</strong>
-                    <p>Zakazane są spam, nękanie i treści naruszające prawo.</p>
-                  </div>
-                </div>
-
-                <div className={styles.sideItem}>
-                  <span className={styles.sideItemIcon}>
-                    <FiCreditCard />
-                  </span>
-                  <div>
-                    <strong>Sprawdzaj warunki planu</strong>
-                    <p>Przed zakupem premium zapoznaj się z ceną i okresem rozliczeń.</p>
-                  </div>
-                </div>
-
-                <div className={styles.sideItem}>
-                  <span className={styles.sideItemIcon}>
-                    <FiClock />
-                  </span>
-                  <div>
-                    <strong>Reaguj na wiadomości i rezerwacje</strong>
-                    <p>Dbaj o sprawną komunikację z klientami i terminowość.</p>
-                  </div>
-                </div>
-              </div>
             </div>
-
-            <div className={styles.sideCard}>
-              <h3 className={styles.sideTitle}>Dane operatora</h3>
-
-              <div className={styles.companyBox}>
-                <p><strong>Showly.me</strong></p>
-                <p>Platforma do tworzenia profili i wizytówek online</p>
-                <p>E-mail: kontakt@showly.me</p>
-              </div>
-            </div>
-
-            <div className={styles.sideCard}>
-              <h3 className={styles.sideTitle}>Status dokumentu</h3>
-
-              <div className={styles.statusPill}>
-                <FiFileText />
-                <span>Regulamin obowiązuje od 23 czerwca 2026 r.</span>
-              </div>
-            </div>
-          </aside>
+          </main>
         </div>
       </div>
     </section>

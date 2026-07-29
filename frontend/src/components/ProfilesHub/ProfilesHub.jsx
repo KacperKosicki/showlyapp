@@ -396,7 +396,6 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
             <div className={styles.inner}>
                 <div className={styles.layout}>
                     <aside className={styles.side}>
-                        <span className={styles.overline}>Profile Showly</span>
 
                         <h2 className={styles.heading}>
                             Odkrywaj profile <span>bez chaosu.</span>

@@ -1,50 +1,35 @@
 @import "../../../styles/variables";
 
-$paper-bg: #ffffff;
-$paper-soft: #fbfbfd;
-$paper-muted: #f5f6fa;
-$ink: #151515;
-
-$dark-bg: #111216;
-$dark-surface: #1a1c22;
-$dark-surface-soft: #232630;
-$dark-text: #f4f1ea;
-$dark-muted: rgba(244, 241, 234, 0.68);
-$dark-border: rgba(244, 241, 234, 0.16);
-$dark-primary: #a895ff;
-$dark-pink: #ff4f9a;
-
 /* =========================================================
-   ProfileHeader
+   ProfileHeader — styl jak Notifications
 ========================================================= */
 
 .head {
+  --profile-header-accent: var(--app-primary);
+  --profile-header-accent-soft: rgba(111, 78, 242, 0.09);
+  --profile-header-accent-border: rgba(111, 78, 242, 0.22);
+  --profile-header-shadow: 0 18px 55px rgba(21, 21, 21, 0.07);
+
   position: relative;
   overflow: hidden;
-  isolation: isolate;
-
   width: 100%;
-  padding: clamp(1.15rem, 2.4vw, 2rem);
+  min-width: 0;
 
-  background: $paper-bg;
-  color: $ink;
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
+  padding: clamp(1.2rem, 2.6vw, 1.9rem);
 
-  font-family: $font-body;
+  border: 1px solid var(--app-border);
+  border-radius: 24px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  box-shadow: var(--profile-header-shadow);
+
+  font-family: $font-accent;
 
   transition:
-    background 0.22s ease,
-    color 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(26, 28, 34, 0.94);
-    color: $dark-text;
-    border-color: $dark-border;
-    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
-  }
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 
   *,
   *::before,
@@ -54,57 +39,29 @@ $dark-pink: #ff4f9a;
 
   &::before {
     content: "";
-
     position: absolute;
-    right: -170px;
-    top: -190px;
-    z-index: 0;
-
-    width: 460px;
-    height: 460px;
-
-    pointer-events: none;
+    right: -90px;
+    top: -120px;
+    width: 260px;
+    height: 260px;
     border-radius: 999px;
-    filter: blur(18px);
-
+    pointer-events: none;
     background: radial-gradient(
       circle,
-      rgba(111, 78, 242, 0.13) 0%,
-      rgba(255, 79, 154, 0.07) 42%,
-      rgba(255, 255, 255, 0) 72%
+      var(--profile-header-accent-soft) 0%,
+      rgba(111, 78, 242, 0.055) 42%,
+      transparent 72%
     );
-
-    :global(html[data-theme="dark"]) & {
-      background: radial-gradient(
-        circle,
-        rgba(168, 149, 255, 0.18) 0%,
-        rgba(255, 79, 154, 0.11) 42%,
-        rgba(17, 18, 22, 0) 72%
-      );
-    }
   }
 
   &::after {
     content: "";
-
     position: absolute;
     inset: 0;
-    z-index: 0;
-
     pointer-events: none;
-    opacity: 0.28;
-
-    background-image:
-      linear-gradient(rgba(21, 21, 21, 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(21, 21, 21, 0.035) 1px, transparent 1px);
-    background-size: 26px 26px;
-
-    :global(html[data-theme="dark"]) & {
-      opacity: 0.16;
-      background-image:
-        linear-gradient(rgba(244, 241, 234, 0.055) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(244, 241, 234, 0.055) 1px, transparent 1px);
-    }
+    opacity: 0.55;
+    background:
+      linear-gradient(135deg, transparent 0%, transparent 58%, var(--profile-header-accent-soft) 100%);
   }
 }
 
@@ -121,113 +78,76 @@ $dark-pink: #ff4f9a;
   flex-wrap: wrap;
   gap: 0.65rem;
 
-  margin-bottom: 1.35rem;
+  margin-bottom: 1.25rem;
 }
 
 .labelBadge {
-  min-height: 30px;
-  padding: 0 0.75rem;
-
   display: inline-flex;
   align-items: center;
+  width: fit-content;
 
-  background: rgba(111, 78, 242, 0.08);
-  color: $primary-color;
-  border: 1px solid rgba(111, 78, 242, 0.16);
+  min-height: 2rem;
+  padding: 0.45rem 0.72rem;
+
+  border: 1px solid var(--profile-header-accent-border);
+  border-radius: 999px;
+  background: var(--profile-header-accent-soft);
+  color: var(--profile-header-accent);
 
   font-family: $font-accent;
   font-size: 0.72rem;
-  font-weight: 950;
-  letter-spacing: 0.1em;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.11em;
   text-transform: uppercase;
-
-  transition:
-    background 0.22s ease,
-    color 0.22s ease,
-    border-color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(168, 149, 255, 0.12);
-    color: $dark-primary;
-    border-color: rgba(168, 149, 255, 0.24);
-  }
 }
 
 .labelDot {
+  flex: 0 0 auto;
   width: 8px;
   height: 8px;
-  flex: 0 0 8px;
 
-  display: inline-flex;
-
-  background: $primary-color;
-  box-shadow: 0 0 0 4px rgba(111, 78, 242, 0.1);
-
-  transition:
-    background 0.22s ease,
-    box-shadow 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: $dark-primary;
-    box-shadow: 0 0 0 4px rgba(168, 149, 255, 0.14);
-  }
+  border-radius: 999px;
+  background: var(--profile-header-accent);
+  box-shadow: 0 0 0 4px var(--profile-header-accent-soft);
 }
 
 .labelDesc {
-  color: rgba(21, 21, 21, 0.58);
+  min-width: 0;
 
-  font-size: 0.9rem;
+  font-family: $font-accent;
+  font-size: 0.86rem;
+  font-weight: 600;
   line-height: 1.45;
-  font-weight: 750;
-
-  transition: color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: $dark-muted;
-  }
+  color: var(--app-muted);
 }
 
 .labelLine {
   flex: 1 1 80px;
   height: 1px;
-
-  background: rgba(21, 21, 21, 0.1);
-
-  transition: background 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: $dark-border;
-  }
+  background: var(--app-border);
 }
 
 .pill {
-  min-height: 30px;
-  padding: 0 0.75rem;
-
   display: inline-flex;
   align-items: center;
+  width: fit-content;
 
-  background: $paper-soft;
-  color: rgba(21, 21, 21, 0.58);
-  border: 1px solid rgba(21, 21, 21, 0.1);
+  min-height: 2rem;
+  padding: 0.45rem 0.72rem;
+
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  background: var(--app-surface-soft);
+  color: var(--app-muted);
 
   font-family: $font-accent;
   font-size: 0.68rem;
-  font-weight: 950;
+  font-weight: 700;
+  line-height: 1;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
-
-  transition:
-    background 0.22s ease,
-    color 0.22s ease,
-    border-color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(35, 38, 48, 0.76);
-    color: rgba(244, 241, 234, 0.58);
-    border-color: $dark-border;
-  }
 }
 
 /* =========================================================
@@ -241,7 +161,7 @@ $dark-pink: #ff4f9a;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 1.4rem;
+  gap: clamp(1rem, 2.4vw, 2rem);
 }
 
 .headText {
@@ -249,47 +169,36 @@ $dark-pink: #ff4f9a;
 }
 
 .heading {
+  width: 100%;
   max-width: 860px;
   margin: 0;
 
-  font-family: $font-accent;
-  font-size: clamp(2.45rem, 5vw, 5.35rem);
-  line-height: 0.9;
-  letter-spacing: -0.09em;
-  font-weight: 950;
-  color: $ink;
+  font-family: $font-heading;
+  font-size: clamp(2rem, 3.4vw, 3.55rem);
+  font-weight: 750;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
 
-  transition: color 0.22s ease;
+  color: var(--app-text);
 
-  :global(html[data-theme="dark"]) & {
-    color: $dark-text;
-  }
+  overflow-wrap: normal;
+  word-break: normal;
+  text-wrap: balance;
 }
 
 .description {
-  max-width: 740px;
-  margin: 1rem 0 0;
+  max-width: 760px;
+  margin: 0.85rem 0 0;
 
-  color: rgba(21, 21, 21, 0.66);
-
-  font-size: 1rem;
-  line-height: 1.7;
-
-  transition: color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: $dark-muted;
-  }
+  font-family: $font-accent;
+  font-size: 0.96rem;
+  line-height: 1.68;
+  color: var(--app-muted);
 
   strong {
-    font-weight: 950;
-    color: $ink;
-
-    transition: color 0.22s ease;
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-text;
-    }
+    font-family: $font-heading;
+    font-weight: 720;
+    color: var(--app-text);
   }
 }
 
@@ -307,61 +216,52 @@ $dark-pink: #ff4f9a;
 }
 
 .primary {
-  min-height: 50px;
-  padding: 0 1.05rem;
-
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  border-radius: 0;
-  text-decoration: none;
+  min-height: 2.75rem;
+  padding: 0.78rem 1rem;
 
-  color: #ffffff;
-  background: $ink;
-  border: 1px solid $ink;
-  box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.08);
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  background: var(--app-surface-soft);
+  color: var(--app-text);
 
   font-family: $font-accent;
-  font-size: 0.78rem;
-  font-weight: 950;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-align: center;
   white-space: nowrap;
+  text-decoration: none;
 
   cursor: pointer;
+  outline: none;
 
   transition:
     transform 0.18s ease,
-    box-shadow 0.18s ease,
     background 0.18s ease,
     color 0.18s ease,
     border-color 0.18s ease,
-    opacity 0.18s ease,
-    filter 0.18s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: $dark-bg;
-    background: linear-gradient(135deg, $dark-primary, $dark-pink);
-    border-color: rgba(255, 255, 255, 0.14);
-    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.28);
-  }
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
 
   &:hover {
-    transform: translate(-2px, -2px);
-    background: #000000;
-    box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.12);
-
-    :global(html[data-theme="dark"]) & {
-      background: linear-gradient(135deg, #b8a9ff, #ff68aa);
-      box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.34);
-    }
+    transform: translateY(-1px);
+    border-color: var(--profile-header-accent-border);
+    background: var(--profile-header-accent-soft);
+    color: var(--profile-header-accent);
   }
 
   &:active {
-    transform: translate(0, 0);
-    box-shadow: none;
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 3px var(--profile-header-accent-border);
   }
 
   &:disabled {
@@ -370,32 +270,51 @@ $dark-pink: #ff4f9a;
   }
 
   &:first-child {
-    color: $ink;
-    background: #ffffff;
-    border-color: rgba(21, 21, 21, 0.13);
-    box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.045);
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-text;
-      background: rgba(17, 18, 22, 0.72);
-      border-color: $dark-border;
-      box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
-    }
+    background: var(--app-surface);
+    color: var(--app-muted);
 
     &:hover {
-      color: $primary-color;
-      background: $paper-soft;
-      border-color: rgba(111, 78, 242, 0.24);
-      box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.075);
-
-      :global(html[data-theme="dark"]) & {
-        color: $dark-primary;
-        background: rgba(168, 149, 255, 0.12);
-        border-color: rgba(168, 149, 255, 0.28);
-        box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.3);
-      }
+      color: var(--app-text);
+      background: var(--app-surface-soft);
+      border-color: var(--app-border);
     }
   }
+
+  &:last-child {
+    border-color: var(--profile-header-accent);
+    background: var(--profile-header-accent);
+    color: #ffffff;
+
+    &:hover {
+      border-color: var(--profile-header-accent);
+      background: var(--profile-header-accent);
+      color: #ffffff;
+      box-shadow: 0 10px 28px rgba(111, 78, 242, 0.18);
+    }
+  }
+}
+
+/* =========================================================
+   Dark mode
+========================================================= */
+
+html[data-theme="dark"] .head {
+  --profile-header-accent-soft: rgba(168, 149, 255, 0.12);
+  --profile-header-accent-border: rgba(168, 149, 255, 0.28);
+  --profile-header-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
+
+  &::before {
+    background: radial-gradient(
+      circle,
+      rgba(168, 149, 255, 0.16) 0%,
+      rgba(255, 79, 154, 0.075) 42%,
+      transparent 72%
+    );
+  }
+}
+
+html[data-theme="dark"] .primary:last-child {
+  color: #111216;
 }
 
 /* =========================================================
@@ -405,7 +324,8 @@ $dark-pink: #ff4f9a;
 @media (max-width: 1180px) {
   .headTop {
     display: grid;
-    gap: 1.2rem;
+    align-items: start;
+    gap: 1.15rem;
   }
 
   .headActions {
@@ -415,24 +335,20 @@ $dark-pink: #ff4f9a;
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 720px) {
   .head {
-    padding: 1rem;
-    box-shadow: 7px 7px 0 rgba(21, 21, 21, 0.055);
-
-    :global(html[data-theme="dark"]) & {
-      box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.26);
-    }
+    padding: 1.15rem;
+    border-radius: 18px;
   }
 
   .labelRow {
     gap: 0.55rem;
-    margin-bottom: 1.1rem;
+    margin-bottom: 1rem;
   }
 
   .labelDesc {
     flex: 1 1 100%;
-    font-size: 0.86rem;
+    font-size: 0.82rem;
   }
 
   .labelLine {
@@ -443,16 +359,18 @@ $dark-pink: #ff4f9a;
     max-width: 100%;
     white-space: normal;
     line-height: 1.35;
-    padding-top: 0.45rem;
-    padding-bottom: 0.45rem;
   }
 
   .heading {
-    font-size: clamp(2.25rem, 13vw, 3.9rem);
+    max-width: none;
+    font-size: clamp(1.85rem, 9vw, 2.55rem);
+    line-height: 1.04;
   }
 
   .description {
-    font-size: 0.94rem;
+    margin-top: 0.7rem;
+    font-size: 0.88rem;
+    line-height: 1.58;
   }
 
   .headActions {
@@ -463,34 +381,34 @@ $dark-pink: #ff4f9a;
 
   .primary {
     width: 100%;
-    min-height: 48px;
-    font-size: 0.72rem;
+    min-height: 2.7rem;
+    padding: 0.78rem 0.9rem;
+    font-size: 0.68rem;
   }
 }
 
-@media (max-width: 460px) {
+@media (max-width: 430px) {
   .head {
-    padding: 0.85rem;
+    padding: 1rem;
   }
 
   .labelBadge,
   .pill {
-    min-height: 28px;
-    font-size: 0.62rem;
+    min-height: 1.8rem;
+    padding: 0.38rem 0.58rem;
+    font-size: 0.64rem;
   }
 
   .labelDesc {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
   }
 
   .heading {
-    font-size: clamp(2rem, 14vw, 3.15rem);
+    font-size: clamp(1.75rem, 10vw, 2.25rem);
   }
 
   .primary {
-    min-height: 46px;
-    padding: 0 0.8rem;
-    font-size: 0.66rem;
+    font-size: 0.63rem;
   }
 }
 

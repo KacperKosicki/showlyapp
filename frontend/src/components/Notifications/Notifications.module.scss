@@ -1,839 +1,477 @@
 @import "../../styles/variables";
 
-$paper-bg: #ffffff;
-$paper-soft: #fbfbfd;
-$paper-muted: #f5f6fa;
-$paper-border: rgba(21, 21, 21, 0.1);
-$ink: #151515;
-
-$dark-bg: #111216;
-$dark-surface: #1a1c22;
-$dark-surface-soft: #232630;
-$dark-text: #f4f1ea;
-$dark-muted: rgba(244, 241, 234, 0.68);
-$dark-border: rgba(244, 241, 234, 0.16);
-$dark-primary: #a895ff;
-$dark-pink: #ff4f9a;
+/* =========================================================
+   Notifications — prosty, aplikacyjny widok Showly
+========================================================= */
 
 .section {
-  position: relative;
+  --notifications-accent: var(--app-primary);
+  --notifications-accent-soft: rgba(111, 78, 242, 0.09);
+  --notifications-accent-border: rgba(111, 78, 242, 0.22);
+  --notifications-success: #17825c;
+  --notifications-success-soft: rgba(23, 130, 92, 0.1);
+  --notifications-warning: #ad5d10;
+  --notifications-warning-soft: rgba(173, 93, 16, 0.1);
+  --notifications-system: #315cbd;
+  --notifications-system-soft: rgba(49, 92, 189, 0.1);
+  --notifications-shadow: 0 18px 55px rgba(21, 21, 21, 0.07);
+
   width: 100%;
-  padding: 5.5rem 1.25rem 6.5rem;
-  background: #ffffff;
-  color: $ink;
-  overflow: hidden;
-  font-family: $font-body;
+  min-height: 100vh;
 
-  transition:
-    background 0.22s ease,
-    color 0.22s ease;
+  font-family: $font-accent;
 
-  :global(html[data-theme="dark"]) & {
-    background: $dark-bg;
-    color: $dark-text;
-  }
+  padding:
+    clamp(1.25rem, 3vw, 2.5rem)
+    max(clamp(1rem, 3vw, 2rem), var(--safe-right))
+    calc(clamp(2rem, 5vw, 4rem) + var(--safe-bottom))
+    max(clamp(1rem, 3vw, 2rem), var(--safe-left));
 
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
-  &::before {
-    content: "";
-    position: absolute;
-    left: 55%;
-    top: 50%;
-    width: min(1280px, 92vw);
-    height: 620px;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(circle,
-        rgba(245, 246, 250, 0.95) 0%,
-        rgba(245, 246, 250, 0.42) 45%,
-        rgba(245, 246, 250, 0) 72%);
-    pointer-events: none;
-    z-index: 0;
-
-    transition: background 0.22s ease;
-
-    :global(html[data-theme="dark"]) & {
-      background: radial-gradient(circle,
-          rgba(168, 149, 255, 0.16) 0%,
-          rgba(255, 79, 154, 0.08) 44%,
-          rgba(17, 18, 22, 0) 72%);
-    }
-  }
+  background: var(--app-bg);
+  color: var(--app-text);
 }
 
 .inner {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 1760px;
+  width: min(1440px, 100%);
   margin: 0 auto;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(430px, 520px) minmax(0, 1fr);
-  gap: clamp(2rem, 3.4vw, 4.5rem);
+  grid-template-columns: minmax(370px, 420px) minmax(0, 1fr);
+  gap: clamp(1.25rem, 2.5vw, 2.25rem);
   align-items: start;
 }
 
-/* =========================================================
-   Side panel
-========================================================= */
+.side,
+.content {
+  min-width: 0;
+}
 
 .side {
   position: sticky;
-  top: 110px;
-  width: 100%;
-  padding: clamp(1.65rem, 2.5vw, 2.4rem);
-  background: $paper-bg;
-  border: 1px solid $paper-border;
-  box-shadow: 12px 12px 0 rgba(21, 21, 21, 0.075);
-  text-align: left;
-
-  transition:
-    background 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(26, 28, 34, 0.94);
-    border-color: $dark-border;
-    box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.28);
-  }
+  top: calc(1rem + var(--safe-top));
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: clamp(1.35rem, 2.6vw, 2rem);
+  border: 1px solid var(--app-border);
+  border-radius: 24px;
+  background: var(--app-surface);
+  box-shadow: var(--notifications-shadow);
 }
 
-.overline {
+.chapterLabel,
+.groupLabel {
   display: inline-flex;
-  margin-bottom: 1.05rem;
+  align-items: center;
+  width: fit-content;
   font-family: $font-accent;
-  font-size: 0.75rem;
-  font-weight: 950;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
   letter-spacing: 0.11em;
   text-transform: uppercase;
-  color: $primary-color;
-
-  transition: color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: $dark-primary;
-  }
+  color: var(--app-muted);
 }
 
 .heading {
+  width: 100%;
+  max-width: none;
   margin: 0;
-  font-family: $font-accent;
-  font-size: clamp(2.65rem, 3.25vw, 4.25rem);
-  line-height: 0.96;
-  letter-spacing: -0.075em;
-  color: $ink;
 
-  transition: color 0.22s ease;
+  font-family: $font-heading;
+  font-size: clamp(2.15rem, 2.8vw, 3.15rem);
+  font-weight: 750;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
 
-  :global(html[data-theme="dark"]) & {
-    color: $dark-text;
-  }
+  overflow-wrap: normal;
+  word-break: normal;
+  text-wrap: balance;
 
   span {
-    color: $primary-color;
-
-    transition: color 0.22s ease;
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-primary;
-    }
+    color: var(--notifications-accent);
   }
 }
 
+.description,
+.metaCard span,
+.infoBox p,
+.metaText,
+.date,
+.message,
+.emptyState p {
+  font-family: $font-accent;
+}
+
+.metaCard strong,
+.emptyState strong,
+.name,
+.chapterHead h3,
+.groupHeader h4 {
+  font-family: $font-heading;
+}
+
+.openPill,
+.readPill,
+.unreadPill,
+.groupBadge {
+  font-family: $font-accent;
+}
+
 .description {
-  margin: 1.35rem 0 0;
-  max-width: 560px;
-  font-family: $font-body;
-  font-size: 1rem;
-  line-height: 1.78;
-  color: rgba(21, 21, 21, 0.68);
-
-  transition: color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: $dark-muted;
-  }
+  margin: 0;
+  font-size: 0.96rem;
+  line-height: 1.68;
+  color: var(--app-muted);
 
   strong {
-    color: $ink;
-    font-family: $font-accent;
-    font-weight: 950;
-
-    transition: color 0.22s ease;
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-text;
-    }
+    color: var(--app-text);
   }
 }
 
 .metaRow {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.7rem;
-  margin-top: 2.1rem;
 }
 
 .metaCard {
-  min-height: 92px;
-  padding: 1rem;
-  background: $paper-soft;
-  border: 1px solid rgba(21, 21, 21, 0.1);
   display: grid;
-  align-content: space-between;
-  gap: 0.65rem;
-
-  transition:
-    background 0.22s ease,
-    border-color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(35, 38, 48, 0.78);
-    border-color: $dark-border;
-  }
+  grid-template-columns: minmax(72px, auto) minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  background: var(--app-surface-soft);
 
   strong {
-    display: block;
-    font-family: $font-accent;
-    font-size: clamp(1.35rem, 2vw, 1.7rem);
-    font-weight: 950;
+    min-width: 0;
+    font-family: $font-heading;
+    font-size: 1.35rem;
+    font-weight: 750;
     line-height: 1;
-    color: $ink;
-
-    transition: color 0.22s ease;
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-text;
-    }
+    letter-spacing: -0.03em;
+    color: var(--app-text);
   }
 
   span {
-    display: block;
-    font-family: $font-body;
-    font-size: 0.83rem;
+    min-width: 0;
+    font-size: 0.78rem;
     line-height: 1.35;
-    color: rgba(21, 21, 21, 0.58);
-
-    transition: color 0.22s ease;
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-muted;
-    }
+    color: var(--app-muted);
   }
 }
 
 .infoBox {
-  margin-top: 1.9rem;
-  padding-top: 1.45rem;
-  border-top: 1px solid rgba(21, 21, 21, 0.11);
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--app-border);
 
-  transition: border-color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    border-top-color: $dark-border;
-  }
-
-  span {
+  > span {
     display: block;
-    margin-bottom: 0.55rem;
+    margin-bottom: 0.5rem;
     font-family: $font-accent;
     font-size: 0.74rem;
-    font-weight: 950;
+    font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: rgba(21, 21, 21, 0.58);
-
-    transition: color 0.22s ease;
-
-    :global(html[data-theme="dark"]) & {
-      color: rgba(244, 241, 234, 0.5);
-    }
+    color: var(--app-text);
   }
 
   p {
     margin: 0;
-    font-family: $font-body;
-    font-size: 0.95rem;
-    line-height: 1.65;
-    color: rgba(21, 21, 21, 0.62);
-
-    transition: color 0.22s ease;
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-muted;
-    }
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: var(--app-muted);
   }
 }
 
-/* =========================================================
-   Content
-========================================================= */
-
 .content {
-  min-width: 0;
-  width: 100%;
-  padding: clamp(1.35rem, 2.25vw, 2rem);
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  box-shadow: 10px 10px 0 rgba(21, 21, 21, 0.055);
-
-  transition:
-    background 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(26, 28, 34, 0.94);
-    border-color: $dark-border;
-    box-shadow: 10px 10px 0 rgba(0, 0, 0, 0.26);
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .chapterHead {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.35rem;
-  text-align: left;
+  gap: 1.25rem;
+  align-items: flex-end;
+  padding: clamp(1.2rem, 2.6vw, 1.8rem);
+  border: 1px solid var(--app-border);
+  border-radius: 24px;
+  background: var(--app-surface);
 
   h3 {
-    margin: 0;
-    max-width: 720px;
-    font-family: $font-accent;
-    font-size: clamp(1.55rem, 2.45vw, 2.45rem);
-    line-height: 1.06;
-    letter-spacing: -0.045em;
-    color: $ink;
-
-    transition: color 0.22s ease;
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-text;
-    }
-  }
-}
-
-.chapterLabel {
-  display: block;
-  margin-bottom: 0.55rem;
-  font-family: $font-accent;
-  font-size: 0.75rem;
-  font-weight: 950;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: $primary-color;
-
-  transition: color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: $dark-primary;
+    max-width: 780px;
+    margin: 0.55rem 0 0;
+    font-size: clamp(1.35rem, 2.25vw, 2.15rem);
+    font-weight: 720;
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
   }
 }
 
 .chapterNumber {
   flex: 0 0 auto;
-  min-width: 54px;
-  height: 54px;
-  padding: 0 0.8rem;
   display: grid;
   place-items: center;
-  background: $ink;
-  color: $paper-bg;
-  border: 1px solid $ink;
-  font-family: $font-accent;
-  font-size: 0.9rem;
-  font-weight: 950;
-
-  transition:
-    background 0.22s ease,
-    color 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: linear-gradient(135deg, $dark-primary, $dark-pink);
-    color: $dark-bg;
-    border-color: rgba(255, 255, 255, 0.16);
-    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
-  }
+  min-width: 3.2rem;
+  height: 3.2rem;
+  padding: 0 0.75rem;
+  border-radius: 14px;
+  background: var(--notifications-accent);
+  font-family: $font-heading;
+  font-size: 1.2rem;
+  font-weight: 750;
+  color: #ffffff;
 }
 
-/* =========================================================
-   Message groups
-========================================================= */
-
 .messagesStack {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 1rem;
 }
 
 .messageGroup {
-  padding: 1rem;
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-  box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.04);
-
-  transition:
-    background 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(17, 18, 22, 0.42);
-    border-color: $dark-border;
-    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.22);
-  }
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: 24px;
+  background: var(--app-surface);
+  box-shadow: 0 10px 35px rgba(21, 21, 21, 0.035);
 }
 
 .groupHeader {
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1rem;
-}
+  align-items: center;
+  padding: 1.15rem clamp(1rem, 2.2vw, 1.5rem);
+  border-bottom: 1px solid var(--app-border);
+  background: var(--app-surface-soft);
 
-.groupLabel {
-  display: block;
-  margin-bottom: 0.45rem;
-  font-family: $font-accent;
-  font-size: 0.7rem;
-  font-weight: 950;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: rgba(21, 21, 21, 0.52);
-
-  transition: color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: rgba(244, 241, 234, 0.48);
+  h4 {
+    margin: 0.42rem 0 0;
+    font-size: clamp(1rem, 1.6vw, 1.22rem);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.022em;
   }
 }
 
 .groupBadge {
   flex: 0 0 auto;
-  min-height: 42px;
-  min-width: 42px;
-  padding: 0 0.75rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: $ink;
-  color: #ffffff;
-  border: 1px solid $ink;
+  min-height: 2rem;
+  padding: 0.45rem 0.72rem;
+  border: 1px solid var(--app-border);
+  border-radius: 999px;
+  background: var(--app-surface);
   font-family: $font-accent;
-  font-size: 0.74rem;
-  font-weight: 950;
-  line-height: 1;
-  white-space: nowrap;
-
-  transition:
-    background 0.22s ease,
-    color 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: linear-gradient(135deg, $dark-primary, $dark-pink);
-    color: $dark-bg;
-    border-color: rgba(255, 255, 255, 0.16);
-    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.24);
-  }
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--app-text);
 }
-
-/* =========================================================
-   List / empty
-========================================================= */
 
 .list {
-  list-style: none;
-  display: grid;
-  gap: 0.95rem;
-  padding: 0;
+  display: flex;
+  flex-direction: column;
   margin: 0;
+  padding: 0;
+  list-style: none;
 }
-
-.emptyState {
-  padding: clamp(1.15rem, 2vw, 1.5rem);
-  text-align: left;
-  background: $paper-soft;
-  border: 1px dashed rgba(21, 21, 21, 0.18);
-
-  transition:
-    background 0.22s ease,
-    border-color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(17, 18, 22, 0.5);
-    border-color: rgba(244, 241, 234, 0.2);
-  }
-
-  strong {
-    display: block;
-    margin-bottom: 0.35rem;
-    font-family: $font-accent;
-    font-size: clamp(1.2rem, 1.8vw, 1.55rem);
-    line-height: 1.08;
-    letter-spacing: -0.04em;
-    color: $ink;
-
-    transition: color 0.22s ease;
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-text;
-    }
-  }
-
-  p {
-    max-width: 720px;
-    margin: 0;
-    font-family: $font-body;
-    font-size: 0.95rem;
-    line-height: 1.65;
-    color: rgba(21, 21, 21, 0.62);
-
-    transition: color 0.22s ease;
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-muted;
-    }
-  }
-}
-
-.emptyIconWrap {
-  width: 58px;
-  height: 58px;
-  margin-bottom: 1rem;
-  display: grid;
-  place-items: center;
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.04);
-
-  transition:
-    background 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(35, 38, 48, 0.78);
-    border-color: $dark-border;
-    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
-  }
-}
-
-.emptyIcon {
-  font-size: 1.45rem;
-  color: $primary-color;
-
-  transition: color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: $dark-primary;
-  }
-}
-
-/* =========================================================
-   Notification item
-========================================================= */
 
 .item {
-  overflow: hidden;
-  background: $paper-bg;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-  box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.045);
-
+  position: relative;
   transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    border-color 0.18s ease,
     background 0.18s ease,
-    opacity 0.18s ease;
+    border-color 0.18s ease;
 
-  :global(html[data-theme="dark"]) & {
-    background: rgba(26, 28, 34, 0.86);
-    border-color: $dark-border;
-    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.24);
+  & + & {
+    border-top: 1px solid var(--app-border);
   }
+}
+
+.item::before {
+  content: "";
+  position: absolute;
+  top: 1rem;
+  bottom: 1rem;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: transparent;
 }
 
 .item:hover {
-  transform: translate(-2px, -2px);
-  border-color: rgba(21, 21, 21, 0.18);
-  background: $paper-soft;
-  box-shadow: 8px 8px 0 rgba(21, 21, 21, 0.075);
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(168, 149, 255, 0.1);
-    border-color: rgba(168, 149, 255, 0.28);
-    box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
-  }
+  background: var(--app-surface-soft);
 }
 
 .unread {
-  border-color: rgba(255, 64, 129, 0.34);
+  background: var(--notifications-accent-soft);
 
-  :global(html[data-theme="dark"]) & {
-    border-color: rgba(255, 79, 154, 0.42);
-    box-shadow:
-      6px 6px 0 rgba(0, 0, 0, 0.24),
-      inset 4px 0 0 rgba(255, 79, 154, 0.52);
+  &::before {
+    background: var(--notifications-accent);
   }
 }
 
 .read {
-  opacity: 0.98;
-
-  :global(html[data-theme="dark"]) & {
-    opacity: 0.9;
-  }
+  background: var(--app-surface);
 }
 
-.itemSystem {
-  background: $paper-soft;
+.itemSystem.unread {
+  background: var(--notifications-system-soft);
 
-  :global(html[data-theme="dark"]) & {
-    background: rgba(35, 38, 48, 0.78);
+  &::before {
+    background: var(--notifications-system);
   }
 }
 
 .link {
   display: block;
-  padding: 1rem;
-  text-decoration: none;
+  width: 100%;
   color: inherit;
-  font-family: $font-body;
+  text-decoration: none;
+  outline: none;
+
+  &:focus-visible {
+    box-shadow: inset 0 0 0 3px var(--notifications-accent-border);
+  }
 }
 
 .row {
   display: grid;
-  grid-template-columns: 64px minmax(0, 1fr) auto;
-  grid-template-areas:
-    "avatar head actions"
-    "avatar message actions";
-  column-gap: 1rem;
+  grid-template-columns: 52px minmax(0, 1fr);
+  column-gap: 0.95rem;
   row-gap: 0.65rem;
-  align-items: start;
+  padding: 1.1rem clamp(1rem, 2.2vw, 1.5rem);
 }
 
-/* =========================================================
-   Avatar
-========================================================= */
-
 .avatarWrap {
-  grid-area: avatar;
   position: relative;
-  width: 64px;
-  height: 64px;
-  background: $paper-soft;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.04);
-  overflow: hidden;
-
-  transition:
-    background 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(35, 38, 48, 0.78);
-    border-color: $dark-border;
-    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.24);
-  }
+  grid-row: 1 / span 3;
+  align-self: start;
 }
 
 .avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   display: block;
-  border-radius: 0;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  background: var(--app-surface-soft);
+  object-fit: cover;
 }
 
 .avatarSystem {
   display: grid;
   place-items: center;
-  font-size: 1.35rem;
-  color: $primary-color;
-  background: #ffffff;
+  background: var(--notifications-system-soft);
+  color: var(--notifications-system);
 
-  transition:
-    background 0.22s ease,
-    color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: $dark-primary;
-    background: rgba(17, 18, 22, 0.72);
+  svg {
+    width: 1.35rem;
+    height: 1.35rem;
   }
 }
 
 .avatarSkeleton {
-  background: $paper-muted;
-  position: relative;
-
-  transition: background 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(244, 241, 234, 0.08);
-  }
+  border-color: transparent;
 }
 
 .badgeDot {
   position: absolute;
-  right: 7px;
-  bottom: 7px;
-  width: 10px;
-  height: 10px;
-  background: $secondary-color;
-  border: 2px solid #ffffff;
-
-  transition:
-    background 0.22s ease,
-    border-color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: $dark-pink;
-    border-color: $dark-surface;
-  }
+  right: -3px;
+  bottom: -3px;
+  width: 13px;
+  height: 13px;
+  border: 3px solid var(--app-surface);
+  border-radius: 50%;
+  background: var(--notifications-accent);
 }
 
-/* =========================================================
-   Item content
-========================================================= */
+.itemSystem .badgeDot {
+  background: var(--notifications-system);
+}
 
 .itemHead {
-  grid-area: head;
-  min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  min-width: 0;
 }
 
 .meta {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  width: 100%;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 .icon {
-  flex-shrink: 0;
-  font-size: 1.05rem;
-  color: $primary-color;
-  margin-top: 0.15rem;
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+  color: var(--notifications-accent);
+}
 
-  transition: color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: $dark-primary;
-  }
+.itemSystem .icon {
+  color: var(--notifications-system);
 }
 
 .metaText {
-  display: block;
-  white-space: normal;
-  overflow: visible;
-  word-break: break-word;
-  text-align: left;
-  color: rgba(21, 21, 21, 0.58);
-  font-family: $font-body;
-  font-size: 0.95rem;
-  line-height: 1.5;
+  min-width: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--app-muted);
 
-  transition: color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: $dark-muted;
-  }
-
-  b,
-  strong {
-    color: $ink;
-    font-weight: 950;
-    font-family: $font-accent;
-
-    transition: color 0.22s ease;
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-text;
-    }
+  b {
+    font-weight: 650;
+    color: var(--app-text);
   }
 }
 
 .name {
-  color: $primary-color;
-  font-weight: 950;
-  letter-spacing: -0.2px;
-  white-space: normal;
-  font-family: $font-accent;
-
-  transition: color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: $dark-primary;
-  }
+  font-weight: 700;
+  color: var(--app-text);
 }
 
 .date {
-  color: rgba(21, 21, 21, 0.45);
-  font-family: $font-body;
-  font-size: 0.86rem;
+  flex: 0 0 auto;
+  padding-top: 0.1rem;
+  font-size: 0.7rem;
   line-height: 1.35;
-  text-align: left;
-
-  transition: color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: rgba(244, 241, 234, 0.42);
-  }
+  white-space: nowrap;
+  color: var(--app-muted);
 }
 
 .message {
-  grid-area: message;
-  margin: 0;
-  font-family: $font-body;
-  font-size: 0.98rem;
-  line-height: 1.55;
-  color: rgba(21, 21, 21, 0.78);
-  text-align: left;
-
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-
+  grid-column: 2;
+  margin: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-
-  transition: color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: rgba(244, 241, 234, 0.78);
-  }
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.94rem;
+  line-height: 1.52;
+  color: var(--app-text);
 }
 
-/* =========================================================
-   Pills / actions
-========================================================= */
+.unread .message {
+  font-weight: 580;
+}
 
 .bottomRow {
-  grid-area: actions;
+  grid-column: 2;
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 0.5rem;
-  min-width: 170px;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
 }
 
 .unreadPill,
@@ -841,251 +479,214 @@ $dark-pink: #ff4f9a;
 .openPill {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: fit-content;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid rgba(21, 21, 21, 0.1);
-  background: #ffffff;
+  min-height: 1.75rem;
+  padding: 0.35rem 0.58rem;
+  border-radius: 999px;
   font-family: $font-accent;
-  font-size: 0.72rem;
-  font-weight: 950;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
+  font-size: 0.68rem;
+  font-weight: 700;
   line-height: 1;
-
-  transition:
-    background 0.22s ease,
-    color 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
 }
 
 .unreadPill {
-  color: rgba(21, 21, 21, 0.68);
-
-  :global(html[data-theme="dark"]) & {
-    color: $dark-muted;
-    background: rgba(17, 18, 22, 0.72);
-    border-color: $dark-border;
-  }
-
-  strong {
-    color: $secondary-color;
-    font-weight: 950;
-    font-family: $font-accent;
-
-    transition: color 0.22s ease;
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-pink;
-    }
-  }
+  background: var(--notifications-accent);
+  color: #ffffff;
 }
 
 .readPill {
-  color: rgba(21, 21, 21, 0.45);
-  background: $paper-soft;
-
-  :global(html[data-theme="dark"]) & {
-    color: rgba(244, 241, 234, 0.44);
-    background: rgba(35, 38, 48, 0.78);
-    border-color: $dark-border;
-  }
+  border: 1px solid var(--app-border);
+  background: var(--app-surface-soft);
+  color: var(--app-muted);
 }
 
 .openPill {
-  color: #ffffff;
-  background: $ink;
-  border-color: $ink;
+  padding-right: 0;
+  color: var(--app-text);
+  transition: transform 0.18s ease;
+}
 
-  :global(html[data-theme="dark"]) & {
-    color: $dark-bg;
-    background: linear-gradient(135deg, $dark-primary, $dark-pink);
-    border-color: rgba(255, 255, 255, 0.16);
-    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.22);
+.item:hover .openPill {
+  transform: translateX(3px);
+}
+
+.emptyState {
+  display: grid;
+  justify-items: center;
+  padding: clamp(2rem, 5vw, 4rem) 1.25rem;
+  text-align: center;
+
+  strong {
+    margin-top: 0.95rem;
+    font-size: 1rem;
+    color: var(--app-text);
+  }
+
+  p {
+    max-width: 520px;
+    margin: 0.45rem 0 0;
+    font-size: 0.84rem;
+    line-height: 1.55;
+    color: var(--app-muted);
   }
 }
 
-/* =========================================================
-   Skeleton
-========================================================= */
+.emptyIconWrap {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  background: var(--app-surface-soft);
+}
+
+.emptyIcon {
+  width: 1.35rem;
+  height: 1.35rem;
+  color: var(--notifications-accent);
+}
 
 .skeletonItem {
   pointer-events: none;
 }
 
-.skeleton {
-  position: relative;
-  background: $paper-muted;
-  display: inline-block;
-  min-height: 14px;
-
-  transition: background 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(244, 241, 234, 0.08);
-  }
+.skeleton,
+.metaSkel,
+.dateSkel,
+.pillSkel,
+.nameSkeleton {
+  display: block;
+  border-radius: 999px;
+  background: var(--app-border);
 }
 
-.shimmer {
-  overflow: hidden;
-  position: relative;
+.metaSkel {
+  width: min(310px, 70%);
+  height: 0.85rem;
+}
 
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    transform: translateX(-100%);
-    background: linear-gradient(90deg,
-        transparent,
-        rgba(255, 255, 255, 0.76),
-        transparent);
-    animation: shimmer 1.2s infinite;
+.dateSkel {
+  width: 86px;
+  height: 0.7rem;
+}
 
-    :global(html[data-theme="dark"]) & {
-      background: linear-gradient(90deg,
-          transparent,
-          rgba(244, 241, 234, 0.14),
-          transparent);
-    }
-  }
+.message.skeleton {
+  width: min(560px, 90%);
+  height: 1rem;
+}
+
+.pillSkel {
+  width: 95px;
+  height: 1.75rem;
 }
 
 .nameSkeleton {
   display: inline-block;
-  width: 140px;
-  height: 1em;
+  width: 90px;
+  height: 0.72rem;
   vertical-align: middle;
-  background: $paper-muted;
+}
+
+.shimmer {
   position: relative;
+  overflow: hidden;
+}
 
-  transition: background 0.22s ease;
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.45),
+    transparent
+  );
+  animation: notificationsShimmer 1.35s infinite;
+}
 
-  :global(html[data-theme="dark"]) & {
-    background: rgba(244, 241, 234, 0.08);
+@keyframes notificationsShimmer {
+  100% {
+    transform: translateX(100%);
   }
 }
 
-.metaSkel {
-  height: 14px;
-  width: min(520px, 100%);
-  background: $paper-muted;
-  position: relative;
-
-  transition: background 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(244, 241, 234, 0.08);
-  }
+html[data-theme="dark"] .section {
+  --notifications-accent-soft: rgba(168, 149, 255, 0.12);
+  --notifications-accent-border: rgba(168, 149, 255, 0.28);
+  --notifications-success: #75d5af;
+  --notifications-success-soft: rgba(117, 213, 175, 0.12);
+  --notifications-warning: #f0ad69;
+  --notifications-warning-soft: rgba(240, 173, 105, 0.12);
+  --notifications-system: #8eafff;
+  --notifications-system-soft: rgba(142, 175, 255, 0.12);
+  --notifications-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
 }
 
-.dateSkel {
-  height: 12px;
-  width: 170px;
-  background: $paper-muted;
-  position: relative;
-
-  transition: background 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(244, 241, 234, 0.08);
-  }
+html[data-theme="dark"] .chapterNumber,
+html[data-theme="dark"] .unreadPill {
+  color: #111216;
 }
 
-.pillSkel {
-  width: 120px;
-  height: 30px;
-  background: $paper-muted;
-  position: relative;
-
-  transition: background 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(244, 241, 234, 0.08);
-  }
-}
-
-/* =========================================================
-   RWD
-========================================================= */
-
-@media (max-width: 1400px) {
-  .layout {
-    grid-template-columns: minmax(390px, 460px) minmax(0, 1fr);
-    gap: clamp(1.5rem, 2.8vw, 3rem);
-  }
+html[data-theme="dark"] .shimmer::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.08),
+    transparent
+  );
 }
 
 @media (max-width: 1180px) {
   .layout {
     grid-template-columns: 1fr;
-    gap: 1.35rem;
   }
 
   .side {
-    position: relative;
-    top: auto;
+    position: static;
   }
 
-  .description {
-    max-width: 780px;
+  .heading {
+    max-width: 760px;
   }
 
   .metaRow {
-    max-width: 760px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .metaCard {
+    grid-template-columns: 1fr;
+    align-content: start;
   }
 }
 
-@media (max-width: 980px) {
-  .row {
-    grid-template-columns: 60px minmax(0, 1fr);
-    grid-template-areas:
-      "avatar head"
-      "message message"
-      "actions actions";
-  }
-
-  .bottomRow {
-    min-width: 0;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
-
-@media (max-width: 900px) {
+@media (max-width: 720px) {
   .section {
-    padding: 4rem 1rem 5rem;
-  }
-
-  .content {
-    padding: 1.15rem;
-  }
-}
-
-@media (max-width: 680px) {
-  .section {
-    padding: 3.5rem 0.95rem 4.5rem;
+    padding-top: 0.85rem;
   }
 
   .side,
-  .content {
-    padding: 1rem;
-  }
-
   .chapterHead,
-  .groupHeader {
-    display: grid;
-    gap: 0.9rem;
+  .messageGroup {
+    border-radius: 18px;
   }
 
-  .chapterNumber,
-  .groupBadge {
-    order: -1;
-    width: fit-content;
-    min-width: 48px;
-    height: 48px;
+  .side {
+    gap: 1rem;
+    padding: 1.15rem;
+  }
+
+  .heading {
+    width: 100%;
+    max-width: none;
+    font-size: clamp(1.85rem, 9vw, 2.45rem);
+    line-height: 1.04;
+  }
+
+  .description {
+    font-size: 0.88rem;
+    line-height: 1.58;
   }
 
   .metaRow {
@@ -1093,169 +694,131 @@ $dark-pink: #ff4f9a;
   }
 
   .metaCard {
-    min-height: auto;
+    grid-template-columns: 68px minmax(0, 1fr);
+    padding: 0.82rem 0.9rem;
   }
 
-  .heading {
-    font-size: clamp(2.15rem, 12vw, 3.15rem);
+  .infoBox {
+    display: none;
   }
 
-  .description {
-    font-size: 0.93rem;
+  .chapterHead {
+    align-items: center;
+    padding: 1.1rem;
+
+    h3 {
+      margin-top: 0.4rem;
+      font-size: 1.2rem;
+    }
   }
 
-  .messageGroup {
-    padding: 0.85rem;
+  .chapterNumber {
+    min-width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 12px;
+    font-size: 1rem;
   }
 
-  .link {
-    padding: 0.85rem;
+  .groupHeader {
+    align-items: flex-start;
+    padding: 1rem;
+  }
+
+  .groupBadge {
+    min-height: 1.8rem;
+    padding: 0.38rem 0.58rem;
+    font-size: 0.66rem;
   }
 
   .row {
-    grid-template-columns: 54px minmax(0, 1fr);
+    grid-template-columns: 44px minmax(0, 1fr);
     column-gap: 0.75rem;
-    row-gap: 0.75rem;
+    padding: 1rem;
   }
 
-  .avatarWrap {
-    width: 54px;
-    height: 54px;
+  .avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
   }
 
-  .message {
-    font-size: 0.95rem;
+  .itemHead {
+    display: block;
+  }
+
+  .date {
+    margin-top: 0.3rem;
+    font-size: 0.65rem;
   }
 
   .metaText {
-    font-size: 0.92rem;
+    font-size: 0.76rem;
+  }
+
+  .message {
+    font-size: 0.87rem;
+    line-height: 1.48;
+  }
+
+  .bottomRow {
+    align-items: flex-end;
+  }
+
+  .openPill {
+    font-size: 0.64rem;
+  }
+
+  .unreadPill,
+  .readPill {
+    font-size: 0.63rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .chapterLabel,
+  .groupLabel {
+    font-size: 0.65rem;
+  }
+
+  .chapterHead h3 {
+    max-width: 230px;
+  }
+
+  .groupHeader h4 {
+    font-size: 0.96rem;
+  }
+
+  .row {
+    row-gap: 0.55rem;
   }
 
   .bottomRow {
     flex-wrap: wrap;
-    gap: 0.5rem;
+  }
+
+  .openPill {
+    margin-left: auto;
   }
 }
 
-@media (max-width: 480px) {
-  .section {
-    padding: 3rem 0.8rem 4rem;
+@media (hover: none) {
+  .item:hover {
+    background: inherit;
   }
 
-  .side,
-  .content {
-    box-shadow: 6px 6px 0 rgba(21, 21, 21, 0.06);
-
-    :global(html[data-theme="dark"]) & {
-      box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.26);
-    }
-  }
-
-  .messageGroup,
-  .emptyState {
-    padding: 0.85rem;
-  }
-
-  .heading {
-    font-size: clamp(2rem, 14vw, 2.8rem);
-  }
-
-  .emptyIconWrap {
-    width: 56px;
-    height: 56px;
-  }
-
-  .emptyIcon {
-    font-size: 1.35rem;
-  }
-
-  .date {
-    font-size: 0.8rem;
-  }
-
-  .bottomRow {
-    align-items: stretch;
-
-    .unreadPill,
-    .readPill,
-    .openPill {
-      width: 100%;
-    }
-  }
-}
-
-@media (max-width: 360px) {
-  .row {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "avatar"
-      "head"
-      "message"
-      "actions";
-  }
-
-  .avatarWrap {
-    width: 58px;
-    height: 58px;
+  .item:hover .openPill {
+    transform: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-
-  .section,
-  .section::before,
-  .side,
-  .overline,
-  .heading,
-  .heading span,
-  .description,
-  .description strong,
-  .metaCard,
-  .metaCard strong,
-  .metaCard span,
-  .infoBox,
-  .infoBox span,
-  .infoBox p,
-  .content,
-  .chapterHead h3,
-  .chapterLabel,
-  .chapterNumber,
-  .messageGroup,
-  .groupLabel,
-  .groupBadge,
-  .emptyState,
-  .emptyState strong,
-  .emptyState p,
-  .emptyIconWrap,
-  .emptyIcon,
   .item,
-  .avatarWrap,
-  .avatarSystem,
-  .avatarSkeleton,
-  .badgeDot,
-  .icon,
-  .metaText,
-  .metaText b,
-  .metaText strong,
-  .name,
-  .date,
-  .message,
-  .unreadPill,
-  .readPill,
   .openPill,
-  .skeleton,
-  .nameSkeleton,
-  .metaSkel,
-  .dateSkel,
-  .pillSkel,
-  .shimmer::after {
-    animation: none;
+  .body {
     transition: none;
   }
-}
 
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
+  .shimmer::after {
+    animation: none;
   }
 }

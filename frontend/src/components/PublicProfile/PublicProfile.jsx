@@ -46,8 +46,6 @@ import {
 import { FiFlag } from "react-icons/fi";
 import { reportApi } from "../../api/reportApi";
 
-import "react-calendar/dist/Calendar.css";
-
 const cn = (...classes) => classes.filter(Boolean).join(" ");
 
 const REPORT_REASONS = [
@@ -996,7 +994,7 @@ export default function PublicProfile() {
   const priceShortLabel = hasPrice ? `od ${pf} zł` : "brak danych";
 
   return (
-    <div className={styles.page} style={cssVars}>
+    <div className={cn(styles.page, styles.reservationTheme)} style={cssVars}>
       <div className={styles.bgGlow} aria-hidden="true" />
       <div className={styles.noiseLayer} aria-hidden="true" />
       <div className={styles.orbOne} aria-hidden="true" />
@@ -1844,6 +1842,10 @@ export default function PublicProfile() {
                   <>
                     <div className={styles.splitLine} />
 
+                    <h4 className={styles.socialTitle}>
+                      Social media
+                    </h4>
+
                     <div className={styles.socialGrid}>
                       {socialItems.map((s) => (
                         <a
@@ -1856,7 +1858,14 @@ export default function PublicProfile() {
                           aria-label={s.label}
                         >
                           <span className={styles.socialIcon}>{s.icon}</span>
-                          <span className={styles.socialText}>{s.label}</span>
+
+                          <span className={styles.socialText}>
+                            {s.label}
+                          </span>
+
+                          <span className={styles.linkArrow}>
+                            <FaExternalLinkAlt />
+                          </span>
                         </a>
                       ))}
                     </div>

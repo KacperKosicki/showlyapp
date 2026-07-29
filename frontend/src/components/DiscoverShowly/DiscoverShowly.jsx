@@ -33,7 +33,6 @@ const DiscoverShowly = () => {
     <section className={styles.section} id="discover-showly">
       <div className={styles.inner}>
         <aside className={styles.side}>
-          <span className={styles.overline}>Showly Explore</span>
 
           <h2 className={styles.title}>
             Odkrywaj profile bez chaosu.

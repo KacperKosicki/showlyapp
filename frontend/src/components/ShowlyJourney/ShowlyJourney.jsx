@@ -75,7 +75,6 @@ const ShowlyJourney = () => {
       <div className={styles.inner}>
         <div className={styles.layout}>
           <aside className={styles.side}>
-            <span className={styles.overline}>Showly Journey</span>
 
             <h2 className={styles.heading}>
               Od pustego profilu do gotowej{" "}
@@ -115,7 +114,7 @@ const ShowlyJourney = () => {
             </div>
           </aside>
 
-          <div className={styles.content}>
+          <main className={styles.content}>
             <div className={styles.chapterHead}>
               <div>
                 <span className={styles.chapterLabel}>Jak działa Showly?</span>
@@ -208,7 +207,7 @@ const ShowlyJourney = () => {
                 </div>
               </aside>
             </div>
-          </div>
+          </main>
         </div>
       </div>
     </section>

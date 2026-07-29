@@ -37,7 +37,6 @@ const HowShowlyWorks = () => {
     <section className={styles.section} id="how-showly-works">
       <div className={styles.inner}>
         <aside className={styles.side}>
-          <span className={styles.overline}>Showly Flow</span>
 
           <h2 className={styles.title}>Od znalezienia profilu do działania.</h2>
 
@@ -111,25 +110,6 @@ const HowShowlyWorks = () => {
                 </div>
               </article>
             ))}
-          </div>
-
-          <div className={styles.summary}>
-            <span className={styles.summaryNumber}>05</span>
-
-            <div>
-              <span className={styles.summaryKicker}>Efekt?</span>
-
-              <p className={styles.summaryText}>
-                Użytkownik szybciej rozumie platformę, dłużej zostaje na stronie
-                i łatwiej przechodzi do działania.
-              </p>
-
-              <div className={styles.summaryMini}>
-                <span>mniej chaosu</span>
-                <span>lepsze decyzje</span>
-                <span>szybszy kontakt</span>
-              </div>
-            </div>
           </div>
         </main>
       </div>

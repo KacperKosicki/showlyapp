@@ -81,7 +81,6 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
       <div className={styles.wrap}>
         <div className={styles.layout}>
           <aside className={styles.side}>
-            <span className={styles.overline}>Showly.me</span>
 
             <h2>
               Profil online,
@@ -197,7 +196,6 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
 
         <div className={styles.benefits}>
           <div className={styles.sectionIntro}>
-            <span className={styles.overline}>W praktyce</span>
             <h3>Co zmienia Showly?</h3>
           </div>
 
@@ -214,7 +212,6 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
 
         <div className={styles.future}>
           <div className={styles.futureText}>
-            <span className={styles.overline}>Co dalej?</span>
 
             <h3>Showly ma rozwijać się w stronę praktycznego narzędzia dla usług.</h3>
 
@@ -237,7 +234,6 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
 
         <div className={styles.cta}>
           <div className={styles.ctaText}>
-            <span className={styles.overline}>Szybki start</span>
 
             <h3>Stwórz profil, który możesz od razu pokazać klientowi.</h3>
 

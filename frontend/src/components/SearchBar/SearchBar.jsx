@@ -68,9 +68,13 @@ const SearchBar = () => {
 
       try {
         setLoading(true);
+
         const { data } = await axios.get(
-          `${API}/api/profiles/search?q=${encodeURIComponent(debouncedQuery)}&limit=6`
+          `${API}/api/profiles/search?q=${encodeURIComponent(
+            debouncedQuery
+          )}&limit=6`
         );
+
         setResults(Array.isArray(data) ? data : []);
         setOpen(true);
       } catch (err) {
@@ -96,6 +100,7 @@ const SearchBar = () => {
 
   const handleGoToProfile = (slug) => {
     setOpen(false);
+
     navigate(`/${slug}`, {
       state: { scrollToId: "profileWrapper" },
     });
@@ -112,29 +117,50 @@ const SearchBar = () => {
           Wyszukaj
         </label>
 
-        <input
-          id="searchInput"
-          type="text"
-          placeholder="Szukaj profili i usług…"
-          className={styles.searchInput}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => {
-            if (results.length > 0 || query.trim().length >= 2) setOpen(true);
-          }}
-        />
+        <div className={styles.inputArea}>
+          <FaSearch className={styles.inputIcon} aria-hidden="true" />
+
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Szukaj profili i usług…"
+            className={styles.searchInput}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => {
+              if (results.length > 0 || query.trim().length >= 2) {
+                setOpen(true);
+              }
+            }}
+          />
+        </div>
 
         <button
           type="submit"
           className={styles.searchButton}
           aria-label="Szukaj"
         >
+          <span>Szukaj</span>
           <FaSearch />
         </button>
       </form>
 
       {open && query.trim().length >= 2 && (
         <div className={styles.dropdown}>
+          <div className={styles.dropdownHeader}>
+            <div>
+              <span className={styles.dropdownLabel}>Wyniki wyszukiwania</span>
+              <strong>
+                {loading
+                  ? "Szukam profili..."
+                  : `${results.length} ${results.length === 1 ? "wynik" : "wyników"
+                  }`}
+              </strong>
+            </div>
+
+            <span className={styles.queryPill}>{query.trim()}</span>
+          </div>
+
           {loading ? (
             <div className={styles.dropdownState}>Szukam…</div>
           ) : results.length === 0 ? (
@@ -161,9 +187,14 @@ const SearchBar = () => {
                     >
                       <div className={styles.resultAvatar}>
                         {item?.avatar?.url ? (
-                          <img src={item.avatar.url} alt={item.name || "Profil"} />
+                          <img
+                            src={item.avatar.url}
+                            alt={item.name || "Profil"}
+                          />
                         ) : (
-                          <span>{(item?.name || "?").charAt(0).toUpperCase()}</span>
+                          <span>
+                            {(item?.name || "?").charAt(0).toUpperCase()}
+                          </span>
                         )}
                       </div>
 
@@ -174,10 +205,14 @@ const SearchBar = () => {
                         </div>
 
                         <div className={styles.resultMeta}>
-                          {item.location ? <span>📍 {item.location}</span> : null}
+                          {item.location ? (
+                            <span>📍 {item.location}</span>
+                          ) : null}
+
                           {item.rating ? (
                             <span>
-                              ⭐ {Number(item.rating).toFixed(1)} ({item.reviews || 0})
+                              ⭐ {Number(item.rating).toFixed(1)} (
+                              {item.reviews || 0})
                             </span>
                           ) : null}
                         </div>
@@ -185,17 +220,21 @@ const SearchBar = () => {
                         {Array.isArray(item.matchedServices) &&
                           item.matchedServices.length > 0 ? (
                           <div className={styles.serviceHits}>
-                            {item.matchedServices.slice(0, 2).map((service) => (
-                              <span
-                                key={service._id || service.name}
-                                className={styles.serviceBadge}
-                              >
-                                {service.name}
-                              </span>
-                            ))}
+                            {item.matchedServices
+                              .slice(0, 2)
+                              .map((service) => (
+                                <span
+                                  key={service._id || service.name}
+                                  className={styles.serviceBadge}
+                                >
+                                  {service.name}
+                                </span>
+                              ))}
                           </div>
                         ) : null}
                       </div>
+
+                      <span className={styles.openResult}>Otwórz →</span>
                     </button>
                   );
                 })}

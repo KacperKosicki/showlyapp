@@ -677,14 +677,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
                     <h2 className={styles.heroTitle}>
                       Rozmowa z {renderNameNode(receiverName)}
                     </h2>
-
-                    <span className={styles.titlePill}>
-                      {channel === "account_to_profile"
-                        ? "KONTO ↔ PROFIL"
-                        : channel === "profile_to_account"
-                          ? "PROFIL ↔ KONTO"
-                          : "ROZMOWA"}
-                    </span>
                   </div>
 
                   <div className={styles.metaRow}>

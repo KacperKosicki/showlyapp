@@ -868,7 +868,6 @@ export default function AdminPanel() {
 
         <div className={styles.layout}>
           <aside className={styles.side}>
-            <span className={styles.overline}>Showly Admin</span>
 
             <h1 className={styles.sideTitle}>Panel administratora</h1>
 

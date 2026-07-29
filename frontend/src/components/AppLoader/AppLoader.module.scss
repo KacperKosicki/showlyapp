@@ -1,51 +1,31 @@
 @import "../../styles/variables";
 
-$paper-bg: #ffffff;
-$paper-soft: #fbfbfd;
-$ink: #151515;
-
-$dark-bg: #111216;
-$dark-surface: #1a1c22;
-$dark-surface-soft: #232630;
-$dark-text: #f4f1ea;
-$dark-muted: rgba(244, 241, 234, 0.68);
-$dark-border: rgba(244, 241, 234, 0.16);
-$dark-primary: #a895ff;
-$dark-pink: #ff4f9a;
+/* =========================================================
+   AppLoader — aplikacyjny widok Showly
+========================================================= */
 
 .loaderPage {
   position: relative;
   min-height: 100svh;
-  padding: calc(env(safe-area-inset-top, 0px) + 1.2rem) 1rem
-    calc(env(safe-area-inset-bottom, 0px) + 1.2rem);
-
   display: grid;
   place-items: center;
-
   overflow: hidden;
   isolation: isolate;
 
-  background:
-    radial-gradient(circle at 18% 18%, rgba(111, 78, 242, 0.14), transparent 34%),
-    radial-gradient(circle at 84% 28%, rgba(255, 64, 129, 0.13), transparent 36%),
-    linear-gradient(180deg, #ffffff 0%, #fbfbff 48%, #fff7fb 100%);
+  padding:
+    calc(env(safe-area-inset-top, 0px) + 1.25rem)
+    max(1rem, env(safe-area-inset-right, 0px))
+    calc(env(safe-area-inset-bottom, 0px) + 1.25rem)
+    max(1rem, env(safe-area-inset-left, 0px));
 
-  color: $ink;
-  font-family: $font-body;
+  background: var(--app-bg);
+  color: var(--app-text);
+  font-family: $font-accent;
 
   *,
   *::before,
   *::after {
     box-sizing: border-box;
-  }
-
-  :global(html[data-theme="dark"]) & {
-    background:
-      radial-gradient(circle at 18% 18%, rgba(168, 149, 255, 0.16), transparent 34%),
-      radial-gradient(circle at 84% 28%, rgba(255, 79, 154, 0.13), transparent 36%),
-      linear-gradient(180deg, #111216 0%, #151720 48%, #111216 100%);
-
-    color: $dark-text;
   }
 }
 
@@ -53,58 +33,43 @@ $dark-pink: #ff4f9a;
   position: absolute;
   inset: 0;
   z-index: 0;
-  pointer-events: none;
   overflow: hidden;
+  pointer-events: none;
 }
 
 .grid {
   position: absolute;
   inset: 0;
+  opacity: 0.42;
 
   background:
-    linear-gradient(to right, rgba(21, 21, 21, 0.045) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(21, 21, 21, 0.035) 1px, transparent 1px);
-  background-size: 42px 42px;
+    linear-gradient(to right, var(--app-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--app-border) 1px, transparent 1px);
+  background-size: 44px 44px;
 
-  mask-image: radial-gradient(circle at 50% 42%, #000 0%, transparent 70%);
-  opacity: 0.5;
-
-  :global(html[data-theme="dark"]) & {
-    background:
-      linear-gradient(to right, rgba(244, 241, 234, 0.055) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(244, 241, 234, 0.04) 1px, transparent 1px);
-    opacity: 0.28;
-  }
+  mask-image: radial-gradient(circle at 50% 48%, #000 0%, transparent 72%);
 }
 
 .orbOne,
 .orbTwo {
   position: absolute;
-  width: 360px;
-  height: 360px;
-  border-radius: 999px;
-  filter: blur(80px);
-  opacity: 0.62;
+  width: min(36rem, 72vw);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.14;
 }
 
 .orbOne {
-  left: -120px;
-  top: 14%;
-  background: rgba(111, 78, 242, 0.2);
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(168, 149, 255, 0.22);
-  }
+  top: -10%;
+  left: -14%;
+  background: var(--app-primary);
 }
 
 .orbTwo {
-  right: -130px;
-  bottom: 12%;
-  background: rgba(255, 64, 129, 0.18);
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(255, 79, 154, 0.18);
-  }
+  right: -16%;
+  bottom: -14%;
+  background: #ff4f9a;
 }
 
 .card {
@@ -112,207 +77,178 @@ $dark-pink: #ff4f9a;
   z-index: 1;
 
   width: min(520px, 100%);
-  padding: 1.1rem;
+  padding: clamp(1rem, 2.8vw, 1.4rem);
 
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  box-shadow:
-    10px 10px 0 rgba(21, 21, 21, 0.07),
-    0 24px 80px rgba(21, 21, 21, 0.1);
+  border: 1px solid var(--app-border);
+  border-radius: 28px;
+  background: color-mix(in srgb, var(--app-surface) 92%, transparent);
+  box-shadow: 0 22px 70px rgba(21, 21, 21, 0.09);
 
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(26, 28, 34, 0.78);
-    border-color: $dark-border;
-    box-shadow:
-      10px 10px 0 rgba(0, 0, 0, 0.28),
-      0 24px 80px rgba(0, 0, 0, 0.42);
-  }
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 0.85rem;
+  padding: 0.9rem;
 
-  padding: 0.85rem;
-
-  background: rgba(255, 255, 255, 0.74);
-  border: 1px solid rgba(21, 21, 21, 0.1);
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(35, 38, 48, 0.72);
-    border-color: $dark-border;
-  }
-
-  div {
-    min-width: 0;
-    display: grid;
-    gap: 0.1rem;
-  }
-
-  strong {
-    font-family: $font-heading;
-    font-size: 1.28rem;
-    line-height: 1;
-    letter-spacing: -0.045em;
-    color: $ink;
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-text;
-    }
-  }
-
-  span {
-    font-size: 0.82rem;
-    color: rgba(21, 21, 21, 0.58);
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-muted;
-    }
-  }
+  border: 1px solid var(--app-border);
+  border-radius: 20px;
+  background: var(--app-surface-soft);
 }
 
 .logoMark {
   width: 48px;
   height: 48px;
   flex: 0 0 auto;
-
   display: grid;
   place-items: center;
 
-  background: linear-gradient(135deg, #a895ff, #ff4f9a);
-  color: #111216;
-  border: 1px solid rgba(21, 21, 21, 0.18);
-  box-shadow: 5px 5px 0 rgba(21, 21, 21, 0.08);
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--app-primary), #ff4f9a);
+  color: #ffffff;
 
-  font-family: $font-accent;
+  font-family: $font-heading;
   font-size: 1.15rem;
-  font-weight: 950;
+  font-weight: 800;
+  line-height: 1;
+}
 
-  :global(html[data-theme="dark"]) & {
-    border-color: rgba(255, 255, 255, 0.16);
-    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.3);
+.brandText {
+  min-width: 0;
+  display: grid;
+  gap: 0.16rem;
+
+  strong {
+    font-family: $font-heading;
+    font-size: 1.22rem;
+    font-weight: 750;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    color: var(--app-text);
+  }
+
+  span {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--app-muted);
   }
 }
 
 .loaderBox {
-  margin: 1.1rem 0;
-  padding: 1rem;
-
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.7rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin: 1rem 0;
+  padding: 0.85rem;
 
-  background: rgba(251, 251, 253, 0.74);
-  border: 1px solid rgba(21, 21, 21, 0.1);
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(17, 18, 22, 0.38);
-    border-color: $dark-border;
-  }
+  border: 1px solid var(--app-border);
+  border-radius: 20px;
+  background: var(--app-surface-soft);
 
   span {
-    min-height: 82px;
+    min-height: 78px;
     display: block;
+    overflow: hidden;
+    position: relative;
 
-    background:
-      linear-gradient(
-        110deg,
-        rgba(111, 78, 242, 0.08) 0%,
-        rgba(255, 64, 129, 0.16) 45%,
-        rgba(111, 78, 242, 0.08) 100%
+    border: 1px solid var(--app-border);
+    border-radius: 16px;
+    background: var(--app-surface);
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      transform: translateX(-110%);
+
+      background: linear-gradient(
+        100deg,
+        transparent 0%,
+        rgba(111, 78, 242, 0.11) 38%,
+        rgba(255, 79, 154, 0.13) 52%,
+        transparent 100%
       );
-    border: 1px solid rgba(21, 21, 21, 0.08);
 
-    animation: tilePulse 1.2s ease-in-out infinite;
+      animation: loaderShimmer 1.35s ease-in-out infinite;
+    }
 
-    &:nth-child(2) {
+    &:nth-child(2)::before {
       animation-delay: 0.14s;
     }
 
-    &:nth-child(3) {
+    &:nth-child(3)::before {
       animation-delay: 0.28s;
-    }
-
-    :global(html[data-theme="dark"]) & {
-      background:
-        linear-gradient(
-          110deg,
-          rgba(168, 149, 255, 0.1) 0%,
-          rgba(255, 79, 154, 0.16) 45%,
-          rgba(168, 149, 255, 0.1) 100%
-        );
-      border-color: rgba(244, 241, 234, 0.08);
     }
   }
 }
 
 .text {
-  text-align: left;
+  padding: 0.15rem 0.15rem 0;
+
+  .eyebrow {
+    display: inline-flex;
+    margin-bottom: 0.55rem;
+
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--app-primary);
+  }
 
   h1 {
     margin: 0;
-    font-family: $font-accent;
+    font-family: $font-heading;
     font-size: clamp(1.75rem, 5vw, 2.45rem);
-    line-height: 0.98;
-    letter-spacing: -0.06em;
-    color: $ink;
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-text;
-    }
+    font-weight: 760;
+    line-height: 1.02;
+    letter-spacing: -0.05em;
+    color: var(--app-text);
+    text-wrap: balance;
   }
 
   p {
-    margin: 0.65rem 0 0;
     max-width: 390px;
+    margin: 0.65rem 0 0;
 
-    font-size: 0.95rem;
-    line-height: 1.55;
-    color: rgba(21, 21, 21, 0.62);
-
-    :global(html[data-theme="dark"]) & {
-      color: $dark-muted;
-    }
+    font-size: 0.92rem;
+    line-height: 1.58;
+    color: var(--app-muted);
   }
 }
 
 .progress {
   position: relative;
-
-  height: 10px;
-  margin-top: 1.1rem;
-
+  height: 8px;
+  margin-top: 1.15rem;
   overflow: hidden;
 
-  background: rgba(21, 21, 21, 0.08);
-  border: 1px solid rgba(21, 21, 21, 0.08);
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(244, 241, 234, 0.08);
-    border-color: rgba(244, 241, 234, 0.08);
-  }
+  border-radius: 999px;
+  background: var(--app-surface-soft);
+  border: 1px solid var(--app-border);
 
   span {
     position: absolute;
     inset: 0 auto 0 0;
     width: 42%;
+    border-radius: inherit;
 
-    background: linear-gradient(135deg, #a895ff, #ff4f9a);
-    animation: progressMove 1.15s ease-in-out infinite;
+    background: linear-gradient(90deg, var(--app-primary), #ff4f9a);
+    animation: progressMove 1.2s ease-in-out infinite;
   }
 }
 
 @keyframes progressMove {
   0% {
-    transform: translateX(-110%);
+    transform: translateX(-115%);
   }
 
   55% {
-    transform: translateX(80%);
+    transform: translateX(85%);
   }
 
   100% {
@@ -320,16 +256,13 @@ $dark-pink: #ff4f9a;
   }
 }
 
-@keyframes tilePulse {
-  0%,
-  100% {
-    opacity: 0.42;
-    transform: translateY(0);
+@keyframes loaderShimmer {
+  0% {
+    transform: translateX(-115%);
   }
 
-  50% {
-    opacity: 1;
-    transform: translateY(-4px);
+  100% {
+    transform: translateX(115%);
   }
 }
 
@@ -341,29 +274,48 @@ $dark-pink: #ff4f9a;
 
   .card {
     padding: 0.85rem;
+    border-radius: 24px;
   }
 
   .brand {
     padding: 0.75rem;
+    border-radius: 18px;
   }
 
   .logoMark {
     width: 44px;
     height: 44px;
+    border-radius: 14px;
   }
 
   .loaderBox {
-    gap: 0.55rem;
-    padding: 0.75rem;
+    gap: 0.5rem;
+    padding: 0.7rem;
+    border-radius: 18px;
 
     span {
-      min-height: 66px;
+      min-height: 64px;
+      border-radius: 14px;
     }
   }
 }
 
+@media (max-width: 380px) {
+  .loaderBox {
+    gap: 0.4rem;
+
+    span {
+      min-height: 56px;
+    }
+  }
+
+  .brandText span {
+    font-size: 0.74rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .loaderBox span,
+  .loaderBox span::before,
   .progress span {
     animation: none;
   }

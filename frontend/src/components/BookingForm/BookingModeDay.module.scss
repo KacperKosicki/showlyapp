@@ -1273,3 +1273,296 @@ $dark-disabled-border: rgba(244, 241, 234, 0.08);
     transition: none;
   }
 }
+
+/* =========================================================
+   APP STYLE OVERRIDE — zgodny z Notifications / BookingForm
+========================================================= */
+
+.topGrid,
+.mainGrid {
+  gap: 1rem;
+}
+
+.field,
+.toggleField,
+.calendarCard,
+.infoCard,
+.warnBox,
+.fullLegendBar,
+.emptyState,
+.submitBar,
+.summaryRow,
+.toggleHint {
+  border: 1px solid var(--app-border);
+  border-radius: 20px;
+  background: var(--app-surface);
+  box-shadow: none;
+}
+
+.field,
+.toggleField,
+.calendarCard,
+.infoCard,
+.warnBox,
+.fullLegendBar {
+  padding: 1rem;
+}
+
+.fieldHint,
+.modePill,
+.legendItem {
+  border-radius: 999px;
+}
+
+.fieldHint {
+  border-color: var(--bf-primary-line);
+  background: var(--bf-primary-soft);
+  color: var(--bf-primary);
+}
+
+.fieldTitle,
+.cardHead h3,
+.infoTitle,
+.emptyState strong {
+  font-family: $font-heading;
+  color: var(--app-text);
+}
+
+.fieldEyebrow,
+.cardLabel {
+  color: var(--app-muted);
+}
+
+.textarea,
+.select {
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  background: var(--app-surface-soft);
+  color: var(--app-text);
+  box-shadow: none;
+  transform: none;
+
+  &:hover {
+    border-color: var(--bf-primary-line);
+  }
+
+  &:focus {
+    border-color: var(--bf-primary);
+    background: var(--app-surface);
+    box-shadow: 0 0 0 4px var(--bf-primary-soft);
+    transform: none;
+  }
+}
+
+.selectChevron {
+  color: var(--app-muted);
+}
+
+.toggleHint,
+.summaryRow,
+.fullLegendBar {
+  background: var(--app-surface-soft);
+}
+
+.toggleLabel {
+  color: var(--app-text);
+
+  input {
+    accent-color: var(--bf-primary);
+  }
+}
+
+.warnBox {
+  border-color: var(--bf-primary-line);
+  background: var(--bf-primary-soft);
+
+  strong {
+    color: var(--bf-primary);
+  }
+
+  p {
+    color: var(--app-muted);
+  }
+}
+
+.monthNav button {
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: var(--app-surface-soft);
+  color: var(--app-text);
+  box-shadow: none;
+  transform: none;
+
+  &:hover:not(:disabled) {
+    border-color: var(--bf-primary-line);
+    background: var(--bf-primary-soft);
+    color: var(--bf-primary);
+    box-shadow: none;
+    transform: translateY(-1px);
+  }
+}
+
+.monthLabel,
+.weekday {
+  color: var(--app-text);
+}
+
+.weekday {
+  opacity: 0.62;
+}
+
+.day {
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  box-shadow: none;
+  transform: none;
+
+  &:hover:not(:disabled) {
+    border-color: var(--bf-primary-line);
+    background: var(--bf-primary-soft);
+    color: var(--bf-primary);
+    box-shadow: none;
+    transform: translateY(-1px);
+  }
+}
+
+.selectedDay {
+  border-color: var(--bf-primary) !important;
+  background: var(--bf-primary) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.dayUnavailable {
+  border-color: rgba(190, 53, 85, 0.24) !important;
+  background: rgba(190, 53, 85, 0.1) !important;
+  color: #be3555 !important;
+}
+
+.dayPast,
+.dayLocked {
+  border-color: var(--app-border) !important;
+  background: var(--app-surface-soft) !important;
+  color: var(--app-muted) !important;
+  opacity: 0.52;
+}
+
+.modePill,
+.legendItem {
+  border-color: var(--app-border);
+  background: var(--app-surface-soft);
+  color: var(--app-muted);
+}
+
+.modeDot {
+  border: 0;
+  border-radius: 50%;
+  background: var(--bf-primary);
+}
+
+.summaryLabel,
+.infoSub,
+.summaryValue,
+.legendMetaFull,
+.submitHint,
+.muted {
+  color: var(--app-muted);
+}
+
+.summaryValue b,
+.infoSub b {
+  color: var(--app-text);
+}
+
+.emptyState {
+  padding: 1.25rem;
+  background: var(--app-surface-soft);
+}
+
+.emptyNumber {
+  border: 0;
+  border-radius: 14px;
+  background: var(--bf-primary);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.legendBox {
+  border-radius: 4px;
+}
+
+.legendFree {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+}
+
+.legendSelected {
+  background: var(--bf-primary);
+  border-color: var(--bf-primary);
+}
+
+.legendLocked {
+  background: var(--app-surface-soft);
+  border-color: var(--app-border);
+}
+
+.submitBar {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--app-surface-soft);
+}
+
+.submit {
+  min-height: 48px;
+  border: 1px solid var(--bf-primary);
+  border-radius: 14px;
+  background: var(--bf-primary);
+  color: #ffffff;
+  box-shadow: none;
+  transform: none;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--bf-primary) 88%, #000000);
+    box-shadow: 0 10px 24px var(--bf-primary-soft);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--bf-primary-soft);
+    outline-offset: 3px;
+  }
+}
+
+@media (max-width: 760px) {
+  .field,
+  .toggleField,
+  .calendarCard,
+  .infoCard,
+  .warnBox,
+  .fullLegendBar,
+  .emptyState,
+  .submitBar,
+  .summaryRow,
+  .toggleHint {
+    border-radius: 18px;
+  }
+
+  .day,
+  .monthNav button,
+  .textarea,
+  .select {
+    border-radius: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day,
+  .monthNav button,
+  .submit,
+  .textarea,
+  .select {
+    transition: none;
+  }
+}

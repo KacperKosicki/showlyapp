@@ -356,7 +356,7 @@ const Notifications = ({ user, setUnreadCount }) => {
           <FiInbox className={styles.icon} />
 
           <span className={styles.metaText}>
-            Wiadomość do Twojego <b>profilu</b> od {renderNameNode(rawName)}
+            Wiadomość od {renderNameNode(rawName)}
           </span>
         </>
       );
@@ -380,7 +380,7 @@ const Notifications = ({ user, setUnreadCount }) => {
           <FiMail className={styles.icon} />
 
           <span className={styles.metaText}>
-            Wiadomość systemowa od{" "}
+            Wiadomość od{" "}
             <span className={styles.name}>{sysName}</span>
           </span>
         </>
@@ -409,7 +409,12 @@ const Notifications = ({ user, setUnreadCount }) => {
               <div className={styles.meta}>{header}</div>
 
               <div className={styles.date}>
-                {new Date(lastMsg.createdAt).toLocaleString()}
+                {new Date(lastMsg.createdAt).toLocaleString("pl-PL", {
+                  day: "2-digit",
+                  month: "short",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </div>
             </div>
 
@@ -424,7 +429,7 @@ const Notifications = ({ user, setUnreadCount }) => {
                 <span className={styles.readPill}>Przeczytane</span>
               )}
 
-              <span className={styles.openPill}>Otwórz wątek →</span>
+              <span className={styles.openPill}>Otwórz →</span>
             </div>
           </div>
         </Link>
@@ -504,28 +509,26 @@ const Notifications = ({ user, setUnreadCount }) => {
       <div className={styles.inner}>
         <div className={styles.layout}>
           <aside className={styles.side}>
-            <span className={styles.overline}>Showly Notifications</span>
 
             <h2 className={styles.heading}>
-              Twoje <span>powiadomienia</span> i wiadomości.
+              Twoje <span>wiadomości</span>
             </h2>
 
             <p className={styles.description}>
               {hasMyProfile ? (
                 <>
-                  Zebraliśmy wiadomości do Twojego profilu
+                  Wiadomości do profilu
                   {myProfile?.name ? (
                     <>
                       {" "}
                       <strong>{myProfile.name}</strong>
                     </>
                   ) : null}{" "}
-                  oraz wątki wysłane z Twojego konta.
+                  i rozmowy rozpoczęte z konta.
                 </>
               ) : (
                 <>
-                  Wątki wysłane z Twojego konta są dostępne poniżej. Wiadomości
-                  do profilu pojawią się, gdy utworzysz swoją wizytówkę.
+                  Rozmowy rozpoczęte z konta są dostępne poniżej. Odbieranie zapytań włączysz po utworzeniu profilu.
                 </>
               )}
             </p>
@@ -555,8 +558,7 @@ const Notifications = ({ user, setUnreadCount }) => {
               <span>Inbox • Wątki • System</span>
 
               <p>
-                Tutaj znajdziesz wiadomości od klientów, rozmowy rozpoczęte z
-                innymi profilami oraz komunikaty systemowe Showly.
+                Wiadomości od klientów, rozpoczęte rozmowy i komunikaty Showly.
               </p>
             </div>
           </aside>
@@ -566,7 +568,7 @@ const Notifications = ({ user, setUnreadCount }) => {
               <div>
                 <span className={styles.chapterLabel}>Centrum wiadomości</span>
 
-                <h3>Sprawdzaj rozmowy i otwieraj pełne wątki.</h3>
+                <h3>Wszystkie rozmowy w jednym miejscu.</h3>
               </div>
 
               <span className={styles.chapterNumber}>
@@ -596,7 +598,7 @@ const Notifications = ({ user, setUnreadCount }) => {
             ) : (
               <div className={styles.messagesStack}>
                 {renderGroup({
-                  title: `Otrzymane wiadomości do Twojego profilu${myProfile?.name ? ` „${myProfile.name}”` : ""
+                  title: `Wiadomości do profilu${myProfile?.name ? ` „${myProfile.name}”` : ""
                     }`,
                   label: "Do profilu",
                   badge: hasMyProfile

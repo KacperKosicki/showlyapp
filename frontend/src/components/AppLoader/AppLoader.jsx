@@ -13,7 +13,7 @@ const AppLoader = () => {
         <div className={styles.brand}>
           <span className={styles.logoMark}>S</span>
 
-          <div>
+          <div className={styles.brandText}>
             <strong>Showly.me</strong>
             <span>profil online w jednym linku</span>
           </div>
@@ -26,7 +26,8 @@ const AppLoader = () => {
         </div>
 
         <div className={styles.text}>
-          <h1>Trwa ładowanie aplikacji</h1>
+          <span className={styles.eyebrow}>Uruchamianie aplikacji</span>
+          <h1>Trwa ładowanie Showly</h1>
           <p>Przygotowujemy Twoje konto, profil i ustawienia.</p>
         </div>
 

@@ -257,7 +257,6 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
       <div className={styles.inner}>
         <div className={styles.layout}>
           <aside className={styles.side}>
-            <span className={styles.overline}>Showly Boost</span>
 
             <h2 className={styles.heading}>
               Profile z <span>lepszą widocznością.</span>

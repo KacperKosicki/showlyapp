@@ -17,18 +17,18 @@ const icons = {
 
 const AlertBox = ({ type = "info", message, onClose }) => {
   useEffect(() => {
-    if (!onClose || !message) return;
+    if (!onClose || !message) return undefined;
 
-    const timer = setTimeout(onClose, 5000);
+    const timer = window.setTimeout(onClose, 5000);
 
-    return () => clearTimeout(timer);
+    return () => window.clearTimeout(timer);
   }, [onClose, message]);
 
-  if (!message) return null;
+  if (!message || typeof document === "undefined") return null;
 
   const safeType = styles[type] ? type : "info";
 
-  const alert = (
+  return createPortal(
     <div className={styles.alertBox}>
       <div
         className={`${styles.alert} ${styles[safeType]}`}
@@ -52,10 +52,9 @@ const AlertBox = ({ type = "info", message, onClose }) => {
           </button>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
-
-  return createPortal(alert, document.body);
 };
 
 export default AlertBox;

@@ -1,9 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import styles from "./ReservationList.module.scss";
-import { createPortal } from "react-dom";
 import AlertBox from "../AlertBox/AlertBox";
 import { useLocation } from "react-router-dom";
-import { FiInbox, FiSend, FiPlus, FiEdit3, FiX } from "react-icons/fi";
+import { FiInbox, FiSend, FiPlus } from "react-icons/fi";
 import {
   FiCalendar,
   FiClock,
@@ -15,11 +14,9 @@ import {
   FiUser,
   FiList,
   FiGrid,
-  FiInfo,
 } from "react-icons/fi";
 
-import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css";
+import ReservationCalendar from "./ReservationCalendar";
 
 import { api } from "../../api/api";
 
@@ -1291,6 +1288,20 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     return whole ? "cały dzień" : `${res.fromTime} – ${res.toTime}`;
   };
 
+  const getReservationLinkClass = (status) => {
+    const normalizedStatus = String(status || "").toLowerCase();
+
+    if (normalizedStatus === "zaakceptowana") {
+      return styles.linkAccepted;
+    }
+
+    if (["odrzucona", "anulowana"].includes(normalizedStatus)) {
+      return styles.linkRejected;
+    }
+
+    return styles.linkPending;
+  };
+
   const statusIcon = (status) => {
     if (status === "zaakceptowana") {
       return <FiCheckCircle className={styles.chipIcon} aria-hidden="true" />;
@@ -1672,10 +1683,16 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     const isPending = res.status === "oczekująca";
     const created = res.createdAt || res.updatedAt || Date.now();
     const isOffline = !!res.offline;
+    const isClosed = ["anulowana", "odrzucona"].includes(res.status);
+
+    const canClientManage = variant === "sent" && !isClosed;
+    const canProviderRespond = variant === "received" && isPending;
+    const canRemoveOffline = variant === "received" && isOffline && !isClosed;
+    const showBottomRow = canClientManage || canProviderRespond || canRemoveOffline;
 
     return (
       <li key={res._id} className={`${styles.item} ${isPending ? styles.unread : styles.read}`}>
-        <div className={styles.link}>
+        <div className={`${styles.link} ${getReservationLinkClass(res.status)}`}>
           <div className={styles.row}>
             <div className={styles.avatarWrap}>
               <AvatarNode variant={variant} isOffline={isOffline} />
@@ -1698,60 +1715,51 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
               {renderCancellationReason(res)}
             </div>
 
-            <div className={styles.bottomRow}>
-              {variant === "sent" && !["anulowana", "odrzucona"].includes(res.status) ? (
-                <>
-                  <button
-                    onClick={() => handleClientCancelWithReason(res)}
-                    className={`${styles.actionBtn} ${styles.cancelBtn}`}
-                    disabled={disabledIds.has(`cancel-${res._id}`)}
-                  >
-                    ❌ Anuluj z powodem
-                  </button>
-
-                  {!res.clientNote?.message ? (
+            {showBottomRow && (
+              <div className={styles.bottomRow}>
+                {canClientManage && (
+                  <>
                     <button
-                      onClick={() => handleClientNote(res)}
-                      className={`${styles.actionBtn} ${styles.acceptBtn}`}
-                      disabled={disabledIds.has(`note-${res._id}`)}
+                      onClick={() => handleClientCancelWithReason(res)}
+                      className={`${styles.actionBtn} ${styles.cancelBtn}`}
+                      disabled={disabledIds.has(`cancel-${res._id}`)}
                     >
-                      💬 Dodaj informację
+                      ❌ Anuluj z powodem
                     </button>
-                  ) : (
-                    <span className={styles.statePill}>
-                      Informacja dodana
-                    </span>
-                  )}
-                </>
-              ) : null}
 
-              {variant === "received" && res.status === "oczekująca" ? (
-                <>
-                  <button
-                    onClick={() => handleStatusChange(res._id, "zaakceptowana")}
-                    className={`${styles.actionBtn} ${styles.acceptBtn}`}
-                    disabled={disabledIds.has(res._id)}
-                  >
-                    ✅ Potwierdź
-                  </button>
+                    {!res.clientNote?.message && (
+                      <button
+                        onClick={() => handleClientNote(res)}
+                        className={`${styles.actionBtn} ${styles.acceptBtn}`}
+                        disabled={disabledIds.has(`note-${res._id}`)}
+                      >
+                        💬 Dodaj informację
+                      </button>
+                    )}
+                  </>
+                )}
 
-                  <button
-                    onClick={() => handleStatusChange(res._id, "odrzucona")}
-                    className={`${styles.actionBtn} ${styles.rejectBtn}`}
-                    disabled={disabledIds.has(res._id)}
-                  >
-                    ❌ Odrzuć
-                  </button>
-                </>
-              ) : (
-                <span className={styles.statePill}>
-                  Status: <strong>{res.status}</strong>
-                </span>
-              )}
+                {canProviderRespond && (
+                  <>
+                    <button
+                      onClick={() => handleStatusChange(res._id, "zaakceptowana")}
+                      className={`${styles.actionBtn} ${styles.acceptBtn}`}
+                      disabled={disabledIds.has(res._id)}
+                    >
+                      ✅ Potwierdź
+                    </button>
 
-              {variant === "received" &&
-                res.offline &&
-                !["anulowana", "odrzucona"].includes(res.status) && (
+                    <button
+                      onClick={() => handleStatusChange(res._id, "odrzucona")}
+                      className={`${styles.actionBtn} ${styles.rejectBtn}`}
+                      disabled={disabledIds.has(res._id)}
+                    >
+                      ❌ Odrzuć
+                    </button>
+                  </>
+                )}
+
+                {canRemoveOffline && (
                   <button
                     onClick={() => handleCancelOfflineByProvider(res)}
                     className={`${styles.actionBtn} ${styles.cancelBtn}`}
@@ -1760,7 +1768,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                     🗑 Usuń offline
                   </button>
                 )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </li>
@@ -2002,306 +2011,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     });
   }, [dayTimeline]);
 
-  const offlineModalEl = useMemo(() => {
-    if (!offlineOpen) return null;
-
-    const servicesLocal = providerMeta?.services || [];
-
-    return createPortal(
-      <div className={styles.modalOverlay} onClick={() => setOfflineOpen(false)}>
-        <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
-          <div className={styles.modalHead}>
-            <div className={styles.modalTitle}>
-              <FiPlus /> Dodaj rezerwację offline
-            </div>
-
-            <button
-              className={styles.modalClose}
-              onClick={() => setOfflineOpen(false)}
-              type="button"
-            >
-              <FiX />
-            </button>
-          </div>
-
-          <div className={styles.modalBody}>
-            {metaLoading && <div className={styles.modalHint}>Ładowanie danych profilu…</div>}
-
-            <div className={styles.modalInfo}>
-              <FiInfo />
-              <div>
-                <b>System dolicza przerwę {OFFLINE_BUFFER_MIN} min</b> po każdej rezerwacji
-                (także offline).
-                <div style={{ opacity: 0.85, fontSize: 12, marginTop: 4 }}>
-                  (bazowe {BASE_BREAK_MIN} min + bufor z profilu {bookingBufferMin} min)
-                </div>
-              </div>
-            </div>
-
-            {conflicts.length > 0 && (
-              <div className={styles.modalWarn}>
-                <div className={styles.modalWarnTitle}>
-                  <FiAlertCircle /> Uwaga: możliwy konflikt terminów (z buforem{" "}
-                  {OFFLINE_BUFFER_MIN} min)
-                </div>
-                <div className={styles.modalWarnText}>
-                  W tym dniu/godzinach są już rezerwacje. Terminy mogą się nałożyć:
-                </div>
-                <ul className={styles.conflictList}>
-                  {conflicts.slice(0, 6).map((c) => (
-                    <li key={c.id}>{c.label}</li>
-                  ))}
-                </ul>
-                {conflicts.length > 6 && (
-                  <div className={styles.conflictMore}>+ {conflicts.length - 6} więcej</div>
-                )}
-              </div>
-            )}
-
-            <div className={styles.modalGrid}>
-              <label className={styles.field}>
-                <span>Data</span>
-                <input
-                  className={styles.formInput}
-                  type="date"
-                  value={offlineForm.date}
-                  onChange={(e) =>
-                    setOfflineForm((p) => ({ ...p, date: e.target.value, slotStart: "" }))
-                  }
-                />
-              </label>
-
-              {!isDayBlockingMode && (
-                <label className={styles.fieldToggle}>
-                  <input
-                    type="checkbox"
-                    checked={offlineForm.dateOnly}
-                    onChange={(e) =>
-                      setOfflineForm((p) => ({
-                        ...p,
-                        dateOnly: e.target.checked,
-                        slotStart: "",
-                      }))
-                    }
-                  />
-                  <span>Cały dzień</span>
-                </label>
-              )}
-
-              <label className={styles.fieldWide}>
-                <span>Klient (offline)</span>
-                <input
-                  className={styles.formInput}
-                  value={offlineForm.offlineClientName}
-                  onChange={(e) =>
-                    setOfflineForm((p) => ({ ...p, offlineClientName: e.target.value }))
-                  }
-                  placeholder="Np. Kasia / Firma X"
-                />
-              </label>
-
-              <label className={styles.fieldWide}>
-                <span>Opis (wyświetlany w rezerwacji)</span>
-                <textarea
-                  className={styles.formTextarea}
-                  rows={3}
-                  value={offlineForm.description}
-                  onChange={(e) =>
-                    setOfflineForm((p) => ({ ...p, description: e.target.value }))
-                  }
-                  placeholder="Opcjonalnie"
-                />
-              </label>
-
-              <label className={styles.fieldWide}>
-                <span>Usługa (wymagane)</span>
-                <select
-                  className={styles.formInput}
-                  value={offlineForm.serviceId}
-                  onChange={(e) =>
-                    setOfflineForm((p) => ({
-                      ...p,
-                      serviceId: e.target.value,
-                      staffId: "",
-                      slotStart: "",
-                    }))
-                  }
-                >
-                  <option value="">— wybierz usługę —</option>
-                  {servicesLocal.map((s) => {
-                    const mins = getServiceDurationMinutes(s);
-                    const label = mins
-                      ? `${s.name} (${mins % 60 === 0 && mins >= 60
-                        ? `${mins / 60} godz.`
-                        : `${mins} min`
-                      })`
-                      : s.name;
-
-                    return (
-                      <option key={String(s._id)} value={String(s._id)}>
-                        {label}
-                      </option>
-                    );
-                  })}
-                </select>
-
-                {!!durationLabel && (
-                  <div className={styles.durationPill}>
-                    ⏱ Czas usługi: <b>{durationLabel}</b>
-                    <span className={styles.durationMini}>
-                      + {OFFLINE_BUFFER_MIN} min przerwy
-                    </span>
-                  </div>
-                )}
-              </label>
-
-              <label className={styles.fieldWide}>
-                <span>Pracownik</span>
-                <select
-                  className={styles.formInput}
-                  value={offlineForm.staffId}
-                  onChange={(e) =>
-                    setOfflineForm((p) => ({
-                      ...p,
-                      staffId: e.target.value,
-                      slotStart: "",
-                    }))
-                  }
-                  disabled={!teamEnabled || isAutoAssignTeam}
-                  title={
-                    !teamEnabled
-                      ? "Zespół wyłączony w profilu"
-                      : isAutoAssignTeam
-                        ? "Auto-assign: pracownik dobierany automatycznie"
-                        : ""
-                  }
-                >
-                  <option value="">
-                    {isUserPickTeam
-                      ? "— wybierz pracownika (wymagane) —"
-                      : "— opcjonalnie —"}
-                  </option>
-                  {filteredStaff.map((s) => (
-                    <option key={String(s._id)} value={String(s._id)}>
-                      {s.name} (cap: {s.capacity || 1})
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              {!isDayBlockingMode && isSlotMode && !offlineForm.dateOnly && (
-                <div className={styles.slotBox}>
-                  <div className={styles.slotHead}>
-                    Wybierz godzinę startu (slot)
-                    <span className={styles.slotHint}>+ {OFFLINE_BUFFER_MIN} min przerwy</span>
-                  </div>
-
-                  {!offlineForm.serviceId ? (
-                    <div className={styles.slotInfo}>
-                      Najpierw wybierz <b>usługę</b> — wtedy pokażę dopasowane sloty.
-                    </div>
-                  ) : isUserPickTeam && !offlineForm.staffId ? (
-                    <div className={styles.slotInfo}>
-                      Wybierz <b>pracownika</b>, żeby pokazać sloty (tryb user-pick).
-                    </div>
-                  ) : (
-                    <>
-                      <div className={styles.slotGrid}>
-                        {offlineSlots.map((s, i) => (
-                          <button
-                            key={`${s.label}-${i}`}
-                            type="button"
-                            className={`
-                              ${styles.slotBtn}
-                              ${s.status === "disabled" ? styles.slotDisabled : ""}
-                              ${s.status === "reserved" ? styles.slotReserved : ""}
-                              ${s.status === "pending" ? styles.slotPending : ""}
-                              ${offlineForm.slotStart === s.label ? styles.slotSelected : ""}
-                            `}
-                            disabled={s.status !== "free"}
-                            onClick={() =>
-                              setOfflineForm((p) => ({ ...p, slotStart: s.label }))
-                            }
-                          >
-                            {s.label}
-                          </button>
-                        ))}
-                      </div>
-
-                      <div className={styles.slotLegend}>
-                        <span>
-                          <span className={`${styles.legBox} ${styles.legReserved}`} />
-                          zajęte
-                        </span>
-                        <span>
-                          <span className={`${styles.legBox} ${styles.legPending}`} />
-                          oczekujące
-                        </span>
-                        <span>
-                          <span className={`${styles.legBox} ${styles.legDisabled}`} />
-                          niedostępne
-                        </span>
-                        <span>
-                          <span className={`${styles.legBox} ${styles.legFree}`} />
-                          wolne
-                        </span>
-                      </div>
-
-                      {!!offlineForm.slotStart && (
-                        <div className={styles.slotSummary}>
-                          Start: <b>{offlineForm.fromTime}</b> • Koniec:{" "}
-                          <b>{offlineForm.toTime}</b>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className={styles.modalActions}>
-              <button
-                className={styles.modalSecondary}
-                onClick={() => setOfflineOpen(false)}
-                type="button"
-              >
-                Anuluj
-              </button>
-
-              <button
-                className={styles.modalPrimary}
-                onClick={submitOffline}
-                type="button"
-                disabled={disabledIds.has("offline-submit")}
-              >
-                <FiEdit3 /> Dodaj
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>,
-      document.body
-    );
-  }, [
-    offlineOpen,
-    providerMeta,
-    metaLoading,
-    offlineForm,
-    conflicts,
-    durationLabel,
-    filteredStaff,
-    disabledIds,
-    submitOffline,
-    getServiceDurationMinutes,
-    teamEnabled,
-    isUserPickTeam,
-    isAutoAssignTeam,
-    offlineSlots,
-    isDayBlockingMode,
-    isSlotMode,
-    OFFLINE_BUFFER_MIN,
-    bookingBufferMin,
-  ]);
 
   useEffect(() => {
     if (loading) return;
@@ -2350,305 +2059,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
     return () => clearInterval(id);
   }, [isLogged, clientReservations, serviceReservations, refetch]);
-
-  const CalendarPanel = () => {
-    const meta = dayMap.get(selectedIso);
-
-    return (
-      <div className={styles.calendarWrap}>
-        <div className={styles.calendarCard}>
-          <div className={styles.calendarHeader}>
-            <div>
-              <div className={styles.calendarTitle}>Kalendarz rezerwacji</div>
-              <div className={styles.calendarSub}>
-                Kliknij dzień, aby podejrzeć rezerwacje i wolne sloty z tego terminu.
-              </div>
-            </div>
-
-            <div className={styles.calendarPills}>
-              <span className={styles.calendarPill}>
-                Dzień: <strong>{formatDatePL(selectedIso)}</strong>
-              </span>
-              <span className={styles.calendarPill}>
-                Razem: <strong>{meta?.total ?? 0}</strong>
-              </span>
-              <span className={styles.calendarPill}>
-                Otrzymane: <strong>{meta?.recvTotal ?? 0}</strong>
-              </span>
-              <span className={styles.calendarPill}>
-                Wysłane: <strong>{meta?.sentTotal ?? 0}</strong>
-              </span>
-            </div>
-          </div>
-
-          <div className={styles.calendarGrid}>
-            <div className={styles.calendarLeft}>
-              <div className={styles.calSkin}>
-                <Calendar
-                  value={selectedDay}
-                  onChange={(d) => setSelectedDay(d)}
-                  locale="pl-PL"
-                  tileClassName={({ date, view }) => {
-                    if (view !== "month") return null;
-
-                    const iso = toISODate(date);
-                    const dayInfo = getDayAvailabilityInfo(providerMeta, iso);
-
-                    return dayInfo ? styles.calendarUnavailableDay : null;
-                  }}
-                  tileContent={({ date, view }) => {
-                    if (view !== "month") return null;
-
-                    const iso = toISODate(date);
-                    const v = dayMap.get(iso);
-                    const dayInfo = getDayAvailabilityInfo(providerMeta, iso);
-
-                    const total = v?.total || 0;
-                    const unavailable = v?.unavailable || 0;
-                    const pending = v?.pending || 0;
-                    const accepted = v?.accepted || 0;
-                    const rejected = v?.rejected || 0;
-
-                    if (!v && !dayInfo) return null;
-
-                    if (total === 0 && unavailable === 0 && !dayInfo) {
-                      return null;
-                    }
-
-                    return (
-                      <div className={styles.tileBadges} aria-hidden="true">
-                        {(dayInfo || unavailable > 0) && (
-                          <span className={`${styles.dotMini} ${styles.dotUnavailable}`} />
-                        )}
-
-                        {pending > 0 && (
-                          <span className={`${styles.dotMini} ${styles.dotPending}`} />
-                        )}
-
-                        {accepted > 0 && (
-                          <span className={`${styles.dotMini} ${styles.dotAccepted}`} />
-                        )}
-
-                        {rejected > 0 && (
-                          <span className={`${styles.dotMini} ${styles.dotRejected}`} />
-                        )}
-
-                        {total > 0 && (
-                          <span className={styles.tileCount}>{total}</span>
-                        )}
-                      </div>
-                    );
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className={styles.calendarRight}>
-              <div className={styles.dayBox}>
-                <div className={styles.dayBoxHead}>
-                  <FiCalendar />
-                  <span>
-                    Rezerwacje z dnia <strong>{formatDatePL(selectedIso)}</strong>
-                  </span>
-                </div>
-
-                {selectedDayAvailabilityInfo && (
-                  <div className={styles.unavailableNotice}>
-                    <FiAlertCircle />
-                    <div>
-                      <strong>{selectedDayAvailabilityInfo.title}</strong>
-                      {selectedDayAvailabilityInfo.reason && (
-                        <span>{selectedDayAvailabilityInfo.reason}</span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {isSlotMode && (
-                  <div className={styles.daySection}>
-                    <div className={styles.daySectionTitle}>
-                      Plan dnia <span className={styles.dayCount}>{visibleTimelineBlocks.length}</span>
-                    </div>
-
-                    {visibleTimelineBlocks.length === 0 ? (
-                      <div className={styles.timelineEmpty}>Brak danych.</div>
-                    ) : (
-                      <div className={styles.timeline}>
-                        {visibleTimelineBlocks.map((b) => (
-                          <div key={b.id} className={styles.tlRow}>
-                            <div className={styles.tlTime}>
-                              <span className={styles.tlTimeTxt}>
-                                {minToTime(b.startMin)}–{minToTime(b.endMin)}
-                              </span>
-                              <span
-                                className={`${styles.tlDot} ${dotToTlClass(
-                                  b.isFree ? "wolne" : b.status
-                                )}`}
-                              />
-                            </div>
-
-                            <div
-                              className={`${styles.tlCard} ${b.isFree ? styles.tlCardFree : ""
-                                }`}
-                            >
-                              <div className={styles.tlTop}>
-                                {b.isFree ? (
-                                  <span className={`${styles.tlKind} ${styles.tlKindRecv}`}>
-                                    <FiGrid /> WOLNE
-                                  </span>
-                                ) : (
-                                  <span
-                                    className={`${styles.tlKind} ${b.kind === "recv"
-                                      ? styles.tlKindRecv
-                                      : styles.tlKindSent
-                                      }`}
-                                  >
-                                    {b.kind === "recv" ? (
-                                      <>
-                                        <FiInbox /> Otrzymana
-                                      </>
-                                    ) : (
-                                      <>
-                                        <FiSend /> Wysłana
-                                      </>
-                                    )}
-                                  </span>
-                                )}
-
-                                {!b.isFree && b.offline && (
-                                  <span className={styles.tlOffline}>OFFLINE</span>
-                                )}
-
-                                <span
-                                  className={`${styles.tlStatus} ${statusToTlClass(
-                                    b.isFree ? "wolne" : b.status
-                                  )}`}
-                                >
-                                  {b.isFree ? (
-                                    "wolne"
-                                  ) : (
-                                    <>
-                                      {statusIcon(b.status)} {b.status}
-                                    </>
-                                  )}
-                                </span>
-                              </div>
-
-                              <div className={styles.tlTitle}>{b.title}</div>
-
-                              {!b.isFree && (
-                                <div className={styles.tlMeta}>
-                                  {b.serviceName && (
-                                    <span className={styles.tlChip}>
-                                      <FiTag /> {b.serviceName}
-                                    </span>
-                                  )}
-                                  {b.staffName && (
-                                    <span className={styles.tlChip}>
-                                      <FiUser /> {b.staffName}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-
-                              {!b.isFree && b.desc && (
-                                <div className={styles.tlDesc}>
-                                  <FiFileText /> <span>{b.desc}</span>
-                                </div>
-                              )}
-
-                              {b.isFree && !selectedDayAvailabilityInfo && (
-                                <div className={styles.tlActions}>
-                                  <button
-                                    type="button"
-                                    className={styles.tlAddBtn}
-                                    onClick={() =>
-                                      openOfflineForSlot(selectedIso, b.startMin, b.endMin)
-                                    }
-                                  >
-                                    <FiPlus /> Dodaj offline w tym slocie
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {isDayBlockingMode && (
-                  <div className={styles.daySection}>
-                    <div className={styles.daySectionTitle}>Blokowanie dnia</div>
-                    <div className={styles.timelineEmpty}>
-                      W tym trybie możesz dodać offline rezerwację na cały dzień dla
-                      wybranej daty.
-                    </div>
-                  </div>
-                )}
-
-                {hasProviderProfile && (
-                  <div className={styles.daySection}>
-                    <div className={styles.daySectionTitle}>
-                      Otrzymane{" "}
-                      <span className={styles.dayCount}>{selectedReservations.recv.length}</span>
-                    </div>
-
-                    {selectedReservations.recv.length === 0 ? (
-                      <div className={styles.dayEmpty}>
-                        Brak otrzymanych rezerwacji w tym dniu.
-                      </div>
-                    ) : (
-                      <ul className={styles.list}>
-                        {selectedReservations.recv.map((r) => renderItem(r, "received"))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-
-                <div className={styles.daySection}>
-                  <div className={styles.daySectionTitle}>
-                    Wysłane{" "}
-                    <span className={styles.dayCount}>{selectedReservations.sent.length}</span>
-                  </div>
-
-                  {selectedReservations.sent.length === 0 ? (
-                    <div className={styles.dayEmpty}>
-                      Brak wysłanych rezerwacji w tym dniu.
-                    </div>
-                  ) : (
-                    <ul className={styles.list}>
-                      {selectedReservations.sent.map((r) => renderItem(r, "sent"))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-
-              {hasProviderProfile && (isSlotMode || isDayBlockingMode) && (
-                <div className={styles.dayActions}>
-                  <button
-                    className={styles.addOfflineBtn}
-                    type="button"
-                    disabled={!!selectedDayAvailabilityInfo}
-                    title={selectedDayAvailabilityInfo?.reason || ""}
-                    onClick={() => openOfflineForDay(selectedIso)}
-                  >
-                    <FiPlus />
-                    {selectedDayAvailabilityInfo
-                      ? " Niedostępne"
-                      : isDayBlockingMode
-                        ? " Zablokuj dzień offline"
-                        : " Dodaj offline"}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   const SkeletonItem = () => (
     <li className={`${styles.item} ${styles.skeletonItem}`}>
@@ -2747,10 +2157,9 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       <div className={styles.shell}>
         <div className={styles.layout}>
           <aside className={styles.side}>
-            <span className={styles.overline}>Showly Reservations</span>
 
             <h2 className={styles.heading}>
-              Twoje <span>rezerwacje</span> i terminy.
+              Twoje <span>rezerwacje</span> i terminy
             </h2>
 
             <p className={styles.description}>
@@ -2890,7 +2299,43 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
               </div>
             ) : canUseCalendar && viewMode === "calendar" ? (
               <div className={styles.calendarPanelWrap}>
-                <CalendarPanel />
+                <ReservationCalendar
+                  selectedDay={selectedDay}
+                  onSelectedDayChange={setSelectedDay}
+                  selectedIso={selectedIso}
+                  formatDatePL={formatDatePL}
+                  dayMap={dayMap}
+                  getDayAvailabilityInfo={getDayAvailabilityInfo}
+                  providerMeta={providerMeta}
+                  selectedDayAvailabilityInfo={selectedDayAvailabilityInfo}
+                  visibleTimelineBlocks={visibleTimelineBlocks}
+                  selectedReservations={selectedReservations}
+                  hasProviderProfile={hasProviderProfile}
+                  isSlotMode={isSlotMode}
+                  isDayBlockingMode={isDayBlockingMode}
+                  renderReservationItem={renderItem}
+                  statusIcon={statusIcon}
+                  onOpenOfflineForSlot={openOfflineForSlot}
+                  onOpenOfflineForDay={openOfflineForDay}
+                  offlineOpen={offlineOpen}
+                  setOfflineOpen={setOfflineOpen}
+                  metaLoading={metaLoading}
+                  offlineForm={offlineForm}
+                  setOfflineForm={setOfflineForm}
+                  conflicts={conflicts}
+                  durationLabel={durationLabel}
+                  filteredStaff={filteredStaff}
+                  disabledIds={disabledIds}
+                  submitOffline={submitOffline}
+                  getServiceDurationMinutes={getServiceDurationMinutes}
+                  teamEnabled={teamEnabled}
+                  isUserPickTeam={isUserPickTeam}
+                  isAutoAssignTeam={isAutoAssignTeam}
+                  offlineSlots={offlineSlots}
+                  offlineBufferMin={OFFLINE_BUFFER_MIN}
+                  baseBreakMin={BASE_BREAK_MIN}
+                  bookingBufferMin={bookingBufferMin}
+                />
               </div>
             ) : (
               <div className={styles.reservationsStack}>
@@ -2947,7 +2392,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         </div>
       </div>
 
-      {offlineModalEl}
     </section>
   );
 };

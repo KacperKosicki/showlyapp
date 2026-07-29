@@ -688,3 +688,157 @@ $dark-disabled-text: rgba(244, 241, 234, 0.34);
     transition: none;
   }
 }
+
+/* =========================================================
+   APP STYLE OVERRIDE — zgodny z Notifications / BookingForm
+========================================================= */
+
+.form {
+  gap: 1rem;
+}
+
+.introBox,
+.field,
+.previewBox,
+.previewContent,
+.previewEmpty,
+.submitBar {
+  border: 1px solid var(--app-border);
+  border-radius: 20px;
+  background: var(--app-surface);
+  box-shadow: none;
+}
+
+.introBox,
+.field,
+.previewBox {
+  padding: 1rem;
+}
+
+.introNumber,
+.previewNumber {
+  border: 0;
+  border-radius: 14px;
+  background: var(--bf-primary);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.introBox strong,
+.fieldTitle,
+.previewHead strong {
+  font-family: $font-heading;
+  color: var(--app-text);
+}
+
+.introBox p,
+.previewEmpty,
+.submitHint {
+  color: var(--app-muted);
+}
+
+.fieldEyebrow,
+.previewLabel {
+  color: var(--app-muted);
+}
+
+.fieldHint {
+  border: 1px solid var(--bf-primary-line);
+  border-radius: 999px;
+  background: var(--bf-primary-soft);
+  color: var(--bf-primary);
+}
+
+.input,
+.select,
+.textarea {
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  background: var(--app-surface-soft);
+  color: var(--app-text);
+  box-shadow: none;
+  transform: none;
+
+  &:hover:not(:disabled) {
+    border-color: var(--bf-primary-line);
+  }
+
+  &:focus {
+    border-color: var(--bf-primary);
+    background: var(--app-surface);
+    box-shadow: 0 0 0 4px var(--bf-primary-soft);
+    transform: none;
+  }
+
+  &:disabled {
+    border-color: var(--app-border);
+    background: var(--app-surface-soft);
+    color: var(--app-muted);
+  }
+}
+
+.selectChevron {
+  color: var(--app-muted);
+}
+
+.previewContent {
+  background: var(--app-surface-soft);
+  color: var(--app-text);
+}
+
+.previewEmpty {
+  border-style: dashed;
+  background: var(--app-surface-soft);
+}
+
+.submitBar {
+  padding: 1rem;
+  background: var(--app-surface-soft);
+}
+
+.submit {
+  min-height: 48px;
+  border: 1px solid var(--bf-primary);
+  border-radius: 14px;
+  background: var(--bf-primary);
+  color: #ffffff;
+  box-shadow: none;
+  transform: none;
+
+  &:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--bf-primary) 88%, #000000);
+    box-shadow: 0 10px 24px var(--bf-primary-soft);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 3px solid var(--bf-primary-soft);
+    outline-offset: 3px;
+  }
+}
+
+@media (max-width: 760px) {
+  .introBox,
+  .field,
+  .previewBox,
+  .previewContent,
+  .previewEmpty,
+  .submitBar {
+    border-radius: 18px;
+  }
+
+  .input,
+  .select,
+  .textarea {
+    border-radius: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input,
+  .select,
+  .textarea,
+  .submit {
+    transition: none;
+  }
+}

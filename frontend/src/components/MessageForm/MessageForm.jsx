@@ -296,89 +296,10 @@ const MessageForm = ({ user }) => {
       <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />
     );
 
-  if (loading) {
-    return (
-      <div id="messageFormContainer" className={styles.page}>
-        <div className={styles.bgGlow} aria-hidden="true" />
-        <div className={styles.noiseLayer} aria-hidden="true" />
-
-        <div className={styles.shell}>
-          <div className={styles.wrapper}>
-            <div className={styles.backRow}>
-              <div className={`${styles.backButton} ${styles.disabled}`}>
-                <FaArrowLeft />
-                Wróć
-              </div>
-            </div>
-
-            <header className={styles.hero}>
-              <div className={styles.heroDecor} aria-hidden="true">
-                <span className={styles.heroGlowA} />
-                <span className={styles.heroGlowB} />
-                <span className={styles.heroGrid} />
-              </div>
-
-              <div className={styles.heroTopBar}>
-                <div className={styles.heroBadge}>
-                  <FaRegCommentDots />
-                  <span>Konto ➜ Wizytówka</span>
-                </div>
-              </div>
-
-              <div className={styles.heroInner}>
-                <div className={styles.heroLeft}>
-                  <span className={styles.kicker}>
-                    <FaBolt />
-                    Nowa wiadomość
-                  </span>
-
-                  <h2 className={styles.heroTitle}>Przygotowuję rozmowę…</h2>
-
-                  <p className={styles.heroText}>
-                    Sprawdzam, czy istnieje już wątek oraz pobieram dane odbiorcy.
-                  </p>
-                </div>
-
-                <div className={styles.heroRight}>
-                  <div className={styles.avatarWrap}>
-                    <div className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`}>
-                      <FaUserCircle />
-                    </div>
-                    <div className={styles.avatarRing} aria-hidden="true" />
-                  </div>
-                </div>
-              </div>
-            </header>
-
-            <section className={styles.formCard}>
-              <div className={styles.senderHint}>
-                <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />
-              </div>
-
-              <div className={`${styles.textarea} ${styles.shimmer}`} />
-
-              <LoadingButton
-                type="button"
-                isLoading={true}
-                disabled={true}
-                className={styles.primaryBtn}
-              >
-                Ładowanie
-              </LoadingButton>
-            </section>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div id="messageFormContainer" className={styles.page}>
-      <div className={styles.bgGlow} aria-hidden="true" />
-      <div className={styles.noiseLayer} aria-hidden="true" />
-
-      <div className={styles.shell}>
-        {alert && (
+  const renderMessageLayout = ({ isLoading = false }) => (
+    <div id="messageFormContainer" className={styles.section}>
+      <div className={styles.inner}>
+        {alert && !isLoading && (
           <AlertBox
             type={alert.type}
             message={alert.message}
@@ -386,8 +307,13 @@ const MessageForm = ({ user }) => {
           />
         )}
 
-        <div className={styles.wrapper}>
-          <div className={styles.backRow}>
+        <div className={styles.backRow}>
+          {isLoading ? (
+            <div className={`${styles.backButton} ${styles.disabled}`}>
+              <FaArrowLeft />
+              Wróć
+            </div>
+          ) : (
             <button
               type="button"
               className={styles.backButton}
@@ -396,140 +322,217 @@ const MessageForm = ({ user }) => {
               <FaArrowLeft />
               Wróć
             </button>
-          </div>
+          )}
+        </div>
 
-          <header className={styles.hero}>
-            <div className={styles.heroDecor} aria-hidden="true">
-              <span className={styles.heroGlowA} />
-              <span className={styles.heroGlowB} />
-              <span className={styles.heroGrid} />
-            </div>
+        <div className={styles.layout}>
+          <aside className={styles.side}>
 
-            <div className={styles.heroTopBar}>
-              <div className={styles.heroBadge} title="Kanał wiadomości">
-                <FaRegCommentDots />
-                <span>Konto ➜ Wizytówka</span>
+            <h1 className={styles.heading}>
+              {isLoading ? (
+                <>Przygotowuję <span>rozmowę.</span></>
+              ) : (
+                <>Napisz do <span>{renderNameNode(receiverName)}</span></>
+              )}
+            </h1>
+
+            <p className={styles.description}>
+              {isLoading
+                ? "Sprawdzam, czy istnieje już wątek oraz pobieram dane odbiorcy."
+                : "Wyślij pierwszą wiadomość. Po wysłaniu automatycznie przejdziesz do utworzonej konwersacji."}
+            </p>
+
+            <div className={styles.receiverCard}>
+              <div className={styles.avatarWrap}>
+                {!isLoading && !metaPending && receiverAvatar ? (
+                  <img
+                    src={receiverAvatar}
+                    alt=""
+                    className={styles.avatar}
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      e.currentTarget.src = DEFAULT_AVATAR;
+                    }}
+                  />
+                ) : (
+                  <div
+                    className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`}
+                  >
+                    <FaUserCircle />
+                  </div>
+                )}
               </div>
 
-              <div className={styles.heroBadgeSoft}>
-                <FaShieldAlt />
-                <span>Bezpieczny wątek</span>
-              </div>
-            </div>
-
-            <div className={styles.heroInner}>
-              <div className={styles.heroLeft}>
-                <span className={styles.kicker}>
-                  <FaComments />
-                  Nowa rozmowa
-                </span>
-
-                <h2 className={styles.heroTitle}>
-                  Napisz do {renderNameNode(receiverName)}
-                </h2>
-
-                <p className={styles.heroText}>
-                  Wyślij pierwszą wiadomość — po wysłaniu automatycznie przejdziesz
-                  do konwersacji.
-                </p>
-
-                <div className={styles.metaRow}>
-                  <span>Pierwsza wiadomość tworzy wątek</span>
-                  <span className={styles.dot} />
-                  <span>Konto ➜ właściciel wizytówki</span>
-                </div>
-              </div>
-
-              <div className={styles.heroRight}>
-                <div className={styles.avatarWrap}>
-                  {!metaPending && receiverAvatar ? (
-                    <img
-                      src={receiverAvatar}
-                      alt=""
-                      className={styles.avatar}
-                      decoding="async"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        e.currentTarget.src = DEFAULT_AVATAR;
-                      }}
-                    />
+              <div className={styles.receiverDetails}>
+                <span>Odbiorca</span>
+                <strong>
+                  {isLoading ? (
+                    <span className={`${styles.nameSkeleton} ${styles.shimmer}`} />
                   ) : (
-                    <div className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`}>
-                      <FaUserCircle />
-                    </div>
+                    renderNameNode(receiverName)
                   )}
-
-                  <div className={styles.avatarRing} aria-hidden="true" />
-                </div>
+                </strong>
+                <p>Właściciel wizytówki Showly</p>
               </div>
             </div>
-          </header>
 
-          <section className={styles.formCard}>
-            <form onSubmit={handleSend} className={styles.form}>
-              <div className={styles.formHeader}>
-                <div>
-                  <span className={styles.sectionKicker}>
-                    <FaPaperPlane />
-                    Wiadomość
-                  </span>
-
-                  <h3 className={styles.formTitle}>Napisz wiadomość</h3>
-
-                  <p className={styles.formSub}>
-                    Krótko opisz, o co chcesz zapytać. Odbiorca zobaczy wiadomość w
-                    swoim panelu.
-                  </p>
-                </div>
+            <div className={styles.metaRow}>
+              <div className={styles.metaCard}>
+                <strong>1</strong>
+                <span>wiadomość tworzy nowy wątek</span>
               </div>
 
-              <div className={styles.senderHint}>
-                Wyślesz wiadomość jako: <strong>Twoje konto</strong>
+              <div className={styles.metaCard}>
+                <strong>800</strong>
+                <span>maksymalna liczba znaków</span>
               </div>
 
-              <textarea
-                className={styles.textarea}
-                value={message}
-                onChange={(e) => {
-                  const text = e.target.value;
-                  if (text.length <= maxChars) setMessage(text);
-                }}
-                placeholder="Np. Cześć, chciałbym zapytać o dostępny termin, cenę lub szczegóły usługi..."
-                required
-                disabled={isSending}
-              />
-
-              <div className={styles.textareaMeta}>
-                <span>Wiadomość trafi bezpośrednio do właściciela wizytówki.</span>
-                <strong>{message.length} / {maxChars}</strong>
+              <div className={styles.metaCard}>
+                <strong>konto</strong>
+                <span>nadawca wiadomości</span>
               </div>
-
-              <LoadingButton
-                type="submit"
-                isLoading={isSending}
-                disabled={isSending || !message.trim()}
-                className={styles.primaryBtn}
-              >
-                <FaPaperPlane />
-                Wyślij wiadomość
-              </LoadingButton>
-            </form>
+            </div>
 
             <div className={styles.infoBox}>
-              <span className={styles.infoIcon}>
-                <FaInfoCircle />
+              <span>
+                <FaShieldAlt />
+                Bezpieczny wątek
               </span>
 
               <p>
-                Jeśli wątek już istnieje, zostaniesz automatycznie przekierowany do
-                aktualnej rozmowy.
+                Jeśli rozmowa już istnieje, zostaniesz automatycznie
+                przekierowany do aktualnej konwersacji.
               </p>
             </div>
-          </section>
+          </aside>
+
+          <main className={styles.content}>
+            <div className={styles.chapterHead}>
+              <div>
+                <span className={styles.chapterLabel}>
+                  {isLoading ? "Ładowanie formularza" : "Nowa wiadomość"}
+                </span>
+
+                <h2>
+                  {isLoading
+                    ? "Przygotowuję formularz wiadomości."
+                    : "Napisz pierwszą wiadomość do profilu."}
+                </h2>
+              </div>
+
+              <span className={styles.chapterNumber}>01</span>
+            </div>
+
+            <section className={styles.messagePanel}>
+              <div className={styles.panelHeader}>
+                <span className={styles.panelBadge}>
+                  <FaRegCommentDots />
+                  Konto ➜ Wizytówka
+                </span>
+
+                <span className={styles.panelBadgeSoft}>
+                  <FaBolt />
+                  Nowa rozmowa
+                </span>
+              </div>
+
+              {isLoading ? (
+                <div className={styles.form}>
+                  <div className={`${styles.senderHint} ${styles.shimmer}`}>
+                    <span className={styles.nameSkeleton} />
+                  </div>
+
+                  <div className={`${styles.textarea} ${styles.shimmer}`} />
+
+                  <LoadingButton
+                    type="button"
+                    isLoading={true}
+                    disabled={true}
+                    className={styles.primaryBtn}
+                  >
+                    Ładowanie
+                  </LoadingButton>
+                </div>
+              ) : (
+                <>
+                  <form onSubmit={handleSend} className={styles.form}>
+                    <div className={styles.formHeader}>
+                      <div>
+                        <span className={styles.sectionKicker}>
+                          <FaPaperPlane />
+                          Wiadomość
+                        </span>
+
+                        <h3 className={styles.formTitle}>Napisz wiadomość</h3>
+
+                        <p className={styles.formSub}>
+                          Krótko opisz, o co chcesz zapytać. Odbiorca zobaczy
+                          wiadomość w swoim panelu.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className={styles.senderHint}>
+                      Wyślesz wiadomość jako: <strong>Twoje konto</strong>
+                    </div>
+
+                    <textarea
+                      className={styles.textarea}
+                      value={message}
+                      onChange={(e) => {
+                        const text = e.target.value;
+                        if (text.length <= maxChars) setMessage(text);
+                      }}
+                      placeholder="Np. Cześć, chciałbym zapytać o dostępny termin, cenę lub szczegóły usługi..."
+                      required
+                      disabled={isSending}
+                    />
+
+                    <div className={styles.textareaMeta}>
+                      <span>
+                        Wiadomość trafi bezpośrednio do właściciela wizytówki.
+                      </span>
+                      <strong>
+                        {message.length} / {maxChars}
+                      </strong>
+                    </div>
+
+                    <LoadingButton
+                      type="submit"
+                      isLoading={isSending}
+                      disabled={isSending || !message.trim()}
+                      className={styles.primaryBtn}
+                    >
+                      <FaPaperPlane />
+                      Wyślij wiadomość
+                    </LoadingButton>
+                  </form>
+
+                  <div className={styles.bottomInfo}>
+                    <span className={styles.infoIcon}>
+                      <FaInfoCircle />
+                    </span>
+
+                    <p>
+                      Pierwsza wiadomość utworzy nowy wątek. Jeśli rozmowa już
+                      istnieje, nastąpi automatyczne przekierowanie.
+                    </p>
+                  </div>
+                </>
+              )}
+            </section>
+          </main>
         </div>
       </div>
     </div>
   );
+
+  if (loading) {
+    return renderMessageLayout({ isLoading: true });
+  }
+
+  return renderMessageLayout({ isLoading: false });
 };
 
 export default MessageForm;

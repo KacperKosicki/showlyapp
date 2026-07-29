@@ -962,3 +962,450 @@ $dark-danger: #ff9aa6;
     }
   }
 }
+
+/* =========================================================
+   APP STYLE OVERRIDE — zgodny z Notifications / BookingForm
+========================================================= */
+
+.section {
+  --cardW: clamp(360px, 27vw, 430px);
+  --gap: clamp(0.9rem, 1.2vw, 1.2rem);
+  // Większa strefa boczna oddziela strzałki od kart — jak w PromotedProfiles.
+  --sidePad: clamp(4.25rem, 5vw, 5.5rem);
+
+  min-height: 100vh;
+
+  padding:
+    clamp(1.25rem, 3vw, 2.5rem)
+    max(clamp(1rem, 3vw, 2rem), var(--safe-right))
+    calc(clamp(2rem, 5vw, 4rem) + var(--safe-bottom))
+    max(clamp(1rem, 3vw, 2rem), var(--safe-left));
+
+  background: var(--app-bg);
+  color: var(--app-text);
+  font-family: $font-accent;
+
+  &::before {
+    display: none;
+  }
+}
+
+.inner {
+  width: min(1560px, 100%);
+  max-width: none;
+}
+
+.layout {
+  grid-template-columns: minmax(370px, 420px) minmax(0, 1fr);
+  gap: clamp(1.25rem, 2.5vw, 2.25rem);
+}
+
+/* =========================================================
+   Sidebar
+========================================================= */
+
+.side {
+  top: calc(1rem + var(--safe-top));
+  padding: clamp(1.35rem, 2.6vw, 2rem);
+
+  border: 1px solid var(--app-border);
+  border-radius: 24px;
+  background: var(--app-surface);
+  box-shadow: 0 18px 55px rgba(21, 21, 21, 0.07);
+}
+
+.overline,
+.chapterLabel {
+  color: var(--app-muted);
+}
+
+.heading {
+  font-family: $font-heading;
+  font-size: clamp(2.15rem, 2.8vw, 3.15rem);
+  font-weight: 750;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  color: var(--app-text);
+
+  span {
+    color: var(--app-primary);
+  }
+}
+
+.description,
+.infoBox span,
+.infoBox p,
+.metaCard span,
+.emptyState p,
+.mobileHint {
+  color: var(--app-muted);
+}
+
+.metaRow {
+  gap: 0.65rem;
+  margin-top: 1.35rem;
+}
+
+.metaCard {
+  min-height: 86px;
+  padding: 0.9rem;
+
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  background: var(--app-surface-soft);
+  box-shadow: none;
+
+  strong {
+    font-family: $font-heading;
+    color: var(--app-text);
+  }
+}
+
+.infoBox {
+  margin-top: 1rem;
+  padding: 1rem;
+
+  border: 1px solid var(--app-border);
+  border-radius: 18px;
+  background: var(--app-surface-soft);
+}
+
+/* =========================================================
+   Content
+========================================================= */
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.chapterHead {
+  align-items: flex-end;
+  margin-bottom: 0;
+  padding: clamp(1.2rem, 2.6vw, 1.8rem);
+
+  border: 1px solid var(--app-border);
+  border-radius: 24px;
+  background: var(--app-surface);
+
+  h3 {
+    font-family: $font-heading;
+    font-size: clamp(1.35rem, 2.25vw, 2.15rem);
+    font-weight: 720;
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    color: var(--app-text);
+  }
+}
+
+.chapterNumber {
+  min-width: 3.2rem;
+  height: 3.2rem;
+
+  border: 0;
+  border-radius: 14px;
+  background: var(--app-primary);
+  color: #ffffff;
+  box-shadow: none;
+}
+
+/* =========================================================
+   Carousel
+========================================================= */
+
+.carousel {
+  // sidePad tworzy osobną przestrzeń dla przycisków nawigacji.
+  padding: 1rem var(--sidePad);
+
+  border: 1px solid var(--app-border);
+  border-radius: 24px;
+  background: var(--app-surface);
+  overflow: hidden;
+}
+
+.carousel::before,
+.carousel::after {
+  width: var(--sidePad);
+}
+
+.carousel::before {
+  background: linear-gradient(
+    90deg,
+    var(--app-surface) 18%,
+    color-mix(in srgb, var(--app-surface) 0%, transparent)
+  );
+}
+
+.carousel::after {
+  background: linear-gradient(
+    270deg,
+    var(--app-surface) 18%,
+    color-mix(in srgb, var(--app-surface) 0%, transparent)
+  );
+}
+
+.grid {
+  padding: 0.35rem 0 0.75rem;
+}
+
+.cardWrap {
+  border-radius: 20px;
+}
+
+/* =========================================================
+   Empty / error
+========================================================= */
+
+.emptyState {
+  width: 100%;
+  max-width: none;
+  padding: clamp(1.25rem, 2.2vw, 1.8rem);
+
+  border: 1px dashed var(--app-border);
+  border-radius: 24px;
+  background: var(--app-surface);
+  box-shadow: none;
+
+  strong {
+    font-family: $font-heading;
+    color: var(--app-text);
+  }
+}
+
+.errorState {
+  border-color: rgba(190, 53, 85, 0.28);
+  background: rgba(190, 53, 85, 0.07);
+
+  strong {
+    color: #be3555;
+  }
+}
+
+.emptyIconWrap {
+  border: 1px solid color-mix(in srgb, var(--app-primary) 24%, transparent);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--app-primary) 9%, transparent);
+  box-shadow: none;
+}
+
+.emptyIcon {
+  color: var(--app-primary);
+}
+
+.cta {
+  border: 1px solid var(--app-primary);
+  border-radius: 14px;
+  background: var(--app-primary);
+  color: #ffffff;
+  box-shadow: none;
+  transform: none;
+
+  &:hover {
+    background: color-mix(in srgb, var(--app-primary) 88%, #000000);
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--app-primary) 16%, transparent);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--app-primary) 18%, transparent);
+    outline-offset: 3px;
+  }
+}
+
+/* =========================================================
+   Arrows
+========================================================= */
+
+.navBtn {
+  width: 46px;
+  height: 46px;
+
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  background: var(--app-surface-soft);
+  color: var(--app-text);
+  box-shadow: none;
+
+  svg {
+    color: currentColor;
+  }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--app-primary) 24%, transparent);
+    background: color-mix(in srgb, var(--app-primary) 9%, var(--app-surface));
+    color: var(--app-primary);
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--app-primary) 18%, transparent);
+    outline-offset: 3px;
+  }
+}
+
+.left {
+  left: 0.75rem;
+
+  &:hover {
+    transform: translate(-2px, -50%);
+  }
+
+  &:active {
+    transform: translate(0, -50%);
+  }
+}
+
+.right {
+  right: 0.75rem;
+
+  &:hover {
+    transform: translate(2px, -50%);
+  }
+
+  &:active {
+    transform: translate(0, -50%);
+  }
+}
+
+.disabled {
+  opacity: 0.32;
+}
+
+/* =========================================================
+   Skeleton
+========================================================= */
+
+.skeletonCard {
+  min-height: 300px;
+  padding: 1rem;
+
+  border: 1px solid var(--app-border);
+  border-radius: 20px;
+  background: var(--app-surface);
+  box-shadow: none;
+}
+
+.skeletonThumb,
+.skeletonLineLg,
+.skeletonLineMd,
+.skeletonLineSm {
+  border: 0;
+  border-radius: 10px;
+  background: var(--app-surface-soft);
+}
+
+.skeletonThumb {
+  border-radius: 16px;
+}
+
+.shimmer {
+  &::after {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--app-text) 7%, transparent),
+      transparent
+    );
+  }
+}
+
+/* =========================================================
+   RWD
+========================================================= */
+
+@media (max-width: 1180px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .side {
+    position: relative;
+    top: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .section {
+    --cardW: min(400px, 100%);
+    --sidePad: 0px;
+  }
+
+  .carousel {
+    padding: 1rem;
+  }
+
+  .carousel::before,
+  .carousel::after {
+    display: none;
+  }
+
+  .mobileHint {
+    color: var(--app-muted);
+
+    span {
+      color: var(--app-primary);
+    }
+  }
+}
+
+@media (max-width: 680px) {
+  .section {
+    padding-top: 1rem;
+  }
+
+  .side,
+  .chapterHead,
+  .carousel,
+  .emptyState {
+    border-radius: 20px;
+  }
+
+  .metaRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .side,
+  .carousel,
+  .emptyState,
+  .skeletonCard {
+    padding: 0.9rem;
+  }
+
+  .chapterHead {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .chapterNumber {
+    order: -1;
+  }
+
+  .cta {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta,
+  .navBtn,
+  .grid,
+  .mobileHint,
+  .shimmer::after {
+    animation: none;
+    transition: none;
+    scroll-behavior: auto;
+  }
+}

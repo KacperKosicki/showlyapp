@@ -1,46 +1,16 @@
 @import "../../styles/variables";
 
-$paper-bg: #ffffff;
-$paper-soft: #fbfbfd;
-$paper-muted: #f5f6fa;
-$ink: #151515;
-
-$success: #15803d;
-$error: #b91c1c;
-$warning: #a16207;
-$info: #2563eb;
-
-$dark-bg: #111216;
-$dark-surface: #1a1c22;
-$dark-surface-soft: #232630;
-$dark-text: #f4f1ea;
-$dark-muted: rgba(244, 241, 234, 0.68);
-$dark-border: rgba(244, 241, 234, 0.16);
-
-$dark-success: #8ee6a1;
-$dark-error: #ff9aa6;
-$dark-warning: #facc15;
-$dark-info: #93c5fd;
-
 .alertBox {
-  /*
-    Desktop:
-    nowy navbar ma fixed shell + box z cieniem, więc alert startuje
-    od razu pod nim, ale z lekkim oddechem.
-  */
-  --alert-nav-offset: 106px;
+  --alert-nav-offset: 96px;
 
   position: fixed;
+  z-index: 2147483647;
   top: calc(env(safe-area-inset-top, 0px) + var(--alert-nav-offset));
   left: 50%;
+  width: min(620px, calc(100vw - 2rem));
   transform: translateX(-50%);
-
-  z-index: 2147483647;
-
-  width: min(92vw, 620px);
-
   pointer-events: none;
-  font-family: $font-body;
+  font-family: $font-accent;
 
   *,
   *::before,
@@ -50,102 +20,61 @@ $dark-info: #93c5fd;
 }
 
 .alert {
-  --alert-color: #{$info};
-  --alert-soft: rgba(37, 99, 235, 0.075);
+  --alert-color: #2563eb;
+  --alert-soft: rgba(37, 99, 235, 0.09);
   --alert-border: rgba(37, 99, 235, 0.24);
 
   position: relative;
-
-  width: 100%;
-  min-height: 70px;
-  padding: 0.82rem 0.86rem;
-
-  pointer-events: auto;
-
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 36px;
+  grid-template-columns: 46px minmax(0, 1fr) 38px;
   align-items: center;
   gap: 0.85rem;
 
-  background: rgba(255, 255, 255, 0.97);
-  color: $ink;
-
-  border: 1px solid var(--alert-border);
-  border-left: 7px solid var(--alert-color);
-
-  box-shadow:
-    9px 9px 0 rgba(21, 21, 21, 0.08),
-    0 20px 54px rgba(21, 21, 21, 0.13);
+  width: 100%;
+  min-height: 72px;
+  padding: 0.8rem;
 
   overflow: hidden;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  pointer-events: auto;
+
+  border: 1px solid var(--alert-border);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--app-surface) 94%, transparent);
+  color: var(--app-text);
+
+  box-shadow:
+    0 18px 55px rgba(21, 21, 21, 0.12),
+    0 2px 8px rgba(21, 21, 21, 0.05);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 
   animation: alertIn 0.24s ease both;
-
-  transition:
-    background 0.22s ease,
-    color 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background:
-      radial-gradient(circle at 8% 0%, rgba(168, 149, 255, 0.12), transparent 34%),
-      rgba(26, 28, 34, 0.94);
-
-    color: $dark-text;
-
-    box-shadow:
-      9px 9px 0 rgba(0, 0, 0, 0.28),
-      0 22px 58px rgba(0, 0, 0, 0.34);
-  }
 
   &::before {
     content: "";
     position: absolute;
     inset: 0;
-
     background: linear-gradient(
-      90deg,
+      110deg,
       var(--alert-soft) 0%,
-      rgba(255, 255, 255, 0) 64%
+      transparent 58%
     );
-
     pointer-events: none;
-
-    :global(html[data-theme="dark"]) & {
-      background: linear-gradient(
-        90deg,
-        var(--alert-soft) 0%,
-        rgba(26, 28, 34, 0) 68%
-      );
-    }
   }
 
   &::after {
     content: "";
     position: absolute;
-    left: 0;
-    bottom: 0;
-
-    width: 100%;
+    left: 0.8rem;
+    right: 0.8rem;
+    bottom: 0.32rem;
     height: 3px;
-
-    background: linear-gradient(
-      90deg,
-      var(--alert-color),
-      rgba(255, 255, 255, 0)
-    );
-
-    opacity: 0.65;
-    pointer-events: none;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--alert-color), transparent);
     transform-origin: left;
     animation: alertProgress 5s linear forwards;
-
-    :global(html[data-theme="dark"]) & {
-      opacity: 0.78;
-    }
+    pointer-events: none;
   }
 }
 
@@ -153,22 +82,21 @@ $dark-info: #93c5fd;
   position: relative;
   z-index: 1;
 
-  width: 44px;
-  height: 44px;
-
   display: grid;
   place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
 
-  background: var(--alert-soft);
   border: 1px solid var(--alert-border);
+  border-radius: 15px;
+  background: var(--alert-soft);
   color: var(--alert-color);
+  font-size: 1.18rem;
 
-  font-size: 1.15rem;
-
-  transition:
-    background 0.22s ease,
-    color 0.22s ease,
-    border-color 0.22s ease;
+  svg {
+    display: block;
+  }
 }
 
 .message {
@@ -176,150 +104,86 @@ $dark-info: #93c5fd;
   z-index: 1;
 
   min-width: 0;
-
-  font-family: $font-body;
-  font-weight: 850;
-  font-size: 0.95rem;
-  line-height: 1.45;
-  letter-spacing: -0.01em;
-
-  color: rgba(21, 21, 21, 0.78);
-
-  word-break: break-word;
-
-  transition: color 0.22s ease;
-
-  :global(html[data-theme="dark"]) & {
-    color: rgba(244, 241, 234, 0.84);
-  }
+  color: var(--app-text);
+  font-family: $font-accent;
+  font-size: 0.9rem;
+  font-weight: 650;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .close {
   position: relative;
   z-index: 1;
 
-  width: 36px;
-  height: 36px;
-
   display: grid;
   place-items: center;
+  width: 38px;
+  height: 38px;
 
-  border: 1px solid rgba(21, 21, 21, 0.12);
-  border-radius: 0;
-
-  background: $paper-bg;
-  color: rgba(21, 21, 21, 0.72);
-
-  font-family: $font-accent;
-  font-size: 1.35rem;
-  font-weight: 950;
-  line-height: 1;
+  padding: 0;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: var(--app-surface-soft);
+  color: var(--app-muted);
 
   cursor: pointer;
+  font: inherit;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
 
   transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease,
     color 0.18s ease,
-    border-color 0.18s ease;
-
-  :global(html[data-theme="dark"]) & {
-    background: rgba(35, 38, 48, 0.88);
-    color: $dark-muted;
-    border-color: $dark-border;
-  }
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
 
   &:hover {
-    transform: translate(-2px, -2px);
-    background: $paper-muted;
-    color: $ink;
-    border-color: rgba(21, 21, 21, 0.18);
-    box-shadow: 4px 4px 0 rgba(21, 21, 21, 0.08);
-
-    :global(html[data-theme="dark"]) & {
-      background: rgba(244, 241, 234, 0.08);
-      color: $dark-text;
-      border-color: rgba(244, 241, 234, 0.24);
-      box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.26);
-    }
+    border-color: var(--alert-border);
+    background: var(--alert-soft);
+    color: var(--alert-color);
+    transform: translateY(-1px);
   }
 
   &:active {
-    transform: translate(0, 0);
-    box-shadow: none;
+    transform: translateY(0);
   }
 
   &:focus-visible {
-    outline: 3px solid rgba(111, 78, 242, 0.22);
-    outline-offset: 3px;
-
-    :global(html[data-theme="dark"]) & {
-      outline-color: rgba(168, 149, 255, 0.34);
-    }
+    outline: 3px solid var(--alert-soft);
+    outline-offset: 2px;
   }
 }
 
-/* =========================================================
-   Variants
-========================================================= */
-
 .success {
-  --alert-color: #{$success};
-  --alert-soft: rgba(21, 128, 61, 0.075);
-  --alert-border: rgba(21, 128, 61, 0.24);
-
-  :global(html[data-theme="dark"]) & {
-    --alert-color: #{$dark-success};
-    --alert-soft: rgba(142, 230, 161, 0.12);
-    --alert-border: rgba(142, 230, 161, 0.28);
-  }
+  --alert-color: #17825c;
+  --alert-soft: rgba(23, 130, 92, 0.1);
+  --alert-border: rgba(23, 130, 92, 0.26);
 }
 
 .error {
-  --alert-color: #{$error};
-  --alert-soft: rgba(185, 28, 28, 0.075);
-  --alert-border: rgba(185, 28, 28, 0.24);
-
-  :global(html[data-theme="dark"]) & {
-    --alert-color: #{$dark-error};
-    --alert-soft: rgba(255, 154, 166, 0.12);
-    --alert-border: rgba(255, 154, 166, 0.3);
-  }
+  --alert-color: #be3555;
+  --alert-soft: rgba(190, 53, 85, 0.1);
+  --alert-border: rgba(190, 53, 85, 0.26);
 }
 
 .warning {
-  --alert-color: #{$warning};
-  --alert-soft: rgba(161, 98, 7, 0.08);
-  --alert-border: rgba(161, 98, 7, 0.26);
-
-  :global(html[data-theme="dark"]) & {
-    --alert-color: #{$dark-warning};
-    --alert-soft: rgba(250, 204, 21, 0.12);
-    --alert-border: rgba(250, 204, 21, 0.3);
-  }
+  --alert-color: #ad5d10;
+  --alert-soft: rgba(173, 93, 16, 0.1);
+  --alert-border: rgba(173, 93, 16, 0.26);
 }
 
 .info {
-  --alert-color: #{$info};
-  --alert-soft: rgba(37, 99, 235, 0.075);
-  --alert-border: rgba(37, 99, 235, 0.24);
-
-  :global(html[data-theme="dark"]) & {
-    --alert-color: #{$dark-info};
-    --alert-soft: rgba(147, 197, 253, 0.12);
-    --alert-border: rgba(147, 197, 253, 0.3);
-  }
+  --alert-color: #315cbd;
+  --alert-soft: rgba(49, 92, 189, 0.1);
+  --alert-border: rgba(49, 92, 189, 0.26);
 }
-
-/* =========================================================
-   Animation
-========================================================= */
 
 @keyframes alertIn {
   from {
     opacity: 0;
-    transform: translateY(-12px) scale(0.985);
+    transform: translateY(-10px) scale(0.985);
   }
 
   to {
@@ -338,129 +202,75 @@ $dark-info: #93c5fd;
   }
 }
 
-/* =========================================================
-   Mobile — pod nowy kompaktowy navbar
-========================================================= */
-
 @media (max-width: 760px) {
   .alertBox {
-    /*
-      Nowy mobile navbar jest jednorzędowy i kompaktowy:
-      nie ustawiamy już 158–170px, bo alert robił się za nisko.
-    */
-    --alert-nav-offset: 82px;
-
-    width: min(430px, calc(100vw - 1.44rem));
+    --alert-nav-offset: 78px;
+    width: min(430px, calc(100vw - 1.4rem));
   }
 
   .alert {
-    grid-template-columns: 40px minmax(0, 1fr) 34px;
-    gap: 0.72rem;
-
-    min-height: 64px;
-    padding: 0.7rem;
-
-    border-left-width: 6px;
-
-    box-shadow:
-      7px 7px 0 rgba(21, 21, 21, 0.075),
-      0 16px 44px rgba(21, 21, 21, 0.12);
-
-    :global(html[data-theme="dark"]) & {
-      box-shadow:
-        7px 7px 0 rgba(0, 0, 0, 0.28),
-        0 18px 48px rgba(0, 0, 0, 0.3);
-    }
+    grid-template-columns: 42px minmax(0, 1fr) 34px;
+    gap: 0.7rem;
+    min-height: 66px;
+    padding: 0.68rem;
+    border-radius: 18px;
   }
 
   .icon {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
     font-size: 1.02rem;
   }
 
   .message {
-    font-size: 0.86rem;
-    line-height: 1.38;
+    font-size: 0.84rem;
+    line-height: 1.42;
   }
 
   .close {
     width: 34px;
     height: 34px;
-    font-size: 1.18rem;
+    border-radius: 11px;
+    font-size: 1.12rem;
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 420px) {
   .alertBox {
-    --alert-nav-offset: 78px;
-
-    width: calc(100vw - 1.5rem);
+    --alert-nav-offset: 72px;
+    width: calc(100vw - 1rem);
   }
 
   .alert {
     grid-template-columns: 38px minmax(0, 1fr) 32px;
-    gap: 0.62rem;
-
-    min-height: 62px;
-    padding: 0.62rem;
-
-    border-left-width: 5px;
+    gap: 0.58rem;
+    padding: 0.58rem;
+    border-radius: 16px;
   }
 
   .icon {
     width: 38px;
     height: 38px;
-    font-size: 0.98rem;
+    border-radius: 12px;
+    font-size: 0.94rem;
   }
 
   .message {
-    font-size: 0.82rem;
-    line-height: 1.36;
+    font-size: 0.79rem;
   }
 
   .close {
     width: 32px;
     height: 32px;
-    font-size: 1.1rem;
-  }
-}
-
-@media (max-width: 390px) {
-  .alertBox {
-    --alert-nav-offset: 74px;
-
-    width: calc(100vw - 1.1rem);
-  }
-
-  .alert {
-    grid-template-columns: 34px minmax(0, 1fr) 30px;
-    gap: 0.55rem;
-    padding: 0.58rem;
-  }
-
-  .icon {
-    width: 34px;
-    height: 34px;
-    font-size: 0.9rem;
-  }
-
-  .message {
-    font-size: 0.78rem;
-  }
-
-  .close {
-    width: 30px;
-    height: 30px;
+    border-radius: 10px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .alert,
   .alert::after,
-  .close,
-  .icon,
-  .message {
+  .close {
     animation: none;
     transition: none;
   }

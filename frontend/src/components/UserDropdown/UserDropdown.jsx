@@ -756,7 +756,7 @@ const UserDropdown = ({
           >
             <span className={styles.itemLeft}>
               <FiHeart className={styles.itemIcon} aria-hidden="true" />
-              <span className={styles.itemText}>Ulubione</span>
+              <span className={styles.itemText}>Ulubione profile</span>
             </span>
           </button>
         </div>

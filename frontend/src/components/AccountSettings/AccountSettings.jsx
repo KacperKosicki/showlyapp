@@ -8,7 +8,7 @@ import {
   sendPasswordResetEmail,
   onAuthStateChanged,
 } from "firebase/auth";
-import { FiImage, FiSave, FiTrash2, FiLock } from "react-icons/fi";
+import { FiImage, FiSave, FiTrash2, FiLock, FiUser, FiShield } from "react-icons/fi";
 
 const API = process.env.REACT_APP_API_URL;
 
@@ -343,6 +343,9 @@ export default function AccountSettings() {
     );
   }
 
+  const hasAvatar = Boolean(preview && preview !== fallbackImg);
+  const hasDisplayName = Boolean(displayName.trim());
+
   return (
     <section id="scrollToId" className={styles.section}>
       <div className={styles.inner}>
@@ -358,50 +361,65 @@ export default function AccountSettings() {
 
         <div className={styles.layout}>
           <aside className={styles.side}>
-            <span className={styles.overline}>Showly Account</span>
+            <h2 className={styles.heading}>
+              Ustawienia <span>konta</span>
+            </h2>
 
-            <h2 className={styles.sideTitle}>Ustawienia konta</h2>
-
-            <p className={styles.sideText}>
-              Zarządzaj podstawowymi danymi konta: awatarem, nazwą wyświetlaną
-              oraz dostępem do hasła. Prosto, bez przeładowanego panelu.
+            <p className={styles.description}>
+              Zarządzaj danymi widocznymi w Showly, zdjęciem konta oraz
+              bezpieczeństwem logowania.
             </p>
 
-            <div className={styles.quickStats}>
-              <div>
+            <div className={styles.metaRow}>
+              <div className={styles.metaCard}>
                 <strong>{user?.email ? "OK" : "—"}</strong>
-                <span>adres e-mail</span>
+                <span>adres e-mail konta</span>
               </div>
 
-              <div>
-                <strong>{preview && preview !== fallbackImg ? "Tak" : "Nie"}</strong>
-                <span>awatar konta</span>
+              <div className={styles.metaCard}>
+                <strong>{hasAvatar ? "Tak" : "Nie"}</strong>
+                <span>ustawiony awatar</span>
               </div>
 
-              <div>
-                <strong>{displayName.trim() ? "Tak" : "Nie"}</strong>
-                <span>nazwa publiczna</span>
+              <div className={styles.metaCard}>
+                <strong>{hasDisplayName ? "Tak" : "Nie"}</strong>
+                <span>nazwa wyświetlana</span>
               </div>
+            </div>
+
+            <div className={styles.infoBox}>
+              <span>Profil • Konto • Bezpieczeństwo</span>
+              <p>
+                Zmiany zapisujesz osobno w każdej sekcji. Dzięki temu masz
+                pełną kontrolę nad tym, co aktualizujesz.
+              </p>
             </div>
           </aside>
 
           <div className={styles.content}>
-            <article className={styles.chapter}>
-              <div className={styles.chapterNumber}>01</div>
+            <div className={styles.chapterHeadMain}>
+              <div>
+                <span className={styles.chapterLabel}>Centrum ustawień</span>
+                <h3>Twoje dane i dostęp w jednym miejscu.</h3>
+              </div>
 
-              <div className={styles.chapterMain}>
-                <div className={styles.chapterHead}>
+              <span className={styles.chapterNumber}>03</span>
+            </div>
+
+            <div className={styles.settingsStack}>
+              <section className={styles.settingGroup}>
+                <div className={styles.groupHeader}>
                   <div>
-                    <span className={styles.chapterLabel}>Awatar konta</span>
-                    <h3 className={styles.chapterTitle}>
-                      Zdjęcie, które będzie reprezentować Twoje konto.
-                    </h3>
+                    <span className={styles.groupLabel}>Zdjęcie konta</span>
+                    <h4>Awatar użytkownika</h4>
                   </div>
 
-                  <span className={styles.badge}>{file ? "do zapisu" : "OK"}</span>
+                  <span className={styles.groupBadge}>
+                    {file ? "do zapisu" : hasAvatar ? "ustawiony" : "brak"}
+                  </span>
                 </div>
 
-                <div className={styles.chapterBody}>
+                <div className={styles.groupBody}>
                   <div className={styles.avatarRow}>
                     <div className={styles.avatarPreview}>
                       <img
@@ -417,15 +435,17 @@ export default function AccountSettings() {
                     </div>
 
                     <div className={styles.controls}>
+                      <div className={styles.sectionIconRow}>
+                        <span className={styles.sectionIcon}><FiImage /></span>
+                        <p>
+                          Wybierz zdjęcie, które będzie reprezentować Twoje konto
+                          w wiadomościach, rezerwacjach i aktywności w Showly.
+                        </p>
+                      </div>
+
                       <label className={styles.fileBtn}>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={onFileChange}
-                        />
-                        <ButtonContent icon={<FiImage />}>
-                          Wybierz plik
-                        </ButtonContent>
+                        <input type="file" accept="image/*" onChange={onFileChange} />
+                        <ButtonContent icon={<FiImage />}>Wybierz plik</ButtonContent>
                       </label>
 
                       <div className={styles.actionsRow}>
@@ -439,7 +459,7 @@ export default function AccountSettings() {
                           Zapisz awatar
                         </ActionButton>
 
-                        {preview && preview !== fallbackImg && (
+                        {hasAvatar && (
                           <ActionButton
                             isLoading={loadingAction === "removeAvatar"}
                             disabled={loadingAction !== null}
@@ -453,35 +473,34 @@ export default function AccountSettings() {
                       </div>
 
                       <small className={styles.hint}>
-                        Obsługiwane są pliki graficzne do 2 MB. Po wybraniu
-                        zdjęcia zapisz zmianę przyciskiem.
+                        Obsługiwane są pliki graficzne do 2 MB.
                       </small>
                     </div>
                   </div>
                 </div>
-              </div>
-            </article>
+              </section>
 
-            <article className={styles.chapter}>
-              <div className={styles.chapterNumber}>02</div>
-
-              <div className={styles.chapterMain}>
-                <div className={styles.chapterHead}>
+              <section className={styles.settingGroup}>
+                <div className={styles.groupHeader}>
                   <div>
-                    <span className={styles.chapterLabel}>
-                      Nazwa wyświetlana
-                    </span>
-                    <h3 className={styles.chapterTitle}>
-                      Nazwa, która może pojawiać się przy aktywności w Showly.
-                    </h3>
+                    <span className={styles.groupLabel}>Dane publiczne</span>
+                    <h4>Nazwa wyświetlana</h4>
                   </div>
 
-                  <span className={styles.badge}>
-                    {displayName.trim() ? "OK" : "brak"}
+                  <span className={styles.groupBadge}>
+                    {hasDisplayName ? "ustawiona" : "brak"}
                   </span>
                 </div>
 
-                <div className={styles.chapterBody}>
+                <div className={styles.groupBody}>
+                  <div className={styles.sectionIconRow}>
+                    <span className={styles.sectionIcon}><FiUser /></span>
+                    <p>
+                      Ta nazwa może pojawiać się przy opiniach, wiadomościach,
+                      konwersacjach oraz rezerwacjach.
+                    </p>
+                  </div>
+
                   <div className={styles.inline}>
                     <input
                       className={styles.input}
@@ -499,40 +518,30 @@ export default function AccountSettings() {
                       className={styles.primary}
                       icon={<FiSave />}
                     >
-                      Zapisz
+                      Zapisz nazwę
                     </ActionButton>
                   </div>
-
-                  <small className={styles.hint}>
-                    Ta nazwa może pojawiać się przy opiniach, wiadomościach,
-                    konwersacjach oraz rezerwacjach.
-                  </small>
                 </div>
-              </div>
-            </article>
+              </section>
 
-            <article className={styles.chapter}>
-              <div className={styles.chapterNumber}>03</div>
-
-              <div className={styles.chapterMain}>
-                <div className={styles.chapterHead}>
+              <section className={styles.settingGroup}>
+                <div className={styles.groupHeader}>
                   <div>
-                    <span className={styles.chapterLabel}>
-                      Bezpieczeństwo
-                    </span>
-                    <h3 className={styles.chapterTitle}>
-                      Reset hasła dla konta powiązanego z e-mailem.
-                    </h3>
+                    <span className={styles.groupLabel}>Bezpieczeństwo</span>
+                    <h4>Zmiana hasła</h4>
                   </div>
 
-                  <span className={styles.badge}>reset</span>
+                  <span className={styles.groupBadge}>e-mail</span>
                 </div>
 
-                <div className={styles.chapterBody}>
-                  <p className={styles.text}>
-                    Jeśli logujesz się hasłem, możesz wysłać na swój adres
-                    e-mail link do zmiany hasła i zaktualizować dostęp do konta.
-                  </p>
+                <div className={styles.groupBody}>
+                  <div className={styles.sectionIconRow}>
+                    <span className={styles.sectionIcon}><FiShield /></span>
+                    <p>
+                      Wyślemy link do zmiany hasła na adres przypisany do
+                      Twojego konta: <strong>{user?.email || "brak adresu"}</strong>.
+                    </p>
+                  </div>
 
                   <ActionButton
                     isLoading={loadingAction === "resetPass"}
@@ -544,8 +553,8 @@ export default function AccountSettings() {
                     Wyślij link do zmiany hasła
                   </ActionButton>
                 </div>
-              </div>
-            </article>
+              </section>
+            </div>
           </div>
         </div>
       </div>

@@ -230,7 +230,6 @@ const PartnersShowcase = ({ currentUser, setAlert }) => {
       <div className={styles.inner}>
         <div className={styles.layout}>
           <aside className={styles.side}>
-            <span className={styles.overline}>Showly Premium</span>
 
             <h2 className={styles.heading}>
               Partnerzy <span>premium</span> Showly.
