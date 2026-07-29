@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import styles from "./ReservationList.module.scss";
 import AlertBox from "../AlertBox/AlertBox";
 import { useLocation } from "react-router-dom";
-import { FiInbox, FiSend, FiPlus } from "react-icons/fi";
+import { FiInbox, FiSend } from "react-icons/fi";
 import {
   FiCalendar,
   FiClock,
@@ -1857,21 +1857,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       recv: recv.slice().sort(sortFn),
     };
   }, [clientReservations, serviceReservations, selectedIso, hasProviderProfile]);
-
-  const statusToTlClass = (status) => {
-    if (status === "zaakceptowana") return styles.tlAccepted;
-    if (status === "odrzucona" || status === "anulowana") return styles.tlRejected;
-    if (status === "oczekująca") return styles.tlPending;
-    return "";
-  };
-
-  const dotToTlClass = (status) => {
-    if (status === "zaakceptowana") return styles.tlDotAccepted;
-    if (status === "odrzucona" || status === "anulowana") return styles.tlDotRejected;
-    if (status === "oczekująca") return styles.tlDotPending;
-    if (status === "wolne") return styles.tlDotFree;
-    return "";
-  };
 
   const openOfflineForSlot = async (isoDate, startMin, endMin) => {
     const opened = await openOfflineForDay(isoDate);

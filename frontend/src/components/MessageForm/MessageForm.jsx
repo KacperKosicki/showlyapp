@@ -13,7 +13,6 @@ import {
   FaShieldAlt,
   FaInfoCircle,
   FaPaperPlane,
-  FaComments,
   FaBolt,
 } from "react-icons/fa";
 
