@@ -720,21 +720,13 @@
 
   gap: var(--card-gap);
 
-  width:
-    calc(
-      100% +
-      max(
-        1rem,
-        calc((100vw - min(1500px, 100vw)) / 2)
-      )
-    );
+  --carousel-edge: max(1rem, calc((100vw - 1500px) / 2));
+
+  width: calc(100% + var(--carousel-edge));
 
   padding:
     0.85rem
-    max(
-      1rem,
-      calc((100vw - min(1500px, 100vw)) / 2)
-    )
+    var(--carousel-edge)
     1.5rem
     0;
 
