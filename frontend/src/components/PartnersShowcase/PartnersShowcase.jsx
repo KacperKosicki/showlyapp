@@ -1,18 +1,37 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import axios from "axios";
+
 import styles from "./PartnersShowcase.module.scss";
+
 import UserCard from "../UserCard/UserCard";
+
 import { auth } from "../../firebase";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+
+import {
+  FiArrowLeft,
+  FiArrowRight,
+} from "react-icons/fi";
 
 const API = process.env.REACT_APP_API_URL;
 
 async function getAuthHeader() {
-  const u = auth.currentUser;
-  if (!u) return {};
+  const user = auth.currentUser;
 
-  const token = await u.getIdToken();
-  return { Authorization: `Bearer ${token}` };
+  if (!user) {
+    return {};
+  }
+
+  const token = await user.getIdToken();
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
 }
 
 const tierWeight = {
@@ -25,11 +44,12 @@ const tierWeight = {
 };
 
 const PartnersShowcase = ({ currentUser, setAlert }) => {
-  const [partners, setPartners] = useState([]);
-  const [loading, setLoading] = useState(true);
-
+  const sectionRef = useRef(null);
   const scrollerRef = useRef(null);
   const rafRef = useRef(null);
+
+  const [partners, setPartners] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
@@ -37,64 +57,94 @@ const PartnersShowcase = ({ currentUser, setAlert }) => {
   useEffect(() => {
     let isMounted = true;
 
-    const run = async () => {
+    const fetchPartners = async () => {
       try {
         setLoading(true);
 
-        const { data: profiles } = await axios.get(`${API}/api/profiles`);
-        const safeProfiles = Array.isArray(profiles) ? profiles : [];
+        const { data: profiles } = await axios.get(
+          `${API}/api/profiles`
+        );
+
+        const safeProfiles = Array.isArray(profiles)
+          ? profiles
+          : [];
 
         let onlyPartners = safeProfiles.filter(
-          (p) => p?.partnership?.isPartner === true
+          (profile) =>
+            profile?.partnership?.isPartner === true
         );
 
         onlyPartners = onlyPartners.sort((a, b) => {
-          const priorityDiff =
+          const priorityDifference =
             Number(b?.partnership?.priority || 0) -
             Number(a?.partnership?.priority || 0);
 
-          if (priorityDiff !== 0) return priorityDiff;
+          if (priorityDifference !== 0) {
+            return priorityDifference;
+          }
 
-          const tierDiff =
+          const tierDifference =
             (tierWeight[b?.partnership?.tier] || 0) -
             (tierWeight[a?.partnership?.tier] || 0);
 
-          if (tierDiff !== 0) return tierDiff;
+          if (tierDifference !== 0) {
+            return tierDifference;
+          }
 
-          const ratingDiff = Number(b?.rating || 0) - Number(a?.rating || 0);
+          const ratingDifference =
+            Number(b?.rating || 0) -
+            Number(a?.rating || 0);
 
-          if (ratingDiff !== 0) return ratingDiff;
+          if (ratingDifference !== 0) {
+            return ratingDifference;
+          }
 
-          return Number(b?.reviews || 0) - Number(a?.reviews || 0);
+          return (
+            Number(b?.reviews || 0) -
+            Number(a?.reviews || 0)
+          );
         });
 
         if (currentUser?.uid && auth.currentUser) {
           const authHeader = await getAuthHeader();
 
-          const { data: favProfiles } = await axios.get(
+          const { data: favoriteProfiles } = await axios.get(
             `${API}/api/favorites/my`,
             {
-              headers: { ...authHeader },
+              headers: {
+                ...authHeader,
+              },
             }
           );
 
-          const favSet = new Set(
-            (Array.isArray(favProfiles) ? favProfiles : [])
-              .map((p) => p?.userId || p?.profileUserId)
+          const favoriteIds = new Set(
+            (
+              Array.isArray(favoriteProfiles)
+                ? favoriteProfiles
+                : []
+            )
+              .map(
+                (profile) =>
+                  profile?.userId ||
+                  profile?.profileUserId
+              )
               .filter(Boolean)
           );
 
-          onlyPartners = onlyPartners.map((p) => ({
-            ...p,
-            isFavorite: favSet.has(p.userId),
+          onlyPartners = onlyPartners.map((profile) => ({
+            ...profile,
+            isFavorite: favoriteIds.has(profile.userId),
           }));
         }
 
         if (isMounted) {
           setPartners(onlyPartners);
         }
-      } catch (err) {
-        console.error("Błąd pobierania partnerów:", err);
+      } catch (error) {
+        console.error(
+          "Błąd pobierania partnerów:",
+          error
+        );
 
         if (isMounted) {
           setPartners([]);
@@ -103,7 +153,8 @@ const PartnersShowcase = ({ currentUser, setAlert }) => {
         if (typeof setAlert === "function") {
           setAlert({
             type: "error",
-            message: "Nie udało się pobrać partnerów Showly.",
+            message:
+              "Nie udało się pobrać partnerów Showly.",
           });
         }
       } finally {
@@ -113,51 +164,120 @@ const PartnersShowcase = ({ currentUser, setAlert }) => {
       }
     };
 
-    run();
+    fetchPartners();
 
     return () => {
       isMounted = false;
     };
   }, [currentUser?.uid, setAlert]);
 
-  const updateArrows = useCallback(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section) {
+      return undefined;
+    }
+
+    const animatedElements = section.querySelectorAll(
+      `.${styles.reveal}`
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add(
+              styles.revealVisible
+            );
+          } else {
+            entry.target.classList.remove(
+              styles.revealVisible
+            );
+          }
+        });
+      },
+      {
+        threshold: 0.14,
+        rootMargin: "0px 0px -7% 0px",
+      }
+    );
+
+    animatedElements.forEach((element) => {
+      observer.observe(element);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [loading, partners.length]);
+
+  const updateCarouselState = useCallback(() => {
+    const element = scrollerRef.current;
+
+    if (!element) {
+      return;
+    }
 
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
     }
 
     rafRef.current = requestAnimationFrame(() => {
-      const max = Math.max(0, el.scrollWidth - el.clientWidth);
-      const x = Math.max(0, el.scrollLeft);
+      const maxScroll = Math.max(
+        0,
+        element.scrollWidth - element.clientWidth
+      );
 
-      setCanLeft(x > 4);
-      setCanRight(max > 4 && x < max - 4);
+      const currentScroll = Math.max(
+        0,
+        element.scrollLeft
+      );
+
+      setCanLeft(currentScroll > 4);
+
+      setCanRight(
+        maxScroll > 4 &&
+          currentScroll < maxScroll - 4
+      );
     });
   }, []);
 
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
+    const element = scrollerRef.current;
 
-    updateArrows();
+    if (!element) {
+      return undefined;
+    }
 
-    const handleScroll = () => updateArrows();
+    updateCarouselState();
 
-    el.addEventListener("scroll", handleScroll, { passive: true });
+    const handleScroll = () => {
+      updateCarouselState();
+    };
+
+    element.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+
     window.addEventListener("resize", handleScroll);
 
     let resizeObserver;
 
     if (typeof ResizeObserver !== "undefined") {
       resizeObserver = new ResizeObserver(handleScroll);
-      resizeObserver.observe(el);
+      resizeObserver.observe(element);
     }
 
     return () => {
-      el.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
+      element.removeEventListener(
+        "scroll",
+        handleScroll
+      );
+
+      window.removeEventListener(
+        "resize",
+        handleScroll
+      );
 
       if (resizeObserver) {
         resizeObserver.disconnect();
@@ -167,173 +287,264 @@ const PartnersShowcase = ({ currentUser, setAlert }) => {
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [partners.length, updateArrows]);
+  }, [partners.length, updateCarouselState]);
 
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
+    const element = scrollerRef.current;
+
+    if (!element) {
+      return undefined;
+    }
 
     const frame = requestAnimationFrame(() => {
-      el.scrollTo({
+      element.scrollTo({
         left: 0,
         behavior: "auto",
       });
 
-      updateArrows();
+      updateCarouselState();
     });
 
-    return () => cancelAnimationFrame(frame);
-  }, [partners.length, updateArrows]);
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [partners.length, updateCarouselState]);
 
-  const scrollByCard = (dir = 1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
+  const scrollByCard = (direction = 1) => {
+    const element = scrollerRef.current;
 
-    const firstCard = el.querySelector(`.${styles.cardWrap}`);
-    const cardW = firstCard?.getBoundingClientRect().width || 420;
+    if (!element) {
+      return;
+    }
 
-    const computed = getComputedStyle(el);
-    const gap = parseFloat(computed.columnGap || computed.gap || "0") || 24;
+    const firstCard = element.querySelector(
+      `.${styles.cardWrap}`
+    );
 
-    const step = cardW + gap;
-    const max = Math.max(0, el.scrollWidth - el.clientWidth);
-    const next = Math.min(Math.max(el.scrollLeft + dir * step, 0), max);
+    const cardWidth =
+      firstCard?.getBoundingClientRect().width || 420;
 
-    el.scrollTo({
-      left: next <= 8 ? 0 : next,
+    const computedStyles = getComputedStyle(element);
+
+    const gap =
+      parseFloat(
+        computedStyles.columnGap ||
+          computedStyles.gap ||
+          "0"
+      ) || 24;
+
+    const scrollStep = cardWidth + gap;
+
+    const maxScroll = Math.max(
+      0,
+      element.scrollWidth - element.clientWidth
+    );
+
+    const nextScroll = Math.min(
+      Math.max(
+        element.scrollLeft +
+          direction * scrollStep,
+        0
+      ),
+      maxScroll
+    );
+
+    element.scrollTo({
+      left: nextScroll <= 8 ? 0 : nextScroll,
       behavior: "smooth",
     });
 
-    window.setTimeout(updateArrows, 320);
+    window.setTimeout(updateCarouselState, 350);
   };
 
   if (loading) {
     return (
-      <section className={styles.section}>
+      <section
+        ref={sectionRef}
+        className={styles.section}
+      >
+        <div className={styles.decor} aria-hidden="true">
+          <span className={styles.orbOne} />
+          <span className={styles.orbTwo} />
+        </div>
+
         <div className={styles.inner}>
-          <div className={styles.loadingCard}>
-            <span>Showly Premium</span>
-            <strong>Ładowanie partnerów...</strong>
+          <div className={styles.loading}>
+            <span className={styles.eyebrow}>
+              Partnerzy Showly
+            </span>
+
+            <strong>Ładowanie wyróżnionych profili…</strong>
+
             <p>
-              Sprawdzamy wyróżnione profile, aktywność i kolejność prezentacji.
+              Sprawdzamy aktywność, poziom partnerstwa
+              i kolejność prezentacji.
             </p>
+
+            <div
+              className={styles.loadingLine}
+              aria-hidden="true"
+            >
+              <span />
+            </div>
           </div>
         </div>
       </section>
     );
   }
 
-  if (!partners.length) return null;
+  if (!partners.length) {
+    return null;
+  }
 
   return (
-    <section className={styles.section}>
+    <section
+      ref={sectionRef}
+      className={styles.section}
+      id="partners-showcase"
+    >
+      <div className={styles.decor} aria-hidden="true">
+        <span className={styles.orbOne} />
+        <span className={styles.orbTwo} />
+        <span className={styles.lineOne} />
+        <span className={styles.lineTwo} />
+      </div>
+
       <div className={styles.inner}>
-        <div className={styles.layout}>
-          <aside className={styles.side}>
+        <header className={styles.header}>
+          <div
+            className={`${styles.headingBlock} ${styles.reveal} ${styles.fromLeft}`}
+          >
+            <span className={styles.eyebrow}>
+              Partnerzy premium
+            </span>
 
-            <h2 className={styles.heading}>
-              Partnerzy <span>premium</span> Showly.
+            <h2>
+              Profile, które aktywnie budują{" "}
+              <span>swoją markę w Showly.</span>
             </h2>
+          </div>
 
-            <p className={styles.description}>
-              Poznaj profile, które aktywnie rozwijają swoją markę w Showly,
-              dbają o jakość prezentacji i budują większe zaufanie dzięki
-              widoczności, aktywności oraz profesjonalnemu wizerunkowi.
+          <div
+            className={`${styles.headerSide} ${styles.reveal} ${styles.fromRight}`}
+            style={{
+              "--reveal-delay": "120ms",
+            }}
+          >
+            <p>
+              Poznaj usługodawców i twórców, którzy dbają
+              o jakość prezentacji, aktywność i profesjonalny
+              wizerunek swojej działalności.
             </p>
 
-            <div className={styles.metaRow}>
-              <div className={styles.metaCard}>
-                <strong>{partners.length}+</strong>
-                <span>wyróżnionych profili</span>
-              </div>
+            <div className={styles.partnerCount}>
+              <strong>
+                {String(partners.length).padStart(2, "0")}
+              </strong>
 
-              <div className={styles.metaCard}>
-                <strong>Top</strong>
-                <span>najbardziej aktywni partnerzy</span>
-              </div>
-
-              <div className={styles.metaCard}>
-                <strong>01</strong>
-                <span>sekcja premium</span>
-              </div>
-            </div>
-
-            <div className={styles.infoBox}>
-              <span>Zaufanie • Jakość • Widoczność</span>
-              <p>
-                Profile partnerów są wyświetlane wyżej, mają większą ekspozycję
-                i lepiej wyróżniają się w katalogu Showly.
-              </p>
-            </div>
-          </aside>
-
-          <div className={styles.content}>
-            <div className={styles.chapterHead}>
               <div>
-                <span className={styles.chapterLabel}>
+                <span>wyróżnionych profili</span>
+                <small>
+                  prezentowanych według aktywności i poziomu
+                  partnerstwa
+                </small>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section className={styles.showcase}>
+          <span className={styles.showcaseWatermark} aria-hidden="true">
+            PARTNERZY SHOWLY
+          </span>
+
+          <div
+            className={`${styles.showcaseHead} ${styles.reveal} ${styles.fromTop}`}
+          >
+            <div className={styles.showcaseIntro}>
+              <span className={styles.showcaseIndex}>
+                01
+              </span>
+
+              <div>
+                <span className={styles.eyebrow}>
                   Wyróżnione profile
                 </span>
 
-                <h3>Przesuwaj listę i poznaj partnerów Showly.</h3>
+                <h3>
+                  Przesuwaj wystawę i poznaj partnerów
+                  Showly.
+                </h3>
               </div>
-
-              <span className={styles.chapterNumber}>01</span>
             </div>
 
-            <div className={styles.carousel}>
+            <div className={styles.controls}>
               <button
                 type="button"
-                className={`${styles.navBtn} ${styles.left} ${!canLeft ? styles.disabled : ""
-                  }`}
+                className={styles.controlButton}
                 onClick={() => scrollByCard(-1)}
                 disabled={!canLeft}
-                aria-label="Przewiń w lewo"
-                title="Przewiń w lewo"
+                aria-label="Przewiń partnerów w lewo"
               >
-                <FaChevronLeft />
+                <FiArrowLeft aria-hidden="true" />
               </button>
-
-              <div
-                className={styles.grid}
-                ref={scrollerRef}
-                role="list"
-                aria-label="Lista partnerów Showly"
-              >
-                {partners.map((partner, index) => (
-                  <div
-                    className={styles.cardWrap}
-                    key={partner._id || partner.userId || index}
-                    role="listitem"
-                  >
-                    <UserCard
-                      user={partner}
-                      currentUser={currentUser}
-                      setAlert={setAlert}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className={styles.mobileHint}>
-                <span>←</span>
-                <p>Przesuń, aby zobaczyć więcej partnerów</p>
-                <span>→</span>
-              </div>
 
               <button
                 type="button"
-                className={`${styles.navBtn} ${styles.right} ${!canRight ? styles.disabled : ""
-                  }`}
+                className={styles.controlButton}
                 onClick={() => scrollByCard(1)}
                 disabled={!canRight}
-                aria-label="Przewiń w prawo"
-                title="Przewiń w prawo"
+                aria-label="Przewiń partnerów w prawo"
               >
-                <FaChevronRight />
+                <FiArrowRight aria-hidden="true" />
               </button>
             </div>
           </div>
-        </div>
+
+          <div
+            className={`${styles.carousel} ${styles.reveal} ${styles.fromBottom}`}
+            style={{
+              "--reveal-delay": "100ms",
+            }}
+          >
+            <div
+              ref={scrollerRef}
+              className={styles.track}
+              role="list"
+              aria-label="Lista partnerów Showly"
+            >
+              {partners.map((partner, index) => (
+                <div
+                  className={styles.cardWrap}
+                  key={
+                    partner._id ||
+                    partner.userId ||
+                    index
+                  }
+                  role="listitem"
+                  style={{
+                    "--card-delay": `${Math.min(
+                      index * 70,
+                      350
+                    )}ms`,
+                  }}
+                >
+                  <UserCard
+                    user={partner}
+                    currentUser={currentUser}
+                    setAlert={setAlert}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className={styles.mobileHint}>
+              <FiArrowLeft aria-hidden="true" />
+              <span>Przesuń, aby zobaczyć więcej</span>
+              <FiArrowRight aria-hidden="true" />
+            </div>
+          </div>
+        </section>
       </div>
     </section>
   );

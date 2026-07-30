@@ -906,6 +906,34 @@
     background: var(--app-surface-soft);
   }
 
+  .itemPrimary {
+    border-color: var(--dropdown-accent-border);
+    background: var(--dropdown-accent);
+    color: #ffffff;
+
+    .itemIcon {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    &:hover,
+    &:active {
+      border-color: var(--dropdown-accent-border);
+      background: var(--dropdown-accent);
+      color: #ffffff;
+      box-shadow: none;
+    }
+  }
+
+  :global(html[data-theme="dark"]) .itemPrimary {
+    color: #111216;
+
+    .itemIcon {
+      color: #111216;
+    }
+  }
+
   .itemLeft {
     gap: 0.58rem;
   }
@@ -988,6 +1016,7 @@
 }
 
 @media (hover: none) {
+
   .trigger:hover,
   .item:hover {
     transform: none;
@@ -995,6 +1024,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .trigger,
   .icon,
   .menu,

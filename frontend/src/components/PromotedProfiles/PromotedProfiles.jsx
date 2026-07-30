@@ -1,6 +1,19 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import axios from "axios";
-import { FaAward, FaChevronLeft, FaChevronRight, FaRocket } from "react-icons/fa";
+
+import {
+  FaAward,
+  FaChevronLeft,
+  FaChevronRight,
+  FaRocket,
+} from "react-icons/fa";
+
 import { auth } from "../../firebase";
 import UserCard from "../UserCard/UserCard";
 import styles from "./PromotedProfiles.module.scss";
@@ -8,11 +21,17 @@ import styles from "./PromotedProfiles.module.scss";
 const API = process.env.REACT_APP_API_URL;
 
 async function getAuthHeader() {
-  const u = auth.currentUser;
-  if (!u) return {};
+  const user = auth.currentUser;
 
-  const token = await u.getIdToken();
-  return { Authorization: `Bearer ${token}` };
+  if (!user) {
+    return {};
+  }
+
+  const token = await user.getIdToken();
+
+  return {
+    Authorization: `Bearer ${token}`,
+  };
 }
 
 const planWeight = {
@@ -20,18 +39,31 @@ const planWeight = {
   standard: 1,
 };
 
-const softActiveStatuses = new Set(["active", "trialing", "past_due"]);
+const softActiveStatuses = new Set([
+  "active",
+  "trialing",
+  "past_due",
+]);
 
 const getPlanKey = (profile = {}) => {
-  const billing = profile?.billingPublic || profile?.billing || {};
-  const effectivePlan = String(billing?.effectivePlan || "").toLowerCase();
+  const billing =
+    profile?.billingPublic || profile?.billing || {};
 
-  if (effectivePlan === "standard" || effectivePlan === "premium") {
+  const effectivePlan = String(
+    billing?.effectivePlan || ""
+  ).toLowerCase();
+
+  if (
+    effectivePlan === "standard" ||
+    effectivePlan === "premium"
+  ) {
     return effectivePlan;
   }
 
   const plan = String(billing?.plan || "").toLowerCase();
-  const status = String(billing?.status || "").toLowerCase();
+  const status = String(
+    billing?.status || ""
+  ).toLowerCase();
 
   if (
     (plan === "standard" || plan === "premium") &&
@@ -45,28 +77,42 @@ const getPlanKey = (profile = {}) => {
 
 const sortPromotedProfiles = (profiles = []) =>
   [...profiles].sort((a, b) => {
-    const planDiff =
-      (planWeight[getPlanKey(b)] || 0) - (planWeight[getPlanKey(a)] || 0);
+    const planDifference =
+      (planWeight[getPlanKey(b)] || 0) -
+      (planWeight[getPlanKey(a)] || 0);
 
-    if (planDiff !== 0) return planDiff;
+    if (planDifference !== 0) {
+      return planDifference;
+    }
 
-    const ratingDiff = Number(b?.rating || 0) - Number(a?.rating || 0);
+    const ratingDifference =
+      Number(b?.rating || 0) - Number(a?.rating || 0);
 
-    if (ratingDiff !== 0) return ratingDiff;
+    if (ratingDifference !== 0) {
+      return ratingDifference;
+    }
 
-    const reviewsDiff = Number(b?.reviews || 0) - Number(a?.reviews || 0);
+    const reviewsDifference =
+      Number(b?.reviews || 0) -
+      Number(a?.reviews || 0);
 
-    if (reviewsDiff !== 0) return reviewsDiff;
+    if (reviewsDifference !== 0) {
+      return reviewsDifference;
+    }
 
-    return Number(b?.visits || 0) - Number(a?.visits || 0);
+    return (
+      Number(b?.visits || 0) -
+      Number(a?.visits || 0)
+    );
   });
 
 const PromotedProfiles = ({ currentUser, setAlert }) => {
-  const [profiles, setProfiles] = useState([]);
-  const [loading, setLoading] = useState(true);
-
+  const sectionRef = useRef(null);
   const scrollerRef = useRef(null);
   const rafRef = useRef(null);
+
+  const [profiles, setProfiles] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
@@ -74,46 +120,71 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
   useEffect(() => {
     let isMounted = true;
 
-    const run = async () => {
+    const fetchPromotedProfiles = async () => {
       try {
         setLoading(true);
 
-        const { data } = await axios.get(`${API}/api/profiles`);
-        const safeProfiles = Array.isArray(data) ? data : [];
-
-        let promoted = safeProfiles.filter((profile) =>
-          ["standard", "premium"].includes(getPlanKey(profile))
+        const { data } = await axios.get(
+          `${API}/api/profiles`
         );
 
-        promoted = sortPromotedProfiles(promoted);
+        const safeProfiles = Array.isArray(data)
+          ? data
+          : [];
+
+        let promotedProfiles = safeProfiles.filter(
+          (profile) =>
+            ["standard", "premium"].includes(
+              getPlanKey(profile)
+            )
+        );
+
+        promotedProfiles = sortPromotedProfiles(
+          promotedProfiles
+        );
 
         if (currentUser?.uid && auth.currentUser) {
           const authHeader = await getAuthHeader();
 
-          const { data: favProfiles } = await axios.get(
-            `${API}/api/favorites/my`,
-            {
-              headers: { ...authHeader },
-            }
-          );
+          const { data: favoriteProfiles } =
+            await axios.get(`${API}/api/favorites/my`, {
+              headers: {
+                ...authHeader,
+              },
+            });
 
-          const favSet = new Set(
-            (Array.isArray(favProfiles) ? favProfiles : [])
-              .map((p) => p?.userId || p?.profileUserId)
+          const favoriteIds = new Set(
+            (
+              Array.isArray(favoriteProfiles)
+                ? favoriteProfiles
+                : []
+            )
+              .map(
+                (profile) =>
+                  profile?.userId ||
+                  profile?.profileUserId
+              )
               .filter(Boolean)
           );
 
-          promoted = promoted.map((profile) => ({
-            ...profile,
-            isFavorite: favSet.has(profile.userId),
-          }));
+          promotedProfiles = promotedProfiles.map(
+            (profile) => ({
+              ...profile,
+              isFavorite: favoriteIds.has(
+                profile.userId
+              ),
+            })
+          );
         }
 
         if (isMounted) {
-          setProfiles(promoted);
+          setProfiles(promotedProfiles);
         }
-      } catch (err) {
-        console.error("Błąd pobierania promowanych profili:", err);
+      } catch (error) {
+        console.error(
+          "Błąd pobierania promowanych profili:",
+          error
+        );
 
         if (isMounted) {
           setProfiles([]);
@@ -122,7 +193,8 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
         if (typeof setAlert === "function") {
           setAlert({
             type: "error",
-            message: "Nie udało się pobrać promowanych profili.",
+            message:
+              "Nie udało się pobrać promowanych profili.",
           });
         }
       } finally {
@@ -132,51 +204,119 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
       }
     };
 
-    run();
+    fetchPromotedProfiles();
 
     return () => {
       isMounted = false;
     };
   }, [currentUser?.uid, setAlert]);
 
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section) {
+      return undefined;
+    }
+
+    const animatedElements = section.querySelectorAll(
+      `.${styles.reveal}`
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add(
+              styles.revealVisible
+            );
+          } else {
+            entry.target.classList.remove(
+              styles.revealVisible
+            );
+          }
+        });
+      },
+      {
+        threshold: 0.14,
+        rootMargin: "0px 0px -7% 0px",
+      }
+    );
+
+    animatedElements.forEach((element) => {
+      observer.observe(element);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [loading, profiles.length]);
+
   const updateArrows = useCallback(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
+    const element = scrollerRef.current;
+
+    if (!element) {
+      return;
+    }
 
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
     }
 
     rafRef.current = requestAnimationFrame(() => {
-      const max = Math.max(0, el.scrollWidth - el.clientWidth);
-      const x = Math.max(0, el.scrollLeft);
+      const maxScroll = Math.max(
+        0,
+        element.scrollWidth - element.clientWidth
+      );
 
-      setCanLeft(x > 4);
-      setCanRight(max > 4 && x < max - 4);
+      const currentScroll = Math.max(
+        0,
+        element.scrollLeft
+      );
+
+      setCanLeft(currentScroll > 4);
+      setCanRight(
+        maxScroll > 4 &&
+          currentScroll < maxScroll - 4
+      );
     });
   }, []);
 
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
+    const element = scrollerRef.current;
+
+    if (!element) {
+      return undefined;
+    }
 
     updateArrows();
 
-    const handleScroll = () => updateArrows();
+    const handleScroll = () => {
+      updateArrows();
+    };
 
-    el.addEventListener("scroll", handleScroll, { passive: true });
+    element.addEventListener("scroll", handleScroll, {
+      passive: true,
+    });
+
     window.addEventListener("resize", handleScroll);
 
     let resizeObserver;
 
     if (typeof ResizeObserver !== "undefined") {
       resizeObserver = new ResizeObserver(handleScroll);
-      resizeObserver.observe(el);
+      resizeObserver.observe(element);
     }
 
     return () => {
-      el.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
+      element.removeEventListener(
+        "scroll",
+        handleScroll
+      );
+
+      window.removeEventListener(
+        "resize",
+        handleScroll
+      );
 
       if (resizeObserver) {
         resizeObserver.disconnect();
@@ -189,11 +329,14 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
   }, [profiles.length, updateArrows]);
 
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
+    const element = scrollerRef.current;
+
+    if (!element) {
+      return undefined;
+    }
 
     const frame = requestAnimationFrame(() => {
-      el.scrollTo({
+      element.scrollTo({
         left: 0,
         behavior: "auto",
       });
@@ -201,25 +344,52 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
       updateArrows();
     });
 
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+    };
   }, [profiles.length, updateArrows]);
 
-  const scrollByCard = (dir = 1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
+  const scrollByCard = (direction = 1) => {
+    const element = scrollerRef.current;
 
-    const firstCard = el.querySelector(`.${styles.cardWrap}`);
-    const cardW = firstCard?.getBoundingClientRect().width || 420;
+    if (!element) {
+      return;
+    }
 
-    const computed = getComputedStyle(el);
-    const gap = parseFloat(computed.columnGap || computed.gap || "0") || 24;
+    const firstCard = element.querySelector(
+      `.${styles.cardWrap}`
+    );
 
-    const step = cardW + gap;
-    const max = Math.max(0, el.scrollWidth - el.clientWidth);
-    const next = Math.min(Math.max(el.scrollLeft + dir * step, 0), max);
+    const cardWidth =
+      firstCard?.getBoundingClientRect().width || 420;
 
-    el.scrollTo({
-      left: next <= 8 ? 0 : next,
+    const computedStyles = getComputedStyle(element);
+
+    const gap =
+      parseFloat(
+        computedStyles.columnGap ||
+          computedStyles.gap ||
+          "0"
+      ) || 24;
+
+    const scrollStep = cardWidth + gap;
+
+    const maxScroll = Math.max(
+      0,
+      element.scrollWidth - element.clientWidth
+    );
+
+    const nextScroll = Math.min(
+      Math.max(
+        element.scrollLeft +
+          direction * scrollStep,
+        0
+      ),
+      maxScroll
+    );
+
+    element.scrollTo({
+      left: nextScroll <= 8 ? 0 : nextScroll,
       behavior: "smooth",
     });
 
@@ -228,21 +398,46 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
 
   if (loading) {
     return (
-      <section className={styles.section}>
+      <section
+        ref={sectionRef}
+        className={styles.section}
+      >
+        <div className={styles.decor} aria-hidden="true">
+          <span className={styles.orbOne} />
+          <span className={styles.orbTwo} />
+          <span className={styles.waveOne} />
+        </div>
+
         <div className={styles.inner}>
-          <div className={styles.loadingCard}>
-            <span>Showly Boost</span>
-            <strong>Ładowanie promowanych profili...</strong>
+          <div className={styles.loadingBlock}>
+            <span className={styles.eyebrow}>
+              Showly Boost
+            </span>
+
+            <strong>
+              Ładowanie promowanych profili…
+            </strong>
+
             <p>
-              Sprawdzamy profile z aktywnym planem Standard lub Premium.
+              Sprawdzamy profile z aktywnym planem
+              Standard lub Premium.
             </p>
+
+            <div
+              className={styles.loadingLine}
+              aria-hidden="true"
+            >
+              <span />
+            </div>
           </div>
         </div>
       </section>
     );
   }
 
-  if (!profiles.length) return null;
+  if (!profiles.length) {
+    return null;
+  }
 
   const premiumCount = profiles.filter(
     (profile) => getPlanKey(profile) === "premium"
@@ -253,131 +448,200 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
   ).length;
 
   return (
-    <section className={styles.section}>
+    <section
+      ref={sectionRef}
+      className={styles.section}
+      id="promoted-profiles"
+    >
+      <div className={styles.decor} aria-hidden="true">
+        <span className={styles.orbOne} />
+        <span className={styles.orbTwo} />
+        <span className={styles.waveOne} />
+        <span className={styles.waveTwo} />
+        <span className={styles.lineOne} />
+        <span className={styles.lineTwo} />
+      </div>
+
       <div className={styles.inner}>
-        <div className={styles.layout}>
-          <aside className={styles.side}>
+        <header className={styles.header}>
+          <div
+            className={`${styles.headingBlock} ${styles.reveal} ${styles.fromLeft}`}
+          >
+            <span className={styles.eyebrow}>
+              Showly Boost
+            </span>
 
-            <h2 className={styles.heading}>
-              Profile z <span>lepszą widocznością.</span>
+            <h2>
+              Profile z{" "}
+              <span>lepszą widocznością.</span>
             </h2>
+          </div>
 
-            <p className={styles.description}>
-              Wyróżnione wizytówki osób, które aktywnie rozwijają swój profil w
-              Showly. Pokazujemy je wyżej, bo korzystają z planów Standard lub
-              Premium i dbają o lepszą prezentację swojej oferty.
+          <div
+            className={`${styles.headerSide} ${styles.reveal} ${styles.fromRight}`}
+            style={{
+              "--reveal-delay": "120ms",
+            }}
+          >
+            <p>
+              Wyróżnione wizytówki osób, które aktywnie
+              rozwijają swój profil w Showly. Plany
+              Standard i Premium pomagają ich ofercie
+              dotrzeć wyżej i szybciej.
             </p>
 
-            <div className={styles.metaRow}>
-              <div className={styles.metaCard}>
-                <strong>{profiles.length}</strong>
-                <span>promowanych profili</span>
-              </div>
+            <div className={styles.planNote}>
+              <FaRocket aria-hidden="true" />
 
-              <div className={styles.metaCard}>
-                <strong>{premiumCount}</strong>
-                <span>profili Premium</span>
-              </div>
-
-              <div className={styles.metaCard}>
-                <strong>{standardCount}</strong>
-                <span>profili Standard</span>
-              </div>
-            </div>
-
-            <div className={styles.infoBox}>
               <span>
-                <FaRocket /> Standard i Premium
+                Większa ekspozycja dla aktywnych profili
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <div
+          className={`${styles.statsStrip} ${styles.reveal} ${styles.fromBottom}`}
+          style={{
+            "--reveal-delay": "90ms",
+          }}
+        >
+          <div className={styles.statItem}>
+            <strong>
+              {String(profiles.length).padStart(2, "0")}
+            </strong>
+            <span>promowanych profili</span>
+          </div>
+
+          <div className={styles.statItem}>
+            <strong>
+              {String(premiumCount).padStart(2, "0")}
+            </strong>
+            <span>profili Premium</span>
+          </div>
+
+          <div className={styles.statItem}>
+            <strong>
+              {String(standardCount).padStart(2, "0")}
+            </strong>
+            <span>profili Standard</span>
+          </div>
+        </div>
+
+        <section className={styles.showcase}>
+          <span
+            className={styles.showcaseWatermark}
+            aria-hidden="true"
+          >
+            SHOWLY BOOST
+          </span>
+
+          <div
+            className={`${styles.showcaseHead} ${styles.reveal} ${styles.fromTop}`}
+          >
+            <div className={styles.showcaseIntro}>
+              <span className={styles.showcaseIndex}>
+                02
               </span>
 
-              <p>
-                Promowane profile mają większą ekspozycję w Showly i pomagają
-                szybciej dotrzeć do osób szukających usługodawcy, twórcy albo
-                specjalisty.
-              </p>
-            </div>
-          </aside>
-
-          <div className={styles.content}>
-            <div className={styles.chapterHead}>
               <div>
-                <span className={styles.chapterLabel}>
+                <span className={styles.eyebrow}>
                   Promowane profile
                 </span>
 
-                <h3>Przesuwaj listę i sprawdzaj wyróżnione wizytówki.</h3>
+                <h3>
+                  Przesuwaj listę i sprawdzaj wyróżnione
+                  wizytówki.
+                </h3>
               </div>
-
-              <span className={styles.chapterNumber}>02</span>
             </div>
 
-            <div className={styles.carousel}>
+            <div className={styles.controls}>
               <button
                 type="button"
-                className={`${styles.navBtn} ${styles.left} ${!canLeft ? styles.disabled : ""
-                  }`}
+                className={styles.controlButton}
                 onClick={() => scrollByCard(-1)}
                 disabled={!canLeft}
-                aria-label="Przewiń w lewo"
-                title="Przewiń w lewo"
+                aria-label="Przewiń promowane profile w lewo"
               >
-                <FaChevronLeft />
+                <FaChevronLeft aria-hidden="true" />
               </button>
-
-              <div
-                className={styles.grid}
-                ref={scrollerRef}
-                role="list"
-                aria-label="Lista promowanych profili Showly"
-              >
-                {profiles.map((profile, index) => {
-                  const planKey = getPlanKey(profile);
-                  const planLabel = planKey === "premium" ? "Premium" : "Standard";
-
-                  return (
-                    <div
-                      className={styles.cardWrap}
-                      key={profile._id || profile.userId || index}
-                      role="listitem"
-                    >
-                      <span
-                        className={`${styles.planBadge} ${planKey ? styles[planKey] : ""
-                          }`}
-                      >
-                        <FaAward />
-                        {planLabel}
-                      </span>
-
-                      <UserCard
-                        user={profile}
-                        currentUser={currentUser}
-                        setAlert={setAlert}
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className={styles.mobileHint}>
-                <span>←</span>
-                <p>Przesuń, aby zobaczyć więcej promowanych profili</p>
-                <span>→</span>
-              </div>
 
               <button
                 type="button"
-                className={`${styles.navBtn} ${styles.right} ${!canRight ? styles.disabled : ""
-                  }`}
+                className={styles.controlButton}
                 onClick={() => scrollByCard(1)}
                 disabled={!canRight}
-                aria-label="Przewiń w prawo"
-                title="Przewiń w prawo"
+                aria-label="Przewiń promowane profile w prawo"
               >
-                <FaChevronRight />
+                <FaChevronRight aria-hidden="true" />
               </button>
             </div>
           </div>
-        </div>
+
+          <div
+            className={`${styles.carousel} ${styles.reveal} ${styles.fromBottom}`}
+            style={{
+              "--reveal-delay": "100ms",
+            }}
+          >
+            <div
+              ref={scrollerRef}
+              className={styles.track}
+              role="list"
+              aria-label="Lista promowanych profili Showly"
+            >
+              {profiles.map((profile, index) => {
+                const planKey = getPlanKey(profile);
+                const planLabel =
+                  planKey === "premium"
+                    ? "Premium"
+                    : "Standard";
+
+                return (
+                  <div
+                    className={styles.cardWrap}
+                    key={
+                      profile._id ||
+                      profile.userId ||
+                      index
+                    }
+                    role="listitem"
+                    style={{
+                      "--card-delay": `${Math.min(
+                        index * 70,
+                        350
+                      )}ms`,
+                    }}
+                  >
+                    <span
+                      className={`${styles.planBadge} ${
+                        planKey ? styles[planKey] : ""
+                      }`}
+                    >
+                      <FaAward aria-hidden="true" />
+                      {planLabel}
+                    </span>
+
+                    <UserCard
+                      user={profile}
+                      currentUser={currentUser}
+                      setAlert={setAlert}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className={styles.mobileHint}>
+              <FaChevronLeft aria-hidden="true" />
+              <span>
+                Przesuń, aby zobaczyć więcej
+              </span>
+              <FaChevronRight aria-hidden="true" />
+            </div>
+          </div>
+        </section>
       </div>
     </section>
   );

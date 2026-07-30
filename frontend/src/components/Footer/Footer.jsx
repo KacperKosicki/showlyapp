@@ -1,101 +1,126 @@
-import styles from "./Footer.module.scss";
-import {
-  FaFacebookF,
-  FaInstagram,
-  FaLinkedinIn,
-  FaXTwitter,
-} from "react-icons/fa6";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   FiArrowUpRight,
-  FiCheckCircle,
-  FiCompass,
-  FiCreditCard,
-  FiGrid,
+  FiArrowUp,
   FiHeart,
   FiMail,
-  FiMapPin,
-  FiMessageCircle,
   FiSearch,
-  FiShield,
   FiStar,
-  FiTrendingUp,
   FiUserPlus,
 } from "react-icons/fi";
-import { useLocation, useNavigate } from "react-router-dom";
+
+import styles from "./Footer.module.scss";
 
 const productLinks = [
-  { label: "Strona główna", path: "/", scrollToId: "hero", icon: <FiCompass /> },
+  {
+    label: "Strona główna",
+    path: "/",
+    scrollToId: "hero",
+  },
   {
     label: "Jak to działa",
     path: "/jak-to-dziala",
     scrollToId: "showlyJourney",
-    icon: <FiGrid />,
   },
-  { label: "Profile", path: "/profile", scrollToId: "profilesHub", icon: <FiSearch /> },
+  {
+    label: "Profile",
+    path: "/profile",
+    scrollToId: "profilesHub",
+  },
   {
     label: "Kontakt",
     path: "/kontakt",
     scrollToId: "scrollToId",
-    icon: <FiMessageCircle />,
   },
 ];
 
 const legalLinks = [
-  { label: "Regulamin", path: "/regulamin", scrollToId: "scrollToId" },
-  { label: "Polityka cookies", path: "/polityka-cookies", scrollToId: "scrollToId" },
-  { label: "Kontakt", path: "/kontakt", scrollToId: "scrollToId" },
+  {
+    label: "Regulamin",
+    path: "/regulamin",
+    scrollToId: "scrollToId",
+  },
+  {
+    label: "Polityka cookies",
+    path: "/polityka-cookies",
+    scrollToId: "scrollToId",
+  },
+  {
+    label: "Kontakt",
+    path: "/kontakt",
+    scrollToId: "scrollToId",
+  },
 ];
 
-const Footer = ({ user = null, hasProfile = false, loadingProfileStatus = false }) => {
+const Footer = ({
+  user = null,
+  hasProfile = false,
+  loadingProfileStatus = false,
+}) => {
   const year = new Date().getFullYear();
+
   const navigate = useNavigate();
   const location = useLocation();
 
   const isLoggedIn = Boolean(user?.uid);
-  const shouldOpenProfilePanel = isLoggedIn && (hasProfile || loadingProfileStatus);
+
+  const shouldOpenProfilePanel =
+    isLoggedIn &&
+    (hasProfile || loadingProfileStatus);
 
   const profileAction = shouldOpenProfilePanel
     ? {
-      label: loadingProfileStatus ? "Twój profil" : "Zarządzaj profilem",
-      path: "/profil",
-      scrollToId: "profileWrapper",
-      icon: <FiStar />,
-    }
+        label: loadingProfileStatus
+          ? "Twój profil"
+          : "Zarządzaj profilem",
+        path: "/profil",
+        scrollToId: "profileWrapper",
+        icon: <FiStar />,
+      }
     : {
-      label: "Stwórz profil",
-      path: "/stworz-profil",
-      scrollToId: "scrollToId",
-      icon: <FiUserPlus />,
-    };
+        label: "Stwórz profil",
+        path: "/stworz-profil",
+        scrollToId: "scrollToId",
+        icon: <FiUserPlus />,
+      };
 
   const creatorLinks = [
     profileAction,
-    { label: "Ulubione", path: "/ulubione", scrollToId: "scrollToId", icon: <FiHeart /> },
     {
-      label: "Płatności i plany",
-      path: shouldOpenProfilePanel ? "/profil" : "/stworz-profil",
-      scrollToId: shouldOpenProfilePanel ? "billingSection" : "scrollToId",
-      icon: <FiCreditCard />,
+      label: "Ulubione",
+      path: "/ulubione",
+      scrollToId: "scrollToId",
+      icon: <FiHeart />,
     },
   ];
 
   const scrollToSection = (scrollToId) => {
-    if (!scrollToId) return;
+    if (!scrollToId) {
+      return;
+    }
 
     const targetIds = [
       scrollToId,
-      scrollToId !== "scrollToId" ? "scrollToId" : null,
+      scrollToId !== "scrollToId"
+        ? "scrollToId"
+        : null,
     ].filter(Boolean);
 
     let attempts = 0;
 
     const tryScroll = () => {
-      const el = targetIds
-        .map((targetId) => document.getElementById(targetId))
+      const element = targetIds
+        .map((targetId) =>
+          document.getElementById(targetId)
+        )
         .find(Boolean);
 
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+
         return;
       }
 
@@ -109,34 +134,30 @@ const Footer = ({ user = null, hasProfile = false, loadingProfileStatus = false 
     requestAnimationFrame(tryScroll);
   };
 
-  const handleNavigate = (path, scrollToId = null) => {
-    if (location.pathname === path && scrollToId) {
+  const handleNavigate = (
+    path,
+    scrollToId = null
+  ) => {
+    if (
+      location.pathname === path &&
+      scrollToId
+    ) {
       scrollToSection(scrollToId);
       return;
     }
 
-    navigate(path, { state: { scrollToId } });
+    navigate(path, {
+      state: {
+        scrollToId,
+      },
+    });
   };
 
   const scrollToTop = () => {
-    const html = document.documentElement;
-    const body = document.body;
-
-    const previousHtmlBehavior = html.style.scrollBehavior;
-    const previousBodyBehavior = body.style.scrollBehavior;
-
-    html.style.scrollBehavior = "smooth";
-    body.style.scrollBehavior = "smooth";
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
-
-    setTimeout(() => {
-      html.scrollTop = 0;
-      body.scrollTop = 0;
-
-      html.style.scrollBehavior = previousHtmlBehavior;
-      body.style.scrollBehavior = previousBodyBehavior;
-    }, 500);
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   };
 
   const renderLinks = (items) => (
@@ -146,11 +167,15 @@ const Footer = ({ user = null, hasProfile = false, loadingProfileStatus = false 
           <button
             type="button"
             className={styles.navLink}
-            onClick={() => handleNavigate(item.path, item.scrollToId)}
+            onClick={() =>
+              handleNavigate(
+                item.path,
+                item.scrollToId
+              )
+            }
           >
-            {item.icon && <span className={styles.navIcon}>{item.icon}</span>}
             <span>{item.label}</span>
-            <FiArrowUpRight className={styles.navArrow} />
+            <FiArrowUpRight aria-hidden="true" />
           </button>
         </li>
       ))}
@@ -158,200 +183,130 @@ const Footer = ({ user = null, hasProfile = false, loadingProfileStatus = false 
   );
 
   return (
-    <footer className={styles.footer} id="footer">
-      <div className={styles.topWave} aria-hidden="true">
-        <svg
-          viewBox="0 0 1440 120"
-          preserveAspectRatio="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M0,58 C180,98 330,18 520,48 C725,82 835,122 1040,72 C1210,30 1320,42 1440,74 L1440,0 L0,0 Z" />
-        </svg>
-      </div>
-      <div className={styles.bg} aria-hidden="true">
-        <span className={styles.gradientWash} />
-        <span className={styles.glowOne} />
-        <span className={styles.glowTwo} />
-        <span className={styles.mesh} />
-        <span className={styles.noise} />
+    <footer
+      className={styles.footer}
+      id="footer"
+    >
+      <div
+        className={styles.decor}
+        aria-hidden="true"
+      >
+        <span className={styles.orbOne} />
+        <span className={styles.orbTwo} />
+        <span className={styles.waveOne} />
+        <span className={styles.waveTwo} />
       </div>
 
-      <div className={styles.wrap}>
-        <section className={styles.heroBand} aria-label="Showly footer">
-          <div className={styles.brandPanel}>
-            <div className={styles.brandTop}>
-              <span className={styles.logoMark} aria-hidden="true">
-                <span />
-              </span>
+      <div className={styles.inner}>
+        <section className={styles.top}>
+          <div className={styles.brand}>
+            <span className={styles.eyebrow}>
+              Showly.me
+            </span>
 
-              <div>
-                <p className={styles.kicker}>Showly.me</p>
-                <h2 className={styles.brandTitle}>
-                  Profil, który pracuje za Ciebie.
-                </h2>
-              </div>
-            </div>
+            <h2>
+              Profil, który{" "}
+              <span>pracuje za Ciebie.</span>
+            </h2>
 
-            <p className={styles.brandText}>
-              Jedno miejsce na opis, usługi, zdjęcia, opinie, kontakt i rezerwacje.
-              Showly pomaga wyglądać profesjonalnie bez budowania własnej strony od zera.
+            <p>
+              Jedno miejsce na opis, ofertę,
+              zdjęcia, opinie, kontakt i rezerwacje.
+              Bez budowania własnej strony od zera.
             </p>
 
-            <div className={styles.ctaRow}>
+            <div className={styles.actions}>
               <button
                 type="button"
-                className={styles.primaryCta}
-                onClick={() => handleNavigate(profileAction.path, profileAction.scrollToId)}
+                className={styles.primaryAction}
+                onClick={() =>
+                  handleNavigate(
+                    profileAction.path,
+                    profileAction.scrollToId
+                  )
+                }
               >
                 {profileAction.icon}
-                {profileAction.label}
+                <span>{profileAction.label}</span>
               </button>
 
               <button
                 type="button"
-                className={styles.secondaryCta}
-                onClick={() => handleNavigate("/profile", "profilesHub")}
+                className={styles.secondaryAction}
+                onClick={() =>
+                  handleNavigate(
+                    "/profile",
+                    "profilesHub"
+                  )
+                }
               >
                 <FiSearch />
-                Przeglądaj profile
+                <span>Przeglądaj profile</span>
               </button>
             </div>
           </div>
 
-          <div className={styles.signalPanel}>
-            <div className={styles.signalTop}>
-              <span className={styles.signalIcon}>
-                <FiTrendingUp />
-              </span>
+          <div className={styles.contact}>
+            <span className={styles.contactLabel}>
+              Kontakt
+            </span>
 
-              <div>
-                <span className={styles.signalLabel}>Widoczność</span>
-                <strong>Starter, Standard i Premium</strong>
-              </div>
-            </div>
+            <a
+              href="mailto:kontakt@showly.me"
+              className={styles.email}
+            >
+              <FiMail aria-hidden="true" />
 
-            <div className={styles.signalGrid}>
-              <div className={styles.signalItem}>
-                <FiCheckCircle />
-                <span>Publiczna wizytówka</span>
-              </div>
+              <span>kontakt@showly.me</span>
 
-              <div className={styles.signalItem}>
-                <FiShield />
-                <span>Regulamin i zgody</span>
-              </div>
-
-              <div className={styles.signalItem}>
-                <FiMessageCircle />
-                <span>Szybki kontakt</span>
-              </div>
-
-              <div className={styles.signalItem}>
-                <FiStar />
-                <span>Lepsza prezentacja</span>
-              </div>
-            </div>
+              <FiArrowUpRight
+                aria-hidden="true"
+                className={styles.emailArrow}
+              />
+            </a>
           </div>
         </section>
 
-        <section className={styles.mainGrid}>
-          <div className={styles.infoCard}>
-            <h3 className={styles.cardTitle}>Showly w skrócie</h3>
-            <p>
-              Twórcy, specjaliści i usługodawcy mogą pokazać ofertę w sposób, który
-              klient szybko rozumie: kim jesteś, co robisz, ile kosztuje usługa i jak
-              się z Tobą skontaktować.
-            </p>
+        <section className={styles.navigation}>
+          <nav
+            className={styles.navGroup}
+            aria-label="Nawigacja platformy"
+          >
+            <span className={styles.navTitle}>
+              Platforma
+            </span>
 
-            <div className={styles.badges}>
-              <span>Mobile-first</span>
-              <span>Profile usług</span>
-              <span>Galeria i opinie</span>
-            </div>
-          </div>
-
-          <nav className={styles.linkCard} aria-label="Nawigacja produktu">
-            <h3 className={styles.cardTitle}>Platforma</h3>
             {renderLinks(productLinks)}
           </nav>
 
-          <nav className={styles.linkCard} aria-label="Nawigacja dla twórców">
-            <h3 className={styles.cardTitle}>Dla twórców</h3>
+          <nav
+            className={styles.navGroup}
+            aria-label="Nawigacja użytkownika"
+          >
+            <span className={styles.navTitle}>
+              Dla Ciebie
+            </span>
+
             {renderLinks(creatorLinks)}
           </nav>
 
-          <div className={styles.contactCard}>
-            <h3 className={styles.cardTitle}>Kontakt</h3>
+          <div className={styles.footerNote}>
+            <span className={styles.navTitle}>
+              Showly
+            </span>
 
-            <a className={styles.contactRow} href="mailto:kontakt@showly.me">
-              <span className={styles.contactIcon}>
-                <FiMail />
-              </span>
-              <span>
-                <small>E-mail</small>
-                <strong>kontakt@showly.me</strong>
-              </span>
-            </a>
-
-            <div className={styles.contactRow}>
-              <span className={styles.contactIcon}>
-                <FiMapPin />
-              </span>
-              <span>
-                <small>Działamy</small>
-                <strong>Online, cała Polska</strong>
-              </span>
-            </div>
-
-            <div
-              className={styles.socials}
-              role="group"
-              aria-label="Social media wkrótce"
-            >
-              <button
-                type="button"
-                className={styles.socialBtn}
-                disabled
-                title="Wkrótce"
-                aria-label="Facebook wkrótce"
-              >
-                <FaFacebookF />
-              </button>
-              <button
-                type="button"
-                className={styles.socialBtn}
-                disabled
-                title="Wkrótce"
-                aria-label="Instagram wkrótce"
-              >
-                <FaInstagram />
-              </button>
-              <button
-                type="button"
-                className={styles.socialBtn}
-                disabled
-                title="Wkrótce"
-                aria-label="X wkrótce"
-              >
-                <FaXTwitter />
-              </button>
-              <button
-                type="button"
-                className={styles.socialBtn}
-                disabled
-                title="Wkrótce"
-                aria-label="LinkedIn wkrótce"
-              >
-                <FaLinkedinIn />
-              </button>
-            </div>
+            <p>
+              Wizytówki dla usługodawców,
+              twórców i specjalistów.
+            </p>
           </div>
         </section>
 
         <div className={styles.bottom}>
           <div className={styles.bottomLeft}>
-            <span className={styles.copy}>© {year} Showly.me</span>
-            <span className={styles.separator} aria-hidden="true" />
+            <span className={styles.copy}>
+              © {year} Showly.me
+            </span>
 
             <div className={styles.legalLinks}>
               {legalLinks.map((link) => (
@@ -359,7 +314,12 @@ const Footer = ({ user = null, hasProfile = false, loadingProfileStatus = false 
                   key={link.label}
                   type="button"
                   className={styles.legalLink}
-                  onClick={() => handleNavigate(link.path, link.scrollToId)}
+                  onClick={() =>
+                    handleNavigate(
+                      link.path,
+                      link.scrollToId
+                    )
+                  }
                 >
                   {link.label}
                 </button>
@@ -371,10 +331,10 @@ const Footer = ({ user = null, hasProfile = false, loadingProfileStatus = false 
             type="button"
             className={styles.toTop}
             onClick={scrollToTop}
-            aria-label="Wróć na górę"
+            aria-label="Wróć na górę strony"
           >
-            Do góry
-            <span aria-hidden="true">↑</span>
+            <span>Do góry</span>
+            <FiArrowUp aria-hidden="true" />
           </button>
         </div>
       </div>

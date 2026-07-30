@@ -1,114 +1,204 @@
+import { useEffect, useRef } from "react";
+
 import styles from "./DiscoverShowly.module.scss";
-import { FiUsers, FiMessageSquare, FiClock, FiThumbsUp } from "react-icons/fi";
+
+import {
+  FiArrowRight,
+  FiClock,
+  FiMessageSquare,
+  FiThumbsUp,
+  FiUsers,
+} from "react-icons/fi";
 
 const items = [
   {
-    icon: <FiUsers />,
-    title: "Profile z różnych branż",
-    text: "Przeglądaj wizytówki specjalistów z wielu kategorii — od usług lokalnych po działalność online.",
-    badges: ["branże", "wizytówki", "kategorie"],
+    icon: FiUsers,
+    number: "01",
+    label: "Profile",
+    title: "Odkrywaj specjalistów z różnych branż.",
+    text:
+      "Przeglądaj wizytówki osób działających lokalnie i online. Zobacz, czym się zajmują, gdzie pracują i jak wygląda ich oferta.",
+    details: ["branże", "lokalizacja", "wizytówki"],
+    animation: "fromLeft",
   },
   {
-    icon: <FiMessageSquare />,
-    title: "Szybki kontakt",
-    text: "Zadaj pytanie, doprecyzuj usługę i ustal szczegóły bez wychodzenia z platformy.",
-    badges: ["wiadomości", "kontakt", "wygoda"],
+    icon: FiMessageSquare,
+    number: "02",
+    label: "Kontakt",
+    title: "Zadawaj pytania bez szukania właściwego miejsca.",
+    text:
+      "Przejdź bezpośrednio do wiadomości, doprecyzuj usługę i ustal najważniejsze szczegóły z usługodawcą.",
+    details: ["wiadomości", "kontakt", "szczegóły"],
+    animation: "fromRight",
   },
   {
-    icon: <FiClock />,
-    title: "Dostępność i terminy",
-    text: "Sprawdzaj dostępność usługodawców i korzystaj z wygodnych form rezerwacji tam, gdzie są aktywne.",
-    badges: ["terminy", "rezerwacje", "elastyczność"],
+    icon: FiClock,
+    number: "03",
+    label: "Dostępność",
+    title: "Sprawdzaj terminy tam, gdzie są aktywne.",
+    text:
+      "Nie każdy profil działa w ten sam sposób. Tam, gdzie dostępne są rezerwacje, możesz wygodnie sprawdzić terminy.",
+    details: ["terminy", "rezerwacje", "elastyczność"],
+    animation: "fromLeft",
   },
   {
-    icon: <FiThumbsUp />,
-    title: "Opinie i decyzje",
-    text: "Porównuj profile, zdjęcia, zakres usług i oceny, żeby podejmować lepsze decyzje szybciej.",
-    badges: ["opinie", "porównanie", "zaufanie"],
+    icon: FiThumbsUp,
+    number: "04",
+    label: "Decyzja",
+    title: "Porównuj konkrety i wybieraj świadomie.",
+    text:
+      "Zdjęcia, opinie, zakres usług i podstawowe informacje pomagają szybciej ocenić, który profil najlepiej odpowiada Twoim potrzebom.",
+    details: ["opinie", "porównanie", "zaufanie"],
+    animation: "fromBottom",
   },
 ];
 
 const DiscoverShowly = () => {
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section) {
+      return undefined;
+    }
+
+    const animatedElements = section.querySelectorAll(
+      `.${styles.reveal}`
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add(styles.revealVisible);
+          } else {
+            entry.target.classList.remove(styles.revealVisible);
+          }
+        });
+      },
+      {
+        threshold: 0.16,
+        rootMargin: "0px 0px -8% 0px",
+      }
+    );
+
+    animatedElements.forEach((element) => {
+      observer.observe(element);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   return (
-    <section className={styles.section} id="discover-showly">
+    <section
+      ref={sectionRef}
+      className={styles.section}
+      id="discover-showly"
+    >
+      <div className={styles.decor} aria-hidden="true">
+        <span className={styles.orbOne} />
+        <span className={styles.orbTwo} />
+        <span className={styles.lineOne} />
+        <span className={styles.lineTwo} />
+      </div>
+
       <div className={styles.inner}>
-        <aside className={styles.side}>
+        <header className={styles.header}>
+          <div
+            className={`${styles.heading} ${styles.reveal} ${styles.fromLeft}`}
+          >
+            <span className={styles.eyebrow}>Odkrywaj Showly</span>
 
-          <h2 className={styles.title}>
-            Odkrywaj profile bez chaosu.
-          </h2>
-
-          <p className={styles.subtitle}>
-            Showly pomaga szybko znaleźć odpowiednią osobę, porównać oferty i
-            przejść od zainteresowania do działania — bez zbędnych kroków.
-          </p>
-
-          <div className={styles.sideMeta}>
-            <div className={styles.metaItem}>
-              <strong>01</strong>
-              <span>profile i branże</span>
-            </div>
-
-            <div className={styles.metaItem}>
-              <strong>02</strong>
-              <span>kontakt i wiadomości</span>
-            </div>
-
-            <div className={styles.metaItem}>
-              <strong>03</strong>
-              <span>terminy i decyzje</span>
-            </div>
-          </div>
-        </aside>
-
-        <main className={styles.content}>
-          <div className={styles.chapterHead}>
-            <div>
-              <span className={styles.chapterLabel}>
-                Profile / Kontakt / Rezerwacje
-              </span>
-
-              <h3>Co możesz zrobić w Showly?</h3>
-            </div>
-
-            <span className={styles.chapterNumber}>04</span>
+            <h2>
+              Znajdź właściwą osobę, poznaj ofertę i przejdź prosto do działania.
+            </h2>
           </div>
 
-          <div className={styles.gridCards}>
-            {items.map((item, index) => (
-              <article key={item.title} className={styles.card}>
-                <div className={styles.cardTop}>
-                  <span className={styles.cardNumber}>
-                    {String(index + 1).padStart(2, "0")}
+          <div
+            className={`${styles.lead} ${styles.reveal} ${styles.fromRight}`}
+            style={{ "--reveal-delay": "120ms" }}
+          >
+            <p>
+              Showly pomaga przejść od ogólnego wyszukiwania do konkretnego
+              profilu — bez przeglądania przypadkowych postów, komentarzy i
+              wielu osobnych linków.
+            </p>
+
+            <div className={styles.leadMeta}>
+              <strong>Profile / kontakt / terminy</strong>
+              <span>wszystko w jednej, uporządkowanej ścieżce</span>
+            </div>
+          </div>
+        </header>
+
+        <div className={styles.features}>
+          {items.map((item, index) => {
+            const Icon = item.icon;
+
+            return (
+              <article
+                className={`${styles.feature} ${
+                  styles[`feature${index + 1}`]
+                } ${styles.reveal} ${styles[item.animation]}`}
+                style={{
+                  "--reveal-delay": `${index * 110}ms`,
+                }}
+                key={item.number}
+              >
+                <div className={styles.featureTop}>
+                  <span className={styles.featureNumber}>
+                    {item.number}
                   </span>
 
-                  <div className={styles.icon}>{item.icon}</div>
+                  <div className={styles.featureIcon}>
+                    <Icon aria-hidden="true" />
+                  </div>
                 </div>
 
-                <h3 className={styles.cardTitle}>{item.title}</h3>
+                <div className={styles.featureBody}>
+                  <span className={styles.featureLabel}>
+                    {item.label}
+                  </span>
 
-                <p className={styles.cardText}>{item.text}</p>
+                  <h3>{item.title}</h3>
 
-                <div className={styles.cardMeta}>
-                  {item.badges.map((badge) => (
-                    <span key={badge} className={styles.badge}>
-                      {badge}
-                    </span>
-                  ))}
+                  <p>{item.text}</p>
+
+                  <div className={styles.details}>
+                    {item.details.map((detail) => (
+                      <span key={detail}>{detail}</span>
+                    ))}
+                  </div>
                 </div>
               </article>
-            ))}
+            );
+          })}
+        </div>
+
+        <footer
+          className={`${styles.footer} ${styles.reveal} ${styles.fromBottom}`}
+          style={{ "--reveal-delay": "100ms" }}
+        >
+          <div>
+            <span className={styles.eyebrow}>Sprawdź dalej</span>
+
+            <h3>
+              Przewiń niżej i zobacz profile dostępne aktualnie na platformie.
+            </h3>
           </div>
 
-          <div className={styles.bottomPanel}>
-            <span className={styles.bottomNumber}>05</span>
-
-            <p className={styles.bottomText}>
-              Przewijaj niżej i sprawdź wybrane wizytówki dostępne aktualnie na
-              platformie.
+          <div className={styles.footerNote}>
+            <p>
+              Porównaj różne branże, style pracy i zakresy usług. Być może
+              właściwy profil jest już kilka kroków niżej.
             </p>
+
+            <FiArrowRight aria-hidden="true" />
           </div>
-        </main>
+        </footer>
       </div>
     </section>
   );
