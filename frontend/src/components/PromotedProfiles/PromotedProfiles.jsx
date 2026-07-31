@@ -196,14 +196,18 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
       return undefined;
     }
 
-    const animatedElements = section.querySelectorAll(
-      `.${styles.reveal}`
+    const animatedElements = Array.from(
+      section.querySelectorAll(`.${styles.reveal}`)
     );
 
     if (!animatedElements.length) {
       setRevealReady(false);
       return undefined;
     }
+
+    animatedElements.forEach((element) => {
+      element.classList.remove(styles.revealVisible);
+    });
 
     if (typeof IntersectionObserver === "undefined") {
       animatedElements.forEach((element) => {
@@ -232,14 +236,24 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
       }
     );
 
-    const frame = requestAnimationFrame(() => {
-      animatedElements.forEach((element) => {
-        observer.observe(element);
+    let frameOne;
+    let frameTwo;
+    let timeout;
+
+    frameOne = requestAnimationFrame(() => {
+      frameTwo = requestAnimationFrame(() => {
+        timeout = window.setTimeout(() => {
+          animatedElements.forEach((element) => {
+            observer.observe(element);
+          });
+        }, 80);
       });
     });
 
     return () => {
-      cancelAnimationFrame(frame);
+      cancelAnimationFrame(frameOne);
+      cancelAnimationFrame(frameTwo);
+      window.clearTimeout(timeout);
       observer.disconnect();
     };
   }, [loading, profiles.length]);
@@ -420,9 +434,8 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
   return (
     <section
       ref={sectionRef}
-      className={`${styles.section} ${
-        revealReady ? styles.revealReady : ""
-      }`}
+      className={`${styles.section} ${revealReady ? styles.revealReady : ""
+        }`}
       id="promoted-profiles"
     >
       <div className={styles.decor} aria-hidden="true">
@@ -562,9 +575,8 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
                     }}
                   >
                     <span
-                      className={`${styles.planBadge} ${
-                        planKey ? styles[planKey] : ""
-                      }`}
+                      className={`${styles.planBadge} ${planKey ? styles[planKey] : ""
+                        }`}
                     >
                       <FaAward aria-hidden="true" />
                       {planLabel}
