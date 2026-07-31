@@ -222,23 +222,32 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
       `.${styles.reveal}`
     );
 
+    if (!animatedElements.length) {
+      return undefined;
+    }
+
+    const revealElement = (element) => {
+      element.classList.add(styles.revealVisible);
+    };
+
+    if (typeof IntersectionObserver === "undefined") {
+      animatedElements.forEach(revealElement);
+
+      return undefined;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add(
-              styles.revealVisible
-            );
-          } else {
-            entry.target.classList.remove(
-              styles.revealVisible
-            );
+            revealElement(entry.target);
+            observer.unobserve(entry.target);
           }
         });
       },
       {
-        threshold: 0.14,
-        rootMargin: "0px 0px -7% 0px",
+        threshold: 0.08,
+        rootMargin: "0px 0px -8% 0px",
       }
     );
 
@@ -276,7 +285,7 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
       setCanLeft(currentScroll > 4);
       setCanRight(
         maxScroll > 4 &&
-          currentScroll < maxScroll - 4
+        currentScroll < maxScroll - 4
       );
     });
   }, []);
@@ -368,8 +377,8 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
     const gap =
       parseFloat(
         computedStyles.columnGap ||
-          computedStyles.gap ||
-          "0"
+        computedStyles.gap ||
+        "0"
       ) || 24;
 
     const scrollStep = cardWidth + gap;
@@ -382,7 +391,7 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
     const nextScroll = Math.min(
       Math.max(
         element.scrollLeft +
-          direction * scrollStep,
+        direction * scrollStep,
         0
       ),
       maxScroll
@@ -615,9 +624,8 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
                     }}
                   >
                     <span
-                      className={`${styles.planBadge} ${
-                        planKey ? styles[planKey] : ""
-                      }`}
+                      className={`${styles.planBadge} ${planKey ? styles[planKey] : ""
+                        }`}
                     >
                       <FaAward aria-hidden="true" />
                       {planLabel}
