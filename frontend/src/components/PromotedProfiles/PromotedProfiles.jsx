@@ -109,6 +109,7 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
 
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
+  const [revealReady, setRevealReady] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -186,6 +187,62 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
       isMounted = false;
     };
   }, [currentUser?.uid, setAlert]);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section || loading || !profiles.length) {
+      setRevealReady(false);
+      return undefined;
+    }
+
+    const animatedElements = section.querySelectorAll(
+      `.${styles.reveal}`
+    );
+
+    if (!animatedElements.length) {
+      setRevealReady(false);
+      return undefined;
+    }
+
+    if (typeof IntersectionObserver === "undefined") {
+      animatedElements.forEach((element) => {
+        element.classList.add(styles.revealVisible);
+      });
+
+      setRevealReady(false);
+      return undefined;
+    }
+
+    setRevealReady(true);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add(styles.revealVisible);
+          } else {
+            entry.target.classList.remove(styles.revealVisible);
+          }
+        });
+      },
+      {
+        threshold: 0.14,
+        rootMargin: "0px 0px -7% 0px",
+      }
+    );
+
+    const frame = requestAnimationFrame(() => {
+      animatedElements.forEach((element) => {
+        observer.observe(element);
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [loading, profiles.length]);
 
   const updateArrows = useCallback(() => {
     const element = scrollerRef.current;
@@ -363,7 +420,9 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
   return (
     <section
       ref={sectionRef}
-      className={styles.section}
+      className={`${styles.section} ${
+        revealReady ? styles.revealReady : ""
+      }`}
       id="promoted-profiles"
     >
       <div className={styles.decor} aria-hidden="true">
@@ -429,7 +488,12 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
         </div>
 
         <section className={styles.showcase}>
-          <div className={styles.showcaseHead}>
+          <div
+            className={`${styles.showcaseHead} ${styles.reveal} ${styles.fromTop}`}
+            style={{
+              "--reveal-delay": "120ms",
+            }}
+          >
             <div className={styles.showcaseIntro}>
               <span className={styles.showcaseIndex}>02</span>
 
@@ -468,7 +532,12 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
             </div>
           </div>
 
-          <div className={styles.carousel}>
+          <div
+            className={`${styles.carousel} ${styles.reveal} ${styles.fromBottom}`}
+            style={{
+              "--reveal-delay": "160ms",
+            }}
+          >
             <div
               ref={scrollerRef}
               className={styles.track}
@@ -493,8 +562,9 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
                     }}
                   >
                     <span
-                      className={`${styles.planBadge} ${planKey ? styles[planKey] : ""
-                        }`}
+                      className={`${styles.planBadge} ${
+                        planKey ? styles[planKey] : ""
+                      }`}
                     >
                       <FaAward aria-hidden="true" />
                       {planLabel}

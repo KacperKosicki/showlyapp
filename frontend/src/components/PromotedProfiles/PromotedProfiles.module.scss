@@ -2,7 +2,7 @@
 
 /* =========================================================
    PromotedProfiles — Showly Boost
-   Wersja uproszczona na wzór PartnersShowcase/UserCardList
+   Reveal bez ryzyka pustej sekcji na produkcji
 ========================================================= */
 
 .section {
@@ -75,7 +75,9 @@
 .orbOne,
 .orbTwo {
   position: absolute;
+
   border-radius: 999px;
+
   filter: blur(115px);
   opacity: 0.35;
 }
@@ -124,6 +126,7 @@
 
 .waveOne {
   top: 38%;
+
   height: 32%;
 
   background:
@@ -161,6 +164,7 @@
 
 .waveTwo {
   bottom: -8%;
+
   height: 30%;
 
   background:
@@ -248,7 +252,9 @@
   grid-template-columns:
     minmax(0, 1.35fr)
     minmax(320px, 0.65fr);
+
   align-items: end;
+
   gap: clamp(2rem, 6vw, 6rem);
 }
 
@@ -275,6 +281,7 @@
   z-index: 1;
 
   max-width: 1000px;
+
   margin: 0.75rem 0 0;
 
   font-family: $font-heading;
@@ -443,6 +450,7 @@
   gap: clamp(1.5rem, 3vw, 2.5rem);
 
   min-width: 0;
+
   padding:
     clamp(2rem, 4vw, 3.5rem)
     0
@@ -556,9 +564,11 @@
 
   background:
     color-mix(in srgb, var(--app-bg) 88%, transparent);
+
   color: var(--app-text);
 
   backdrop-filter: blur(12px);
+
   cursor: pointer;
 
   transition:
@@ -577,6 +587,7 @@
     border-color: var(--promoted-primary);
     background: var(--promoted-primary-soft);
     color: var(--promoted-primary);
+
     transform: translateY(-2px);
   }
 
@@ -598,7 +609,9 @@
 .carousel {
   position: relative;
   z-index: 2;
+
   min-width: 0;
+
   padding-top: clamp(1rem, 2vw, 1.5rem);
 }
 
@@ -637,6 +650,7 @@
   position: relative;
 
   flex: 0 0 var(--card-width);
+
   width: var(--card-width);
   min-width: 0;
 
@@ -648,6 +662,7 @@
     0.8s
     cubic-bezier(0.16, 1, 0.3, 1)
     both;
+
   animation-delay: var(--card-delay, 0ms);
 
   transition:
@@ -689,6 +704,7 @@
 
   background:
     color-mix(in srgb, var(--app-surface) 90%, transparent);
+
   color: var(--app-text);
 
   backdrop-filter: blur(12px);
@@ -707,12 +723,14 @@
 
 .planBadge.premium {
   border-color: var(--promoted-secondary-border);
+
   background:
     color-mix(
       in srgb,
       var(--app-surface) 85%,
       var(--promoted-secondary-soft)
     );
+
   color:
     color-mix(
       in srgb,
@@ -727,12 +745,14 @@
 
 .planBadge.standard {
   border-color: var(--promoted-primary-border);
+
   background:
     color-mix(
       in srgb,
       var(--app-surface) 86%,
       var(--promoted-primary-soft)
     );
+
   color:
     color-mix(
       in srgb,
@@ -816,7 +836,7 @@
 }
 
 /* =========================================================
-   Reveal — bez ryzyka pustej sekcji na produkcji
+   Reveal — bezpieczny reveal na produkcji
 ========================================================= */
 
 .reveal {
@@ -830,16 +850,36 @@
     filter 0.85s cubic-bezier(0.16, 1, 0.3, 1);
 
   transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform, filter;
 }
 
-.fromTop,
-.fromBottom,
-.fromLeft,
-.fromRight,
-.revealVisible {
-  opacity: 1;
-  filter: none;
-  transform: translate3d(0, 0, 0);
+.revealReady {
+  .reveal {
+    opacity: 0;
+    filter: blur(8px);
+  }
+
+  .fromTop {
+    transform: translate3d(0, -55px, 0);
+  }
+
+  .fromBottom {
+    transform: translate3d(0, 55px, 0);
+  }
+
+  .fromLeft {
+    transform: translate3d(-75px, 0, 0);
+  }
+
+  .fromRight {
+    transform: translate3d(75px, 0, 0);
+  }
+
+  .revealVisible {
+    opacity: 1;
+    filter: blur(0);
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 /* =========================================================
@@ -1022,28 +1062,31 @@
     svg {
       width: 0.85rem;
       height: 0.85rem;
+
       color: var(--promoted-primary);
     }
   }
 
-  .fromTop {
-    transform: translate3d(0, -35px, 0);
-  }
+  .revealReady {
+    .fromTop {
+      transform: translate3d(0, -35px, 0);
+    }
 
-  .fromBottom {
-    transform: translate3d(0, 35px, 0);
-  }
+    .fromBottom {
+      transform: translate3d(0, 35px, 0);
+    }
 
-  .fromLeft {
-    transform: translate3d(-35px, 0, 0);
-  }
+    .fromLeft {
+      transform: translate3d(-35px, 0, 0);
+    }
 
-  .fromRight {
-    transform: translate3d(35px, 0, 0);
-  }
+    .fromRight {
+      transform: translate3d(35px, 0, 0);
+    }
 
-  .revealVisible {
-    transform: translate3d(0, 0, 0);
+    .revealVisible {
+      transform: translate3d(0, 0, 0);
+    }
   }
 }
 
@@ -1089,7 +1132,9 @@
     transition: none;
   }
 
-  .reveal {
+  .reveal,
+  .revealReady .reveal,
+  .revealReady .revealVisible {
     opacity: 1;
     filter: none;
     transform: none;
