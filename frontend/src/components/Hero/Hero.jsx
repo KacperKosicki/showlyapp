@@ -131,11 +131,11 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
                 </span>
 
                 <h1 className={styles.title}>
-                  Twoja oferta.
+                  Jeden profil.
                   <br />
-                  Jeden link.
+                  Daj się znaleźć.
                   <br />
-                  <span>Zero chaosu.</span>
+                  <span>Pokaż, co robisz.</span>
                 </h1>
               </div>
             </div>
