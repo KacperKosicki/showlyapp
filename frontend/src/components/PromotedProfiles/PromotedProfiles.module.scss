@@ -26,41 +26,26 @@
   width: 100%;
 
   padding:
-    clamp(3.5rem, 7vw, 6.5rem)
-    max(clamp(1rem, 3vw, 2rem), var(--safe-right))
-    calc(clamp(3rem, 6vw, 5rem) + var(--safe-bottom))
-    max(clamp(1rem, 3vw, 2rem), var(--safe-left));
+    clamp(3.5rem, 7vw, 6.5rem) max(clamp(1rem, 3vw, 2rem), var(--safe-right)) calc(clamp(3rem, 6vw, 5rem) + var(--safe-bottom)) max(clamp(1rem, 3vw, 2rem), var(--safe-left));
 
   background:
-    radial-gradient(
-      circle at 12% 9%,
+    radial-gradient(circle at 12% 9%,
       rgba(15, 118, 110, 0.1),
-      transparent 33%
-    ),
-    radial-gradient(
-      circle at 88% 73%,
+      transparent 33%),
+    radial-gradient(circle at 88% 73%,
       rgba(245, 158, 11, 0.085),
-      transparent 35%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(
-        in srgb,
+      transparent 35%),
+    linear-gradient(180deg,
+      color-mix(in srgb,
         var(--app-bg) 94%,
-        var(--promoted-primary-soft)
-      ) 0%,
+        var(--promoted-primary-soft)) 0%,
       var(--app-bg) 35%,
-      color-mix(
-        in srgb,
+      color-mix(in srgb,
         var(--app-bg) 93%,
-        var(--promoted-secondary-soft)
-      ) 72%,
-      color-mix(
-        in srgb,
+        var(--promoted-secondary-soft)) 72%,
+      color-mix(in srgb,
         var(--app-bg) 95%,
-        var(--promoted-blue-soft)
-      ) 100%
-    );
+        var(--promoted-blue-soft)) 100%);
 
   color: var(--app-text);
   font-family: $font-accent;
@@ -130,16 +115,13 @@
   height: 35%;
 
   background:
-    linear-gradient(
-      112deg,
+    linear-gradient(112deg,
       rgba(15, 118, 110, 0.07),
       rgba(245, 158, 11, 0.045),
-      rgba(56, 116, 255, 0.035)
-    );
+      rgba(56, 116, 255, 0.035));
 
   clip-path:
-    polygon(
-      0 24%,
+    polygon(0 24%,
       10% 18%,
       22% 22%,
       34% 35%,
@@ -155,8 +137,7 @@
       43% 83%,
       28% 69%,
       14% 70%,
-      0 80%
-    );
+      0 80%);
 
   opacity: 0.8;
   transform: rotate(-1.4deg);
@@ -167,16 +148,13 @@
   height: 34%;
 
   background:
-    linear-gradient(
-      105deg,
+    linear-gradient(105deg,
       rgba(245, 158, 11, 0.05),
       rgba(15, 118, 110, 0.075),
-      rgba(56, 116, 255, 0.03)
-    );
+      rgba(56, 116, 255, 0.03));
 
   clip-path:
-    polygon(
-      0 43%,
+    polygon(0 43%,
       14% 27%,
       29% 33%,
       43% 49%,
@@ -185,8 +163,7 @@
       85% 29%,
       100% 35%,
       100% 100%,
-      0 100%
-    );
+      0 100%);
 
   opacity: 0.72;
   transform: rotate(1deg);
@@ -199,16 +176,12 @@
   height: 1px;
 
   background:
-    linear-gradient(
-      90deg,
+    linear-gradient(90deg,
       transparent,
-      color-mix(
-        in srgb,
+      color-mix(in srgb,
         var(--app-border) 78%,
-        transparent
-      ),
-      transparent
-    );
+        transparent),
+      transparent);
 
   opacity: 0.58;
 }
@@ -253,8 +226,7 @@
 .header {
   display: grid;
   grid-template-columns:
-    minmax(0, 1.35fr)
-    minmax(320px, 0.65fr);
+    minmax(0, 1.35fr) minmax(320px, 0.65fr);
 
   align-items: end;
 
@@ -301,11 +273,9 @@
     display: inline;
 
     background:
-      linear-gradient(
-        90deg,
+      linear-gradient(90deg,
         var(--promoted-primary),
-        var(--promoted-secondary)
-      );
+        var(--promoted-secondary));
 
     background-clip: text;
     -webkit-background-clip: text;
@@ -323,11 +293,9 @@
       height: 0.16em;
 
       background:
-        linear-gradient(
-          90deg,
+        linear-gradient(90deg,
           rgba(15, 118, 110, 0.17),
-          rgba(245, 158, 11, 0.15)
-        );
+          rgba(245, 158, 11, 0.15));
 
       transform: rotate(-1deg);
     }
@@ -342,7 +310,7 @@
   justify-self: end;
 }
 
-.headerSide > p {
+.headerSide>p {
   margin: 0;
 
   font-size: clamp(0.95rem, 1.2vw, 1.06rem);
@@ -421,11 +389,9 @@
 
   &:nth-child(3) strong {
     color:
-      color-mix(
-        in srgb,
+      color-mix(in srgb,
         var(--promoted-primary) 68%,
-        var(--app-text)
-      );
+        var(--app-text));
   }
 
   span {
@@ -455,9 +421,7 @@
   min-width: 0;
 
   padding:
-    clamp(2rem, 4vw, 3.5rem)
-    0
-    clamp(1rem, 2vw, 2rem);
+    clamp(2rem, 4vw, 3.5rem) 0 clamp(1rem, 2vw, 2rem);
 
   border-top: 1px solid var(--app-border);
 
@@ -475,28 +439,19 @@
     pointer-events: none;
 
     background:
-      linear-gradient(
-        105deg,
-        color-mix(
-          in srgb,
+      linear-gradient(105deg,
+        color-mix(in srgb,
           var(--app-bg) 80%,
-          var(--promoted-primary-soft)
-        ),
-        color-mix(
-          in srgb,
+          var(--promoted-primary-soft)),
+        color-mix(in srgb,
           var(--app-bg) 88%,
-          var(--promoted-secondary-soft)
-        ) 48%,
-        color-mix(
-          in srgb,
+          var(--promoted-secondary-soft)) 48%,
+        color-mix(in srgb,
           var(--app-bg) 91%,
-          var(--promoted-blue-soft)
-        )
-      );
+          var(--promoted-blue-soft)));
 
     clip-path:
-      polygon(
-        0 13%,
+      polygon(0 13%,
         12% 8%,
         25% 11%,
         39% 20%,
@@ -512,8 +467,7 @@
         41% 92%,
         27% 84%,
         13% 86%,
-        0 94%
-      );
+        0 94%);
 
     opacity: 0.8;
   }
@@ -532,16 +486,12 @@
     pointer-events: none;
 
     background:
-      radial-gradient(
-        ellipse at 22% 45%,
+      radial-gradient(ellipse at 22% 45%,
         rgba(15, 118, 110, 0.11),
-        transparent 42%
-      ),
-      radial-gradient(
-        ellipse at 82% 58%,
+        transparent 42%),
+      radial-gradient(ellipse at 82% 58%,
         rgba(245, 158, 11, 0.085),
-        transparent 38%
-      );
+        transparent 38%);
 
     filter: blur(24px);
   }
@@ -569,11 +519,9 @@
   white-space: nowrap;
 
   color:
-    color-mix(
-      in srgb,
+    color-mix(in srgb,
       var(--promoted-primary) 5%,
-      transparent
-    );
+      transparent);
 }
 
 .showcaseHead {
@@ -624,11 +572,9 @@
   letter-spacing: -0.065em;
 
   color:
-    color-mix(
-      in srgb,
+    color-mix(in srgb,
       var(--promoted-secondary) 82%,
-      var(--app-text)
-    );
+      var(--app-text));
 }
 
 /* =========================================================
@@ -656,11 +602,9 @@
   border-radius: 50%;
 
   background:
-    color-mix(
-      in srgb,
+    color-mix(in srgb,
       var(--app-bg) 88%,
-      transparent
-    );
+      transparent);
 
   color: var(--app-text);
 
@@ -725,10 +669,7 @@
   width: calc(100% + var(--carousel-edge));
 
   padding:
-    0.85rem
-    var(--carousel-edge)
-    1.5rem
-    0;
+    0.85rem var(--carousel-edge) 1.5rem 0;
 
   overflow-x: auto;
   overflow-y: hidden;
@@ -758,10 +699,7 @@
   scroll-snap-stop: normal;
 
   animation:
-    cardEntrance
-    0.8s
-    cubic-bezier(0.16, 1, 0.3, 1)
-    both;
+    cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 
   animation-delay: var(--card-delay, 0ms);
 
@@ -773,12 +711,10 @@
     transform: translateY(-3px);
 
     filter:
-      drop-shadow(
-        0 22px 42px rgba(21, 21, 21, 0.09)
-      );
+      drop-shadow(0 22px 42px rgba(21, 21, 21, 0.09));
   }
 
-  > * {
+  >* {
     width: 100%;
     max-width: none;
   }
@@ -808,11 +744,9 @@
   border-radius: 999px;
 
   background:
-    color-mix(
-      in srgb,
+    color-mix(in srgb,
       var(--app-surface) 90%,
-      transparent
-    );
+      transparent);
 
   color: var(--app-text);
 
@@ -833,17 +767,13 @@
 .planBadge.premium {
   border-color: var(--promoted-secondary-border);
   background:
-    color-mix(
-      in srgb,
+    color-mix(in srgb,
       var(--app-surface) 85%,
-      var(--promoted-secondary-soft)
-    );
+      var(--promoted-secondary-soft));
   color:
-    color-mix(
-      in srgb,
+    color-mix(in srgb,
       var(--promoted-secondary) 72%,
-      var(--app-text)
-    );
+      var(--app-text));
 
   svg {
     color: var(--promoted-secondary);
@@ -853,17 +783,13 @@
 .planBadge.standard {
   border-color: var(--promoted-primary-border);
   background:
-    color-mix(
-      in srgb,
+    color-mix(in srgb,
       var(--app-surface) 86%,
-      var(--promoted-primary-soft)
-    );
+      var(--promoted-primary-soft));
   color:
-    color-mix(
-      in srgb,
+    color-mix(in srgb,
       var(--promoted-primary) 78%,
-      var(--app-text)
-    );
+      var(--app-text));
 
   svg {
     color: var(--promoted-primary);
@@ -890,7 +816,7 @@
   border-top: 1px solid var(--app-border);
   border-bottom: 1px solid var(--app-border);
 
-  > strong {
+  >strong {
     margin-top: 0.75rem;
 
     font-family: $font-heading;
@@ -902,7 +828,7 @@
     color: var(--app-text);
   }
 
-  > p {
+  >p {
     max-width: 520px;
 
     margin: 1rem 0 0;
@@ -933,11 +859,9 @@
     width: 36%;
 
     background:
-      linear-gradient(
-        90deg,
+      linear-gradient(90deg,
         var(--promoted-primary),
-        var(--promoted-secondary)
-      );
+        var(--promoted-secondary));
 
     animation: loadingMove 1.4s ease-in-out infinite;
   }
@@ -979,9 +903,7 @@
 
 .revealVisible {
   opacity: 1;
-
   filter: blur(0);
-
   transform: translate3d(0, 0, 0);
 }
 
@@ -1002,74 +924,50 @@
   --promoted-blue-soft: rgba(92, 133, 255, 0.08);
 
   background:
-    radial-gradient(
-      circle at 12% 9%,
+    radial-gradient(circle at 12% 9%,
       rgba(94, 234, 212, 0.09),
-      transparent 33%
-    ),
-    radial-gradient(
-      circle at 88% 73%,
+      transparent 33%),
+    radial-gradient(circle at 88% 73%,
       rgba(251, 191, 36, 0.07),
-      transparent 35%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(
-        in srgb,
+      transparent 35%),
+    linear-gradient(180deg,
+      color-mix(in srgb,
         var(--app-bg) 91%,
-        rgba(94, 234, 212, 0.1)
-      ) 0%,
+        rgba(94, 234, 212, 0.1)) 0%,
       var(--app-bg) 36%,
-      color-mix(
-        in srgb,
+      color-mix(in srgb,
         var(--app-bg) 92%,
-        rgba(251, 191, 36, 0.07)
-      ) 74%,
-      color-mix(
-        in srgb,
+        rgba(251, 191, 36, 0.07)) 74%,
+      color-mix(in srgb,
         var(--app-bg) 93%,
-        rgba(92, 133, 255, 0.06)
-      ) 100%
-    );
+        rgba(92, 133, 255, 0.06)) 100%);
 }
 
 :global(html[data-theme="dark"]) .showcase {
   &::before {
     background:
-      linear-gradient(
-        105deg,
-        color-mix(
-          in srgb,
+      linear-gradient(105deg,
+        color-mix(in srgb,
           var(--app-bg) 82%,
-          rgba(94, 234, 212, 0.12)
-        ),
-        color-mix(
-          in srgb,
+          rgba(94, 234, 212, 0.12)),
+        color-mix(in srgb,
           var(--app-bg) 88%,
-          rgba(251, 191, 36, 0.085)
-        ) 50%,
-        color-mix(
-          in srgb,
+          rgba(251, 191, 36, 0.085)) 50%,
+        color-mix(in srgb,
           var(--app-bg) 90%,
-          rgba(92, 133, 255, 0.07)
-        )
-      );
+          rgba(92, 133, 255, 0.07)));
 
     opacity: 0.62;
   }
 
   &::after {
     background:
-      radial-gradient(
-        ellipse at 22% 45%,
+      radial-gradient(ellipse at 22% 45%,
         rgba(94, 234, 212, 0.1),
-        transparent 42%
-      ),
-      radial-gradient(
-        ellipse at 82% 58%,
+        transparent 42%),
+      radial-gradient(ellipse at 82% 58%,
         rgba(251, 191, 36, 0.07),
-        transparent 38%
-      );
+        transparent 38%);
   }
 }
 
@@ -1083,9 +981,7 @@
 
 :global(html[data-theme="dark"]) .cardWrap:hover {
   filter:
-    drop-shadow(
-      0 22px 42px rgba(0, 0, 0, 0.24)
-    );
+    drop-shadow(0 22px 42px rgba(0, 0, 0, 0.24));
 }
 
 /* =========================================================
@@ -1132,13 +1028,7 @@
     --card-width: min(390px, 88vw);
 
     padding:
-      clamp(2.5rem, 8vw, 3.5rem)
-      max(0.85rem, var(--safe-right))
-      calc(
-        clamp(2.5rem, 9vw, 4rem) +
-          var(--safe-bottom)
-      )
-      max(0.85rem, var(--safe-left));
+      clamp(2.5rem, 8vw, 3.5rem) max(0.85rem, var(--safe-right)) calc(clamp(2.5rem, 9vw, 4rem) + var(--safe-bottom)) max(0.85rem, var(--safe-left));
   }
 
   .decor {
@@ -1162,17 +1052,14 @@
     gap: 1.5rem;
 
     padding:
-      2rem
-      0
-      0.5rem;
+      2rem 0 0.5rem;
 
     &::before {
       top: 12rem;
       bottom: 0;
 
       clip-path:
-        polygon(
-          0 8%,
+        polygon(0 8%,
           18% 4%,
           37% 10%,
           57% 5%,
@@ -1183,8 +1070,7 @@
           61% 97%,
           39% 92%,
           17% 98%,
-          0 91%
-        );
+          0 91%);
     }
   }
 
@@ -1216,28 +1102,16 @@
 
   .track {
     width:
-      calc(
-        100% +
-        max(
-          0.85rem,
-          var(--safe-right)
-        )
-      );
+      calc(100% + max(0.85rem,
+          var(--safe-right)));
 
     margin-right:
-      calc(
-        -1 *
-        max(
-          0.85rem,
-          var(--safe-right)
-        )
-      );
+      calc(-1 * max(0.85rem,
+          var(--safe-right)));
 
     padding-right:
-      max(
-        0.85rem,
-        var(--safe-right)
-      );
+      max(0.85rem,
+        var(--safe-right));
 
     scroll-snap-type: x mandatory;
   }
@@ -1299,16 +1173,12 @@
     --card-width: min(360px, 88vw);
 
     padding-left:
-      max(
-        0.75rem,
-        var(--safe-left)
-      );
+      max(0.75rem,
+        var(--safe-left));
 
     padding-right:
-      max(
-        0.75rem,
-        var(--safe-right)
-      );
+      max(0.75rem,
+        var(--safe-right));
   }
 
   .statItem {
@@ -1331,6 +1201,7 @@
 ========================================================= */
 
 @media (hover: none) {
+
   .controlButton:hover:not(:disabled),
   .cardWrap:hover {
     transform: none;
@@ -1338,6 +1209,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .reveal,
   .controlButton,
   .cardWrap,

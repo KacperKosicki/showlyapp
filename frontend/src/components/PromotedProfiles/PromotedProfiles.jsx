@@ -226,12 +226,10 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
       return undefined;
     }
 
-    const revealElement = (element) => {
-      element.classList.add(styles.revealVisible);
-    };
-
     if (typeof IntersectionObserver === "undefined") {
-      animatedElements.forEach(revealElement);
+      animatedElements.forEach((element) => {
+        element.classList.add(styles.revealVisible);
+      });
 
       return undefined;
     }
@@ -240,8 +238,9 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            revealElement(entry.target);
-            observer.unobserve(entry.target);
+            entry.target.classList.add(styles.revealVisible);
+          } else {
+            entry.target.classList.remove(styles.revealVisible);
           }
         });
       },
