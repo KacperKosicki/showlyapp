@@ -187,57 +187,6 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
     };
   }, [currentUser?.uid, setAlert]);
 
-  // Ten efekt jest celowo skopiowany stylem z działających sekcji
-  // PartnersShowcase/UserCardList: obserwujemy elementy .reveal osobno,
-  // dodajemy klasę gdy element wchodzi w viewport i usuwamy ją gdy wychodzi.
-  useEffect(() => {
-    const section = sectionRef.current;
-
-    if (!section) {
-      return undefined;
-    }
-
-    const animatedElements = section.querySelectorAll(
-      `.${styles.reveal}`
-    );
-
-    if (!animatedElements.length) {
-      return undefined;
-    }
-
-    if (typeof IntersectionObserver === "undefined") {
-      animatedElements.forEach((element) => {
-        element.classList.add(styles.revealVisible);
-      });
-
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add(styles.revealVisible);
-          } else {
-            entry.target.classList.remove(styles.revealVisible);
-          }
-        });
-      },
-      {
-        threshold: 0.14,
-        rootMargin: "0px 0px -7% 0px",
-      }
-    );
-
-    animatedElements.forEach((element) => {
-      observer.observe(element);
-    });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [loading, profiles.length]);
-
   const updateArrows = useCallback(() => {
     const element = scrollerRef.current;
 
@@ -479,12 +428,7 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
           </div>
         </div>
 
-        <section
-          className={`${styles.showcase} ${styles.reveal} ${styles.fromBottom}`}
-          style={{
-            "--reveal-delay": "120ms",
-          }}
-        >
+        <section className={styles.showcase}>
           <div className={styles.showcaseHead}>
             <div className={styles.showcaseIntro}>
               <span className={styles.showcaseIndex}>02</span>
@@ -549,9 +493,8 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
                     }}
                   >
                     <span
-                      className={`${styles.planBadge} ${
-                        planKey ? styles[planKey] : ""
-                      }`}
+                      className={`${styles.planBadge} ${planKey ? styles[planKey] : ""
+                        }`}
                     >
                       <FaAward aria-hidden="true" />
                       {planLabel}
