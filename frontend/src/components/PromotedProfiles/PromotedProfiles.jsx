@@ -46,8 +46,7 @@ const softActiveStatuses = new Set([
 ]);
 
 const getPlanKey = (profile = {}) => {
-  const billing =
-    profile?.billingPublic || profile?.billing || {};
+  const billing = profile?.billingPublic || profile?.billing || {};
 
   const effectivePlan = String(
     billing?.effectivePlan || ""
@@ -61,9 +60,7 @@ const getPlanKey = (profile = {}) => {
   }
 
   const plan = String(billing?.plan || "").toLowerCase();
-  const status = String(
-    billing?.status || ""
-  ).toLowerCase();
+  const status = String(billing?.status || "").toLowerCase();
 
   if (
     (plan === "standard" || plan === "premium") &&
@@ -93,17 +90,13 @@ const sortPromotedProfiles = (profiles = []) =>
     }
 
     const reviewsDifference =
-      Number(b?.reviews || 0) -
-      Number(a?.reviews || 0);
+      Number(b?.reviews || 0) - Number(a?.reviews || 0);
 
     if (reviewsDifference !== 0) {
       return reviewsDifference;
     }
 
-    return (
-      Number(b?.visits || 0) -
-      Number(a?.visits || 0)
-    );
+    return Number(b?.visits || 0) - Number(a?.visits || 0);
   });
 
 const PromotedProfiles = ({ currentUser, setAlert }) => {
@@ -124,57 +117,41 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
       try {
         setLoading(true);
 
-        const { data } = await axios.get(
-          `${API}/api/profiles`
+        const { data } = await axios.get(`${API}/api/profiles`);
+
+        const safeProfiles = Array.isArray(data) ? data : [];
+
+        let promotedProfiles = safeProfiles.filter((profile) =>
+          ["standard", "premium"].includes(getPlanKey(profile))
         );
 
-        const safeProfiles = Array.isArray(data)
-          ? data
-          : [];
-
-        let promotedProfiles = safeProfiles.filter(
-          (profile) =>
-            ["standard", "premium"].includes(
-              getPlanKey(profile)
-            )
-        );
-
-        promotedProfiles = sortPromotedProfiles(
-          promotedProfiles
-        );
+        promotedProfiles = sortPromotedProfiles(promotedProfiles);
 
         if (currentUser?.uid && auth.currentUser) {
           const authHeader = await getAuthHeader();
 
-          const { data: favoriteProfiles } =
-            await axios.get(`${API}/api/favorites/my`, {
+          const { data: favoriteProfiles } = await axios.get(
+            `${API}/api/favorites/my`,
+            {
               headers: {
                 ...authHeader,
               },
-            });
+            }
+          );
 
           const favoriteIds = new Set(
-            (
-              Array.isArray(favoriteProfiles)
-                ? favoriteProfiles
-                : []
-            )
+            (Array.isArray(favoriteProfiles) ? favoriteProfiles : [])
               .map(
                 (profile) =>
-                  profile?.userId ||
-                  profile?.profileUserId
+                  profile?.userId || profile?.profileUserId
               )
               .filter(Boolean)
           );
 
-          promotedProfiles = promotedProfiles.map(
-            (profile) => ({
-              ...profile,
-              isFavorite: favoriteIds.has(
-                profile.userId
-              ),
-            })
-          );
+          promotedProfiles = promotedProfiles.map((profile) => ({
+            ...profile,
+            isFavorite: favoriteIds.has(profile.userId),
+          }));
         }
 
         if (isMounted) {
@@ -193,8 +170,7 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
         if (typeof setAlert === "function") {
           setAlert({
             type: "error",
-            message:
-              "Nie udało się pobrać promowanych profili.",
+            message: "Nie udało się pobrać promowanych profili.",
           });
         }
       } finally {
@@ -211,6 +187,9 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
     };
   }, [currentUser?.uid, setAlert]);
 
+  // Ten efekt jest celowo skopiowany stylem z działających sekcji
+  // PartnersShowcase/UserCardList: obserwujemy elementy .reveal osobno,
+  // dodajemy klasę gdy element wchodzi w viewport i usuwamy ją gdy wychodzi.
   useEffect(() => {
     const section = sectionRef.current;
 
@@ -245,8 +224,8 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
         });
       },
       {
-        threshold: 0.08,
-        rootMargin: "0px 0px -8% 0px",
+        threshold: 0.14,
+        rootMargin: "0px 0px -7% 0px",
       }
     );
 
@@ -276,15 +255,11 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
         element.scrollWidth - element.clientWidth
       );
 
-      const currentScroll = Math.max(
-        0,
-        element.scrollLeft
-      );
+      const currentScroll = Math.max(0, element.scrollLeft);
 
       setCanLeft(currentScroll > 4);
       setCanRight(
-        maxScroll > 4 &&
-        currentScroll < maxScroll - 4
+        maxScroll > 4 && currentScroll < maxScroll - 4
       );
     });
   }, []);
@@ -316,15 +291,8 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
     }
 
     return () => {
-      element.removeEventListener(
-        "scroll",
-        handleScroll
-      );
-
-      window.removeEventListener(
-        "resize",
-        handleScroll
-      );
+      element.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
 
       if (resizeObserver) {
         resizeObserver.disconnect();
@@ -375,9 +343,7 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
 
     const gap =
       parseFloat(
-        computedStyles.columnGap ||
-        computedStyles.gap ||
-        "0"
+        computedStyles.columnGap || computedStyles.gap || "0"
       ) || 24;
 
     const scrollStep = cardWidth + gap;
@@ -388,11 +354,7 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
     );
 
     const nextScroll = Math.min(
-      Math.max(
-        element.scrollLeft +
-        direction * scrollStep,
-        0
-      ),
+      Math.max(element.scrollLeft + direction * scrollStep, 0),
       maxScroll
     );
 
@@ -406,29 +368,23 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
 
   if (loading) {
     return (
-      <section
-        ref={sectionRef}
-        className={styles.section}
-      >
+      <section ref={sectionRef} className={styles.section}>
         <div className={styles.decor} aria-hidden="true">
           <span className={styles.orbOne} />
           <span className={styles.orbTwo} />
           <span className={styles.waveOne} />
+          <span className={styles.lineOne} />
         </div>
 
         <div className={styles.inner}>
           <div className={styles.loadingBlock}>
-            <span className={styles.eyebrow}>
-              Showly Boost
-            </span>
+            <span className={styles.eyebrow}>Showly Boost</span>
 
-            <strong>
-              Ładowanie promowanych profili…
-            </strong>
+            <strong>Ładowanie promowanych profili…</strong>
 
             <p>
-              Sprawdzamy profile z aktywnym planem
-              Standard lub Premium.
+              Sprawdzamy profile z aktywnym planem Standard lub
+              Premium.
             </p>
 
             <div
@@ -475,13 +431,10 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
           <div
             className={`${styles.headingBlock} ${styles.reveal} ${styles.fromLeft}`}
           >
-            <span className={styles.eyebrow}>
-              Showly Boost
-            </span>
+            <span className={styles.eyebrow}>Showly Boost</span>
 
             <h2>
-              Profile z{" "}
-              <span>lepszą widocznością.</span>
+              Profile z <span>lepszą widocznością.</span>
             </h2>
           </div>
 
@@ -492,18 +445,14 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
             }}
           >
             <p>
-              Wyróżnione wizytówki osób, które aktywnie
-              rozwijają swój profil w Showly. Plany
-              Standard i Premium pomagają ich ofercie
-              dotrzeć wyżej i szybciej.
+              Wyróżnione wizytówki osób, które aktywnie rozwijają
+              swój profil w Showly. Plany Standard i Premium
+              pomagają ich ofercie dotrzeć wyżej i szybciej.
             </p>
 
             <div className={styles.planNote}>
               <FaRocket aria-hidden="true" />
-
-              <span>
-                Większa ekspozycja dla aktywnych profili
-              </span>
+              <span>Większa ekspozycja dla aktywnych profili</span>
             </div>
           </div>
         </header>
@@ -515,42 +464,30 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
           }}
         >
           <div className={styles.statItem}>
-            <strong>
-              {String(profiles.length).padStart(2, "0")}
-            </strong>
+            <strong>{String(profiles.length).padStart(2, "0")}</strong>
             <span>promowanych profili</span>
           </div>
 
           <div className={styles.statItem}>
-            <strong>
-              {String(premiumCount).padStart(2, "0")}
-            </strong>
+            <strong>{String(premiumCount).padStart(2, "0")}</strong>
             <span>profili Premium</span>
           </div>
 
           <div className={styles.statItem}>
-            <strong>
-              {String(standardCount).padStart(2, "0")}
-            </strong>
+            <strong>{String(standardCount).padStart(2, "0")}</strong>
             <span>profili Standard</span>
           </div>
         </div>
 
-        <section className={styles.showcase}>
-          <span
-            className={styles.showcaseWatermark}
-            aria-hidden="true"
-          >
-            SHOWLY BOOST
-          </span>
-
-          <div
-            className={`${styles.showcaseHead} ${styles.reveal} ${styles.fromTop}`}
-          >
+        <section
+          className={`${styles.showcase} ${styles.reveal} ${styles.fromBottom}`}
+          style={{
+            "--reveal-delay": "120ms",
+          }}
+        >
+          <div className={styles.showcaseHead}>
             <div className={styles.showcaseIntro}>
-              <span className={styles.showcaseIndex}>
-                02
-              </span>
+              <span className={styles.showcaseIndex}>02</span>
 
               <div>
                 <span className={styles.eyebrow}>
@@ -587,12 +524,7 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
             </div>
           </div>
 
-          <div
-            className={`${styles.carousel} ${styles.reveal} ${styles.fromBottom}`}
-            style={{
-              "--reveal-delay": "100ms",
-            }}
-          >
+          <div className={styles.carousel}>
             <div
               ref={scrollerRef}
               className={styles.track}
@@ -602,18 +534,12 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
               {profiles.map((profile, index) => {
                 const planKey = getPlanKey(profile);
                 const planLabel =
-                  planKey === "premium"
-                    ? "Premium"
-                    : "Standard";
+                  planKey === "premium" ? "Premium" : "Standard";
 
                 return (
                   <div
                     className={styles.cardWrap}
-                    key={
-                      profile._id ||
-                      profile.userId ||
-                      index
-                    }
+                    key={profile._id || profile.userId || index}
                     role="listitem"
                     style={{
                       "--card-delay": `${Math.min(
@@ -623,8 +549,9 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
                     }}
                   >
                     <span
-                      className={`${styles.planBadge} ${planKey ? styles[planKey] : ""
-                        }`}
+                      className={`${styles.planBadge} ${
+                        planKey ? styles[planKey] : ""
+                      }`}
                     >
                       <FaAward aria-hidden="true" />
                       {planLabel}
@@ -642,9 +569,7 @@ const PromotedProfiles = ({ currentUser, setAlert }) => {
 
             <div className={styles.mobileHint}>
               <FaChevronLeft aria-hidden="true" />
-              <span>
-                Przesuń, aby zobaczyć więcej
-              </span>
+              <span>Przesuń, aby zobaczyć więcej</span>
               <FaChevronRight aria-hidden="true" />
             </div>
           </div>

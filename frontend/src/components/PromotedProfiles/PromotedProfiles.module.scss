@@ -1,20 +1,19 @@
 @import "../../styles/variables";
 
 /* =========================================================
-   PromotedProfiles — editorial Showly Boost
+   PromotedProfiles — Showly Boost
+   Wersja uproszczona na wzór PartnersShowcase/UserCardList
 ========================================================= */
 
 .section {
   --promoted-primary: #0f766e;
   --promoted-secondary: #f59e0b;
 
-  --promoted-primary-soft: rgba(15, 118, 110, 0.11);
-  --promoted-primary-border: rgba(15, 118, 110, 0.25);
-
+  --promoted-primary-soft: rgba(15, 118, 110, 0.1);
+  --promoted-primary-border: rgba(15, 118, 110, 0.24);
   --promoted-secondary-soft: rgba(245, 158, 11, 0.1);
   --promoted-secondary-border: rgba(245, 158, 11, 0.28);
-
-  --promoted-blue-soft: rgba(56, 116, 255, 0.07);
+  --promoted-blue-soft: rgba(56, 116, 255, 0.06);
 
   --card-width: clamp(385px, 30vw, 440px);
   --card-gap: clamp(1rem, 1.8vw, 1.5rem);
@@ -26,26 +25,29 @@
   width: 100%;
 
   padding:
-    clamp(3.5rem, 7vw, 6.5rem) max(clamp(1rem, 3vw, 2rem), var(--safe-right)) calc(clamp(3rem, 6vw, 5rem) + var(--safe-bottom)) max(clamp(1rem, 3vw, 2rem), var(--safe-left));
+    clamp(3.5rem, 7vw, 6.5rem)
+    max(clamp(1rem, 3vw, 2rem), var(--safe-right))
+    calc(clamp(3.5rem, 7vw, 6rem) + var(--safe-bottom))
+    max(clamp(1rem, 3vw, 2rem), var(--safe-left));
 
   background:
-    radial-gradient(circle at 12% 9%,
+    radial-gradient(
+      circle at 12% 9%,
       rgba(15, 118, 110, 0.1),
-      transparent 33%),
-    radial-gradient(circle at 88% 73%,
+      transparent 33%
+    ),
+    radial-gradient(
+      circle at 88% 73%,
       rgba(245, 158, 11, 0.085),
-      transparent 35%),
-    linear-gradient(180deg,
-      color-mix(in srgb,
-        var(--app-bg) 94%,
-        var(--promoted-primary-soft)) 0%,
-      var(--app-bg) 35%,
-      color-mix(in srgb,
-        var(--app-bg) 93%,
-        var(--promoted-secondary-soft)) 72%,
-      color-mix(in srgb,
-        var(--app-bg) 95%,
-        var(--promoted-blue-soft)) 100%);
+      transparent 35%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--app-bg) 94%, var(--promoted-primary-soft)) 0%,
+      var(--app-bg) 34%,
+      color-mix(in srgb, var(--app-bg) 93%, var(--promoted-secondary-soft)) 70%,
+      color-mix(in srgb, var(--app-bg) 95%, var(--promoted-blue-soft)) 100%
+    );
 
   color: var(--app-text);
   font-family: $font-accent;
@@ -73,31 +75,41 @@
 .orbOne,
 .orbTwo {
   position: absolute;
-
   border-radius: 999px;
-
   filter: blur(115px);
-  opacity: 0.32;
+  opacity: 0.35;
 }
 
 .orbOne {
-  top: -150px;
-  left: -240px;
+  top: -130px;
+  left: -220px;
 
-  width: 620px;
-  height: 620px;
+  width: 610px;
+  height: 610px;
 
-  background: rgba(15, 118, 110, 0.24);
+  background:
+    radial-gradient(
+      circle,
+      rgba(15, 118, 110, 0.28),
+      rgba(15, 118, 110, 0.05) 60%,
+      transparent 74%
+    );
 }
 
 .orbTwo {
-  right: -260px;
-  bottom: -110px;
+  right: -250px;
+  bottom: -130px;
 
   width: 650px;
   height: 650px;
 
-  background: rgba(245, 158, 11, 0.18);
+  background:
+    radial-gradient(
+      circle,
+      rgba(245, 158, 11, 0.22),
+      rgba(245, 158, 11, 0.045) 60%,
+      transparent 75%
+    );
 }
 
 .waveOne,
@@ -112,58 +124,66 @@
 
 .waveOne {
   top: 38%;
-  height: 35%;
+  height: 32%;
 
   background:
-    linear-gradient(112deg,
+    linear-gradient(
+      112deg,
       rgba(15, 118, 110, 0.07),
       rgba(245, 158, 11, 0.045),
-      rgba(56, 116, 255, 0.035));
+      rgba(56, 116, 255, 0.035)
+    );
 
   clip-path:
-    polygon(0 24%,
-      10% 18%,
-      22% 22%,
-      34% 35%,
-      48% 39%,
-      61% 30%,
-      74% 15%,
-      88% 18%,
-      100% 32%,
-      100% 86%,
-      87% 80%,
-      73% 88%,
-      58% 94%,
-      43% 83%,
-      28% 69%,
-      14% 70%,
-      0 80%);
+    polygon(
+      0 20%,
+      11% 13%,
+      25% 19%,
+      39% 31%,
+      53% 27%,
+      66% 15%,
+      79% 9%,
+      91% 15%,
+      100% 25%,
+      100% 84%,
+      88% 78%,
+      73% 85%,
+      58% 92%,
+      43% 84%,
+      28% 71%,
+      13% 73%,
+      0 81%
+    );
 
-  opacity: 0.8;
-  transform: rotate(-1.4deg);
+  opacity: 0.82;
+  transform: rotate(-2deg);
 }
 
 .waveTwo {
-  bottom: -10%;
-  height: 34%;
+  bottom: -8%;
+  height: 30%;
 
   background:
-    linear-gradient(105deg,
-      rgba(245, 158, 11, 0.05),
-      rgba(15, 118, 110, 0.075),
-      rgba(56, 116, 255, 0.03));
+    linear-gradient(
+      108deg,
+      rgba(245, 158, 11, 0.04),
+      rgba(15, 118, 110, 0.06),
+      rgba(56, 116, 255, 0.035)
+    );
 
   clip-path:
-    polygon(0 43%,
-      14% 27%,
-      29% 33%,
-      43% 49%,
-      57% 54%,
-      71% 45%,
-      85% 29%,
-      100% 35%,
+    polygon(
+      0 37%,
+      15% 24%,
+      30% 31%,
+      45% 48%,
+      59% 51%,
+      73% 43%,
+      87% 27%,
+      100% 33%,
       100% 100%,
-      0 100%);
+      0 100%
+    );
 
   opacity: 0.72;
   transform: rotate(1deg);
@@ -176,21 +196,21 @@
   height: 1px;
 
   background:
-    linear-gradient(90deg,
+    linear-gradient(
+      90deg,
       transparent,
-      color-mix(in srgb,
-        var(--app-border) 78%,
-        transparent),
-      transparent);
+      color-mix(in srgb, var(--app-border) 72%, transparent),
+      transparent
+    );
 
-  opacity: 0.58;
+  opacity: 0.62;
 }
 
 .lineOne {
   top: 28%;
-  right: 4%;
+  right: 3%;
 
-  width: 48vw;
+  width: 47vw;
 
   transform: rotate(-5deg);
 }
@@ -199,7 +219,7 @@
   bottom: 17%;
   left: 5%;
 
-  width: 43vw;
+  width: 44vw;
 
   transform: rotate(5deg);
 }
@@ -220,16 +240,15 @@
 }
 
 /* =========================================================
-   Nagłówek sekcji
+   Nagłówek
 ========================================================= */
 
 .header {
   display: grid;
   grid-template-columns:
-    minmax(0, 1.35fr) minmax(320px, 0.65fr);
-
+    minmax(0, 1.35fr)
+    minmax(320px, 0.65fr);
   align-items: end;
-
   gap: clamp(2rem, 6vw, 6rem);
 }
 
@@ -256,7 +275,6 @@
   z-index: 1;
 
   max-width: 1000px;
-
   margin: 0.75rem 0 0;
 
   font-family: $font-heading;
@@ -272,10 +290,14 @@
     position: relative;
     display: inline;
 
+    color: var(--promoted-primary);
+
     background:
-      linear-gradient(90deg,
+      linear-gradient(
+        90deg,
         var(--promoted-primary),
-        var(--promoted-secondary));
+        var(--promoted-secondary)
+      );
 
     background-clip: text;
     -webkit-background-clip: text;
@@ -293,9 +315,11 @@
       height: 0.16em;
 
       background:
-        linear-gradient(90deg,
+        linear-gradient(
+          90deg,
           rgba(15, 118, 110, 0.17),
-          rgba(245, 158, 11, 0.15));
+          rgba(245, 158, 11, 0.15)
+        );
 
       transform: rotate(-1deg);
     }
@@ -310,7 +334,7 @@
   justify-self: end;
 }
 
-.headerSide>p {
+.headerSide > p {
   margin: 0;
 
   font-size: clamp(0.95rem, 1.2vw, 1.06rem);
@@ -322,7 +346,6 @@
 .planNote {
   display: flex;
   align-items: center;
-
   gap: 0.65rem;
 
   padding-top: 1rem;
@@ -348,7 +371,7 @@
 }
 
 /* =========================================================
-   Statystyki — otwarty pasek
+   Statystyki
 ========================================================= */
 
 .statsStrip {
@@ -363,7 +386,6 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: end;
-
   gap: clamp(0.8rem, 2vw, 1.4rem);
 
   min-width: 0;
@@ -389,9 +411,11 @@
 
   &:nth-child(3) strong {
     color:
-      color-mix(in srgb,
+      color-mix(
+        in srgb,
         var(--promoted-primary) 68%,
-        var(--app-text));
+        var(--app-text)
+      );
   }
 
   span {
@@ -408,7 +432,7 @@
 }
 
 /* =========================================================
-   Otwarta wystawa
+   Showcase
 ========================================================= */
 
 .showcase {
@@ -419,109 +443,40 @@
   gap: clamp(1.5rem, 3vw, 2.5rem);
 
   min-width: 0;
-
   padding:
-    clamp(2rem, 4vw, 3.5rem) 0 clamp(1rem, 2vw, 2rem);
+    clamp(2rem, 4vw, 3.5rem)
+    0
+    clamp(1rem, 2vw, 2rem);
 
   border-top: 1px solid var(--app-border);
 
   &::before {
-    content: "";
-
-    position: absolute;
-    z-index: -2;
-
-    top: clamp(9rem, 15vw, 13rem);
-    right: calc(50% - 50vw);
-    bottom: -1rem;
-    left: calc(50% - 50vw);
-
-    pointer-events: none;
-
-    background:
-      linear-gradient(105deg,
-        color-mix(in srgb,
-          var(--app-bg) 80%,
-          var(--promoted-primary-soft)),
-        color-mix(in srgb,
-          var(--app-bg) 88%,
-          var(--promoted-secondary-soft)) 48%,
-        color-mix(in srgb,
-          var(--app-bg) 91%,
-          var(--promoted-blue-soft)));
-
-    clip-path:
-      polygon(0 13%,
-        12% 8%,
-        25% 11%,
-        39% 20%,
-        51% 17%,
-        65% 7%,
-        79% 4%,
-        91% 10%,
-        100% 18%,
-        100% 92%,
-        89% 87%,
-        73% 91%,
-        56% 98%,
-        41% 92%,
-        27% 84%,
-        13% 86%,
-        0 94%);
-
-    opacity: 0.8;
-  }
-
-  &::after {
-    content: "";
+    content: "SHOWLY BOOST";
 
     position: absolute;
     z-index: -1;
-
-    top: clamp(12rem, 18vw, 16rem);
-    right: calc(50% - 50vw);
-    bottom: 2rem;
-    left: calc(50% - 50vw);
+    top: clamp(1rem, 3vw, 2rem);
+    left: 50%;
 
     pointer-events: none;
+    user-select: none;
 
-    background:
-      radial-gradient(ellipse at 22% 45%,
-        rgba(15, 118, 110, 0.11),
-        transparent 42%),
-      radial-gradient(ellipse at 82% 58%,
-        rgba(245, 158, 11, 0.085),
-        transparent 38%);
+    transform: translateX(-50%);
 
-    filter: blur(24px);
+    font-family: $font-heading;
+    font-size: clamp(4rem, 12vw, 11rem);
+    font-weight: 780;
+    line-height: 0.8;
+    letter-spacing: -0.075em;
+    white-space: nowrap;
+
+    color:
+      color-mix(
+        in srgb,
+        var(--promoted-primary) 5%,
+        transparent
+      );
   }
-}
-
-.showcaseWatermark {
-  position: absolute;
-  z-index: -1;
-
-  top: clamp(8.5rem, 13vw, 11rem);
-  left: 50%;
-
-  width: max-content;
-
-  pointer-events: none;
-  user-select: none;
-
-  transform: translateX(-50%);
-
-  font-family: $font-heading;
-  font-size: clamp(4rem, 12vw, 11rem);
-  font-weight: 780;
-  line-height: 0.8;
-  letter-spacing: -0.075em;
-  white-space: nowrap;
-
-  color:
-    color-mix(in srgb,
-      var(--promoted-primary) 5%,
-      transparent);
 }
 
 .showcaseHead {
@@ -531,7 +486,6 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-
   gap: 2rem;
 
   padding-bottom: clamp(1.4rem, 2.5vw, 2rem);
@@ -543,14 +497,12 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: flex-end;
-
   gap: clamp(1rem, 2.5vw, 2rem);
 
   min-width: 0;
 
   h3 {
     max-width: 850px;
-
     margin: 0.55rem 0 0;
 
     font-family: $font-heading;
@@ -572,9 +524,11 @@
   letter-spacing: -0.065em;
 
   color:
-    color-mix(in srgb,
+    color-mix(
+      in srgb,
       var(--promoted-secondary) 82%,
-      var(--app-text));
+      var(--app-text)
+    );
 }
 
 /* =========================================================
@@ -584,7 +538,6 @@
 .controls {
   display: flex;
   align-items: center;
-
   gap: 0.55rem;
 }
 
@@ -602,14 +555,10 @@
   border-radius: 50%;
 
   background:
-    color-mix(in srgb,
-      var(--app-bg) 88%,
-      transparent);
-
+    color-mix(in srgb, var(--app-bg) 88%, transparent);
   color: var(--app-text);
 
   backdrop-filter: blur(12px);
-
   cursor: pointer;
 
   transition:
@@ -626,10 +575,8 @@
 
   &:hover:not(:disabled) {
     border-color: var(--promoted-primary);
-
     background: var(--promoted-primary-soft);
     color: var(--promoted-primary);
-
     transform: translateY(-2px);
   }
 
@@ -651,9 +598,7 @@
 .carousel {
   position: relative;
   z-index: 2;
-
   min-width: 0;
-
   padding-top: clamp(1rem, 2vw, 1.5rem);
 }
 
@@ -661,7 +606,6 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-start;
-
   gap: var(--card-gap);
 
   --carousel-edge: max(1rem, calc((100vw - 1500px) / 2));
@@ -669,7 +613,10 @@
   width: calc(100% + var(--carousel-edge));
 
   padding:
-    0.85rem var(--carousel-edge) 1.5rem 0;
+    0.85rem
+    var(--carousel-edge)
+    1.5rem
+    0;
 
   overflow-x: auto;
   overflow-y: hidden;
@@ -677,7 +624,6 @@
   scroll-snap-type: x proximity;
   scroll-behavior: smooth;
   overscroll-behavior-x: contain;
-
   scrollbar-width: none;
 
   -webkit-overflow-scrolling: touch;
@@ -691,7 +637,6 @@
   position: relative;
 
   flex: 0 0 var(--card-width);
-
   width: var(--card-width);
   min-width: 0;
 
@@ -699,8 +644,10 @@
   scroll-snap-stop: normal;
 
   animation:
-    cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
-
+    cardEntrance
+    0.8s
+    cubic-bezier(0.16, 1, 0.3, 1)
+    both;
   animation-delay: var(--card-delay, 0ms);
 
   transition:
@@ -709,12 +656,10 @@
 
   &:hover {
     transform: translateY(-3px);
-
-    filter:
-      drop-shadow(0 22px 42px rgba(21, 21, 21, 0.09));
+    filter: drop-shadow(0 22px 42px rgba(21, 21, 21, 0.09));
   }
 
-  >* {
+  > * {
     width: 100%;
     max-width: none;
   }
@@ -732,7 +677,6 @@
 
   display: inline-flex;
   align-items: center;
-
   gap: 0.45rem;
 
   min-height: 2rem;
@@ -744,10 +688,7 @@
   border-radius: 999px;
 
   background:
-    color-mix(in srgb,
-      var(--app-surface) 90%,
-      transparent);
-
+    color-mix(in srgb, var(--app-surface) 90%, transparent);
   color: var(--app-text);
 
   backdrop-filter: blur(12px);
@@ -767,13 +708,17 @@
 .planBadge.premium {
   border-color: var(--promoted-secondary-border);
   background:
-    color-mix(in srgb,
+    color-mix(
+      in srgb,
       var(--app-surface) 85%,
-      var(--promoted-secondary-soft));
+      var(--promoted-secondary-soft)
+    );
   color:
-    color-mix(in srgb,
+    color-mix(
+      in srgb,
       var(--promoted-secondary) 72%,
-      var(--app-text));
+      var(--app-text)
+    );
 
   svg {
     color: var(--promoted-secondary);
@@ -783,13 +728,17 @@
 .planBadge.standard {
   border-color: var(--promoted-primary-border);
   background:
-    color-mix(in srgb,
+    color-mix(
+      in srgb,
       var(--app-surface) 86%,
-      var(--promoted-primary-soft));
+      var(--promoted-primary-soft)
+    );
   color:
-    color-mix(in srgb,
+    color-mix(
+      in srgb,
       var(--promoted-primary) 78%,
-      var(--app-text));
+      var(--app-text)
+    );
 
   svg {
     color: var(--promoted-primary);
@@ -810,13 +759,12 @@
 
   width: min(760px, 100%);
   margin: 0 auto;
-
   padding: clamp(2rem, 5vw, 4rem) 0;
 
   border-top: 1px solid var(--app-border);
   border-bottom: 1px solid var(--app-border);
 
-  >strong {
+  > strong {
     margin-top: 0.75rem;
 
     font-family: $font-heading;
@@ -828,9 +776,8 @@
     color: var(--app-text);
   }
 
-  >p {
+  > p {
     max-width: 520px;
-
     margin: 1rem 0 0;
 
     font-size: 0.9rem;
@@ -845,7 +792,6 @@
 
   width: 100%;
   height: 2px;
-
   margin-top: 1.5rem;
 
   overflow: hidden;
@@ -859,16 +805,18 @@
     width: 36%;
 
     background:
-      linear-gradient(90deg,
+      linear-gradient(
+        90deg,
         var(--promoted-primary),
-        var(--promoted-secondary));
+        var(--promoted-secondary)
+      );
 
     animation: loadingMove 1.4s ease-in-out infinite;
   }
 }
 
 /* =========================================================
-   Reveal
+   Reveal — identyczna mechanika jak w działających sekcjach
 ========================================================= */
 
 .reveal {
@@ -881,7 +829,6 @@
     filter 0.85s cubic-bezier(0.16, 1, 0.3, 1);
 
   transition-delay: var(--reveal-delay, 0ms);
-
   will-change: opacity, transform, filter;
 }
 
@@ -917,58 +864,28 @@
 
   --promoted-primary-soft: rgba(94, 234, 212, 0.12);
   --promoted-primary-border: rgba(94, 234, 212, 0.28);
-
   --promoted-secondary-soft: rgba(251, 191, 36, 0.1);
   --promoted-secondary-border: rgba(251, 191, 36, 0.28);
-
   --promoted-blue-soft: rgba(92, 133, 255, 0.08);
 
   background:
-    radial-gradient(circle at 12% 9%,
+    radial-gradient(
+      circle at 12% 9%,
       rgba(94, 234, 212, 0.09),
-      transparent 33%),
-    radial-gradient(circle at 88% 73%,
+      transparent 33%
+    ),
+    radial-gradient(
+      circle at 88% 73%,
       rgba(251, 191, 36, 0.07),
-      transparent 35%),
-    linear-gradient(180deg,
-      color-mix(in srgb,
-        var(--app-bg) 91%,
-        rgba(94, 234, 212, 0.1)) 0%,
+      transparent 35%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--app-bg) 91%, rgba(94, 234, 212, 0.1)) 0%,
       var(--app-bg) 36%,
-      color-mix(in srgb,
-        var(--app-bg) 92%,
-        rgba(251, 191, 36, 0.07)) 74%,
-      color-mix(in srgb,
-        var(--app-bg) 93%,
-        rgba(92, 133, 255, 0.06)) 100%);
-}
-
-:global(html[data-theme="dark"]) .showcase {
-  &::before {
-    background:
-      linear-gradient(105deg,
-        color-mix(in srgb,
-          var(--app-bg) 82%,
-          rgba(94, 234, 212, 0.12)),
-        color-mix(in srgb,
-          var(--app-bg) 88%,
-          rgba(251, 191, 36, 0.085)) 50%,
-        color-mix(in srgb,
-          var(--app-bg) 90%,
-          rgba(92, 133, 255, 0.07)));
-
-    opacity: 0.62;
-  }
-
-  &::after {
-    background:
-      radial-gradient(ellipse at 22% 45%,
-        rgba(94, 234, 212, 0.1),
-        transparent 42%),
-      radial-gradient(ellipse at 82% 58%,
-        rgba(251, 191, 36, 0.07),
-        transparent 38%);
-  }
+      color-mix(in srgb, var(--app-bg) 92%, rgba(251, 191, 36, 0.07)) 74%,
+      color-mix(in srgb, var(--app-bg) 93%, rgba(92, 133, 255, 0.06)) 100%
+    );
 }
 
 :global(html[data-theme="dark"]) .planBadge.premium {
@@ -980,12 +897,11 @@
 }
 
 :global(html[data-theme="dark"]) .cardWrap:hover {
-  filter:
-    drop-shadow(0 22px 42px rgba(0, 0, 0, 0.24));
+  filter: drop-shadow(0 22px 42px rgba(0, 0, 0, 0.24));
 }
 
 /* =========================================================
-   Tablet
+   Responsive
 ========================================================= */
 
 @media (max-width: 1100px) {
@@ -994,9 +910,8 @@
   }
 
   .headerSide {
-    justify-self: start;
-
     max-width: 760px;
+    justify-self: start;
   }
 }
 
@@ -1019,16 +934,15 @@
   }
 }
 
-/* =========================================================
-   Mobile
-========================================================= */
-
 @media (max-width: 760px) {
   .section {
     --card-width: min(390px, 88vw);
 
     padding:
-      clamp(2.5rem, 8vw, 3.5rem) max(0.85rem, var(--safe-right)) calc(clamp(2.5rem, 9vw, 4rem) + var(--safe-bottom)) max(0.85rem, var(--safe-left));
+      clamp(2.5rem, 8vw, 3.5rem)
+      max(0.85rem, var(--safe-right))
+      calc(clamp(2.5rem, 9vw, 4rem) + var(--safe-bottom))
+      max(0.85rem, var(--safe-left));
   }
 
   .decor {
@@ -1050,33 +964,11 @@
 
   .showcase {
     gap: 1.5rem;
-
-    padding:
-      2rem 0 0.5rem;
-
-    &::before {
-      top: 12rem;
-      bottom: 0;
-
-      clip-path:
-        polygon(0 8%,
-          18% 4%,
-          37% 10%,
-          57% 5%,
-          76% 9%,
-          100% 3%,
-          100% 95%,
-          81% 91%,
-          61% 97%,
-          39% 92%,
-          17% 98%,
-          0 91%);
-    }
+    padding: 2rem 0 0.5rem;
   }
 
-  .showcaseWatermark {
-    top: 11.5rem;
-
+  .showcase::before {
+    top: 2.5rem;
     font-size: clamp(4rem, 24vw, 7rem);
   }
 
@@ -1102,17 +994,18 @@
 
   .track {
     width:
-      calc(100% + max(0.85rem,
-          var(--safe-right)));
+      calc(
+        100% +
+        max(0.85rem, var(--safe-right))
+      );
 
     margin-right:
-      calc(-1 * max(0.85rem,
-          var(--safe-right)));
+      calc(
+        -1 *
+        max(0.85rem, var(--safe-right))
+      );
 
-    padding-right:
-      max(0.85rem,
-        var(--safe-right));
-
+    padding-right: max(0.85rem, var(--safe-right));
     scroll-snap-type: x mandatory;
   }
 
@@ -1129,7 +1022,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-
     gap: 0.6rem;
 
     margin-top: 0.7rem;
@@ -1142,7 +1034,6 @@
     svg {
       width: 0.85rem;
       height: 0.85rem;
-
       color: var(--promoted-primary);
     }
   }
@@ -1172,18 +1063,12 @@
   .section {
     --card-width: min(360px, 88vw);
 
-    padding-left:
-      max(0.75rem,
-        var(--safe-left));
-
-    padding-right:
-      max(0.75rem,
-        var(--safe-right));
+    padding-left: max(0.75rem, var(--safe-left));
+    padding-right: max(0.75rem, var(--safe-right));
   }
 
   .statItem {
     grid-template-columns: 64px minmax(0, 1fr);
-
     padding: 1rem 0.4rem;
 
     strong {
@@ -1201,7 +1086,6 @@
 ========================================================= */
 
 @media (hover: none) {
-
   .controlButton:hover:not(:disabled),
   .cardWrap:hover {
     transform: none;
@@ -1209,7 +1093,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   .reveal,
   .controlButton,
   .cardWrap,
@@ -1220,9 +1103,7 @@
 
   .reveal {
     opacity: 1;
-
     filter: none;
-
     transform: none;
   }
 
