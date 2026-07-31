@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import styles from "./UserDropdown.module.scss";
-import { FaChevronDown } from "react-icons/fa";
 import {
   FiUser,
   FiSettings,
@@ -12,6 +11,8 @@ import {
   FiAlertTriangle,
   FiTag,
   FiMapPin,
+  FiArrowUpRight,
+  FiChevronDown,
 } from "react-icons/fi";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -469,6 +470,7 @@ const UserDropdown = ({
         onClick={() => setOpen((prev) => !prev)}
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label={open ? "Zamknij menu użytkownika" : "Otwórz menu użytkownika"}
       >
         <span className={styles.avatarWrap} aria-hidden="true">
           <img
@@ -485,60 +487,80 @@ const UserDropdown = ({
           {roleLabel && <span className={styles.rolePill}>{roleLabel}</span>}
         </span>
 
-        <span className={styles.email}>{displayEmail}</span>
+        <span className={styles.triggerCopy}>
+          <small>Twoje konto</small>
+          <span className={styles.email}>{displayEmail}</span>
+        </span>
 
         {hasAnyBadge && <span className={styles.dotPulse} aria-hidden="true" />}
 
-        <FaChevronDown
-          className={`${styles.icon} ${open ? styles.iconOpen : ""}`}
-          aria-hidden="true"
-        />
+        <span className={styles.triggerEnd} aria-hidden="true">
+          <span className={styles.triggerIndex}>01</span>
+
+          <FiChevronDown
+            className={`${styles.icon} ${open ? styles.iconOpen : ""}`}
+          />
+        </span>
       </button>
 
       <div
         className={`${styles.menu} ${open ? styles.visible : ""}`}
         role="menu"
+        aria-hidden={!open}
         onWheel={(e) => e.stopPropagation()}
         onTouchMove={(e) => e.stopPropagation()}
       >
-        <div className={styles.menuTop}>
-          <div className={styles.identity}>
-            <span className={styles.bigAvatarWrap} aria-hidden="true">
-              <img
-                src={avatarSrc}
-                alt=""
-                className={styles.bigAvatar}
-                decoding="async"
-                referrerPolicy="no-referrer"
-                onError={(e) => {
-                  e.currentTarget.src = "/images/other/no-image.png";
-                }}
-              />
+        <span className={styles.menuAccent} aria-hidden="true" />
 
-              {roleLabel && <span className={styles.bigRolePill}>{roleLabel}</span>}
+        <div className={styles.menuTop}>
+          <div className={styles.menuHeading}>
+            <span className={styles.menuIndex} aria-hidden="true">
+              01
             </span>
 
-            <div className={styles.identityText}>
-              <div className={styles.menuTitle}>Twoje menu</div>
-              <div className={styles.menuSub}>{displayEmail}</div>
+            <div className={styles.identity}>
+              <span className={styles.bigAvatarWrap} aria-hidden="true">
+                <img
+                  src={avatarSrc}
+                  alt=""
+                  className={styles.bigAvatar}
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/other/no-image.png";
+                  }}
+                />
+
+                {roleLabel && (
+                  <span className={styles.bigRolePill}>{roleLabel}</span>
+                )}
+              </span>
+
+              <div className={styles.identityText}>
+                <div className={styles.menuTitle}>Panel użytkownika</div>
+                <div className={styles.menuSub}>{displayEmail}</div>
+              </div>
             </div>
           </div>
 
           <div className={styles.quickStats}>
             <span>
+              <small>Wiadomości</small>
               <b>{Number(unreadCount || 0)}</b>
-              wiadomości
             </span>
 
             <span>
+              <small>Rezerwacje</small>
               <b>{Number(reservationBadgeCount || 0)}</b>
-              rezerwacje
             </span>
           </div>
         </div>
 
         <div className={styles.group}>
-          <span className={styles.groupTitle}>Konto</span>
+          <span className={styles.groupTitle}>
+            <b>01</b>
+            <span>Konto</span>
+          </span>
 
           <button
             type="button"
@@ -550,6 +572,8 @@ const UserDropdown = ({
               <FiSettings className={styles.itemIcon} aria-hidden="true" />
               <span className={styles.itemText}>Twoje konto</span>
             </span>
+
+            <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
           </button>
 
           {canSeeAdminPanel && (
@@ -564,15 +588,19 @@ const UserDropdown = ({
                 <span className={styles.itemText}>Panel admina</span>
               </span>
 
-              <span className={styles.rightPill}>uprawnienia</span>
+              <span className={styles.itemRight}>
+                <span className={styles.rightPill}>uprawnienia</span>
+                <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
+              </span>
             </button>
           )}
         </div>
 
-        <div className={styles.sep} role="separator" />
-
         <div className={styles.group}>
-          <span className={styles.groupTitle}>Profil</span>
+          <span className={styles.groupTitle}>
+            <b>02</b>
+            <span>Profil</span>
+          </span>
 
           {showProfileActions && profileStatus === "none" && (
             <button
@@ -586,7 +614,10 @@ const UserDropdown = ({
                 <span className={styles.itemText}>Stwórz profil</span>
               </span>
 
-              <span className={styles.rightPill}>start</span>
+              <span className={styles.itemRight}>
+                <span className={styles.rightPill}>start</span>
+                <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
+              </span>
             </button>
           )}
 
@@ -623,6 +654,8 @@ const UserDropdown = ({
                   )}
                 </span>
               </span>
+
+              <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
             </button>
           )}
 
@@ -636,10 +669,11 @@ const UserDropdown = ({
           )}
         </div>
 
-        <div className={styles.sep} role="separator" />
-
         <div className={styles.group}>
-          <span className={styles.groupTitle}>Centrum aktywności</span>
+          <span className={styles.groupTitle}>
+            <b>03</b>
+            <span>Centrum aktywności</span>
+          </span>
 
           <button
             type="button"
@@ -699,9 +733,13 @@ const UserDropdown = ({
               <span className={styles.itemText}>Powiadomienia</span>
             </span>
 
-            {Number(unreadCount) > 0 && (
-              <span className={styles.countBadge}>{unreadCount}</span>
-            )}
+            <span className={styles.itemRight}>
+              {Number(unreadCount) > 0 && (
+                <span className={styles.countBadge}>{unreadCount}</span>
+              )}
+
+              <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
+            </span>
           </button>
 
           <button
@@ -715,9 +753,13 @@ const UserDropdown = ({
               <span className={styles.itemText}>Rezerwacje</span>
             </span>
 
-            {Number(reservationBadgeCount) > 0 && (
-              <span className={styles.countBadge}>{reservationBadgeCount}</span>
-            )}
+            <span className={styles.itemRight}>
+              {Number(reservationBadgeCount) > 0 && (
+                <span className={styles.countBadge}>{reservationBadgeCount}</span>
+              )}
+
+              <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
+            </span>
           </button>
 
           <button
@@ -758,22 +800,31 @@ const UserDropdown = ({
               <FiHeart className={styles.itemIcon} aria-hidden="true" />
               <span className={styles.itemText}>Ulubione profile</span>
             </span>
+
+            <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
           </button>
         </div>
 
-        <div className={styles.sep} role="separator" />
-
-        <button
-          type="button"
-          className={`${styles.item} ${styles.itemDanger}`}
-          role="menuitem"
-          onClick={handleLogout}
-        >
-          <span className={styles.itemLeft}>
-            <FiLogOut className={styles.itemIcon} aria-hidden="true" />
-            <span className={styles.itemText}>Wyloguj</span>
+        <div className={`${styles.group} ${styles.sessionGroup}`}>
+          <span className={styles.groupTitle}>
+            <b>04</b>
+            <span>Sesja</span>
           </span>
-        </button>
+
+          <button
+            type="button"
+            className={`${styles.item} ${styles.itemDanger}`}
+            role="menuitem"
+            onClick={handleLogout}
+          >
+            <span className={styles.itemLeft}>
+              <FiLogOut className={styles.itemIcon} aria-hidden="true" />
+              <span className={styles.itemText}>Wyloguj</span>
+            </span>
+
+            <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
+          </button>
+        </div>
       </div>
     </div>
   );

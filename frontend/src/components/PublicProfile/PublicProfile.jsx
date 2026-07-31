@@ -994,11 +994,13 @@ export default function PublicProfile() {
   const priceShortLabel = hasPrice ? `od ${pf} zł` : "brak danych";
 
   return (
-    <div className={cn(styles.page, styles.reservationTheme)} style={cssVars}>
-      <div className={styles.bgGlow} aria-hidden="true" />
-      <div className={styles.noiseLayer} aria-hidden="true" />
-      <div className={styles.orbOne} aria-hidden="true" />
-      <div className={styles.orbTwo} aria-hidden="true" />
+    <div className={styles.page} style={cssVars}>
+      <div className={styles.pageDecor} aria-hidden="true">
+        <span className={styles.decorOrbA} />
+        <span className={styles.decorOrbB} />
+        <span className={styles.decorLineA} />
+        <span className={styles.decorLineB} />
+      </div>
 
       <div
         className={cn(
@@ -1009,86 +1011,68 @@ export default function PublicProfile() {
         id="profileWrapper"
       >
         {alert && (
-          <AlertBox
-            type={alert.type}
-            message={alert.message}
-            onClose={() => setAlert(null)}
-          />
+          <div className={styles.alertWrap}>
+            <AlertBox
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert(null)}
+            />
+          </div>
         )}
 
         <header
           className={cn(
-            styles.hero,
-            showBanner && styles.heroWithBanner,
-            partner.isPartner && styles.heroPartner,
-            isOwner && styles.heroOwner
+            styles.profileHero,
+            showBanner && styles.profileHeroWithBanner,
+            partner.isPartner && styles.profileHeroPartner
           )}
         >
-          <div className={styles.heroDecor} aria-hidden="true">
-            <span className={styles.heroGlowA} />
-            <span className={styles.heroGlowB} />
-            <span className={styles.heroGrid} />
-            <span className={styles.heroBeam} />
+          <div className={styles.heroMedia} aria-hidden="true">
+            <span className={styles.heroBackdrop} />
+            <span className={styles.heroShade} />
+            <span className={styles.heroPattern} />
           </div>
 
-          <div className={styles.heroFade} aria-hidden="true" />
-
-          <div className={styles.heroTop}>
-            <span className={styles.locPill} title={location || "Brak lokalizacji"}>
-              <FaMapMarkerAlt />
-              <span className={styles.locText}>{location || "Brak lokalizacji"}</span>
-            </span>
-
-            <div className={styles.heroTopRight}>
-              <span
-                className={styles.ratingPill}
-                title={`Ocena: ${avgRatingLabel} (${reviewsCount})`}
-              >
-                <FaStar />
-                <span>
-                  <strong>{avgRatingLabel}</strong>
-                  <span className={styles.dot} />
-                  <span>{reviewsCount} opinii</span>
-                </span>
-              </span>
+          <div className={styles.heroContent}>
+            <div className={styles.heroTopbar}>
+              <div className={styles.heroKicker}>
+                <span className={styles.heroStatusDot} />
+                <span>{statusLabel}</span>
+              </div>
 
               {!isOwner && (
                 <button
                   type="button"
-                  className={styles.reportTopBtn}
+                  className={styles.reportButton}
                   onClick={openReportProfile}
-                  title="Zgłoś profil"
-                  aria-label="Zgłoś profil"
                 >
-                  <FiFlag />
-                  <span>Zgłoś</span>
+                  <FiFlag aria-hidden="true" />
+                  <span>Zgłoś profil</span>
                 </button>
               )}
             </div>
-          </div>
 
-          <div className={styles.heroInner}>
-            <div className={styles.heroIdentity}>
-              <div className={styles.avatarWrap}>
-                <img
-                  src={profileAvatarSrc}
-                  alt={name}
-                  className={styles.avatar}
-                  onError={(e) => {
-                    e.currentTarget.src = "/images/other/no-image.png";
-                  }}
-                />
+            <div className={styles.heroMain}>
+              <div className={styles.identity}>
+                <div className={styles.avatarFrame}>
+                  <span className={styles.avatarAura} aria-hidden="true" />
 
-                <div className={styles.avatarRing} aria-hidden="true" />
+                  <img
+                    src={profileAvatarSrc}
+                    alt={name}
+                    className={styles.avatar}
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/other/no-image.png";
+                    }}
+                  />
 
-                <span className={styles.avatarStatus}>
-                  <FaBolt />
-                </span>
-              </div>
+                  <span className={styles.avatarBadge} title="Aktywny profil">
+                    <FaBolt aria-hidden="true" />
+                  </span>
+                </div>
 
-              <div className={styles.heroInfo}>
-                <div className={styles.titleRow}>
-                  <div className={styles.badgesRow}>
+                <div className={styles.identityContent}>
+                  <div className={styles.badgeRow}>
                     {partner.isPartner && (
                       <span
                         className={cn(
@@ -1102,7 +1086,7 @@ export default function PublicProfile() {
 
                     <span
                       className={cn(
-                        styles.titlePill,
+                        styles.profileBadge,
                         profileType && styles[`type_${profileType}`]
                       )}
                     >
@@ -1113,398 +1097,320 @@ export default function PublicProfile() {
                   <h1 className={styles.heroTitle}>{name}</h1>
 
                   {role?.trim() && (
-                    <p className={styles.heroRole} title={role}>
-                      {role}
-                    </p>
+                    <p className={styles.heroRole}>{role}</p>
                   )}
+
+                  <div className={styles.heroMeta}>
+                    <span className={styles.heroMetaItem}>
+                      <FaMapMarkerAlt aria-hidden="true" />
+                      {location || "Brak lokalizacji"}
+                    </span>
+
+                    <span className={styles.heroMetaDivider} aria-hidden="true" />
+
+                    <span className={styles.heroMetaItem}>
+                      <FaStar aria-hidden="true" />
+                      <strong>{avgRatingLabel}</strong>
+                      <span>{reviewsCount} opinii</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.heroActions}>
+                {showBookButton && (
+                  <button
+                    type="button"
+                    className={styles.actionPrimary}
+                    onClick={goToBooking}
+                  >
+                    <FaRegCalendarAlt aria-hidden="true" />
+                    <span>
+                      <small>Przejdź do działania</small>
+                      <strong>{bookBtnLabel}</strong>
+                    </span>
+                  </button>
+                )}
+
+                {!isOwner && (
+                  <button
+                    type="button"
+                    className={styles.actionSecondary}
+                    onClick={startMessage}
+                  >
+                    <FaPaperPlane aria-hidden="true" />
+                    <span>
+                      <small>Masz dodatkowe pytanie?</small>
+                      <strong>Napisz wiadomość</strong>
+                    </span>
+                  </button>
+                )}
+
+                <div className={styles.heroActionRow}>
+                  {!isOwner && (
+                    <button
+                      type="button"
+                      className={cn(
+                        styles.actionSquare,
+                        isFav && styles.favoriteActive
+                      )}
+                      onClick={toggleFavorite}
+                    >
+                      {isFav ? <FaHeart aria-hidden="true" /> : <FaRegHeart aria-hidden="true" />}
+                      <span>{isFav ? "Zapisano" : "Ulubione"}</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    className={cn(
+                      styles.actionSquare,
+                      copiedProfileLink && styles.copiedAction
+                    )}
+                    onClick={copyProfileLink}
+                  >
+                    {copiedProfileLink ? <FaCheck aria-hidden="true" /> : <FaCopy aria-hidden="true" />}
+                    <span>{copiedProfileLink ? "Skopiowano" : "Udostępnij"}</span>
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </header>
 
-        <section className={styles.heroPanelDock} aria-label="Statystyki i szybkie akcje profilu">
-          <div
-            className={cn(
-              styles.heroPanel,
-              partner.isPartner && styles.heroPanelPartner
-            )}
-          >
-            <div className={styles.heroPanelTop}>
-              <span className={styles.panelEyebrow}>Szybki podgląd</span>
-              <span className={styles.panelStatus}>
-                <span />
-                Aktywny
-              </span>
+        <section className={styles.profileLedger} aria-label="Podsumowanie profilu">
+          <div className={styles.ledgerItem}>
+            <span className={styles.ledgerIcon}>
+              <FaRegEye aria-hidden="true" />
+            </span>
+            <div className={styles.ledgerCopy}>
+              <strong className={styles.ledgerValue}>
+                {Number(profile?.visits ?? 0).toLocaleString("pl-PL")}
+              </strong>
+              <span className={styles.ledgerLabel}>odwiedzin profilu</span>
             </div>
+          </div>
 
-            <div className={styles.metricRow}>
-              <div className={styles.metricCard}>
-                <span className={styles.metricIcon}>
-                  <FaRegEye />
-                </span>
-
-                <div className={styles.metricContent}>
-                  <strong>{Number(profile?.visits ?? 0).toLocaleString("pl-PL")}</strong>
-                  <span>Odwiedzin</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className={cn(
-                  styles.metricCard,
-                  styles.favoriteMetric,
-                  isFav && styles.favActive
-                )}
-                onClick={toggleFavorite}
-              >
-                <span className={styles.metricIcon}>
-                  {isFav ? <FaHeart /> : <FaRegHeart />}
-                </span>
-
-                <div className={styles.metricContent}>
-                  <strong>{isFav ? "W ulubionych" : "Dodaj"}</strong>
-                  <span>Ulubione</span>
-                </div>
-              </button>
-
-              <div className={styles.metricCard}>
-                <span className={styles.metricIcon}>
-                  <FaShieldAlt />
-                </span>
-
-                <div className={styles.metricContent}>
-                  <strong>{statusLabel}</strong>
-                  <span>Status</span>
-                </div>
-              </div>
+          <div className={styles.ledgerItem}>
+            <span className={styles.ledgerIcon}>
+              <FaMoneyBillWave aria-hidden="true" />
+            </span>
+            <div className={styles.ledgerCopy}>
+              <strong className={styles.ledgerValue}>{priceShortLabel}</strong>
+              <span className={styles.ledgerLabel}>informacja o cenie</span>
             </div>
+          </div>
 
-            <div className={styles.quickStats}>
-              <div className={styles.quickStat}>
-                <span>
-                  <FaMoneyBillWave />
-                </span>
-
-                <div>
-                  <strong>{priceShortLabel}</strong>
-                  <small>Cennik</small>
-                </div>
-              </div>
-
-              <div className={styles.quickStat}>
-                <span>
-                  <FaListUl />
-                </span>
-
-                <div>
-                  <strong>{visibleServices.length}</strong>
-                  <small>Usług</small>
-                </div>
-              </div>
-
-              <div className={styles.quickStat}>
-                <span>
-                  <FaImage />
-                </span>
-
-                <div>
-                  <strong>{gallery.length}</strong>
-                  <small>Zdjęć</small>
-                </div>
-              </div>
+          <div className={styles.ledgerItem}>
+            <span className={styles.ledgerIcon}>
+              <FaListUl aria-hidden="true" />
+            </span>
+            <div className={styles.ledgerCopy}>
+              <strong className={styles.ledgerValue}>{visibleServices.length}</strong>
+              <span className={styles.ledgerLabel}>aktywnych usług</span>
             </div>
+          </div>
 
-            <button
-              type="button"
-              className={cn(styles.shareProfileBtn, copiedProfileLink && styles.shareProfileBtnCopied)}
-              onClick={copyProfileLink}
-            >
-              <span className={styles.shareProfileIcon}>
-                {copiedProfileLink ? <FaCheck /> : <FaCopy />}
-              </span>
+          <div className={styles.ledgerItem}>
+            <span className={styles.ledgerIcon}>
+              <FaImage aria-hidden="true" />
+            </span>
+            <div className={styles.ledgerCopy}>
+              <strong className={styles.ledgerValue}>{gallery.length}</strong>
+              <span className={styles.ledgerLabel}>zdjęć w galerii</span>
+            </div>
+          </div>
 
-              <span className={styles.shareProfileText}>
-                <strong>{copiedProfileLink ? "Skopiowano link" : "Skopiuj link do profilu"}</strong>
-                <small>showly.me/{slug}</small>
-              </span>
-            </button>
-
-            <div className={styles.ctaRow}>
-              {showBookButton && (
-                <button type="button" className={styles.ctaPrimary} onClick={goToBooking}>
-                  <FaRegCalendarAlt />
-                  {bookBtnLabel}
-                </button>
-              )}
-
-              {!isOwner && (
-                <button type="button" className={styles.ctaSecondary} onClick={startMessage}>
-                  <FaPaperPlane />
-                  Zadaj pytanie
-                </button>
-              )}
+          <div className={styles.ledgerItem}>
+            <span className={styles.ledgerIcon}>
+              <FaShieldAlt aria-hidden="true" />
+            </span>
+            <div className={styles.ledgerCopy}>
+              <strong className={styles.ledgerValue}>{statusLabel}</strong>
+              <span className={styles.ledgerLabel}>status profilu</span>
             </div>
           </div>
         </section>
 
-        <main className={styles.grid}>
-          <section className={styles.mainCol}>
-            <section className={cn(styles.mainCard, styles.profileIntroCard)}>
-              <div className={styles.cardHeader}>
-                <div className={styles.titleWrap}>
-                  <span className={styles.sectionKicker}>
-                    <FaInfoCircle />
-                    Informacje
+        <main className={styles.contentGrid}>
+          <div className={styles.contentMain}>
+            <section className={styles.sectionBlock} id="overview">
+              <div className={styles.sectionHeading}>
+                <span className={styles.sectionNumber}>01</span>
+
+                <div className={styles.sectionHeadingMain}>
+                  <span className={styles.sectionEyebrow}>
+                    <FaInfoCircle aria-hidden="true" />
+                    O profilu
                   </span>
 
-                  <h2 className={styles.sectionTitle}>O profilu</h2>
+                  <h2 className={styles.sectionTitle}>
+                    Wszystko, co najważniejsze, zanim przejdziesz do kontaktu.
+                  </h2>
 
-                  <p className={styles.sectionSub}>
-                    Najważniejsze informacje o działalności, stylu pracy i ofercie.
+                  <p className={styles.sectionLead}>
+                    Opis działalności, zakres cenowy, specjalizacje i miejsca w sieci.
                   </p>
-                </div>
-
-                <div className={styles.pricePill}>
-                  <span className={styles.priceIcon}>
-                    <FaMoneyBillWave />
-                  </span>
-
-                  {hasPrice ? (
-                    <div>
-                      <small>Cennik</small>
-                      <strong>
-                        od {pf} zł do {pt} zł
-                      </strong>
-                    </div>
-                  ) : (
-                    <div>
-                      <small>Cennik</small>
-                      <em>brak danych</em>
-                    </div>
-                  )}
                 </div>
               </div>
 
-              <div className={styles.cardBody}>
-                {description?.trim() ? (
-                  <div className={styles.descBox}>
-                    <span className={styles.quoteIcon}>
-                      <FaQuoteLeft />
-                    </span>
-
-                    <p className={styles.desc}>{description}</p>
-                  </div>
-                ) : (
-                  <div className={styles.emptyInline}>
-                    <FaInfoCircle />
-                    <p>Użytkownik nie dodał jeszcze opisu.</p>
-                  </div>
-                )}
-
-                {tags?.length > 0 && (
-                  <div className={styles.chips}>
-                    {tags.map((tag) => (
-                      <span key={tag} className={styles.chip}>
-                        {String(tag).toUpperCase()}
+              <div className={styles.overviewGrid}>
+                <div className={styles.overviewCopy}>
+                  {description?.trim() ? (
+                    <div className={styles.descriptionPanel}>
+                      <span className={styles.quoteMark} aria-hidden="true">
+                        <FaQuoteLeft />
                       </span>
-                    ))}
-                  </div>
-                )}
-
-                <div className={styles.splitLine} />
-
-                <div className={styles.block}>
-                  <div className={styles.blockHeader}>
-                    <div>
-                      <h3 className={styles.blockTitle}>Linki</h3>
-                      <p className={styles.blockSub}>
-                        Strony, portfolio lub dodatkowe miejsca w sieci.
-                      </p>
-                    </div>
-
-                    {cleanLinks.length > 0 && (
-                      <span className={styles.badgeCount}>
-                        {cleanLinks.length}
-                      </span>
-                    )}
-                  </div>
-
-                  {cleanLinks.length > 0 ? (
-                    <div className={styles.linkGrid}>
-                      {cleanLinks.map((link, i) => {
-                        const href = ensureUrl(link);
-
-                        return (
-                          <a
-                            key={`${href}-${i}`}
-                            href={href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={styles.linkTile}
-                            title={href}
-                          >
-                            <div className={styles.linkTileLeft}>
-                              <span className={styles.linkBadge}>
-                                <FaGlobe />
-                              </span>
-
-                              <div className={styles.linkText}>
-                                <strong>{prettyUrl(href)}</strong>
-                                <small>Otwórz zewnętrzny link</small>
-                              </div>
-                            </div>
-
-                            <span className={styles.linkArrow}>
-                              <FaExternalLinkAlt />
-                            </span>
-                          </a>
-                        );
-                      })}
+                      <p className={styles.description}>{description}</p>
                     </div>
                   ) : (
-                    <div className={styles.emptyInline}>
-                      <FaLink />
-                      <p>Użytkownik nie dodał jeszcze żadnych linków.</p>
+                    <div className={styles.emptyStateInline}>
+                      <FaInfoCircle aria-hidden="true" />
+                      <p>Użytkownik nie dodał jeszcze opisu.</p>
+                    </div>
+                  )}
+
+                  {tags?.length > 0 && (
+                    <div className={styles.tagList}>
+                      {tags.map((tag) => (
+                        <span key={tag} className={styles.tag}>
+                          {String(tag).toUpperCase()}
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>
 
-                {!isOwner && (
-                  <>
-                    <div className={styles.splitLine} />
+                <aside className={styles.pricePanel}>
+                  <span className={styles.priceIcon}>
+                    <FaMoneyBillWave aria-hidden="true" />
+                  </span>
 
-                    <div className={styles.rateBox}>
-                      <div className={styles.rateTop}>
-                        <div>
-                          <span className={styles.sectionKicker}>
-                            <FaStar />
-                            Ocena
-                          </span>
+                  <span className={styles.priceLabel}>Orientacyjny cennik</span>
 
-                          <h3 className={styles.blockTitle}>
-                            {hasRated ? "Twoja ocena została zapisana" : "Oceń profil"}
-                          </h3>
+                  {hasPrice ? (
+                    <strong className={styles.priceValue}>
+                      {pf}–{pt} zł
+                    </strong>
+                  ) : (
+                    <strong className={styles.priceMissing}>Brak danych</strong>
+                  )}
 
-                          <span className={styles.rateHint}>
-                            {hasRated
-                              ? "Dziękujemy za opinię!"
-                              : "Wybierz gwiazdki i dodaj krótki komentarz."}
-                          </span>
-                        </div>
+                  <p>
+                    Szczegółową cenę sprawdzisz przy konkretnej usłudze lub bezpośrednio u usługodawcy.
+                  </p>
+                </aside>
+              </div>
 
-                        <div className={styles.rateScore}>
-                          <strong>{hasRated && myRatingLabel ? myRatingLabel : avgRatingLabel}</strong>
-                          <span>{hasRated ? "Twoja" : "Średnia"}</span>
-                        </div>
-                      </div>
+              <div className={styles.linksPanel}>
+                <div className={styles.panelHeader}>
+                  <div>
+                    <h3 className={styles.panelTitle}>Linki i portfolio</h3>
+                    <p className={styles.panelDescription}>
+                      Dodatkowe strony, realizacje lub miejsca związane z profilem.
+                    </p>
+                  </div>
 
-                      <div className={styles.starsRow}>
-                        {[1, 2, 3, 4, 5].map((val) => (
-                          <FaStar
-                            key={val}
-                            className={cn(
-                              styles.star,
-                              val <= (hoveredRating || selectedRating)
-                                ? styles.starOn
-                                : styles.starOff,
-                              hasRated && styles.starDisabled
-                            )}
-                            onClick={!hasRated ? () => setSelectedRating(val) : undefined}
-                            onMouseEnter={!hasRated ? () => setHoveredRating(val) : undefined}
-                            onMouseLeave={!hasRated ? () => setHoveredRating(0) : undefined}
-                          />
-                        ))}
-                      </div>
+                  {cleanLinks.length > 0 && (
+                    <span className={styles.sectionCount}>{cleanLinks.length}</span>
+                  )}
+                </div>
 
-                      {!hasRated && (
-                        <>
-                          <textarea
-                            className={styles.textarea}
-                            placeholder="Napisz krótko, co było na plus / co można poprawić (min. 10 znaków)"
-                            value={comment}
-                            onChange={(e) => {
-                              const text = e.target.value;
-                              if (text.length <= maxChars) setComment(text);
-                            }}
-                          />
+                {cleanLinks.length > 0 ? (
+                  <div className={styles.linkList}>
+                    {cleanLinks.map((link, index) => {
+                      const href = ensureUrl(link);
 
-                          <div className={styles.textareaMeta}>
-                            <span className={styles.mutedSmall}>
-                              Bądź konkretny/a — to pomaga innym użytkownikom.
+                      return (
+                        <a
+                          key={`${href}-${index}`}
+                          href={href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.linkItem}
+                        >
+                          <span className={styles.linkLeft}>
+                            <span className={styles.linkIcon}>
+                              <FaGlobe aria-hidden="true" />
                             </span>
 
-                            <span className={styles.counter}>
-                              {comment.length} / {maxChars}
+                            <span className={styles.linkCopy}>
+                              <strong>{prettyUrl(href)}</strong>
+                              <small>Otwórz zewnętrzny link</small>
                             </span>
-                          </div>
+                          </span>
 
-                          <LoadingButton
-                            type="button"
-                            isLoading={isRatingSending}
-                            disabled={isRatingSending}
-                            className={styles.primaryBtn}
-                            onClick={handleRate}
-                          >
-                            Wyślij opinię
-                          </LoadingButton>
-                        </>
-                      )}
-                    </div>
-                  </>
+                          <span className={styles.linkArrow}>
+                            <FaExternalLinkAlt aria-hidden="true" />
+                          </span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className={styles.emptyStateInline}>
+                    <FaLink aria-hidden="true" />
+                    <p>Użytkownik nie dodał jeszcze żadnych linków.</p>
+                  </div>
                 )}
               </div>
             </section>
 
             {hasGallery && (
-              <section className={cn(styles.sectionCard, styles.gallerySection)}>
-                <div className={styles.sectionHeader}>
-                  <div>
-                    <span className={styles.sectionKicker}>
-                      <FaImage />
-                      Zdjęcia
+              <section className={styles.sectionBlock} id="gallery">
+                <div className={styles.sectionHeading}>
+                  <span className={styles.sectionNumber}>02</span>
+
+                  <div className={styles.sectionHeadingMain}>
+                    <span className={styles.sectionEyebrow}>
+                      <FaImage aria-hidden="true" />
+                      Galeria
                     </span>
 
-                    <h2 className={styles.sectionTitle}>Galeria</h2>
+                    <h2 className={styles.sectionTitle}>
+                      Realizacje i zdjęcia, które pokazują styl profilu.
+                    </h2>
 
-                    <p className={styles.sectionSub}>
-                      Zdjęcia profilu, realizacji lub przykładów pracy.
+                    <p className={styles.sectionLead}>
+                      Kliknij dowolne zdjęcie, aby otworzyć je w pełnym widoku.
                     </p>
 
                     {gallery.length > 1 && (
-                      <span className={styles.mobileSwipeHint}>
+                      <span className={styles.swipeHint}>
                         Przesuń palcem, aby zobaczyć więcej
                       </span>
                     )}
                   </div>
 
-                  <span className={styles.badgeCount}>{gallery.length}</span>
+                  <span className={styles.sectionCount}>{gallery.length}</span>
                 </div>
 
-                <div className={styles.gallery}>
-                  {gallery.map((src, i) => (
+                <div className={styles.galleryGrid}>
+                  {gallery.map((src, index) => (
                     <button
-                      key={i}
+                      key={`${src}-${index}`}
                       type="button"
-                      className={styles.galleryItem}
+                      className={cn(
+                        styles.galleryItem,
+                        index === 0 && styles.galleryItemLead
+                      )}
                       onClick={() => openLightbox(src)}
-                      aria-label={`Otwórz zdjęcie ${i + 1}`}
-                      title="Otwórz"
+                      aria-label={`Otwórz zdjęcie ${index + 1}`}
                     >
                       <img
                         src={src}
-                        alt={`Zdjęcie ${i + 1}`}
+                        alt={`Zdjęcie ${index + 1}`}
+                        className={styles.galleryImage}
                         onError={(e) => {
                           e.currentTarget.src = "/images/other/no-image.png";
                         }}
                       />
 
-                      <span className={styles.galleryNumber}>
-                        {String(i + 1).padStart(2, "0")}
+                      <span className={styles.galleryIndex}>
+                        {String(index + 1).padStart(2, "0")}
                       </span>
 
-                      <span className={styles.galleryOverlay}>Podgląd</span>
+                      <span className={styles.galleryAction}>Otwórz podgląd</span>
                     </button>
                   ))}
                 </div>
@@ -1512,125 +1418,128 @@ export default function PublicProfile() {
             )}
 
             {visibleServices.length > 0 && (
-              <section className={cn(styles.sectionCard, styles.servicesSection)} id="services">
-                <div className={styles.sectionHeader}>
-                  <div>
-                    <span className={styles.sectionKicker}>
-                      <FaListUl />
+              <section className={styles.sectionBlock} id="services">
+                <div className={styles.sectionHeading}>
+                  <span className={styles.sectionNumber}>03</span>
+
+                  <div className={styles.sectionHeadingMain}>
+                    <span className={styles.sectionEyebrow}>
+                      <FaListUl aria-hidden="true" />
                       Oferta
                     </span>
 
-                    <h2 className={styles.sectionTitle}>Usługi</h2>
+                    <h2 className={styles.sectionTitle}>
+                      Usługi przedstawione jasno — z ceną, czasem i kolejnym krokiem.
+                    </h2>
 
-                    <p className={styles.sectionSub}>
-                      Oferta, ceny i orientacyjny czas realizacji.
+                    <p className={styles.sectionLead}>
+                      Wybierz interesującą pozycję i przejdź bezpośrednio do kontaktu lub rezerwacji.
                     </p>
                   </div>
 
-                  <span className={styles.badgeCount}>{visibleServices.length}</span>
+                  <span className={styles.sectionCount}>{visibleServices.length}</span>
                 </div>
 
-                <div className={styles.servicesGrid}>
-                  {visibleServices.map((s, i) => {
-                    const img = getServiceImageUrl(s);
-                    const categoryLabel = mapServiceCategory(s.category);
-                    const priceLabel = formatServicePrice(s);
+                <div className={styles.servicesList}>
+                  {visibleServices.map((service, index) => {
+                    const image = getServiceImageUrl(service);
+                    const categoryLabel = mapServiceCategory(service.category);
+                    const priceLabel = formatServicePrice(service);
                     const durationLabel =
-                      s?.duration?.value && s?.duration?.unit
-                        ? `${s.duration.value} ${mapUnit(s.duration.unit)}`
+                      service?.duration?.value && service?.duration?.unit
+                        ? `${service.duration.value} ${mapUnit(service.duration.unit)}`
                         : "Brak czasu";
 
                     return (
                       <article
-                        key={s._id || i}
+                        key={service._id || index}
                         className={cn(
                           styles.serviceCard,
-                          s.featured && styles.serviceCardFeatured
+                          service.featured && styles.serviceFeatured
                         )}
                       >
+                        <span className={styles.serviceNumber}>
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+
                         <div className={styles.serviceMedia}>
-                          {img ? (
+                          {image ? (
                             <img
-                              src={img}
-                              alt={s.name || `Usługa ${i + 1}`}
+                              src={image}
+                              alt={service.name || `Usługa ${index + 1}`}
                               className={styles.serviceImage}
                               onError={(e) => {
                                 e.currentTarget.src = "/images/other/no-image.png";
                               }}
                             />
                           ) : (
-                            <div className={styles.serviceImagePlaceholder}>
-                              <FaRegCalendarAlt />
+                            <div className={styles.servicePlaceholder}>
+                              <FaRegCalendarAlt aria-hidden="true" />
                               <span>Bez zdjęcia</span>
                             </div>
                           )}
 
-                          <div className={styles.serviceBadges}>
-                            <span className={styles.serviceCategoryBadge}>
+                          <div className={styles.serviceBadgeRow}>
+                            <span className={styles.serviceCategory}>
                               {categoryLabel}
                             </span>
 
-                            {s.featured && (
+                            {service.featured && (
                               <span className={styles.serviceFeaturedBadge}>
-                                <FaBolt />
+                                <FaBolt aria-hidden="true" />
                                 Wyróżniona
                               </span>
                             )}
                           </div>
                         </div>
 
-                        <div className={styles.serviceContent}>
-                          <div className={styles.serviceTop}>
-                            <h3 className={styles.serviceCardTitle}>
-                              {s.name || `Usługa ${i + 1}`}
+                        <div className={styles.serviceBody}>
+                          <div className={styles.serviceHeader}>
+                            <h3 className={styles.serviceTitle}>
+                              {service.name || `Usługa ${index + 1}`}
                             </h3>
                           </div>
 
-                          {s.shortDescription?.trim() ? (
+                          {service.shortDescription?.trim() ? (
                             <p className={styles.serviceDescription}>
-                              {s.shortDescription}
+                              {service.shortDescription}
                             </p>
                           ) : (
-                            <div className={cn(styles.emptyInline, styles.serviceEmptyInline)}>
-                              <FaInfoCircle />
+                            <div className={styles.emptyStateInline}>
+                              <FaInfoCircle aria-hidden="true" />
                               <p>Użytkownik nie dodał krótkiego opisu tej usługi.</p>
                             </div>
                           )}
 
-                          <div className={styles.serviceMetaGrid}>
+                          <div className={styles.serviceMeta}>
                             <div className={styles.serviceMetaItem}>
                               <span className={styles.serviceMetaIcon}>
-                                <FaMoneyBillWave />
+                                <FaMoneyBillWave aria-hidden="true" />
                               </span>
-
-                              <div>
-                                <span className={styles.serviceMetaLabel}>Cena usługi</span>
-                                <span className={styles.serviceMetaValue}>
-                                  {priceLabel}
-                                </span>
-                              </div>
+                              <span>
+                                <small className={styles.serviceMetaLabel}>Cena</small>
+                                <strong className={styles.serviceMetaValue}>{priceLabel}</strong>
+                              </span>
                             </div>
 
                             <div className={styles.serviceMetaItem}>
                               <span className={styles.serviceMetaIcon}>
-                                <FaClock />
+                                <FaClock aria-hidden="true" />
                               </span>
-
-                              <div>
-                                <span className={styles.serviceMetaLabel}>Czas realizacji usługi</span>
-                                <span className={styles.serviceMetaValue}>
-                                  {durationLabel}
-                                </span>
-                              </div>
+                              <span>
+                                <small className={styles.serviceMetaLabel}>Czas realizacji</small>
+                                <strong className={styles.serviceMetaValue}>{durationLabel}</strong>
+                              </span>
                             </div>
                           </div>
+
                           {!isOwner && (
                             <button
                               type="button"
                               className={styles.serviceCta}
-                              onClick={() => goToServiceBooking(s)}
+                              onClick={() => goToServiceBooking(service)}
                             >
-                              <FaRegCalendarAlt />
+                              <FaRegCalendarAlt aria-hidden="true" />
                               {getServiceCtaLabel()}
                             </button>
                           )}
@@ -1641,41 +1550,43 @@ export default function PublicProfile() {
                 </div>
               </section>
             )}
-          </section>
 
-          <aside className={styles.side}>
-            <section className={cn(styles.sideCard, styles.reviewsCard)}>
-              <div className={styles.sideHeader}>
-                <div>
-                  <span className={styles.sectionKicker}>
-                    <FaComments />
-                    Społeczność
+            <section className={styles.sectionBlock} id="reviews">
+              <div className={styles.sectionHeading}>
+                <span className={styles.sectionNumber}>04</span>
+
+                <div className={styles.sectionHeadingMain}>
+                  <span className={styles.sectionEyebrow}>
+                    <FaComments aria-hidden="true" />
+                    Opinie
                   </span>
 
-                  <h2 className={styles.sectionTitle}>Opinie</h2>
+                  <h2 className={styles.sectionTitle}>
+                    Doświadczenia osób, które miały kontakt z tym profilem.
+                  </h2>
 
-                  <p className={styles.sectionSub}>Oceny i komentarze użytkowników.</p>
-
+                  <p className={styles.sectionLead}>
+                    Oceny i komentarze pomagają szybciej podjąć właściwą decyzję.
+                  </p>
 
                   {ratedByArr.length > 1 && (
-                    <span className={styles.mobileSwipeHint}>
+                    <span className={styles.swipeHint}>
                       Przesuń palcem, aby zobaczyć więcej
                     </span>
                   )}
                 </div>
 
-                <span className={styles.badgeCount}>{profile.ratedBy?.length || 0}</span>
+                <span className={styles.sectionCount}>{ratedByArr.length}</span>
               </div>
 
-              {profile.ratedBy?.length > 0 ? (
+              {ratedByArr.length > 0 ? (
                 <ul className={styles.reviewList}>
-                  {profile.ratedBy.map((op, i) => {
-                    const ratingVal = Number(op.rating);
-                    const avatarSrc =
-                      normalizeAvatar(op.userAvatar) || "/images/other/no-image.png";
-
-                    const dateLabel = op.createdAt
-                      ? new Date(op.createdAt).toLocaleDateString("pl-PL", {
+                  {ratedByArr.map((review, index) => {
+                    const ratingValue = Number(review.rating);
+                    const reviewAvatar =
+                      normalizeAvatar(review.userAvatar) || "/images/other/no-image.png";
+                    const dateLabel = review.createdAt
+                      ? new Date(review.createdAt).toLocaleDateString("pl-PL", {
                         year: "numeric",
                         month: "short",
                         day: "numeric",
@@ -1684,13 +1595,16 @@ export default function PublicProfile() {
 
                     return (
                       <li
-                        key={op?._id || i}
-                        className={cn(styles.review, op?.userId === uid && styles.myReview)}
+                        key={review?._id || index}
+                        className={cn(
+                          styles.reviewCard,
+                          review?.userId === uid && styles.myReview
+                        )}
                       >
-                        <div className={styles.reviewTop}>
+                        <div className={styles.reviewHeader}>
                           <div className={styles.reviewUser}>
                             <img
-                              src={avatarSrc}
+                              src={reviewAvatar}
                               alt=""
                               className={styles.reviewAvatar}
                               decoding="async"
@@ -1700,24 +1614,23 @@ export default function PublicProfile() {
                               }}
                             />
 
-                            <div className={styles.reviewMeta}>
+                            <div className={styles.reviewIdentity}>
                               <strong className={styles.reviewName}>
-                                {op.userName || "Użytkownik"}
+                                {review.userName || "Użytkownik"}
                               </strong>
-
                               {dateLabel && (
                                 <span className={styles.reviewDate}>{dateLabel}</span>
                               )}
                             </div>
                           </div>
 
-                          <div className={styles.reviewRight}>
+                          <div className={styles.reviewTools}>
                             <div className={styles.reviewStars}>
-                              {[...Array(5)].map((_, idx) => (
+                              {[...Array(5)].map((_, starIndex) => (
                                 <FaStar
-                                  key={idx}
+                                  key={starIndex}
                                   className={
-                                    idx < ratingVal
+                                    starIndex < ratingValue
                                       ? styles.starMiniOn
                                       : styles.starMiniOff
                                   }
@@ -1727,152 +1640,196 @@ export default function PublicProfile() {
 
                             <button
                               type="button"
-                              className={cn(
-                                styles.reportMiniBtn,
-                                !op?._id && styles.disabledBtn
-                              )}
-                              onClick={() => openReportReview(op?._id, op?.userId)}
-                              title="Zgłoś opinię"
+                              className={styles.reportReviewButton}
+                              onClick={() => openReportReview(review?._id, review?.userId)}
+                              disabled={!review?._id}
                               aria-label="Zgłoś opinię"
-                              disabled={!op?._id}
                             >
-                              <FiFlag />
+                              <FiFlag aria-hidden="true" />
                             </button>
                           </div>
                         </div>
 
-                        <p className={styles.reviewText}>{op.comment}</p>
+                        <p className={styles.reviewText}>{review.comment}</p>
                       </li>
                     );
                   })}
                 </ul>
               ) : (
-                <div className={styles.emptyInline}>
-                  <FaStar />
-                  <p>Użytkownik nie posiada jeszcze żadnej opinii.</p>
+                <div className={styles.emptyStatePanel}>
+                  <FaStar aria-hidden="true" />
+                  <div>
+                    <strong>Jeszcze bez opinii</strong>
+                    <p>Ten profil nie otrzymał jeszcze żadnego komentarza.</p>
+                  </div>
                 </div>
               )}
             </section>
+          </div>
 
-            {hasInfoBox && (
-              <section className={cn(styles.sideCard, styles.contactCard)}>
-                <div className={styles.sideHeader}>
-                  <div>
-                    <span className={styles.sectionKicker}>
-                      <FaPhoneAlt />
+          <aside className={styles.contentAside}>
+            <div className={styles.stickyRail}>
+              {hasInfoBox && (
+                <section className={styles.contactCard} id="contact">
+                  <div className={styles.sideHeader}>
+                    <span className={styles.sideKicker}>
+                      <FaPhoneAlt aria-hidden="true" />
                       Kontakt
                     </span>
-
-                    <h2 className={styles.sectionTitle}>Kontakt i social media</h2>
-
-                    <p className={styles.sectionSub}>
-                      Najważniejsze kanały kontaktu w jednym miejscu.
+                    <h2 className={styles.sideTitle}>Wybierz najwygodniejszy kanał.</h2>
+                    <p className={styles.sideText}>
+                      Dane kontaktowe i social media zebrane w jednym miejscu.
                     </p>
                   </div>
-                </div>
 
-                <div className={styles.infoList}>
-                  {fullAddress ? (
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLeft}>
-                        <span className={styles.infoIcon}>
-                          <FaMapMarkedAlt />
-                        </span>
-                        <span>Adres</span>
-                      </span>
-
+                  <div className={styles.contactList}>
+                    {fullAddress && (
                       <a
-                        className={styles.infoLink}
                         href={mapsUrl}
                         target="_blank"
                         rel="noopener noreferrer"
+                        className={styles.contactItem}
                       >
-                        {fullAddress}
-                      </a>
-                    </div>
-                  ) : (
-                    <div className={styles.emptyInline}>
-                      <FaMapMarkedAlt />
-                      <p>Użytkownik nie dodał jeszcze adresu.</p>
-                    </div>
-                  )}
-
-                  {contactPhone ? (
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLeft}>
-                        <span className={styles.infoIcon}>
-                          <FaPhoneAlt />
+                        <span className={styles.contactIcon}>
+                          <FaMapMarkedAlt aria-hidden="true" />
                         </span>
-                        <span>Telefon</span>
-                      </span>
-
-                      <a className={styles.infoLink} href={`tel:${contactPhone}`}>
-                        {contact.phone}
-                      </a>
-                    </div>
-                  ) : (
-                    <div className={styles.emptyInline}>
-                      <FaPhoneAlt />
-                      <p>Użytkownik nie dodał jeszcze numeru telefonu.</p>
-                    </div>
-                  )}
-
-                  {contactEmail ? (
-                    <div className={styles.infoRow}>
-                      <span className={styles.infoLeft}>
-                        <span className={styles.infoIcon}>
-                          <FaEnvelope />
+                        <span className={styles.contactCopy}>
+                          <small className={styles.contactLabel}>Adres</small>
+                          <strong className={styles.contactValue}>{fullAddress}</strong>
                         </span>
-                        <span>E-mail</span>
-                      </span>
-
-                      <a className={styles.infoLink} href={`mailto:${contactEmail}`}>
-                        {contactEmail}
+                        <FaExternalLinkAlt aria-hidden="true" />
                       </a>
-                    </div>
-                  ) : (
-                    <div className={styles.emptyInline}>
-                      <FaEnvelope />
-                      <p>Użytkownik nie dodał jeszcze adresu e-mail.</p>
+                    )}
+
+                    {contactPhone && (
+                      <a href={`tel:${contactPhone}`} className={styles.contactItem}>
+                        <span className={styles.contactIcon}>
+                          <FaPhoneAlt aria-hidden="true" />
+                        </span>
+                        <span className={styles.contactCopy}>
+                          <small className={styles.contactLabel}>Telefon</small>
+                          <strong className={styles.contactValue}>{contact.phone}</strong>
+                        </span>
+                        <FaExternalLinkAlt aria-hidden="true" />
+                      </a>
+                    )}
+
+                    {contactEmail && (
+                      <a href={`mailto:${contactEmail}`} className={styles.contactItem}>
+                        <span className={styles.contactIcon}>
+                          <FaEnvelope aria-hidden="true" />
+                        </span>
+                        <span className={styles.contactCopy}>
+                          <small className={styles.contactLabel}>E-mail</small>
+                          <strong className={styles.contactValue}>{contactEmail}</strong>
+                        </span>
+                        <FaExternalLinkAlt aria-hidden="true" />
+                      </a>
+                    )}
+                  </div>
+
+                  {socialItems.length > 0 && (
+                    <div className={styles.socialSection}>
+                      <h3 className={styles.socialHeading}>Social media</h3>
+
+                      <div className={styles.socialGrid}>
+                        {socialItems.map((social) => (
+                          <a
+                            key={social.key}
+                            href={social.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.socialLink}
+                            aria-label={social.label}
+                          >
+                            <span className={styles.socialIcon}>{social.icon}</span>
+                            <span className={styles.socialLabel}>{social.label}</span>
+                            <span className={styles.socialArrow}>
+                              <FaExternalLinkAlt aria-hidden="true" />
+                            </span>
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   )}
-                </div>
+                </section>
+              )}
 
-                {socialItems.length > 0 && (
-                  <>
-                    <div className={styles.splitLine} />
+              {!isOwner && (
+                <section className={styles.ratingCard}>
+                  <div className={styles.sideHeader}>
+                    <span className={styles.sideKicker}>
+                      <FaStar aria-hidden="true" />
+                      Twoja opinia
+                    </span>
+                    <h2 className={styles.sideTitle}>
+                      {hasRated ? "Ocena została zapisana." : "Podziel się swoim doświadczeniem."}
+                    </h2>
+                    <p className={styles.sideText}>
+                      {hasRated
+                        ? "Dziękujemy — Twoja opinia jest już widoczna przy profilu."
+                        : "Wybierz gwiazdki i dodaj krótki, konkretny komentarz."}
+                    </p>
+                  </div>
 
-                    <h4 className={styles.socialTitle}>
-                      Social media
-                    </h4>
+                  <div className={styles.ratingOverview}>
+                    <strong className={styles.ratingScoreValue}>
+                      {hasRated && myRatingLabel ? myRatingLabel : avgRatingLabel}
+                    </strong>
+                    <span className={styles.ratingScoreLabel}>
+                      {hasRated ? "Twoja ocena" : "Średnia profilu"}
+                    </span>
+                  </div>
 
-                    <div className={styles.socialGrid}>
-                      {socialItems.map((s) => (
-                        <a
-                          key={s.key}
-                          href={s.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.socialTile}
-                          title={s.label}
-                          aria-label={s.label}
-                        >
-                          <span className={styles.socialIcon}>{s.icon}</span>
+                  <div className={styles.ratingStars}>
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <FaStar
+                        key={value}
+                        className={cn(
+                          styles.star,
+                          value <= (hoveredRating || selectedRating)
+                            ? styles.starOn
+                            : styles.starOff,
+                          hasRated && styles.starDisabled
+                        )}
+                        onClick={!hasRated ? () => setSelectedRating(value) : undefined}
+                        onMouseEnter={!hasRated ? () => setHoveredRating(value) : undefined}
+                        onMouseLeave={!hasRated ? () => setHoveredRating(0) : undefined}
+                      />
+                    ))}
+                  </div>
 
-                          <span className={styles.socialText}>
-                            {s.label}
-                          </span>
+                  {!hasRated && (
+                    <>
+                      <textarea
+                        className={styles.textarea}
+                        placeholder="Napisz, co było na plus lub co można poprawić..."
+                        value={comment}
+                        onChange={(e) => {
+                          const text = e.target.value;
+                          if (text.length <= maxChars) setComment(text);
+                        }}
+                      />
 
-                          <span className={styles.linkArrow}>
-                            <FaExternalLinkAlt />
-                          </span>
-                        </a>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </section>
-            )}
+                      <div className={styles.textareaFooter}>
+                        <span className={styles.mutedText}>Minimum 10 znaków</span>
+                        <span className={styles.counter}>{comment.length} / {maxChars}</span>
+                      </div>
+
+                      <LoadingButton
+                        type="button"
+                        isLoading={isRatingSending}
+                        disabled={isRatingSending}
+                        className={styles.submitRating}
+                        onClick={handleRate}
+                      >
+                        Wyślij opinię
+                      </LoadingButton>
+                    </>
+                  )}
+                </section>
+              )}
+            </div>
           </aside>
         </main>
       </div>
@@ -1893,33 +1850,37 @@ export default function PublicProfile() {
             ✕
           </button>
 
-          <img src={fullscreenImage} alt="" onClick={(e) => e.stopPropagation()} />
+          <img
+            src={fullscreenImage}
+            alt=""
+            className={styles.lightboxImage}
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
 
       {reportOpen && (
         <div
-          className={styles.reportModalBackdrop}
+          className={styles.modalBackdrop}
           onClick={() => setReportOpen(false)}
           role="dialog"
           aria-modal="true"
         >
           <div className={styles.reportModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.reportModalTop}>
+            <div className={styles.modalHeader}>
               <div>
-                <span className={styles.sectionKicker}>
-                  <FiFlag />
+                <span className={styles.sideKicker}>
+                  <FiFlag aria-hidden="true" />
                   Zgłoszenie
                 </span>
-
-                <h3 className={styles.reportTitle}>
+                <h3 className={styles.modalTitle}>
                   {reportType === "profile" ? "Zgłoś profil" : "Zgłoś opinię"}
                 </h3>
               </div>
 
               <button
                 type="button"
-                className={styles.reportClose}
+                className={styles.modalClose}
                 onClick={() => setReportOpen(false)}
                 aria-label="Zamknij"
               >
@@ -1927,41 +1888,38 @@ export default function PublicProfile() {
               </button>
             </div>
 
-            <div className={styles.reportRow}>
-              <label className={styles.reportLabel}>Powód</label>
-
+            <div className={styles.formField}>
+              <label htmlFor="report-reason">Powód</label>
               <select
-                className={styles.reportSelect}
+                id="report-reason"
+                className={styles.select}
                 value={reportReason}
                 onChange={(e) => setReportReason(e.target.value)}
               >
-                {REPORT_REASONS.map((r) => (
-                  <option key={r.v} value={r.v}>
-                    {r.label}
+                {REPORT_REASONS.map((reason) => (
+                  <option key={reason.v} value={reason.v}>
+                    {reason.label}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className={styles.reportRow}>
-              <label className={styles.reportLabel}>
-                Dodatkowe informacje opcjonalnie
-              </label>
-
+            <div className={styles.formField}>
+              <label htmlFor="report-message">Dodatkowe informacje opcjonalnie</label>
               <textarea
-                className={styles.reportTextarea}
+                id="report-message"
+                className={styles.modalTextarea}
                 value={reportMsg}
                 onChange={(e) => setReportMsg(e.target.value.slice(0, 400))}
-                placeholder="Opisz krótko dlaczego zgłaszasz…"
+                placeholder="Opisz krótko, dlaczego zgłaszasz..."
               />
-
-              <div className={styles.reportHint}>{reportMsg.length} / 400</div>
+              <span className={styles.formHint}>{reportMsg.length} / 400</span>
             </div>
 
-            <div className={styles.reportActions}>
+            <div className={styles.modalActions}>
               <button
                 type="button"
-                className={styles.reportGhost}
+                className={styles.modalSecondary}
                 onClick={() => setReportOpen(false)}
                 disabled={reportSending}
               >
@@ -1970,7 +1928,7 @@ export default function PublicProfile() {
 
               <LoadingButton
                 type="button"
-                className={styles.reportPrimary}
+                className={styles.modalPrimary}
                 isLoading={reportSending}
                 disabled={reportSending}
                 onClick={submitReport}

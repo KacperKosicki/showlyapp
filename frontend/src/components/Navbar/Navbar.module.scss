@@ -1,37 +1,34 @@
 @import "../../styles/variables";
 
 /* =========================================================
-   Navbar — styl dopasowany do Notifications / Showly app UI
+   Navbar — editorial / Showly manifest style
 ========================================================= */
 
 .navbarShell {
-  --navbar-accent: var(--app-primary);
-  --navbar-accent-soft: rgba(111, 78, 242, 0.09);
-  --navbar-accent-border: rgba(111, 78, 242, 0.22);
-  --navbar-shadow: 0 18px 55px rgba(21, 21, 21, 0.07);
-  --navbar-shadow-scrolled: 0 12px 34px rgba(21, 21, 21, 0.075);
+  --navbar-primary: var(--app-primary);
+  --navbar-primary-soft: rgba(111, 78, 242, 0.09);
+  --navbar-primary-border: rgba(111, 78, 242, 0.24);
+  --navbar-surface: color-mix(in srgb, var(--app-bg) 88%, transparent);
+  --navbar-line: color-mix(in srgb, var(--app-border) 86%, transparent);
 
   position: fixed;
   inset: 0 0 auto;
   z-index: 1000;
 
   width: 100%;
+
   padding:
-    calc(env(safe-area-inset-top, 0px) + 0.95rem)
-    max(1rem, var(--safe-right))
-    0.85rem
-    max(1rem, var(--safe-left));
+    calc(env(safe-area-inset-top, 0px) + 1rem) max(clamp(1rem, 3vw, 2rem), var(--safe-right)) 0 max(clamp(1rem, 3vw, 2rem), var(--safe-left));
 
   pointer-events: none;
-  background: transparent;
   isolation: isolate;
 
   transition:
-    padding 0.22s ease,
-    background 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease,
-    backdrop-filter 0.22s ease;
+    padding 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease,
+    backdrop-filter 0.3s ease;
 
   *,
   *::before,
@@ -39,338 +36,480 @@
     box-sizing: border-box;
   }
 
-  > * {
+  >* {
     pointer-events: auto;
   }
 }
 
 :global(html[data-theme="dark"]) .navbarShell {
-  --navbar-accent-soft: rgba(168, 149, 255, 0.12);
-  --navbar-accent-border: rgba(168, 149, 255, 0.28);
-  --navbar-shadow: 0 20px 60px rgba(0, 0, 0, 0.24);
-  --navbar-shadow-scrolled: 0 16px 44px rgba(0, 0, 0, 0.3);
+  --navbar-primary-soft: rgba(168, 149, 255, 0.12);
+  --navbar-primary-border: rgba(168, 149, 255, 0.3);
+  --navbar-surface: color-mix(in srgb, var(--app-bg) 86%, transparent);
+  --navbar-line: color-mix(in srgb, var(--app-border) 78%, transparent);
 }
 
-.scrolled {
-  padding:
-    calc(env(safe-area-inset-top, 0px) + 0.55rem)
-    max(1rem, var(--safe-right))
-    0.55rem
-    max(1rem, var(--safe-left));
+.navbarShell::before {
+  content: "";
 
-  background: color-mix(in srgb, var(--app-bg) 82%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--app-border) 74%, transparent);
-  box-shadow: var(--navbar-shadow-scrolled);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+
+  pointer-events: none;
+  opacity: 0;
+
+  background: var(--navbar-surface);
+  border-bottom: 1px solid transparent;
+
   backdrop-filter: blur(18px) saturate(145%);
   -webkit-backdrop-filter: blur(18px) saturate(145%);
 
+  transition:
+    opacity 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.scrolled {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.45rem);
+  padding-bottom: 0.45rem;
+
+  &::before {
+    opacity: 1;
+    border-bottom-color: var(--navbar-line);
+  }
+
   .navbar {
-    max-width: 1160px;
-    min-height: 56px;
-    box-shadow: 0 10px 35px rgba(21, 21, 21, 0.035);
+    min-height: 60px;
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
   }
 
   .logoMark {
-    width: 38px;
-    height: 38px;
-    border-radius: 13px;
-  }
-
-  .logoText {
-    font-size: 1.13rem;
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
   }
 
   .logoSub {
-    opacity: 0;
-    transform: translateY(-4px);
     max-height: 0;
     margin-top: 0;
+
+    opacity: 0;
+    transform: translateY(-5px);
   }
 
-  .beta {
-    min-height: 28px;
+  .navStatement {
+    opacity: 0.68;
   }
 }
 
-:global(html[data-theme="dark"]) .scrolled .navbar {
-  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.26);
-}
+/* =========================================================
+   Główny układ
+========================================================= */
 
 .navbar {
-  width: min(1220px, 100%);
-  min-height: 62px;
-  margin: 0 auto;
-  padding: 0.5rem;
+  position: relative;
 
-  display: flex;
+  width: min(1380px, 100%);
+  min-height: 76px;
+  margin: 0 auto;
+  padding: 0.65rem 0.15rem;
+
+  display: grid;
+  grid-template-columns: minmax(260px, auto) minmax(280px, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+
+  gap: clamp(1rem, 3vw, 3rem);
 
   overflow: visible;
 
-  border: 1px solid var(--app-border);
-  border-radius: 24px;
-  background: color-mix(in srgb, var(--app-surface) 94%, transparent);
+  border-top: 1px solid var(--navbar-line);
+  border-bottom: 1px solid var(--navbar-line);
+
   color: var(--app-text);
-  box-shadow: var(--navbar-shadow);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+
+  animation: navbarEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 
   transition:
-    max-width 0.22s ease,
-    min-height 0.22s ease,
-    box-shadow 0.22s ease,
-    border-color 0.22s ease,
-    background 0.22s ease,
-    color 0.22s ease;
+    min-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    padding 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.3s ease,
+    color 0.3s ease;
+
+  &::before {
+    content: "";
+
+    position: absolute;
+    top: -1px;
+    left: 0;
+
+    width: clamp(76px, 9vw, 132px);
+    height: 2px;
+
+    background: var(--navbar-primary);
+  }
 }
 
-/* =========================
+/* =========================================================
    Logo
-========================= */
+========================================================= */
 
 .logoWrap {
   min-width: 0;
-  flex: 0 1 auto;
 
-  display: inline-flex;
+  display: inline-grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
   align-items: center;
-  gap: 0.75rem;
+
+  gap: clamp(0.6rem, 1.2vw, 1rem);
+
+  width: fit-content;
+  max-width: 100%;
 
   color: var(--app-text);
   text-decoration: none;
 
   transition:
-    transform 0.18s ease,
-    opacity 0.18s ease,
-    color 0.18s ease;
+    color 0.2s ease,
+    transform 0.2s ease;
 
   &:hover {
-    transform: translateY(-1px);
+    transform: translateX(3px);
+
+    .logoMark {
+      border-color: var(--navbar-primary);
+      background: var(--navbar-primary-soft);
+    }
+
+    .logoImage {
+      transform: scale(1.05);
+    }
   }
 
   &:focus-visible {
-    outline: 3px solid var(--navbar-accent-border);
-    outline-offset: 4px;
-    border-radius: 18px;
+    outline: 3px solid var(--navbar-primary-border);
+    outline-offset: 5px;
   }
 }
 
 .logoMark {
-  flex: 0 0 auto;
-  width: 42px;
-  height: 42px;
+  position: relative;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
 
-  border: 1px solid var(--navbar-accent-border);
-  border-radius: 15px;
-  background: var(--navbar-accent-soft);
-  color: var(--navbar-accent);
+  display: grid;
+  place-items: center;
 
-  font-family: $font-heading;
-  font-size: 1rem;
-  font-weight: 800;
-  line-height: 1;
+  overflow: hidden;
+
+  border: 1px solid var(--navbar-primary-border);
+  border-radius: 12px;
+
+  background:
+    color-mix(in srgb,
+      var(--navbar-primary-soft) 72%,
+      var(--app-surface));
 
   transition:
-    width 0.22s ease,
-    height 0.22s ease,
-    border-radius 0.22s ease,
-    background 0.22s ease,
-    color 0.22s ease,
-    border-color 0.22s ease;
+    width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    flex-basis 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.logoImage {
+  display: block;
+
+  width: 72%;
+  height: 72%;
+
+  object-fit: contain;
+  object-position: center;
+
+  user-select: none;
+  pointer-events: none;
+
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.logoDivider {
+  width: 1px;
+  height: 38px;
+
+  background: var(--navbar-line);
+
+  transition:
+    height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.2s ease;
 }
 
 .logoGroup {
   min-width: 0;
+
   display: grid;
-  gap: 0.12rem;
+}
+
+.logoLine {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 0.55rem;
 }
 
 .logoText {
   display: block;
 
   font-family: $font-heading;
-  font-size: 1.24rem;
-  font-weight: 750;
+  font-size: clamp(1.1rem, 1.7vw, 1.36rem);
+  font-weight: 760;
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.045em;
+
   color: var(--app-text);
+
   white-space: nowrap;
-
-  transition:
-    font-size 0.22s ease,
-    color 0.22s ease;
-}
-
-.logoSub {
-  display: block;
-  max-height: 20px;
-  margin-top: 0.08rem;
-  overflow: hidden;
-
-  font-family: $font-accent;
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--app-muted);
-  white-space: nowrap;
-
-  transition:
-    opacity 0.22s ease,
-    transform 0.22s ease,
-    max-height 0.22s ease,
-    margin 0.22s ease,
-    color 0.22s ease;
 }
 
 .beta {
   flex: 0 0 auto;
-  min-height: 30px;
-  padding: 0 0.58rem;
 
   display: inline-flex;
   align-items: center;
-  justify-content: center;
 
-  border: 1px solid var(--app-border);
-  border-radius: 999px;
-  background: var(--app-surface-soft);
-  color: var(--app-muted);
+  padding-bottom: 0.2rem;
+
+  border-bottom: 1px solid var(--navbar-primary);
 
   font-family: $font-accent;
-  font-size: 0.64rem;
-  font-weight: 700;
+  font-size: 0.58rem;
+  font-weight: 800;
+  line-height: 1;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  line-height: 1;
+
+  color: var(--navbar-primary);
+}
+
+.logoSub {
+  display: block;
+
+  max-height: 18px;
+  margin-top: 0.34rem;
+
+  overflow: hidden;
+
+  font-family: $font-accent;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.015em;
+
+  color: var(--app-muted);
+
   white-space: nowrap;
 
   transition:
-    min-height 0.22s ease,
-    background 0.22s ease,
-    color 0.22s ease,
-    border-color 0.22s ease;
+    max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    margin 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s ease,
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.2s ease;
 }
 
-/* =========================
-   Right side
-========================= */
+/* =========================================================
+   Środkowy komunikat
+========================================================= */
 
-.right {
+.navStatement {
   min-width: 0;
 
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.55rem;
+  justify-content: center;
+
+  gap: 0;
+
+  opacity: 1;
+
+  transition: opacity 0.3s ease;
+
+  span {
+    position: relative;
+
+    padding: 0 1.1rem;
+
+    font-family: $font-accent;
+    font-size: 0.64rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.095em;
+    text-transform: uppercase;
+
+    color: var(--app-muted);
+
+    white-space: nowrap;
+
+    &:not(:last-child)::after {
+      content: "";
+
+      position: absolute;
+      top: 50%;
+      right: 0;
+
+      width: 3px;
+      height: 3px;
+
+      border-radius: 50%;
+      background: var(--navbar-primary);
+
+      transform: translate(50%, -50%);
+    }
+  }
+}
+
+/* =========================================================
+   Prawa strona
+========================================================= */
+
+.right {
+  min-width: 0;
 
   position: relative;
   z-index: 20;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 0.55rem;
 }
 
 .themeToggle,
 .loginPrompt,
 .registerPrompt {
   appearance: none;
+
   border: 0;
+  border-radius: 0;
+
   cursor: pointer;
 
   font-family: $font-accent;
-  font-weight: 700;
+  font-weight: 760;
   line-height: 1;
+
   white-space: nowrap;
 
   transition:
-    transform 0.18s ease,
-    background 0.18s ease,
-    color 0.18s ease,
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    opacity 0.18s ease;
+    transform 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
 
   &:focus-visible {
-    outline: 3px solid var(--navbar-accent-border);
+    outline: 3px solid var(--navbar-primary-border);
     outline-offset: 3px;
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.58;
     cursor: not-allowed;
   }
 }
 
 .themeToggle {
-  flex: 0 0 auto;
   min-height: 48px;
-  padding: 0 0.85rem;
+  padding: 0.45rem 0.8rem;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.48rem;
+  border-radius: 12px;
 
-  border: 1px solid var(--app-border);
-  border-radius: 16px;
-  background: var(--app-surface-soft);
+  gap: 0.65rem;
+
+  border-left: 1px solid var(--navbar-line);
+
+  background: transparent;
   color: var(--app-muted);
 
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
-
   &:hover {
-    transform: translateY(-1px);
-    border-color: var(--navbar-accent-border);
-    background: var(--navbar-accent-soft);
-    color: var(--navbar-accent);
-  }
-
-  &:active {
-    transform: translateY(0);
+    background: var(--navbar-primary-soft);
+    color: var(--navbar-primary);
+    border-radius: 12px;
   }
 }
 
 .themeIcon {
-  width: 1rem;
-  height: 1rem;
+  flex: 0 0 auto;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-grid;
+  place-items: center;
+
+  width: 1.1rem;
+  height: 1.1rem;
 
   svg {
-    width: 0.95rem;
-    height: 0.95rem;
+    width: 1rem;
+    height: 1rem;
   }
 }
 
-.themeLabel {
-  display: inline-block;
+.themeCopy {
+  display: grid;
+
+  gap: 0.16rem;
+
+  text-align: left;
+
+  small,
+  strong {
+    display: block;
+  }
+
+  small {
+    font-size: 0.55rem;
+    font-weight: 760;
+    line-height: 1;
+    letter-spacing: 0.095em;
+    text-transform: uppercase;
+
+    color: var(--app-muted);
+  }
+
+  strong {
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1;
+
+    color: currentColor;
+  }
 }
 
-/* =========================
-   User / loading / auth
-========================= */
+/* =========================================================
+   Użytkownik / ładowanie / logowanie
+========================================================= */
 
 .userSlot,
-.loadingSlot,
-.authButtons {
-  border-radius: 16px;
-  background: var(--app-surface-soft);
+.loadingSlot {
+  min-height: 48px;
 
-  transition:
-    background 0.22s ease,
-    border-color 0.22s ease,
-    box-shadow 0.22s ease;
+  border-left: 1px solid var(--navbar-line);
 }
 
 .userSlot {
-  min-height: 48px;
-  padding: 0.25rem;
+  min-width: 0;
+  padding-left: 0.55rem;
 
   display: inline-flex;
   align-items: center;
@@ -378,253 +517,244 @@
 
   overflow: visible;
 
-  &:focus-within {
-    border-color: var(--navbar-accent-border);
-  }
-
-  > * {
+  >* {
     min-width: 0;
   }
 }
-
-.loadingSlot {
-  min-width: 220px;
-  min-height: 48px;
-  padding: 0.45rem 0.6rem;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.loadingDot,
-.loadingLine {
-  position: relative;
-  overflow: hidden;
-  display: block;
-  border-radius: 999px;
-  background: var(--app-border);
-
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    transform: translateX(-100%);
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.45),
-      transparent
-    );
-    animation: navbarShimmer 1.35s infinite;
-  }
-}
-
-:global(html[data-theme="dark"]) .loadingDot::after,
-:global(html[data-theme="dark"]) .loadingLine::after {
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.08),
-    transparent
-  );
-}
-
-.loadingDot {
-  width: 34px;
-  height: 34px;
-}
-
-.loadingLine {
-  width: 138px;
-  height: 14px;
-}
-
-.authButtons {
-  min-width: 0;
-  padding: 0.25rem;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.loginPrompt,
-.registerPrompt {
-  min-height: 46px;
-  padding: 0 1rem;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-
-  border-radius: 13px;
-  font-size: 0.86rem;
-
-  svg {
-    flex: 0 0 auto;
-    font-size: 0.9rem;
-  }
-}
-
-.loginPrompt {
-  border: 1px solid var(--app-border);
-  background: var(--app-surface);
-  color: var(--app-muted);
-
-  &:hover {
-    transform: translateY(-1px);
-    border-color: var(--navbar-accent-border);
-    background: var(--navbar-accent-soft);
-    color: var(--navbar-accent);
-  }
-}
-
-.registerPrompt {
-  border: 1px solid var(--navbar-accent);
-  background: var(--navbar-accent);
-  color: #ffffff;
-
-  &:hover {
-    transform: translateY(-1px);
-    filter: saturate(1.05);
-    box-shadow: 0 10px 24px var(--navbar-accent-soft);
-  }
-}
-
-:global(html[data-theme="dark"]) .registerPrompt {
-  color: #111216;
-}
-
-/* =========================
-   UserDropdown safety styles
-   Nie zmienia logiki dropdowna, tylko pomaga mu zmieścić się w navbarze.
-========================= */
 
 .userSlot :global(button),
 .userSlot :global(a) {
   font-family: $font-accent;
 }
 
-/* =========================
-   Mobile / tablet
-========================= */
+.loadingSlot {
+  min-width: 190px;
+  padding: 0.45rem 0.65rem;
 
-@media (max-width: 760px) {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 0.65rem;
+}
+
+.loadingDot,
+.loadingLine {
+  position: relative;
+
+  display: block;
+  overflow: hidden;
+
+  background: var(--app-border);
+
+  &::after {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background:
+      linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.5),
+        transparent);
+
+    transform: translateX(-100%);
+    animation: navbarShimmer 1.35s infinite;
+  }
+}
+
+:global(html[data-theme="dark"]) .loadingDot::after,
+:global(html[data-theme="dark"]) .loadingLine::after {
+  background:
+    linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.08),
+      transparent);
+}
+
+.loadingDot {
+  width: 34px;
+  height: 34px;
+
+  border-radius: 50%;
+}
+
+.loadingLine {
+  width: 128px;
+  height: 10px;
+}
+
+.authButtons {
+  min-width: 0;
+
+  display: inline-flex;
+  align-items: center;
+
+  gap: 0.45rem;
+}
+
+.loginPrompt,
+.registerPrompt {
+  min-height: 48px;
+  padding: 0 1rem;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.52rem;
+
+  border-radius: 12px;
+
+  font-size: 0.77rem;
+  letter-spacing: 0.01em;
+
+  svg {
+    flex: 0 0 auto;
+
+    width: 0.95rem;
+    height: 0.95rem;
+  }
+}
+
+.loginPrompt {
+  border: 1px solid var(--navbar-line);
+
+  background: transparent;
+  color: var(--app-muted);
+
+  &:hover {
+    border-color: var(--navbar-primary-border);
+
+    background: var(--navbar-primary-soft);
+    color: var(--navbar-primary);
+  }
+}
+
+.registerPrompt {
+  border: 1px solid var(--navbar-primary);
+
+  background: var(--navbar-primary);
+  color: #ffffff;
+
+  &:hover {
+    transform: translateY(-2px);
+
+    box-shadow: 0 12px 28px var(--navbar-primary-soft);
+  }
+}
+
+.registerArrow {
+  margin-left: 0.08rem;
+
+  transition: transform 0.2s ease;
+}
+
+.registerPrompt:hover .registerArrow {
+  transform: translate(2px, -2px);
+}
+
+:global(html[data-theme="dark"]) .registerPrompt {
+  color: #111216;
+}
+
+/* =========================================================
+   Mniejszy desktop / tablet
+========================================================= */
+
+@media (max-width: 1120px) {
+  .navbar {
+    grid-template-columns: minmax(235px, auto) minmax(0, 1fr) auto;
+
+    gap: 1rem;
+  }
+
+  .navStatement span {
+    padding: 0 0.72rem;
+
+    font-size: 0.59rem;
+  }
+
+  .themeCopy small {
+    display: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .navbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .navStatement {
+    display: none;
+  }
+}
+
+/* =========================================================
+   Mobile
+========================================================= */
+
+@media (max-width: 720px) {
   .navbarShell {
     padding:
-      calc(env(safe-area-inset-top, 0px) + 0.72rem)
-      0.72rem
-      0;
-    background: transparent;
-    border-bottom: 0;
-    box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+      calc(env(safe-area-inset-top, 0px) + 0.68rem) max(0.75rem, var(--safe-right)) 0 max(0.75rem, var(--safe-left));
   }
 
   .navbarShell.scrolled {
-    padding:
-      calc(env(safe-area-inset-top, 0px) + 0.5rem)
-      0.72rem
-      0.72rem;
-    background: transparent;
-    border-bottom: 0;
-    box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-
-  .navbarShell.scrolled::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: calc(-1 * env(safe-area-inset-top, 0px));
-    bottom: -34px;
-    z-index: 0;
-    pointer-events: none;
-
-    background: color-mix(in srgb, var(--app-bg) 68%, transparent);
-    backdrop-filter: blur(20px) saturate(155%);
-    -webkit-backdrop-filter: blur(20px) saturate(155%);
-
-    mask-image: linear-gradient(
-      180deg,
-      #000 0%,
-      #000 68%,
-      rgba(0, 0, 0, 0.78) 82%,
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      180deg,
-      #000 0%,
-      #000 68%,
-      rgba(0, 0, 0, 0.78) 82%,
-      transparent 100%
-    );
+    padding-top: calc(env(safe-area-inset-top, 0px) + 0.35rem);
+    padding-bottom: 0.35rem;
   }
 
   .navbar {
-    position: relative;
-    z-index: 2;
+    min-height: 58px;
+    padding: 0.4rem 0;
 
-    width: min(430px, calc(100vw - 1.44rem));
-    max-width: min(430px, calc(100vw - 1.44rem));
-    min-height: 54px;
-    padding: 0.42rem;
-
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: space-between;
     gap: 0.55rem;
-
-    border-radius: 20px;
-    background: color-mix(in srgb, var(--app-surface) 86%, transparent);
-    box-shadow:
-      0 10px 35px rgba(21, 21, 21, 0.05),
-      0 16px 38px rgba(21, 21, 21, 0.08);
-    backdrop-filter: blur(16px) saturate(150%);
-    -webkit-backdrop-filter: blur(16px) saturate(150%);
-  }
-
-  :global(html[data-theme="dark"]) .navbar {
-    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.32);
   }
 
   .scrolled .navbar {
-    width: min(410px, calc(100vw - 1.44rem));
-    max-width: min(410px, calc(100vw - 1.44rem));
-    min-height: 52px;
+    min-height: 54px;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
   }
 
   .logoWrap {
-    width: auto;
-    min-width: 0;
-    flex: 1 1 auto;
-    justify-content: flex-start;
-    gap: 0.5rem;
+    gap: 0.52rem;
 
     &:hover {
       transform: none;
+
+      .logoImage {
+        transform: none;
+      }
     }
   }
 
   .logoMark {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+
+    border-radius: 10px;
+  }
+
+  .scrolled .logoMark {
     width: 34px;
     height: 34px;
     flex-basis: 34px;
-    border-radius: 12px;
+  }
+
+  .logoImage {
+    width: 70%;
+    height: 70%;
+  }
+
+  .logoDivider {
+    height: 30px;
   }
 
   .logoText {
-    max-width: 128px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 1.04rem;
+    font-size: 1.03rem;
   }
 
   .logoSub,
@@ -633,11 +763,7 @@
   }
 
   .right {
-    width: auto;
-    min-width: 0;
-    flex: 0 0 auto;
-    justify-content: flex-end;
-    gap: 0.38rem;
+    gap: 0.34rem;
   }
 
   .themeToggle {
@@ -645,59 +771,45 @@
     min-width: 42px;
     min-height: 42px;
     padding: 0;
-    border-radius: 14px;
 
-    &:hover {
-      transform: none;
-      box-shadow: none;
-    }
+    border: 1px solid var(--navbar-line);
+    border-radius: 12px;
   }
 
-  .themeLabel {
+  .themeCopy {
     display: none;
   }
 
   .userSlot,
-  .loadingSlot,
-  .authButtons {
-    width: auto;
-    max-width: none;
-    min-width: 0;
+  .loadingSlot {
     min-height: 42px;
-    border-radius: 14px;
+
+    border-left: 0;
   }
 
   .userSlot {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    padding: 0.2rem;
-
-    > * {
-      width: auto;
-    }
+    padding-left: 0;
   }
 
   .loadingSlot {
-    width: 88px;
+    min-width: 76px;
+    padding: 0.35rem;
+
     justify-content: center;
-    padding: 0.35rem 0.45rem;
   }
 
   .loadingDot {
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
   }
 
   .loadingLine {
-    width: 38px;
+    width: 28px;
+    height: 8px;
   }
 
   .authButtons {
-    padding: 0.2rem;
-    display: inline-flex;
-    gap: 0.35rem;
+    gap: 0.32rem;
   }
 
   .loginPrompt,
@@ -706,46 +818,64 @@
     min-width: 42px;
     min-height: 42px;
     padding: 0;
-    border-radius: 12px;
 
     &:hover {
       transform: none;
+
       box-shadow: none;
     }
 
-    span {
+    span,
+    .registerArrow {
       display: none;
-    }
-
-    svg {
-      display: block;
-      font-size: 0.95rem;
     }
   }
 }
 
 @media (max-width: 430px) {
   .navbarShell {
-    padding-left: 0.6rem;
-    padding-right: 0.6rem;
-  }
-
-  .navbarShell.scrolled {
-    padding-left: 0.6rem;
-    padding-right: 0.6rem;
+    padding-left: max(0.6rem, var(--safe-left));
+    padding-right: max(0.6rem, var(--safe-right));
   }
 
   .navbar {
-    width: calc(100vw - 1.2rem);
-    max-width: calc(100vw - 1.2rem);
-    padding: 0.38rem;
+    gap: 0.4rem;
+  }
+
+  .logoWrap {
     gap: 0.42rem;
-    border-radius: 18px;
+  }
+
+  .logoMark {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+
+    border-radius: 9px;
+  }
+
+  .scrolled .logoMark {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+  }
+
+  .logoImage {
+    width: 68%;
+    height: 68%;
+  }
+
+  .logoDivider {
+    height: 26px;
   }
 
   .logoText {
-    max-width: 108px;
-    font-size: 0.98rem;
+    max-width: 112px;
+
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    font-size: 0.97rem;
   }
 
   .themeToggle,
@@ -754,18 +884,43 @@
     width: 40px;
     min-width: 40px;
     min-height: 40px;
+
+    border-radius: 12px;
   }
 }
 
 @media (max-width: 360px) {
-  .logoText {
-    max-width: 92px;
+  .logoWrap {
+    gap: 0.35rem;
   }
 
   .logoMark {
-    width: 32px;
-    height: 32px;
-    flex-basis: 32px;
+    width: 31px;
+    height: 31px;
+    flex-basis: 31px;
+
+    border-radius: 8px;
+  }
+
+  .scrolled .logoMark {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+  }
+
+  .logoDivider {
+    display: none;
+  }
+
+  .logoText {
+    max-width: 88px;
+
+    font-size: 0.92rem;
+  }
+
+  .right,
+  .authButtons {
+    gap: 0.25rem;
   }
 
   .themeToggle,
@@ -774,40 +929,81 @@
     width: 38px;
     min-width: 38px;
     min-height: 38px;
-  }
 
-  .right {
-    gap: 0.28rem;
+    border-radius: 11px;
   }
 }
 
+/* =========================================================
+   Touch / reduced motion
+========================================================= */
+
 @media (hover: none) {
+
   .logoWrap:hover,
-  .themeToggle:hover,
-  .loginPrompt:hover,
   .registerPrompt:hover {
+    transform: none;
+  }
+
+  .logoWrap:hover {
+    .logoMark {
+      border-color: var(--navbar-primary-border);
+
+      background:
+        color-mix(in srgb,
+          var(--navbar-primary-soft) 72%,
+          var(--app-surface));
+    }
+
+    .logoImage {
+      transform: none;
+    }
+  }
+
+  .registerPrompt:hover .registerArrow {
     transform: none;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .navbarShell,
+  .navbarShell::before,
   .navbar,
   .logoWrap,
   .logoMark,
-  .logoText,
+  .logoImage,
+  .logoDivider,
   .logoSub,
-  .beta,
+  .navStatement,
   .themeToggle,
-  .authButtons,
-  .userSlot,
-  .loadingSlot,
   .loginPrompt,
   .registerPrompt,
+  .registerArrow,
   .loadingDot::after,
   .loadingLine::after {
     animation: none;
     transition: none;
+  }
+}
+
+/* =========================================================
+   Animacje
+========================================================= */
+
+@keyframes navbarEnter {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+
+    transform: translate3d(0, -28px, 0);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+
+    transform: translate3d(0, 0, 0);
   }
 }
 

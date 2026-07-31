@@ -197,7 +197,7 @@ const UserCardList = ({ currentUser, setAlert }) => {
 
       setCanRight(
         maxScroll > 4 &&
-          currentScroll < maxScroll - 4
+        currentScroll < maxScroll - 4
       );
     });
   }, []);
@@ -289,8 +289,8 @@ const UserCardList = ({ currentUser, setAlert }) => {
     const gap =
       parseFloat(
         computedStyles.columnGap ||
-          computedStyles.gap ||
-          "0"
+        computedStyles.gap ||
+        "0"
       ) || 24;
 
     const scrollStep = cardWidth + gap;
@@ -303,7 +303,7 @@ const UserCardList = ({ currentUser, setAlert }) => {
     const nextScroll = Math.min(
       Math.max(
         element.scrollLeft +
-          direction * scrollStep,
+        direction * scrollStep,
         0
       ),
       maxScroll
@@ -388,7 +388,7 @@ const UserCardList = ({ currentUser, setAlert }) => {
             className={`${styles.headingBlock} ${styles.reveal} ${styles.fromLeft}`}
           >
             <span className={styles.eyebrow}>
-              Showly Ranking
+              Najlepiej oceniani
             </span>
 
             <h2>

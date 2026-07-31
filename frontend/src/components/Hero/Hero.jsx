@@ -1,19 +1,46 @@
-import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import styles from "./Hero.module.scss";
+import { useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  FiArrowRight,
+  FiArrowUpRight,
+  FiCheck,
+  FiLink,
+  FiSearch,
+} from "react-icons/fi";
+
 import SearchBar from "../SearchBar/SearchBar";
+import styles from "./Hero.module.scss";
+
+const profilePoints = [
+  {
+    number: "01",
+    title: "Oferta bez dopytywania",
+    text: "Usługi, cennik, opis i zdjęcia znajdują się razem.",
+  },
+  {
+    number: "02",
+    title: "Kontakt od razu z profilu",
+    text: "Klient może napisać, sprawdzić dane albo wybrać termin.",
+  },
+  {
+    number: "03",
+    title: "Link gotowy do udostępnienia",
+    text: "Dodajesz go do bio, posta, ogłoszenia lub wiadomości.",
+  },
+];
 
 const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const sectionRef = useRef(null);
 
   const handleNavigate = (path, scrollToId = null) => {
     if (location.pathname === path && scrollToId) {
-      const el = document.getElementById(scrollToId);
+      const element = document.getElementById(scrollToId);
 
-      if (el) {
+      if (element) {
         setTimeout(() => {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 100);
       }
 
@@ -33,139 +60,264 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
     };
   }, []);
 
+  useEffect(() => {
+    const section = sectionRef.current;
+
+    if (!section) {
+      return undefined;
+    }
+
+    const animatedElements = section.querySelectorAll(`.${styles.reveal}`);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add(styles.revealVisible);
+          }
+        });
+      },
+      {
+        threshold: 0.08,
+        rootMargin: "0px 0px -4% 0px",
+      }
+    );
+
+    animatedElements.forEach((element) => {
+      observer.observe(element);
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   return (
-    <section className={styles.hero} id="hero">
-      <div className={styles.bg} aria-hidden="true">
-        <span className={styles.blurOne} />
-        <span className={styles.blurTwo} />
-        <span className={styles.blurThree} />
+    <section ref={sectionRef} className={styles.hero} id="hero">
+      <div className={styles.decor} aria-hidden="true">
+        <span className={styles.orbOne} />
+        <span className={styles.orbTwo} />
+        <span className={styles.verticalLine} />
+        <span className={styles.diagonalLine} />
+        <span className={styles.cornerMark} />
       </div>
 
-      <div className={styles.wrap}>
-        <div className={styles.content}>
-          <h1 className={styles.title}>
-            Twoja oferta.
-            <br />
-            Jeden link.
-            <br />
-            <span>Zero chaosu.</span>
-          </h1>
+      <div className={styles.inner}>
+        <header
+          className={`${styles.metaBar} ${styles.reveal} ${styles.fromTop}`}
+        >
+          <span>Platforma profili usługowych</span>
 
-          <p className={styles.lead}>
-            Stwórz profil z usługami, galerią, cennikiem, opiniami i kontaktem.
-            Jedno miejsce, które możesz wysłać klientowi, dodać do bio albo
-            wkleić w ogłoszeniu.
-          </p>
+          <div>
+            <span>Showly.me</span>
+            <span>Beta</span>
+            <span>Online</span>
+          </div>
+        </header>
 
-          <div className={styles.searchBlock}>
-            <div className={styles.searchHeader}>
-              <div>
-                <span>Szukaj profili</span>
-                <small>rola, usługa albo miasto</small>
+        <div className={styles.layout}>
+          <div className={styles.content}>
+            <div
+              className={`${styles.headingRow} ${styles.reveal} ${styles.fromLeft}`}
+              style={{ "--reveal-delay": "70ms" }}
+            >
+              <span className={styles.chapter} aria-hidden="true">
+                01
+              </span>
+
+              <div className={styles.headingCopy}>
+                <span className={styles.eyebrow}>
+                  Jeden profil. Cała oferta.
+                </span>
+
+                <h1 className={styles.title}>
+                  Twoja oferta.
+                  <br />
+                  Jeden link.
+                  <br />
+                  <span>Zero chaosu.</span>
+                </h1>
               </div>
             </div>
 
-            <SearchBar variant="hero" />
-
-            <p className={styles.hint}>
-              Spróbuj: <b>DJ Poznań</b>, <b>fryzjer Piła</b>, <b>cukiernia</b>
+            <p
+              className={`${styles.lead} ${styles.reveal} ${styles.fromLeft}`}
+              style={{ "--reveal-delay": "140ms" }}
+            >
+              Stwórz profil z usługami, galerią, cennikiem, opiniami i
+              kontaktem. Jedno miejsce, które możesz wysłać klientowi, dodać
+              do bio albo wkleić w ogłoszeniu.
             </p>
-          </div>
 
-          <div className={styles.actions}>
-            {user ? (
-              loadingProfileStatus ? (
-                <button type="button" className={styles.primaryBtn} disabled>
-                  Sprawdzanie profilu...
-                </button>
-              ) : hasProfile ? (
-                <button
-                  type="button"
-                  className={styles.primaryBtn}
-                  onClick={() => handleNavigate("/profil", "profileWrapper")}
-                >
-                  Edytuj profil
-                </button>
+            <div
+              className={`${styles.searchBlock} ${styles.reveal} ${styles.fromBottom}`}
+              style={{ "--reveal-delay": "210ms" }}
+            >
+              <div className={styles.searchIntro}>
+                <div className={styles.searchLabel}>
+                  <FiSearch aria-hidden="true" />
+                  <span>Wyszukiwanie</span>
+                </div>
+
+                <div className={styles.searchCopy}>
+                  <strong>Znajdź właściwy profil</strong>
+                  <small>rola, usługa albo miasto</small>
+                </div>
+              </div>
+
+              <div className={styles.searchField}>
+                <SearchBar variant="hero" />
+              </div>
+
+              <div className={styles.searchFooter}>
+                <p className={styles.hint}>
+                  Spróbuj: <b>DJ Poznań</b>, <b>fryzjer Piła</b>,{" "}
+                  <b>cukiernia</b>
+                </p>
+
+                <span>profile zamiast przypadkowych postów</span>
+              </div>
+            </div>
+
+            <div
+              className={`${styles.actions} ${styles.reveal} ${styles.fromBottom}`}
+              style={{ "--reveal-delay": "280ms" }}
+            >
+              {user ? (
+                loadingProfileStatus ? (
+                  <button type="button" className={styles.primaryBtn} disabled>
+                    <span>Sprawdzanie profilu...</span>
+                  </button>
+                ) : hasProfile ? (
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    onClick={() => handleNavigate("/profil", "profileWrapper")}
+                  >
+                    <span>Edytuj profil</span>
+                    <FiArrowUpRight aria-hidden="true" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    onClick={() =>
+                      handleNavigate("/stworz-profil", "scrollToId")
+                    }
+                  >
+                    <span>Stwórz profil</span>
+                    <FiArrowUpRight aria-hidden="true" />
+                  </button>
+                )
               ) : (
                 <button
                   type="button"
                   className={styles.primaryBtn}
-                  onClick={() => handleNavigate("/stworz-profil", "scrollToId")}
+                  onClick={() => handleNavigate("/register", "registerBox")}
                 >
-                  Stwórz profil
+                  <span>Załóż darmowy profil</span>
+                  <FiArrowUpRight aria-hidden="true" />
                 </button>
-              )
-            ) : (
+              )}
+
               <button
                 type="button"
-                className={styles.primaryBtn}
-                onClick={() => handleNavigate("/register", "registerBox")}
+                className={styles.secondaryBtn}
+                onClick={() =>
+                  handleNavigate("/jak-to-dziala", "showlyJourney")
+                }
               >
-                Załóż darmowy profil
+                <span>Zobacz jak działa Showly</span>
+                <FiArrowRight aria-hidden="true" />
               </button>
-            )}
+            </div>
 
-            <button
-              type="button"
-              className={styles.secondaryBtn}
-              onClick={() => handleNavigate("/jak-to-dziala", "showlyJourney")}
+            <div
+              className={`${styles.trustLine} ${styles.reveal} ${styles.fromBottom}`}
+              style={{ "--reveal-delay": "340ms" }}
             >
-              Zobacz jak działa Showly
-            </button>
+              <span>
+                <FiCheck aria-hidden="true" />
+                bez osobnej strony
+              </span>
+
+              <span>
+                <FiCheck aria-hidden="true" />
+                gotowe na telefon
+              </span>
+
+              <span>
+                <FiCheck aria-hidden="true" />
+                jeden publiczny link
+              </span>
+            </div>
           </div>
+
+          <aside
+            className={`${styles.side} ${styles.reveal} ${styles.fromRight}`}
+            style={{ "--reveal-delay": "160ms" }}
+            aria-label="Co możesz pokazać w Showly"
+          >
+            <div className={styles.sideAccent} aria-hidden="true" />
+
+            <header className={styles.sideHeader}>
+              <div>
+                <span className={styles.sideEyebrow}>02 / Profil publiczny</span>
+                <h2>Wszystko, czego klient potrzebuje do decyzji.</h2>
+              </div>
+
+              <FiLink aria-hidden="true" />
+            </header>
+
+            <div className={styles.urlBar}>
+              <span>showly.me/</span>
+              <strong>twoja-nazwa</strong>
+              <FiArrowUpRight aria-hidden="true" />
+            </div>
+
+            <div className={styles.profileList}>
+              {profilePoints.map((point) => (
+                <article className={styles.profilePoint} key={point.number}>
+                  <span className={styles.pointNumber}>{point.number}</span>
+
+                  <div>
+                    <strong>{point.title}</strong>
+                    <p>{point.text}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <footer className={styles.sideFooter}>
+              <div>
+                <strong>1 link</strong>
+                <span>do całej oferty</span>
+              </div>
+
+              <div>
+                <strong>24/7</strong>
+                <span>profil dostępny online</span>
+              </div>
+            </footer>
+          </aside>
         </div>
 
-        <aside className={styles.side} aria-label="Co możesz pokazać w Showly">
-          <div className={styles.sideTop}>
-            <span>Profil publiczny</span>
-            <b>showly.me/twoja-nazwa</b>
+        <footer
+          className={`${styles.bottomRail} ${styles.reveal} ${styles.fromBottom}`}
+          style={{ "--reveal-delay": "360ms" }}
+        >
+          <div className={styles.journey} aria-hidden="true">
+            <span>Znajdź</span>
+            <FiArrowRight />
+            <span>Porównaj</span>
+            <FiArrowRight />
+            <span>Skontaktuj się</span>
           </div>
 
-          <div className={styles.sideCard}>
-            <span>01</span>
-            <div>
-              <strong>Oferta bez dopytywania</strong>
-              <p>Usługi, cennik, opis i zdjęcia w jednym miejscu.</p>
-            </div>
-          </div>
-
-          <div className={styles.sideCard}>
-            <span>02</span>
-            <div>
-              <strong>Kontakt od razu z profilu</strong>
-              <p>Klient może wysłać pytanie, sprawdzić dane albo przejść dalej.</p>
-            </div>
-          </div>
-
-          <div className={styles.sideCard}>
-            <span>03</span>
-            <div>
-              <strong>Link do bio, posta i ogłoszenia</strong>
-              <p>Nie wysyłasz osobno galerii, cen, opinii i sociali.</p>
-            </div>
-          </div>
-
-          <div className={styles.sideFooter}>
-            <div>
-              <strong>1 link</strong>
-              <span>do całej oferty</span>
-            </div>
-
-            <div>
-              <strong>mobile</strong>
-              <span>gotowe na telefon</span>
-            </div>
-          </div>
-        </aside>
-      </div>
-
-      <div className={styles.wave}>
-        <svg viewBox="0 0 1440 220" preserveAspectRatio="none">
-          <path
-            fill="#ffffff"
-            d="M0,96L80,106.7C160,117,320,139,480,128C640,117,800,75,960,80C1120,85,1280,139,1360,165.3L1440,192L1440,220L0,220Z"
-          />
-        </svg>
+          <span className={styles.scrollNote}>
+            Przewiń i zobacz, jak Showly porządkuje drogę klienta
+          </span>
+        </footer>
       </div>
     </section>
   );

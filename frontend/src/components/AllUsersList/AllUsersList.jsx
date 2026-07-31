@@ -411,7 +411,7 @@ const AllUsersList = ({ currentUser, setAlert }) => {
             className={`${styles.headingBlock} ${styles.reveal} ${styles.fromLeft}`}
           >
             <span className={styles.eyebrow}>
-              Showly Directory
+              Profile Showly
             </span>
 
             <h2>
