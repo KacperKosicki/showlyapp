@@ -12,21 +12,9 @@ import SearchBar from "../SearchBar/SearchBar";
 import styles from "./Hero.module.scss";
 
 const profilePoints = [
-  {
-    number: "01",
-    title: "Oferta bez dopytywania",
-    text: "Usługi, cennik, opis i zdjęcia znajdują się razem.",
-  },
-  {
-    number: "02",
-    title: "Kontakt od razu z profilu",
-    text: "Klient może napisać, sprawdzić dane albo wybrać termin.",
-  },
-  {
-    number: "03",
-    title: "Link gotowy do udostępnienia",
-    text: "Dodajesz go do bio, posta, ogłoszenia lub wiadomości.",
-  },
+  "Usługi i cennik",
+  "Galeria i opinie",
+  "Kontakt i rezerwacje",
 ];
 
 const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
@@ -98,7 +86,6 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
         <span className={styles.orbOne} />
         <span className={styles.orbTwo} />
         <span className={styles.verticalLine} />
-        <span className={styles.diagonalLine} />
         <span className={styles.cornerMark} />
       </div>
 
@@ -106,12 +93,11 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
         <header
           className={`${styles.metaBar} ${styles.reveal} ${styles.fromTop}`}
         >
-          <span>Platforma profili usługowych</span>
+          <span>Showly.me</span>
 
           <div>
-            <span>Showly.me</span>
+            <span>Profile usługowe</span>
             <span>Beta</span>
-            <span>Online</span>
           </div>
         </header>
 
@@ -128,57 +114,46 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
                 </span>
 
                 <h1 className={styles.title}>
-                  Jeden profil.
+                  Pokaż swoją ofertę.
                   <br />
-                  Daj się znaleźć.
-                  <br />
-                  <span>Pokaż, co robisz.</span>
+                  <span>Daj się znaleźć.</span>
                 </h1>
               </div>
             </div>
 
             <p
               className={`${styles.lead} ${styles.reveal} ${styles.fromLeft}`}
-              style={{ "--reveal-delay": "140ms" }}
+              style={{ "--reveal-delay": "120ms" }}
             >
-              Stwórz profil z usługami, galerią, cennikiem, opiniami i
-              kontaktem. Jedno miejsce, które możesz wysłać klientowi, dodać
-              do bio albo wkleić w ogłoszeniu.
+              Usługi, zdjęcia, ceny i kontakt w jednym profilu, który możesz
+              łatwo udostępnić klientom.
             </p>
 
             <div
               className={`${styles.searchBlock} ${styles.reveal} ${styles.fromBottom}`}
-              style={{ "--reveal-delay": "210ms" }}
+              style={{ "--reveal-delay": "180ms" }}
             >
               <div className={styles.searchIntro}>
                 <div className={styles.searchLabel}>
                   <FiSearch aria-hidden="true" />
-                  <span>Wyszukiwanie</span>
+                  <strong>Znajdź usługę lub profil</strong>
                 </div>
 
-                <div className={styles.searchCopy}>
-                  <strong>Znajdź właściwy profil</strong>
-                  <small>rola, usługa albo miasto</small>
-                </div>
+                <small>Wpisz usługę, osobę albo miasto</small>
               </div>
 
               <div className={styles.searchField}>
                 <SearchBar variant="hero" />
               </div>
 
-              <div className={styles.searchFooter}>
-                <p className={styles.hint}>
-                  Spróbuj: <b>DJ Poznań</b>, <b>fryzjer Piła</b>,{" "}
-                  <b>cukiernia</b>
-                </p>
-
-                <span>profile zamiast przypadkowych postów</span>
-              </div>
+              <p className={styles.hint}>
+                Na przykład: <b>DJ Poznań</b> lub <b>fryzjer Piła</b>
+              </p>
             </div>
 
             <div
               className={`${styles.actions} ${styles.reveal} ${styles.fromBottom}`}
-              style={{ "--reveal-delay": "280ms" }}
+              style={{ "--reveal-delay": "240ms" }}
             >
               {user ? (
                 loadingProfileStatus ? (
@@ -224,43 +199,38 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
                   handleNavigate("/jak-to-dziala", "showlyJourney")
                 }
               >
-                <span>Zobacz jak działa Showly</span>
+                <span>Jak działa Showly?</span>
                 <FiArrowRight aria-hidden="true" />
               </button>
             </div>
 
             <div
               className={`${styles.trustLine} ${styles.reveal} ${styles.fromBottom}`}
-              style={{ "--reveal-delay": "340ms" }}
+              style={{ "--reveal-delay": "290ms" }}
             >
               <span>
                 <FiCheck aria-hidden="true" />
-                bez osobnej strony
+                bez własnej strony
               </span>
 
               <span>
                 <FiCheck aria-hidden="true" />
-                gotowe na telefon
-              </span>
-
-              <span>
-                <FiCheck aria-hidden="true" />
-                jeden publiczny link
+                jeden link do udostępnienia
               </span>
             </div>
           </div>
 
           <aside
             className={`${styles.side} ${styles.reveal} ${styles.fromRight}`}
-            style={{ "--reveal-delay": "160ms" }}
-            aria-label="Co możesz pokazać w Showly"
+            style={{ "--reveal-delay": "150ms" }}
+            aria-label="Najważniejsze elementy profilu Showly"
           >
             <div className={styles.sideAccent} aria-hidden="true" />
 
             <header className={styles.sideHeader}>
               <div>
-                <span className={styles.sideEyebrow}>02 / Profil publiczny</span>
-                <h2>Wszystko, czego klient potrzebuje do decyzji.</h2>
+                <span className={styles.sideEyebrow}>Twój profil w Showly</span>
+                <h2>Wszystko ważne. Bez chaosu.</h2>
               </div>
 
               <FiLink aria-hidden="true" />
@@ -274,47 +244,19 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
 
             <div className={styles.profileList}>
               {profilePoints.map((point) => (
-                <article className={styles.profilePoint} key={point.number}>
-                  <span className={styles.pointNumber}>{point.number}</span>
-
-                  <div>
-                    <strong>{point.title}</strong>
-                    <p>{point.text}</p>
-                  </div>
-                </article>
+                <div className={styles.profilePoint} key={point}>
+                  <FiCheck aria-hidden="true" />
+                  <strong>{point}</strong>
+                </div>
               ))}
             </div>
 
-            <footer className={styles.sideFooter}>
-              <div>
-                <strong>1 link</strong>
-                <span>do całej oferty</span>
-              </div>
-
-              <div>
-                <strong>24/7</strong>
-                <span>profil dostępny online</span>
-              </div>
-            </footer>
+            <p className={styles.sideMessage}>
+              Klient od razu widzi, co robisz i jak może się z Tobą
+              skontaktować.
+            </p>
           </aside>
         </div>
-
-        <footer
-          className={`${styles.bottomRail} ${styles.reveal} ${styles.fromBottom}`}
-          style={{ "--reveal-delay": "360ms" }}
-        >
-          <div className={styles.journey} aria-hidden="true">
-            <span>Znajdź</span>
-            <FiArrowRight />
-            <span>Porównaj</span>
-            <FiArrowRight />
-            <span>Skontaktuj się</span>
-          </div>
-
-          <span className={styles.scrollNote}>
-            Przewiń i zobacz, jak Showly porządkuje drogę klienta
-          </span>
-        </footer>
       </div>
     </section>
   );

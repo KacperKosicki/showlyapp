@@ -1,10 +1,9 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  FiArrowUpRight,
+  FiArrowRight,
   FiArrowUp,
-  FiHeart,
+  FiArrowUpRight,
   FiMail,
-  FiSearch,
   FiStar,
   FiUserPlus,
 } from "react-icons/fi";
@@ -45,11 +44,6 @@ const legalLinks = [
     path: "/polityka-cookies",
     scrollToId: "scrollToId",
   },
-  {
-    label: "Kontakt",
-    path: "/kontakt",
-    scrollToId: "scrollToId",
-  },
 ];
 
 const Footer = ({
@@ -58,39 +52,45 @@ const Footer = ({
   loadingProfileStatus = false,
 }) => {
   const year = new Date().getFullYear();
-
   const navigate = useNavigate();
   const location = useLocation();
 
   const isLoggedIn = Boolean(user?.uid);
 
-  const shouldOpenProfilePanel =
-    isLoggedIn &&
-    (hasProfile || loadingProfileStatus);
-
-  const profileAction = shouldOpenProfilePanel
+  const profileAction = loadingProfileStatus && isLoggedIn
     ? {
-        label: loadingProfileStatus
-          ? "Twój profil"
-          : "Zarządzaj profilem",
+      label: "Sprawdzanie profilu...",
+      path: null,
+      scrollToId: null,
+      Icon: FiStar,
+      disabled: true,
+    }
+    : isLoggedIn && hasProfile
+      ? {
+        label: "Zarządzaj profilem",
         path: "/profil",
         scrollToId: "profileWrapper",
-        icon: <FiStar />,
+        Icon: FiStar,
+        disabled: false,
       }
-    : {
+      : {
         label: "Stwórz profil",
         path: "/stworz-profil",
         scrollToId: "scrollToId",
-        icon: <FiUserPlus />,
+        Icon: FiUserPlus,
+        disabled: false,
       };
 
   const creatorLinks = [
-    profileAction,
+    {
+      label: isLoggedIn && hasProfile ? "Twój profil" : "Stwórz profil",
+      path: isLoggedIn && hasProfile ? "/profil" : "/stworz-profil",
+      scrollToId: isLoggedIn && hasProfile ? "profileWrapper" : "scrollToId",
+    },
     {
       label: "Ulubione",
       path: "/ulubione",
       scrollToId: "scrollToId",
-      icon: <FiHeart />,
     },
   ];
 
@@ -101,18 +101,14 @@ const Footer = ({
 
     const targetIds = [
       scrollToId,
-      scrollToId !== "scrollToId"
-        ? "scrollToId"
-        : null,
+      scrollToId !== "scrollToId" ? "scrollToId" : null,
     ].filter(Boolean);
 
     let attempts = 0;
 
     const tryScroll = () => {
       const element = targetIds
-        .map((targetId) =>
-          document.getElementById(targetId)
-        )
+        .map((targetId) => document.getElementById(targetId))
         .find(Boolean);
 
       if (element) {
@@ -134,14 +130,12 @@ const Footer = ({
     requestAnimationFrame(tryScroll);
   };
 
-  const handleNavigate = (
-    path,
-    scrollToId = null
-  ) => {
-    if (
-      location.pathname === path &&
-      scrollToId
-    ) {
+  const handleNavigate = (path, scrollToId = null) => {
+    if (!path) {
+      return;
+    }
+
+    if (location.pathname === path && scrollToId) {
       scrollToSection(scrollToId);
       return;
     }
@@ -167,12 +161,7 @@ const Footer = ({
           <button
             type="button"
             className={styles.navLink}
-            onClick={() =>
-              handleNavigate(
-                item.path,
-                item.scrollToId
-              )
-            }
+            onClick={() => handleNavigate(item.path, item.scrollToId)}
           >
             <span>{item.label}</span>
             <FiArrowUpRight aria-hidden="true" />
@@ -182,131 +171,80 @@ const Footer = ({
     </ul>
   );
 
+  const ProfileIcon = profileAction.Icon;
+
   return (
-    <footer
-      className={styles.footer}
-      id="footer"
-    >
-      <div
-        className={styles.decor}
-        aria-hidden="true"
-      >
-        <span className={styles.orbOne} />
-        <span className={styles.orbTwo} />
-        <span className={styles.waveOne} />
-        <span className={styles.waveTwo} />
+    <footer className={styles.footer} id="footer">
+      <div className={styles.decor} aria-hidden="true">
+        <span className={styles.orb} />
+        <span className={styles.line} />
       </div>
 
       <div className={styles.inner}>
-        <section className={styles.top}>
-          <div className={styles.brand}>
-            <span className={styles.eyebrow}>
-              Showly.me
-            </span>
+        <section className={styles.intro}>
+          <div className={styles.introCopy}>
+            <span className={styles.eyebrow}>Showly.me</span>
 
-            <h2>
-              Profil, który{" "}
-              <span>pracuje za Ciebie.</span>
-            </h2>
+            <h2>Jedno miejsce na Twoją ofertę.</h2>
 
             <p>
-              Jedno miejsce na opis, ofertę,
-              zdjęcia, opinie, kontakt i rezerwacje.
-              Bez budowania własnej strony od zera.
+              Pokaż usługi, realizacje i kontakt pod jednym linkiem, który łatwo
+              udostępnisz klientom.
             </p>
-
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.primaryAction}
-                onClick={() =>
-                  handleNavigate(
-                    profileAction.path,
-                    profileAction.scrollToId
-                  )
-                }
-              >
-                {profileAction.icon}
-                <span>{profileAction.label}</span>
-              </button>
-
-              <button
-                type="button"
-                className={styles.secondaryAction}
-                onClick={() =>
-                  handleNavigate(
-                    "/profile",
-                    "profilesHub"
-                  )
-                }
-              >
-                <FiSearch />
-                <span>Przeglądaj profile</span>
-              </button>
-            </div>
           </div>
 
-          <div className={styles.contact}>
-            <span className={styles.contactLabel}>
-              Kontakt
-            </span>
-
-            <a
-              href="mailto:kontakt@showly.me"
-              className={styles.email}
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.primaryAction}
+              disabled={profileAction.disabled}
+              onClick={() =>
+                handleNavigate(profileAction.path, profileAction.scrollToId)
+              }
             >
-              <FiMail aria-hidden="true" />
+              <ProfileIcon aria-hidden="true" />
+              <span>{profileAction.label}</span>
+              {!profileAction.disabled && <FiArrowRight aria-hidden="true" />}
+            </button>
 
-              <span>kontakt@showly.me</span>
-
-              <FiArrowUpRight
-                aria-hidden="true"
-                className={styles.emailArrow}
-              />
-            </a>
+            <button
+              type="button"
+              className={styles.textAction}
+              onClick={() => handleNavigate("/profile", "profilesHub")}
+            >
+              <span>Przeglądaj profile</span>
+              <FiArrowUpRight aria-hidden="true" />
+            </button>
           </div>
         </section>
 
         <section className={styles.navigation}>
-          <nav
-            className={styles.navGroup}
-            aria-label="Nawigacja platformy"
-          >
-            <span className={styles.navTitle}>
-              Platforma
-            </span>
-
+          <nav className={styles.navGroup} aria-label="Nawigacja platformy">
+            <span className={styles.navTitle}>Platforma</span>
             {renderLinks(productLinks)}
           </nav>
 
-          <nav
-            className={styles.navGroup}
-            aria-label="Nawigacja użytkownika"
-          >
-            <span className={styles.navTitle}>
-              Dla Ciebie
-            </span>
-
+          <nav className={styles.navGroup} aria-label="Nawigacja użytkownika">
+            <span className={styles.navTitle}>Dla Ciebie</span>
             {renderLinks(creatorLinks)}
           </nav>
 
-          <div className={styles.footerNote}>
-            <span className={styles.navTitle}>
-              Showly
-            </span>
+          <div className={styles.contact}>
+            <span className={styles.navTitle}>Kontakt</span>
 
-            <p>
-              Wizytówki dla usługodawców,
-              twórców i specjalistów.
-            </p>
+            <p>Masz pytanie albo chcesz zgłosić problem?</p>
+
+            <a href="mailto:kontakt@showly.me" className={styles.email}>
+              <FiMail aria-hidden="true" />
+              <span>kontakt@showly.me</span>
+              <FiArrowUpRight aria-hidden="true" />
+            </a>
           </div>
         </section>
 
         <div className={styles.bottom}>
           <div className={styles.bottomLeft}>
-            <span className={styles.copy}>
-              © {year} Showly.me
-            </span>
+            <span className={styles.copy}>© {year} Showly.me</span>
 
             <div className={styles.legalLinks}>
               {legalLinks.map((link) => (
@@ -314,12 +252,7 @@ const Footer = ({
                   key={link.label}
                   type="button"
                   className={styles.legalLink}
-                  onClick={() =>
-                    handleNavigate(
-                      link.path,
-                      link.scrollToId
-                    )
-                  }
+                  onClick={() => handleNavigate(link.path, link.scrollToId)}
                 >
                   {link.label}
                 </button>

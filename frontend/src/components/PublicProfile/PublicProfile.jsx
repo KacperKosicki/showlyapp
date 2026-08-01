@@ -1064,7 +1064,6 @@ export default function PublicProfile() {
           <div className={styles.heroMedia} aria-hidden="true">
             <span className={styles.heroBackdrop} />
             <span className={styles.heroShade} />
-            <span className={styles.heroPattern} />
           </div>
 
           <div className={styles.heroContent}>
