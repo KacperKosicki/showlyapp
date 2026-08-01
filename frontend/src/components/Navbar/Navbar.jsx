@@ -65,7 +65,8 @@ const Navbar = ({
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch {
-      // Motyw nadal działa w bieżącej sesji, nawet jeśli zapis jest zablokowany.
+      // Motyw nadal działa w bieżącej sesji,
+      // nawet jeśli zapis jest zablokowany.
     }
   }, [theme]);
 
@@ -96,11 +97,19 @@ const Navbar = ({
     }
 
     metaTheme.setAttribute("content", statusColor);
-    document.documentElement.style.setProperty("--app-status-bg", statusColor);
+
+    document.documentElement.style.setProperty(
+      "--app-status-bg",
+      statusColor
+    );
   }, [isDarkTheme, scrolled]);
 
   const handleAuthNavigate = (path, scrollToId) => {
-    navigate(path, { state: { scrollToId } });
+    navigate(path, {
+      state: {
+        scrollToId,
+      },
+    });
   };
 
   const toggleTheme = () => {
@@ -111,16 +120,23 @@ const Navbar = ({
 
   return (
     <header
-      className={`${styles.navbarShell} ${scrolled ? styles.scrolled : ""
-        }`}
+      className={`${styles.navbarShell} ${
+        scrolled ? styles.scrolled : ""
+      }`}
     >
-      <nav className={styles.navbar} aria-label="Główna nawigacja Showly">
+      <nav
+        className={styles.navbar}
+        aria-label="Główna nawigacja Showly"
+      >
         <Link
           to="/"
           className={styles.logoWrap}
           aria-label="Przejdź na stronę główną Showly"
         >
-          <span className={styles.logoMark} aria-hidden="true">
+          <span
+            className={styles.logoMark}
+            aria-hidden="true"
+          >
             <img
               src="images/other/logo-showly.png"
               alt=""
@@ -128,12 +144,20 @@ const Navbar = ({
             />
           </span>
 
-          <span className={styles.logoDivider} aria-hidden="true" />
+          <span
+            className={styles.logoDivider}
+            aria-hidden="true"
+          />
 
           <span className={styles.logoGroup}>
             <span className={styles.logoLine}>
-              <span className={styles.logoText}>Showly.me</span>
-              <span className={styles.beta}>Beta</span>
+              <span className={styles.logoText}>
+                Showly.me
+              </span>
+
+              <span className={styles.beta}>
+                Beta
+              </span>
             </span>
 
             <span className={styles.logoSub}>
@@ -142,7 +166,10 @@ const Navbar = ({
           </span>
         </Link>
 
-        <div className={styles.navStatement} aria-hidden="true">
+        <div
+          className={styles.navStatement}
+          aria-hidden="true"
+        >
           <span>Znajdź</span>
           <span>Porównaj</span>
           <span>Skontaktuj się</span>
@@ -153,17 +180,31 @@ const Navbar = ({
             type="button"
             className={styles.themeToggle}
             onClick={toggleTheme}
-            aria-label={isDarkTheme ? "Włącz jasny motyw" : "Włącz ciemny motyw"}
+            aria-label={
+              isDarkTheme
+                ? "Włącz jasny motyw"
+                : "Włącz ciemny motyw"
+            }
             aria-pressed={isDarkTheme}
-            title={isDarkTheme ? "Jasny motyw" : "Ciemny motyw"}
+            title={
+              isDarkTheme
+                ? "Jasny motyw"
+                : "Ciemny motyw"
+            }
           >
-            <span className={styles.themeIcon} aria-hidden="true">
+            <span
+              className={styles.themeIcon}
+              aria-hidden="true"
+            >
               {isDarkTheme ? <FiSun /> : <FiMoon />}
             </span>
 
             <span className={styles.themeCopy}>
               <small>Motyw</small>
-              <strong>{isDarkTheme ? "Jasny" : "Ciemny"}</strong>
+
+              <strong>
+                {isDarkTheme ? "Jasny" : "Ciemny"}
+              </strong>
             </span>
           </button>
 
@@ -184,7 +225,9 @@ const Navbar = ({
                 refreshTrigger={refreshTrigger}
                 unreadCount={unreadCount}
                 setUnreadCount={setUnreadCount}
-                pendingReservationsCount={pendingReservationsCount}
+                pendingReservationsCount={
+                  pendingReservationsCount
+                }
                 setAlert={setAlert}
               />
             </div>
@@ -193,9 +236,17 @@ const Navbar = ({
               <button
                 type="button"
                 className={styles.loginPrompt}
-                onClick={() => handleAuthNavigate("/login", "loginBox")}
+                onClick={() =>
+                  handleAuthNavigate(
+                    "/login",
+                    "loginBox"
+                  )
+                }
+                aria-label="Zaloguj się"
+                title="Zaloguj się"
               >
                 <FiUser aria-hidden="true" />
+
                 <span>Zaloguj</span>
               </button>
 
@@ -203,11 +254,18 @@ const Navbar = ({
                 type="button"
                 className={styles.registerPrompt}
                 onClick={() =>
-                  handleAuthNavigate("/register", "registerBox")
+                  handleAuthNavigate(
+                    "/register",
+                    "registerBox"
+                  )
                 }
+                aria-label="Załóż konto"
+                title="Załóż konto"
               >
                 <FiUserPlus aria-hidden="true" />
+
                 <span>Załóż konto</span>
+
                 <FiArrowUpRight
                   className={styles.registerArrow}
                   aria-hidden="true"
