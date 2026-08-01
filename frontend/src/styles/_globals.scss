@@ -54,8 +54,12 @@ html {
 body {
   overflow-x: hidden;
   -webkit-text-size-adjust: 100%;
+
   background: var(--app-bg);
   color: var(--app-text);
+
+  font-family: $font-body;
+
   transition:
     background 0.22s ease,
     color 0.22s ease;
@@ -63,14 +67,20 @@ body {
 
 body::before {
   content: "";
+
   position: fixed;
-  left: 0;
-  right: 0;
   top: 0;
+  right: 0;
+  left: 0;
+
   height: env(safe-area-inset-top, 0px);
+
   z-index: 9998;
+
   pointer-events: none;
+
   background: var(--app-status-bg);
+
   transition: background 0.22s ease;
 }
 
@@ -92,23 +102,36 @@ button,
   font-family: $font-accent;
 }
 
-/* --- Hairline fix pod stopką (nie zmienia wyglądu reszty) --- */
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+/* Hairline fix pod stopką */
 footer {
   position: relative;
+
   transform: translateZ(0);
   backface-visibility: hidden;
 }
 
 footer::after {
   content: "";
+
   position: fixed;
-  left: 0;
   right: 0;
   bottom: 0;
+  left: 0;
+
+  width: 100%;
   height: 2px;
-  background: #0e0f13;
-  pointer-events: none;
+
   z-index: 1;
+
+  pointer-events: none;
+
+  background: #0e0f13;
 }
 
 /* Na ekranach o gęstych pikselach 1px wystarczy */
