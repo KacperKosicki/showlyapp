@@ -1,49 +1,50 @@
 // src/App.js
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from "react-router-dom";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { lazy, Suspense, useState, useEffect, useMemo, useCallback } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
-import { initForegroundPushListener } from "./services/pushNotifications";
 
+// Elementy potrzebne od razu na stronie głównej pozostają w głównym bundle.
 import Navbar from "./components/Navbar/Navbar";
 import Hero from "./components/Hero/Hero";
 import UserCardList from "./components/UserCardList/UserCardList";
 import WhyUs from "./components/WhyUs/WhyUs";
 import AllUsersList from "./components/AllUsersList/AllUsersList";
 import Footer from "./components/Footer/Footer";
-import Register from "./components/Register/Register";
-import Login from "./components/Login/Login";
-import VerifySuccess from "./components/VerifySuccess/VerifySuccess";
 import AboutApp from "./components/AboutApp/AboutApp";
-import CreateProfile from "./components/CreateProfile/CreateProfile";
-import YourProfile from "./components/YourProfile/YourProfile";
-import PublicProfile from "./components/PublicProfile/PublicProfile";
-import MessageForm from "./components/MessageForm/MessageForm";
-import Notifications from "./components/Notifications/Notifications";
-import ThreadView from "./components/ThreadView/ThreadView";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
-import BookingForm from "./components/BookingForm/BookingForm";
-import ReservationList from "./components/ReservationList/ReservationList";
-import AccountSettings from "./components/AccountSettings/AccountSettings";
-import Favorites from "./components/Favorites/Favorites";
-import BillingSuccess from "./components/BillingSuccess/BillingSuccess";
-import BillingCancel from "./components/BillingCancel/BillingCancel";
-import SearchResults from "./components/SearchResults/SearchResults";
 import PartnersShowcase from "./components/PartnersShowcase/PartnersShowcase";
 import PromotedProfiles from "./components/PromotedProfiles/PromotedProfiles";
 import HowShowlyWorks from "./components/HowShowlyWorks/HowShowlyWorks";
 import DiscoverShowly from "./components/DiscoverShowly/DiscoverShowly";
 import AlertBox from "./components/AlertBox/AlertBox";
-import Contact from "./components/Contact/Contact";
-import Regulations from "./components/Regulations/Regulations";
 import CookieBanner from "./components/CookieBanner/CookieBanner";
-import CookiesPolicy from "./components/CookiesPolicy/CookiesPolicy";
-import ShowlyJourney from "./components/ShowlyJourney/ShowlyJourney";
-import ProfilesHub from "./components/ProfilesHub/ProfilesHub";
 import AppLoader from "./components/AppLoader/AppLoader";
-
-import AdminPanel from "./components/AdminPanel/AdminPanel";
 import AdminRoute from "./components/auth/AdminRoute";
+
+// Widoki tras pobieramy dopiero wtedy, gdy użytkownik faktycznie na nie wejdzie.
+const Register = lazy(() => import("./components/Register/Register"));
+const Login = lazy(() => import("./components/Login/Login"));
+const VerifySuccess = lazy(() => import("./components/VerifySuccess/VerifySuccess"));
+const CreateProfile = lazy(() => import("./components/CreateProfile/CreateProfile"));
+const YourProfile = lazy(() => import("./components/YourProfile/YourProfile"));
+const PublicProfile = lazy(() => import("./components/PublicProfile/PublicProfile"));
+const MessageForm = lazy(() => import("./components/MessageForm/MessageForm"));
+const Notifications = lazy(() => import("./components/Notifications/Notifications"));
+const ThreadView = lazy(() => import("./components/ThreadView/ThreadView"));
+const BookingForm = lazy(() => import("./components/BookingForm/BookingForm"));
+const ReservationList = lazy(() => import("./components/ReservationList/ReservationList"));
+const AccountSettings = lazy(() => import("./components/AccountSettings/AccountSettings"));
+const Favorites = lazy(() => import("./components/Favorites/Favorites"));
+const BillingSuccess = lazy(() => import("./components/BillingSuccess/BillingSuccess"));
+const BillingCancel = lazy(() => import("./components/BillingCancel/BillingCancel"));
+const SearchResults = lazy(() => import("./components/SearchResults/SearchResults"));
+const Contact = lazy(() => import("./components/Contact/Contact"));
+const Regulations = lazy(() => import("./components/Regulations/Regulations"));
+const CookiesPolicy = lazy(() => import("./components/CookiesPolicy/CookiesPolicy"));
+const ShowlyJourney = lazy(() => import("./components/ShowlyJourney/ShowlyJourney"));
+const ProfilesHub = lazy(() => import("./components/ProfilesHub/ProfilesHub"));
+const AdminPanel = lazy(() => import("./components/AdminPanel/AdminPanel"));
 
 const API = process.env.REACT_APP_API_URL;
 
@@ -51,6 +52,28 @@ function LegacyProfileRedirect() {
   const { slug } = useParams();
 
   return <Navigate to={`/${slug || ""}`} replace />;
+}
+
+function AuthRoute({ user, loading, children }) {
+  if (loading) return <AppLoader />;
+
+  return user ? children : <Navigate to="/login" replace />;
+}
+
+function GuestOnlyRoute({ user, loading, isAuthFlow, children }) {
+  if (loading) return <AppLoader />;
+
+  return user && !isAuthFlow ? <Navigate to="/" replace /> : children;
+}
+
+function AdminAccessRoute({ user, role, loading, children }) {
+  if (loading) return <AppLoader />;
+
+  return (
+    <AdminRoute user={user} role={role}>
+      {children}
+    </AdminRoute>
+  );
 }
 
 function App() {
@@ -141,7 +164,41 @@ function App() {
   }, [safeUser?.uid, token, refreshTrigger, authFetch]);
 
   useEffect(() => {
-    initForegroundPushListener();
+    let cancelled = false;
+    let idleId = null;
+    let timeoutId = null;
+
+    const startPushListener = async () => {
+      try {
+        const { initForegroundPushListener } = await import(
+          "./services/pushNotifications"
+        );
+
+        if (!cancelled) {
+          initForegroundPushListener();
+        }
+      } catch (err) {
+        console.error("❌ Błąd uruchamiania powiadomień push:", err);
+      }
+    };
+
+    if ("requestIdleCallback" in window) {
+      idleId = window.requestIdleCallback(startPushListener, { timeout: 3000 });
+    } else {
+      timeoutId = window.setTimeout(startPushListener, 1200);
+    }
+
+    return () => {
+      cancelled = true;
+
+      if (idleId !== null && "cancelIdleCallback" in window) {
+        window.cancelIdleCallback(idleId);
+      }
+
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   const isAuthFlow = sessionStorage.getItem("authFlow") === "1";
@@ -305,10 +362,6 @@ function App() {
     return () => controller.abort();
   }, [safeUser?.uid, token, refreshTrigger, authFetch]);
 
-  if (!isAuthFlow && (loadingUser || loadingToken || loadingRole)) {
-    return <AppLoader />;
-  }
-
   const heroProps = {
     user: safeUser,
     loadingUser,
@@ -354,9 +407,10 @@ function App() {
         />
       )}
 
-      <Routes>
-        <Route
-          path="/"
+      <Suspense fallback={<AppLoader />}>
+        <Routes>
+          <Route
+            path="/"
           element={
             <>
               <Hero {...heroProps} />
@@ -377,33 +431,37 @@ function App() {
           }
         />
 
-        <Route
-          path="/login"
-          element={
-            safeUser && !isAuthFlow ? (
-              <Navigate to="/" replace />
-            ) : (
-              <Login setUser={setUser} setRefreshTrigger={setRefreshTrigger} />
-            )
-          }
-        />
-
-        <Route
-          path="/register"
-          element={
-            safeUser && !isAuthFlow ? (
-              <Navigate to="/" replace />
-            ) : (
-              <Register
+          <Route
+            path="/login"
+            element={
+              <GuestOnlyRoute
                 user={safeUser}
-                setUser={setUser}
-                setRefreshTrigger={setRefreshTrigger}
-              />
-            )
-          }
-        />
+                loading={loadingUser || loadingToken}
+                isAuthFlow={isAuthFlow}
+              >
+                <Login setUser={setUser} setRefreshTrigger={setRefreshTrigger} />
+              </GuestOnlyRoute>
+            }
+          />
 
-        <Route path="/verify-success" element={<VerifySuccess />} />
+          <Route
+            path="/register"
+            element={
+              <GuestOnlyRoute
+                user={safeUser}
+                loading={loadingUser || loadingToken}
+                isAuthFlow={isAuthFlow}
+              >
+                <Register
+                  user={safeUser}
+                  setUser={setUser}
+                  setRefreshTrigger={setRefreshTrigger}
+                />
+              </GuestOnlyRoute>
+            }
+          />
+
+          <Route path="/verify-success" element={<VerifySuccess />} />
 
         <Route
           path="/szukaj"
@@ -438,18 +496,22 @@ function App() {
           }
         />
 
-        <Route
-          path="/admin"
-          element={
-            <AdminRoute user={safeUser} role={userRole}>
-              <>
-                <Hero {...heroProps} />
-                <AdminPanel />
-                <Footer {...footerProps} />
-              </>
-            </AdminRoute>
-          }
-        />
+          <Route
+            path="/admin"
+            element={
+              <AdminAccessRoute
+                user={safeUser}
+                role={userRole}
+                loading={loadingUser || loadingToken || loadingRole}
+              >
+                <>
+                  <Hero {...heroProps} />
+                  <AdminPanel />
+                  <Footer {...footerProps} />
+                </>
+              </AdminAccessRoute>
+            }
+          />
 
         <Route
           path="/stworz-profil"
@@ -490,117 +552,103 @@ function App() {
           element={<LegacyProfileRedirect />}
         />
 
-        <Route
-          path="/wiadomosc/:recipientId"
-          element={
-            safeUser ? (
-              <>
-                <Hero {...heroProps} />
-                <MessageForm user={safeUser} />
-                <Footer {...footerProps} />
-              </>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+          <Route
+            path="/wiadomosc/:recipientId"
+            element={
+              <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
+                <>
+                  <Hero {...heroProps} />
+                  <MessageForm user={safeUser} />
+                  <Footer {...footerProps} />
+                </>
+              </AuthRoute>
+            }
+          />
 
-        <Route
-          path="/powiadomienia"
-          element={
-            safeUser ? (
-              <>
-                <Hero {...heroProps} />
-                <Notifications user={safeUser} setUnreadCount={setUnreadCount} />
-                <Footer {...footerProps} />
-              </>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+          <Route
+            path="/powiadomienia"
+            element={
+              <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
+                <>
+                  <Hero {...heroProps} />
+                  <Notifications user={safeUser} setUnreadCount={setUnreadCount} />
+                  <Footer {...footerProps} />
+                </>
+              </AuthRoute>
+            }
+          />
 
-        <Route
-          path="/ulubione"
-          element={
-            safeUser ? (
-              <>
-                <Hero {...heroProps} />
-                <Favorites currentUser={safeUser} />
-                <Footer {...footerProps} />
-              </>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+          <Route
+            path="/ulubione"
+            element={
+              <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
+                <>
+                  <Hero {...heroProps} />
+                  <Favorites currentUser={safeUser} />
+                  <Footer {...footerProps} />
+                </>
+              </AuthRoute>
+            }
+          />
 
-        <Route
-          path="/konwersacja/:threadId"
-          element={
-            safeUser ? (
-              <>
-                <Hero {...heroProps} />
-                <ThreadView
-                  user={safeUser}
-                  setUnreadCount={setUnreadCount}
-                  triggerRefresh={triggerRefresh}
-                />
-                <Footer {...footerProps} />
-              </>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+          <Route
+            path="/konwersacja/:threadId"
+            element={
+              <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
+                <>
+                  <Hero {...heroProps} />
+                  <ThreadView
+                    user={safeUser}
+                    setUnreadCount={setUnreadCount}
+                    triggerRefresh={triggerRefresh}
+                  />
+                  <Footer {...footerProps} />
+                </>
+              </AuthRoute>
+            }
+          />
 
-        <Route
-          path="/rezerwacja/:slug"
-          element={
-            safeUser ? (
-              <>
-                <Hero {...heroProps} />
-                <BookingForm user={safeUser} />
-                <Footer {...footerProps} />
-              </>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+          <Route
+            path="/rezerwacja/:slug"
+            element={
+              <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
+                <>
+                  <Hero {...heroProps} />
+                  <BookingForm user={safeUser} />
+                  <Footer {...footerProps} />
+                </>
+              </AuthRoute>
+            }
+          />
 
-        <Route
-          path="/konto"
-          element={
-            safeUser ? (
-              <>
-                <Hero {...heroProps} />
-                <AccountSettings />
-                <Footer {...footerProps} />
-              </>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+          <Route
+            path="/konto"
+            element={
+              <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
+                <>
+                  <Hero {...heroProps} />
+                  <AccountSettings />
+                  <Footer {...footerProps} />
+                </>
+              </AuthRoute>
+            }
+          />
 
-        <Route
-          path="/rezerwacje"
-          element={
-            safeUser ? (
-              <>
-                <Hero {...heroProps} />
-                <ReservationList
-                  user={safeUser}
-                  resetPendingReservationsCount={resetPendingReservationsCount}
-                />
-                <Footer {...footerProps} />
-              </>
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+          <Route
+            path="/rezerwacje"
+            element={
+              <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
+                <>
+                  <Hero {...heroProps} />
+                  <ReservationList
+                    user={safeUser}
+                    resetPendingReservationsCount={resetPendingReservationsCount}
+                  />
+                  <Footer {...footerProps} />
+                </>
+              </AuthRoute>
+            }
+          />
 
         <Route
           path="/kontakt"
@@ -667,7 +715,8 @@ function App() {
             </>
           }
         />
-      </Routes>
+        </Routes>
+      </Suspense>
     </Router>
   );
 }
