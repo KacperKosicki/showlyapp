@@ -1,8 +1,6 @@
-// src/App.js
+// src/App.jsx
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from "react-router-dom";
 import { lazy, Suspense, useState, useEffect, useMemo, useCallback } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "./firebase";
 
 // Elementy potrzebne od razu na stronie głównej pozostają w głównym bundle.
 import Navbar from "./components/Navbar/Navbar";
@@ -164,8 +162,11 @@ function App() {
   }, [safeUser?.uid, token, refreshTrigger, authFetch]);
 
   useEffect(() => {
+    if (!safeUser?.uid || !token) {
+      return undefined;
+    }
+
     let cancelled = false;
-    let idleId = null;
     let timeoutId = null;
 
     const startPushListener = async () => {
@@ -182,64 +183,172 @@ function App() {
       }
     };
 
-    if ("requestIdleCallback" in window) {
-      idleId = window.requestIdleCallback(startPushListener, { timeout: 3000 });
-    } else {
-      timeoutId = window.setTimeout(startPushListener, 1200);
-    }
+    timeoutId = window.setTimeout(startPushListener, 1000);
 
     return () => {
       cancelled = true;
-
-      if (idleId !== null && "cancelIdleCallback" in window) {
-        window.cancelIdleCallback(idleId);
-      }
 
       if (timeoutId !== null) {
         window.clearTimeout(timeoutId);
       }
     };
-  }, []);
+  }, [safeUser?.uid, token]);
 
   const isAuthFlow = sessionStorage.getItem("authFlow") === "1";
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let unsubscribe = null;
+    let cancelled = false;
+    let started = false;
+    let timeoutId = null;
+
+    const immediateAuthPaths = [
+      "/login",
+      "/register",
+      "/verify-success",
+      "/admin",
+      "/stworz-profil",
+      "/profil",
+      "/wiadomosc",
+      "/powiadomienia",
+      "/ulubione",
+      "/konwersacja",
+      "/rezerwacja",
+      "/konto",
+      "/rezerwacje",
+      "/billing",
+    ];
+
+    const currentPath = window.location.pathname;
+
+    const needsAuthImmediately = immediateAuthPaths.some(
+      (path) =>
+        currentPath === path ||
+        currentPath.startsWith(`${path}/`)
+    );
+
+    const removeStartListeners = () => {
+      window.removeEventListener("pointerdown", startFirebaseOnInteraction);
+      window.removeEventListener("keydown", startFirebaseOnInteraction);
+      window.removeEventListener("touchstart", startFirebaseOnInteraction);
+
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+
+    const initializeFirebaseAuth = async () => {
+      if (started || cancelled) return;
+
+      started = true;
+      removeStartListeners();
+
       try {
-        setLoadingUser(true);
-        setLoadingToken(true);
-        setLoadingRole(true);
+        const [{ onAuthStateChanged }, { auth }] = await Promise.all([
+          import("firebase/auth"),
+          import("./firebase"),
+        ]);
 
-        if (firebaseUser) {
-          const safe = {
-            email: firebaseUser.email,
-            uid: firebaseUser.uid,
-          };
+        if (cancelled) return;
 
-          setUser(safe);
+        unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          try {
+            setLoadingUser(true);
+            setLoadingToken(true);
+            setLoadingRole(true);
 
-          const idToken = await firebaseUser.getIdToken();
-          setToken(idToken);
-        } else {
+            if (firebaseUser) {
+              const safe = {
+                email: firebaseUser.email || "",
+                uid: firebaseUser.uid,
+              };
+
+              setUser(safe);
+
+              const idToken = await firebaseUser.getIdToken();
+
+              if (!cancelled) {
+                setToken(idToken);
+              }
+            } else {
+              setUser(null);
+              setToken(null);
+              setUserRole("user");
+              setLoadingRole(false);
+            }
+          } catch (error) {
+            console.error("❌ onAuthStateChanged error:", error);
+
+            if (!cancelled) {
+              setUser(null);
+              setToken(null);
+              setUserRole("user");
+              setLoadingRole(false);
+            }
+          } finally {
+            if (!cancelled) {
+              setLoadingUser(false);
+              setLoadingToken(false);
+            }
+          }
+        });
+      } catch (error) {
+        console.error("❌ Błąd ładowania Firebase Auth:", error);
+
+        if (!cancelled) {
           setUser(null);
           setToken(null);
           setUserRole("user");
+
+          setLoadingUser(false);
+          setLoadingToken(false);
           setLoadingRole(false);
         }
-      } catch (e) {
-        console.error("❌ onAuthStateChanged error:", e);
-
-        setUser(null);
-        setToken(null);
-        setUserRole("user");
-        setLoadingRole(false);
-      } finally {
-        setLoadingUser(false);
-        setLoadingToken(false);
       }
-    });
+    };
 
-    return () => unsubscribe();
+    function startFirebaseOnInteraction() {
+      initializeFirebaseAuth();
+    }
+
+    if (needsAuthImmediately) {
+      initializeFirebaseAuth();
+    } else {
+      // Na publicznej stronie Firebase uruchomi się:
+      // 1. po pierwszej interakcji użytkownika
+      // 2. albo w wolnej chwili, maksymalnie po 5 sekundach
+      window.addEventListener(
+        "pointerdown",
+        startFirebaseOnInteraction,
+        { once: true }
+      );
+
+      window.addEventListener(
+        "keydown",
+        startFirebaseOnInteraction,
+        { once: true }
+      );
+
+      window.addEventListener(
+        "touchstart",
+        startFirebaseOnInteraction,
+        { once: true, passive: true }
+      );
+
+      timeoutId = window.setTimeout(
+        initializeFirebaseAuth,
+        5000
+      );
+    }
+
+    return () => {
+      cancelled = true;
+      removeStartListeners();
+
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -411,25 +520,25 @@ function App() {
         <Routes>
           <Route
             path="/"
-          element={
-            <>
-              <Hero {...heroProps} />
-              <AboutApp
-                user={safeUser}
-                hasProfile={hasProfile}
-                loadingProfileStatus={loadingProfileStatus}
-              />
-              <PartnersShowcase currentUser={safeUser} setAlert={setAlert} />
-              <HowShowlyWorks />
-              <PromotedProfiles currentUser={safeUser} setAlert={setAlert} />
-              <DiscoverShowly />
-              <UserCardList currentUser={safeUser} setAlert={setAlert} />
-              <WhyUs />
-              <AllUsersList currentUser={safeUser} setAlert={setAlert} />
-              <Footer {...footerProps} />
-            </>
-          }
-        />
+            element={
+              <>
+                <Hero {...heroProps} />
+                <AboutApp
+                  user={safeUser}
+                  hasProfile={hasProfile}
+                  loadingProfileStatus={loadingProfileStatus}
+                />
+                <PartnersShowcase currentUser={safeUser} setAlert={setAlert} />
+                <HowShowlyWorks />
+                <PromotedProfiles currentUser={safeUser} setAlert={setAlert} />
+                <DiscoverShowly />
+                <UserCardList currentUser={safeUser} setAlert={setAlert} />
+                <WhyUs />
+                <AllUsersList currentUser={safeUser} setAlert={setAlert} />
+                <Footer {...footerProps} />
+              </>
+            }
+          />
 
           <Route
             path="/login"
@@ -463,38 +572,38 @@ function App() {
 
           <Route path="/verify-success" element={<VerifySuccess />} />
 
-        <Route
-          path="/szukaj"
-          element={
-            <>
-              <Hero {...heroProps} />
-              <SearchResults currentUser={safeUser} />
-              <Footer {...footerProps} />
-            </>
-          }
-        />
+          <Route
+            path="/szukaj"
+            element={
+              <>
+                <Hero {...heroProps} />
+                <SearchResults currentUser={safeUser} />
+                <Footer {...footerProps} />
+              </>
+            }
+          />
 
-        <Route
-          path="/billing/success"
-          element={
-            <>
-              <Hero {...heroProps} />
-              <BillingSuccess triggerRefresh={triggerRefresh} />
-              <Footer {...footerProps} />
-            </>
-          }
-        />
+          <Route
+            path="/billing/success"
+            element={
+              <>
+                <Hero {...heroProps} />
+                <BillingSuccess triggerRefresh={triggerRefresh} />
+                <Footer {...footerProps} />
+              </>
+            }
+          />
 
-        <Route
-          path="/billing/cancel"
-          element={
-            <>
-              <Hero {...heroProps} />
-              <BillingCancel triggerRefresh={triggerRefresh} />
-              <Footer {...footerProps} />
-            </>
-          }
-        />
+          <Route
+            path="/billing/cancel"
+            element={
+              <>
+                <Hero {...heroProps} />
+                <BillingCancel triggerRefresh={triggerRefresh} />
+                <Footer {...footerProps} />
+              </>
+            }
+          />
 
           <Route
             path="/admin"
@@ -513,44 +622,44 @@ function App() {
             }
           />
 
-        <Route
-          path="/stworz-profil"
-          element={
-            <>
-              <Hero {...heroProps} />
-              {safeUser && loadingProfileStatus ? (
-                <p style={{ padding: "2rem", textAlign: "center" }}>
-                  Sprawdzanie profilu...
-                </p>
-              ) : safeUser && hasProfile ? (
-                <Navigate
-                  to="/profil"
-                  replace
-                  state={{ scrollToId: "profileWrapper" }}
-                />
-              ) : (
-                <CreateProfile user={safeUser} setRefreshTrigger={setRefreshTrigger} />
-              )}
-              <Footer {...footerProps} />
-            </>
-          }
-        />
+          <Route
+            path="/stworz-profil"
+            element={
+              <>
+                <Hero {...heroProps} />
+                {safeUser && loadingProfileStatus ? (
+                  <p style={{ padding: "2rem", textAlign: "center" }}>
+                    Sprawdzanie profilu...
+                  </p>
+                ) : safeUser && hasProfile ? (
+                  <Navigate
+                    to="/profil"
+                    replace
+                    state={{ scrollToId: "profileWrapper" }}
+                  />
+                ) : (
+                  <CreateProfile user={safeUser} setRefreshTrigger={setRefreshTrigger} />
+                )}
+                <Footer {...footerProps} />
+              </>
+            }
+          />
 
-        <Route
-          path="/profil"
-          element={
-            <>
-              <Hero {...heroProps} />
-              <YourProfile user={safeUser} setRefreshTrigger={setRefreshTrigger} />
-              <Footer {...footerProps} />
-            </>
-          }
-        />
+          <Route
+            path="/profil"
+            element={
+              <>
+                <Hero {...heroProps} />
+                <YourProfile user={safeUser} setRefreshTrigger={setRefreshTrigger} />
+                <Footer {...footerProps} />
+              </>
+            }
+          />
 
-        <Route
-          path="/profil/:slug"
-          element={<LegacyProfileRedirect />}
-        />
+          <Route
+            path="/profil/:slug"
+            element={<LegacyProfileRedirect />}
+          />
 
           <Route
             path="/wiadomosc/:recipientId"
@@ -650,71 +759,71 @@ function App() {
             }
           />
 
-        <Route
-          path="/kontakt"
-          element={
-            <>
-              <Hero {...heroProps} />
-              <Contact />
-              <Footer {...footerProps} />
-            </>
-          }
-        />
+          <Route
+            path="/kontakt"
+            element={
+              <>
+                <Hero {...heroProps} />
+                <Contact />
+                <Footer {...footerProps} />
+              </>
+            }
+          />
 
-        <Route
-          path="/profile"
-          element={
-            <>
-              <Hero {...heroProps} />
-              <ProfilesHub currentUser={safeUser} setAlert={setAlert} />
-              <Footer {...footerProps} />
-            </>
-          }
-        />
+          <Route
+            path="/profile"
+            element={
+              <>
+                <Hero {...heroProps} />
+                <ProfilesHub currentUser={safeUser} setAlert={setAlert} />
+                <Footer {...footerProps} />
+              </>
+            }
+          />
 
-        <Route
-          path="/jak-to-dziala"
-          element={
-            <>
-              <Hero {...heroProps} />
-              <ShowlyJourney />
-              <Footer {...footerProps} />
-            </>
-          }
-        />
+          <Route
+            path="/jak-to-dziala"
+            element={
+              <>
+                <Hero {...heroProps} />
+                <ShowlyJourney />
+                <Footer {...footerProps} />
+              </>
+            }
+          />
 
-        <Route
-          path="/regulamin"
-          element={
-            <>
-              <Hero {...heroProps} />
-              <Regulations />
-              <Footer {...footerProps} />
-            </>
-          }
-        />
+          <Route
+            path="/regulamin"
+            element={
+              <>
+                <Hero {...heroProps} />
+                <Regulations />
+                <Footer {...footerProps} />
+              </>
+            }
+          />
 
-        <Route
-          path="/polityka-cookies"
-          element={
-            <>
-              <Hero {...heroProps} />
-              <CookiesPolicy />
-              <Footer {...footerProps} />
-            </>
-          }
-        />
+          <Route
+            path="/polityka-cookies"
+            element={
+              <>
+                <Hero {...heroProps} />
+                <CookiesPolicy />
+                <Footer {...footerProps} />
+              </>
+            }
+          />
 
-        <Route
-          path="/:slug"
-          element={
-            <>
-              <Hero {...heroProps} />
-              <PublicProfile />
-              <Footer {...footerProps} />
-            </>
-          }
-        />
+          <Route
+            path="/:slug"
+            element={
+              <>
+                <Hero {...heroProps} />
+                <PublicProfile />
+                <Footer {...footerProps} />
+              </>
+            }
+          />
         </Routes>
       </Suspense>
     </Router>
