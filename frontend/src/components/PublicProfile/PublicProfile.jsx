@@ -1034,14 +1034,13 @@ export default function PublicProfile() {
         <span className={styles.decorLineB} />
       </div>
 
-      <div
-        className={cn(
-          styles.shell,
-          partner.isPartner && styles.partnerShell,
-          isOwner && styles.ownerShell
-        )}
-        id="profileWrapper"
-      >
+<div
+  className={cn(
+    styles.shell,
+    isOwner && styles.ownerShell
+  )}
+  id="profileWrapper"
+>
         {alert && (
           <div className={styles.alertWrap}>
             <AlertBox
@@ -1052,15 +1051,14 @@ export default function PublicProfile() {
           </div>
         )}
 
-        <header
-          className={cn(
-            styles.profileHero,
-            styles.reveal,
-            styles.fromTop,
-            showBanner && styles.profileHeroWithBanner,
-            partner.isPartner && styles.profileHeroPartner
-          )}
-        >
+<header
+  className={cn(
+    styles.profileHero,
+    styles.reveal,
+    styles.fromTop,
+    showBanner && styles.profileHeroWithBanner
+  )}
+>
           <div className={styles.heroMedia} aria-hidden="true">
             <span className={styles.heroBackdrop} />
             <span className={styles.heroShade} />

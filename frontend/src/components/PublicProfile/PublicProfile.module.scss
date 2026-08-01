@@ -134,16 +134,6 @@ $ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
   margin-bottom: 1rem;
 }
 
-.partnerShell {
-
-  .profileHero,
-  .sectionBlock,
-  .contactCard,
-  .ratingCard {
-    border-color: color-mix(in srgb, var(--pp-partner) 30%, var(--app-border));
-  }
-}
-
 .ownerShell {
   .heroStatusDot {
     background: var(--pp-primary);
@@ -235,14 +225,6 @@ $ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 5;
     height: 3px;
     background: linear-gradient(90deg, var(--pp-primary), var(--pp-secondary));
-  }
-}
-
-.profileHeroPartner {
-  border-top-color: var(--pp-partner-border);
-
-  &::before {
-    background: linear-gradient(90deg, var(--pp-partner), var(--pp-primary));
   }
 }
 
@@ -1010,19 +992,6 @@ $ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
 
   background: var(--pp-surface-tint);
 
-  transition:
-    background 0.25s ease,
-    border-color 0.25s ease;
-
-  &:hover {
-    border-color: var(--pp-primary-border);
-
-    background:
-      color-mix(in srgb,
-        var(--app-surface) 88%,
-        var(--pp-primary-soft-strong));
-  }
-
   p {
     margin: 1rem 0 0;
 
@@ -1741,23 +1710,48 @@ $ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
 
 .contactCard,
 .ratingCard {
+  position: relative;
+
+  align-self: start;
+
   min-width: 0;
+  min-height: 0;
+  height: auto;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+
   padding: clamp(1.25rem, 2.5vw, 1.8rem);
+
   border-top: 3px solid var(--pp-primary);
   border-right: 1px solid var(--app-border);
   border-bottom: 1px solid var(--app-border);
   border-left: 1px solid var(--app-border);
-  background: var(--app-surface);
-  transition: border-color 0.25s ease, background 0.25s ease;
 
-  &:hover {
-    border-color: var(--pp-primary-border);
-    background: var(--pp-surface-tint);
-  }
+  background: var(--pp-surface-tint);
 }
 
+.pricePanel,
+.contactCard,
 .ratingCard {
-  border-top-color: color-mix(in srgb, #f3b519 75%, var(--pp-primary));
+  transition:
+    background 0.55s $ease-editorial,
+    border-color 0.55s $ease-editorial;
+}
+
+.pricePanel:hover,
+.contactCard:hover,
+.ratingCard:hover {
+  border-top-color: var(--pp-primary);
+  border-right-color: var(--pp-primary-border);
+  border-bottom-color: var(--pp-primary-border);
+  border-left-color: var(--pp-primary-border);
+
+  background:
+    color-mix(in srgb,
+      var(--app-surface) 88%,
+      var(--pp-primary-soft-strong));
 }
 
 .sideHeader {
@@ -1796,7 +1790,9 @@ $ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
   border-top: 1px solid var(--app-border);
   color: inherit;
   text-decoration: none;
-  transition: padding 0.22s ease, color 0.22s ease, background 0.22s ease;
+  transition:
+    padding 0.55s $ease-editorial,
+    color 0.55s $ease-editorial;
 
   &:last-child {
     border-bottom: 1px solid var(--app-border);
@@ -1812,7 +1808,6 @@ $ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
   &:hover {
     padding-right: 0.65rem;
     padding-left: 0.65rem;
-    background: var(--pp-primary-soft);
 
     >svg {
       color: var(--pp-primary);
@@ -1889,10 +1884,9 @@ $ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
   border-bottom: 1px solid var(--app-border);
   color: var(--app-muted);
   text-decoration: none;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: color 0.55s $ease-editorial;
 
   &:hover {
-    background: var(--pp-primary-soft);
     color: var(--pp-primary);
   }
 }
@@ -1958,10 +1952,12 @@ $ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
   width: clamp(1.45rem, 3vw, 2rem);
   height: clamp(1.45rem, 3vw, 2rem);
   cursor: pointer;
-  transition: color 0.18s ease, transform 0.18s ease;
+  transition:
+    color 0.4s $ease-editorial,
+    transform 0.4s $ease-editorial;
 
   &:hover {
-    transform: translateY(-2px) scale(1.05);
+    transform: translateY(-1px) scale(1.03);
   }
 }
 
@@ -2840,18 +2836,35 @@ $ease-editorial: cubic-bezier(0.16, 1, 0.3, 1);
     background: transparent;
   }
 
+  .pricePanel,
+  .contactCard,
+  .ratingCard {
+    border-top-color: var(--pp-primary);
+    border-right-color: var(--app-border);
+    border-bottom-color: var(--app-border);
+    border-left-color: var(--app-border);
+
+    background: var(--pp-surface-tint);
+
+    transition:
+      background 0.55s $ease-editorial,
+      border-color 0.55s $ease-editorial;
+  }
+
+  .pricePanel:hover,
   .contactCard:hover,
   .ratingCard:hover {
-    background: var(--app-surface);
-  }
+    border-right-color: var(--pp-primary-border);
+    border-bottom-color: var(--pp-primary-border);
+    border-left-color: var(--pp-primary-border);
 
-  .pricePanel:hover {
-    background: var(--pp-surface-tint);
-  }
+    // Gruba górna linia nadal ma właściwy kolor theme.
+    border-top-color: var(--pp-primary);
 
-  .galleryItem:hover .galleryImage,
-  .serviceCard:hover .serviceImage {
-    transform: none;
+    background:
+      color-mix(in srgb,
+        var(--app-surface) 88%,
+        var(--pp-primary-soft-strong));
   }
 }
 
