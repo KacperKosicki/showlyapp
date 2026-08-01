@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import styles from "./PublicProfile.module.scss";
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { createPortal } from "react-dom";
 
 import AlertBox from "../AlertBox/AlertBox";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
@@ -224,6 +225,7 @@ export default function PublicProfile() {
   const { slug } = useParams();
   const routerLocation = useLocation();
   const navigate = useNavigate();
+  const pageRef = useRef(null);
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -364,6 +366,36 @@ export default function PublicProfile() {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [fullscreenImage, reportOpen]);
+
+  useEffect(() => {
+    const page = pageRef.current;
+
+    if (!page || loading || !profile) {
+      return undefined;
+    }
+
+    const animatedElements = page.querySelectorAll(`.${styles.reveal}`);
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add(styles.revealVisible);
+          } else {
+            entry.target.classList.remove(styles.revealVisible);
+          }
+        });
+      },
+      {
+        threshold: 0.12,
+        rootMargin: "0px 0px -7% 0px",
+      }
+    );
+
+    animatedElements.forEach((element) => observer.observe(element));
+
+    return () => observer.disconnect();
+  }, [loading, profile, slug]);
 
   const mapUnit = (unit) => {
     switch (unit) {
@@ -994,7 +1026,7 @@ export default function PublicProfile() {
   const priceShortLabel = hasPrice ? `od ${pf} zł` : "brak danych";
 
   return (
-    <div className={styles.page} style={cssVars}>
+    <div ref={pageRef} className={styles.page} style={cssVars}>
       <div className={styles.pageDecor} aria-hidden="true">
         <span className={styles.decorOrbA} />
         <span className={styles.decorOrbB} />
@@ -1023,6 +1055,8 @@ export default function PublicProfile() {
         <header
           className={cn(
             styles.profileHero,
+            styles.reveal,
+            styles.fromTop,
             showBanner && styles.profileHeroWithBanner,
             partner.isPartner && styles.profileHeroPartner
           )}
@@ -1178,7 +1212,11 @@ export default function PublicProfile() {
           </div>
         </header>
 
-        <section className={styles.profileLedger} aria-label="Podsumowanie profilu">
+        <section
+          className={cn(styles.profileLedger, styles.reveal, styles.fromBottom)}
+          style={{ "--reveal-delay": "100ms" }}
+          aria-label="Podsumowanie profilu"
+        >
           <div className={styles.ledgerItem}>
             <span className={styles.ledgerIcon}>
               <FaRegEye aria-hidden="true" />
@@ -1234,7 +1272,7 @@ export default function PublicProfile() {
 
         <main className={styles.contentGrid}>
           <div className={styles.contentMain}>
-            <section className={styles.sectionBlock} id="overview">
+            <section className={cn(styles.sectionBlock, styles.reveal, styles.fromLeft)} id="overview">
               <div className={styles.sectionHeading}>
                 <span className={styles.sectionNumber}>01</span>
 
@@ -1357,7 +1395,7 @@ export default function PublicProfile() {
             </section>
 
             {hasGallery && (
-              <section className={styles.sectionBlock} id="gallery">
+              <section className={cn(styles.sectionBlock, styles.reveal, styles.fromRight)} id="gallery">
                 <div className={styles.sectionHeading}>
                   <span className={styles.sectionNumber}>02</span>
 
@@ -1392,8 +1430,11 @@ export default function PublicProfile() {
                       type="button"
                       className={cn(
                         styles.galleryItem,
+                        styles.reveal,
+                        styles.fromBottom,
                         index === 0 && styles.galleryItemLead
                       )}
+                      style={{ "--reveal-delay": `${Math.min(index, 5) * 70}ms` }}
                       onClick={() => openLightbox(src)}
                       aria-label={`Otwórz zdjęcie ${index + 1}`}
                     >
@@ -1418,7 +1459,7 @@ export default function PublicProfile() {
             )}
 
             {visibleServices.length > 0 && (
-              <section className={styles.sectionBlock} id="services">
+              <section className={cn(styles.sectionBlock, styles.reveal, styles.fromLeft)} id="services">
                 <div className={styles.sectionHeading}>
                   <span className={styles.sectionNumber}>03</span>
 
@@ -1455,8 +1496,11 @@ export default function PublicProfile() {
                         key={service._id || index}
                         className={cn(
                           styles.serviceCard,
+                          styles.reveal,
+                          index % 2 === 0 ? styles.fromLeft : styles.fromRight,
                           service.featured && styles.serviceFeatured
                         )}
+                        style={{ "--reveal-delay": `${Math.min(index, 5) * 80}ms` }}
                       >
                         <span className={styles.serviceNumber}>
                           {String(index + 1).padStart(2, "0")}
@@ -1551,7 +1595,7 @@ export default function PublicProfile() {
               </section>
             )}
 
-            <section className={styles.sectionBlock} id="reviews">
+            <section className={cn(styles.sectionBlock, styles.reveal, styles.fromRight)} id="reviews">
               <div className={styles.sectionHeading}>
                 <span className={styles.sectionNumber}>04</span>
 
@@ -1598,8 +1642,11 @@ export default function PublicProfile() {
                         key={review?._id || index}
                         className={cn(
                           styles.reviewCard,
+                          styles.reveal,
+                          styles.fromBottom,
                           review?.userId === uid && styles.myReview
                         )}
+                        style={{ "--reveal-delay": `${Math.min(index, 5) * 70}ms` }}
                       >
                         <div className={styles.reviewHeader}>
                           <div className={styles.reviewUser}>
@@ -1670,7 +1717,7 @@ export default function PublicProfile() {
           <aside className={styles.contentAside}>
             <div className={styles.stickyRail}>
               {hasInfoBox && (
-                <section className={styles.contactCard} id="contact">
+                <section className={cn(styles.contactCard, styles.reveal, styles.fromRight)} id="contact">
                   <div className={styles.sideHeader}>
                     <span className={styles.sideKicker}>
                       <FaPhoneAlt aria-hidden="true" />
@@ -1756,7 +1803,10 @@ export default function PublicProfile() {
               )}
 
               {!isOwner && (
-                <section className={styles.ratingCard}>
+                <section
+                  className={cn(styles.ratingCard, styles.reveal, styles.fromRight)}
+                  style={{ "--reveal-delay": "120ms" }}
+                >
                   <div className={styles.sideHeader}>
                     <span className={styles.sideKicker}>
                       <FaStar aria-hidden="true" />
@@ -1834,111 +1884,116 @@ export default function PublicProfile() {
         </main>
       </div>
 
-      {fullscreenImage && (
-        <div
-          className={styles.lightbox}
-          onClick={closeLightbox}
-          role="dialog"
-          aria-modal="true"
-        >
-          <button
-            type="button"
-            className={styles.lightboxClose}
+      {fullscreenImage &&
+        createPortal(
+          <div
+            className={styles.lightbox}
             onClick={closeLightbox}
-            aria-label="Zamknij"
+            role="dialog"
+            aria-modal="true"
           >
-            ✕
-          </button>
+            <button
+              type="button"
+              className={styles.lightboxClose}
+              onClick={closeLightbox}
+              aria-label="Zamknij"
+            >
+              ✕
+            </button>
 
-          <img
-            src={fullscreenImage}
-            alt=""
-            className={styles.lightboxImage}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
+            <img
+              src={fullscreenImage}
+              alt=""
+              className={styles.lightboxImage}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>,
+          document.body
+        )}
 
-      {reportOpen && (
-        <div
-          className={styles.modalBackdrop}
-          onClick={() => setReportOpen(false)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className={styles.reportModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <div>
-                <span className={styles.sideKicker}>
-                  <FiFlag aria-hidden="true" />
-                  Zgłoszenie
-                </span>
-                <h3 className={styles.modalTitle}>
-                  {reportType === "profile" ? "Zgłoś profil" : "Zgłoś opinię"}
-                </h3>
+      {reportOpen &&
+        createPortal(
+          <div
+            className={styles.modalBackdrop}
+            style={cssVars}
+            onClick={() => setReportOpen(false)}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className={styles.reportModal} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <div>
+                  <span className={styles.sideKicker}>
+                    <FiFlag aria-hidden="true" />
+                    Zgłoszenie
+                  </span>
+                  <h3 className={styles.modalTitle}>
+                    {reportType === "profile" ? "Zgłoś profil" : "Zgłoś opinię"}
+                  </h3>
+                </div>
+
+                <button
+                  type="button"
+                  className={styles.modalClose}
+                  onClick={() => setReportOpen(false)}
+                  aria-label="Zamknij"
+                >
+                  ✕
+                </button>
               </div>
 
-              <button
-                type="button"
-                className={styles.modalClose}
-                onClick={() => setReportOpen(false)}
-                aria-label="Zamknij"
-              >
-                ✕
-              </button>
-            </div>
+              <div className={styles.formField}>
+                <label htmlFor="report-reason">Powód</label>
+                <select
+                  id="report-reason"
+                  className={styles.select}
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                >
+                  {REPORT_REASONS.map((reason) => (
+                    <option key={reason.v} value={reason.v}>
+                      {reason.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div className={styles.formField}>
-              <label htmlFor="report-reason">Powód</label>
-              <select
-                id="report-reason"
-                className={styles.select}
-                value={reportReason}
-                onChange={(e) => setReportReason(e.target.value)}
-              >
-                {REPORT_REASONS.map((reason) => (
-                  <option key={reason.v} value={reason.v}>
-                    {reason.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+              <div className={styles.formField}>
+                <label htmlFor="report-message">Dodatkowe informacje opcjonalnie</label>
+                <textarea
+                  id="report-message"
+                  className={styles.modalTextarea}
+                  value={reportMsg}
+                  onChange={(e) => setReportMsg(e.target.value.slice(0, 400))}
+                  placeholder="Opisz krótko, dlaczego zgłaszasz..."
+                />
+                <span className={styles.formHint}>{reportMsg.length} / 400</span>
+              </div>
 
-            <div className={styles.formField}>
-              <label htmlFor="report-message">Dodatkowe informacje opcjonalnie</label>
-              <textarea
-                id="report-message"
-                className={styles.modalTextarea}
-                value={reportMsg}
-                onChange={(e) => setReportMsg(e.target.value.slice(0, 400))}
-                placeholder="Opisz krótko, dlaczego zgłaszasz..."
-              />
-              <span className={styles.formHint}>{reportMsg.length} / 400</span>
-            </div>
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  className={styles.modalSecondary}
+                  onClick={() => setReportOpen(false)}
+                  disabled={reportSending}
+                >
+                  Anuluj
+                </button>
 
-            <div className={styles.modalActions}>
-              <button
-                type="button"
-                className={styles.modalSecondary}
-                onClick={() => setReportOpen(false)}
-                disabled={reportSending}
-              >
-                Anuluj
-              </button>
-
-              <LoadingButton
-                type="button"
-                className={styles.modalPrimary}
-                isLoading={reportSending}
-                disabled={reportSending}
-                onClick={submitReport}
-              >
-                Wyślij zgłoszenie
-              </LoadingButton>
+                <LoadingButton
+                  type="button"
+                  className={styles.modalPrimary}
+                  isLoading={reportSending}
+                  disabled={reportSending}
+                  onClick={submitReport}
+                >
+                  Wyślij zgłoszenie
+                </LoadingButton>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
