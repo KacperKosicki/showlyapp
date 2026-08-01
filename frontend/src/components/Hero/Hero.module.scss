@@ -1287,3 +1287,21 @@
     overflow-x: hidden;
   }
 }
+
+@media (max-width: 720px) {
+  .reveal {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    transition: none;
+    transition-delay: 0ms;
+    will-change: auto;
+  }
+
+  .fromTop,
+  .fromBottom,
+  .fromLeft,
+  .fromRight {
+    transform: none;
+  }
+}

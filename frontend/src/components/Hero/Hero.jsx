@@ -117,10 +117,7 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
 
         <div className={styles.layout}>
           <div className={styles.content}>
-            <div
-              className={`${styles.headingRow} ${styles.reveal} ${styles.fromLeft}`}
-              style={{ "--reveal-delay": "70ms" }}
-            >
+            <div className={styles.headingRow}>
               <span className={styles.chapter} aria-hidden="true">
                 01
               </span>
