@@ -3,18 +3,19 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   FiArrowRight,
   FiArrowUpRight,
-  FiCheck,
-  FiLink,
+  FiCamera,
+  FiMapPin,
   FiSearch,
+  FiStar,
 } from "react-icons/fi";
 
 import SearchBar from "../SearchBar/SearchBar";
 import styles from "./Hero.module.scss";
 
-const profilePoints = [
-  "Usługi i cennik",
-  "Galeria i opinie",
-  "Kontakt i rezerwacje",
+const profileAvatars = [
+  { initials: "FO", label: "Fotografia", tone: "violet" },
+  { initials: "DJ", label: "DJ", tone: "orange" },
+  { initials: "BE", label: "Beauty", tone: "green" },
 ];
 
 const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
@@ -56,104 +57,61 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
     }
 
     const animatedElements = section.querySelectorAll(`.${styles.reveal}`);
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add(styles.revealVisible);
+            observer.unobserve(entry.target);
           }
         });
       },
-      {
-        threshold: 0.08,
-        rootMargin: "0px 0px -4% 0px",
-      }
+      { threshold: 0.08 }
     );
 
-    animatedElements.forEach((element) => {
-      observer.observe(element);
-    });
+    animatedElements.forEach((element) => observer.observe(element));
 
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, []);
 
   return (
     <section ref={sectionRef} className={styles.hero} id="hero">
-      <div className={styles.decor} aria-hidden="true">
-        <span className={styles.orbOne} />
-        <span className={styles.orbTwo} />
-        <span className={styles.verticalLine} />
-        <span className={styles.cornerMark} />
+      <div className={styles.background} aria-hidden="true">
+        <span className={styles.bigWord}>SHOWLY</span>
+        <span className={styles.gridDot} />
+        <span className={styles.scribble}>↗</span>
       </div>
 
       <div className={styles.inner}>
-        <header
-          className={`${styles.metaBar} ${styles.reveal} ${styles.fromTop}`}
-        >
-          <span>Showly.me</span>
-
-          <div>
-            <span>Profile usługowe</span>
-            <span>Beta</span>
-          </div>
-        </header>
-
         <div className={styles.layout}>
           <div className={styles.content}>
-            <div className={styles.headingRow}>
-              <span className={styles.chapter} aria-hidden="true">
-                01
-              </span>
-
-              <div className={styles.headingCopy}>
-                <span className={styles.eyebrow}>
-                  Jeden profil. Cała oferta.
-                </span>
-
-                <h1 className={styles.title}>
-                  Pokaż swoją ofertę.
-                  <br />
-                  <span>Daj się znaleźć.</span>
-                </h1>
-              </div>
+            <div
+              className={`${styles.kicker} ${styles.reveal} ${styles.fromTop}`}
+            >
+              <span className={styles.kickerDot} />
+              Profil usługowy, który pracuje za Ciebie
             </div>
 
-            <p
-              className={`${styles.lead} ${styles.reveal} ${styles.fromLeft}`}
-              style={{ "--reveal-delay": "120ms" }}
+            <h1
+              className={`${styles.title} ${styles.reveal} ${styles.fromLeft}`}
+              style={{ "--reveal-delay": "70ms" }}
             >
-              Usługi, zdjęcia, ceny i kontakt w jednym profilu, który możesz
-              łatwo udostępnić klientom.
+              Twoja oferta.
+              <span className={styles.highlight}>Jeden link.</span>
+              Zero chaosu.
+            </h1>
+
+            <p
+              className={`${styles.lead} ${styles.reveal} ${styles.fromBottom}`}
+              style={{ "--reveal-delay": "130ms" }}
+            >
+              Pokaż usługi, ceny, zdjęcia i wolne terminy w profilu, który
+              naprawdę wygląda jak Twoja marka.
             </p>
 
             <div
-              className={`${styles.searchBlock} ${styles.reveal} ${styles.fromBottom}`}
-              style={{ "--reveal-delay": "180ms" }}
-            >
-              <div className={styles.searchIntro}>
-                <div className={styles.searchLabel}>
-                  <FiSearch aria-hidden="true" />
-                  <strong>Znajdź usługę lub profil</strong>
-                </div>
-
-                <small>Wpisz usługę, osobę albo miasto</small>
-              </div>
-
-              <div className={styles.searchField}>
-                <SearchBar variant="hero" />
-              </div>
-
-              <p className={styles.hint}>
-                Na przykład: <b>DJ Poznań</b> lub <b>fryzjer Piła</b>
-              </p>
-            </div>
-
-            <div
               className={`${styles.actions} ${styles.reveal} ${styles.fromBottom}`}
-              style={{ "--reveal-delay": "240ms" }}
+              style={{ "--reveal-delay": "190ms" }}
             >
               {user ? (
                 loadingProfileStatus ? (
@@ -166,7 +124,7 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
                     className={styles.primaryBtn}
                     onClick={() => handleNavigate("/profil", "profileWrapper")}
                   >
-                    <span>Edytuj profil</span>
+                    <span>Edytuj swój profil</span>
                     <FiArrowUpRight aria-hidden="true" />
                   </button>
                 ) : (
@@ -177,7 +135,7 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
                       handleNavigate("/stworz-profil", "scrollToId")
                     }
                   >
-                    <span>Stwórz profil</span>
+                    <span>Stwórz swój profil</span>
                     <FiArrowUpRight aria-hidden="true" />
                   </button>
                 )
@@ -194,67 +152,112 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
 
               <button
                 type="button"
-                className={styles.secondaryBtn}
+                className={styles.textBtn}
                 onClick={() =>
                   handleNavigate("/jak-to-dziala", "showlyJourney")
                 }
               >
-                <span>Jak działa Showly?</span>
+                <span>Zobacz, jak to działa</span>
                 <FiArrowRight aria-hidden="true" />
               </button>
             </div>
 
             <div
-              className={`${styles.trustLine} ${styles.reveal} ${styles.fromBottom}`}
-              style={{ "--reveal-delay": "290ms" }}
+              className={`${styles.searchBlock} ${styles.reveal} ${styles.fromBottom}`}
+              style={{ "--reveal-delay": "250ms" }}
             >
-              <span>
-                <FiCheck aria-hidden="true" />
-                bez własnej strony
-              </span>
+              <div className={styles.searchHeading}>
+                <FiSearch aria-hidden="true" />
+                <div>
+                  <strong>Szukasz konkretnej usługi?</strong>
+                  <span>Wpisz nazwę, branżę albo miasto</span>
+                </div>
+              </div>
 
-              <span>
-                <FiCheck aria-hidden="true" />
-                jeden link do udostępnienia
-              </span>
+              <div className={styles.searchField}>
+                <SearchBar variant="hero" />
+              </div>
             </div>
           </div>
 
           <aside
-            className={`${styles.side} ${styles.reveal} ${styles.fromRight}`}
-            style={{ "--reveal-delay": "150ms" }}
-            aria-label="Najważniejsze elementy profilu Showly"
+            className={`${styles.visual} ${styles.reveal} ${styles.fromRight}`}
+            style={{ "--reveal-delay": "110ms" }}
+            aria-label="Przykładowy profil w Showly"
           >
-            <div className={styles.sideAccent} aria-hidden="true" />
+            <div className={styles.sticker} aria-hidden="true">
+              TWOJE
+              <br />
+              MIEJSCE
+            </div>
 
-            <header className={styles.sideHeader}>
-              <div>
-                <span className={styles.sideEyebrow}>Twój profil w Showly</span>
-                <h2>Wszystko ważne. Bez chaosu.</h2>
+            <article className={styles.profileCard}>
+              <header className={styles.cardTop}>
+                <span className={styles.brandMark}>s.</span>
+                <span className={styles.cardUrl}>showly.me/anna-studio</span>
+                <span className={styles.cardStatus}>online</span>
+              </header>
+
+              <div className={styles.gallery} aria-label="Przykładowa galeria">
+                <div className={styles.galleryMain}>
+                  <FiCamera aria-hidden="true" />
+                  <span>Twoje zdjęcie</span>
+                </div>
+                <div className={styles.gallerySmallOne} />
+                <div className={styles.gallerySmallTwo} />
+
+                <span className={styles.location}>
+                  <FiMapPin aria-hidden="true" />
+                  Poznań
+                </span>
               </div>
 
-              <FiLink aria-hidden="true" />
-            </header>
+              <div className={styles.cardBody}>
+                <div className={styles.profileIntro}>
+                  <div className={styles.mainAvatar}>AN</div>
 
-            <div className={styles.urlBar}>
-              <span>showly.me/</span>
-              <strong>twoja-nazwa</strong>
-              <FiArrowUpRight aria-hidden="true" />
-            </div>
+                  <div className={styles.profileName}>
+                    <span>Fotografia &amp; video</span>
+                    <h2>Anna Nowak Studio</h2>
+                  </div>
 
-            <div className={styles.profileList}>
-              {profilePoints.map((point) => (
-                <div className={styles.profilePoint} key={point}>
-                  <FiCheck aria-hidden="true" />
-                  <strong>{point}</strong>
+                  <div className={styles.rating}>
+                    <FiStar aria-hidden="true" />
+                    <strong>4.9</strong>
+                  </div>
                 </div>
-              ))}
-            </div>
 
-            <p className={styles.sideMessage}>
-              Klient od razu widzi, co robisz i jak może się z Tobą
-              skontaktować.
-            </p>
+                <div className={styles.serviceTags}>
+                  <span>Śluby</span>
+                  <span>Portrety</span>
+                  <span>Reportaż</span>
+                </div>
+
+                <div className={styles.cardAction}>
+                  <span>Zobacz ofertę</span>
+                  <FiArrowUpRight aria-hidden="true" />
+                </div>
+              </div>
+            </article>
+
+            <div className={styles.avatarCard}>
+              <div className={styles.avatarStack} aria-hidden="true">
+                {profileAvatars.map((profile) => (
+                  <span
+                    className={`${styles.miniAvatar} ${styles[profile.tone]}`}
+                    key={profile.initials}
+                    title={profile.label}
+                  >
+                    {profile.initials}
+                  </span>
+                ))}
+              </div>
+
+              <p>
+                <strong>Każda branża.</strong>
+                <span>Jeden dobry format.</span>
+              </p>
+            </div>
           </aside>
         </div>
       </div>

@@ -1,40 +1,31 @@
-import { useState, useEffect, useRef, useMemo } from "react";
-import styles from "./UserDropdown.module.scss";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
-  FiUser,
-  FiSettings,
+  FiArrowUpRight,
   FiBell,
   FiCalendar,
+  FiChevronDown,
   FiHeart,
   FiLogOut,
+  FiSettings,
   FiShield,
-  FiAlertTriangle,
-  FiTag,
-  FiMapPin,
-  FiArrowUpRight,
-  FiChevronDown,
+  FiUser,
 } from "react-icons/fi";
-import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { signOut } from "firebase/auth";
+
 import { auth } from "../../firebase";
-import {
-  enablePushNotifications,
-  disablePushNotifications,
-  getBrowserNotificationState,
-  getCurrentPushToken,
-} from "../../services/pushNotifications";
+import styles from "./UserDropdown.module.scss";
 
 const API = process.env.REACT_APP_API_URL;
 
-const normalizeAvatar = (val = "") => {
-  const v = String(val || "").trim();
-  if (!v) return "";
+const normalizeAvatar = (value = "") => {
+  const avatar = String(value || "").trim();
 
-  if (/^https?:\/\//i.test(v)) return v;
-
-  if (v.startsWith("/uploads/")) return `${API}${v}`;
-  if (v.startsWith("uploads/")) return `${API}/${v}`;
+  if (!avatar) return "";
+  if (/^https?:\/\//i.test(avatar)) return avatar;
+  if (avatar.startsWith("/uploads/")) return `${API}${avatar}`;
+  if (avatar.startsWith("uploads/")) return `${API}/${avatar}`;
 
   return "";
 };
@@ -42,13 +33,14 @@ const normalizeAvatar = (val = "") => {
 const pickAvatar = ({ dbAvatar, firebasePhotoURL }) =>
   normalizeAvatar(dbAvatar) || normalizeAvatar(firebasePhotoURL) || "";
 
-async function getAuthHeader() {
-  const u = auth.currentUser;
-  if (!u) return {};
+const getAuthHeader = async () => {
+  const currentUser = auth.currentUser;
 
-  const token = await u.getIdToken();
+  if (!currentUser) return {};
+
+  const token = await currentUser.getIdToken();
   return { Authorization: `Bearer ${token}` };
-}
+};
 
 const UserDropdown = ({
   user,
@@ -60,31 +52,19 @@ const UserDropdown = ({
   setAlert,
 }) => {
   const [open, setOpen] = useState(false);
-
   const [profileStatus, setProfileStatus] = useState("loading");
   const [remainingDays, setRemainingDays] = useState(null);
-  const [isVisible, setIsVisible] = useState(true);
-
-  const [profilePlanLabel, setProfilePlanLabel] = useState("");
-  const [autoRenewedBySubscription, setAutoRenewedBySubscription] =
-    useState(false);
-
+  const [profileVisible, setProfileVisible] = useState(false);
   const [photoURL, setPhotoURL] = useState("");
   const [userRole, setUserRole] = useState("user");
-
-  const [pushState, setPushState] = useState("default");
-  const [pushLoading, setPushLoading] = useState(false);
-  const [pushSaved, setPushSaved] = useState(false);
-
   const [providerReservationsCount, setProviderReservationsCount] = useState(0);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const dropdownRef = useRef(null);
   const triggerRef = useRef(null);
-  const location = useLocation();
 
   const displayEmail = user?.email || auth.currentUser?.email || "Konto";
-
   const showProfileActions = !loadingUser;
   const canSeeAdminPanel = userRole === "admin" || userRole === "mod";
 
@@ -101,83 +81,58 @@ const UserDropdown = ({
   };
 
   useEffect(() => {
-    setPushState(getBrowserNotificationState());
-  }, []);
-
-  useEffect(() => {
-    const run = async () => {
+    const fetchUserData = async () => {
       if (!user?.uid) {
         setPhotoURL("");
         setUserRole("user");
-        setPushSaved(false);
-        setPushState(getBrowserNotificationState());
         return;
       }
 
       try {
+        const authHeader = await getAuthHeader();
+        const response = await fetch(`${API}/api/users/${user.uid}`, {
+          headers: {
+            Accept: "application/json",
+            ...authHeader,
+          },
+        });
+
         let dbAvatar = "";
         let dbRole = "user";
 
-        try {
-          const authHeader = await getAuthHeader();
-
-          const res = await fetch(`${API}/api/users/${user.uid}`, {
-            headers: {
-              Accept: "application/json",
-              ...authHeader,
-            },
-          });
-
-          if (res.ok) {
-            const db = await res.json();
-
-            dbAvatar = db?.avatar || "";
-            dbRole = db?.role || "user";
-
-            const dbTokens = Array.isArray(db?.pushTokens) ? db.pushTokens : [];
-            const currentDeviceToken = await getCurrentPushToken();
-
-            const isThisDeviceSaved =
-              !!currentDeviceToken && dbTokens.includes(currentDeviceToken);
-
-            setPushSaved(isThisDeviceSaved);
-
-            if (isThisDeviceSaved && getBrowserNotificationState() === "granted") {
-              setPushState("granted");
-            } else {
-              setPushState(getBrowserNotificationState());
-            }
-          }
-        } catch { }
-
-        const firebasePhotoURL = auth.currentUser?.photoURL || "";
+        if (response.ok) {
+          const data = await response.json();
+          dbAvatar = data?.avatar || "";
+          dbRole = data?.role || "user";
+        }
 
         setPhotoURL(
           pickAvatar({
             dbAvatar,
-            firebasePhotoURL,
+            firebasePhotoURL: auth.currentUser?.photoURL || "",
           })
         );
-
         setUserRole(dbRole);
       } catch {
-        setPhotoURL("");
+        setPhotoURL(
+          pickAvatar({
+            dbAvatar: "",
+            firebasePhotoURL: auth.currentUser?.photoURL || "",
+          })
+        );
         setUserRole("user");
-        setPushSaved(false);
       }
     };
 
-    run();
+    fetchUserData();
   }, [user?.uid, refreshTrigger]);
 
   useEffect(() => {
     if (!user?.uid) {
       setProfileStatus("none");
-      setIsVisible(false);
       setRemainingDays(null);
-      setProfilePlanLabel("");
-      setAutoRenewedBySubscription(false);
-      return;
+      setProfileVisible(false);
+      return undefined;
     }
 
     const controller = new AbortController();
@@ -186,10 +141,12 @@ const UserDropdown = ({
       if (!dateValue) return null;
 
       const now = new Date();
-      const until = new Date(dateValue);
-      const diff = Math.ceil((until - now) / (1000 * 60 * 60 * 24));
+      const visibleUntil = new Date(dateValue);
+      const days = Math.ceil(
+        (visibleUntil - now) / (1000 * 60 * 60 * 24)
+      );
 
-      return diff > 0 ? diff : 0;
+      return days > 0 ? days : 0;
     };
 
     const fetchProfileStatus = async () => {
@@ -197,35 +154,36 @@ const UserDropdown = ({
         setProfileStatus("loading");
 
         const authHeader = await getAuthHeader();
+        const response = await fetch(
+          `${API}/api/profiles/by-user/${user.uid}`,
+          {
+            headers: {
+              Accept: "application/json",
+              ...authHeader,
+            },
+            signal: controller.signal,
+          }
+        );
 
-        const profileRes = await fetch(`${API}/api/profiles/by-user/${user.uid}`, {
-          headers: {
-            Accept: "application/json",
-            ...authHeader,
-          },
-          signal: controller.signal,
-        });
-
-        if (profileRes.status === 404) {
+        if (response.status === 404) {
           setProfileStatus("none");
-          setIsVisible(false);
           setRemainingDays(null);
-          setProfilePlanLabel("");
-          setAutoRenewedBySubscription(false);
+          setProfileVisible(false);
           return;
         }
 
-        if (!profileRes.ok) {
+        if (!response.ok) {
           setProfileStatus("error");
+          setRemainingDays(null);
+          setProfileVisible(false);
           return;
         }
 
-        const profile = await profileRes.json();
-
+        const profile = await response.json();
         let billingData = null;
 
         try {
-          const billingRes = await fetch(`${API}/api/billing/status`, {
+          const billingResponse = await fetch(`${API}/api/billing/status`, {
             headers: {
               Accept: "application/json",
               ...authHeader,
@@ -233,41 +191,34 @@ const UserDropdown = ({
             signal: controller.signal,
           });
 
-          if (billingRes.ok) {
-            billingData = await billingRes.json();
+          if (billingResponse.ok) {
+            billingData = await billingResponse.json();
           }
-        } catch {
-          billingData = null;
+        } catch (error) {
+          if (error?.name === "AbortError") throw error;
         }
 
         const billingVisibility = billingData?.visibility || null;
-        const billing = billingData?.billing || null;
-
         const visibleUntil =
           billingVisibility?.visibleUntil || profile?.visibleUntil || null;
-
         const daysLeft = countDaysLeft(visibleUntil);
-
-        setIsVisible(
+        const isVisible =
           typeof billingVisibility?.isVisible === "boolean"
             ? billingVisibility.isVisible
-            : profile?.isVisible !== false && daysLeft !== null && daysLeft > 0
-        );
+            : profile?.isVisible !== false &&
+              daysLeft !== null &&
+              daysLeft > 0;
 
         setRemainingDays(daysLeft);
-
-        setProfilePlanLabel(billing?.label || billingData?.plan?.label || "");
-
-        setAutoRenewedBySubscription(
-          !!billingVisibility?.autoRenewedBySubscription
-        );
-
-        setProfileStatus(profile ? "has" : "none");
-      } catch (err) {
-        if (err?.name === "AbortError") return;
-
-        setProfileStatus("error");
-        console.error("❌ Błąd pobierania statusu profilu:", err);
+        setProfileVisible(isVisible);
+        setProfileStatus("has");
+      } catch (error) {
+        if (error?.name !== "AbortError") {
+          setProfileStatus("error");
+          setRemainingDays(null);
+          setProfileVisible(false);
+          console.error("❌ Błąd pobierania statusu profilu:", error);
+        }
       }
     };
 
@@ -282,20 +233,22 @@ const UserDropdown = ({
 
       try {
         const authHeader = await getAuthHeader();
+        const response = await axios.get(
+          `${API}/api/conversations/by-uid/${user.uid}`,
+          { headers: authHeader }
+        );
 
-        const res = await axios.get(`${API}/api/conversations/by-uid/${user.uid}`, {
-          headers: {
-            ...authHeader,
-          },
-        });
-
-        const totalUnread = Array.isArray(res.data)
-          ? res.data.reduce((acc, c) => acc + Number(c.unreadCount || 0), 0)
+        const totalUnread = Array.isArray(response.data)
+          ? response.data.reduce(
+              (total, conversation) =>
+                total + Number(conversation.unreadCount || 0),
+              0
+            )
           : 0;
 
         setUnreadCount(totalUnread);
-      } catch (err) {
-        console.error("❌ Błąd pobierania liczby wiadomości:", err);
+      } catch (error) {
+        console.error("❌ Błąd pobierania liczby wiadomości:", error);
       }
     };
 
@@ -311,27 +264,26 @@ const UserDropdown = ({
 
       try {
         const authHeader = await getAuthHeader();
+        const response = await axios.get(
+          `${API}/api/reservations/by-provider/${user.uid}`,
+          { headers: authHeader }
+        );
 
-        const res = await axios.get(`${API}/api/reservations/by-provider/${user.uid}`, {
-          headers: {
-            ...authHeader,
-          },
-        });
-
-        const reservations = Array.isArray(res.data) ? res.data : [];
-
+        const reservations = Array.isArray(response.data) ? response.data : [];
         const count = reservations.filter((reservation) => {
           const status = String(reservation.status || "").toLowerCase();
-
-          const isRelevantStatus =
+          const isRelevant =
             status === "oczekująca" || status === "zaakceptowana";
 
-          return isRelevantStatus && reservation.providerSeen === false;
+          return isRelevant && reservation.providerSeen === false;
         }).length;
 
         setProviderReservationsCount(count);
-      } catch (err) {
-        console.error("❌ Błąd pobierania liczby rezerwacji usługodawcy:", err);
+      } catch (error) {
+        console.error(
+          "❌ Błąd pobierania liczby rezerwacji usługodawcy:",
+          error
+        );
         setProviderReservationsCount(0);
       }
     };
@@ -340,100 +292,47 @@ const UserDropdown = ({
   }, [user?.uid, refreshTrigger, location.pathname]);
 
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target)
+      ) {
         setOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   useEffect(() => {
-    const onKey = (e) => {
-      if (!open) return;
-
-      if (e.key === "Escape") {
+    const handleKeyDown = (event) => {
+      if (open && event.key === "Escape") {
         setOpen(false);
         triggerRef.current?.focus?.();
       }
     };
 
-    document.addEventListener("keydown", onKey);
-
-    return () => document.removeEventListener("keydown", onKey);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [open]);
 
   const handleNavigate = (path, scrollToId = null) => {
     setOpen(false);
 
     if (location.pathname === path && scrollToId) {
-      const el = document.getElementById(scrollToId);
+      const element = document.getElementById(scrollToId);
 
-      if (el) {
-        setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 100);
+      if (element) {
+        window.setTimeout(() => {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
       }
-    } else {
-      navigate(path, { state: { scrollToId } });
+
+      return;
     }
-  };
 
-  const handleEnablePush = async () => {
-    if (!user?.uid || pushLoading || pushState === "unsupported" || pushSaved) return;
-
-    try {
-      setPushLoading(true);
-
-      const result = await enablePushNotifications(user.uid);
-
-      if (result?.success) {
-        setPushState("granted");
-        setPushSaved(true);
-        showAlert("success", "Powiadomienia zostały włączone na tym urządzeniu.");
-      } else {
-        const currentState = getBrowserNotificationState();
-        setPushState(currentState);
-
-        if (result?.reason === "denied") {
-          showAlert("error", "Powiadomienia są zablokowane w przeglądarce.");
-        } else if (result?.reason === "unsupported") {
-          showAlert("error", "Ta przeglądarka nie obsługuje powiadomień.");
-        } else {
-          showAlert("error", "Nie udało się włączyć powiadomień.");
-        }
-      }
-    } catch (err) {
-      console.error("❌ Błąd aktywacji push:", err);
-      setPushState(getBrowserNotificationState());
-      showAlert("error", "Wystąpił błąd podczas włączania powiadomień.");
-    } finally {
-      setPushLoading(false);
-    }
-  };
-
-  const handleDisablePush = async () => {
-    if (!user?.uid || pushLoading || pushState === "unsupported" || !pushSaved) return;
-
-    try {
-      setPushLoading(true);
-
-      const result = await disablePushNotifications(user.uid);
-
-      if (result?.success) {
-        setPushSaved(false);
-        setPushState(getBrowserNotificationState());
-        showAlert("success", "Powiadomienia zostały wyłączone na tym urządzeniu.");
-      } else {
-        showAlert("error", "Nie udało się wyłączyć powiadomień.");
-      }
-    } catch (err) {
-      console.error("❌ Błąd wyłączania push:", err);
-      showAlert("error", "Wystąpił błąd podczas wyłączania powiadomień.");
-    } finally {
-      setPushLoading(false);
-    }
+    navigate(path, { state: { scrollToId } });
   };
 
   const handleLogout = async () => {
@@ -441,33 +340,26 @@ const UserDropdown = ({
       await signOut(auth);
       localStorage.removeItem("showlyUser");
       navigate("/");
-    } catch (err) {
-      console.error("❌ Błąd wylogowania:", err);
+    } catch (error) {
+      console.error("❌ Błąd wylogowania:", error);
       showAlert("error", "Nie udało się wylogować.");
     }
   };
 
   const avatarSrc = photoURL || "/images/other/no-image.png";
-
   const reservationBadgeCount =
-    Number(pendingReservationsCount || 0) + Number(providerReservationsCount || 0);
-
+    Number(pendingReservationsCount || 0) +
+    Number(providerReservationsCount || 0);
   const hasAnyBadge =
-    Number(unreadCount) > 0 || Number(reservationBadgeCount) > 0;
-
-  const pushLabel = pushSaved
-    ? "włączone"
-    : pushState === "granted"
-      ? "ready"
-      : "push";
+    Number(unreadCount || 0) > 0 || reservationBadgeCount > 0;
 
   return (
     <div className={styles.dropdown} ref={dropdownRef}>
       <button
         type="button"
-        className={`${styles.trigger} ${open ? styles.triggerOpen : ""}`}
         ref={triggerRef}
-        onClick={() => setOpen((prev) => !prev)}
+        className={`${styles.trigger} ${open ? styles.triggerOpen : ""}`}
+        onClick={() => setOpen((current) => !current)}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={open ? "Zamknij menu użytkownika" : "Otwórz menu użytkownika"}
@@ -479,8 +371,8 @@ const UserDropdown = ({
             className={styles.miniAvatar}
             decoding="async"
             referrerPolicy="no-referrer"
-            onError={(e) => {
-              e.currentTarget.src = "/images/other/no-image.png";
+            onError={(event) => {
+              event.currentTarget.src = "/images/other/no-image.png";
             }}
           />
 
@@ -488,79 +380,95 @@ const UserDropdown = ({
         </span>
 
         <span className={styles.triggerCopy}>
-          <small>Twoje konto</small>
+          <small>Konto</small>
           <span className={styles.email}>{displayEmail}</span>
         </span>
 
-        {hasAnyBadge && <span className={styles.dotPulse} aria-hidden="true" />}
+        {hasAnyBadge && <span className={styles.dot} aria-hidden="true" />}
 
         <span className={styles.triggerEnd} aria-hidden="true">
-          <span className={styles.triggerIndex}>01</span>
-
           <FiChevronDown
-            className={`${styles.icon} ${open ? styles.iconOpen : ""}`}
+            className={`${styles.chevron} ${open ? styles.chevronOpen : ""}`}
           />
         </span>
       </button>
 
       <div
-        className={`${styles.menu} ${open ? styles.visible : ""}`}
+        className={`${styles.menu} ${open ? styles.menuVisible : ""}`}
         role="menu"
         aria-hidden={!open}
-        onWheel={(e) => e.stopPropagation()}
-        onTouchMove={(e) => e.stopPropagation()}
+        onWheel={(event) => event.stopPropagation()}
+        onTouchMove={(event) => event.stopPropagation()}
       >
-        <span className={styles.menuAccent} aria-hidden="true" />
-
-        <div className={styles.menuTop}>
-          <div className={styles.menuHeading}>
-            <span className={styles.menuIndex} aria-hidden="true">
-              01
-            </span>
-
-            <div className={styles.identity}>
-              <span className={styles.bigAvatarWrap} aria-hidden="true">
-                <img
-                  src={avatarSrc}
-                  alt=""
-                  className={styles.bigAvatar}
-                  decoding="async"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    e.currentTarget.src = "/images/other/no-image.png";
-                  }}
-                />
-
-                {roleLabel && (
-                  <span className={styles.bigRolePill}>{roleLabel}</span>
-                )}
-              </span>
-
-              <div className={styles.identityText}>
-                <div className={styles.menuTitle}>Panel użytkownika</div>
-                <div className={styles.menuSub}>{displayEmail}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.quickStats}>
-            <span>
-              <small>Wiadomości</small>
-              <b>{Number(unreadCount || 0)}</b>
-            </span>
-
-            <span>
-              <small>Rezerwacje</small>
-              <b>{Number(reservationBadgeCount || 0)}</b>
-            </span>
-          </div>
-        </div>
-
-        <div className={styles.group}>
-          <span className={styles.groupTitle}>
-            <b>01</b>
-            <span>Konto</span>
+        <header className={styles.accountHeader}>
+          <span className={styles.largeAvatarWrap} aria-hidden="true">
+            <img
+              src={avatarSrc}
+              alt=""
+              className={styles.largeAvatar}
+              decoding="async"
+              referrerPolicy="no-referrer"
+              onError={(event) => {
+                event.currentTarget.src = "/images/other/no-image.png";
+              }}
+            />
           </span>
+
+          <div className={styles.accountCopy}>
+            <small>Twoje konto</small>
+            <strong>{displayEmail}</strong>
+          </div>
+
+          {roleLabel && <span className={styles.headerRole}>{roleLabel}</span>}
+        </header>
+
+        <div className={styles.menuList}>
+          {showProfileActions && profileStatus === "none" && (
+            <button
+              type="button"
+              className={`${styles.item} ${styles.itemPrimary}`}
+              role="menuitem"
+              onClick={() => handleNavigate("/stworz-profil", "scrollToId")}
+            >
+              <span className={styles.itemLeft}>
+                <FiUser className={styles.itemIcon} aria-hidden="true" />
+                <span>Stwórz profil</span>
+              </span>
+              <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
+            </button>
+          )}
+
+          {showProfileActions && profileStatus === "has" && (
+            <button
+              type="button"
+              className={`${styles.item} ${styles.itemPrimary}`}
+              role="menuitem"
+              onClick={() => handleNavigate("/profil", "scrollToId")}
+            >
+              <span className={styles.itemLeft}>
+                <FiUser className={styles.itemIcon} aria-hidden="true" />
+                <span className={styles.profileCopy}>
+                  <span>Twój profil</span>
+                  <small
+                    className={
+                      profileVisible
+                        ? styles.profileStatus
+                        : styles.profileExpired
+                    }
+                  >
+                    {profileVisible
+                      ? remainingDays !== null
+                        ? `Aktywny jeszcze ${remainingDays} ${
+                            remainingDays === 1 ? "dzień" : "dni"
+                          }`
+                        : "Profil aktywny"
+                      : "Profil wygasł"}
+                  </small>
+                </span>
+              </span>
+              <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
+            </button>
+          )}
 
           <button
             type="button"
@@ -570,9 +478,8 @@ const UserDropdown = ({
           >
             <span className={styles.itemLeft}>
               <FiSettings className={styles.itemIcon} aria-hidden="true" />
-              <span className={styles.itemText}>Twoje konto</span>
+              <span>Ustawienia konta</span>
             </span>
-
             <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
           </button>
 
@@ -585,142 +492,13 @@ const UserDropdown = ({
             >
               <span className={styles.itemLeft}>
                 <FiShield className={styles.itemIcon} aria-hidden="true" />
-                <span className={styles.itemText}>Panel admina</span>
+                <span>Panel admina</span>
               </span>
-
-              <span className={styles.itemRight}>
-                <span className={styles.rightPill}>uprawnienia</span>
-                <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
-              </span>
-            </button>
-          )}
-        </div>
-
-        <div className={styles.group}>
-          <span className={styles.groupTitle}>
-            <b>02</b>
-            <span>Profil</span>
-          </span>
-
-          {showProfileActions && profileStatus === "none" && (
-            <button
-              type="button"
-              className={`${styles.item} ${styles.itemPrimary}`}
-              role="menuitem"
-              onClick={() => handleNavigate("/stworz-profil", "scrollToId")}
-            >
-              <span className={styles.itemLeft}>
-                <FiUser className={styles.itemIcon} aria-hidden="true" />
-                <span className={styles.itemText}>Stwórz profil</span>
-              </span>
-
-              <span className={styles.itemRight}>
-                <span className={styles.rightPill}>start</span>
-                <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
-              </span>
-            </button>
-          )}
-
-          {showProfileActions && profileStatus === "has" && (
-            <button
-              type="button"
-              className={`${styles.item} ${styles.itemTwoLine}`}
-              role="menuitem"
-              onClick={() => handleNavigate("/profil", "scrollToId")}
-            >
-              <span className={styles.itemLeft}>
-                <FiUser className={styles.itemIcon} aria-hidden="true" />
-
-                <span className={styles.twoLine}>
-                  <span className={styles.itemText}>Twój profil</span>
-
-                  {isVisible ? (
-                    <span className={`${styles.itemSub} ${styles.statusActive}`}>
-                      {autoRenewedBySubscription ? (
-                        <>
-                          {profilePlanLabel || "Plan aktywny"} • aktywny jeszcze{" "}
-                          <b>{remainingDays}</b> dni
-                        </>
-                      ) : (
-                        <>
-                          Pozostało <b>{remainingDays}</b> dni
-                        </>
-                      )}
-                    </span>
-                  ) : (
-                    <span className={`${styles.itemSub} ${styles.statusExpired}`}>
-                      Wygasł
-                    </span>
-                  )}
-                </span>
-              </span>
-
               <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
             </button>
           )}
 
-          {showProfileActions && profileStatus === "error" && (
-            <div className={styles.netBanner} role="status" aria-live="polite">
-              <FiAlertTriangle className={styles.netIcon} aria-hidden="true" />
-              <span className={styles.netText}>
-                Problem z połączeniem… Spróbuj odświeżyć.
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className={styles.group}>
-          <span className={styles.groupTitle}>
-            <b>03</b>
-            <span>Centrum aktywności</span>
-          </span>
-
-          <button
-            type="button"
-            className={`${styles.item} ${styles.itemNotify}`}
-            role="menuitem"
-            onClick={pushSaved ? handleDisablePush : handleEnablePush}
-            disabled={pushLoading || pushState === "unsupported"}
-          >
-            <span className={styles.itemLeft}>
-              <FiBell className={styles.itemIcon} aria-hidden="true" />
-
-              <span className={styles.twoLine}>
-                <span className={styles.itemText}>
-                  {pushLoading
-                    ? "Zapisywanie..."
-                    : pushSaved
-                      ? "Wyłącz powiadomienia"
-                      : pushState === "granted"
-                        ? "Aktywuj na tym koncie"
-                        : "Włącz powiadomienia"}
-                </span>
-
-                <span
-                  className={`${styles.itemSub} ${pushSaved || pushState === "granted"
-                    ? styles.statusActive
-                    : pushState === "denied"
-                      ? styles.statusExpired
-                      : ""
-                    }`}
-                >
-                  {pushSaved &&
-                    "Kliknij, aby wyłączyć powiadomienia na tym urządzeniu"}
-                  {!pushSaved &&
-                    pushState === "granted" &&
-                    "Przeglądarka ma zgodę — kliknij, aby zapisać dla tego konta"}
-                  {pushState === "default" &&
-                    "Kliknij, aby otrzymywać powiadomienia na urządzeniu"}
-                  {pushState === "denied" &&
-                    "Powiadomienia są zablokowane w przeglądarce"}
-                  {pushState === "unsupported" &&
-                    "Ta przeglądarka nie obsługuje powiadomień"}
-                </span>
-              </span>
-            </span>
-
-            <span className={styles.rightPill}>{pushLabel}</span>
-          </button>
+          <span className={styles.divider} aria-hidden="true" />
 
           <button
             type="button"
@@ -730,14 +508,13 @@ const UserDropdown = ({
           >
             <span className={styles.itemLeft}>
               <FiBell className={styles.itemIcon} aria-hidden="true" />
-              <span className={styles.itemText}>Powiadomienia</span>
+              <span>Powiadomienia</span>
             </span>
 
             <span className={styles.itemRight}>
-              {Number(unreadCount) > 0 && (
+              {Number(unreadCount || 0) > 0 && (
                 <span className={styles.countBadge}>{unreadCount}</span>
               )}
-
               <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
             </span>
           </button>
@@ -750,44 +527,17 @@ const UserDropdown = ({
           >
             <span className={styles.itemLeft}>
               <FiCalendar className={styles.itemIcon} aria-hidden="true" />
-              <span className={styles.itemText}>Rezerwacje</span>
+              <span>Rezerwacje</span>
             </span>
 
             <span className={styles.itemRight}>
-              {Number(reservationBadgeCount) > 0 && (
-                <span className={styles.countBadge}>{reservationBadgeCount}</span>
+              {reservationBadgeCount > 0 && (
+                <span className={styles.countBadge}>
+                  {reservationBadgeCount}
+                </span>
               )}
-
               <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
             </span>
-          </button>
-
-          <button
-            type="button"
-            className={`${styles.item} ${styles.itemDisabled}`}
-            role="menuitem"
-            disabled
-          >
-            <span className={styles.itemLeft}>
-              <FiTag className={styles.itemIcon} aria-hidden="true" />
-              <span className={styles.itemText}>Ogłoszenia</span>
-            </span>
-
-            <span className={styles.rightPill}>wkrótce</span>
-          </button>
-
-          <button
-            type="button"
-            className={`${styles.item} ${styles.itemDisabled}`}
-            role="menuitem"
-            disabled
-          >
-            <span className={styles.itemLeft}>
-              <FiMapPin className={styles.itemIcon} aria-hidden="true" />
-              <span className={styles.itemText}>Wydarzenia</span>
-            </span>
-
-            <span className={styles.rightPill}>wkrótce</span>
           </button>
 
           <button
@@ -798,33 +548,25 @@ const UserDropdown = ({
           >
             <span className={styles.itemLeft}>
               <FiHeart className={styles.itemIcon} aria-hidden="true" />
-              <span className={styles.itemText}>Ulubione profile</span>
+              <span>Ulubione profile</span>
             </span>
-
             <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
           </button>
         </div>
 
-        <div className={`${styles.group} ${styles.sessionGroup}`}>
-          <span className={styles.groupTitle}>
-            <b>04</b>
-            <span>Sesja</span>
-          </span>
-
+        <footer className={styles.menuFooter}>
           <button
             type="button"
-            className={`${styles.item} ${styles.itemDanger}`}
+            className={`${styles.item} ${styles.logoutItem}`}
             role="menuitem"
             onClick={handleLogout}
           >
             <span className={styles.itemLeft}>
               <FiLogOut className={styles.itemIcon} aria-hidden="true" />
-              <span className={styles.itemText}>Wyloguj</span>
+              <span>Wyloguj się</span>
             </span>
-
-            <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
           </button>
-        </div>
+        </footer>
       </div>
     </div>
   );

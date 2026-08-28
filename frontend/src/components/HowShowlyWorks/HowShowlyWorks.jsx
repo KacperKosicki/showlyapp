@@ -1,55 +1,47 @@
 import { useEffect, useRef } from "react";
-
-import styles from "./HowShowlyWorks.module.scss";
-
 import {
   FiArrowRight,
   FiCalendar,
+  FiCheck,
   FiMessageCircle,
   FiSearch,
   FiStar,
 } from "react-icons/fi";
 
+import styles from "./HowShowlyWorks.module.scss";
+
 const steps = [
   {
     icon: FiSearch,
     number: "01",
-    label: "Wyszukiwanie",
-    title: "Zaczynasz od tego, czego naprawdę potrzebujesz.",
-    text:
-      "Wpisujesz usługę, kategorię albo miasto. Showly prowadzi Cię bezpośrednio do profili, które pasują do Twojego wyszukiwania.",
-    details: ["usługi", "kategorie", "lokalizacja"],
-    animation: "fromLeft",
+    label: "Szukasz",
+    title: "Wpisujesz usługę albo miejsce.",
+    text: "Showly pokazuje profile pasujące do tego, czego potrzebujesz — bez przekopywania postów i grup.",
+    details: ["usługa", "branża", "lokalizacja"],
   },
   {
     icon: FiStar,
     number: "02",
-    label: "Porównanie",
-    title: "Sprawdzasz konkrety, a nie przypadkowe posty.",
-    text:
-      "Opis, zdjęcia, ceny i opinie znajdują się razem, więc łatwiej ocenić, czy dana osoba lub firma pasuje do Twoich potrzeb.",
-    details: ["opinie", "zdjęcia", "ceny"],
-    animation: "fromBottom",
+    label: "Sprawdzasz",
+    title: "Porównujesz całą ofertę.",
+    text: "Opis, ceny, realizacje i opinie pomagają szybko ocenić, czy to właściwy wybór.",
+    details: ["oferta", "zdjęcia", "opinie"],
   },
   {
     icon: FiMessageCircle,
     number: "03",
-    label: "Kontakt",
-    title: "Nie szukasz już właściwego miejsca do napisania.",
-    text:
-      "Profil prowadzi Cię bezpośrednio do kontaktu, wiadomości albo innej formy rozmowy wybranej przez usługodawcę.",
-    details: ["wiadomość", "kontakt", "szybka decyzja"],
-    animation: "fromRight",
+    label: "Kontaktujesz się",
+    title: "Wybierasz wygodny kontakt.",
+    text: "Piszesz wiadomość albo korzystasz z danych i kanałów udostępnionych przez usługodawcę.",
+    details: ["wiadomość", "telefon", "social media"],
   },
   {
     icon: FiCalendar,
     number: "04",
-    label: "Działanie",
-    title: "Rezerwujesz termin albo od razu przechodzisz dalej.",
-    text:
-      "Jeżeli profil korzysta z rezerwacji, wybierasz dostępny termin. W innym przypadku masz gotowe informacje i możesz od razu napisać.",
-    details: ["terminy", "rezerwacje", "wygoda"],
-    animation: "fromBottom",
+    label: "Umawiasz",
+    title: "Rezerwujesz lub ustalasz szczegóły.",
+    text: "Jeśli profil obsługuje rezerwacje, wybierasz termin. Jeśli nie — od razu przechodzisz do rozmowy.",
+    details: ["termin", "rezerwacja", "decyzja"],
   },
 ];
 
@@ -63,33 +55,34 @@ const HowShowlyWorks = () => {
       return undefined;
     }
 
-    const animatedElements = section.querySelectorAll(
-      `.${styles.reveal}`
-    );
+    const elements = section.querySelectorAll(`.${styles.reveal}`);
+
+    if (typeof IntersectionObserver === "undefined") {
+      elements.forEach((element) => {
+        element.classList.add(styles.revealVisible);
+      });
+
+      return undefined;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add(styles.revealVisible);
-          } else {
-            entry.target.classList.remove(styles.revealVisible);
+            observer.unobserve(entry.target);
           }
         });
       },
       {
-        threshold: 0.16,
-        rootMargin: "0px 0px -8% 0px",
+        threshold: 0.1,
+        rootMargin: "0px 0px -5% 0px",
       }
     );
 
-    animatedElements.forEach((element) => {
-      observer.observe(element);
-    });
+    elements.forEach((element) => observer.observe(element));
 
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -97,12 +90,11 @@ const HowShowlyWorks = () => {
       ref={sectionRef}
       className={styles.section}
       id="how-showly-works"
+      aria-labelledby="how-showly-works-title"
     >
-      <div className={styles.decor} aria-hidden="true">
-        <span className={styles.orbOne} />
-        <span className={styles.orbTwo} />
-        <span className={styles.lineOne} />
-        <span className={styles.lineTwo} />
+      <div className={styles.background} aria-hidden="true">
+        <span className={styles.bigWord}>PROCES</span>
+        <span className={styles.dotField} />
       </div>
 
       <div className={styles.inner}>
@@ -110,90 +102,97 @@ const HowShowlyWorks = () => {
           <div
             className={`${styles.heading} ${styles.reveal} ${styles.fromLeft}`}
           >
-            <span className={styles.eyebrow}>Jak działa Showly?</span>
+            <span className={styles.kicker}>
+              <span className={styles.kickerDot} />
+              Jak działa Showly?
+            </span>
 
-            <h2>
-              Od wyszukania usługi do kontaktu — bez zbierania informacji
-              z kilku różnych miejsc.
+            <h2 id="how-showly-works-title">
+              Znajdź. Sprawdź.
+              <span>Napisz. Umów.</span>
             </h2>
           </div>
 
           <div
             className={`${styles.lead} ${styles.reveal} ${styles.fromRight}`}
-            style={{ "--reveal-delay": "120ms" }}
+            style={{ "--reveal-delay": "100ms" }}
           >
             <p>
-              Showly porządkuje drogę klienta. Najpierw znajdujesz właściwy
-              profil, później porównujesz ofertę, a na końcu przechodzisz do
-              kontaktu albo rezerwacji.
+              Jedna prosta droga od pierwszego wyszukiwania do kontaktu
+              z właściwą osobą. Bez zbierania informacji z kilku miejsc.
             </p>
 
-            <div className={styles.leadMeta}>
-              <strong>4 proste etapy</strong>
-              <span>bez chaosu między postami i wiadomościami</span>
+            <div className={styles.routeSummary}>
+              <span className={styles.routeNumber}>04</span>
+
+              <div>
+                <strong>czytelne etapy</strong>
+                <small>każdy prowadzi do konkretnego działania</small>
+              </div>
             </div>
           </div>
         </header>
 
-        <div className={styles.steps}>
+        <div className={styles.steps} role="list">
           {steps.map((step, index) => {
             const Icon = step.icon;
 
             return (
               <article
-                className={`${styles.step} ${styles[`step${index + 1}`]} ${styles.reveal
-                  } ${styles[step.animation]}`}
-                style={{
-                  "--reveal-delay": `${index * 110}ms`,
-                }}
+                className={`${styles.step} ${styles[`step${index + 1}`]} ${styles.reveal} ${styles.fromBottom}`}
+                style={{ "--reveal-delay": `${index * 85}ms` }}
                 key={step.number}
+                role="listitem"
               >
                 <div className={styles.stepTop}>
                   <span className={styles.stepNumber}>{step.number}</span>
 
-                  <div className={styles.stepIcon}>
+                  <span className={styles.stepIcon}>
                     <Icon aria-hidden="true" />
-                  </div>
+                  </span>
                 </div>
 
                 <div className={styles.stepBody}>
                   <span className={styles.stepLabel}>{step.label}</span>
-
                   <h3>{step.title}</h3>
-
                   <p>{step.text}</p>
-
-                  <div className={styles.details}>
-                    {step.details.map((detail) => (
-                      <span key={detail}>{detail}</span>
-                    ))}
-                  </div>
                 </div>
+
+                <div className={styles.details}>
+                  {step.details.map((detail) => (
+                    <span key={detail}>{detail}</span>
+                  ))}
+                </div>
+
+                {index < steps.length - 1 && (
+                  <span className={styles.connector} aria-hidden="true">
+                    <FiArrowRight />
+                  </span>
+                )}
               </article>
             );
           })}
         </div>
 
         <footer
-          className={`${styles.footer} ${styles.reveal} ${styles.fromBottom}`}
-          style={{ "--reveal-delay": "100ms" }}
+          className={`${styles.result} ${styles.reveal} ${styles.fromBottom}`}
+          style={{ "--reveal-delay": "120ms" }}
         >
-          <div>
-            <span className={styles.eyebrow}>Efekt</span>
+          <span className={styles.resultIcon}>
+            <FiCheck aria-hidden="true" />
+          </span>
 
-            <h3>
-              Klient szybciej rozumie ofertę i wie, co zrobić dalej.
-            </h3>
+          <div className={styles.resultCopy}>
+            <span>Efekt</span>
+            <h3>Klient wie, co oferujesz i co zrobić dalej.</h3>
           </div>
 
-          <div className={styles.footerNote}>
-            <p>
-              Mniej szukania, mniej pytań o podstawowe informacje i prostsza
-              droga od zainteresowania do decyzji.
-            </p>
+          <p>
+            Mniej pytań o podstawy. Więcej rozmów z osobami, które już
+            znają Twoją ofertę.
+          </p>
 
-            <FiArrowRight aria-hidden="true" />
-          </div>
+          <FiArrowRight className={styles.resultArrow} aria-hidden="true" />
         </footer>
       </div>
     </section>

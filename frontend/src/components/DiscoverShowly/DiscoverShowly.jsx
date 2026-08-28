@@ -1,7 +1,4 @@
-import { useEffect, useRef } from "react";
-
-import styles from "./DiscoverShowly.module.scss";
-
+import { useEffect, useRef, useState } from "react";
 import {
   FiArrowRight,
   FiClock,
@@ -10,51 +7,49 @@ import {
   FiUsers,
 } from "react-icons/fi";
 
+import styles from "./DiscoverShowly.module.scss";
+
 const items = [
   {
     icon: FiUsers,
     number: "01",
     label: "Profile",
-    title: "Odkrywaj specjalistów z różnych branż.",
-    text:
-      "Przeglądaj wizytówki osób działających lokalnie i online. Zobacz, czym się zajmują, gdzie pracują i jak wygląda ich oferta.",
-    details: ["branże", "lokalizacja", "wizytówki"],
-    animation: "fromLeft",
+    title: "Zobacz, kto robi to, czego szukasz.",
+    text: "Każda wizytówka pokazuje specjalizację, lokalizację i najważniejsze informacje o sposobie pracy.",
+    details: ["branża", "lokalizacja", "o profilu"],
   },
   {
     icon: FiMessageSquare,
     number: "02",
     label: "Kontakt",
-    title: "Zadawaj pytania bez szukania właściwego miejsca.",
-    text:
-      "Przejdź bezpośrednio do wiadomości, doprecyzuj usługę i ustal najważniejsze szczegóły z usługodawcą.",
-    details: ["wiadomości", "kontakt", "szczegóły"],
-    animation: "fromRight",
+    title: "Od razu wiesz, jak zacząć rozmowę.",
+    text: "Wiadomość, telefon i pozostałe kanały kontaktu są zebrane przy właściwym profilu.",
+    details: ["wiadomość", "telefon", "social media"],
   },
   {
     icon: FiClock,
     number: "03",
     label: "Dostępność",
-    title: "Sprawdzaj terminy tam, gdzie są aktywne.",
-    text:
-      "Nie każdy profil działa w ten sam sposób. Tam, gdzie dostępne są rezerwacje, możesz wygodnie sprawdzić terminy.",
-    details: ["terminy", "rezerwacje", "elastyczność"],
-    animation: "fromLeft",
+    title: "Sprawdź terminy, jeśli profil je udostępnia.",
+    text: "Usługodawca sam wybiera sposób obsługi zapytań. Rezerwujesz termin albo ustalasz go w rozmowie.",
+    details: ["terminy", "rezerwacja", "zapytanie"],
   },
   {
     icon: FiThumbsUp,
     number: "04",
     label: "Decyzja",
-    title: "Porównuj konkrety i wybieraj świadomie.",
-    text:
-      "Zdjęcia, opinie, zakres usług i podstawowe informacje pomagają szybciej ocenić, który profil najlepiej odpowiada Twoim potrzebom.",
-    details: ["opinie", "porównanie", "zaufanie"],
-    animation: "fromBottom",
+    title: "Porównuj ofertę, a nie obietnice.",
+    text: "Realizacje, ceny, usługi i opinie pomagają wybrać profil odpowiadający Twoim potrzebom.",
+    details: ["realizacje", "ceny", "opinie"],
   },
 ];
 
 const DiscoverShowly = () => {
   const sectionRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const activeItem = items[activeIndex];
+  const ActiveIcon = activeItem.icon;
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -63,46 +58,57 @@ const DiscoverShowly = () => {
       return undefined;
     }
 
-    const animatedElements = section.querySelectorAll(
-      `.${styles.reveal}`
-    );
+    const elements = section.querySelectorAll(`.${styles.reveal}`);
+
+    if (typeof IntersectionObserver === "undefined") {
+      elements.forEach((element) => {
+        element.classList.add(styles.revealVisible);
+      });
+
+      return undefined;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add(styles.revealVisible);
-          } else {
-            entry.target.classList.remove(styles.revealVisible);
+            observer.unobserve(entry.target);
           }
         });
       },
       {
-        threshold: 0.16,
-        rootMargin: "0px 0px -8% 0px",
+        threshold: 0.1,
+        rootMargin: "0px 0px -5% 0px",
       }
     );
 
-    animatedElements.forEach((element) => {
-      observer.observe(element);
-    });
+    elements.forEach((element) => observer.observe(element));
 
-    return () => {
-      observer.disconnect();
-    };
+    return () => observer.disconnect();
   }, []);
+
+  const scrollToProfiles = () => {
+    const profilesHub = document.getElementById("profilesHub");
+    const nextSection = sectionRef.current?.nextElementSibling;
+    const target = profilesHub || nextSection;
+
+    target?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
 
   return (
     <section
       ref={sectionRef}
       className={styles.section}
       id="discover-showly"
+      aria-labelledby="discover-showly-title"
     >
-      <div className={styles.decor} aria-hidden="true">
-        <span className={styles.orbOne} />
-        <span className={styles.orbTwo} />
-        <span className={styles.lineOne} />
-        <span className={styles.lineTwo} />
+      <div className={styles.background} aria-hidden="true">
+        <span className={styles.bigWord}>ODKRYWAJ</span>
+        <span className={styles.dotField} />
       </div>
 
       <div className={styles.inner}>
@@ -110,94 +116,137 @@ const DiscoverShowly = () => {
           <div
             className={`${styles.heading} ${styles.reveal} ${styles.fromLeft}`}
           >
-            <span className={styles.eyebrow}>Odkrywaj Showly</span>
+            <span className={styles.kicker}>
+              <span className={styles.kickerDot} />
+              Odkrywaj Showly
+            </span>
 
-            <h2>
-              Znajdź właściwą osobę, poznaj ofertę i przejdź prosto do działania.
+            <h2 id="discover-showly-title">
+              Najpierw potrzeba.
+              <span>Potem właściwy profil.</span>
             </h2>
           </div>
 
           <div
             className={`${styles.lead} ${styles.reveal} ${styles.fromRight}`}
-            style={{ "--reveal-delay": "120ms" }}
+            style={{ "--reveal-delay": "100ms" }}
           >
             <p>
-              Showly pomaga przejść od ogólnego wyszukiwania do konkretnego
-              profilu — bez przeglądania przypadkowych postów, komentarzy i
-              wielu osobnych linków.
+              Nie musisz znać nazwiska ani firmy. Zacznij od usługi,
+              lokalizacji albo tego, co chcesz sprawdzić przed kontaktem.
             </p>
 
-            <div className={styles.leadMeta}>
-              <strong>Profile / kontakt / terminy</strong>
-              <span>wszystko w jednej, uporządkowanej ścieżce</span>
+            <div className={styles.leadNote}>
+              <strong>Jeden profil</strong>
+              <span>oferta, realizacje, kontakt i dostępność</span>
             </div>
           </div>
         </header>
 
-        <div className={styles.features}>
-          {items.map((item, index) => {
-            const Icon = item.icon;
+        <div
+          className={`${styles.explorer} ${styles.reveal} ${styles.fromBottom}`}
+          style={{ "--reveal-delay": "80ms" }}
+        >
+          <div className={styles.explorerNav}>
+            <div className={styles.explorerNavHead}>
+              <span>Co chcesz sprawdzić?</span>
+              <small>Wybierz obszar profilu</small>
+            </div>
 
-            return (
-              <article
-                className={`${styles.feature} ${
-                  styles[`feature${index + 1}`]
-                } ${styles.reveal} ${styles[item.animation]}`}
-                style={{
-                  "--reveal-delay": `${index * 110}ms`,
-                }}
-                key={item.number}
-              >
-                <div className={styles.featureTop}>
-                  <span className={styles.featureNumber}>
-                    {item.number}
-                  </span>
+            <div
+              className={styles.tabs}
+              role="tablist"
+              aria-label="Elementy profilu Showly"
+            >
+              {items.map((item, index) => {
+                const Icon = item.icon;
+                const isActive = index === activeIndex;
 
-                  <div className={styles.featureIcon}>
-                    <Icon aria-hidden="true" />
-                  </div>
-                </div>
+                return (
+                  <button
+                    type="button"
+                    id={`discover-tab-${index}`}
+                    className={`${styles.tab} ${
+                      isActive ? styles.tabActive : ""
+                    }`}
+                    onClick={() => setActiveIndex(index)}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls="discover-preview"
+                    key={item.number}
+                  >
+                    <span className={styles.tabIcon}>
+                      <Icon aria-hidden="true" />
+                    </span>
 
-                <div className={styles.featureBody}>
-                  <span className={styles.featureLabel}>
-                    {item.label}
-                  </span>
+                    <span className={styles.tabCopy}>
+                      <small>{item.number}</small>
+                      <strong>{item.label}</strong>
+                    </span>
 
-                  <h3>{item.title}</h3>
+                    <FiArrowRight
+                      className={styles.tabArrow}
+                      aria-hidden="true"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-                  <p>{item.text}</p>
+          <div
+            className={styles.preview}
+            id="discover-preview"
+            role="tabpanel"
+            aria-labelledby={`discover-tab-${activeIndex}`}
+            key={activeItem.number}
+          >
+            <span className={styles.previewCircle} aria-hidden="true" />
 
-                  <div className={styles.details}>
-                    {item.details.map((detail) => (
-                      <span key={detail}>{detail}</span>
-                    ))}
-                  </div>
-                </div>
-              </article>
-            );
-          })}
+            <div className={styles.previewTop}>
+              <span className={styles.previewIcon}>
+                <ActiveIcon aria-hidden="true" />
+              </span>
+
+              <span className={styles.previewCount}>
+                {activeItem.number} / 04
+              </span>
+            </div>
+
+            <div className={styles.previewBody}>
+              <span className={styles.previewLabel}>{activeItem.label}</span>
+              <h3>{activeItem.title}</h3>
+              <p>{activeItem.text}</p>
+            </div>
+
+            <div className={styles.previewDetails}>
+              {activeItem.details.map((detail) => (
+                <span key={detail}>{detail}</span>
+              ))}
+            </div>
+          </div>
         </div>
 
         <footer
           className={`${styles.footer} ${styles.reveal} ${styles.fromBottom}`}
-          style={{ "--reveal-delay": "100ms" }}
+          style={{ "--reveal-delay": "110ms" }}
         >
-          <div>
-            <span className={styles.eyebrow}>Sprawdź dalej</span>
-
-            <h3>
-              Przewiń niżej i zobacz profile dostępne aktualnie na platformie.
-            </h3>
-          </div>
-
-          <div className={styles.footerNote}>
+          <div className={styles.footerCopy}>
+            <span>Sprawdź sam</span>
+            <h3>Profile są już kilka kroków niżej.</h3>
             <p>
-              Porównaj różne branże, style pracy i zakresy usług. Być może
-              właściwy profil jest już kilka kroków niżej.
+              Porównaj różne branże, sposoby pracy i zakresy usług.
             </p>
-
-            <FiArrowRight aria-hidden="true" />
           </div>
+
+          <button
+            type="button"
+            className={styles.browseButton}
+            onClick={scrollToProfiles}
+          >
+            <span>Przeglądaj profile</span>
+            <FiArrowRight aria-hidden="true" />
+          </button>
         </footer>
       </div>
     </section>

@@ -1,73 +1,55 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styles from "./UserCard.module.scss";
-
 import {
-  FaStar,
-  FaMapMarkerAlt,
-  FaInfoCircle,
-  FaRegEye,
-  FaShieldAlt,
-  FaRegCalendarAlt,
-  FaPaperPlane,
-  FaExternalLinkAlt,
-  FaGlobe,
-  FaLink,
-  FaMoneyBillWave,
-} from "react-icons/fa";
-
+  FiArrowUpRight,
+  FiCalendar,
+  FiChevronDown,
+  FiExternalLink,
+  FiEye,
+  FiGlobe,
+  FiMapPin,
+  FiSend,
+  FiShield,
+  FiStar,
+} from "react-icons/fi";
 import { FaHeart, FaRegHeart } from "react-icons/fa6";
 import axios from "axios";
+
 import { auth } from "../../firebase";
+import styles from "./UserCard.module.scss";
 
 const DEFAULT_AVATAR = "/images/other/no-image.png";
 const API = process.env.REACT_APP_API_URL;
 
 const ensureUrl = (url = "") => {
-  const u = (url || "").trim();
-  if (!u) return "";
-  if (/^https?:\/\//i.test(u)) return u;
-  return `https://${u}`;
+  const value = String(url || "").trim();
+
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+
+  return `https://${value}`;
 };
 
 const prettyUrl = (url) => {
   try {
-    const u = new URL(ensureUrl(url));
-    const host = u.hostname.replace(/^www\./, "");
-    const path = u.pathname === "/" ? "" : u.pathname.replace(/\/$/, "");
-    const qs = u.search || "";
-    return `${host}${path}${qs}`;
+    const parsedUrl = new URL(ensureUrl(url));
+    const host = parsedUrl.hostname.replace(/^www\./, "");
+    const path =
+      parsedUrl.pathname === "/"
+        ? ""
+        : parsedUrl.pathname.replace(/\/$/, "");
+
+    return `${host}${path}`;
   } catch {
     return url;
   }
 };
 
-const pickUrl = (val) => {
-  if (!val) return "";
-  if (typeof val === "string") return val;
-  if (typeof val === "object" && typeof val.url === "string") return val.url;
-  return "";
-};
-
-const normalizeAvatar = (val) => {
-  const raw = pickUrl(val);
-  const v = String(raw || "").trim();
-  if (!v) return "";
-
-  if (v.startsWith("data:image/")) return v;
-  if (v.startsWith("blob:")) return v;
-  if (/^https?:\/\//i.test(v)) return v;
-
-  if (v.startsWith("/uploads/")) return `${API}${v}`;
-  if (v.startsWith("uploads/")) return `${API}/${v}`;
-
-  if (/^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(v)) return `https://${v}`;
-
-  return v;
-};
-
 const THEME_PRESETS = {
   violet: { primary: "#6f4ef2", secondary: "#ff4081" },
+  purple: { primary: "#6f4ef2", secondary: "#a78bfa" },
+  pink: { primary: "#ec4899", secondary: "#fb7185" },
+  rose: { primary: "#e11d48", secondary: "#fb7185" },
   blue: { primary: "#2563eb", secondary: "#06b6d4" },
   green: { primary: "#22c55e", secondary: "#a3e635" },
   orange: { primary: "#f97316", secondary: "#facc15" },
@@ -79,57 +61,60 @@ const resolveUserCardTheme = (theme) => {
   const variant = theme?.variant || "violet";
   const preset = THEME_PRESETS[variant] || THEME_PRESETS.violet;
 
-  const primary = (theme?.primary || theme?.accent || "").trim() || preset.primary;
-  const secondary = (theme?.secondary || theme?.accent2 || "").trim() || preset.secondary;
-
   return {
-    primary,
-    secondary,
-    banner: `linear-gradient(135deg, ${primary}, ${secondary})`,
+    primary:
+      String(theme?.primary || theme?.accent || "").trim() ||
+      preset.primary,
+    secondary:
+      String(theme?.secondary || theme?.accent2 || "").trim() ||
+      preset.secondary,
   };
 };
 
-const PARTNER_COLORS = {
-  partner: "#59d0ff",
-  verified: "#22c55e",
-  ambassador: "#a855f7",
-  "founding-partner": "#7dd3fc",
+const pickUrl = (value) => {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && typeof value.url === "string") {
+    return value.url;
+  }
+  return "";
 };
 
-const resolvePartnerData = (partnership = {}) => {
-  const isPartner = !!partnership?.isPartner;
-  const tier = String(partnership?.tier || "none").toLowerCase();
+const normalizeImage = (value) => {
+  const image = String(pickUrl(value) || "").trim();
 
-  const baseColor =
-    (partnership?.color || "").trim() ||
-    PARTNER_COLORS[tier] ||
-    "#59d0ff";
-
-  const label =
-    (partnership?.badgeText || "").trim() ||
-    (partnership?.label || "").trim() ||
-    (tier === "verified"
-      ? "ZWERYFIKOWANY"
-      : tier === "ambassador"
-        ? "AMBASADOR SHOWLY"
-        : tier === "founding-partner"
-          ? "FOUNDING PARTNER"
-          : "PARTNER SHOWLY");
-
-  return {
-    isPartner,
-    tier,
-    color: baseColor,
-    label,
-  };
+  if (!image) return "";
+  if (image.startsWith("data:image/") || image.startsWith("blob:")) return image;
+  if (/^https?:\/\//i.test(image)) return image;
+  if (image.startsWith("/uploads/")) return `${API}${image}`;
+  if (image.startsWith("uploads/")) return `${API}/${image}`;
+  if (/^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(image)) {
+    return `https://${image}`;
+  }
+  return image;
 };
 
 const getProfileTypeLabel = (profileType) => {
-  if (profileType === "zawodowy") return "ZAWODOWY";
-  if (profileType === "hobbystyczny") return "HOBBY";
-  if (profileType === "serwis") return "SERWIS";
-  if (profileType === "społeczność") return "SPOŁECZNOŚĆ";
-  return "PROFIL";
+  if (profileType === "zawodowy") return "Profil zawodowy";
+  if (profileType === "hobbystyczny") return "Hobby";
+  if (profileType === "serwis") return "Serwis";
+  if (profileType === "społeczność") return "Społeczność";
+  return "Profil Showly";
+};
+
+const getPartnerLabel = (partnership = {}) => {
+  const tier = String(partnership?.tier || "none").toLowerCase();
+
+  return (
+    String(partnership?.badgeText || partnership?.label || "").trim() ||
+    (tier === "verified"
+      ? "Zweryfikowany"
+      : tier === "ambassador"
+        ? "Ambasador Showly"
+        : tier === "founding-partner"
+          ? "Founding Partner"
+          : "Partner Showly")
+  );
 };
 
 const UserCard = ({
@@ -147,7 +132,7 @@ const UserCard = ({
     rating,
     reviews,
     location,
-    tags,
+    tags = [],
     priceFrom,
     priceTo,
     availableDates = [],
@@ -158,17 +143,14 @@ const UserCard = ({
   } = user;
 
   const navigate = useNavigate();
-
   const [isExpanded, setIsExpanded] = useState(false);
   const [visits, setVisits] = useState(
     typeof user.visits === "number" ? user.visits : 0
   );
-
-  const [favCount, setFavCount] = useState(
+  const [favoriteCount, setFavoriteCount] = useState(
     typeof user.favoritesCount === "number" ? user.favoritesCount : 0
   );
-
-  const [isFav, setIsFav] = useState(!!user.isFavorite);
+  const [isFavorite, setIsFavorite] = useState(!!user.isFavorite);
 
   const authHeaders = useCallback(async () => {
     const firebaseUser = auth.currentUser;
@@ -177,7 +159,6 @@ const UserCard = ({
     if (!firebaseUser) return uid ? { uid } : {};
 
     let token = "";
-
     try {
       token = await firebaseUser.getIdToken();
     } catch {
@@ -192,39 +173,41 @@ const UserCard = ({
 
   useEffect(() => {
     if (typeof user.isFavorite === "boolean") {
-      setIsFav(user.isFavorite);
+      setIsFavorite(user.isFavorite);
     }
   }, [user.userId, user.isFavorite]);
 
   useEffect(() => {
     if (typeof user.favoritesCount === "number") {
-      setFavCount(user.favoritesCount);
+      setFavoriteCount(user.favoritesCount);
     }
   }, [user.userId, user.favoritesCount]);
 
-  const showAlert = (message, type = "error") => {
-    if (typeof setAlert === "function") {
-      setAlert({ message, type });
-
-      window.clearTimeout(showAlert._t);
-      showAlert._t = window.setTimeout(() => {
-        setAlert(null);
-      }, 4000);
+  useEffect(() => {
+    if (typeof user.visits === "number") {
+      setVisits(user.visits);
     }
+  }, [user.userId, user.visits]);
+
+  const showAlert = (message, type = "error") => {
+    if (typeof setAlert !== "function") return;
+
+    setAlert({ message, type });
+    window.clearTimeout(showAlert._timeout);
+    showAlert._timeout = window.setTimeout(() => setAlert(null), 4000);
   };
 
-  const blockIfPreview = (e, msg) => {
+  const blockIfPreview = (event, message) => {
     if (!isPreview) return false;
 
-    e?.preventDefault?.();
-    e?.stopPropagation?.();
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
 
     if (typeof onPreviewBlocked === "function") {
-      onPreviewBlocked(msg);
+      onPreviewBlocked(message);
     } else {
-      showAlert(msg, "info");
+      showAlert(message, "info");
     }
-
     return true;
   };
 
@@ -240,34 +223,17 @@ const UserCard = ({
       .replace(/-+$/, "");
 
   const slug = user?.slug || `${slugify(name)}-${slugify(role)}`;
-
-  const avatarSrc = normalizeAvatar(avatar) || DEFAULT_AVATAR;
-
-  const pf = Number(priceFrom);
-  const pt = Number(priceTo);
-  const hasPrice = Number.isFinite(pf) && Number.isFinite(pt) && pf > 0 && pt >= pf;
+  const avatarSrc = normalizeImage(avatar) || DEFAULT_AVATAR;
 
   const publicBilling = user?.billingPublic || user?.billing || {};
   const billingFeatures = publicBilling?.features || null;
-  const publicPlan = String(
-    publicBilling?.effectivePlan ||
-    publicBilling?.plan ||
-    ""
-  ).toLowerCase();
-
   const hasBillingFeatures =
     billingFeatures && Object.keys(billingFeatures).length > 0;
-
-  const canUseBooking = hasBillingFeatures
-    ? !!billingFeatures.booking
-    : true;
-
+  const canUseBooking = hasBillingFeatures ? !!billingFeatures.booking : true;
   const canUseRequestBlocking = hasBillingFeatures
     ? !!billingFeatures.requestBlocking
     : true;
-
   const rawBookingMode = String(user?.bookingMode || "off").toLowerCase();
-
   const bookingMode =
     rawBookingMode === "calendar" && canUseBooking
       ? "calendar"
@@ -276,113 +242,105 @@ const UserCard = ({
         : rawBookingMode === "request-open"
           ? "request-open"
           : "off";
-
   const bookingEnabled = !["off", "none", "disabled", ""].includes(bookingMode);
+  const allowBooking =
+    bookingEnabled && user?.showAvailableDates !== false;
+  const showNoBookingInfo =
+    bookingEnabled && user?.showAvailableDates === false;
+  const bookingLabel =
+    bookingMode === "calendar" ? "Wolny termin" : "Wyślij zapytanie";
 
-  const isCalendar = bookingMode === "calendar";
-  const isRequest =
-    bookingMode === "request-open" || bookingMode === "request-blocking";
-
-  const allowBookingUI = bookingEnabled && user?.showAvailableDates !== false;
-  const showNoBookingInfo = bookingEnabled && user?.showAvailableDates === false;
-
-  const bookBtnLabel = isCalendar
-    ? "Zarezerwuj termin"
-    : isRequest
-      ? "Wyślij zapytanie"
-      : "Zarezerwuj termin";
-
-  const cleanLinks = (links || [])
-    .map((l) => ensureUrl((l || "").trim()))
-    .filter(Boolean);
-
-  const t = resolveUserCardTheme(user?.theme);
-  const partner = resolvePartnerData(partnership);
-  const bannerSrc = normalizeAvatar(banner);
-  const showBanner = !!bannerSrc && ["standard", "premium"].includes(publicPlan);
-
-  const cssVars = {
-    "--uc-primary": t.primary,
-    "--uc-secondary": t.secondary,
-    "--uc-banner": t.banner,
-    "--uc-banner-image": showBanner ? `url("${bannerSrc.replace(/"/g, "%22")}")` : "none",
-
-    "--uc-p-06": `color-mix(in srgb, ${t.primary} 6%, transparent)`,
-    "--uc-p-10": `color-mix(in srgb, ${t.primary} 10%, transparent)`,
-    "--uc-p-14": `color-mix(in srgb, ${t.primary} 14%, transparent)`,
-    "--uc-p-18": `color-mix(in srgb, ${t.primary} 18%, transparent)`,
-    "--uc-p-22": `color-mix(in srgb, ${t.primary} 22%, transparent)`,
-
-    "--uc-s-06": `color-mix(in srgb, ${t.secondary} 6%, transparent)`,
-    "--uc-s-10": `color-mix(in srgb, ${t.secondary} 10%, transparent)`,
-    "--uc-s-14": `color-mix(in srgb, ${t.secondary} 14%, transparent)`,
-
-    "--uc-partner": partner.color,
-    "--uc-partner-soft": `color-mix(in srgb, ${partner.color} 16%, white)`,
-    "--uc-partner-border": `color-mix(in srgb, ${partner.color} 42%, rgba(15, 23, 42, 0.12))`,
-    "--uc-partner-glow": `color-mix(in srgb, ${partner.color} 28%, transparent)`,
+  const bannerSrc = normalizeImage(banner);
+  const showBanner = !!bannerSrc;
+  const theme = resolveUserCardTheme(user?.theme);
+  const cardStyle = {
+    "--card-theme": theme.primary,
+    "--card-theme-dark": `color-mix(in srgb, ${theme.primary} 82%, #000000)`,
+    "--card-theme-soft": `color-mix(in srgb, ${theme.primary} 12%, transparent)`,
+    "--card-secondary": theme.secondary,
+    "--uc-banner-image": showBanner
+      ? `url("${bannerSrc.replace(/"/g, "%22")}")`
+      : "none",
   };
+
+  const fromPrice = Number(priceFrom);
+  const toPrice = Number(priceTo);
+  const hasPrice = Number.isFinite(fromPrice) && fromPrice > 0;
+  const hasPriceRange =
+    hasPrice && Number.isFinite(toPrice) && toPrice > fromPrice;
+  const priceLabel = hasPriceRange
+    ? `${fromPrice}–${toPrice} zł`
+    : hasPrice
+      ? `od ${fromPrice} zł`
+      : "Zapytaj o cenę";
+
+  const visibleTags = Array.isArray(tags) ? tags.slice(0, 3) : [];
+  const cleanLinks = (Array.isArray(links) ? links : [])
+    .map((link) => ensureUrl(pickUrl(link)))
+    .filter(Boolean)
+    .slice(0, 3);
+  const isPartner = !!partnership?.isPartner;
+  const partnerLabel = getPartnerLabel(partnership);
 
   const toggleFavorite = async () => {
     if (!currentUser) {
       showAlert("Aby dodać do ulubionych, musisz być zalogowany.");
       return;
     }
-
     if (currentUser.uid === user.userId) {
       showAlert("Nie możesz dodać własnego profilu do ulubionych.");
       return;
     }
-
     if (!auth.currentUser) {
       showAlert("Sesja jeszcze się ładuje. Spróbuj ponownie za chwilę.", "info");
       return;
     }
 
-    const prevIsFav = isFav;
-    const next = !prevIsFav;
-
-    setIsFav(next);
-    setFavCount((c) => Math.max(0, c + (next ? 1 : -1)));
+    const previousValue = isFavorite;
+    const nextValue = !previousValue;
+    setIsFavorite(nextValue);
+    setFavoriteCount((count) =>
+      Math.max(0, count + (nextValue ? 1 : -1))
+    );
 
     try {
       const headers = await authHeaders();
-
       const { data } = await axios.post(
         `${API}/api/favorites/toggle`,
         { profileUserId: user.userId },
         { headers }
       );
+      const finalValue =
+        typeof data?.isFav === "boolean" ? data.isFav : nextValue;
 
-      const finalIsFav = typeof data?.isFav === "boolean" ? data.isFav : next;
-
-      if (typeof data?.isFav === "boolean") setIsFav(data.isFav);
-      if (typeof data?.count === "number") setFavCount(data.count);
+      if (typeof data?.isFav === "boolean") setIsFavorite(data.isFav);
+      if (typeof data?.count === "number") setFavoriteCount(data.count);
 
       window.dispatchEvent(
         new CustomEvent("showly:favorites-updated", {
           detail: {
             profileUserId: user.userId,
-            isFav: finalIsFav,
+            isFav: finalValue,
             count: typeof data?.count === "number" ? data.count : undefined,
           },
         })
       );
 
       showAlert(
-        finalIsFav
+        finalValue
           ? "Profil został dodany do ulubionych."
           : "Profil został usunięty z ulubionych.",
         "info"
       );
-    } catch (e) {
-      setIsFav(prevIsFav);
-      setFavCount((c) => Math.max(0, c + (prevIsFav ? 1 : -1)));
-
+    } catch (error) {
+      setIsFavorite(previousValue);
+      setFavoriteCount((count) =>
+        Math.max(0, count + (previousValue ? 1 : -1))
+      );
       showAlert(
-        e?.response?.status === 401
-          ? "Brak autoryzacji (401). Token nie został zaakceptowany."
-          : "Nie udało się zaktualizować ulubionych. Spróbuj ponownie."
+        error?.response?.status === 401
+          ? "Brak autoryzacji. Zaloguj się ponownie."
+          : "Nie udało się zaktualizować ulubionych."
       );
     }
   };
@@ -391,20 +349,40 @@ const UserCard = ({
     try {
       if (user?.userId) {
         const headers = currentUser?.uid ? await authHeaders() : {};
-
         const { data } = await axios.patch(
           `${API}/api/profiles/${user.userId}/visit`,
           null,
           { headers }
         );
 
-        if (typeof data?.visits === "number") setVisits(data.visits);
+        if (typeof data?.visits === "number") {
+          setVisits(data.visits);
+        }
       }
     } catch {
-      // ignore
+      // Licznik odwiedzin nie blokuje przejścia do profilu.
     }
 
-    navigate(`/${slug}`, { state: { scrollToId: "profileWrapper" } });
+    navigate(`/${slug}`, {
+      state: { scrollToId: "profileWrapper" },
+    });
+  };
+
+  const goToBooking = () => {
+    if (!currentUser) {
+      showAlert(
+        "Aby skorzystać z rezerwacji lub zapytania, musisz być zalogowany."
+      );
+      return;
+    }
+    if (currentUser.uid === user.userId) {
+      showAlert("Nie możesz wykonać rezerwacji na własnym profilu.");
+      return;
+    }
+
+    navigate(`/rezerwacja/${slug}`, {
+      state: { userId: user.userId, availableDates },
+    });
   };
 
   const startAccountToProfile = () => {
@@ -412,7 +390,6 @@ const UserCard = ({
       showAlert("Aby wysłać wiadomość, musisz być zalogowany.");
       return;
     }
-
     if (currentUser.uid === user.userId) {
       showAlert("Nie możesz wysłać wiadomości do własnego profilu.");
       return;
@@ -423,383 +400,293 @@ const UserCard = ({
     });
   };
 
-  const goToBooking = () => {
-    if (!currentUser) {
-      showAlert("Aby skorzystać z rezerwacji/zapytania, musisz być zalogowany.");
-      return;
-    }
-
-    if (currentUser.uid === user.userId) {
-      showAlert("Nie możesz wykonać rezerwacji/zapytania na własnym profilu.");
-      return;
-    }
-
-    if (user?.showAvailableDates === false) {
-      showAlert(
-        "Ten profil nie udostępnia wolnych terminów — możesz tylko napisać wiadomość.",
-        "info"
-      );
-      return;
-    }
-
-    navigate(`/rezerwacja/${slug}`, {
-      state: { userId: user.userId, availableDates },
-    });
-  };
-
   return (
     <article
-      className={`${styles.card} ${partner.isPartner ? styles.partnerCard : ""}`}
-      style={cssVars}
+      className={`${styles.card} ${isPartner ? styles.partnerCard : ""}`}
+      style={cardStyle}
     >
-      <header className={`${styles.hero} ${showBanner ? styles.heroWithBanner : ""}`}>
-        <div className={styles.heroDecor} aria-hidden="true">
-          <span className={styles.heroGlowA} />
-          <span className={styles.heroGlowB} />
-          <span className={styles.heroGrid} />
+      <header
+        className={`${styles.visual} ${
+          showBanner ? styles.visualWithBanner : ""
+        }`}
+      >
+        {!showBanner && (
+          <div className={styles.visualShapes} aria-hidden="true">
+            <span className={styles.limeBlock} />
+            <span className={styles.circle} />
+          </div>
+        )}
+
+        <div className={styles.visualTop}>
+          <div className={styles.visualBadges}>
+            <span className={styles.profileBadge}>
+              {getProfileTypeLabel(profileType)}
+            </span>
+
+            {isPartner && (
+              <span className={styles.partnerBadge}>{partnerLabel}</span>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className={`${styles.favoriteButton} ${
+              isFavorite ? styles.favoriteActive : ""
+            }`}
+            onClick={(event) => {
+              if (
+                blockIfPreview(
+                  event,
+                  "Ulubione są dostępne po utworzeniu profilu."
+                )
+              ) {
+                return;
+              }
+              toggleFavorite();
+            }}
+            aria-label={
+              isFavorite ? "Usuń profil z ulubionych" : "Dodaj profil do ulubionych"
+            }
+            title={
+              isPreview
+                ? "Podgląd — ulubione wyłączone"
+                : isFavorite
+                  ? "Usuń z ulubionych"
+                  : "Dodaj do ulubionych"
+            }
+          >
+            {isFavorite ? <FaHeart /> : <FaRegHeart />}
+            {favoriteCount > 0 && <small>{favoriteCount}</small>}
+          </button>
         </div>
 
-        <div className={styles.heroFade} aria-hidden="true" />
-
-        <div className={styles.heroTop}>
-          <span className={styles.locPill} title={location || "Brak lokalizacji"}>
-            <FaMapMarkerAlt />
-            <span className={styles.locText}>
-              {location || "Brak lokalizacji"}
-            </span>
-          </span>
-
-          <span className={styles.ratingPill} title={`Ocena: ${rating} (${reviews})`}>
-            <FaStar />
-            <span>
-              <strong>{Number(rating || 0).toFixed(1)}</strong>
-              <span className={styles.dot} />
-              <span>{Number(reviews || 0)} opinii</span>
-            </span>
-          </span>
-        </div>
-
-        <div className={styles.heroInner}>
+        <div className={styles.visualBottom}>
           <div className={styles.avatarWrap}>
             <img
               src={avatarSrc}
               alt={name || "Profil"}
               className={styles.avatar}
               decoding="async"
-              onError={(e) => {
-                if (!e.currentTarget.dataset.fallback) {
-                  e.currentTarget.dataset.fallback = "1";
-                  e.currentTarget.src = DEFAULT_AVATAR;
+              onError={(event) => {
+                if (!event.currentTarget.dataset.fallback) {
+                  event.currentTarget.dataset.fallback = "1";
+                  event.currentTarget.src = DEFAULT_AVATAR;
                 }
               }}
             />
-
-            <div className={styles.avatarRing} aria-hidden="true" />
           </div>
 
-          <div className={styles.heroInfo}>
-            <div className={styles.badgesRow}>
-              {partner.isPartner && (
-                <span
-                  className={`${styles.partnerBadge} ${styles[`partner_${partner.tier}`] || ""
-                    }`}
-                >
-                  {partner.label}
-                </span>
-              )}
+          <div className={styles.visualIdentity}>
+            <p className={styles.role}>{role || "Usługodawca"}</p>
+            <h3 className={styles.name}>{name || "Profil użytkownika"}</h3>
 
-              <span
-                className={`${styles.profileBadge} ${styles[`type_${profileType}`] || ""
-                  }`}
-              >
-                {getProfileTypeLabel(profileType)}
+            <div className={styles.meta}>
+              <span className={styles.metaItem}>
+                <FiMapPin aria-hidden="true" />
+                <span>{location || "Online"}</span>
+              </span>
+
+              <span className={styles.metaItem}>
+                <FiStar aria-hidden="true" />
+                <strong>{Number(rating || 0).toFixed(1)}</strong>
+                <span>({Number(reviews || 0)})</span>
               </span>
             </div>
-
-            <h3 className={styles.name}>
-              <span className={styles.receiverName}>{name || "Profil użytkownika"}</span>
-            </h3>
-
-            <p className={styles.role} title={role || ""}>
-              {role || "—"}
-            </p>
           </div>
         </div>
       </header>
 
-      <section className={styles.body}>
-        {description?.trim() ? (
-          <div className={styles.descBox}>
+      <section className={styles.content}>
+        {description?.trim() && (
+          <div className={styles.descriptionBox}>
             <p
-              className={`${styles.description} ${isExpanded ? styles.expanded : ""
-                }`}
+              className={`${styles.description} ${
+                isExpanded ? styles.descriptionExpanded : ""
+              }`}
             >
               {description}
             </p>
 
             {description.length > 120 && (
               <button
-                className={styles.toggleButton}
-                onClick={() => setIsExpanded((p) => !p)}
                 type="button"
+                className={styles.descriptionToggle}
+                onClick={() => setIsExpanded((current) => !current)}
+                aria-expanded={isExpanded}
               >
-                {isExpanded ? "Zwiń" : "Pokaż więcej"}
+                <span>{isExpanded ? "Zwiń opis" : "Pokaż więcej"}</span>
+                <FiChevronDown
+                  className={
+                    isExpanded ? styles.descriptionToggleOpen : ""
+                  }
+                  aria-hidden="true"
+                />
               </button>
             )}
           </div>
-        ) : (
-          <div className={styles.emptyBox}>
-            <div className={styles.emptyIcon}>
-              <FaInfoCircle />
-            </div>
-
-            <div className={styles.emptyContent}>
-              <span>Użytkownik nie dodał jeszcze opisu.</span>
-            </div>
-          </div>
         )}
 
-        {tags?.length > 0 && (
+        {visibleTags.length > 0 && (
           <div className={styles.tags}>
-            {tags.map((tag) => (
-              <span key={tag} className={styles.tag}>
+            {visibleTags.map((tag) => (
+              <span className={styles.tag} key={tag}>
                 {String(tag).toUpperCase()}
               </span>
             ))}
           </div>
         )}
 
-        <div className={styles.splitLine} />
+        {cleanLinks.length > 0 && (
+          <div className={styles.links} aria-label="Linki profilu">
+            {cleanLinks.map((link, index) => {
+              const linkContent = (
+                <>
+                  <span className={styles.linkIcon}>
+                    <FiGlobe aria-hidden="true" />
+                  </span>
 
-        <div className={styles.details}>
-          <div className={styles.pricePill}>
-            <span className={styles.priceIcon}>
-              <FaMoneyBillWave />
-            </span>
+                  <span className={styles.linkText}>
+                    {prettyUrl(link)}
+                  </span>
 
-            {hasPrice ? (
-              <div>
-                <small>Cennik</small>
-                <strong>
-                  od {pf} zł do {pt} zł
-                </strong>
-              </div>
-            ) : (
-              <div>
-                <small>Cennik</small>
-                <em>brak danych</em>
-              </div>
-            )}
-          </div>
+                  <FiExternalLink
+                    className={styles.linkArrow}
+                    aria-hidden="true"
+                  />
+                </>
+              );
 
-          {cleanLinks.length > 0 ? (
-            <div className={styles.linkGrid}>
-              {cleanLinks.slice(0, 3).map((link, i) => {
-                const label = prettyUrl(link);
-
-                const content = (
-                  <>
-                    <div className={styles.linkTileLeft}>
-                      <span className={styles.linkBadge}>
-                        <FaGlobe />
-                      </span>
-
-                      <div className={styles.linkText}>
-                        <strong>{label}</strong>
-                        <small>
-                          {isPreview ? "Podgląd — link nieaktywny" : "Otwórz zewnętrzny link"}
-                        </small>
-                      </div>
-                    </div>
-
-                    <span className={styles.linkArrow}>
-                      <FaExternalLinkAlt />
-                    </span>
-                  </>
-                );
-
-                if (isPreview) {
-                  return (
-                    <span
-                      key={`${link}-${i}`}
-                      className={`${styles.linkTile} ${styles.linkDisabled}`}
-                      onClick={(e) =>
-                        blockIfPreview(
-                          e,
-                          "Linki są aktywne dopiero po utworzeniu profilu."
-                        )
-                      }
-                      title="Podgląd — link nieaktywny"
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          blockIfPreview(
-                            e,
-                            "Linki są aktywne dopiero po utworzeniu profilu."
-                          );
-                        }
-                      }}
-                    >
-                      {content}
-                    </span>
-                  );
-                }
-
+              if (isPreview) {
                 return (
-                  <a
-                    key={`${link}-${i}`}
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={styles.linkTile}
-                    title={link}
-                    onClick={(e) => e.stopPropagation()}
+                  <button
+                    type="button"
+                    className={styles.linkRow}
+                    key={`${link}-${index}`}
+                    onClick={(event) =>
+                      blockIfPreview(
+                        event,
+                        "Linki będą aktywne po utworzeniu profilu."
+                      )
+                    }
                   >
-                    {content}
-                  </a>
+                    {linkContent}
+                  </button>
                 );
-              })}
-            </div>
-          ) : (
-            <div className={styles.emptyBox}>
-              <div className={styles.emptyIcon}>
-                <FaLink />
-              </div>
+              }
 
-              <div className={styles.emptyContent}>
-                <span>Użytkownik nie dodał jeszcze żadnych linków.</span>
-              </div>
-            </div>
-          )}
+              return (
+                <a
+                  className={styles.linkRow}
+                  href={link}
+                  key={`${link}-${index}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  {linkContent}
+                </a>
+              );
+            })}
+          </div>
+        )}
+
+        <div className={styles.priceRow}>
+          <span>Orientacyjna cena</span>
+          <strong>{priceLabel}</strong>
         </div>
 
         {showNoBookingInfo && (
-          <p className={styles.noReservationInfo}>
-            Ten profil nie udostępnia wolnych terminów – możesz tylko napisać wiadomość.
+          <p className={styles.bookingNote}>
+            Ten profil nie udostępnia terminów — możesz napisać wiadomość.
           </p>
         )}
 
-        <div className={styles.buttons}>
-          {allowBookingUI && (
+        <div className={styles.actions}>
+          <button
+            type="button"
+            className={styles.viewButton}
+            onClick={(event) => {
+              if (
+                blockIfPreview(
+                  event,
+                  "Profil będzie dostępny po zakończeniu tworzenia."
+                )
+              ) {
+                return;
+              }
+              handleViewProfile();
+            }}
+          >
+            <span>Zobacz profil</span>
+            <FiArrowUpRight aria-hidden="true" />
+          </button>
+
+          {allowBooking && (
             <button
               type="button"
-              className={styles.calendarToggle}
+              className={styles.bookingButton}
               disabled={isPreview}
-              onClick={(e) => {
+              onClick={(event) => {
                 if (
                   blockIfPreview(
-                    e,
-                    "Rezerwacje są dostępne dopiero po utworzeniu profilu."
+                    event,
+                    "Rezerwacje są dostępne po utworzeniu profilu."
                   )
                 ) {
                   return;
                 }
-
                 goToBooking();
               }}
               title={
                 isPreview
                   ? "Podgląd — rezerwacje wyłączone"
-                  : "Rezerwacja / zapytanie"
+                  : bookingLabel
               }
             >
-              <FaRegCalendarAlt />
-              {bookBtnLabel}
+              <FiCalendar aria-hidden="true" />
+              <span>{bookingLabel}</span>
             </button>
           )}
 
-          <button
-            type="button"
-            className={styles.buttonSecondary}
-            onClick={(e) => {
-              if (
-                blockIfPreview(
-                  e,
-                  "To tylko podgląd — profil będzie dostępny po utworzeniu."
-                )
-              ) {
-                return;
-              }
-
-              handleViewProfile();
-            }}
-            title={isPreview ? "Podgląd — po utworzeniu profilu" : "Zobacz profil"}
-          >
-            <FaRegEye />
-            Zobacz profil
-          </button>
-
-          {!isPreview && currentUser && currentUser.uid !== user.userId && (
-            <button
-              type="button"
-              className={styles.buttonSecondary}
-              onClick={startAccountToProfile}
-            >
-              <FaPaperPlane />
-              Zadaj pytanie
-            </button>
-          )}
+          {!isPreview &&
+            currentUser &&
+            currentUser.uid !== user.userId && (
+              <button
+                type="button"
+                className={styles.messageButton}
+                onClick={startAccountToProfile}
+              >
+                <FiSend aria-hidden="true" />
+                <span>Zadaj pytanie</span>
+              </button>
+            )}
         </div>
 
-        <div className={styles.cardStats}>
-          <div className={styles.statBox}>
-            <span className={styles.statIcon}>
-              <FaRegEye />
-            </span>
-
-            <div>
+        <footer className={styles.cardFooter}>
+          <span className={styles.statItem}>
+            <FiEye aria-hidden="true" />
+            <span>
               <strong>{Number(visits || 0).toLocaleString("pl-PL")}</strong>
               <small>Odwiedzin</small>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className={`${styles.statBox} ${styles.favoriteStat} ${isFav ? styles.active : ""
-              }`}
-            onClick={(e) => {
-              if (
-                blockIfPreview(
-                  e,
-                  "Nie możesz dodać do ulubionych w podglądzie."
-                )
-              ) {
-                return;
-              }
-
-              toggleFavorite();
-            }}
-            aria-label={isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
-            title={
-              isPreview
-                ? "Podgląd — ulubione wyłączone"
-                : isFav
-                  ? "Usuń z ulubionych"
-                  : "Dodaj do ulubionych"
-            }
-          >
-            <span className={styles.statIcon}>
-              {isFav ? <FaHeart /> : <FaRegHeart />}
             </span>
+          </span>
 
-            <div>
-              <strong>{favCount}</strong>
+          <span className={styles.statItem}>
+            <FaRegHeart aria-hidden="true" />
+            <span>
+              <strong>{favoriteCount}</strong>
               <small>Ulubione</small>
-            </div>
-          </button>
-
-          <div className={styles.statBox}>
-            <span className={styles.statIcon}>
-              <FaShieldAlt />
             </span>
+          </span>
 
-            <div>
-              <strong>{partner.isPartner ? "Partner" : "Aktywny"}</strong>
+          <span className={styles.statItem}>
+            <FiShield aria-hidden="true" />
+            <span>
+              <strong>{isPartner ? "Partner" : "Aktywny"}</strong>
               <small>Status</small>
-            </div>
-          </div>
-        </div>
+            </span>
+          </span>
+        </footer>
       </section>
     </article>
   );

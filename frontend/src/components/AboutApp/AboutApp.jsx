@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   FiArrowRight,
+  FiArrowUpRight,
   FiEdit3,
   FiEye,
   FiLink2,
@@ -14,30 +15,30 @@ const benefits = [
   {
     icon: FiLink2,
     number: "01",
-    title: "Wszystko w jednym miejscu",
-    text: "Oferta, zdjęcia, ceny i kontakt są dostępne pod jednym czytelnym linkiem.",
+    title: "Jedna oferta. Jeden adres.",
+    text: "Usługi, ceny, realizacje i kontakt trafiają pod jeden link, który łatwo wysłać klientowi.",
   },
   {
     icon: FiEye,
     number: "02",
-    title: "Oferta zrozumiała od razu",
-    text: "Klient szybko widzi, czym się zajmujesz i czy Twoja oferta jest dla niego.",
+    title: "Mniej pytań przed decyzją.",
+    text: "Klient od razu widzi, czym się zajmujesz, ile to kosztuje i czy pasujesz do jego potrzeb.",
   },
   {
     icon: FiEdit3,
     number: "03",
-    title: "Pełna kontrola nad profilem",
-    text: "Samodzielnie zmieniasz opis, usługi, zdjęcia i pozostałe informacje.",
+    title: "Zmieniasz, kiedy chcesz.",
+    text: "Aktualizujesz ofertę samodzielnie — bez czekania na informatyka i przebudowy całej strony.",
   },
 ];
 
 const industries = [
-  "usługi lokalne",
-  "freelancerzy",
-  "twórcy",
-  "fotografowie",
-  "DJ-e",
-  "korepetytorzy",
+  { label: "Fotografowie", mark: "FO", tone: "violetAvatar" },
+  { label: "DJ-e", mark: "DJ", tone: "orangeAvatar" },
+  { label: "Beauty", mark: "BE", tone: "greenAvatar" },
+  { label: "Freelancerzy", mark: "FR", tone: "darkAvatar" },
+  { label: "Korepetytorzy", mark: "KO", tone: "limeAvatar" },
+  { label: "Usługi lokalne", mark: "UL", tone: "paperAvatar" },
 ];
 
 const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
@@ -53,7 +54,6 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
     }
 
     const animatedElements = section.querySelectorAll(`.${styles.reveal}`);
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -64,18 +64,13 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
         });
       },
       {
-        threshold: 0.12,
-        rootMargin: "0px 0px -6% 0px",
+        threshold: 0.1,
+        rootMargin: "0px 0px -5% 0px",
       }
     );
 
-    animatedElements.forEach((element) => {
-      observer.observe(element);
-    });
-
-    return () => {
-      observer.disconnect();
-    };
+    animatedElements.forEach((element) => observer.observe(element));
+    return () => observer.disconnect();
   }, []);
 
   const handleNavigate = (path, scrollToId = null) => {
@@ -84,96 +79,79 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
 
       if (element) {
         window.setTimeout(() => {
-          element.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          });
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 100);
       }
 
       return;
     }
 
-    navigate(path, {
-      state: {
-        scrollToId,
-      },
-    });
+    navigate(path, { state: { scrollToId } });
   };
 
-  const renderProfileButton = () => {
+  const profileAction = (() => {
     if (!user) {
-      return (
-        <button
-          type="button"
-          className={styles.secondaryButton}
-          onClick={() => handleNavigate("/register", "registerBox")}
-        >
-          Załóż darmowy profil
-        </button>
-      );
+      return {
+        label: "Załóż darmowy profil",
+        path: "/register",
+        scrollToId: "registerBox",
+        disabled: false,
+      };
     }
 
     if (loadingProfileStatus) {
-      return (
-        <button
-          type="button"
-          className={styles.secondaryButton}
-          disabled
-        >
-          Sprawdzanie profilu...
-        </button>
-      );
+      return {
+        label: "Sprawdzanie profilu...",
+        path: null,
+        scrollToId: null,
+        disabled: true,
+      };
     }
 
     if (hasProfile) {
-      return (
-        <button
-          type="button"
-          className={styles.secondaryButton}
-          onClick={() => handleNavigate("/profil", "profileWrapper")}
-        >
-          Edytuj swój profil
-        </button>
-      );
+      return {
+        label: "Edytuj swój profil",
+        path: "/profil",
+        scrollToId: "profileWrapper",
+        disabled: false,
+      };
     }
 
-    return (
-      <button
-        type="button"
-        className={styles.secondaryButton}
-        onClick={() => handleNavigate("/stworz-profil", "createProfile")}
-      >
-        Stwórz swój profil
-      </button>
-    );
-  };
+    return {
+      label: "Stwórz swój profil",
+      path: "/stworz-profil",
+      scrollToId: "createProfile",
+      disabled: false,
+    };
+  })();
 
   return (
     <section ref={sectionRef} className={styles.section} id="about-app">
-      <div className={styles.decor} aria-hidden="true">
-        <span className={styles.orbOne} />
-        <span className={styles.orbTwo} />
+      <div className={styles.background} aria-hidden="true">
+        <span className={styles.bigWord}>PROFILE</span>
+        <span className={styles.dotField} />
+        <span className={styles.cornerArrow}>↘</span>
       </div>
 
       <div className={styles.inner}>
-        <header className={styles.intro}>
+        <header className={styles.manifest}>
           <div
-            className={`${styles.introHeading} ${styles.reveal} ${styles.fromLeft}`}
+            className={`${styles.manifestCopy} ${styles.reveal} ${styles.fromLeft}`}
           >
-            <span className={styles.eyebrow}>O Showly</span>
+            <span className={styles.kicker}>
+              <span className={styles.kickerDot} />
+              Po co powstało Showly?
+            </span>
 
-            <h2>Jedno miejsce dla Twojej oferty.</h2>
-          </div>
+            <h2>
+              Dobra oferta nie powinna
+              <span className={styles.highlight}>ginąć w wiadomościach.</span>
+            </h2>
 
-          <div
-            className={`${styles.introSide} ${styles.reveal} ${styles.fromRight}`}
-            style={{ "--reveal-delay": "100ms" }}
-          >
             <p>
-              Showly porządkuje najważniejsze informacje o Twojej działalności,
-              żeby klient nie musiał szukać ich w postach, wiadomościach i kilku
-              różnych aplikacjach.
+              Showly porządkuje to, co dziś wysyłasz osobno: ofertę, ceny,
+              realizacje i kontakt. Klient dostaje jeden konkretny profil — Ty
+              przestajesz tłumaczyć wszystko od początku.
             </p>
 
             <div className={styles.actions}>
@@ -182,23 +160,80 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
                 className={styles.primaryButton}
                 onClick={() => handleNavigate("/profile", "profilesHub")}
               >
-                Zobacz profile
-                <FiArrowRight aria-hidden="true" />
+                <span>Zobacz profile</span>
+                <FiArrowUpRight aria-hidden="true" />
               </button>
 
-              {renderProfileButton()}
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                disabled={profileAction.disabled}
+                onClick={() =>
+                  profileAction.path &&
+                  handleNavigate(profileAction.path, profileAction.scrollToId)
+                }
+              >
+                <span>{profileAction.label}</span>
+                {!profileAction.disabled && (
+                  <FiArrowRight aria-hidden="true" />
+                )}
+              </button>
             </div>
           </div>
+
+          <aside
+            className={`${styles.linkCard} ${styles.reveal} ${styles.fromRight}`}
+            style={{ "--reveal-delay": "100ms" }}
+            aria-label="Przykładowa zawartość profilu Showly"
+          >
+            <div className={styles.linkCardTop}>
+              <span className={styles.brandMark}>s.</span>
+              <span>showly.me/twoja-nazwa</span>
+              <FiArrowUpRight aria-hidden="true" />
+            </div>
+
+            <div className={styles.linkCardBody}>
+              <span className={styles.cardLabel}>Twój profil</span>
+              <h3>Wszystko, co klient chce wiedzieć. Od razu.</h3>
+
+              <div className={styles.profileRows}>
+                <div>
+                  <span>Oferta</span>
+                  <strong>Usługi i ceny</strong>
+                  <b>01</b>
+                </div>
+                <div>
+                  <span>Dowód</span>
+                  <strong>Zdjęcia i opinie</strong>
+                  <b>02</b>
+                </div>
+                <div>
+                  <span>Kontakt</span>
+                  <strong>Wiadomość lub rezerwacja</strong>
+                  <b>03</b>
+                </div>
+              </div>
+            </div>
+
+            <span className={styles.readySticker} aria-hidden="true">
+              GOTOWE
+              <br />
+              DO WYSŁANIA
+            </span>
+          </aside>
         </header>
 
         <section className={styles.valueSection}>
-          <div
-            className={`${styles.valueIntro} ${styles.reveal} ${styles.fromTop}`}
+          <header
+            className={`${styles.sectionHeading} ${styles.reveal} ${styles.fromTop}`}
           >
-            <span className={styles.eyebrow}>Prościej dla obu stron</span>
+            <span className={styles.kicker}>
+              <span className={styles.kickerDot} />
+              Mniej tłumaczenia
+            </span>
 
-            <h3>Klient od razu widzi to, co naprawdę ważne.</h3>
-          </div>
+            <h3>Jeden profil robi porządek za Ciebie.</h3>
+          </header>
 
           <div className={styles.benefits}>
             {benefits.map((item, index) => {
@@ -212,7 +247,9 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
                 >
                   <div className={styles.benefitTop}>
                     <span>{item.number}</span>
-                    <Icon aria-hidden="true" />
+                    <span className={styles.benefitIcon}>
+                      <Icon aria-hidden="true" />
+                    </span>
                   </div>
 
                   <h4>{item.title}</h4>
@@ -225,24 +262,32 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
 
         <section className={styles.audienceSection}>
           <div
-            className={`${styles.audienceText} ${styles.reveal} ${styles.fromLeft}`}
+            className={`${styles.audienceCopy} ${styles.reveal} ${styles.fromLeft}`}
           >
-            <span className={styles.eyebrow}>Dla kogo?</span>
+            <span className={styles.kicker}>
+              <span className={styles.kickerDot} />
+              Dla kogo?
+            </span>
 
-            <h3>Dla osób, które pokazują swoją pracę i sprzedają usługi.</h3>
+            <h3>Nie musisz pasować do jednej branży.</h3>
 
             <p>
-              Niezależnie od branży możesz zebrać ofertę, realizacje i kontakt w
-              jednym profilu.
+              Jeśli pokazujesz swoją pracę, sprzedajesz usługę albo przyjmujesz
+              zapytania od klientów — Showly daje Ci na to jedno czytelne
+              miejsce.
             </p>
 
             <div className={styles.shareNote}>
-              <FiSmartphone aria-hidden="true" />
+              <span className={styles.phoneIcon}>
+                <FiSmartphone aria-hidden="true" />
+              </span>
 
               <div>
-                <strong>Jeden link, wiele zastosowań</strong>
-                <span>Bio, post, ogłoszenie albo wiadomość do klienta.</span>
+                <small>Jeden link</small>
+                <strong>Bio, post, ogłoszenie lub wiadomość.</strong>
               </div>
+
+              <FiArrowUpRight aria-hidden="true" />
             </div>
           </div>
 
@@ -251,10 +296,27 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
             style={{ "--reveal-delay": "100ms" }}
           >
             {industries.map((industry) => (
-              <span key={industry}>{industry}</span>
+              <article className={styles.industry} key={industry.label}>
+                <span
+                  className={`${styles.industryAvatar} ${styles[industry.tone]}`}
+                  aria-hidden="true"
+                >
+                  {industry.mark}
+                </span>
+                <strong>{industry.label}</strong>
+                <FiArrowUpRight aria-hidden="true" />
+              </article>
             ))}
           </div>
         </section>
+
+        <div
+          className={`${styles.closingStrip} ${styles.reveal} ${styles.fromBottom}`}
+        >
+          <span>Twoja oferta już istnieje.</span>
+          <strong>Showly daje jej dobry adres.</strong>
+          <FiArrowRight aria-hidden="true" />
+        </div>
       </div>
     </section>
   );

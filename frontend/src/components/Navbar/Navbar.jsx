@@ -6,12 +6,19 @@ import {
   FiUser,
   FiUserPlus,
 } from "react-icons/fi";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import UserDropdown from "../UserDropdown/UserDropdown";
 import styles from "./Navbar.module.scss";
 
 const THEME_STORAGE_KEY = "theme";
+
+const navItems = [
+  { label: "O Showly", scrollToId: "about-app" },
+  { label: "Jak działa", scrollToId: "how-showly-works" },
+  { label: "Promowane profile", scrollToId: "promoted-partners-title" },
+  { label: "Wszystkie profile", scrollToId: "showly-directory" },
+];
 
 const getInitialTheme = () => {
   if (typeof window === "undefined") {
@@ -20,7 +27,6 @@ const getInitialTheme = () => {
 
   try {
     const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-
     return savedTheme === "dark" || savedTheme === "light"
       ? savedTheme
       : "light";
@@ -39,6 +45,7 @@ const Navbar = ({
   setAlert,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState(getInitialTheme);
@@ -47,16 +54,13 @@ const Navbar = ({
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 18);
+      setScrolled(window.scrollY > 28);
     };
 
     handleScroll();
-
     window.addEventListener("scroll", handleScroll, { passive: true });
 
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -65,8 +69,7 @@ const Navbar = ({
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch {
-      // Motyw nadal działa w bieżącej sesji,
-      // nawet jeśli zapis jest zablokowany.
+      // Motyw nadal działa w bieżącej sesji.
     }
   }, [theme]);
 
@@ -75,10 +78,10 @@ const Navbar = ({
       return;
     }
 
-    const lightTop = "#ffffff";
-    const lightScrolled = "#fbf9ff";
-    const darkTop = "#111216";
-    const darkScrolled = "#17181d";
+    const lightTop = "#f1eee4";
+    const lightScrolled = "#fffdf7";
+    const darkTop = "#111310";
+    const darkScrolled = "#1c1f1b";
 
     const statusColor = isDarkTheme
       ? scrolled
@@ -97,19 +100,33 @@ const Navbar = ({
     }
 
     metaTheme.setAttribute("content", statusColor);
-
-    document.documentElement.style.setProperty(
-      "--app-status-bg",
-      statusColor
-    );
+    document.documentElement.style.setProperty("--app-status-bg", statusColor);
   }, [isDarkTheme, scrolled]);
 
   const handleAuthNavigate = (path, scrollToId) => {
-    navigate(path, {
-      state: {
-        scrollToId,
-      },
-    });
+    navigate(path, { state: { scrollToId } });
+  };
+
+  const handleSectionNavigate = (scrollToId) => {
+    if (location.pathname === "/") {
+      const element = document.getElementById(scrollToId);
+
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+    }
+
+    navigate("/", { state: { scrollToId } });
+  };
+
+  const handleLogoClick = (event) => {
+    if (location.pathname !== "/") {
+      return;
+    }
+
+    event.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const toggleTheme = () => {
@@ -124,55 +141,36 @@ const Navbar = ({
         scrolled ? styles.scrolled : ""
       }`}
     >
-      <nav
-        className={styles.navbar}
-        aria-label="Główna nawigacja Showly"
-      >
+      <nav className={styles.navbar} aria-label="Główna nawigacja Showly">
         <Link
           to="/"
           className={styles.logoWrap}
-          aria-label="Przejdź na stronę główną Showly"
+          aria-label="Przejdź na początek strony Showly"
+          onClick={handleLogoClick}
         >
-          <span
-            className={styles.logoMark}
-            aria-hidden="true"
-          >
+          <span className={styles.logoMark} aria-hidden="true">
             <img
-              src="images/other/logo-showly.png"
+              src="/images/other/logo-showly.png"
               alt=""
               className={styles.logoImage}
             />
           </span>
 
-          <span
-            className={styles.logoDivider}
-            aria-hidden="true"
-          />
-
-          <span className={styles.logoGroup}>
-            <span className={styles.logoLine}>
-              <span className={styles.logoText}>
-                Showly.me
-              </span>
-
-              <span className={styles.beta}>
-                Beta
-              </span>
-            </span>
-
-            <span className={styles.logoSub}>
-              profile, które prowadzą do kontaktu
-            </span>
-          </span>
+          <span className={styles.logoText}>Showly.me</span>
+          <span className={styles.beta}>Beta</span>
         </Link>
 
-        <div
-          className={styles.navStatement}
-          aria-hidden="true"
-        >
-          <span>Znajdź</span>
-          <span>Porównaj</span>
-          <span>Skontaktuj się</span>
+        <div className={styles.navLinks} aria-label="Sekcje strony głównej">
+          {navItems.map((item) => (
+            <button
+              type="button"
+              className={styles.navLink}
+              onClick={() => handleSectionNavigate(item.scrollToId)}
+              key={item.scrollToId}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
 
         <div className={styles.right}>
@@ -181,31 +179,16 @@ const Navbar = ({
             className={styles.themeToggle}
             onClick={toggleTheme}
             aria-label={
-              isDarkTheme
-                ? "Włącz jasny motyw"
-                : "Włącz ciemny motyw"
+              isDarkTheme ? "Włącz jasny motyw" : "Włącz ciemny motyw"
             }
             aria-pressed={isDarkTheme}
-            title={
-              isDarkTheme
-                ? "Jasny motyw"
-                : "Ciemny motyw"
-            }
+            title={isDarkTheme ? "Jasny motyw" : "Ciemny motyw"}
           >
-            <span
-              className={styles.themeIcon}
-              aria-hidden="true"
-            >
-              {isDarkTheme ? <FiSun /> : <FiMoon />}
-            </span>
-
-            <span className={styles.themeCopy}>
-              <small>Motyw</small>
-
-              <strong>
-                {isDarkTheme ? "Jasny" : "Ciemny"}
-              </strong>
-            </span>
+            {isDarkTheme ? (
+              <FiSun aria-hidden="true" />
+            ) : (
+              <FiMoon aria-hidden="true" />
+            )}
           </button>
 
           {loadingUser && !user ? (
@@ -225,9 +208,7 @@ const Navbar = ({
                 refreshTrigger={refreshTrigger}
                 unreadCount={unreadCount}
                 setUnreadCount={setUnreadCount}
-                pendingReservationsCount={
-                  pendingReservationsCount
-                }
+                pendingReservationsCount={pendingReservationsCount}
                 setAlert={setAlert}
               />
             </div>
@@ -236,17 +217,11 @@ const Navbar = ({
               <button
                 type="button"
                 className={styles.loginPrompt}
-                onClick={() =>
-                  handleAuthNavigate(
-                    "/login",
-                    "loginBox"
-                  )
-                }
+                onClick={() => handleAuthNavigate("/login", "loginBox")}
                 aria-label="Zaloguj się"
                 title="Zaloguj się"
               >
                 <FiUser aria-hidden="true" />
-
                 <span>Zaloguj</span>
               </button>
 
@@ -254,18 +229,13 @@ const Navbar = ({
                 type="button"
                 className={styles.registerPrompt}
                 onClick={() =>
-                  handleAuthNavigate(
-                    "/register",
-                    "registerBox"
-                  )
+                  handleAuthNavigate("/register", "registerBox")
                 }
                 aria-label="Załóż konto"
                 title="Załóż konto"
               >
                 <FiUserPlus aria-hidden="true" />
-
                 <span>Załóż konto</span>
-
                 <FiArrowUpRight
                   className={styles.registerArrow}
                   aria-hidden="true"

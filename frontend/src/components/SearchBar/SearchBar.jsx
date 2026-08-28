@@ -1,9 +1,4 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   FiArrowUpRight,
   FiMapPin,
@@ -18,44 +13,21 @@ import styles from "./SearchBar.module.scss";
 const API = process.env.REACT_APP_API_URL;
 
 const THEME_PRESETS = {
-  violet: {
-    primary: "#6f4ef2",
-    secondary: "#ff4081",
-  },
-  blue: {
-    primary: "#2563eb",
-    secondary: "#06b6d4",
-  },
-  green: {
-    primary: "#22c55e",
-    secondary: "#a3e635",
-  },
-  orange: {
-    primary: "#f97316",
-    secondary: "#facc15",
-  },
-  red: {
-    primary: "#ef4444",
-    secondary: "#fb7185",
-  },
-  dark: {
-    primary: "#111827",
-    secondary: "#4b5563",
-  },
+  violet: { primary: "#6557ef", secondary: "#d8ff72" },
+  blue: { primary: "#2563eb", secondary: "#7dd3fc" },
+  green: { primary: "#4f9b79", secondary: "#d8ff72" },
+  orange: { primary: "#f97316", secondary: "#ffba7a" },
+  red: { primary: "#e84f62", secondary: "#ff9a82" },
+  dark: { primary: "#171917", secondary: "#686c65" },
 };
 
 const resolveTheme = (theme) => {
   const variant = theme?.variant || "violet";
   const preset = THEME_PRESETS[variant] || THEME_PRESETS.violet;
 
-  const primary = String(theme?.primary || "").trim() || preset.primary;
-  const secondary =
-    String(theme?.secondary || "").trim() || preset.secondary;
-
   return {
-    primary,
-    secondary,
-    gradient: `linear-gradient(135deg, ${primary}, ${secondary})`,
+    primary: String(theme?.primary || "").trim() || preset.primary,
+    secondary: String(theme?.secondary || "").trim() || preset.secondary,
   };
 };
 
@@ -93,20 +65,17 @@ const getResultCountLabel = (count) => {
 
 const SearchBar = ({ variant = "default" }) => {
   const navigate = useNavigate();
-
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
-
   const generatedId = useId();
+
   const inputId = `showly-search-${generatedId.replace(/:/g, "")}`;
   const listboxId = `${inputId}-results`;
 
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
-
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
 
@@ -125,9 +94,7 @@ const SearchBar = ({ variant = "default" }) => {
       setDebouncedQuery(trimmedQuery);
     }, 300);
 
-    return () => {
-      window.clearTimeout(timer);
-    };
+    return () => window.clearTimeout(timer);
   }, [trimmedQuery]);
 
   useEffect(() => {
@@ -139,10 +106,7 @@ const SearchBar = ({ variant = "default" }) => {
     };
 
     document.addEventListener("pointerdown", handlePointerDown);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-    };
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, []);
 
   useEffect(() => {
@@ -162,22 +126,14 @@ const SearchBar = ({ variant = "default" }) => {
         setOpen(true);
         setActiveIndex(-1);
 
-        const { data } = await axios.get(
-          `${API}/api/profiles/search`,
-          {
-            params: {
-              q: debouncedQuery,
-              limit: 6,
-            },
-            signal: controller.signal,
-          }
-        );
+        const { data } = await axios.get(`${API}/api/profiles/search`, {
+          params: { q: debouncedQuery, limit: 6 },
+          signal: controller.signal,
+        });
 
-        if (controller.signal.aborted) {
-          return;
+        if (!controller.signal.aborted) {
+          setResults(Array.isArray(data) ? data : []);
         }
-
-        setResults(Array.isArray(data) ? data : []);
       } catch (error) {
         if (
           error?.name === "CanceledError" ||
@@ -196,11 +152,18 @@ const SearchBar = ({ variant = "default" }) => {
     };
 
     fetchResults();
-
-    return () => {
-      controller.abort();
-    };
+    return () => controller.abort();
   }, [debouncedQuery]);
+
+  const handleGoToProfile = (slug) => {
+    if (!slug) {
+      return;
+    }
+
+    setOpen(false);
+    setActiveIndex(-1);
+    navigate(`/${slug}`, { state: { scrollToId: "profileWrapper" } });
+  };
 
   const goToSearchResults = () => {
     const value = query.trim();
@@ -212,38 +175,18 @@ const SearchBar = ({ variant = "default" }) => {
 
     setOpen(false);
     setActiveIndex(-1);
-
     navigate(`/szukaj?q=${encodeURIComponent(value)}`);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (
-      open &&
-      activeIndex >= 0 &&
-      results[activeIndex]?.slug
-    ) {
+    if (open && activeIndex >= 0 && results[activeIndex]?.slug) {
       handleGoToProfile(results[activeIndex].slug);
       return;
     }
 
     goToSearchResults();
-  };
-
-  const handleGoToProfile = (slug) => {
-    if (!slug) {
-      return;
-    }
-
-    setOpen(false);
-    setActiveIndex(-1);
-
-    navigate(`/${slug}`, {
-      state: {
-        scrollToId: "profileWrapper",
-      },
-    });
   };
 
   const handleInputChange = (event) => {
@@ -269,10 +212,8 @@ const SearchBar = ({ variant = "default" }) => {
   const handleInputKeyDown = (event) => {
     if (event.key === "Escape") {
       event.preventDefault();
-
       setOpen(false);
       setActiveIndex(-1);
-
       return;
     }
 
@@ -282,62 +223,42 @@ const SearchBar = ({ variant = "default" }) => {
 
     if (event.key === "ArrowDown") {
       event.preventDefault();
-
       setOpen(true);
-      setActiveIndex((currentIndex) => {
-        if (currentIndex >= results.length - 1) {
-          return 0;
-        }
-
-        return currentIndex + 1;
-      });
-
+      setActiveIndex((currentIndex) =>
+        currentIndex >= results.length - 1 ? 0 : currentIndex + 1
+      );
       return;
     }
 
     if (event.key === "ArrowUp") {
       event.preventDefault();
-
       setOpen(true);
-      setActiveIndex((currentIndex) => {
-        if (currentIndex <= 0) {
-          return results.length - 1;
-        }
-
-        return currentIndex - 1;
-      });
+      setActiveIndex((currentIndex) =>
+        currentIndex <= 0 ? results.length - 1 : currentIndex - 1
+      );
     }
   };
 
   return (
-    <div
-      className={wrapperClassName}
-      ref={wrapperRef}
-    >
+    <div className={wrapperClassName} ref={wrapperRef}>
       <form
         className={styles.searchContainer}
         role="search"
         onSubmit={handleSubmit}
       >
-        <label
-          className={styles.srOnly}
-          htmlFor={inputId}
-        >
+        <label className={styles.srOnly} htmlFor={inputId}>
           Wyszukaj profile, usługi lub lokalizacje
         </label>
 
         <div className={styles.inputArea}>
-          <FiSearch
-            className={styles.inputIcon}
-            aria-hidden="true"
-          />
+          <FiSearch className={styles.inputIcon} aria-hidden="true" />
 
           <input
             ref={inputRef}
             id={inputId}
             type="search"
             className={styles.searchInput}
-            placeholder="Szukaj profili i usług…"
+            placeholder="Fotograf, DJ, fryzjer, miasto…"
             value={query}
             autoComplete="off"
             spellCheck="false"
@@ -361,10 +282,7 @@ const SearchBar = ({ variant = "default" }) => {
           className={styles.searchButton}
           aria-label="Przejdź do wyników wyszukiwania"
         >
-          <span className={styles.buttonLabel}>
-            Szukaj
-          </span>
-
+          <span className={styles.buttonLabel}>Szukaj</span>
           <FiArrowUpRight aria-hidden="true" />
         </button>
       </form>
@@ -378,62 +296,40 @@ const SearchBar = ({ variant = "default" }) => {
         >
           <header className={styles.dropdownHeader}>
             <div className={styles.dropdownHeading}>
-              <span
-                className={styles.dropdownIndex}
-                aria-hidden="true"
-              >
-                01
-              </span>
-
+              <span className={styles.dropdownDot} aria-hidden="true" />
               <div>
-                <span className={styles.dropdownLabel}>
-                  Wyniki wyszukiwania
-                </span>
-
+                <span className={styles.dropdownLabel}>Wyszukiwarka profili Showly</span>
                 <strong aria-live="polite">
                   {loading
-                    ? "Szukam pasujących profili"
+                    ? "Szukam pasujących profili…"
                     : getResultCountLabel(results.length)}
                 </strong>
               </div>
             </div>
 
-            <span
-              className={styles.queryTerm}
-              title={trimmedQuery}
-            >
-              „{trimmedQuery}”
+            <span className={styles.queryTerm} title={trimmedQuery}>
+              {trimmedQuery}
             </span>
           </header>
 
           {loading ? (
-            <div
-              className={styles.dropdownState}
-              role="status"
-            >
-              <span className={styles.stateIndex}>
-                00
+            <div className={styles.dropdownState} role="status">
+              <span className={styles.stateMark} aria-hidden="true">
+                ···
               </span>
-
               <div>
                 <strong>Przeszukuję Showly</strong>
                 <span>To potrwa tylko chwilę.</span>
               </div>
             </div>
           ) : results.length === 0 ? (
-            <div
-              className={styles.dropdownState}
-              role="status"
-            >
-              <span className={styles.stateIndex}>
-                00
+            <div className={styles.dropdownState} role="status">
+              <span className={styles.stateMark} aria-hidden="true">
+                0
               </span>
-
               <div>
                 <strong>Brak pasujących profili</strong>
-                <span>
-                  Spróbuj użyć innej usługi, branży lub miasta.
-                </span>
+                <span>Spróbuj wpisać inną usługę, branżę lub miasto.</span>
               </div>
             </div>
           ) : (
@@ -447,15 +343,13 @@ const SearchBar = ({ variant = "default" }) => {
                 {results.map((item, index) => {
                   const resolvedTheme = resolveTheme(item.theme);
                   const avatarUrl = getAvatarUrl(item.avatar);
+                  const resultId = `${inputId}-option-${index}`;
+                  const isActive = index === activeIndex;
 
                   const cssVariables = {
                     "--result-primary": resolvedTheme.primary,
                     "--result-secondary": resolvedTheme.secondary,
-                    "--result-gradient": resolvedTheme.gradient,
                   };
-
-                  const resultId = `${inputId}-option-${index}`;
-                  const isActive = index === activeIndex;
 
                   return (
                     <button
@@ -476,21 +370,9 @@ const SearchBar = ({ variant = "default" }) => {
                       onFocus={() => setActiveIndex(index)}
                       onClick={() => handleGoToProfile(item.slug)}
                     >
-                      <span
-                        className={styles.resultNumber}
-                        aria-hidden="true"
-                      >
-                        {String(index + 1).padStart(2, "0")}
-                      </span>
-
-                      <span
-                        className={styles.resultAvatar}
-                        aria-hidden="true"
-                      >
+                      <span className={styles.resultAvatar} aria-hidden="true">
                         <span className={styles.avatarFallback}>
-                          {(item?.name || "?")
-                            .charAt(0)
-                            .toUpperCase()}
+                          {(item?.name || "?").charAt(0).toUpperCase()}
                         </span>
 
                         {avatarUrl && (
@@ -509,9 +391,7 @@ const SearchBar = ({ variant = "default" }) => {
 
                       <span className={styles.resultContent}>
                         <span className={styles.resultTop}>
-                          <strong>
-                            {item.name || "Profil bez nazwy"}
-                          </strong>
+                          <strong>{item.name || "Profil bez nazwy"}</strong>
 
                           {item.role && (
                             <span className={styles.resultRole}>
@@ -531,10 +411,8 @@ const SearchBar = ({ variant = "default" }) => {
                           {Number(item.rating) > 0 && (
                             <span className={styles.resultMetaItem}>
                               <FiStar aria-hidden="true" />
-
                               <span>
-                                {Number(item.rating).toFixed(1)}
-                                {" · "}
+                                {Number(item.rating).toFixed(1)} ·{" "}
                                 {Number(item.reviews || 0)} opinii
                               </span>
                             </span>
@@ -561,10 +439,7 @@ const SearchBar = ({ variant = "default" }) => {
                           )}
                       </span>
 
-                      <span
-                        className={styles.openResult}
-                        aria-hidden="true"
-                      >
+                      <span className={styles.openResult} aria-hidden="true">
                         <span>Otwórz</span>
                         <FiArrowUpRight />
                       </span>
@@ -580,16 +455,12 @@ const SearchBar = ({ variant = "default" }) => {
               >
                 <span className={styles.showAllCopy}>
                   <small>Pełna lista</small>
-
-                  <strong>
-                    Wszystkie wyniki dla „{trimmedQuery}”
-                  </strong>
+                  <strong>Wszystkie wyniki dla „{trimmedQuery}”</strong>
                 </span>
 
-                <FiArrowUpRight
-                  className={styles.showAllArrow}
-                  aria-hidden="true"
-                />
+                <span className={styles.showAllIcon} aria-hidden="true">
+                  <FiArrowUpRight />
+                </span>
               </button>
             </>
           )}

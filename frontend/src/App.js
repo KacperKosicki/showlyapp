@@ -11,8 +11,7 @@ import AllUsersList from "./components/AllUsersList/AllUsersList";
 import Footer from "./components/Footer/Footer";
 import AboutApp from "./components/AboutApp/AboutApp";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
-import PartnersShowcase from "./components/PartnersShowcase/PartnersShowcase";
-import PromotedProfiles from "./components/PromotedProfiles/PromotedProfiles";
+import PromotedPartners from "./components/PromotedPartners/PromotedPartners";
 import HowShowlyWorks from "./components/HowShowlyWorks/HowShowlyWorks";
 import DiscoverShowly from "./components/DiscoverShowly/DiscoverShowly";
 import AlertBox from "./components/AlertBox/AlertBox";
@@ -528,9 +527,8 @@ function App() {
                   hasProfile={hasProfile}
                   loadingProfileStatus={loadingProfileStatus}
                 />
-                <PartnersShowcase currentUser={safeUser} setAlert={setAlert} />
                 <HowShowlyWorks />
-                <PromotedProfiles currentUser={safeUser} setAlert={setAlert} />
+                <PromotedPartners currentUser={safeUser} setAlert={setAlert} />
                 <DiscoverShowly />
                 <UserCardList currentUser={safeUser} setAlert={setAlert} />
                 <WhyUs />
