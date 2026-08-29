@@ -1,44 +1,72 @@
 import { useEffect, useState } from "react";
+import {
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  updateProfile,
+} from "firebase/auth";
+import {
+  FiImage,
+  FiLock,
+  FiSave,
+  FiShield,
+  FiTrash2,
+  FiUser,
+} from "react-icons/fi";
 import { useLocation } from "react-router-dom";
-import styles from "./AccountSettings.module.scss";
+
 import { auth } from "../../firebase";
 import AlertBox from "../AlertBox/AlertBox";
-import {
-  updateProfile,
-  sendPasswordResetEmail,
-  onAuthStateChanged,
-} from "firebase/auth";
-import { FiImage, FiSave, FiTrash2, FiLock, FiUser, FiShield } from "react-icons/fi";
+import styles from "./AccountSettings.module.scss";
 
 const API = process.env.REACT_APP_API_URL;
 
 async function authHeaders(extra = {}) {
-  const u = auth.currentUser;
-  if (!u) return { ...extra };
-  const token = await u.getIdToken();
-  return { Authorization: `Bearer ${token}`, ...extra };
-}
+  const currentUser = auth.currentUser;
 
-const isLocalhostUrl = (u = "") =>
-  /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(u);
-
-const normalizeAvatar = (val = "") => {
-  if (!val) return "";
-
-  if (/^https?:\/\//i.test(val)) {
-    if (isLocalhostUrl(val)) return val;
-    return val.replace(/^http:\/\//i, "https://");
+  if (!currentUser) {
+    return { ...extra };
   }
 
-  if (val.startsWith("/uploads/")) return `${API}${val}`;
-  if (val.startsWith("uploads/")) return `${API}/${val}`;
+  const token = await currentUser.getIdToken();
 
-  return val;
+  return {
+    Authorization: `Bearer ${token}`,
+    ...extra,
+  };
+}
+
+const isLocalhostUrl = (url = "") =>
+  /^https?:\/\/(localhost|127\.0\.0\.1)/i.test(url);
+
+const normalizeAvatar = (value = "") => {
+  if (!value) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(value)) {
+    if (isLocalhostUrl(value)) {
+      return value;
+    }
+
+    return value.replace(/^http:\/\//i, "https://");
+  }
+
+  if (value.startsWith("/uploads/")) {
+    return `${API}${value}`;
+  }
+
+  if (value.startsWith("uploads/")) {
+    return `${API}/${value}`;
+  }
+
+  return value;
 };
 
 const LoadingDots = ({ active }) => (
   <span
-    className={`${styles.loadingDots} ${active ? styles.loadingDotsActive : ""}`}
+    className={`${styles.loadingDots} ${
+      active ? styles.loadingDotsActive : ""
+    }`}
     aria-hidden="true"
   >
     <span />
@@ -57,7 +85,9 @@ const ButtonContent = ({ icon, children, isLoading }) => (
       <span className={styles.btnLabel}>{children}</span>
     </span>
 
-    {typeof isLoading === "boolean" && <LoadingDots active={isLoading} />}
+    {typeof isLoading === "boolean" && (
+      <LoadingDots active={isLoading} />
+    )}
   </span>
 );
 
@@ -71,7 +101,7 @@ const ActionButton = ({
 }) => (
   <button
     type="button"
-    className={`${styles.btn} ${className}`}
+    className={`${styles.button} ${className}`}
     disabled={disabled || isLoading}
     onClick={onClick}
     aria-busy={isLoading ? "true" : "false"}
@@ -83,8 +113,9 @@ const ActionButton = ({
   </button>
 );
 
-export default function AccountSettings() {
+const AccountSettings = () => {
   const location = useLocation();
+  const fallbackImg = "/images/other/no-image.png";
 
   const [user, setUser] = useState(() => auth.currentUser || null);
   const [displayName, setDisplayName] = useState(
@@ -96,18 +127,16 @@ export default function AccountSettings() {
   const [loading, setLoading] = useState(true);
   const [alert, setAlert] = useState(null);
 
-  const fallbackImg = "/images/other/no-image.png";
-
   const showAlert = (type, message) => {
     setAlert({ type, message });
   };
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
+    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
       try {
         setLoading(true);
 
-        if (!u) {
+        if (!authUser) {
           setUser(null);
           setDisplayName("");
           setPreview(fallbackImg);
@@ -115,8 +144,10 @@ export default function AccountSettings() {
         }
 
         try {
-          await u.reload();
-        } catch { }
+          await authUser.reload();
+        } catch {
+          // Dane z bieżącej sesji nadal mogą zostać użyte.
+        }
 
         const freshUser = auth.currentUser;
 
@@ -125,16 +156,20 @@ export default function AccountSettings() {
 
         try {
           const headers = await authHeaders({ Accept: "application/json" });
-          const res = await fetch(`${API}/api/users/${u.uid}`, { headers });
+          const response = await fetch(`${API}/api/users/${authUser.uid}`, {
+            headers,
+          });
 
-          if (res.ok) {
-            const dbUser = await res.json();
+          if (response.ok) {
+            const databaseUser = await response.json();
             const avatarUrl =
-              dbUser?.avatar || freshUser?.photoURL || fallbackImg;
+              databaseUser?.avatar || freshUser?.photoURL || fallbackImg;
 
             setPreview(normalizeAvatar(avatarUrl));
           } else {
-            setPreview(normalizeAvatar(freshUser?.photoURL) || fallbackImg);
+            setPreview(
+              normalizeAvatar(freshUser?.photoURL) || fallbackImg
+            );
           }
         } catch {
           setPreview(normalizeAvatar(freshUser?.photoURL) || fallbackImg);
@@ -144,11 +179,13 @@ export default function AccountSettings() {
       }
     });
 
-    return () => unsub();
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading) {
+      return;
+    }
 
     let targetId = location.state?.scrollToId;
 
@@ -156,13 +193,15 @@ export default function AccountSettings() {
       targetId = window.location.hash.replace("#", "").trim();
     }
 
-    if (!targetId) return;
+    if (!targetId) {
+      return;
+    }
 
     const tryScroll = () => {
-      const el = document.getElementById(targetId);
+      const element = document.getElementById(targetId);
 
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
 
         if (location.state?.scrollToId) {
           window.history.replaceState(
@@ -179,7 +218,7 @@ export default function AccountSettings() {
     };
 
     requestAnimationFrame(tryScroll);
-  }, [location.state, loading, location.pathname]);
+  }, [location.pathname, location.state, loading]);
 
   useEffect(() => {
     return () => {
@@ -189,30 +228,37 @@ export default function AccountSettings() {
     };
   }, [preview]);
 
-  const onFileChange = (e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
+  const onFileChange = (event) => {
+    const selectedFile = event.target.files?.[0];
 
-    if (!/^image\//.test(f.type)) {
-      e.target.value = "";
-      return showAlert("warning", "Wybierz plik graficzny.");
+    if (!selectedFile) {
+      return;
     }
 
-    if (f.size > 2 * 1024 * 1024) {
-      e.target.value = "";
-      return showAlert("warning", "Maksymalny rozmiar to 2 MB.");
+    if (!/^image\//.test(selectedFile.type)) {
+      event.target.value = "";
+      showAlert("warning", "Wybierz plik graficzny.");
+      return;
+    }
+
+    if (selectedFile.size > 2 * 1024 * 1024) {
+      event.target.value = "";
+      showAlert("warning", "Maksymalny rozmiar to 2 MB.");
+      return;
     }
 
     if (preview?.startsWith("blob:")) {
       URL.revokeObjectURL(preview);
     }
 
-    setFile(f);
-    setPreview(URL.createObjectURL(f));
+    setFile(selectedFile);
+    setPreview(URL.createObjectURL(selectedFile));
   };
 
   const handleSaveAvatar = async () => {
-    if (!user || !file) return;
+    if (!user || !file) {
+      return;
+    }
 
     try {
       setLoadingAction("saveAvatar");
@@ -221,30 +267,31 @@ export default function AccountSettings() {
       form.append("file", file);
 
       const headers = await authHeaders();
-
-      const res = await fetch(`${API}/api/users/${user.uid}/avatar`, {
+      const response = await fetch(`${API}/api/users/${user.uid}/avatar`, {
         method: "POST",
         headers,
         body: form,
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message || "Błąd uploadu");
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error?.message || "Błąd uploadu");
       }
 
-      const { url } = await res.json();
+      const { url } = await response.json();
 
       try {
         await updateProfile(user, { photoURL: url });
         await user.reload();
-      } catch { }
+      } catch {
+        // Awatar w bazie został zapisany poprawnie.
+      }
 
       setPreview(normalizeAvatar(url));
       setFile(null);
       showAlert("success", "Zapisano nowy awatar.");
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       showAlert("error", "Nie udało się zapisać awataru.");
     } finally {
       setLoadingAction(null);
@@ -252,33 +299,36 @@ export default function AccountSettings() {
   };
 
   const handleRemoveAvatar = async () => {
-    if (!user) return;
+    if (!user) {
+      return;
+    }
 
     try {
       setLoadingAction("removeAvatar");
 
       const headers = await authHeaders();
-
-      const res = await fetch(`${API}/api/users/${user.uid}/avatar`, {
+      const response = await fetch(`${API}/api/users/${user.uid}/avatar`, {
         method: "DELETE",
         headers,
       });
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message || "Błąd usuwania");
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error?.message || "Błąd usuwania");
       }
 
       try {
         await updateProfile(user, { photoURL: "" });
         await user.reload();
-      } catch { }
+      } catch {
+        // Awatar w bazie został usunięty poprawnie.
+      }
 
       setPreview(fallbackImg);
       setFile(null);
       showAlert("success", "Usunięto awatar.");
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       showAlert("error", "Nie udało się usunąć awataru.");
     } finally {
       setLoadingAction(null);
@@ -286,14 +336,16 @@ export default function AccountSettings() {
   };
 
   const handleSaveDisplayName = async () => {
-    if (!user) return;
+    if (!user) {
+      return;
+    }
 
     try {
       setLoadingAction("saveName");
 
-      const clean = displayName.trim();
+      const cleanDisplayName = displayName.trim();
 
-      await updateProfile(user, { displayName: clean });
+      await updateProfile(user, { displayName: cleanDisplayName });
       await user.reload();
 
       const headers = await authHeaders({
@@ -303,13 +355,13 @@ export default function AccountSettings() {
       await fetch(`${API}/api/users/${user.uid}`, {
         method: "PATCH",
         headers,
-        body: JSON.stringify({ displayName: clean }),
-      }).catch(() => { });
+        body: JSON.stringify({ displayName: cleanDisplayName }),
+      }).catch(() => {});
 
       setUser(auth.currentUser);
       showAlert("success", "Zaktualizowano nazwę wyświetlaną.");
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       showAlert("error", "Nie udało się zapisać nazwy.");
     } finally {
       setLoadingAction(null);
@@ -318,15 +370,16 @@ export default function AccountSettings() {
 
   const handlePasswordReset = async () => {
     if (!user?.email) {
-      return showAlert("warning", "Brak adresu e-mail.");
+      showAlert("warning", "Brak adresu e-mail.");
+      return;
     }
 
     try {
       setLoadingAction("resetPass");
       await sendPasswordResetEmail(auth, user.email);
       showAlert("info", "Wysłaliśmy link do zmiany hasła.");
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
       showAlert("error", "Nie udało się wysłać linku do resetu.");
     } finally {
       setLoadingAction(null);
@@ -337,7 +390,15 @@ export default function AccountSettings() {
     return (
       <section className={styles.section}>
         <div className={styles.inner}>
-          <div className={styles.loadingCard}>Ładowanie ustawień konta…</div>
+          <div className={styles.loadingPanel} role="status">
+            <span className={styles.loadingMark} aria-hidden="true">
+              <FiUser />
+            </span>
+            <div>
+              <strong>Ustawienia konta</strong>
+              <span>Ładujemy Twoje dane…</span>
+            </div>
+          </div>
         </div>
       </section>
     );
@@ -359,195 +420,195 @@ export default function AccountSettings() {
           </div>
         )}
 
-        <div className={styles.layout}>
-          <aside className={styles.side}>
-            <h2 className={styles.heading}>
-              Ustawienia <span>konta</span>
-            </h2>
-
-            <p className={styles.description}>
-              Zarządzaj danymi widocznymi w Showly, zdjęciem konta oraz
-              bezpieczeństwem logowania.
-            </p>
-
-            <div className={styles.metaRow}>
-              <div className={styles.metaCard}>
-                <strong>{user?.email ? "OK" : "—"}</strong>
-                <span>adres e-mail konta</span>
-              </div>
-
-              <div className={styles.metaCard}>
-                <strong>{hasAvatar ? "Tak" : "Nie"}</strong>
-                <span>ustawiony awatar</span>
-              </div>
-
-              <div className={styles.metaCard}>
-                <strong>{hasDisplayName ? "Tak" : "Nie"}</strong>
-                <span>nazwa wyświetlana</span>
-              </div>
+        <main className={styles.panel}>
+          <header className={styles.panelHeader}>
+            <div className={styles.titleBlock}>
+              <span className={styles.kicker}>Konto Showly</span>
+              <h1>Ustawienia konta</h1>
+              <p>Awatar, nazwa oraz bezpieczeństwo logowania.</p>
             </div>
 
-            <div className={styles.infoBox}>
-              <span>Profil • Konto • Bezpieczeństwo</span>
-              <p>
-                Zmiany zapisujesz osobno w każdej sekcji. Dzięki temu masz
-                pełną kontrolę nad tym, co aktualizujesz.
-              </p>
+            <div className={styles.accountIdentity}>
+              <span className={styles.identityIcon} aria-hidden="true">
+                <FiUser />
+              </span>
+
+              <span className={styles.identityCopy}>
+                <small>Zalogowane konto</small>
+                <strong>
+                  {user?.displayName || displayName.trim() || "Użytkownik Showly"}
+                </strong>
+                <span>{user?.email || "Brak adresu e-mail"}</span>
+              </span>
             </div>
-          </aside>
+          </header>
 
-          <div className={styles.content}>
-            <div className={styles.chapterHeadMain}>
-              <div>
-                <span className={styles.chapterLabel}>Centrum ustawień</span>
-                <h3>Twoje dane i dostęp w jednym miejscu.</h3>
-              </div>
+          <div className={styles.settingsBody}>
+            <section className={styles.setting}>
+              <header className={styles.settingHeader}>
+                <div className={styles.settingTitle}>
+                  <span className={styles.settingIcon} aria-hidden="true">
+                    <FiImage />
+                  </span>
 
-              <span className={styles.chapterNumber}>03</span>
-            </div>
-
-            <div className={styles.settingsStack}>
-              <section className={styles.settingGroup}>
-                <div className={styles.groupHeader}>
                   <div>
-                    <span className={styles.groupLabel}>Zdjęcie konta</span>
-                    <h4>Awatar użytkownika</h4>
+                    <span className={styles.settingLabel}>Zdjęcie konta</span>
+                    <h2>Awatar użytkownika</h2>
                   </div>
+                </div>
 
-                  <span className={styles.groupBadge}>
-                    {file ? "do zapisu" : hasAvatar ? "ustawiony" : "brak"}
+                <span className={styles.statusBadge}>
+                  {file ? "Gotowy do zapisu" : hasAvatar ? "Ustawiony" : "Brak"}
+                </span>
+              </header>
+
+              <div className={styles.avatarContent}>
+                <div className={styles.avatarFrame}>
+                  <img
+                    src={preview || fallbackImg}
+                    alt="Awatar użytkownika"
+                    className={styles.avatar}
+                    decoding="async"
+                    referrerPolicy="no-referrer"
+                    onError={(event) => {
+                      event.currentTarget.src = fallbackImg;
+                    }}
+                  />
+
+                  <span className={styles.avatarTag} aria-hidden="true">
+                    <FiImage />
                   </span>
                 </div>
 
-                <div className={styles.groupBody}>
-                  <div className={styles.avatarRow}>
-                    <div className={styles.avatarPreview}>
-                      <img
-                        src={preview || fallbackImg}
-                        alt="Avatar użytkownika"
-                        className={styles.avatar}
-                        decoding="async"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          e.currentTarget.src = fallbackImg;
-                        }}
+                <div className={styles.avatarControls}>
+                  <p>
+                    To zdjęcie pojawia się przy wiadomościach, rezerwacjach
+                    i pozostałej aktywności na Showly.
+                  </p>
+
+                  <div className={styles.fileRow}>
+                    <label className={styles.fileButton}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={onFileChange}
                       />
-                    </div>
+                      <ButtonContent icon={<FiImage />}>
+                        Wybierz zdjęcie
+                      </ButtonContent>
+                    </label>
 
-                    <div className={styles.controls}>
-                      <div className={styles.sectionIconRow}>
-                        <span className={styles.sectionIcon}><FiImage /></span>
-                        <p>
-                          Wybierz zdjęcie, które będzie reprezentować Twoje konto
-                          w wiadomościach, rezerwacjach i aktywności w Showly.
-                        </p>
-                      </div>
+                    <span>JPG, PNG lub WEBP · maks. 2 MB</span>
+                  </div>
 
-                      <label className={styles.fileBtn}>
-                        <input type="file" accept="image/*" onChange={onFileChange} />
-                        <ButtonContent icon={<FiImage />}>Wybierz plik</ButtonContent>
-                      </label>
+                  <div className={styles.actionsRow}>
+                    <ActionButton
+                      isLoading={loadingAction === "saveAvatar"}
+                      disabled={!file || loadingAction !== null}
+                      onClick={handleSaveAvatar}
+                      className={styles.primaryButton}
+                      icon={<FiSave />}
+                    >
+                      Zapisz awatar
+                    </ActionButton>
 
-                      <div className={styles.actionsRow}>
-                        <ActionButton
-                          isLoading={loadingAction === "saveAvatar"}
-                          disabled={!file || loadingAction !== null}
-                          onClick={handleSaveAvatar}
-                          className={styles.primary}
-                          icon={<FiSave />}
-                        >
-                          Zapisz awatar
-                        </ActionButton>
-
-                        {hasAvatar && (
-                          <ActionButton
-                            isLoading={loadingAction === "removeAvatar"}
-                            disabled={loadingAction !== null}
-                            onClick={handleRemoveAvatar}
-                            className={styles.ghost}
-                            icon={<FiTrash2 />}
-                          >
-                            Usuń awatar
-                          </ActionButton>
-                        )}
-                      </div>
-
-                      <small className={styles.hint}>
-                        Obsługiwane są pliki graficzne do 2 MB.
-                      </small>
-                    </div>
+                    {hasAvatar && (
+                      <ActionButton
+                        isLoading={loadingAction === "removeAvatar"}
+                        disabled={loadingAction !== null}
+                        onClick={handleRemoveAvatar}
+                        className={styles.dangerButton}
+                        icon={<FiTrash2 />}
+                      >
+                        Usuń awatar
+                      </ActionButton>
+                    )}
                   </div>
                 </div>
-              </section>
+              </div>
+            </section>
 
-              <section className={styles.settingGroup}>
-                <div className={styles.groupHeader}>
-                  <div>
-                    <span className={styles.groupLabel}>Dane publiczne</span>
-                    <h4>Nazwa wyświetlana</h4>
+            <div className={styles.secondaryGrid}>
+              <section className={styles.setting}>
+                <header className={styles.settingHeader}>
+                  <div className={styles.settingTitle}>
+                    <span className={styles.settingIcon} aria-hidden="true">
+                      <FiUser />
+                    </span>
+
+                    <div>
+                      <span className={styles.settingLabel}>Dane publiczne</span>
+                      <h2>Nazwa wyświetlana</h2>
+                    </div>
                   </div>
 
-                  <span className={styles.groupBadge}>
-                    {hasDisplayName ? "ustawiona" : "brak"}
+                  <span className={styles.statusBadge}>
+                    {hasDisplayName ? "Ustawiona" : "Brak"}
                   </span>
-                </div>
+                </header>
 
-                <div className={styles.groupBody}>
-                  <div className={styles.sectionIconRow}>
-                    <span className={styles.sectionIcon}><FiUser /></span>
-                    <p>
-                      Ta nazwa może pojawiać się przy opiniach, wiadomościach,
-                      konwersacjach oraz rezerwacjach.
-                    </p>
-                  </div>
+                <div className={styles.settingContent}>
+                  <p>
+                    Widoczna przy opiniach, wiadomościach, rozmowach
+                    i rezerwacjach.
+                  </p>
 
-                  <div className={styles.inline}>
+                  <label className={styles.field}>
+                    <span>Nazwa</span>
                     <input
                       className={styles.input}
                       type="text"
                       placeholder="Twoja nazwa"
                       value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
+                      onChange={(event) => setDisplayName(event.target.value)}
                       maxLength={40}
                     />
+                  </label>
 
-                    <ActionButton
-                      isLoading={loadingAction === "saveName"}
-                      disabled={loadingAction !== null}
-                      onClick={handleSaveDisplayName}
-                      className={styles.primary}
-                      icon={<FiSave />}
-                    >
-                      Zapisz nazwę
-                    </ActionButton>
-                  </div>
+                  <ActionButton
+                    isLoading={loadingAction === "saveName"}
+                    disabled={loadingAction !== null}
+                    onClick={handleSaveDisplayName}
+                    className={styles.primaryButton}
+                    icon={<FiSave />}
+                  >
+                    Zapisz nazwę
+                  </ActionButton>
                 </div>
               </section>
 
-              <section className={styles.settingGroup}>
-                <div className={styles.groupHeader}>
-                  <div>
-                    <span className={styles.groupLabel}>Bezpieczeństwo</span>
-                    <h4>Zmiana hasła</h4>
+              <section className={`${styles.setting} ${styles.securitySetting}`}>
+                <header className={styles.settingHeader}>
+                  <div className={styles.settingTitle}>
+                    <span className={styles.settingIcon} aria-hidden="true">
+                      <FiShield />
+                    </span>
+
+                    <div>
+                      <span className={styles.settingLabel}>Bezpieczeństwo</span>
+                      <h2>Zmiana hasła</h2>
+                    </div>
                   </div>
 
-                  <span className={styles.groupBadge}>e-mail</span>
-                </div>
+                  <span className={styles.statusBadge}>E-mail</span>
+                </header>
 
-                <div className={styles.groupBody}>
-                  <div className={styles.sectionIconRow}>
-                    <span className={styles.sectionIcon}><FiShield /></span>
-                    <p>
-                      Wyślemy link do zmiany hasła na adres przypisany do
-                      Twojego konta: <strong>{user?.email || "brak adresu"}</strong>.
-                    </p>
+                <div className={styles.settingContent}>
+                  <p>
+                    Link do ustawienia nowego hasła wyślemy na przypisany
+                    do konta adres.
+                  </p>
+
+                  <div className={styles.emailBox}>
+                    <span>Adres odbiorcy</span>
+                    <strong>{user?.email || "Brak adresu e-mail"}</strong>
                   </div>
 
                   <ActionButton
                     isLoading={loadingAction === "resetPass"}
                     disabled={loadingAction !== null}
                     onClick={handlePasswordReset}
-                    className={styles.secondary}
+                    className={styles.secondaryButton}
                     icon={<FiLock />}
                   >
                     Wyślij link do zmiany hasła
@@ -556,8 +617,15 @@ export default function AccountSettings() {
               </section>
             </div>
           </div>
-        </div>
+
+          <footer className={styles.panelFooter}>
+            <FiShield aria-hidden="true" />
+            <span>Każdą sekcję zapisujesz osobno.</span>
+          </footer>
+        </main>
       </div>
     </section>
   );
-}
+};
+
+export default AccountSettings;

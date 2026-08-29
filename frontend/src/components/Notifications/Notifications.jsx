@@ -1,36 +1,89 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
-import styles from "./Notifications.module.scss";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import axios from "axios";
 import { Link, useLocation } from "react-router-dom";
-import { FiInbox, FiSend, FiMail } from "react-icons/fi";
+import {
+  FiArrowUpRight,
+  FiInbox,
+  FiMail,
+  FiSend,
+} from "react-icons/fi";
+
 import { auth } from "../../firebase";
+
+import styles from "./Notifications.module.scss";
 
 const API = process.env.REACT_APP_API_URL;
 const DEFAULT_AVATAR = "/images/other/no-image.png";
 
-const pickUrl = (val) => {
-  if (!val) return "";
-  if (typeof val === "string") return val;
-  if (typeof val === "object" && typeof val.url === "string") return val.url;
+const pickUrl = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (typeof value === "object" && typeof value.url === "string") {
+    return value.url;
+  }
+
   return "";
 };
 
-const normalizeAvatar = (val) => {
-  const raw = pickUrl(val);
-  const v = String(raw || "").trim();
+const normalizeAvatar = (value) => {
+  const raw = pickUrl(value);
+  const avatar = String(raw || "").trim();
 
-  if (!v) return "";
+  if (!avatar) {
+    return "";
+  }
 
-  if (v.startsWith("data:image/")) return v;
-  if (v.startsWith("blob:")) return v;
-  if (/^https?:\/\//i.test(v)) return v;
+  if (avatar.startsWith("data:image/")) {
+    return avatar;
+  }
 
-  if (v.startsWith("/uploads/")) return `${API}${v}`;
-  if (v.startsWith("uploads/")) return `${API}/${v}`;
+  if (avatar.startsWith("blob:")) {
+    return avatar;
+  }
 
-  if (/^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(v)) return `https://${v}`;
+  if (/^https?:\/\//i.test(avatar)) {
+    return avatar;
+  }
 
-  return v;
+  if (avatar.startsWith("/uploads/")) {
+    return `${API}${avatar}`;
+  }
+
+  if (avatar.startsWith("uploads/")) {
+    return `${API}/${avatar}`;
+  }
+
+  if (/^[a-z0-9.-]+\.[a-z]{2,}([/:?]|$)/i.test(avatar)) {
+    return `https://${avatar}`;
+  }
+
+  return avatar;
+};
+
+const formatMessageDate = (value) => {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toLocaleString("pl-PL", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 const Notifications = ({ user, setUnreadCount }) => {
@@ -72,14 +125,14 @@ const Notifications = ({ user, setUnreadCount }) => {
 
       try {
         const headers = await authHeaders();
+        const response = await axios.get(
+          `${API}/api/profiles/by-user/${firebaseUid}`,
+          { headers }
+        );
 
-        const res = await axios.get(`${API}/api/profiles/by-user/${firebaseUid}`, {
-          headers,
-        });
-
-        setMyProfile(res?.data || null);
-      } catch (err) {
-        console.error("❌ Błąd pobierania mojego profilu:", err);
+        setMyProfile(response?.data || null);
+      } catch (error) {
+        console.error("Błąd pobierania mojego profilu:", error);
         setMyProfile(null);
       }
     };
@@ -106,23 +159,25 @@ const Notifications = ({ user, setUnreadCount }) => {
 
       try {
         const headers = await authHeaders();
-
-        const res = await axios.get(`${API}/api/conversations/by-uid/${firebaseUid}`, {
-          headers,
-        });
-
-        const list = Array.isArray(res.data) ? res.data : [];
+        const response = await axios.get(
+          `${API}/api/conversations/by-uid/${firebaseUid}`,
+          { headers }
+        );
+        const list = Array.isArray(response.data) ? response.data : [];
 
         setConversations(list);
 
-        const unread = list.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
+        const unread = list.reduce(
+          (total, conversation) =>
+            total + (conversation.unreadCount || 0),
+          0
+        );
 
         if (typeof setUnreadCount === "function") {
           setUnreadCount(unread);
         }
-      } catch (err) {
-        console.error("❌ Błąd pobierania konwersacji:", err);
-
+      } catch (error) {
+        console.error("Błąd pobierania konwersacji:", error);
         setConversations([]);
 
         if (typeof setUnreadCount === "function") {
@@ -139,38 +194,44 @@ const Notifications = ({ user, setUnreadCount }) => {
   const otherUids = useMemo(
     () =>
       conversations
-        .map((c) => c.withUid)
+        .map((conversation) => conversation.withUid)
         .filter(Boolean)
         .filter((uid) => uid !== "SYSTEM")
-        .filter((v, i, arr) => arr.indexOf(v) === i),
+        .filter((uid, index, values) => values.indexOf(uid) === index),
     [conversations]
   );
 
-  const isProfileResolved = (uid) => profileMetaMap[uid] !== undefined;
+  const isProfileResolved = (uid) =>
+    profileMetaMap[uid] !== undefined;
 
   useEffect(() => {
     const fetchProfiles = async () => {
-      if (otherUids.length === 0) return;
+      if (otherUids.length === 0) {
+        return;
+      }
 
-      setProfileMetaMap((prev) => {
-        const draft = { ...prev };
+      setProfileMetaMap((currentMap) => {
+        const nextMap = { ...currentMap };
 
         otherUids.forEach((uid) => {
-          if (!Object.prototype.hasOwnProperty.call(draft, uid)) {
-            draft[uid] = undefined;
+          if (!Object.prototype.hasOwnProperty.call(nextMap, uid)) {
+            nextMap[uid] = undefined;
           }
         });
 
-        return draft;
+        return nextMap;
       });
 
       try {
         const entries = await Promise.all(
           otherUids.map(async (uid) => {
             try {
-              const res = await axios.get(`${API}/api/profiles/by-user/${uid}`);
-              const name = (res?.data?.name || "").trim() || null;
-              const avatar = normalizeAvatar(res?.data?.avatar) || null;
+              const response = await axios.get(
+                `${API}/api/profiles/by-user/${uid}`
+              );
+              const name = (response?.data?.name || "").trim() || null;
+              const avatar =
+                normalizeAvatar(response?.data?.avatar) || null;
 
               return [uid, { name, avatar }];
             } catch {
@@ -179,17 +240,17 @@ const Notifications = ({ user, setUnreadCount }) => {
           })
         );
 
-        setProfileMetaMap((prev) => {
-          const next = { ...prev };
+        setProfileMetaMap((currentMap) => {
+          const nextMap = { ...currentMap };
 
           entries.forEach(([uid, meta]) => {
-            next[uid] = meta;
+            nextMap[uid] = meta;
           });
 
-          return next;
+          return nextMap;
         });
-      } catch (err) {
-        console.error("❌ Błąd pobierania profili:", err);
+      } catch (error) {
+        console.error("Błąd pobierania profili:", error);
       }
     };
 
@@ -197,16 +258,25 @@ const Notifications = ({ user, setUnreadCount }) => {
   }, [otherUids]);
 
   useEffect(() => {
-    const scrollTo = location.state?.scrollToId;
+    const scrollToId = location.state?.scrollToId;
 
-    if (!scrollTo || loading) return;
+    if (!scrollToId || loading) {
+      return;
+    }
 
     const tryScroll = () => {
-      const el = document.getElementById(scrollTo);
+      const element = document.getElementById(scrollToId);
 
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        window.history.replaceState({}, document.title, location.pathname);
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+        window.history.replaceState(
+          {},
+          document.title,
+          location.pathname
+        );
       } else {
         requestAnimationFrame(tryScroll);
       }
@@ -222,38 +292,53 @@ const Notifications = ({ user, setUnreadCount }) => {
     if (prefer === "account") {
       return (
         account ||
-        (typeof profileMeta?.name === "string" ? profileMeta.name.trim() : "") ||
+        (typeof profileMeta?.name === "string"
+          ? profileMeta.name.trim()
+          : "") ||
         "Użytkownik"
       );
     }
 
-    if (!isProfileResolved(otherUid)) return "";
+    if (!isProfileResolved(otherUid)) {
+      return "";
+    }
 
-    if (typeof profileMeta?.name === "string" && profileMeta.name.trim()) {
+    if (
+      typeof profileMeta?.name === "string" &&
+      profileMeta.name.trim()
+    ) {
       return profileMeta.name.trim();
     }
 
     return account || "Użytkownik";
   };
 
-  const getAvatarSrc = (convo, variant) => {
-    const otherUid = convo.withUid;
+  const getAvatarSrc = (conversation, variant) => {
+    const otherUid = conversation.withUid;
 
-    if (variant === "system") return "";
-
-    if (variant === "inbox") {
-      return normalizeAvatar(convo.withAvatar) || "";
+    if (variant === "system") {
+      return "";
     }
 
-    const meta = profileMetaMap[otherUid];
+    if (variant === "inbox") {
+      return normalizeAvatar(conversation.withAvatar) || "";
+    }
 
-    if (!isProfileResolved(otherUid)) return "";
+    const profileMeta = profileMetaMap[otherUid];
 
-    return normalizeAvatar(meta?.avatar) || "";
+    if (!isProfileResolved(otherUid)) {
+      return "";
+    }
+
+    return normalizeAvatar(profileMeta?.avatar) || "";
   };
 
   const accountToProfile = useMemo(
-    () => conversations.filter((c) => c.channel === "account_to_profile"),
+    () =>
+      conversations.filter(
+        (conversation) =>
+          conversation.channel === "account_to_profile"
+      ),
     [conversations]
   );
 
@@ -261,7 +346,9 @@ const Notifications = ({ user, setUnreadCount }) => {
     const myUid = auth.currentUser?.uid || user?.uid;
 
     return accountToProfile.filter(
-      (c) => c.firstFromUid && c.firstFromUid !== myUid
+      (conversation) =>
+        conversation.firstFromUid &&
+        conversation.firstFromUid !== myUid
     );
   }, [accountToProfile, user?.uid]);
 
@@ -269,29 +356,35 @@ const Notifications = ({ user, setUnreadCount }) => {
     const myUid = auth.currentUser?.uid || user?.uid;
 
     return accountToProfile.filter(
-      (c) => c.firstFromUid && c.firstFromUid === myUid
+      (conversation) =>
+        conversation.firstFromUid &&
+        conversation.firstFromUid === myUid
     );
   }, [accountToProfile, user?.uid]);
 
   const systemConversations = useMemo(
-    () => conversations.filter((c) => c.channel === "system"),
+    () =>
+      conversations.filter(
+        (conversation) => conversation.channel === "system"
+      ),
     [conversations]
   );
 
-  const hasMyProfile = !!(myProfile && myProfile._id);
+  const hasMyProfile = Boolean(myProfile?._id);
 
   const systemUnread = systemConversations.reduce(
-    (acc, c) => acc + (c.unreadCount || 0),
+    (total, conversation) =>
+      total + (conversation.unreadCount || 0),
     0
   );
-
   const inboxUnread = inboxToMyProfile.reduce(
-    (acc, c) => acc + (c.unreadCount || 0),
+    (total, conversation) =>
+      total + (conversation.unreadCount || 0),
     0
   );
-
   const outboxUnread = myAccountToOtherProfiles.reduce(
-    (acc, c) => acc + (c.unreadCount || 0),
+    (total, conversation) =>
+      total + (conversation.unreadCount || 0),
     0
   );
 
@@ -302,13 +395,18 @@ const Notifications = ({ user, setUnreadCount }) => {
     rawName ? (
       <span className={styles.name}>{rawName}</span>
     ) : (
-      <span className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`} />
+      <span
+        className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`}
+      />
     );
 
   const AvatarNode = ({ src, variant }) => {
     if (variant === "system") {
       return (
-        <div className={`${styles.avatar} ${styles.avatarSystem}`} aria-hidden="true">
+        <div
+          className={`${styles.avatar} ${styles.avatarSystem}`}
+          aria-hidden="true"
+        >
           <FiMail />
         </div>
       );
@@ -330,58 +428,68 @@ const Notifications = ({ user, setUnreadCount }) => {
         className={styles.avatar}
         decoding="async"
         referrerPolicy="no-referrer"
-        onError={(e) => {
-          e.currentTarget.src = DEFAULT_AVATAR;
+        onError={(event) => {
+          event.currentTarget.src = DEFAULT_AVATAR;
         }}
       />
     );
   };
 
-  const renderItem = (convo, variant) => {
-    const lastMsg = convo.lastMessage;
+  const renderItem = (conversation, variant) => {
+    const lastMessage = conversation.lastMessage;
 
-    if (!lastMsg) return null;
+    if (!lastMessage) {
+      return null;
+    }
 
-    const isUnread = (convo.unreadCount || 0) > 0;
-    const otherUid = convo.withUid;
-    const avatarSrc = getAvatarSrc(convo, variant);
+    const isUnread = (conversation.unreadCount || 0) > 0;
+    const otherUid = conversation.withUid;
+    const avatarSrc = getAvatarSrc(conversation, variant);
 
     let header;
 
     if (variant === "inbox") {
-      const rawName = getName(otherUid, convo.withDisplayName, "account");
+      const rawName = getName(
+        otherUid,
+        conversation.withDisplayName,
+        "account"
+      );
 
       header = (
         <>
           <FiInbox className={styles.icon} />
-
           <span className={styles.metaText}>
             Wiadomość od {renderNameNode(rawName)}
           </span>
         </>
       );
     } else if (variant === "outbox") {
-      const rawName = getName(otherUid, convo.withDisplayName, "profile");
+      const rawName = getName(
+        otherUid,
+        conversation.withDisplayName,
+        "profile"
+      );
 
       header = (
         <>
           <FiSend className={styles.icon} />
-
           <span className={styles.metaText}>
-            Rozmowa Twojego <b>konta</b> z profilem {renderNameNode(rawName)}
+            Rozmowa Twojego <b>konta</b> z profilem{" "}
+            {renderNameNode(rawName)}
           </span>
         </>
       );
     } else {
-      const sysName = (convo.withDisplayName || "Showly.me").trim();
+      const systemName = (
+        conversation.withDisplayName || "Showly.me"
+      ).trim();
 
       header = (
         <>
           <FiMail className={styles.icon} />
-
           <span className={styles.metaText}>
             Wiadomość od{" "}
-            <span className={styles.name}>{sysName}</span>
+            <span className={styles.name}>{systemName}</span>
           </span>
         </>
       );
@@ -389,12 +497,13 @@ const Notifications = ({ user, setUnreadCount }) => {
 
     return (
       <li
-        key={convo._id}
-        className={`${styles.item} ${isUnread ? styles.unread : styles.read} ${variant === "system" ? styles.itemSystem : ""
-          }`}
+        key={conversation._id}
+        className={`${styles.item} ${
+          isUnread ? styles.unread : styles.read
+        } ${variant === "system" ? styles.itemSystem : ""}`}
       >
         <Link
-          to={`/konwersacja/${convo._id}`}
+          to={`/konwersacja/${conversation._id}`}
           className={styles.link}
           state={{ scrollToId: "threadPageLayout" }}
         >
@@ -402,34 +511,39 @@ const Notifications = ({ user, setUnreadCount }) => {
             <div className={styles.avatarWrap}>
               <AvatarNode src={avatarSrc} variant={variant} />
 
-              {isUnread && <span className={styles.badgeDot} aria-hidden="true" />}
-            </div>
-
-            <div className={styles.itemHead}>
-              <div className={styles.meta}>{header}</div>
-
-              <div className={styles.date}>
-                {new Date(lastMsg.createdAt).toLocaleString("pl-PL", {
-                  day: "2-digit",
-                  month: "short",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </div>
-            </div>
-
-            <p className={styles.message}>{lastMsg.content}</p>
-
-            <div className={styles.bottomRow}>
-              {isUnread ? (
-                <span className={styles.unreadPill}>
-                  Nieprzeczytane: <strong>{convo.unreadCount}</strong>
-                </span>
-              ) : (
-                <span className={styles.readPill}>Przeczytane</span>
+              {isUnread && (
+                <span className={styles.badgeDot} aria-hidden="true" />
               )}
+            </div>
 
-              <span className={styles.openPill}>Otwórz →</span>
+            <div className={styles.itemBody}>
+              <div className={styles.itemHead}>
+                <div className={styles.meta}>{header}</div>
+
+                <time
+                  className={styles.date}
+                  dateTime={lastMessage.createdAt}
+                >
+                  {formatMessageDate(lastMessage.createdAt)}
+                </time>
+              </div>
+
+              <p className={styles.message}>{lastMessage.content}</p>
+
+              <div className={styles.bottomRow}>
+                {isUnread ? (
+                  <span className={styles.unreadLabel}>
+                    {conversation.unreadCount} nieprzeczytane
+                  </span>
+                ) : (
+                  <span className={styles.readLabel}>Przeczytane</span>
+                )}
+
+                <span className={styles.openLink}>
+                  Otwórz rozmowę
+                  <FiArrowUpRight aria-hidden="true" />
+                </span>
+              </div>
             </div>
           </div>
         </Link>
@@ -442,32 +556,39 @@ const Notifications = ({ user, setUnreadCount }) => {
       <div className={styles.link}>
         <div className={styles.row}>
           <div className={styles.avatarWrap}>
-            <div className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`} />
+            <div
+              className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`}
+            />
           </div>
 
-          <div className={styles.itemHead}>
-            <span className={`${styles.metaSkel} ${styles.shimmer}`} />
-            <span className={`${styles.dateSkel} ${styles.shimmer}`} />
-          </div>
+          <div className={styles.itemBody}>
+            <div className={styles.itemHead}>
+              <span className={`${styles.metaSkel} ${styles.shimmer}`} />
+              <span className={`${styles.dateSkel} ${styles.shimmer}`} />
+            </div>
 
-          <p className={`${styles.message} ${styles.skeleton} ${styles.shimmer}`} />
+            <span
+              className={`${styles.messageSkel} ${styles.shimmer}`}
+            />
 
-          <div className={styles.bottomRow}>
-            <span className={`${styles.pillSkel} ${styles.shimmer}`} />
-            <span className={`${styles.pillSkel} ${styles.shimmer}`} />
+            <div className={styles.bottomRow}>
+              <span className={`${styles.labelSkel} ${styles.shimmer}`} />
+              <span className={`${styles.openSkel} ${styles.shimmer}`} />
+            </div>
           </div>
         </div>
       </div>
     </li>
   );
 
-  const EmptyBox = ({ icon, title, text }) => (
+  const EmptyState = ({ icon, title, text }) => (
     <div className={styles.emptyState}>
-      <div className={styles.emptyIconWrap}>{icon}</div>
+      <span className={styles.emptyIcon}>{icon}</span>
 
-      <strong>{title}</strong>
-
-      <p>{text}</p>
+      <div>
+        <strong>{title}</strong>
+        <p>{text}</p>
+      </div>
     </div>
   );
 
@@ -475,7 +596,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     title,
     label,
     badge,
-    icon,
+    Icon,
     items,
     variant,
     emptyTitle,
@@ -483,22 +604,30 @@ const Notifications = ({ user, setUnreadCount }) => {
     disabled = false,
   }) => (
     <section className={styles.messageGroup}>
-      <div className={styles.groupHeader}>
-        <div>
+      <header className={styles.groupHeader}>
+        <span className={styles.groupIcon}>
+          <Icon aria-hidden="true" />
+        </span>
+
+        <div className={styles.groupHeading}>
           <span className={styles.groupLabel}>{label}</span>
-          <h4>{title}</h4>
+          <h2>{title}</h2>
         </div>
 
         <span className={styles.groupBadge}>{badge}</span>
-      </div>
+      </header>
 
-      {disabled ? (
-        <EmptyBox icon={icon} title={emptyTitle} text={emptyText} />
-      ) : items.length === 0 ? (
-        <EmptyBox icon={icon} title={emptyTitle} text={emptyText} />
+      {disabled || items.length === 0 ? (
+        <EmptyState
+          icon={<Icon aria-hidden="true" />}
+          title={emptyTitle}
+          text={emptyText}
+        />
       ) : (
         <ul className={styles.list}>
-          {items.map((conversation) => renderItem(conversation, variant))}
+          {items.map((conversation) =>
+            renderItem(conversation, variant)
+          )}
         </ul>
       )}
     </section>
@@ -507,106 +636,67 @@ const Notifications = ({ user, setUnreadCount }) => {
   return (
     <section id="scrollToId" className={styles.section}>
       <div className={styles.inner}>
-        <div className={styles.layout}>
-          <aside className={styles.side}>
+        <div className={styles.panel}>
+          <header className={styles.panelHeader}>
+            <div className={styles.titleBlock}>
+              <span className={styles.kicker}>Showly / Wiadomości</span>
+              <h1>Centrum wiadomości</h1>
 
-            <h2 className={styles.heading}>
-              Twoje <span>wiadomości</span>
-            </h2>
+              {hasMyProfile && myProfile?.name ? (
+                <p>
+                  Profil: <strong>{myProfile.name}</strong>
+                </p>
+              ) : null}
+            </div>
 
-            <p className={styles.description}>
-              {hasMyProfile ? (
-                <>
-                  Wiadomości do profilu
-                  {myProfile?.name ? (
-                    <>
-                      {" "}
-                      <strong>{myProfile.name}</strong>
-                    </>
-                  ) : null}{" "}
-                  i rozmowy rozpoczęte z konta.
-                </>
-              ) : (
-                <>
-                  Rozmowy rozpoczęte z konta są dostępne poniżej. Odbieranie zapytań włączysz po utworzeniu profilu.
-                </>
-              )}
-            </p>
-
-            <div className={styles.metaRow}>
-              <div className={styles.metaCard}>
+            <div className={styles.headerStats}>
+              <div className={styles.headerStat}>
+                <span>Nieprzeczytane</span>
                 <strong>{loading ? "—" : totalUnread}</strong>
-                <span>nieprzeczytanych wiadomości</span>
               </div>
 
-              <div className={styles.metaCard}>
+              <div className={styles.headerStat}>
+                <span>Wszystkie wątki</span>
                 <strong>{loading ? "—" : totalThreads}</strong>
-                <span>wszystkich wątków</span>
-              </div>
-
-              <div className={styles.metaCard}>
-                <strong>{hasMyProfile ? "Profil" : "Konto"}</strong>
-                <span>
-                  {hasMyProfile
-                    ? "wiadomości do profilu aktywne"
-                    : "utwórz profil, aby odbierać zapytania"}
-                </span>
               </div>
             </div>
-
-            <div className={styles.infoBox}>
-              <span>Inbox • Wątki • System</span>
-
-              <p>
-                Wiadomości od klientów, rozpoczęte rozmowy i komunikaty Showly.
-              </p>
-            </div>
-          </aside>
+          </header>
 
           <div className={styles.content}>
-            <div className={styles.chapterHead}>
-              <div>
-                <span className={styles.chapterLabel}>Centrum wiadomości</span>
-
-                <h3>Wszystkie rozmowy w jednym miejscu.</h3>
-              </div>
-
-              <span className={styles.chapterNumber}>
-                {loading ? "—" : totalUnread}
-              </span>
-            </div>
-
             {loading ? (
-              <div className={styles.messagesStack}>
-                <section className={styles.messageGroup}>
-                  <div className={styles.groupHeader}>
-                    <div>
-                      <span className={styles.groupLabel}>Ładowanie</span>
-                      <h4>Pobieramy Twoje powiadomienia.</h4>
-                    </div>
+              <section className={styles.messageGroup}>
+                <header className={styles.groupHeader}>
+                  <span className={styles.groupIcon}>
+                    <FiMail aria-hidden="true" />
+                  </span>
 
-                    <span className={styles.groupBadge}>—</span>
+                  <div className={styles.groupHeading}>
+                    <span className={styles.groupLabel}>Ładowanie</span>
+                    <h2>Pobieramy Twoje wiadomości.</h2>
                   </div>
 
-                  <ul className={styles.list}>
-                    {Array.from({ length: 4 }).map((_, index) => (
-                      <SkeletonItem key={index} />
-                    ))}
-                  </ul>
-                </section>
-              </div>
+                  <span className={styles.groupBadge}>—</span>
+                </header>
+
+                <ul className={styles.list}>
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <SkeletonItem key={index} />
+                  ))}
+                </ul>
+              </section>
             ) : (
-              <div className={styles.messagesStack}>
+              <div className={styles.messages}>
                 {renderGroup({
-                  title: `Wiadomości do profilu${myProfile?.name ? ` „${myProfile.name}”` : ""
-                    }`,
-                  label: "Do profilu",
+                  title: `Wiadomości do profilu${
+                    myProfile?.name ? ` „${myProfile.name}”` : ""
+                  }`,
+                  label: "Odebrane przez profil",
                   badge: hasMyProfile
                     ? inboxUnread > 0
                       ? `${inboxUnread} nowe`
                       : inboxToMyProfile.length
                     : "—",
-                  icon: <FiInbox className={styles.emptyIcon} />,
+                  Icon: FiInbox,
                   items: inboxToMyProfile,
                   variant: "inbox",
                   disabled: !hasMyProfile,
@@ -614,18 +704,18 @@ const Notifications = ({ user, setUnreadCount }) => {
                     ? "Brak wiadomości do Twojego profilu"
                     : "Nie masz jeszcze utworzonego profilu",
                   emptyText: hasMyProfile
-                    ? "Gdy ktoś napisze do Twojej wizytówki, konwersacje pojawią się właśnie tutaj."
-                    : "Wiadomości do profilu będą dostępne dopiero po utworzeniu wizytówki usługodawcy.",
+                    ? "Gdy ktoś napisze do Twojej wizytówki, rozmowa pojawi się właśnie tutaj."
+                    : "Wiadomości do profilu będą dostępne po utworzeniu wizytówki usługodawcy.",
                 })}
 
                 {renderGroup({
                   title: "Rozmowy z innymi profilami",
-                  label: "Twoje konto → profile",
+                  label: "Wysłane z Twojego konta",
                   badge:
                     outboxUnread > 0
                       ? `${outboxUnread} nowe`
                       : myAccountToOtherProfiles.length,
-                  icon: <FiSend className={styles.emptyIcon} />,
+                  Icon: FiSend,
                   items: myAccountToOtherProfiles,
                   variant: "outbox",
                   emptyTitle: "Brak rozmów z innymi profilami",
@@ -635,17 +725,17 @@ const Notifications = ({ user, setUnreadCount }) => {
 
                 {renderGroup({
                   title: "Wiadomości systemowe",
-                  label: "System",
+                  label: "Komunikaty Showly",
                   badge:
                     systemUnread > 0
                       ? `${systemUnread} nowe`
                       : systemConversations.length,
-                  icon: <FiMail className={styles.emptyIcon} />,
+                  Icon: FiMail,
                   items: systemConversations,
                   variant: "system",
                   emptyTitle: "Brak wiadomości systemowych",
                   emptyText:
-                    "Komunikaty systemowe od Showly pojawią się tutaj, gdy będą dostępne.",
+                    "Komunikaty od Showly pojawią się tutaj, gdy będą dostępne.",
                 })}
               </div>
             )}
