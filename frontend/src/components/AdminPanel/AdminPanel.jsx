@@ -1,15 +1,28 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import {
+  FiActivity,
+  FiCalendar,
+  FiFlag,
+  FiGrid,
+  FiShield,
+  FiUserCheck,
+  FiUsers,
+} from "react-icons/fi";
 import styles from "./AdminPanel.module.scss";
 import AlertBox from "../AlertBox/AlertBox";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
 import { adminApi } from "../../api/adminApi";
 
 const TABS = [
-  { key: "dashboard", label: "Dashboard" },
-  { key: "users", label: "Użytkownicy" },
-  { key: "profiles", label: "Profile" },
-  { key: "reports", label: "Zgłoszenia" },
+  { key: "dashboard", label: "Dashboard", Icon: FiGrid },
+  { key: "users", label: "Użytkownicy", Icon: FiUsers },
+  { key: "profiles", label: "Profile", Icon: FiUserCheck },
+  { key: "reports", label: "Zgłoszenia", Icon: FiFlag },
 ];
 
 const REPORT_TABS = [
@@ -866,36 +879,62 @@ export default function AdminPanel() {
           </div>
         )}
 
-        <div className={styles.layout}>
-          <aside className={styles.side}>
+        <div className={styles.panel}>
+          <header className={styles.adminHeader}>
+            <div className={styles.headerCopy}>
+              <span className={styles.eyebrow}>
+                <FiShield aria-hidden="true" />
+                Administracja Showly
+              </span>
 
-            <h1 className={styles.sideTitle}>Panel administratora</h1>
+              <h1>Panel administratora</h1>
 
-            <p className={styles.sideText}>
-              Zarządzaj użytkownikami, profilami, partnerstwami i zgłoszeniami
-              z jednego miejsca. Bez ozdobników — najważniejsze dane, szybkie
-              akcje i kontrola nad platformą.
-            </p>
+              <p>
+                Dane platformy, konta, profile i moderacja w jednym miejscu.
+              </p>
+            </div>
 
             <div className={styles.quickStats}>
               <div>
-                <strong>{stats?.users ?? "—"}</strong>
-                <span>użytkowników</span>
+                <span className={styles.quickStatIcon} aria-hidden="true">
+                  <FiUsers />
+                </span>
+
+                <span className={styles.quickStatCopy}>
+                  <small>Użytkownicy</small>
+                  <strong>{stats?.users ?? "—"}</strong>
+                </span>
               </div>
 
               <div>
-                <strong>{stats?.profiles ?? "—"}</strong>
-                <span>profili</span>
+                <span className={styles.quickStatIcon} aria-hidden="true">
+                  <FiUserCheck />
+                </span>
+
+                <span className={styles.quickStatCopy}>
+                  <small>Profile</small>
+                  <strong>{stats?.profiles ?? "—"}</strong>
+                </span>
               </div>
 
               <div>
-                <strong>{stats?.reservations ?? "—"}</strong>
-                <span>rezerwacji</span>
+                <span className={styles.quickStatIcon} aria-hidden="true">
+                  <FiCalendar />
+                </span>
+
+                <span className={styles.quickStatCopy}>
+                  <small>Rezerwacje</small>
+                  <strong>{stats?.reservations ?? "—"}</strong>
+                </span>
               </div>
             </div>
+          </header>
 
-            <nav className={styles.tabs} aria-label="Nawigacja panelu admina">
-              {TABS.map((t, index) => (
+          <nav className={styles.tabs} aria-label="Nawigacja panelu admina">
+            {TABS.map((t, index) => {
+              const TabIcon = t.Icon;
+
+              return (
                 <button
                   key={t.key}
                   className={`${styles.tabBtn} ${tab === t.key ? styles.active : ""
@@ -903,12 +942,18 @@ export default function AdminPanel() {
                   onClick={() => setTab(t.key)}
                   type="button"
                 >
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                  {t.label}
+                  <span className={styles.tabIcon} aria-hidden="true">
+                    <TabIcon />
+                  </span>
+
+                  <span className={styles.tabCopy}>
+                    <small>{String(index + 1).padStart(2, "0")}</small>
+                    <strong>{t.label}</strong>
+                  </span>
                 </button>
-              ))}
-            </nav>
-          </aside>
+              );
+            })}
+          </nav>
 
           <div className={styles.content}>
             {tab === "dashboard" && (
@@ -936,24 +981,68 @@ export default function AdminPanel() {
                   <div className={styles.chapterBody}>
                     <div className={styles.cardGrid}>
                       <div className={styles.statCard}>
-                        <div className={styles.cardLabel}>Użytkownicy</div>
+                        <div className={styles.statTop}>
+                          <span className={styles.statIcon} aria-hidden="true">
+                            <FiUsers />
+                          </span>
+                          <div className={styles.cardLabel}>Użytkownicy</div>
+                        </div>
+
                         <div className={styles.cardValue}>
                           {stats?.users ?? "—"}
                         </div>
+
+                        <div className={styles.cardNote}>
+                          zarejestrowane konta
+                        </div>
                       </div>
 
                       <div className={styles.statCard}>
-                        <div className={styles.cardLabel}>Profile</div>
+                        <div className={styles.statTop}>
+                          <span className={styles.statIcon} aria-hidden="true">
+                            <FiUserCheck />
+                          </span>
+                          <div className={styles.cardLabel}>Profile</div>
+                        </div>
+
                         <div className={styles.cardValue}>
                           {stats?.profiles ?? "—"}
                         </div>
+
+                        <div className={styles.cardNote}>
+                          utworzone wizytówki
+                        </div>
                       </div>
 
                       <div className={styles.statCard}>
-                        <div className={styles.cardLabel}>Rezerwacje</div>
+                        <div className={styles.statTop}>
+                          <span className={styles.statIcon} aria-hidden="true">
+                            <FiCalendar />
+                          </span>
+                          <div className={styles.cardLabel}>Rezerwacje</div>
+                        </div>
+
                         <div className={styles.cardValue}>
                           {stats?.reservations ?? "—"}
                         </div>
+
+                        <div className={styles.cardNote}>
+                          wszystkie zgłoszone terminy
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className={styles.dashboardNote}>
+                      <span className={styles.dashboardNoteIcon} aria-hidden="true">
+                        <FiActivity />
+                      </span>
+
+                      <div>
+                        <strong>Pełne dane są podzielone na trzy obszary.</strong>
+                        <span>
+                          Konta znajdziesz w użytkownikach, wizytówki i partnerstwa
+                          w profilach, a sprawy wymagające reakcji w zgłoszeniach.
+                        </span>
                       </div>
                     </div>
                   </div>

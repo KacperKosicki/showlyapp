@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./Favorites.module.scss";
 import UserCard from "../UserCard/UserCard";
-import { FiHeart } from "react-icons/fi";
+import { FiAlertCircle, FiArrowUpRight, FiHeart, FiLock } from "react-icons/fi";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { Link, useLocation } from "react-router-dom";
 import { api } from "../../api/api";
 
-export default function Favorites({ currentUser, setAlert }) {
+const Favorites = ({ currentUser, setAlert }) => {
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState([]);
   const [error, setError] = useState("");
@@ -100,11 +100,11 @@ export default function Favorites({ currentUser, setAlert }) {
 
           const partnership = derivedIsPartner
             ? {
-              isPartner: true,
-              tier: String(derivedTier || "partner").toLowerCase(),
-              badgeText: String(derivedBadgeText || "PARTNER SHOWLY"),
-              ...(derivedColor ? { color: derivedColor } : {}),
-            }
+                isPartner: true,
+                tier: String(derivedTier || "partner").toLowerCase(),
+                badgeText: String(derivedBadgeText || "PARTNER SHOWLY"),
+                ...(derivedColor ? { color: derivedColor } : {}),
+              }
             : parsedPartnership || {};
 
           const userId =
@@ -274,97 +274,48 @@ export default function Favorites({ currentUser, setAlert }) {
     window.setTimeout(updateArrows, 320);
   };
 
-  const sideData = {
+  const viewCopy = {
     guest: {
-      overline: "Showly Favorites",
-      headingStart: "Twoje ",
-      headingAccent: "ulubione",
-      headingEnd: " profile.",
-      description:
-        "Zapisane wizytówki specjalistów, do których możesz szybko wracać po zalogowaniu.",
-      meta: [
-        ["Gość", "zaloguj się, aby zobaczyć listę"],
-        ["0", "zapisanych wizytówek"],
-        ["Showly", "Twoja prywatna lista profili"],
-      ],
-      infoTitle: "Zapisuj • Wracaj • Wybieraj",
-      infoText:
-        "Po zalogowaniu możesz dodawać interesujące profile do ulubionych i wracać do nich w jednym miejscu.",
+      title: "Profile, które chcesz mieć pod ręką.",
+      text: "Zaloguj się, aby zobaczyć własną listę zapisanych wizytówek.",
+      listTitle: "Twoja lista czeka na zalogowanie",
     },
     loading: {
-      overline: "Showly Favorites",
-      headingStart: "Ładujemy Twoje ",
-      headingAccent: "ulubione",
-      headingEnd: ".",
-      description:
-        "Pobieramy zapisane wizytówki i przygotowujemy Twoją prywatną listę profili.",
-      meta: [
-        ["Ładowanie", "trwa pobieranie listy"],
-        ["—", "zapisanych wizytówek"],
-        ["Showly", "Twoja prywatna lista profili"],
-      ],
-      infoTitle: "Lista • Powroty • Wygoda",
-      infoText:
-        "Za chwilę zobaczysz profile, które wcześniej zostały dodane do ulubionych.",
+      title: "Twoje ulubione w jednym miejscu.",
+      text: "Pobieramy profile zapisane na Twoim koncie.",
+      listTitle: "Ładujemy zapisane profile",
     },
     error: {
-      overline: "Showly Favorites",
-      headingStart: "Coś poszło ",
-      headingAccent: "nie tak",
-      headingEnd: ".",
-      description:
-        "Nie udało się pobrać zapisanych profili. Spróbuj odświeżyć stronę albo wrócić za chwilę.",
-      meta: [
-        ["Błąd", "nie udało się pobrać danych"],
-        ["—", "zapisanych wizytówek"],
-        ["Showly", "Twoja prywatna lista profili"],
-      ],
-      infoTitle: "Ulubione • Problem • Spróbuj ponownie",
-      infoText:
-        "Twoja lista nie została utracona — problem dotyczy pobierania danych.",
+      title: "Twoje ulubione w jednym miejscu.",
+      text: "Lista jest chwilowo niedostępna. Twoje zapisane profile nie zostały usunięte.",
+      listTitle: "Nie udało się pobrać listy",
     },
     empty: {
-      overline: "Showly Favorites",
-      headingStart: "Lista ulubionych jest ",
-      headingAccent: "pusta",
-      headingEnd: ".",
-      description:
-        "Nie dodałeś/aś jeszcze żadnego profilu do ulubionych. Gdy coś zapiszesz, pojawi się właśnie tutaj.",
-      meta: [
-        ["0", "zapisanych wizytówek"],
-        ["Gotowe", "czas odkrywać specjalistów"],
-        ["Showly", "Twoja prywatna lista profili"],
-      ],
-      infoTitle: "Zapisuj • Wracaj • Wybieraj",
-      infoText:
-        "Klikaj serduszko przy interesujących profilach, aby zbudować własną listę kontaktów.",
+      title: "Zapisuj profile na później.",
+      text: "Kliknij serce przy wybranej wizytówce, a znajdziesz ją później właśnie tutaj.",
+      listTitle: "Brak zapisanych profili",
     },
     ready: {
-      overline: "Showly Favorites",
-      headingStart: "Twoje ",
-      headingAccent: "ulubione",
-      headingEnd: " profile.",
-      description:
-        "Zapisane wizytówki specjalistów, do których chcesz szybko wracać.",
-      meta: [
-        [String(count), "zapisanych wizytówek"],
-        ["Prywatne", "tylko dla Twojego konta"],
-        ["Showly", "szybki dostęp do profili"],
-      ],
-      infoTitle: "Zapisane • Szybki powrót • Wybór",
-      infoText:
-        "To Twoja osobista lista profili, które możesz porównać, sprawdzić ponownie albo wykorzystać później.",
+      title: "Profile, które chcesz mieć pod ręką.",
+      text: "Wracaj do zapisanych wizytówek, porównuj oferty i wybieraj bez ponownego szukania.",
+      listTitle: "Zapisane profile",
     },
   };
 
-  const currentSide = sideData[viewStatus];
+  const currentCopy = viewCopy[viewStatus];
 
   const SkeletonCard = () => (
     <div className={`${styles.skeletonCard} ${styles.shimmer}`}>
-      <div className={styles.skeletonThumb} />
-      <div className={styles.skeletonLineLg} />
-      <div className={styles.skeletonLineMd} />
-      <div className={styles.skeletonLineSm} />
+      <div className={styles.skeletonHero}>
+        <span className={styles.skeletonBadge} />
+        <span className={styles.skeletonAvatar} />
+      </div>
+
+      <div className={styles.skeletonBody}>
+        <div className={styles.skeletonLineLg} />
+        <div className={styles.skeletonLineMd} />
+        <div className={styles.skeletonLineSm} />
+      </div>
     </div>
   );
 
@@ -372,23 +323,22 @@ export default function Favorites({ currentUser, setAlert }) {
     if (viewStatus === "guest") {
       return (
         <div className={styles.emptyState}>
-          <div className={styles.emptyIconWrap}>
-            <FiHeart className={styles.emptyIcon} />
+          <span className={styles.emptyIconWrap}>
+            <FiLock aria-hidden="true" />
+          </span>
+
+          <div className={styles.emptyCopy}>
+            <strong>Zaloguj się, aby zobaczyć ulubione</strong>
+            <p>Zapisane wizytówki są przypisane do Twojego konta.</p>
           </div>
-
-          <strong>Zaloguj się, aby zobaczyć ulubione</strong>
-
-          <p>
-            Po zalogowaniu zobaczysz tutaj wszystkie zapisane profile i szybko
-            wrócisz do interesujących Cię specjalistów.
-          </p>
 
           <Link
             className={styles.cta}
             to="/login"
             state={{ scrollToId: "loginBox" }}
           >
-            Przejdź do logowania
+            <span>Przejdź do logowania</span>
+            <FiArrowUpRight aria-hidden="true" />
           </Link>
         </div>
       );
@@ -397,8 +347,14 @@ export default function Favorites({ currentUser, setAlert }) {
     if (viewStatus === "error") {
       return (
         <div className={`${styles.emptyState} ${styles.errorState}`}>
-          <strong>Błąd pobierania danych</strong>
-          <p>{error}</p>
+          <span className={styles.emptyIconWrap}>
+            <FiAlertCircle aria-hidden="true" />
+          </span>
+
+          <div className={styles.emptyCopy}>
+            <strong>Błąd pobierania danych</strong>
+            <p>{error}</p>
+          </div>
         </div>
       );
     }
@@ -406,22 +362,22 @@ export default function Favorites({ currentUser, setAlert }) {
     if (viewStatus === "empty") {
       return (
         <div className={styles.emptyState}>
-          <div className={styles.emptyIconWrap}>
-            <FiHeart className={styles.emptyIcon} />
+          <span className={styles.emptyIconWrap}>
+            <FiHeart aria-hidden="true" />
+          </span>
+
+          <div className={styles.emptyCopy}>
+            <strong>Nic tu jeszcze nie ma</strong>
+            <p>Dodaj pierwszy profil do swojej prywatnej kolekcji.</p>
           </div>
-
-          <strong>Nic tu jeszcze nie ma</strong>
-
-          <p>
-            Gdy zapiszesz interesujące wizytówki, pojawią się właśnie tutaj.
-          </p>
 
           <Link
             className={styles.cta}
             to="/profile"
             state={{ scrollToId: "profilesHub" }}
           >
-            Przeglądaj specjalistów
+            <span>Przeglądaj profile</span>
+            <FiArrowUpRight aria-hidden="true" />
           </Link>
         </div>
       );
@@ -435,72 +391,75 @@ export default function Favorites({ currentUser, setAlert }) {
   return (
     <section id="scrollToId" className={styles.section}>
       <div className={styles.inner}>
-        <div className={styles.layout}>
-          <aside className={styles.side}>
-            <span className={styles.overline}>{currentSide.overline}</span>
+        <div className={styles.collection}>
+          <header className={styles.hero}>
+            <div className={styles.heroCopy}>
+              <span className={styles.kicker}>
+                <FiHeart aria-hidden="true" />
+                Twoja kolekcja
+              </span>
 
-            <h2 className={styles.heading}>
-              {currentSide.headingStart}
-              <span>{currentSide.headingAccent}</span>
-              {currentSide.headingEnd}
-            </h2>
-
-            <p className={styles.description}>{currentSide.description}</p>
-
-            <div className={styles.metaRow}>
-              {currentSide.meta.map(([value, label]) => (
-                <div className={styles.metaCard} key={`${value}-${label}`}>
-                  <strong>{value}</strong>
-                  <span>{label}</span>
-                </div>
-              ))}
+              <h1>{currentCopy.title}</h1>
+              <p>{currentCopy.text}</p>
             </div>
 
-            <div className={styles.infoBox}>
-              <span>{currentSide.infoTitle}</span>
-              <p>{currentSide.infoText}</p>
+            <div className={styles.summary} aria-live="polite">
+              <span className={styles.summaryIcon} aria-hidden="true">
+                <FiHeart />
+              </span>
+
+              <strong>
+                {viewStatus === "ready"
+                  ? String(count).padStart(2, "0")
+                  : viewStatus === "loading"
+                    ? "—"
+                    : viewStatus === "error"
+                      ? "!"
+                      : "00"}
+              </strong>
+
+              <small>
+                {count === 1 ? "zapisany profil" : "zapisanych profili"}
+              </small>
             </div>
-          </aside>
+          </header>
 
           <div className={styles.content}>
-            <div className={styles.chapterHead}>
-              <div>
-                <span className={styles.chapterLabel}>Lista ulubionych</span>
-
-                <h3>
-                  {viewStatus === "ready"
-                    ? "Przesuwaj listę i wracaj do zapisanych profili."
-                    : viewStatus === "loading"
-                      ? "Przygotowujemy Twoją listę zapisanych profili."
-                      : viewStatus === "error"
-                        ? "Nie udało się pobrać zapisanych profili."
-                        : "Zapisuj profile i wracaj do nich później."}
-                </h3>
+            <div className={styles.listBar}>
+              <div className={styles.listHeading}>
+                <span>Ulubione</span>
+                <h2>{currentCopy.listTitle}</h2>
               </div>
 
-              <span className={styles.chapterNumber}>
-                {viewStatus === "ready"
-                  ? count
-                  : viewStatus === "error"
-                    ? "!"
-                    : "0"}
-              </span>
+              {showCarousel && (
+                <div className={styles.controls} aria-label="Sterowanie listą">
+                  <button
+                    type="button"
+                    className={`${styles.navBtn} ${!canLeft ? styles.disabled : ""}`}
+                    onClick={() => scrollByCard(-1)}
+                    disabled={!canLeft}
+                    aria-label="Przewiń w lewo"
+                    title="Przewiń w lewo"
+                  >
+                    <FaChevronLeft aria-hidden="true" />
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`${styles.navBtn} ${!canRight ? styles.disabled : ""}`}
+                    onClick={() => scrollByCard(1)}
+                    disabled={!canRight}
+                    aria-label="Przewiń w prawo"
+                    title="Przewiń w prawo"
+                  >
+                    <FaChevronRight aria-hidden="true" />
+                  </button>
+                </div>
+              )}
             </div>
 
             {showCarousel ? (
               <div className={styles.carousel}>
-                <button
-                  type="button"
-                  className={`${styles.navBtn} ${styles.left} ${!canLeft ? styles.disabled : ""
-                    }`}
-                  onClick={() => scrollByCard(-1)}
-                  disabled={!canLeft}
-                  aria-label="Przewiń w lewo"
-                  title="Przewiń w lewo"
-                >
-                  <FaChevronLeft />
-                </button>
-
                 <div
                   className={styles.grid}
                   ref={scrollerRef}
@@ -509,46 +468,34 @@ export default function Favorites({ currentUser, setAlert }) {
                 >
                   {viewStatus === "loading"
                     ? Array.from({ length: 4 }).map((_, index) => (
-                      <div
-                        className={styles.cardWrap}
-                        key={index}
-                        role="listitem"
-                      >
-                        <SkeletonCard />
-                      </div>
-                    ))
+                        <div
+                          className={styles.cardWrap}
+                          key={index}
+                          role="listitem"
+                        >
+                          <SkeletonCard />
+                        </div>
+                      ))
                     : profiles.map((profile, index) => (
-                      <div
-                        className={styles.cardWrap}
-                        key={profile.userId || profile._id || index}
-                        role="listitem"
-                      >
-                        <UserCard
-                          user={profile}
-                          currentUser={currentUser}
-                          setAlert={setAlert}
-                        />
-                      </div>
-                    ))}
+                        <div
+                          className={styles.cardWrap}
+                          key={profile.userId || profile._id || index}
+                          role="listitem"
+                        >
+                          <UserCard
+                            user={profile}
+                            currentUser={currentUser}
+                            setAlert={setAlert}
+                          />
+                        </div>
+                      ))}
                 </div>
 
                 <div className={styles.mobileHint}>
                   <span>←</span>
-                  <p>Przesuń, aby zobaczyć więcej ulubionych profili</p>
+                  <p>Przesuń, aby zobaczyć więcej</p>
                   <span>→</span>
                 </div>
-
-                <button
-                  type="button"
-                  className={`${styles.navBtn} ${styles.right} ${!canRight ? styles.disabled : ""
-                    }`}
-                  onClick={() => scrollByCard(1)}
-                  disabled={!canRight}
-                  aria-label="Przewiń w prawo"
-                  title="Przewiń w prawo"
-                >
-                  <FaChevronRight />
-                </button>
               </div>
             ) : (
               renderStateBox()
@@ -558,4 +505,6 @@ export default function Favorites({ currentUser, setAlert }) {
       </div>
     </section>
   );
-}
+};
+
+export default Favorites;
