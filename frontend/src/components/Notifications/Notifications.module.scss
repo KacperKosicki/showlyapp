@@ -724,10 +724,11 @@
   }
 
   .groupHeader {
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    position: relative;
+    grid-template-columns: auto minmax(0, 1fr);
     gap: 0.65rem;
     min-height: 78px;
-    padding: 0.8rem;
+    padding: 0.8rem 4.15rem 0.8rem 0.8rem;
   }
 
   .groupIcon {
@@ -741,6 +742,9 @@
   }
 
   .groupBadge {
+    position: absolute;
+    top: 0.72rem;
+    right: 0.72rem;
     min-width: 41px;
     min-height: 28px;
     padding: 0.35rem 0.42rem;
@@ -795,14 +799,40 @@
   }
 
   .emptyState {
+    grid-template-columns: 42px minmax(0, 1fr);
+    align-items: center;
+    gap: 0.72rem;
+    min-height: 0;
     padding: 1rem 0.8rem;
+
+    > div {
+      display: contents;
+    }
+
+    strong {
+      grid-column: 2;
+      grid-row: 1;
+      align-self: center;
+    }
+
+    p {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      margin: 0;
+    }
+  }
+
+  .emptyIcon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
   }
 }
 
 @media (max-width: 420px) {
   .section {
-    padding-right: 0.6rem;
-    padding-left: 0.6rem;
+    padding-right: max(1rem, var(--safe-right, 0px));
+    padding-left: max(1rem, var(--safe-left, 0px));
   }
 
   .headerStat span {
@@ -811,6 +841,7 @@
 
   .groupHeader {
     grid-template-columns: 36px minmax(0, 1fr);
+    padding-right: 4rem;
   }
 
   .groupIcon {
@@ -819,9 +850,8 @@
   }
 
   .groupBadge {
-    grid-column: 2;
-    justify-self: start;
-    margin-top: -0.35rem;
+    top: 0.7rem;
+    right: 0.7rem;
   }
 
   .bottomRow {
@@ -833,9 +863,6 @@
     font-size: 0.5rem;
   }
 
-  .emptyState {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 @media (hover: none) {

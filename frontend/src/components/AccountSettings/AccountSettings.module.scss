@@ -221,11 +221,7 @@
   display: grid;
   gap: clamp(1rem, 2vw, 1.5rem);
   padding: clamp(1rem, 3.5vw, 2.5rem);
-  background:
-    linear-gradient(rgba(23, 25, 23, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(23, 25, 23, 0.035) 1px, transparent 1px),
-    var(--account-paper);
-  background-size: 32px 32px;
+  background: var(--account-paper);
 }
 
 .setting {
@@ -769,14 +765,6 @@
     var(--app-bg);
 }
 
-:global(html[data-theme="dark"]) .settingsBody {
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    var(--account-paper);
-  background-size: 32px 32px;
-}
-
 @media (max-width: 900px) {
   .panelHeader {
     grid-template-columns: 1fr;
@@ -848,7 +836,6 @@
 
   .settingsBody {
     padding: 0.8rem;
-    background-size: 24px 24px;
   }
 
   .setting {
