@@ -365,11 +365,6 @@ const Login = ({ setUser, setRefreshTrigger }) => {
               </div>
 
               <div className={styles.loginPanel}>
-                <div className={styles.loginBadge}>
-                  <FiZap />
-                  <span>Witaj ponownie</span>
-                </div>
-
                 <form onSubmit={handleSubmit} className={styles.form}>
                   <div className={styles.formGrid}>
                     <div className={styles.inputGroup}>

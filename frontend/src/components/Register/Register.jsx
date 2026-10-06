@@ -270,7 +270,6 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
       <section className={styles.section} aria-labelledby="register-heading">
         <div id="registerBox" className={styles.inner}>
           <header className={styles.intro}>
-            <span className={styles.kicker}><FiZap aria-hidden="true" /> Dołącz do Showly</span>
             <h1 id="register-heading" className={styles.heading}>
               Twoja oferta.<br /><span>Twój dobry start.</span>
             </h1>
