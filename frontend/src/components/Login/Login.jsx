@@ -18,7 +18,6 @@ import {
   FiMail,
   FiLock,
   FiArrowRight,
-  FiZap,
   FiShield,
   FiMessageCircle,
   FiCalendar,

@@ -19,7 +19,6 @@ import {
   FiMail,
   FiLock,
   FiArrowRight,
-  FiZap,
   FiCheckCircle,
 } from "react-icons/fi";
 
