@@ -20,10 +20,6 @@ import {
   FiLock,
   FiArrowRight,
   FiZap,
-  FiShield,
-  FiLink,
-  FiMessageCircle,
-  FiCalendar,
   FiCheckCircle,
 } from "react-icons/fi";
 
@@ -271,243 +267,121 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
     <>
       <Hero user={user} setUser={setUser} />
 
-      <section className={styles.section}>
+      <section className={styles.section} aria-labelledby="register-heading">
         <div id="registerBox" className={styles.inner}>
-          <div className={styles.layout}>
-            <aside className={styles.side}>
+          <header className={styles.intro}>
+            <span className={styles.kicker}><FiZap aria-hidden="true" /> Dołącz do Showly</span>
+            <h1 id="register-heading" className={styles.heading}>
+              Twoja oferta.<br /><span>Twój dobry start.</span>
+            </h1>
+            <p className={styles.description}>
+              Zacznij od konta. Potem dodaj ofertę, zdjęcia i pokaż klientom swój profil.
+            </p>
+          </header>
 
-              <h1 className={styles.heading}>
-                Stwórz konto i pokaż ofertę <span>w jednym linku.</span>
-              </h1>
-
-              <p className={styles.description}>
-                Załóż konto, utwórz wizytówkę i zbierz w jednym miejscu opis,
-                zdjęcia, cennik, opinie, wiadomości oraz rezerwacje.
-              </p>
-
-              <div className={styles.metaRow}>
-                <div className={styles.metaCard}>
-                  <strong>1</strong>
-                  <span>konto do profilu i kontaktu</span>
-                </div>
-
-                <div className={styles.metaCard}>
-                  <strong>0 zł</strong>
-                  <span>start bez opłat</span>
-                </div>
-
-                <div className={styles.metaCard}>
-                  <strong>mobile</strong>
-                  <span>profil gotowy na telefon</span>
-                </div>
+          <div className={styles.card}>
+            {emailSent ? (
+              <div className={styles.activation} role="status">
+                <span className={styles.activationIcon}><FiCheckCircle aria-hidden="true" /></span>
+                <span className={styles.eyebrow}>Jeszcze jeden krok</span>
+                <h2>Sprawdź swoją skrzynkę</h2>
+                <p>Link aktywacyjny wysłaliśmy na <strong>{form.email.trim().toLowerCase()}</strong>.</p>
+                <ol className={styles.nextSteps}>
+                  <li>Otwórz wiadomość od Showly i kliknij link aktywacyjny.</li>
+                  <li>Zaloguj się i zacznij tworzyć swój profil.</li>
+                </ol>
+                <p className={styles.hint}>Nie widzisz wiadomości? Sprawdź folder spam.</p>
+                <Link to="/login" state={{ scrollToId: "loginBox" }} className={styles.primaryLink}>
+                  Przejdź do logowania <FiArrowRight aria-hidden="true" />
+                </Link>
               </div>
-
-              <div className={styles.infoBox}>
-                <span>Po rejestracji możesz:</span>
-
-                <div className={styles.featureList}>
-                  <p>
-                    <FiCheckCircle />
-                    utworzyć publiczną wizytówkę Showly,
-                  </p>
-
-                  <p>
-                    <FiLink />
-                    udostępniać jeden link klientom,
-                  </p>
-
-                  <p>
-                    <FiMessageCircle />
-                    odbierać wiadomości i zapytania,
-                  </p>
-
-                  <p>
-                    <FiCalendar />
-                    korzystać z rezerwacji lub zapytań,
-                  </p>
-
-                  <p>
-                    <FiShield />
-                    zarządzać kontem i bezpieczeństwem.
-                  </p>
-                </div>
-              </div>
-            </aside>
-
-            <div className={styles.content}>
-              <div className={styles.chapterHead}>
-                <div>
-                  <span className={styles.chapterLabel}>Rejestracja konta</span>
-                  <h2 className={styles.title}>Utwórz konto w Showly</h2>
-
-                  <p className={styles.subtitle}>
-                    Wypełnij dane albo kontynuuj przez Google. Konto pozwoli Ci
-                    stworzyć profil, zarządzać ofertą i odbierać kontakt od klientów.
-                  </p>
+            ) : (
+              <>
+                <div className={styles.cardHeader}>
+                  <div>
+                    <span className={styles.eyebrow}>Konto w Showly</span>
+                    <h2>Stwórz swoje konto</h2>
+                  </div>
+                  <span className={styles.headerIcon} aria-hidden="true"><FiUser /></span>
                 </div>
 
-                <span className={styles.chapterNumber}>01</span>
-              </div>
+                <div className={styles.cardBody}>
+                  <LoadingButton
+                    type="button"
+                    onClick={handleGoogleLogin}
+                    isLoading={isGoogleLoading}
+                    disabled={isBusy}
+                    className={styles.googleButton}
+                  >
+                    <span className={styles.googleIcon}><img src="/images/icons/google.png" alt="" /></span>
+                    Kontynuuj przez Google
+                  </LoadingButton>
 
-              <div className={styles.registerPanel}>
-                <div className={styles.registerBadge}>
-                  <FiZap />
-                  <span>Dołącz do Showly</span>
-                </div>
+                  <div className={styles.divider}><span>lub użyj adresu e-mail</span></div>
 
-                {!emailSent ? (
                   <form onSubmit={handleSubmit} className={styles.form}>
                     <div className={styles.formGrid}>
                       <div className={styles.inputGroup}>
-                        <label className={styles.inputLabel}>Imię i nazwisko</label>
-
+                        <label htmlFor="register-name">Imię i nazwisko</label>
                         <div className={styles.inputWrap}>
-                          <FiUser className={styles.inputIcon} />
-
-                          <input
-                            type="text"
-                            name="name"
-                            placeholder="Np. Jan Kowalski"
-                            value={form.name}
-                            onChange={handleChange}
-                            required
-                            disabled={isBusy}
-                          />
+                          <FiUser aria-hidden="true" />
+                          <input id="register-name" type="text" name="name" autoComplete="name"
+                            placeholder="Jan Kowalski" value={form.name} onChange={handleChange}
+                            required disabled={isBusy} />
                         </div>
                       </div>
-
                       <div className={styles.inputGroup}>
-                        <label className={styles.inputLabel}>Adres e-mail</label>
-
+                        <label htmlFor="register-email">Adres e-mail</label>
                         <div className={styles.inputWrap}>
-                          <FiMail className={styles.inputIcon} />
-
-                          <input
-                            type="email"
-                            name="email"
-                            placeholder="twoj@email.com"
-                            value={form.email}
-                            onChange={handleChange}
-                            required
-                            disabled={isBusy}
-                          />
+                          <FiMail aria-hidden="true" />
+                          <input id="register-email" type="email" name="email" autoComplete="email"
+                            placeholder="twoj@email.com" value={form.email} onChange={handleChange}
+                            required disabled={isBusy} />
                         </div>
                       </div>
-
                       <div className={styles.inputGroup}>
-                        <label className={styles.inputLabel}>Hasło</label>
-
+                        <label htmlFor="register-password">Hasło</label>
                         <div className={styles.inputWrap}>
-                          <FiLock className={styles.inputIcon} />
-
-                          <input
-                            type="password"
-                            name="password"
-                            placeholder="Ustaw swoje hasło"
-                            value={form.password}
-                            onChange={handleChange}
-                            required
-                            disabled={isBusy}
-                          />
+                          <FiLock aria-hidden="true" />
+                          <input id="register-password" type="password" name="password" autoComplete="new-password"
+                            placeholder="Utwórz hasło" value={form.password} onChange={handleChange}
+                            minLength={6} aria-describedby="register-password-hint" required disabled={isBusy} />
                         </div>
+                        <p id="register-password-hint" className={styles.fieldHint}>Co najmniej 6 znaków.</p>
                       </div>
-
                       <div className={styles.inputGroup}>
-                        <label className={styles.inputLabel}>Powtórz hasło</label>
-
+                        <label htmlFor="register-confirm-password">Powtórz hasło</label>
                         <div className={styles.inputWrap}>
-                          <FiLock className={styles.inputIcon} />
-
-                          <input
-                            type="password"
-                            name="confirmPassword"
-                            placeholder="Powtórz hasło"
-                            value={form.confirmPassword}
-                            onChange={handleChange}
-                            required
-                            disabled={isBusy}
-                          />
+                          <FiLock aria-hidden="true" />
+                          <input id="register-confirm-password" type="password" name="confirmPassword" autoComplete="new-password"
+                            placeholder="Wpisz hasło ponownie" value={form.confirmPassword} onChange={handleChange}
+                            minLength={6} required disabled={isBusy} />
                         </div>
                       </div>
                     </div>
 
-                    <div className={styles.buttonGrid}>
-                      <LoadingButton
-                        type="submit"
-                        isLoading={isRegistering}
-                        disabled={isBusy}
-                        className={styles.submitButton}
-                      >
-                        <span className={styles.buttonInner}>
-                          <span className={styles.buttonLabel}>Zarejestruj się</span>
-
-                          {!isRegistering && (
-                            <span className={styles.buttonIcon}>
-                              <FiArrowRight />
-                            </span>
-                          )}
-                        </span>
-                      </LoadingButton>
-
-                      <LoadingButton
-                        type="button"
-                        onClick={handleGoogleLogin}
-                        isLoading={isGoogleLoading}
-                        disabled={isBusy}
-                        className={styles.googleButton}
-                      >
-                        <span className={styles.buttonInner}>
-                          <span className={styles.googleIconWrap}>
-                            <img src="/images/icons/google.png" alt="Google" />
-                          </span>
-
-                          <span className={styles.buttonLabel}>
-                            KONTYNUUJ PRZEZ GOOGLE
-                          </span>
-                        </span>
-                      </LoadingButton>
-                    </div>
-                  </form>
-                ) : (
-                  <div className={styles.successLarge}>
-                    <strong>Sprawdź skrzynkę e-mail</strong>
-
-                    <p>
-                      Rejestracja zakończona. Kliknij link aktywacyjny, aby
-                      aktywować konto. Następnie możesz przejść do logowania.
-                    </p>
-                  </div>
-                )}
-
-                {(error || (message && !emailSent)) && (
-                  <div className={styles.statusStack}>
-                    {error && <div className={styles.error}>{error}</div>}
-                    {message && !emailSent && (
-                      <div className={styles.success}>{message}</div>
+                    {(error || message) && (
+                      <div className={styles.statusStack}>
+                        {error && <div className={styles.error} role="alert">{error}</div>}
+                        {message && <div className={styles.success} role="status">{message}</div>}
+                      </div>
                     )}
-                  </div>
-                )}
 
-                <div className={styles.bottomBox}>
-                  <div>
-                    <p className={styles.loginLink}>Masz już konto?</p>
+                    <LoadingButton type="submit" isLoading={isRegistering} disabled={isBusy} className={styles.submitButton}>
+                      <span className={styles.buttonInner}>Utwórz konto <FiArrowRight aria-hidden="true" /></span>
+                    </LoadingButton>
+                    <p className={styles.hint}>Wyślemy Ci e-mail z linkiem do aktywacji konta.</p>
+                  </form>
+                </div>
 
-                    <span className={styles.loginHint}>
-                      Zaloguj się i wróć do swojego profilu Showly.
-                    </span>
-                  </div>
-
-                  <Link
-                    to="/login"
-                    state={{ scrollToId: "loginBox" }}
-                    className={styles.linkButton}
-                  >
-                    <FiArrowRight />
-                    Przejdź do logowania
+                <div className={styles.cardFooter}>
+                  <span>Masz już konto?</span>
+                  <Link to="/login" state={{ scrollToId: "loginBox" }}>
+                    Zaloguj się <FiArrowRight aria-hidden="true" />
                   </Link>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         </div>
       </section>

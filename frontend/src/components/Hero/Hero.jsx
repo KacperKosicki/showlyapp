@@ -85,13 +85,6 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
       <div className={styles.inner}>
         <div className={styles.layout}>
           <div className={styles.content}>
-            <div
-              className={`${styles.kicker} ${styles.reveal} ${styles.fromTop}`}
-            >
-              <span className={styles.kickerDot} />
-              Profil usługowy, który pracuje za Ciebie
-            </div>
-
             <h1
               className={`${styles.title} ${styles.reveal} ${styles.fromLeft}`}
               style={{ "--reveal-delay": "70ms" }}

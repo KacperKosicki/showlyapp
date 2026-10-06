@@ -290,13 +290,13 @@ const Login = ({ setUser, setRefreshTrigger }) => {
     <>
       <Hero />
 
-      <section className={styles.section}>
+      <section className={styles.section} aria-labelledby="login-heading">
         <div className={styles.inner} id="loginBox">
           <div className={styles.layout}>
             <aside className={styles.side}>
-              <span className={styles.chapterLabel}>Showly Account</span>
+              <span className={styles.chapterLabel}>Twoje konto. Twoje możliwości.</span>
 
-              <h1 className={styles.heading}>
+              <h1 className={styles.heading} id="login-heading">
                 Wróć do swojego <span>profilu online.</span>
               </h1>
 
@@ -317,8 +317,8 @@ const Login = ({ setUser, setRefreshTrigger }) => {
                 </div>
 
                 <div className={styles.metaCard}>
-                  <strong>mobile</strong>
-                  <span>wygodne logowanie na telefonie</span>
+                  <strong>360°</strong>
+                  <span>Twój profil w jednym miejscu</span>
                 </div>
               </div>
 
@@ -361,7 +361,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
                   </p>
                 </div>
 
-                <span className={styles.chapterNumber}>01</span>
+                <span className={styles.chapterNumber} aria-hidden="true"><FiArrowRight /></span>
               </div>
 
               <div className={styles.loginPanel}>
@@ -373,13 +373,15 @@ const Login = ({ setUser, setRefreshTrigger }) => {
                 <form onSubmit={handleSubmit} className={styles.form}>
                   <div className={styles.formGrid}>
                     <div className={styles.inputGroup}>
-                      <label className={styles.inputLabel}>Adres e-mail</label>
+                      <label className={styles.inputLabel} htmlFor="login-email">Adres e-mail</label>
 
                       <div className={styles.inputWrap}>
                         <FiMail className={styles.inputIcon} />
 
                         <input
+                          id="login-email"
                           name="email"
+                          autoComplete="email"
                           type="email"
                           placeholder="twoj@email.com"
                           required
@@ -391,13 +393,15 @@ const Login = ({ setUser, setRefreshTrigger }) => {
                     </div>
 
                     <div className={styles.inputGroup}>
-                      <label className={styles.inputLabel}>Hasło</label>
+                      <label className={styles.inputLabel} htmlFor="login-password">Hasło</label>
 
                       <div className={styles.inputWrap}>
                         <FiLock className={styles.inputIcon} />
 
                         <input
+                          id="login-password"
                           name="password"
+                          autoComplete="current-password"
                           type="password"
                           placeholder="Wpisz swoje hasło"
                           required
@@ -440,6 +444,8 @@ const Login = ({ setUser, setRefreshTrigger }) => {
                       </span>
                     </LoadingButton>
 
+                    <div className={styles.divider}><span>lub</span></div>
+
                     <LoadingButton
                       type="button"
                       onClick={handleGoogleLogin}
@@ -449,10 +455,10 @@ const Login = ({ setUser, setRefreshTrigger }) => {
                     >
                       <span className={styles.buttonInner}>
                         <span className={styles.googleIconWrap}>
-                          <img src="/images/icons/google.png" alt="Google" />
+                          <img src="/images/icons/google.png" alt="" />
                         </span>
 
-                        <span className={styles.buttonLabel}>KONTYNUUJ PRZEZ GOOGLE</span>
+                        <span className={styles.buttonLabel}>Kontynuuj przez Google</span>
                       </span>
                     </LoadingButton>
                   </div>
@@ -460,8 +466,8 @@ const Login = ({ setUser, setRefreshTrigger }) => {
 
                 {(error || message) && (
                   <div className={styles.statusStack}>
-                    {error && <div className={styles.error}>{error}</div>}
-                    {message && <div className={styles.success}>{message}</div>}
+                    {error && <div className={styles.error} role="alert">{error}</div>}
+                    {message && <div className={styles.success} role="status">{message}</div>}
                   </div>
                 )}
 

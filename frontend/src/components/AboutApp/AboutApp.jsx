@@ -128,7 +128,7 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
   return (
     <section ref={sectionRef} className={styles.section} id="about-app">
       <div className={styles.background} aria-hidden="true">
-        <span className={styles.bigWord}>PROFILE</span>
+        <span className={styles.bigWord}>O APLIKACJI</span>
         <span className={styles.dotField} />
         <span className={styles.cornerArrow}>↘</span>
       </div>
@@ -138,11 +138,6 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
           <div
             className={`${styles.manifestCopy} ${styles.reveal} ${styles.fromLeft}`}
           >
-            <span className={styles.kicker}>
-              <span className={styles.kickerDot} />
-              Po co powstało Showly?
-            </span>
-
             <h2>
               Dobra oferta nie powinna
               <span className={styles.highlight}>ginąć w wiadomościach.</span>
@@ -227,12 +222,9 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
           <header
             className={`${styles.sectionHeading} ${styles.reveal} ${styles.fromTop}`}
           >
-            <span className={styles.kicker}>
-              <span className={styles.kickerDot} />
-              Mniej tłumaczenia
-            </span>
 
-            <h3>Jeden profil robi porządek za Ciebie.</h3>
+            <h3>Jeden profil robi
+              <span className={styles.highlight}>porządek za Ciebie.</span></h3>
           </header>
 
           <div className={styles.benefits}>
@@ -264,12 +256,9 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
           <div
             className={`${styles.audienceCopy} ${styles.reveal} ${styles.fromLeft}`}
           >
-            <span className={styles.kicker}>
-              <span className={styles.kickerDot} />
-              Dla kogo?
-            </span>
 
-            <h3>Nie musisz pasować do jednej branży.</h3>
+            <h3>Nie musisz pasować do
+              <span className={styles.highlight}>jednej branży.</span></h3>
 
             <p>
               Jeśli pokazujesz swoją pracę, sprzedajesz usługę albo przyjmujesz

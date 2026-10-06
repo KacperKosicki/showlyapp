@@ -206,8 +206,8 @@ const UserDropdown = ({
           typeof billingVisibility?.isVisible === "boolean"
             ? billingVisibility.isVisible
             : profile?.isVisible !== false &&
-              daysLeft !== null &&
-              daysLeft > 0;
+            daysLeft !== null &&
+            daysLeft > 0;
 
         setRemainingDays(daysLeft);
         setProfileVisible(isVisible);
@@ -240,10 +240,10 @@ const UserDropdown = ({
 
         const totalUnread = Array.isArray(response.data)
           ? response.data.reduce(
-              (total, conversation) =>
-                total + Number(conversation.unreadCount || 0),
-              0
-            )
+            (total, conversation) =>
+              total + Number(conversation.unreadCount || 0),
+            0
+          )
           : 0;
 
         setUnreadCount(totalUnread);
@@ -458,9 +458,8 @@ const UserDropdown = ({
                   >
                     {profileVisible
                       ? remainingDays !== null
-                        ? `Aktywny jeszcze ${remainingDays} ${
-                            remainingDays === 1 ? "dzień" : "dni"
-                          }`
+                        ? `Aktywny jeszcze ${remainingDays} ${remainingDays === 1 ? "dzień" : "dni"
+                        }`
                         : "Profil aktywny"
                       : "Profil wygasł"}
                   </small>

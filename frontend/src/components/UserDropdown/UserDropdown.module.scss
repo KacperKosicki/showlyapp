@@ -410,7 +410,7 @@
   align-items: center;
   gap: 0.65rem;
 
-  > span {
+  >span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -426,7 +426,7 @@
   overflow: visible !important;
   white-space: normal !important;
 
-  > span {
+  >span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -529,11 +529,9 @@
   }
 
   &:hover {
-    background: color-mix(
-      in srgb,
-      var(--dropdown-danger) 10%,
-      transparent
-    );
+    background: color-mix(in srgb,
+        var(--dropdown-danger) 10%,
+        transparent);
 
     .itemIcon {
       color: #171717;
@@ -671,6 +669,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .trigger,
   .chevron,
   .menu,

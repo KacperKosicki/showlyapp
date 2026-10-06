@@ -20,10 +20,7 @@
   width: 100%;
   min-height: 100svh;
   padding:
-    calc(clamp(7.5rem, 9vw, 9.5rem) + var(--safe-top))
-    max(clamp(1rem, 4vw, 3.5rem), var(--safe-right))
-    calc(clamp(2.5rem, 4vw, 4rem) + var(--safe-bottom))
-    max(clamp(1rem, 4vw, 3.5rem), var(--safe-left));
+    calc(clamp(7.5rem, 9vw, 9.5rem) + var(--safe-top)) max(clamp(1rem, 4vw, 3.5rem), var(--safe-right)) calc(clamp(2.5rem, 4vw, 4rem) + var(--safe-bottom)) max(clamp(1rem, 4vw, 3.5rem), var(--safe-left));
 
   display: flex;
   align-items: center;
@@ -135,35 +132,6 @@
   position: relative;
   z-index: 4;
   max-width: 780px;
-}
-
-.kicker {
-  width: fit-content;
-  margin-bottom: clamp(1.35rem, 2.2vw, 2rem);
-  padding: 0.58rem 0.8rem;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-
-  border: 1px solid var(--hero-line);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--hero-card) 55%, transparent);
-
-  font-size: 0.68rem;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 0.075em;
-  text-transform: uppercase;
-}
-
-.kickerDot {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: var(--hero-green);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--hero-green) 16%, transparent);
 }
 
 .title {
@@ -801,16 +769,10 @@
   .hero {
     min-height: 100svh;
     padding:
-      calc(6.7rem + var(--safe-top))
-      max(0.9rem, var(--safe-right))
-      calc(2.8rem + var(--safe-bottom))
-      max(0.9rem, var(--safe-left));
+      calc(6.7rem + var(--safe-top)) max(0.9rem, var(--safe-right)) calc(2.8rem + var(--safe-bottom)) max(0.9rem, var(--safe-left));
   }
 
-  .bigWord {
-    top: 24%;
-    font-size: 42vw;
-  }
+
 
   .gridDot {
     width: 80vw;
@@ -820,11 +782,6 @@
 
   .layout {
     gap: 3.6rem;
-  }
-
-  .kicker {
-    margin-bottom: 1.2rem;
-    font-size: 0.6rem;
   }
 
   .title {
@@ -856,7 +813,7 @@
     padding-inline: 0.25rem;
   }
 
-  .searchHeading >div {
+  .searchHeading>div {
     display: grid;
     gap: 0.2rem;
   }
@@ -924,6 +881,7 @@
 }
 
 @media (hover: none) {
+
   .primaryBtn:hover:not(:disabled),
   .textBtn:hover:not(:disabled) {
     transform: none;
@@ -931,6 +889,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .reveal,
   .primaryBtn,
   .textBtn,
