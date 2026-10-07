@@ -1,0 +1,23 @@
+// The same tilted marker treatment as AboutApp, scoped to each section heading.
+@mixin marker-highlight($lime) {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: .16em;
+  padding: .03em .12em .1em .07em;
+  color: #171917;
+  transform: rotate(-1deg);
+  overflow-wrap: normal;
+  word-break: normal;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: .08em -.03em .02em -.02em;
+    z-index: -1;
+    border-radius: .06em;
+    background: $lime;
+    transform: skewX(-4deg);
+  }
+}

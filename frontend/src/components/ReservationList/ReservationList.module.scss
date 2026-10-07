@@ -20,7 +20,7 @@
 .side { position: relative; min-width: 0; padding: clamp(16px, 2.5vw, 26px); border: 1px solid var(--yp-frame); border-radius: 24px; background: var(--app-surface); box-shadow: 6px 7px 0 var(--yp-shadow); }
 .kicker { color: var(--app-primary); font-family: $font-accent; font-size: .66rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
 .headerIcon { position: absolute; top: 26px; right: 26px; width: 42px; height: 42px; padding: 10px; border: 1px solid var(--yp-frame); border-radius: 12px; background: var(--yp-lime); color: #171917; box-shadow: 3px 3px 0 var(--yp-shadow); }
-.heading { max-width: calc(100% - 64px); margin: 5px 0 14px; font-family: $font-heading; font-size: clamp(1.6rem, 2.8vw, 2.4rem); font-weight: 750; letter-spacing: -.055em; line-height: 1.12; span { color: var(--app-primary); } }
+.heading { max-width: calc(100% - 64px); margin: 5px 0 14px; font-family: $font-heading; font-size: clamp(1.6rem, 2.8vw, 2.4rem); font-weight: 750; letter-spacing: -.055em; line-height: 1.12; }
 .description { max-width: 800px; margin: 0 0 26px; padding-bottom: 22px; border-bottom: 2px solid var(--app-border); color: var(--app-muted); font-size: .85rem; line-height: 1.7; }
 .summaryGroup { margin-bottom: 20px; }
 .metaRow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }

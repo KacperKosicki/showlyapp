@@ -40,7 +40,7 @@ const WhyUs = () => {
       <div className={styles.background} aria-hidden="true"><span className={styles.bigWord}>PO TWOJEMU</span><span className={styles.dotField} /></div>
       <div className={styles.inner}>
         <header className={styles.header} data-reveal>
-          <div><span className={styles.kicker}><FiCheck aria-hidden="true" /> Dlaczego Showly?</span><h2 id="whyus-title">Nie tylko wizytówka.<span>Twój kolejny krok.</span></h2></div>
+          <div><h2 id="whyus-title">Nie tylko wizytówka.<span>Twój kolejny krok.</span></h2></div>
           <p>Własny styl, konkretna oferta i kontakt pod ręką. Showly łączy to, co pomaga pokazać swoją pracę i znaleźć właściwą osobę.</p>
         </header>
 

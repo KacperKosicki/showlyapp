@@ -1,4 +1,5 @@
 @import "../../styles/variables";
+@import "../../styles/markerHeadline";
 @import "../../styles/sectionBackdrop";
 
 .section {
@@ -40,10 +41,11 @@
 .bigWord { @include backdropWord(var(--hub-line),min(8.1vw,10rem)); }
 .dotField { @include backdropDots(var(--hub-line)); }
 .inner { position: relative; z-index: 1; width: min(1580px,100%); margin: auto; }
+.header > div:first-child { flex: 1; min-width: 0; }
 .header { display: flex; justify-content: space-between; align-items: center; gap: 2rem; margin-bottom: 2.5rem; }
 .eyebrow { display: inline-flex; align-items: center; gap: .5rem; padding: .6rem .8rem; background: var(--hub-lime); color: #171917; border: 1px solid var(--hub-frame); border-radius: 7px; font-size: .7rem; font-weight: 650; text-transform: uppercase; letter-spacing: .05em; }
-.header h2 { margin: 1.1rem 0; font-family: $font-heading; font-size: clamp(2.5rem,4.7vw,4.7rem); font-weight: 800; line-height: 1.04; letter-spacing: -.065em; }
-.header h2 span { display: block; width: fit-content; max-width: 100%; margin-top: .14em; padding: .05em .12em .12em; color: #171917; background: var(--hub-lime); box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.header h2 { margin: 0 0 1rem; font-family: $font-heading; font-size: clamp(3.5rem, 6.2vw, 6.7rem); font-weight: 800; line-height: 1.04; letter-spacing: -.065em; }
+.header h2 span { @include marker-highlight(var(--hub-lime)); }
 .header p { max-width: 650px; color: var(--hub-muted); line-height: 1.7; margin: 1.25rem 0 0; }
 .directoryNote { flex: 0 0 220px; display: grid; grid-template-columns: 1fr auto; gap: .65rem; padding: 1.4rem; border: 1px solid var(--hub-frame); border-radius: 18px; background: var(--hub-paper); box-shadow: 4px 5px 0 var(--hub-frame); }
 .directoryNote > svg { grid-column: 2; grid-row: 1; color: var(--hub-violet); width: 25px; height: 25px; }

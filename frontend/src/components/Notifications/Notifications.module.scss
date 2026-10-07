@@ -150,14 +150,17 @@
 .openLink { display:inline-flex; align-items:center; gap:8px; font-family:$font-accent; font-size:.72rem; color:var(--app-text); svg { width:15px; height:15px; color:var(--app-primary); } }
 .emptyState {
   display:grid;
-  grid-template-columns:38px minmax(0,1fr);
-  gap:16px;
-  padding:20px;
+  grid-template-columns:minmax(0,1fr);
+  justify-items:center;
+  gap:12px;
+  padding:26px 20px;
   border:1px dashed var(--app-border);
   border-radius:12px;
   background:var(--app-surface);
-  strong { display:block; font-family:$font-accent; font-size:.9rem; line-height:1.5; }
-  p { max-width:650px; margin:8px 0 0; color:var(--app-muted); font-size:.8rem; line-height:1.7; }
+  text-align:center;
+  .emptyIcon { width:42px; height:42px; background:var(--yp-lime); color:#171917; svg { width:20px; height:20px; } }
+  strong { display:block; font-family:$font-body; font-size:.92rem; line-height:1.5; }
+  p { max-width:600px; margin:12px 0 0; color:var(--app-muted); font-size:.8rem; line-height:1.7; }
 }
 .skeletonItem { pointer-events:none; }
 .metaSkel,.dateSkel,.messageSkel,.labelSkel,.openSkel,.nameSkeleton,.avatarSkeleton { display:block; background:var(--app-border); }
@@ -194,3 +197,4 @@
   .item { transition:none; }
   .shimmer::after { animation:none; }
 }
+

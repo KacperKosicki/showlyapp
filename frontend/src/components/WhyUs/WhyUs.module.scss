@@ -1,4 +1,5 @@
 @import "../../styles/variables";
+@import "../../styles/markerHeadline";
 @import "../../styles/sectionBackdrop";
 
 .section {
@@ -37,10 +38,10 @@
 .bigWord { @include backdropWord(var(--why-line),min(13vw,15rem)); }
 .dotField { @include backdropDots(var(--why-line)); }
 .inner { position: relative; z-index: 1; width: min(1440px,100%); margin: auto; }
-.header { display: grid; grid-template-columns: 1.5fr 1fr; align-items: end; gap: clamp(2rem,5vw,5rem); margin-bottom: 2.5rem; }
+.header { display: grid; grid-template-columns: minmax(0,1.9fr) minmax(0,1fr); align-items: end; gap: clamp(2rem,5vw,5rem); margin-bottom: 2.5rem; }
 .kicker { display: inline-flex; align-items: center; gap: .5rem; padding: .6rem .8rem; border: 1px solid var(--why-border); border-radius: 7px; background: var(--why-lime); color: #171917; font-size: .7rem; font-weight: 650; text-transform: uppercase; letter-spacing: .05em; }
-.header h2 { margin: 1.2rem 0 0; font-family: $font-heading; font-size: clamp(2.5rem,4.2vw,4.5rem); line-height: 1.06; font-weight: 800; letter-spacing: -.065em; }
-.header h2 span { display: block; width: fit-content; max-width: 100%; margin-top: .15em; padding: .07em .12em .12em; background: var(--why-lime); color: #171917; }
+.header h2 { margin: 0 0 1rem; font-family: $font-heading; font-size: clamp(3.5rem, 6.2vw, 6.7rem); line-height: 1.06; font-weight: 800; letter-spacing: -.065em; }
+.header h2 span { @include marker-highlight(var(--why-lime)); }
 .header > p { margin: 0 0 .3rem; color: var(--why-muted); font-size: clamp(.95rem,1.2vw,1.1rem); line-height: 1.8; }
 .perspective { display: grid; grid-template-columns: auto minmax(0,1fr); align-items: center; gap: 2rem; padding: 1.3rem 0; margin-bottom: 2rem; border-top: 1px solid var(--why-line); border-bottom: 1px solid var(--why-line); }
 .perspective > p { margin: 0; max-width: 650px; color: var(--why-muted); font-size: .85rem; line-height: 1.7; }

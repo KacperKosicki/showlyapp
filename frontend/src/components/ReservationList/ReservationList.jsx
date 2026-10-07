@@ -2163,7 +2163,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
             <span className={styles.kicker}>Showly.me / Centrum rezerwacji</span>
             <FiCalendar className={styles.headerIcon} aria-hidden="true" />
             <h1 className={styles.heading}>
-              Twoje <span>rezerwacje</span> i terminy
+              Twoje rezerwacje i terminy
             </h1>
 
             <p className={styles.description}>

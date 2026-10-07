@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { FiArrowRight, FiArrowUpRight, FiArrowDownRight, FiBookOpen, FiCamera, FiMusic, FiScissors, FiSearch } from "react-icons/fi";
+import { FiArrowRight, FiArrowUpRight, FiArrowDownRight, FiBookOpen, FiCamera, FiMusic, FiSun, FiScissors, FiSearch } from "react-icons/fi";
 import styles from "./DiscoverShowly.module.scss";
 import useScrollReveal from "../../utils/useScrollReveal";
 
@@ -19,7 +19,7 @@ const CategoryArt = ({ category }) => {
   if (category === "photo") return <div className={styles.lens}><span /><span /><span /><i /></div>;
   if (category === "beauty") return <div className={styles.sculpture}><span /><span /><i /></div>;
   if (category === "music") return <div className={styles.wave}>{[30, 55, 85, 45, 100, 65, 90, 40, 70].map((height, i) => <span key={i} style={{ "--bar-height": `${height}%`, "--bar-delay": `${i * 40}ms` }} />)}</div>;
-  return <div className={styles.letterArt}><span>Aa</span><i>✳</i></div>;
+  return <div className={styles.letterArt}><span>Aa</span><FiSun aria-hidden="true" /></div>;
 };
 
 const DiscoverShowly = () => {

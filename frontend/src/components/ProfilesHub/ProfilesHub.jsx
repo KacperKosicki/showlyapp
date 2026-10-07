@@ -328,7 +328,7 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
             <div className={styles.background} aria-hidden="true"><span className={styles.bigWord}>ZNAJDŹ SWÓJ KLIMAT</span><span className={styles.dotField} /></div>
             <div className={styles.inner}>
                 <header className={styles.header}>
-                    <div><span className={styles.eyebrow}><FiSearch /> Katalog Showly</span><h2 id="profiles-hub-title">Dobra oferta.<br /><span>Właściwy człowiek.</span></h2><p>Znajdź usługę, poznaj styl i wybierz kogoś, kto pasuje do Twojego pomysłu.</p></div>
+                    <div><h2 id="profiles-hub-title">Dobra oferta.<br /><span>Właściwy człowiek.</span></h2><p>Znajdź usługę, poznaj styl i wybierz kogoś, kto pasuje do Twojego pomysłu.</p></div>
                     <div className={styles.directoryNote}><FiUsers aria-hidden="true" /><strong>{loading ? '…' : profiles.length}</strong><span>profili do odkrycia</span><small>Lokalnie i online · Twój wybór</small></div>
                 </header>
                 <div className={styles.searchPanel}><header className={styles.searchPanelHeading}><h3>Zacznij od swojego pomysłu.</h3><FiSearch aria-hidden="true" /></header>

@@ -479,7 +479,8 @@ export const AccountSettingsView = ({
           </header>
 
           <div className={styles.settingsBody}>
-            <section className={styles.setting}>
+            <fieldset className={styles.setting}>
+              <legend>01 / Zdjęcie konta</legend>
               <header className={styles.settingHeader}>
                 <div className={styles.settingTitle}>
                   <span className={styles.settingIcon} aria-hidden="true">
@@ -487,7 +488,6 @@ export const AccountSettingsView = ({
                   </span>
 
                   <div>
-                    <span className={styles.settingLabel}>Zdjęcie konta</span>
                     <h2>Zdjęcie profilowe</h2>
                   </div>
                 </div>
@@ -561,10 +561,11 @@ export const AccountSettingsView = ({
                   </div>
                 </div>
               </div>
-            </section>
+            </fieldset>
 
             <div className={styles.secondaryGrid}>
-              <section className={styles.setting}>
+              <fieldset className={styles.setting}>
+                <legend>02 / Nazwa wyświetlana</legend>
                 <header className={styles.settingHeader}>
                   <div className={styles.settingTitle}>
                     <span className={styles.settingIcon} aria-hidden="true">
@@ -572,7 +573,6 @@ export const AccountSettingsView = ({
                     </span>
 
                     <div>
-                      <span className={styles.settingLabel}>Dane publiczne</span>
                       <h2>Nazwa wyświetlana</h2>
                     </div>
                   </div>
@@ -610,9 +610,10 @@ export const AccountSettingsView = ({
                     Zapisz nazwę
                   </ActionButton>
                 </div>
-              </section>
+              </fieldset>
 
-              <section className={`${styles.setting} ${styles.securitySetting}`}>
+              <fieldset className={`${styles.setting} ${styles.securitySetting}`}>
+                <legend>03 / Bezpieczeństwo</legend>
                 <header className={styles.settingHeader}>
                   <div className={styles.settingTitle}>
                     <span className={styles.settingIcon} aria-hidden="true">
@@ -620,7 +621,6 @@ export const AccountSettingsView = ({
                     </span>
 
                     <div>
-                      <span className={styles.settingLabel}>Bezpieczeństwo</span>
                       <h2>Zmiana hasła</h2>
                     </div>
                   </div>
@@ -649,7 +649,7 @@ export const AccountSettingsView = ({
                     Wyślij link
                   </ActionButton>
                 </div>
-              </section>
+              </fieldset>
             </div>
           </div>
 
