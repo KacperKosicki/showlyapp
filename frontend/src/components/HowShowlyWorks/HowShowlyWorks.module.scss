@@ -2,6 +2,7 @@
 @import "../../styles/sectionBackdrop";
 
 .section {
+  @include scrollReveal;
   --works-bg: #f1eee4;
   --works-paper: #fffdf8;
   --works-ink: #171917;
@@ -33,6 +34,7 @@
   background: var(--works-bg);
   color: var(--works-ink);
   font-family: $font-accent;
+  scroll-margin-top: calc(6rem + var(--safe-top, 0px));
 
   *,
   *::before,

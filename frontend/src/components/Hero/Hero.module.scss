@@ -62,6 +62,7 @@
 
 .bigWord {
   @include backdropWord(var(--hero-line), min(22vw, 26rem));
+  top: clamp(4.75rem, 7vw, 7rem);
 }
 
 .gridDot {

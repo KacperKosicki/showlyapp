@@ -1,6 +1,8 @@
 @import "../../styles/variables";
+@import "../../styles/sectionBackdrop";
 
 .section {
+  @include scrollReveal;
   --discover-bg: #fffdf7;
   --discover-ink: #171917;
   --discover-muted: #686c65;
@@ -34,46 +36,18 @@
 }
 
 .background {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
+  @include sectionBackdrop(var(--discover-line), var(--discover-violet));
 }
 
 .bigWord {
-  position: absolute;
-  top: 0.12em;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-
-  font-family: $font-heading;
-  font-size: clamp(2rem, 9.5vw, 11rem);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.065em;
-  color: transparent;
-  -webkit-text-stroke: 1px var(--discover-line);
-  opacity: 0.65;
-  user-select: none;
+  @include backdropWord(var(--discover-line), min(9.5vw, 11rem));
 }
 
 .dotField {
-  position: absolute;
-  inset: 0;
-
-  background-image: radial-gradient(var(--discover-line) 1.2px, transparent 1.2px);
-  background-size: 24px 24px;
-  mask-image: linear-gradient(115deg, transparent 20%, #000 100%);
-  -webkit-mask-image: linear-gradient(115deg, transparent 20%, #000 100%);
-  opacity: 0.6;
-  animation: dotsDrift 18s linear infinite;
+  @include backdropDots(var(--discover-line));
 }
 
-@keyframes dotsDrift {
-  to { background-position: 24px 24px; }
-}
+
 
 .backgroundArrow {
   position: absolute;
@@ -785,10 +759,7 @@
     padding-top: 4.5rem;
   }
 
-  .bigWord {
-    top: 0.8rem;
-    font-size: 9.5vw;
-  }
+
 
   .backgroundArrow {
     top: 2.5rem;

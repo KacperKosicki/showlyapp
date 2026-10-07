@@ -54,6 +54,13 @@
   -webkit-text-stroke: 1px $line;
   opacity: 0.65;
   user-select: none;
+
+  @media (max-width: 760px) {
+    font-size: 38vw;
+    left: 35%;
+    transform: translateX(-40%) rotate(-5deg);
+    opacity: 0.45;
+  }
 }
 
 @mixin backdropDots($line, $angle: 115deg) {
@@ -68,6 +75,9 @@
 
   @media (max-width: 760px) {
     background-size: 20px 20px;
+    mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.45), #000);
+    -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.45), #000);
+    opacity: 0.85;
     animation-name: backdropDotsDriftMobile;
   }
 
@@ -96,4 +106,19 @@
 @keyframes backdropArrowFloat {
   from { translate: 0 0; }
   to { translate: 0 -10px; }
+}
+
+@mixin scrollReveal {
+  [data-reveal] {
+    transition: opacity 700ms ease, translate 700ms cubic-bezier(0.16, 1, 0.3, 1),
+      transform 200ms ease, box-shadow 200ms ease, background-color 200ms ease,
+      border-color 200ms ease, color 200ms ease;
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  [data-reveal-state="pending"] { opacity: 0; translate: 0 28px; }
+  [data-reveal-state="visible"],
+  [data-reveal]:focus-within { opacity: 1; translate: 0 0; }
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal] { opacity: 1; translate: none; transition: none; }
+  }
 }

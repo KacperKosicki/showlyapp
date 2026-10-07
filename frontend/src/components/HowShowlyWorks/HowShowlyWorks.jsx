@@ -5,6 +5,7 @@ import {
   FiMapPin, FiMessageCircle, FiSearch, FiSliders, FiStar,
 } from "react-icons/fi";
 import styles from "./HowShowlyWorks.module.scss";
+import useScrollReveal from "../../utils/useScrollReveal";
 
 const steps = [
   {
@@ -76,6 +77,7 @@ const StepPreview = ({ index }) => {
 };
 
 const HowShowlyWorks = () => {
+  const sectionRef = useScrollReveal();
   const [activeStep, setActiveStep] = useState(0);
   const tabRefs = useRef([]);
   const step = steps[activeStep];
@@ -94,21 +96,21 @@ const HowShowlyWorks = () => {
   };
 
   return (
-    <section className={styles.section} id="how-showly-works" aria-labelledby="how-showly-works-title">
+    <section ref={sectionRef} className={styles.section} id="how-showly-works" aria-labelledby="how-showly-works-title">
       <div className={styles.background} aria-hidden="true">
         <span className={styles.bigWord}>JAK DZIAŁA SHOWLY</span>
         <span className={styles.gridDot} />
         <span className={styles.scribble}>↗</span>
       </div>
       <div className={styles.inner}>
-        <header className={styles.header}>
+        <header className={styles.header} data-reveal>
           <div>
             <h2 id="how-showly-works-title">Od „szukam”<br />do <span>„to jest to”.<svg viewBox="0 0 360 20" fill="none" aria-hidden="true"><path d="M4 14C95 2 217 2 355 9" /></svg></span></h2>
           </div>
           <div className={styles.lead}><span className={styles.routeBadge}>4 kroki <FiArrowUpRight aria-hidden="true" /></span><p>Poznaj kogoś, kto zrobi to dobrze.<br />Zobacz, jak przejść od potrzeby do kontaktu.</p><span className={styles.instruction}>Wybierz krok i zajrzyj do środka.</span></div>
         </header>
 
-        <div className={styles.explorer}>
+        <div className={styles.explorer} data-reveal>
           <div className={styles.tabs} role="tablist" aria-label="Jak korzystać z Showly — cztery kroki">
             {steps.map(({ icon: Icon, label }, index) => (
               <button key={label} ref={(element) => { tabRefs.current[index] = element; }}

@@ -7,10 +7,10 @@ import {
     FiGrid,
     FiStar,
     FiUsers,
-    FiClock,
     FiRefreshCw,
 } from "react-icons/fi";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FiMapPin, FiSliders, FiX, FiArrowDown, FiHeart, FiArrowLeft, FiArrowRight } from "react-icons/fi";
+import { discoverProfiles } from "./profileDiscovery";
 
 const API = process.env.REACT_APP_API_URL;
 
@@ -37,8 +37,10 @@ const getBookingLabel = (mode) => {
 
 const ProfilesHub = ({ currentUser, setAlert }) => {
     const location = useLocation();
-    const scrollerRef = useRef(null);
-    const rafRef = useRef(null);
+    const trackRef = useRef(null);
+    const [canLeft, setCanLeft] = useState(false);
+    const [canRight, setCanRight] = useState(false);
+
 
     const [profiles, setProfiles] = useState([]);
     const [activeCategory, setActiveCategory] = useState("Wszystkie");
@@ -47,8 +49,21 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
     const [query, setQuery] = useState("");
     const [sort, setSort] = useState("popular");
     const [loading, setLoading] = useState(true);
-    const [canLeft, setCanLeft] = useState(false);
-    const [canRight, setCanRight] = useState(false);
+    const [place, setPlace] = useState('');
+    const [ratedOnly, setRatedOnly] = useState(false);
+    const [favoritesOnly, setFavoritesOnly] = useState(false);
+    const [visibleCount, setVisibleCount] = useState(12);
+    const [fetchError, setFetchError] = useState(false);
+    const [reloadKey, setReloadKey] = useState(0);
+    const [filtersOpen, setFiltersOpen] = useState(() => window.matchMedia?.('(min-width: 1000px)').matches ?? true);
+
+    useEffect(() => {
+        const media = window.matchMedia?.('(min-width: 1000px)');
+        if (!media) return undefined;
+        const update = event => setFiltersOpen(event.matches);
+        media.addEventListener?.('change', update);
+        return () => media.removeEventListener?.('change', update);
+    }, []);
 
     useEffect(() => {
         const scrollTo = location.state?.scrollToId;
@@ -92,15 +107,13 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
         const fetchProfiles = async () => {
             try {
                 setLoading(true);
+                setFetchError(false);
 
                 const res = await fetch(`${API}/api/profiles`, {
                     signal: controller.signal,
                 });
 
-                if (!res.ok) {
-                    setProfiles([]);
-                    return;
-                }
+                if (!res.ok) throw new Error("Nie udało się pobrać profili");
 
                 const data = await res.json();
                 const baseProfiles = Array.isArray(data) ? data : [];
@@ -152,7 +165,7 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
             } catch (err) {
                 if (err?.name === "AbortError") return;
 
-                console.error("❌ Błąd pobierania profili:", err);
+                setFetchError(true);
                 setProfiles([]);
 
                 if (typeof setAlert === "function") {
@@ -169,7 +182,7 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
         fetchProfiles();
 
         return () => controller.abort();
-    }, [currentUser?.uid, setAlert]);
+    }, [currentUser?.uid, setAlert, reloadKey]);
 
     useEffect(() => {
         const onFavoritesUpdated = (event) => {
@@ -240,147 +253,56 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
         ];
     }, [profiles]);
 
-    const filteredProfiles = useMemo(() => {
-        const q = query.trim().toLowerCase();
+    const places = useMemo(() => [...new Set(profiles.map(profile => profile.location).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, 'pl')), [profiles]);
 
-        let list = profiles.filter((profile) => {
-            const category = normalizeCategory(profile.category);
-            const type = getProfileTypeLabel(profile.profileType);
-            const booking = getBookingLabel(profile.bookingMode);
+    const quickSuggestions = useMemo(() => {
+        const branches = categories.filter(category => category.label !== 'Wszystkie' && category.label !== 'Inne');
+        if (branches.length) return branches.slice(0, 5).map(category => ({ label: category.label, kind: 'category' }));
+        const counts = new Map();
+        profiles.forEach(profile => (Array.isArray(profile.tags) ? profile.tags : []).forEach(tag => {
+            if (typeof tag === 'string' && tag.trim()) counts.set(tag, (counts.get(tag) || 0) + 1);
+        }));
+        return [...counts].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([label]) => ({ label, kind: 'query' }));
+    }, [categories, profiles]);
 
-            const matchesCategory =
-                activeCategory === "Wszystkie" || category === activeCategory;
+    const filteredProfiles = useMemo(() => discoverProfiles(profiles, {
+        query, place, category: activeCategory, type: activeType, booking: activeBooking,
+        sort, ratedOnly, favoritesOnly: Boolean(currentUser?.uid) && favoritesOnly,
+    }, { category: normalizeCategory, type: getProfileTypeLabel, booking: getBookingLabel }),
+    [profiles, query, place, activeCategory, activeType, activeBooking, sort, ratedOnly, favoritesOnly, currentUser?.uid]);
 
-            const matchesType = activeType === "Wszystkie" || type === activeType;
+    useEffect(() => { setVisibleCount(12); }, [query, place, activeCategory, activeType, activeBooking, sort, ratedOnly, favoritesOnly]);
 
-            const matchesBooking =
-                activeBooking === "Wszystkie" || booking === activeBooking;
-
-            const text = [
-                profile.name,
-                profile.role,
-                profile.location,
-                profile.description,
-                category,
-                type,
-                booking,
-                ...(Array.isArray(profile.tags) ? profile.tags : []),
-            ]
-                .filter(Boolean)
-                .join(" ")
-                .toLowerCase();
-
-            return (
-                matchesCategory &&
-                matchesType &&
-                matchesBooking &&
-                (!q || text.includes(q))
-            );
-        });
-
-        if (sort === "rating") {
-            list = [...list].sort(
-                (a, b) => Number(b.rating || 0) - Number(a.rating || 0)
-            );
-        }
-
-        if (sort === "newest") {
-            list = [...list].sort(
-                (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-            );
-        }
-
-        if (sort === "popular") {
-            list = [...list].sort(
-                (a, b) =>
-                    Number(b.visits || b.views || 0) - Number(a.visits || a.views || 0)
-            );
-        }
-
-        return list;
-    }, [profiles, activeCategory, activeType, activeBooking, query, sort]);
-
-    const updateArrows = useCallback(() => {
-        const el = scrollerRef.current;
-        if (!el) return;
-
-        if (rafRef.current) {
-            cancelAnimationFrame(rafRef.current);
-        }
-
-        rafRef.current = requestAnimationFrame(() => {
-            const max = Math.max(0, el.scrollWidth - el.clientWidth);
-            const x = Math.max(0, el.scrollLeft);
-
-            setCanLeft(x > 4);
-            setCanRight(max > 4 && x < max - 4);
-        });
+    const updateCarousel = useCallback(() => {
+        const track = trackRef.current;
+        if (!track) return;
+        setCanLeft(track.scrollLeft > 4);
+        setCanRight(track.scrollWidth - track.clientWidth - track.scrollLeft > 4);
     }, []);
 
     useEffect(() => {
-        const el = scrollerRef.current;
-        if (!el) return;
-
-        updateArrows();
-
-        const handleScroll = () => updateArrows();
-
-        el.addEventListener("scroll", handleScroll, { passive: true });
-        window.addEventListener("resize", handleScroll);
-
-        let resizeObserver;
-
-        if (typeof ResizeObserver !== "undefined") {
-            resizeObserver = new ResizeObserver(handleScroll);
-            resizeObserver.observe(el);
-        }
-
-        return () => {
-            el.removeEventListener("scroll", handleScroll);
-            window.removeEventListener("resize", handleScroll);
-
-            if (resizeObserver) {
-                resizeObserver.disconnect();
-            }
-
-            if (rafRef.current) {
-                cancelAnimationFrame(rafRef.current);
-            }
-        };
-    }, [filteredProfiles.length, loading, updateArrows]);
+        const track = trackRef.current;
+        if (!track) return undefined;
+        updateCarousel();
+        const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(updateCarousel) : null;
+        observer?.observe(track);
+        window.addEventListener('resize', updateCarousel);
+        return () => { observer?.disconnect(); window.removeEventListener('resize', updateCarousel); };
+    }, [loading, filteredProfiles.length, visibleCount, updateCarousel]);
 
     useEffect(() => {
-        const el = scrollerRef.current;
-        if (!el) return;
+        trackRef.current?.scrollTo?.({ left: 0, behavior: 'auto' });
+        updateCarousel();
+    }, [query, place, activeCategory, activeType, activeBooking, sort, ratedOnly, favoritesOnly, updateCarousel]);
 
-        const frame = requestAnimationFrame(() => {
-            el.scrollTo({ left: 0, behavior: "auto" });
-            updateArrows();
-        });
-
-        return () => cancelAnimationFrame(frame);
-    }, [query, activeCategory, activeType, activeBooking, sort, updateArrows]);
-
-    const scrollByCard = (dir = 1) => {
-        const el = scrollerRef.current;
-        if (!el) return;
-
-        const firstCard = el.querySelector(`.${styles.cardShell}`);
-        const cardW = firstCard?.getBoundingClientRect().width || 455;
-
-        const computed = getComputedStyle(el);
-        const gap = parseFloat(computed.columnGap || computed.gap || "0") || 24;
-
-        const step = cardW + gap;
-        const max = Math.max(0, el.scrollWidth - el.clientWidth);
-        const next = Math.min(Math.max(el.scrollLeft + dir * step, 0), max);
-
-        el.scrollTo({
-            left: next <= 8 ? 0 : next,
-            behavior: "smooth",
-        });
-
-        window.setTimeout(updateArrows, 320);
+    const scrollProfiles = direction => {
+        const track = trackRef.current;
+        if (!track) return;
+        const width = track.querySelector('[role="listitem"]')?.getBoundingClientRect().width || 360;
+        const gap = parseFloat(getComputedStyle(track).gap) || 20;
+        track.scrollTo({ left: Math.max(0, Math.min(track.scrollLeft + direction * (width + gap), track.scrollWidth - track.clientWidth)),
+            behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     };
 
     const resetFilters = () => {
@@ -389,254 +311,60 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
         setActiveType("Wszystkie");
         setActiveBooking("Wszystkie");
         setSort("popular");
+        setPlace("");
+        setRatedOnly(false);
+        setFavoritesOnly(false);
     };
 
+    const chips = [
+        query.trim() && { label: 'Szukasz: ' + query.trim(), clear: () => setQuery('') },
+        place.trim() && { label: 'Miejsce: ' + place.trim(), clear: () => setPlace('') },
+        activeCategory !== 'Wszystkie' && { label: activeCategory, clear: () => setActiveCategory('Wszystkie') },
+        activeType !== 'Wszystkie' && { label: activeType, clear: () => setActiveType('Wszystkie') },
+        activeBooking !== 'Wszystkie' && { label: activeBooking, clear: () => setActiveBooking('Wszystkie') },
+        ratedOnly && { label: 'Ocena 4+', clear: () => setRatedOnly(false) },
+        currentUser?.uid && favoritesOnly && { label: 'Ulubione', clear: () => setFavoritesOnly(false) },
+    ].filter(Boolean);
+
     return (
-        <section className={styles.section} id="profilesHub">
+        <section className={styles.section} id="profilesHub" aria-labelledby="profiles-hub-title">
+            <div className={styles.background} aria-hidden="true"><span className={styles.bigWord}>ZNAJDŹ SWÓJ KLIMAT</span><span className={styles.dotField} /></div>
             <div className={styles.inner}>
+                <header className={styles.header}>
+                    <div><span className={styles.eyebrow}><FiSearch /> Katalog Showly</span><h2 id="profiles-hub-title">Dobra oferta.<br /><span>Właściwy człowiek.</span></h2><p>Znajdź usługę, poznaj styl i wybierz kogoś, kto pasuje do Twojego pomysłu.</p></div>
+                    <div className={styles.directoryNote}><FiUsers aria-hidden="true" /><strong>{loading ? '…' : profiles.length}</strong><span>profili do odkrycia</span><small>Lokalnie i online · Twój wybór</small></div>
+                </header>
+                <div className={styles.searchPanel}><header className={styles.searchPanelHeading}><h3>Zacznij od swojego pomysłu.</h3><FiSearch aria-hidden="true" /></header>
+                    <div className={styles.searchFields}>
+                        <label className={styles.searchBox}><FiSearch aria-hidden="true" /><span><span>Co lub kogo szukasz?</span><input type="search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Usługa, nazwa, zainteresowanie…" /></span></label>
+                        <label className={styles.searchBox}><FiMapPin aria-hidden="true" /><span><span>Gdzie?</span><input type="search" list="profiles-hub-places" value={place} onChange={e => setPlace(e.target.value)} placeholder="Miasto lub miejscowość" /></span></label>
+                    </div>
+                    <datalist id="profiles-hub-places">{places.map(city => <option key={city} value={city} />)}</datalist>
+                    {quickSuggestions.length > 0 && <div className={styles.quickCategories}><span>Na dobry początek</span>{quickSuggestions.map(suggestion => <button key={suggestion.label} type="button" aria-pressed={suggestion.kind === 'category' ? activeCategory === suggestion.label : query === suggestion.label} onClick={() => suggestion.kind === 'category' ? setActiveCategory(activeCategory === suggestion.label ? 'Wszystkie' : suggestion.label) : setQuery(query === suggestion.label ? '' : suggestion.label)}>{suggestion.label}</button>)}</div>}
+                    <p className={styles.searchHint}>Wyniki zmieniają się podczas pisania. Możesz łączyć kilka słów, np. „fotograf portret”.</p>
+                </div>
                 <div className={styles.layout}>
-                    <aside className={styles.side}>
-
-                        <h2 className={styles.heading}>
-                            Odkrywaj profile <span>bez chaosu.</span>
-                        </h2>
-
-                        <p className={styles.description}>
-                            Przeglądaj wizytówki usługodawców, twórców i lokalnych marek.
-                            Filtruj po branży, typie profilu, trybie rezerwacji albo wyszukuj
-                            po mieście, usłudze i tagach.
-                        </p>
-
-                        <div className={styles.metaRow}>
-                            <div className={styles.metaCard}>
-                                <strong>{profiles.length}</strong>
-                                <span>aktywnych profili</span>
-                            </div>
-
-                            <div className={styles.metaCard}>
-                                <strong>{Math.max(categories.length - 1, 0)}</strong>
-                                <span>kategorii</span>
-                            </div>
-
-                            <div className={styles.metaCard}>
-                                <strong>{filteredProfiles.length}</strong>
-                                <span>wyników po filtrach</span>
-                            </div>
+                    <details className={styles.filtersPanel} open={filtersOpen} onToggle={event => setFiltersOpen(event.currentTarget.open)}>
+                        <summary><span><FiSliders aria-hidden="true" /> Dopasuj wyniki {chips.length > 0 && <b>{chips.length}</b>}</span><span className={styles.filterIndicator}>+</span></summary>
+                        <div className={styles.filterBody}>
+                            <fieldset><legend>01 / Branża</legend><div className={styles.filterList}>{categories.map(category => <button key={category.label} type="button" aria-pressed={activeCategory === category.label} onClick={() => setActiveCategory(category.label)}><span>{category.label}</span><b>{category.count}</b></button>)}</div></fieldset>
+                            <fieldset><legend>02 / Charakter profilu</legend><div className={styles.filterList}>{profileTypes.map(type => <button key={type.label} type="button" aria-pressed={activeType === type.label} onClick={() => setActiveType(type.label)}><span>{type.label}</span><b>{type.count}</b></button>)}</div></fieldset>
+                            <fieldset><legend>03 / Umawianie usług</legend><div className={styles.filterList}>{bookingModes.map(mode => <button key={mode.label} type="button" aria-pressed={activeBooking === mode.label} onClick={() => setActiveBooking(mode.label)}><span>{mode.label}</span><b>{mode.count}</b></button>)}</div></fieldset>
+                            <fieldset><legend>04 / Jeszcze bliżej celu</legend><label className={styles.checkbox}><input type="checkbox" checked={ratedOnly} onChange={e => setRatedOnly(e.target.checked)} /><FiStar aria-hidden="true" /> Ocena co najmniej 4/5</label>{currentUser?.uid && <label className={styles.checkbox}><input type="checkbox" checked={favoritesOnly} onChange={e => setFavoritesOnly(e.target.checked)} /><FiHeart aria-hidden="true" /> Tylko moje ulubione</label>}</fieldset>
+                            <button type="button" className={styles.resetButton} onClick={resetFilters}><FiRefreshCw /> Wyczyść filtry</button>
                         </div>
-
-                        <div className={styles.infoBox}>
-                            <span>Kategorie • Opinie • Rezerwacje</span>
-
-                            <p>
-                                Użyj filtrów, aby szybko znaleźć profil pasujący do konkretnej
-                                usługi, lokalizacji albo sposobu kontaktu.
-                            </p>
-                        </div>
-                    </aside>
-
+                    </details>
                     <div className={styles.content}>
-                        <div className={styles.chapterHead}>
-                            <div>
-                                <span className={styles.chapterLabel}>Katalog wizytówek</span>
-
-                                <h3>
-                                    {filteredProfiles.length === 1
-                                        ? "1 dopasowany profil."
-                                        : `${filteredProfiles.length} dopasowanych profili.`}
-                                </h3>
-                            </div>
-
-                            <span className={styles.chapterNumber}>
-                                {loading ? "..." : filteredProfiles.length}
-                            </span>
-                        </div>
-
-                        <div className={styles.filtersPanel}>
-                            <div className={styles.searchBox}>
-                                <FiSearch />
-
-                                <input
-                                    type="text"
-                                    value={query}
-                                    onChange={(e) => setQuery(e.target.value)}
-                                    placeholder="Np. fryzjer, DJ, Poznań..."
-                                />
-                            </div>
-
-                            <div className={styles.filterSection}>
-                                <span className={styles.filterTitle}>Sortowanie</span>
-
-                                <div className={styles.sortGrid}>
-                                    <button
-                                        type="button"
-                                        className={sort === "popular" ? styles.activeFilter : ""}
-                                        onClick={() => setSort("popular")}
-                                    >
-                                        <FiUsers />
-                                        Popularne
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        className={sort === "rating" ? styles.activeFilter : ""}
-                                        onClick={() => setSort("rating")}
-                                    >
-                                        <FiStar />
-                                        Najlepiej oceniane
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        className={sort === "newest" ? styles.activeFilter : ""}
-                                        onClick={() => setSort("newest")}
-                                    >
-                                        <FiClock />
-                                        Najnowsze
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className={styles.filterSection}>
-                                <span className={styles.filterTitle}>Kategorie</span>
-
-                                <div className={styles.filterList}>
-                                    {categories.map((category) => (
-                                        <button
-                                            key={category.label}
-                                            type="button"
-                                            className={
-                                                activeCategory === category.label ? styles.activeFilter : ""
-                                            }
-                                            onClick={() => setActiveCategory(category.label)}
-                                        >
-                                            <span>{category.label}</span>
-                                            <b>{category.count}</b>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className={styles.filterSection}>
-                                <span className={styles.filterTitle}>Typ profilu</span>
-
-                                <div className={styles.filterList}>
-                                    {profileTypes.map((type) => (
-                                        <button
-                                            key={type.label}
-                                            type="button"
-                                            className={activeType === type.label ? styles.activeFilter : ""}
-                                            onClick={() => setActiveType(type.label)}
-                                        >
-                                            <span>{type.label}</span>
-                                            <b>{type.count}</b>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className={styles.filterSection}>
-                                <span className={styles.filterTitle}>Rezerwacje</span>
-
-                                <div className={styles.filterList}>
-                                    {bookingModes.map((mode) => (
-                                        <button
-                                            key={mode.label}
-                                            type="button"
-                                            className={
-                                                activeBooking === mode.label ? styles.activeFilter : ""
-                                            }
-                                            onClick={() => setActiveBooking(mode.label)}
-                                        >
-                                            <span>{mode.label}</span>
-                                            <b>{mode.count}</b>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <button type="button" className={styles.resetButton} onClick={resetFilters}>
-                                <FiRefreshCw />
-                                Wyczyść filtry
-                            </button>
-                        </div>
-
                         <div className={styles.resultsTop}>
-                            <div>
-                                <span className={styles.resultsLabel}>Wyniki</span>
-
-                                <h3>
-                                    {loading
-                                        ? "Ładowanie profili..."
-                                        : filteredProfiles.length === 1
-                                            ? "1 profil w katalogu"
-                                            : `${filteredProfiles.length} profili w katalogu`}
-                                </h3>
-                            </div>
-
-                            <div className={styles.resultsPill}>
-                                <FiGrid />
-                                Przewijaj profile
-                            </div>
+                            <div aria-live="polite" aria-atomic="true"><span className={styles.resultsLabel}><FiGrid aria-hidden="true" /> Twoje odkrycia</span><h3>{loading ? 'Szukamy profili…' : fetchError ? 'Katalog chwilowo niedostępny' : filteredProfiles.length + ' ' + (filteredProfiles.length === 1 ? 'dopasowany profil' : 'dopasowanych profili')}</h3></div>
+                            <label className={styles.sortLabel}>Pokaż najpierw<select value={sort} onChange={e => setSort(e.target.value)}><option value="popular">Najczęściej odwiedzane</option><option value="rating">Najlepiej oceniane</option><option value="newest">Najnowsze</option></select></label>
                         </div>
-
-                        {loading ? (
-                            <div className={styles.empty}>Ładowanie profili...</div>
-                        ) : filteredProfiles.length === 0 ? (
-                            <div className={styles.empty}>
-                                Nie znaleziono profili dla wybranych filtrów.
-                            </div>
-                        ) : (
-                            <div className={styles.carousel}>
-                                <button
-                                    type="button"
-                                    className={`${styles.navBtn} ${styles.left} ${!canLeft ? styles.disabled : ""
-                                        }`}
-                                    onClick={() => scrollByCard(-1)}
-                                    disabled={!canLeft}
-                                    aria-label="Przewiń w lewo"
-                                >
-                                    <FaChevronLeft />
-                                </button>
-
-                                <div
-                                    className={styles.cardsTrack}
-                                    ref={scrollerRef}
-                                    role="list"
-                                    aria-label="Lista profili Showly"
-                                >
-                                    {filteredProfiles.map((profile) => (
-                                        <div
-                                            className={styles.cardShell}
-                                            key={profile._id || profile.userId || profile.id}
-                                            role="listitem"
-                                        >
-                                            <UserCard
-                                                user={profile}
-                                                currentUser={currentUser}
-                                                setAlert={setAlert}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className={styles.mobileHint}>
-                                    <span>←</span>
-                                    <p>Przesuń, aby zobaczyć więcej profili</p>
-                                    <span>→</span>
-                                </div>
-
-                                <button
-                                    type="button"
-                                    className={`${styles.navBtn} ${styles.right} ${!canRight ? styles.disabled : ""
-                                        }`}
-                                    onClick={() => scrollByCard(1)}
-                                    disabled={!canRight}
-                                    aria-label="Przewiń w prawo"
-                                >
-                                    <FaChevronRight />
-                                </button>
-                            </div>
-                        )}
+                        {chips.length > 0 && <div className={styles.activeFilters} aria-label="Aktywne filtry">{chips.map(chip => <button key={chip.label} type="button" onClick={chip.clear} aria-label={'Usuń filtr: ' + chip.label}>{chip.label}<FiX aria-hidden="true" /></button>)}<button type="button" onClick={resetFilters}>Wyczyść wszystkie</button></div>}
+                        {loading ? <div className={styles.skeletons} aria-label="Ładowanie profili" aria-busy="true">{[0,1,2].map(i => <div key={i} />)}</div> : fetchError ? <div className={styles.empty}><FiRefreshCw aria-hidden="true" /><h3>Spróbujmy jeszcze raz.</h3><p>Nie udało się wczytać katalogu. Odśwież wyniki za chwilę.</p><button type="button" onClick={() => setReloadKey(key => key + 1)}>Wczytaj ponownie</button></div> : filteredProfiles.length === 0 ? <div className={styles.empty}><FiSearch aria-hidden="true" /><h3>Poszukajmy trochę szerzej.</h3><p>Spróbuj krótszej nazwy, innej miejscowości lub usuń jeden z filtrów.</p><button type="button" onClick={resetFilters}>Pokaż wszystkie profile</button></div> : <>
+                            <div className={styles.carouselTop}><p>Przesuwaj karty lub użyj strzałek, żeby odkrywać kolejne profile.</p><div className={styles.carouselControls}><button type="button" aria-label="Poprzedni profil" disabled={!canLeft} onClick={() => scrollProfiles(-1)}><FiArrowLeft aria-hidden="true" /></button><button type="button" aria-label="Następny profil" disabled={!canRight} onClick={() => scrollProfiles(1)}><FiArrowRight aria-hidden="true" /></button></div></div>
+                            <div className={styles.cardsTrack} ref={trackRef} onScroll={updateCarousel} role="list" aria-label="Lista profili Showly" tabIndex={0} onKeyDown={event => { if (event.target !== event.currentTarget) return; if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); scrollProfiles(event.key === 'ArrowRight' ? 1 : -1); } }}>{filteredProfiles.slice(0, visibleCount).map(profile => <div className={styles.cardShell} key={profile._id || profile.userId || profile.id} role="listitem"><UserCard user={profile} currentUser={currentUser} setAlert={setAlert} /></div>)}</div>
+                            <div className={styles.resultsFooter}><span>Widzisz {Math.min(visibleCount, filteredProfiles.length)} z {filteredProfiles.length} profili</span>{visibleCount < filteredProfiles.length && <button type="button" onClick={() => setVisibleCount(count => count + 12)}>Odkryj kolejne profile <FiArrowDown aria-hidden="true" /></button>}</div>
+                        </>}
                     </div>
                 </div>
             </div>

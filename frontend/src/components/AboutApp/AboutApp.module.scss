@@ -28,6 +28,7 @@
   background: var(--about-bg);
   color: var(--about-ink);
   font-family: $font-accent;
+  scroll-margin-top: calc(6rem + var(--safe-top, 0px));
 
   *,
   *::before,
@@ -87,9 +88,9 @@
 
 .manifest {
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(410px, 0.92fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(410px, 0.95fr);
   align-items: center;
-  gap: clamp(3rem, 8vw, 8rem);
+  gap: clamp(2rem, 3vw, 3rem);
 }
 
 .manifestCopy,
@@ -120,6 +121,8 @@
   position: relative;
   z-index: 0;
   width: fit-content;
+  overflow-wrap: normal;
+  word-break: normal;
   margin-top: 0.08em;
   padding: 0.03em 0.12em 0.1em 0.07em;
   color: var(--about-ink);
@@ -784,7 +787,11 @@
   }
 
   .manifestCopy h2 {
-    font-size: clamp(3rem, 13.8vw, 5rem);
+    font-size: clamp(2rem, 10.4vw, 4.5rem);
+  }
+
+  .highlight {
+    max-width: 100%;
   }
 
   .manifestCopy>p {
@@ -864,10 +871,6 @@
 }
 
 @media (max-width: 480px) {
-  .manifestCopy h2 {
-    font-size: clamp(2.7rem, 13.6vw, 4rem);
-  }
-
   .linkCardBody {
     padding: 1.2rem;
   }

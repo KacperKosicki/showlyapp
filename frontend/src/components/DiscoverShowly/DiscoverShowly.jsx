@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { FiArrowRight, FiArrowUpRight, FiBookOpen, FiCamera, FiMusic, FiScissors, FiSearch } from "react-icons/fi";
 import styles from "./DiscoverShowly.module.scss";
+import useScrollReveal from "../../utils/useScrollReveal";
 
 const categories = [
   { id: "photo", icon: FiCamera, label: "Fotografia", query: "fotograf", eyebrow: "Zatrzymaj chwilę", text: "Portret, wydarzenie czy nowa historia Twojej marki?", detail: "Znajdź fotografa" },
@@ -21,15 +22,17 @@ const CategoryArt = ({ category }) => {
   return <div className={styles.letterArt}><span>Aa</span><i>✳</i></div>;
 };
 
-const DiscoverShowly = () => (
-  <section className={styles.section} id="discover-showly" aria-labelledby="discover-showly-title">
+const DiscoverShowly = () => {
+  const sectionRef = useScrollReveal();
+  return (
+  <section ref={sectionRef} className={styles.section} id="discover-showly" aria-labelledby="discover-showly-title">
     <div className={styles.background} aria-hidden="true">
       <span className={styles.bigWord}>ODKRYWAJ SHOWLY</span>
       <span className={styles.dotField} />
       <span className={styles.backgroundArrow}>↘</span>
     </div>
     <div className={styles.inner}>
-      <header className={styles.header}>
+      <header className={styles.header} data-reveal>
         <div>
           <span className={styles.eyebrow}><FiSearch aria-hidden="true" /> Odkrywaj Showly</span>
           <h2 id="discover-showly-title">Dobry pomysł.<br /><span>Właściwi ludzie.</span></h2>
@@ -47,7 +50,7 @@ const DiscoverShowly = () => (
       <div className={styles.grid}>
         {categories.map(({ id, icon: Icon, label, query, eyebrow, text, detail }) => (
           <Link key={id} to={`/szukaj?q=${encodeURIComponent(query)}`}
-            className={`${styles.card} ${styles[id]}`} aria-label={`${detail} — ${label}`}>
+            className={`${styles.card} ${styles[id]}`} aria-label={`${detail} — ${label}`} data-reveal>
             <div className={styles.cardTop}><span><Icon aria-hidden="true" />{eyebrow}</span><FiArrowUpRight className={styles.cardArrow} aria-hidden="true" /></div>
             <div className={styles.art} aria-hidden="true"><CategoryArt category={id} /></div>
             <div className={styles.cardCopy}>
@@ -58,16 +61,17 @@ const DiscoverShowly = () => (
         ))}
       </div>
 
-      <div className={styles.moreIdeas}>
+      <div className={styles.moreIdeas} data-reveal>
         <div className={styles.ideasCopy}><span className={styles.sectionLabel}>Jeszcze więcej możliwości</span><h3>Masz inny pomysł?</h3></div>
         <ul aria-label="Więcej inspiracji">{ideas.map(({ label, query }) => <li key={label}><Link to={`/szukaj?q=${encodeURIComponent(query)}`}>{label}<FiArrowUpRight aria-hidden="true" /></Link></li>)}</ul>
       </div>
-      <footer className={styles.footer}>
+      <footer className={styles.footer} data-reveal>
         <div className={styles.footerCopy}><span className={styles.searchIcon}><FiSearch aria-hidden="true" /></span><div><span className={styles.sectionLabel}>Twój następny krok</span><h3>Nie musisz mieścić się w kategorii.</h3><p>Przejrzyj wszystkie profile i znajdź coś dla siebie.</p></div></div>
         <Link to="/profile" state={{ scrollToId: "profilesHub" }} className={styles.browseButton}>Odkrywaj wszystkie profile <FiArrowUpRight aria-hidden="true" /></Link>
       </footer>
     </div>
   </section>
 );
+};
 
 export default DiscoverShowly;
