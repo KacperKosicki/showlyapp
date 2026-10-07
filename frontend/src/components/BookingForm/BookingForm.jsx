@@ -71,9 +71,9 @@ const resolveTheme = (theme) => {
 const modeLabel = (mode) => {
   const m = String(mode || "off").toLowerCase();
 
-  if (m === "calendar") return "Rezerwacje z kalendarzem";
-  if (m === "request-blocking") return "Zapytanie z blokadą dnia";
-  if (m === "request-open") return "Otwarte zapytanie";
+  if (m === "calendar") return "Wybierz termin wizyty";
+  if (m === "request-blocking") return "Zarezerwuj wybrany dzień";
+  if (m === "request-open") return "Porozmawiajmy o Twoim pomyśle";
 
   return "Rezerwacje niedostępne";
 };
@@ -82,7 +82,7 @@ const modeShortLabel = (mode) => {
   const m = String(mode || "off").toLowerCase();
 
   if (m === "calendar") return "KALENDARZ";
-  if (m === "request-blocking") return "BLOKADA DNIA";
+  if (m === "request-blocking") return "REZERWACJA DNIA";
   if (m === "request-open") return "ZAPYTANIE";
 
   return "WYŁĄCZONE";
@@ -94,6 +94,8 @@ export default function BookingForm({ user }) {
   const location = useLocation();
 
   const [provider, setProvider] = useState(null);
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [alert, setAlert] = useState({
     show: false,
     type: "",
@@ -105,6 +107,8 @@ export default function BookingForm({ user }) {
 
   useEffect(() => {
     let alive = true;
+    setLoadError(false);
+    setProvider(null);
 
     const loadProvider = async () => {
       try {
@@ -172,11 +176,7 @@ export default function BookingForm({ user }) {
 
         if (!alive) return;
 
-        setAlert({
-          show: true,
-          type: "error",
-          message: "Nie udało się załadować profilu.",
-        });
+        setLoadError(true);
       }
     };
 
@@ -185,7 +185,7 @@ export default function BookingForm({ user }) {
     return () => {
       alive = false;
     };
-  }, [slug]);
+  }, [slug, reloadKey]);
 
   useEffect(() => {
     const mode = String(provider?.bookingMode || "off").toLowerCase();
@@ -209,12 +209,13 @@ export default function BookingForm({ user }) {
 
   if (!provider) {
     return (
-      <section className={styles.pageWrap}>
+      <section className={styles.pageWrap} id="booking-form">
         <div className={styles.inner}>
           <div className={styles.loadingCard}>
-            <span>Showly Booking</span>
-            <strong>Ładowanie formularza...</strong>
-            <p>Sprawdzamy profil, usługi i dostępne ustawienia rezerwacji.</p>
+            <span>SHOWLY / REZERWACJE</span>
+            <strong>{loadError ? "Nie udało się wczytać formularza" : "Przygotowujemy Twoją rezerwację…"}</strong>
+            <p>{loadError ? "Spróbuj ponownie. Twój wybór usługi został zachowany." : "Sprawdzamy usługi i dostępność tego profilu."}</p>
+            {loadError && <button type="button" className={styles.backButton} onClick={() => setReloadKey(value => value + 1)}>Spróbuj ponownie</button>}
           </div>
         </div>
       </section>
@@ -231,23 +232,24 @@ export default function BookingForm({ user }) {
         />
       )}
 
-      <section className={styles.pageWrap}>
+      <section className={styles.pageWrap} id="booking-form">
         <div className={styles.inner}>
           <article className={styles.layout} style={cssVars}>
             <aside className={styles.side}>
               <button
                 type="button"
                 className={styles.backButton}
-                onClick={() => navigate(-1)}
+                onClick={() => navigate(`/${provider.slug || slug}`, { state: { scrollToId: "profileWrapper" } })}
               >
                 <FaArrowLeft />
-                <span>Wróć</span>
+                <span>Wróć do profilu</span>
               </button>
 
-              <span className={styles.overline}>Showly Booking</span>
+              <span className={styles.overline}><FaRegCalendarAlt aria-hidden="true" /> Showly / Rezerwacje</span>
 
               <h1 className={styles.heading}>
-                Zarezerwuj termin bez zbędnego chaosu.
+                Dobry wybór.{" "}
+                <span>Prosty kontakt.</span>
               </h1>
 
               <p className={styles.description}>
@@ -313,8 +315,8 @@ export default function BookingForm({ user }) {
                   </span>
 
                   <div>
-                    <strong>Wybrana usługa</strong>
-                    <p>{preselectedServiceName || "Do wyboru w formularzu"}</p>
+                    <strong>Jak zacząć?</strong>
+                    <p>{mode === "request-open" ? "Opisz, czego potrzebujesz" : "Wybierz usługę i termin"}</p>
                   </div>
                 </div>
               </div>
@@ -330,7 +332,7 @@ export default function BookingForm({ user }) {
                   <h2>{modeLabel(mode)}</h2>
                 </div>
 
-                <span className={styles.chapterNumber}>02</span>
+                <span className={styles.chapterNumber}><FaRegCalendarAlt aria-hidden="true" /></span>
               </div>
 
               <section className={styles.body}>

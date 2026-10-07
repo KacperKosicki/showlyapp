@@ -17,6 +17,8 @@ import {
 import { pl } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import styles from "./BookingModeCalendar.module.scss";
+import { FiChevronLeft, FiChevronRight, FiChevronDown } from "react-icons/fi";
+import BookingSteps from "./BookingSteps";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
 import { api } from "../../api/api";
 
@@ -97,6 +99,7 @@ export default function BookingModeCalendar({
   const [selectedService, setService] = useState(null);
 
   const [timeSlots, setTimeSlots] = useState([]);
+  const [showUnavailableSlots, setShowUnavailableSlots] = useState(false);
   const [selectedSlot, setSlot] = useState(""); // "HH:mm"
 
   const [description, setDescription] = useState("");
@@ -117,7 +120,7 @@ export default function BookingModeCalendar({
     [currentMonth]
   );
 
-  const startDayIndex = useMemo(() => getDay(startOfMonth(currentMonth)), [currentMonth]);
+  const startDayIndex = useMemo(() => (getDay(startOfMonth(currentMonth)) + 6) % 7, [currentMonth]);
   const isDayActive = (day) =>
     Array.isArray(provider?.workingDays) && provider.workingDays.includes(getDay(day));
 
@@ -568,30 +571,14 @@ export default function BookingModeCalendar({
 
   return (
     <>
+<BookingSteps className={styles.progress} steps={[{ label: "Usługa", done: Boolean(selectedService) && (!isUserPick || Boolean(selectedStaffId)) }, { label: "Dzień i godzina", done: Boolean(selectedDate && selectedSlot) }, { label: "Sprawdź i wyślij", done: false }]} />
       <div className={styles.topGrid}>
-        <label className={`${styles.field} ${styles.fieldWide}`}>
-          <div className={styles.fieldHeader}>
-            <div>
-              <span className={styles.fieldEyebrow}>01 / Informacje</span>
-              <h3 className={styles.fieldTitle}>Opis lub uwagi do rezerwacji</h3>
-            </div>
 
-            <span className={styles.fieldHint}>opcjonalnie</span>
-          </div>
-
-          <textarea
-            className={styles.textarea}
-            rows="3"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Np. strzyżenie + mycie, wrażliwa skóra, preferowana godzina…"
-          />
-        </label>
 
         <label className={styles.field}>
           <div className={styles.fieldHeader}>
             <div>
-              <span className={styles.fieldEyebrow}>02 / Usługa</span>
+              <span className={styles.fieldEyebrow}>01 / Usługa</span>
               <h3 className={styles.fieldTitle}>Wybierz usługę</h3>
             </div>
 
@@ -630,7 +617,7 @@ export default function BookingModeCalendar({
             </select>
 
             <span className={styles.selectChevron} aria-hidden="true">
-              ▾
+              <FiChevronDown />
             </span>
           </div>
         </label>
@@ -639,7 +626,7 @@ export default function BookingModeCalendar({
           <label className={styles.field}>
             <div className={styles.fieldHeader}>
               <div>
-                <span className={styles.fieldEyebrow}>03 / Osoba</span>
+                <span className={styles.fieldEyebrow}>01 / Zespół</span>
                 <h3 className={styles.fieldTitle}>Wybierz pracownika</h3>
               </div>
 
@@ -675,7 +662,7 @@ export default function BookingModeCalendar({
               </select>
 
               <span className={styles.selectChevron} aria-hidden="true">
-                ▾
+                <FiChevronDown />
               </span>
             </div>
           </label>
@@ -704,10 +691,11 @@ export default function BookingModeCalendar({
             <div className={styles.monthNav}>
               <button
                 type="button"
+                disabled={isBefore(startOfMonth(currentMonth), addMonths(startOfMonth(new Date()), 1))}
                 onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
                 aria-label="Poprzedni miesiąc"
               >
-                &lt;
+                <FiChevronLeft aria-hidden="true" />
               </button>
 
               <span className={styles.monthLabel}>
@@ -719,12 +707,12 @@ export default function BookingModeCalendar({
                 onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
                 aria-label="Następny miesiąc"
               >
-                &gt;
+                <FiChevronRight aria-hidden="true" />
               </button>
             </div>
 
             <div className={styles.calendarGrid}>
-              {["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "Sb"].map((d) => (
+              {["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"].map((d) => (
                 <div key={d} className={styles.weekday}>
                   {d}
                 </div>
@@ -762,7 +750,9 @@ export default function BookingModeCalendar({
                       ${blockedByOverride ? styles.overrideBlockedDay : ""}
                       ${sel ? styles.selectedDay : ""}
                     `}
-                    disabled={disabled}
+                    aria-label={format(day, "d MMMM yyyy", { locale: pl })}
+                    aria-pressed={Boolean(sel)}
+                  disabled={disabled}
                     title={
                       blockedByOverride
                         ? "Ten dzień został oznaczony jako niedostępny przez usługodawcę."
@@ -850,11 +840,7 @@ export default function BookingModeCalendar({
                   </div>
 
                   <div className={styles.legendMetaFull}>
-                    Przerwa: <b>{effectiveBufferMin} min</b>
-                    {bookingBufferMin > 0
-                      ? ` / 5 min stałej przerwy + ${bookingBufferMin} min z profilu`
-                      : " / 5 min stałej przerwy"}
-                    {` / siatka: ${GRID_STEP_MIN} min`}
+                    Czas usługi: <b>{durationToMinutes(selectedService)} min</b> · Przerwa między wizytami: <b>{effectiveBufferMin} min</b>
                   </div>
                 </div>
               </>
@@ -864,10 +850,9 @@ export default function BookingModeCalendar({
       ) : (
         <div className={styles.preSelect}>
           <span className={styles.emptyNumber}>02</span>
-          <strong>Najpierw wybierz usługę</strong>
+          <strong>{activeServices.length ? "Najpierw wybierz usługę" : "Brak usług do rezerwacji"}</strong>
           <p>
-            Żeby pokazać wolne terminy, musimy znać czas trwania konkretnej
-            usługi.
+            {activeServices.length ? "Wybierz usługę, a pokażemy dni i godziny, w których możesz umówić wizytę." : "Ten profil nie ma obecnie aktywnych usług. Wróć do profilu i skontaktuj się bezpośrednio z usługodawcą."}
           </p>
         </div>
       )}
@@ -877,17 +862,19 @@ export default function BookingModeCalendar({
           <div className={styles.cardHead}>
             <div>
               <span className={styles.cardLabel}>Godziny</span>
-              <h3>Dostępne sloty</h3>
+              <h3>Wybierz godzinę</h3>
             </div>
 
             <span className={styles.cardNumber}>04</span>
           </div>
 
           <form onSubmit={handleSubmit} className={styles.slotsForm}>
+            <label className={styles.slotFilter}><input type="checkbox" checked={showUnavailableSlots} onChange={(event) => setShowUnavailableSlots(event.target.checked)} />Pokaż także zajęte i niedostępne godziny</label>
+            {!timeSlots.some((slot) => slot.status === "free") && <div className={styles.infoBox}><strong>Brak wolnych godzin w tym dniu</strong><p>Wybierz inny dzień w kalendarzu lub inną usługę.</p></div>}
             <div className={styles.slotsGrid}>
-              {timeSlots.map((s, i) => (
+              {timeSlots.filter((slot) => showUnavailableSlots || slot.status === "free").map((s) => (
                 <button
-                  key={i}
+                  key={s.label}
                   type="button"
                   className={`
                     ${styles.slot}
@@ -896,6 +883,8 @@ export default function BookingModeCalendar({
                     ${s.status === "pending" ? styles.slotPending : ""}
                     ${selectedSlot === s.label ? styles.slotSelected : ""}
                   `}
+                  aria-pressed={selectedSlot === s.label}
+                  aria-label={`Godzina ${s.label}, ${s.status === "free" ? "wolna" : s.status === "reserved" ? "zajęta" : s.status === "pending" ? "oczekująca" : "niedostępna"}`}
                   disabled={s.status !== "free" || isSubmitting}
                   onClick={() =>
                     !isSubmitting && s.status === "free" && setSlot(s.label)
@@ -906,6 +895,26 @@ export default function BookingModeCalendar({
               ))}
             </div>
 
+        <label className={`${styles.field} ${styles.fieldWide}`}>
+          <div className={styles.fieldHeader}>
+            <div>
+              <span className={styles.fieldEyebrow}>03 / Dodatkowe informacje</span>
+              <h3 className={styles.fieldTitle}>Opis lub uwagi do rezerwacji</h3>
+            </div>
+
+            <span className={styles.fieldHint}>opcjonalnie</span>
+          </div>
+
+          <textarea
+            className={styles.textarea}
+            rows="3"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Np. strzyżenie + mycie, wrażliwa skóra, preferowana godzina…"
+          />
+        </label>
+
+            {selectedSlot && <div className={styles.bookingSummary} aria-live="polite"><strong>Twoja rezerwacja</strong>{selectedService.name}<br />{format(selectedDate, "d MMMM yyyy", { locale: pl })} · godz. {selectedSlot}<br />Czas usługi: {durationToMinutes(selectedService)} min{selectedStaffId && <><br />{staffList.find((staff) => String(staff._id) === String(selectedStaffId))?.name}</>}</div>}
             <div className={styles.submitBar}>
               <LoadingButton
                 type="submit"

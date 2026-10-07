@@ -9,7 +9,7 @@ export function discoverProfiles(profiles, { query = '', place = '', category = 
     const profileBooking = labels.booking(profile.bookingMode);
     const text = normalizeSearch([profile.name, profile.role, profile.location, profile.description,
       profileCategory, profileType, profileBooking, ...(Array.isArray(profile.tags) ? profile.tags : []),
-      ...(Array.isArray(profile.services) ? profile.services : []).map(service => [service?.name, service?.description].filter(Boolean).join(' '))].filter(Boolean).join(' '));
+      ...(Array.isArray(profile.services) ? profile.services : []).map(service => [service?.name, service?.shortDescription, service?.description, ...(Array.isArray(service?.tags) ? service.tags : [])].filter(Boolean).join(' '))].filter(Boolean).join(' '));
     return (category === 'Wszystkie' || profileCategory === category)
       && (type === 'Wszystkie' || profileType === type)
       && (booking === 'Wszystkie' || profileBooking === booking)

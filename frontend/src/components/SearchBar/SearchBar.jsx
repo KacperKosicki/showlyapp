@@ -165,7 +165,7 @@ const SearchBar = ({ variant = "default" }) => {
     navigate(`/${slug}`, { state: { scrollToId: "profileWrapper" } });
   };
 
-  const goToSearchResults = () => {
+  const goToProfilesHub = () => {
     const value = query.trim();
 
     if (!value) {
@@ -175,7 +175,7 @@ const SearchBar = ({ variant = "default" }) => {
 
     setOpen(false);
     setActiveIndex(-1);
-    navigate(`/szukaj?q=${encodeURIComponent(value)}`);
+    navigate(`/profile?q=${encodeURIComponent(value)}`, { state: { scrollToId: "profilesHub" } });
   };
 
   const handleSubmit = (event) => {
@@ -186,7 +186,7 @@ const SearchBar = ({ variant = "default" }) => {
       return;
     }
 
-    goToSearchResults();
+    goToProfilesHub();
   };
 
   const handleInputChange = (event) => {
@@ -451,7 +451,7 @@ const SearchBar = ({ variant = "default" }) => {
               <button
                 type="button"
                 className={styles.showAllButton}
-                onClick={goToSearchResults}
+                onClick={goToProfilesHub}
               >
                 <span className={styles.showAllCopy}>
                   <small>Pełna lista</small>

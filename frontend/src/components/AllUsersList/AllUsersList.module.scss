@@ -469,7 +469,9 @@
   width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 0.35rem var(--gallery-pad) 1.1rem 0.15rem;
+  padding: .75rem max(1rem, var(--gallery-pad)) 1.5rem 1rem;
+  scroll-padding-inline-start: 1rem;
+  scroll-padding-inline-end: max(1rem, var(--gallery-pad));
   scroll-behavior: smooth;
   scroll-snap-type: x proximity;
   overscroll-behavior-x: contain;
@@ -483,8 +485,8 @@
 
 .cardWrap {
   position: relative;
-  flex: 0 0 var(--all-card-width);
-  width: var(--all-card-width);
+  flex: 0 0 min(var(--all-card-width), 100%);
+  width: min(var(--all-card-width), 100%);
   min-width: 0;
   scroll-snap-align: start;
   animation: cardIn 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -972,8 +974,8 @@
   }
 
   .track {
-    padding-top: 0.2rem;
-    padding-bottom: 0.9rem;
+    padding-top: .75rem;
+    padding-bottom: 1.5rem;
     scroll-snap-type: x mandatory;
   }
 

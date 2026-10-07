@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { FiArrowUpRight, FiCheck, FiShield } from "react-icons/fi";
 import styles from "./CookieBanner.module.scss";
 
 const CONSENT_KEY = "showly_cookie_consent";
@@ -44,40 +45,27 @@ export default function CookieBanner() {
       aria-describedby="cookie-banner-description"
     >
       <div className={styles.content}>
-        <span className={styles.number}>CO</span>
-
-        <div className={styles.text}>
-          <span className={styles.overline}>Cookies</span>
-
-          <strong id="cookie-banner-title">Pliki cookies</strong>
-
-          <p id="cookie-banner-description">
-            Korzystamy z niezbędnych plików cookies oraz podobnych technologii,
-            aby strona działała poprawnie. Opcjonalne cookies mogą służyć do
-            analityki i poprawy działania Showly.
-          </p>
-
-          <Link to="/polityka-cookies" className={styles.link}>
-            Dowiedz się więcej
-          </Link>
+        <div className={styles.heading}>
+          <span className={styles.icon} aria-hidden="true"><FiShield /></span>
+          <div>
+            <span className={styles.overline}>Showly / Twój wybór</span>
+            <h2 id="cookie-banner-title">Ciasteczka w Showly.</h2>
+          </div>
         </div>
+        <p id="cookie-banner-description">
+          Niezbędne cookies pomagają stronie działać. Opcjonalne mogą służyć
+          do analityki i ulepszania Showly. Ty decydujesz, czy je zaakceptować.
+        </p>
+        <Link to="/polityka-cookies" className={styles.link}>
+          Polityka cookies <FiArrowUpRight aria-hidden="true" />
+        </Link>
       </div>
-
       <div className={styles.actions}>
-        <button
-          type="button"
-          className={styles.rejectBtn}
-          onClick={rejectCookies}
-        >
-          Odrzucam
+        <button type="button" className={styles.rejectBtn} onClick={rejectCookies}>
+          Tylko niezbędne
         </button>
-
-        <button
-          type="button"
-          className={styles.acceptBtn}
-          onClick={acceptCookies}
-        >
-          Akceptuję
+        <button type="button" className={styles.acceptBtn} onClick={acceptCookies}>
+          <FiCheck aria-hidden="true" /> Akceptuję
         </button>
       </div>
     </div>

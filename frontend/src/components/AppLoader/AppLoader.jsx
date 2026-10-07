@@ -1,42 +1,19 @@
 import styles from "./AppLoader.module.scss";
 
-const AppLoader = () => {
+export default function AppLoader() {
   return (
-    <main className={styles.loaderPage} aria-live="polite" aria-busy="true">
-      <div className={styles.bg} aria-hidden="true">
-        <span className={styles.orbOne} />
-        <span className={styles.orbTwo} />
-        <span className={styles.grid} />
-      </div>
-
-      <section className={styles.card}>
+    <main className={styles.loaderPage} aria-label="Ładowanie aplikacji">
+      <div className={styles.content}>
         <div className={styles.brand}>
-          <span className={styles.logoMark}>S</span>
-
-          <div className={styles.brandText}>
-            <strong>Showly.me</strong>
-            <span>profil online w jednym linku</span>
-          </div>
+          <span className={styles.logoMark} aria-hidden="true">
+            <img src="/images/other/logo-showly.png" alt="" width="40" height="40" />
+          </span>
+          <strong>Showly.me</strong>
         </div>
-
-        <div className={styles.loaderBox} aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-
-        <div className={styles.text}>
-          <span className={styles.eyebrow}>Uruchamianie aplikacji</span>
-          <h1>Trwa ładowanie Showly</h1>
-          <p>Przygotowujemy Twoje konto, profil i ustawienia.</p>
-        </div>
-
-        <div className={styles.progress} aria-hidden="true">
-          <span />
-        </div>
-      </section>
+        <h1>Jeszcze chwila.</h1>
+        <p role="status">Ładujemy Showly…</p>
+        <div className={styles.progress} aria-hidden="true"><span /></div>
+      </div>
     </main>
   );
-};
-
-export default AppLoader;
+}

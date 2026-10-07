@@ -2,6 +2,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styles from "./BookingModeOpen.module.scss";
+import { FiChevronDown } from "react-icons/fi";
+import BookingSteps from "./BookingSteps";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
 import { api } from "../../api/api";
 
@@ -211,6 +213,7 @@ export default function BookingModeOpen({
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
+      <BookingSteps className={styles.progress} steps={[{ label: "Opisz swój pomysł", done: Boolean(message.trim()) }, { label: "Sprawdź i wyślij", done: false }]} />
       <div className={styles.introBox}>
         <span className={styles.introNumber}>01</span>
 
@@ -224,11 +227,32 @@ export default function BookingModeOpen({
         </div>
       </div>
 
+      <label className={`${styles.field} ${styles.messageField}`}>
+        <div className={styles.fieldHeader}>
+          <div>
+            <span className={styles.fieldEyebrow}>01 / Twój pomysł</span>
+            <h3 className={styles.fieldTitle}>Wiadomość</h3>
+          </div>
+
+          <span className={styles.fieldHint}>wymagane</span>
+        </div>
+
+        <textarea
+          className={styles.textarea}
+          rows="5"
+          required
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Opisz krótko czego potrzebujesz, budżet, termin orientacyjny itp."
+          disabled={sending}
+        />
+      </label>
+
       <div className={styles.topGrid}>
         <label className={styles.field}>
           <div className={styles.fieldHeader}>
             <div>
-              <span className={styles.fieldEyebrow}>02 / Temat</span>
+              <span className={styles.fieldEyebrow}>02 / Szczegóły</span>
               <h3 className={styles.fieldTitle}>Temat wiadomości</h3>
             </div>
 
@@ -248,7 +272,7 @@ export default function BookingModeOpen({
         <label className={styles.field}>
           <div className={styles.fieldHeader}>
             <div>
-              <span className={styles.fieldEyebrow}>03 / Kontakt</span>
+              <span className={styles.fieldEyebrow}>02 / Kontakt</span>
               <h3 className={styles.fieldTitle}>Telefon</h3>
             </div>
 
@@ -258,6 +282,7 @@ export default function BookingModeOpen({
           <input
             className={styles.input}
             type="tel"
+            autoComplete="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="Np. 500 600 700"
@@ -269,7 +294,7 @@ export default function BookingModeOpen({
           <label className={styles.field}>
             <div className={styles.fieldHeader}>
               <div>
-                <span className={styles.fieldEyebrow}>04 / Usługa</span>
+                <span className={styles.fieldEyebrow}>02 / Usługa</span>
                 <h3 className={styles.fieldTitle}>Wybierz usługę</h3>
               </div>
 
@@ -293,42 +318,22 @@ export default function BookingModeOpen({
               </select>
 
               <span className={styles.selectChevron} aria-hidden="true">
-                ▾
+                <FiChevronDown />
               </span>
             </div>
           </label>
         )}
       </div>
 
-      <label className={`${styles.field} ${styles.messageField}`}>
-        <div className={styles.fieldHeader}>
-          <div>
-            <span className={styles.fieldEyebrow}>05 / Treść</span>
-            <h3 className={styles.fieldTitle}>Wiadomość</h3>
-          </div>
-
-          <span className={styles.fieldHint}>wymagane</span>
-        </div>
-
-        <textarea
-          className={styles.textarea}
-          rows="6"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Opisz krótko czego potrzebujesz, budżet, termin orientacyjny itp."
-          disabled={sending}
-        />
-      </label>
-
-      <div className={styles.previewBox}>
-        <div className={styles.previewHead}>
+      <details className={styles.previewBox}>
+        <summary className={styles.previewHead}>
           <div>
             <span className={styles.previewLabel}>Podgląd</span>
             <strong>Co zostanie wysłane?</strong>
           </div>
 
-          <span className={styles.previewNumber}>06</span>
-        </div>
+          <FiChevronDown aria-hidden="true" />
+        </summary>
 
         {messagePreview ? (
           <pre className={styles.previewContent}>{messagePreview}</pre>
@@ -337,7 +342,7 @@ export default function BookingModeOpen({
             Uzupełnij wiadomość, aby zobaczyć podgląd zapytania.
           </p>
         )}
-      </div>
+      </details>
 
       <div className={styles.submitBar}>
         <LoadingButton

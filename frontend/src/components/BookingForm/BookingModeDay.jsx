@@ -14,6 +14,8 @@ import {
 import { pl } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import styles from "./BookingModeDay.module.scss";
+import { FiChevronLeft, FiChevronRight, FiChevronDown } from "react-icons/fi";
+import BookingSteps from "./BookingSteps";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
 import { api } from "../../api/api";
 
@@ -100,7 +102,7 @@ export default function BookingModeDay({
   );
 
   const startDayIndex = useMemo(
-    () => getDay(startOfMonth(currentMonth)),
+    () => (getDay(startOfMonth(currentMonth)) + 6) % 7,
     [currentMonth]
   );
 
@@ -343,31 +345,15 @@ export default function BookingModeDay({
 
   return (
     <>
+<BookingSteps className={styles.progress} steps={[{ label: "Usługa i sposób", done: !serviceRequiredForBooking || Boolean(selectedService) }, { label: "Wybierz dzień", done: Boolean(selectedDate) }, { label: "Sprawdź i wyślij", done: false }]} />
       <div className={styles.topGrid}>
-        <label className={`${styles.field} ${styles.fieldWide}`}>
-          <div className={styles.fieldHeader}>
-            <div>
-              <span className={styles.fieldEyebrow}>01 / Informacje</span>
-              <h3 className={styles.fieldTitle}>Opis lub uwagi</h3>
-            </div>
 
-            <span className={styles.fieldHint}>opcjonalnie</span>
-          </div>
-
-          <textarea
-            className={styles.textarea}
-            rows="3"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Opisz, czego potrzebujesz w danym dniu…"
-          />
-        </label>
 
         {hasServices && (
           <label className={styles.field}>
             <div className={styles.fieldHeader}>
               <div>
-                <span className={styles.fieldEyebrow}>02 / Usługa</span>
+                <span className={styles.fieldEyebrow}>01 / Usługa</span>
                 <h3 className={styles.fieldTitle}>Wybierz usługę</h3>
               </div>
 
@@ -411,16 +397,16 @@ export default function BookingModeDay({
               </select>
 
               <span className={styles.selectChevron} aria-hidden="true">
-                ▾
+                <FiChevronDown />
               </span>
             </div>
           </label>
         )}
 
-        <label className={styles.toggleField}>
+        <div className={styles.toggleField}>
           <div className={styles.fieldHeader}>
             <div>
-              <span className={styles.fieldEyebrow}>03 / Tryb</span>
+              <span className={styles.fieldEyebrow}>01 / Sposób rezerwacji</span>
               <h3 className={styles.fieldTitle}>Sposób kontaktu</h3>
             </div>
 
@@ -447,7 +433,7 @@ export default function BookingModeDay({
                 : "Wyślesz prośbę o rezerwację całego dnia do akceptacji."}
             </p>
           </div>
-        </label>
+        </div>
       </div>
 
       {serviceRequiredForBooking && !selectedService && (
@@ -471,11 +457,11 @@ export default function BookingModeDay({
           <div className={styles.monthNav}>
             <button
               type="button"
-              disabled={isSubmitting}
-              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              disabled={isSubmitting || isBefore(startOfMonth(currentMonth), addMonths(startOfMonth(new Date()), 1))}
+                onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
               aria-label="Poprzedni miesiąc"
             >
-              &lt;
+              <FiChevronLeft aria-hidden="true" />
             </button>
 
             <span className={styles.monthLabel}>
@@ -488,12 +474,12 @@ export default function BookingModeDay({
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
               aria-label="Następny miesiąc"
             >
-              &gt;
+              <FiChevronRight aria-hidden="true" />
             </button>
           </div>
 
           <div className={styles.calendarGrid}>
-            {["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "Sb"].map((d) => (
+            {["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"].map((d) => (
               <div key={d} className={styles.weekday}>
                 {d}
               </div>
@@ -534,6 +520,8 @@ export default function BookingModeDay({
                     state === "locked" ? styles.dayLocked : "",
                     sel ? styles.selectedDay : "",
                   ].join(" ")}
+                  aria-label={format(day, "d MMMM yyyy", { locale: pl })}
+                  aria-pressed={Boolean(sel)}
                   disabled={disabled}
                   onClick={() =>
                     !isSubmitting && canPickDay(day) && setDate(day)
@@ -655,6 +643,25 @@ export default function BookingModeDay({
             : "Brak usług / wybierasz tylko dzień"}
         </div>
       </div>
+
+        <label className={`${styles.field} ${styles.fieldWide}`}>
+          <div className={styles.fieldHeader}>
+            <div>
+              <span className={styles.fieldEyebrow}>03 / Dodatkowe informacje</span>
+              <h3 className={styles.fieldTitle}>Opis lub uwagi</h3>
+            </div>
+
+            <span className={styles.fieldHint}>opcjonalnie</span>
+          </div>
+
+          <textarea
+            className={styles.textarea}
+            rows="3"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Opisz, czego potrzebujesz w danym dniu…"
+          />
+        </label>
 
       <form onSubmit={handleSubmit} className={styles.submitBar}>
         <LoadingButton

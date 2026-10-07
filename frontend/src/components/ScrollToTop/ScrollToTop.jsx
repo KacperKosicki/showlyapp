@@ -1,12 +1,17 @@
 // src/components/ScrollToTop/ScrollToTop.jsx
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
 const ScrollToTop = () => {
   const location = useLocation();
+  const previousPath = useRef(null);
   const scrollToId = location.state?.scrollToId;
 
   useLayoutEffect(() => {
+    const samePath = previousPath.current === location.pathname;
+    previousPath.current = location.pathname;
+    // Updating catalog filters in the URL must not send the user back to the hero.
+    if (samePath && !scrollToId) return undefined;
     if (scrollToId) {
       const targetIds = [
         scrollToId,

@@ -1,5 +1,5 @@
 // src/App.jsx
-import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
 import { lazy, Suspense, useState, useEffect, useMemo, useCallback } from "react";
 
 // Elementy potrzebne od razu na stronie głównej pozostają w głównym bundle.
@@ -35,7 +35,6 @@ const AccountSettings = lazy(() => import("./components/AccountSettings/AccountS
 const Favorites = lazy(() => import("./components/Favorites/Favorites"));
 const BillingSuccess = lazy(() => import("./components/BillingSuccess/BillingSuccess"));
 const BillingCancel = lazy(() => import("./components/BillingCancel/BillingCancel"));
-const SearchResults = lazy(() => import("./components/SearchResults/SearchResults"));
 const Contact = lazy(() => import("./components/Contact/Contact"));
 const Regulations = lazy(() => import("./components/Regulations/Regulations"));
 const CookiesPolicy = lazy(() => import("./components/CookiesPolicy/CookiesPolicy"));
@@ -44,6 +43,11 @@ const ProfilesHub = lazy(() => import("./components/ProfilesHub/ProfilesHub"));
 const AdminPanel = lazy(() => import("./components/AdminPanel/AdminPanel"));
 
 const API = process.env.REACT_APP_API_URL;
+
+function LegacySearchRedirect() {
+  const location = useLocation();
+  return <Navigate to={{ pathname: "/profile", search: location.search }} state={{ scrollToId: "profilesHub" }} replace />;
+}
 
 function LegacyProfileRedirect() {
   const { slug } = useParams();
@@ -572,13 +576,7 @@ function App() {
 
           <Route
             path="/szukaj"
-            element={
-              <>
-                <Hero {...heroProps} />
-                <SearchResults currentUser={safeUser} />
-                <Footer {...footerProps} />
-              </>
-            }
+            element={<LegacySearchRedirect />}
           />
 
           <Route

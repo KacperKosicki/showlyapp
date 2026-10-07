@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import styles from "./ProfilesHub.module.scss";
 import UserCard from "../UserCard/UserCard";
 import {
@@ -9,7 +9,7 @@ import {
     FiUsers,
     FiRefreshCw,
 } from "react-icons/fi";
-import { FiMapPin, FiSliders, FiX, FiArrowDown, FiHeart, FiArrowLeft, FiArrowRight } from "react-icons/fi";
+import { FiMapPin, FiSliders, FiX, FiArrowDown, FiHeart, FiArrowLeft, FiArrowRight, FiArrowUpRight } from "react-icons/fi";
 import { discoverProfiles } from "./profileDiscovery";
 
 const API = process.env.REACT_APP_API_URL;
@@ -37,6 +37,13 @@ const getBookingLabel = (mode) => {
 
 const ProfilesHub = ({ currentUser, setAlert }) => {
     const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const query = searchParams.get("q") || "";
+    const setQuery = value => setSearchParams(previous => {
+        const next = new URLSearchParams(previous);
+        if (value.trim()) next.set("q", value); else next.delete("q");
+        return next;
+    }, { replace: true });
     const trackRef = useRef(null);
     const [canLeft, setCanLeft] = useState(false);
     const [canRight, setCanRight] = useState(false);
@@ -46,7 +53,6 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
     const [activeCategory, setActiveCategory] = useState("Wszystkie");
     const [activeType, setActiveType] = useState("Wszystkie");
     const [activeBooking, setActiveBooking] = useState("Wszystkie");
-    const [query, setQuery] = useState("");
     const [sort, setSort] = useState("popular");
     const [loading, setLoading] = useState(true);
     const [place, setPlace] = useState('');
@@ -69,19 +75,10 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
         const scrollTo = location.state?.scrollToId;
         if (!scrollTo) return;
 
-        const tryScroll = () => {
-            const el = document.getElementById(scrollTo);
-
-            if (el) {
-                el.scrollIntoView({ behavior: "smooth", block: "start" });
-                window.history.replaceState({}, document.title, location.pathname);
-                return;
-            }
-
-            requestAnimationFrame(tryScroll);
-        };
-
-        requestAnimationFrame(tryScroll);
+        const frame = requestAnimationFrame(() => {
+            document.getElementById(scrollTo)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        return () => cancelAnimationFrame(frame);
     }, [location.state, location.pathname]);
 
     useEffect(() => {
@@ -340,7 +337,7 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
                         <label className={styles.searchBox}><FiMapPin aria-hidden="true" /><span><span>Gdzie?</span><input type="search" list="profiles-hub-places" value={place} onChange={e => setPlace(e.target.value)} placeholder="Miasto lub miejscowość" /></span></label>
                     </div>
                     <datalist id="profiles-hub-places">{places.map(city => <option key={city} value={city} />)}</datalist>
-                    {quickSuggestions.length > 0 && <div className={styles.quickCategories}><span>Na dobry początek</span>{quickSuggestions.map(suggestion => <button key={suggestion.label} type="button" aria-pressed={suggestion.kind === 'category' ? activeCategory === suggestion.label : query === suggestion.label} onClick={() => suggestion.kind === 'category' ? setActiveCategory(activeCategory === suggestion.label ? 'Wszystkie' : suggestion.label) : setQuery(query === suggestion.label ? '' : suggestion.label)}>{suggestion.label}</button>)}</div>}
+                    {quickSuggestions.length > 0 && <div className={styles.quickCategories}><span>Na dobry początek</span>{quickSuggestions.map(suggestion => <button key={suggestion.label} type="button" aria-pressed={suggestion.kind === 'category' ? activeCategory === suggestion.label : query === suggestion.label} onClick={() => suggestion.kind === 'category' ? setActiveCategory(activeCategory === suggestion.label ? 'Wszystkie' : suggestion.label) : setQuery(query === suggestion.label ? '' : suggestion.label)}><FiArrowUpRight aria-hidden="true" />{suggestion.label}</button>)}</div>}
                     <p className={styles.searchHint}>Wyniki zmieniają się podczas pisania. Możesz łączyć kilka słów, np. „fotograf portret”.</p>
                 </div>
                 <div className={styles.layout}>
