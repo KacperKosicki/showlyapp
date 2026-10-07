@@ -1,0 +1,38 @@
+const mongoose = require('mongoose');
+const color = (fallback = '') => ({ type: String, default: fallback, validate: { validator: v => !v || /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(v), message: 'Kolor musi być w formacie HEX.' } });
+const choice = (values, fallback) => ({ type: String, enum: values, default: fallback });
+const schema = new mongoose.Schema({
+  variant: choice(['system', 'violet', 'blue', 'green', 'orange', 'red', 'dark', 'custom'], 'system'),
+  primary: color(), secondary: color(), background: color(), surface: color(), text: color(), muted: color(),
+  style: choice(['editorial', 'soft', 'minimal'], 'editorial'),
+  mode: choice(['system', 'light', 'dark'], 'system'),
+  headingFont: choice(['poppins', 'space', 'outfit', 'serif'], 'poppins'),
+  bodyFont: choice(['outfit', 'space', 'system'], 'outfit'),
+  layout: choice(['split', 'stacked'], 'split'),
+  layoutVersion: { type: Number, default: 1, enum: [1, 2] },
+  radius: choice(['rounded', 'sharp', 'pill'], 'rounded'),
+  shadow: choice(['hard', 'soft', 'none'], 'hard'),
+  backgroundStyle: choice(['plain', 'dots', 'grid', 'gradient'], 'plain'),
+  bannerStyle: choice(['gradient', 'solid'], 'gradient'),
+  gradientAngle: { type: Number, default: 135, min: 0, max: 360 },
+  density: choice(['comfortable', 'compact'], 'comfortable'),
+  motion: choice(['reveal', 'none'], 'reveal'),
+  decorations: { type: Boolean, default: true },
+  border: color(), heroText: color('#ffffff'),
+  borderStyle: choice(['solid', 'dashed', 'none'], 'solid'),
+  borderWidth: { type: Number, default: 2, min: 1, max: 3 },
+  avatarShape: choice(['rounded', 'circle', 'sharp'], 'rounded'),
+  heroAlignment: choice(['center', 'left'], 'center'),
+  titleSize: choice(['small', 'normal', 'large'], 'normal'),
+  bannerPosition: choice(['center', 'top', 'bottom'], 'center'),
+  bannerOverlay: { type: Number, default: 50, min: 0, max: 85 },
+  showBanner: { type: Boolean, default: true },
+  buttonStyle: choice(['filled', 'outline'], 'filled'),
+  contentWidth: choice(['wide', 'contained'], 'wide'),
+  serviceLayout: choice(['grid', 'list'], 'grid'),
+  ctaLabel: { type: String, default: '', trim: true, maxlength: 40 },
+  tagline: { type: String, default: '', trim: true, maxlength: 120 },
+  sectionOrder: { type: [String], default: ['overview', 'services', 'gallery', 'reviews'], validate: { validator: v => v.length === 4 && new Set(v).size === 4 && v.every(k => ['overview', 'services', 'gallery', 'reviews'].includes(k)), message: 'Kolejność musi zawierać każdą sekcję dokładnie raz.' } },
+  sections: Object.fromEntries(['description', 'contact', 'price', 'links', 'services', 'gallery', 'reviews'].map(k => [k, { type: Boolean, default: true }])),
+}, { _id: false });
+module.exports = schema;

@@ -567,8 +567,8 @@ router.get("/search", async (req, res) => {
 
     // opcjonalnie automatyczne wygaszenie starych profili
     await Profile.updateMany(
-      { isVisible: true, visibleUntil: { $lt: now } },
-      { $set: { isVisible: false } }
+      { isVisible: true, visibleUntil: { $lt: now }, visibilityBlockedByAdmin: { $ne: true } },
+      { $set: { isVisible: false, visibilityBlockedByAdmin: false } }
     );
 
     const baseMatch = {
@@ -1283,8 +1283,8 @@ router.get("/", async (req, res) => {
   try {
     const now = new Date();
     await Profile.updateMany(
-      { isVisible: true, visibleUntil: { $lt: now } },
-      { $set: { isVisible: false } }
+      { isVisible: true, visibleUntil: { $lt: now }, visibilityBlockedByAdmin: { $ne: true } },
+      { $set: { isVisible: false, visibilityBlockedByAdmin: false } }
     );
 
     const visible = await Profile.find({
@@ -1644,6 +1644,7 @@ router.post("/", requireAuth, async (req, res) => {
 // ------------------------------------------------------
 router.patch("/extend/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) => {
   try {
+    if (!req.isAdmin) return res.status(403).json({ message: "Przedłużenie wymaga potwierdzonej płatności. Użyj panelu płatności lub odzyskiwania subskrypcji." });
     const profile = await Profile.findOne({ userId: req.params.uid });
     if (!profile) {
       return res.status(404).json({ message: "Nie znaleziono profilu do przedłużenia." });
@@ -1922,14 +1923,9 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
     }
 
     if (updates.theme) {
-      if (typeof updates.theme.variant !== "undefined") {
-        profile.set("theme.variant", updates.theme.variant);
-      }
-      if (typeof updates.theme.primary !== "undefined") {
-        profile.set("theme.primary", clean(updates.theme.primary));
-      }
-      if (typeof updates.theme.secondary !== "undefined") {
-        profile.set("theme.secondary", clean(updates.theme.secondary));
+      if (hasFeature(profile, "premiumThemes", { allowPastDue: true })) {
+        const previous = profile.theme?.toObject ? profile.theme.toObject() : profile.theme || {};
+        profile.set("theme", { ...previous, ...updates.theme });
       }
     }
 

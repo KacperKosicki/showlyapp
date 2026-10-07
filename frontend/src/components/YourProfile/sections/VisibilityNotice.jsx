@@ -9,6 +9,7 @@ const VisibilityNotice = ({
   isExtending,
   canExtend,
   onExtendVisibility,
+  autoRenewedBySubscription,
 }) => {
   return (
     <div className={`${styles.card} ${styles.noticeCard}`}>
@@ -41,7 +42,7 @@ const VisibilityNotice = ({
             </p>
 
             <p className={styles.noticeText}>
-              Aby ponownie aktywować wizytówkę, przedłuż widoczność.
+              {autoRenewedBySubscription ? 'Masz subskrypcję. Użyj „Sprawdź płatność i przywróć profil” w sekcji planu, aby zsynchronizować jej status.' : 'Aby ponownie aktywować wizytówkę, przedłuż widoczność.'}
             </p>
           </>
         ) : (
@@ -56,7 +57,7 @@ const VisibilityNotice = ({
         )}
       </div>
 
-      {!isAdminHidden && (
+      {!isAdminHidden && !autoRenewedBySubscription && (
         <LoadingButton
           type="button"
           isLoading={isExtending}

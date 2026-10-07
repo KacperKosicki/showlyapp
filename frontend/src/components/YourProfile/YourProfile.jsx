@@ -10,6 +10,7 @@ import VisibilityNotice from './sections/VisibilityNotice';
 import BasicInfoSection from './sections/BasicInfoSection';
 import DescriptionSection from './sections/DescriptionSection';
 import AppearanceSection from './sections/AppearanceSection';
+import ProfileDesignPreview from './sections/ProfileDesignPreview';
 import OfferSection from './sections/OfferSection';
 import LinkMediaSection from './sections/LinkMediaSection';
 import ContactSocialSection from './sections/ContactSocialSection';
@@ -59,6 +60,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   const {
     billingStatus,
+    billingError,
+    handleReconcileBilling,
     billingLoading,
     billingActionLoading,
     isExtending,
@@ -90,6 +93,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
     setEditData,
     loading,
     notFound,
+    loadError,
     initialEditData,
     fetchProfile,
   } = useProfileData({
@@ -255,6 +259,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
 
   if (!user) return <Navigate to="/login" replace />;
   if (loading) return <div className={styles.wrapper}>⏳ Ładowanie profilu…</div>;
+  if (loadError && !profile) return <div className={styles.wrapper}><div className={styles.connectionError} role="alert"><h1>Nie możemy teraz pobrać wizytówki.</h1><p>Serwer jest niedostępny. Nie oznacza to usunięcia ani blokady Twojego profilu. Spróbuj ponownie po przywróceniu połączenia.</p><button type="button" onClick={fetchProfile}>Spróbuj ponownie</button></div></div>;
   if (notFound || !profile) return <EmptyProfileState />;
 
   const hasAvatarNow =
@@ -277,7 +282,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   // Render
   // =========================
   return (
-    <div className={styles.wrapper} id="scrollToId">
+    <div className={styles.wrapper} data-editing={isEditing} id="scrollToId">
       {alert && (
         <AlertBox
           type={alert.type}
@@ -287,13 +292,32 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       )}
 
       <div className={styles.inner} id="profileWrapper">
+        <nav className={styles.editorNav} aria-label="Zarządzanie wizytówką">
+          <a href="#appearanceSection">Wygląd i układ</a>
+          <a href="#profileDesignPreview">Podgląd na żywo</a>
+          <a href="#billingSection">Plan i widoczność</a>
+          {profile?.slug && <a href={`/${profile.slug}`} target="_blank" rel="noreferrer">Podgląd publiczny ↗</a>}
+        </nav>
         <ProfileHeader
           profile={profile}
           isEditing={isEditing}
           onEdit={() => setIsEditing(true)}
         />
 
+        {/* Pasek zapisu edycji */}
+        {isEditing && (
+          <EditBar
+            isSaving={isSaving}
+            onSave={handleSaveChanges}
+            onCancel={handleCancelEdit}
+          />
+        )}
+
+        <div className={styles.editorLayout}>
+          <div className={styles.editorSections}>
         <BillingSection
+          billingError={billingError}
+          onReconcile={async () => { const result = await handleReconcileBilling(); if (result) await fetchProfile(); }}
           billingLoading={billingLoading}
           billingLabel={billingLabel}
           billingCurrentStatus={billingCurrentStatus}
@@ -314,6 +338,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
             isExtending={isExtending}
             canExtend={canExtend}
             onExtendVisibility={handleExtendVisibility}
+            autoRenewedBySubscription={billingStatus?.visibility?.autoRenewedBySubscription}
           />
         )}
 
@@ -349,6 +374,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         />
 
         <AppearanceSection
+          showPreview={false}
           profile={profile}
           editData={editData}
           isEditing={isEditing}
@@ -450,14 +476,9 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           maxQuickAnswers={MAX_QUICK_ANSWERS}
         />
 
-        {/* Pasek zapisu edycji */}
-        {isEditing && (
-          <EditBar
-            isSaving={isSaving}
-            onSave={handleSaveChanges}
-            onCancel={handleCancelEdit}
-          />
-        )}
+          </div>
+          <ProfileDesignPreview profile={profile} editData={editData} isEditing={isEditing} />
+        </div>
 
         <Lightbox
           image={fullscreenImage}

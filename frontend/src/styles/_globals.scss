@@ -52,7 +52,8 @@ html {
 }
 
 body {
-  overflow-x: hidden;
+  // Clip horizontal decoration without creating a scroll container for sticky panels.
+  overflow-x: clip;
   -webkit-text-size-adjust: 100%;
 
   background: var(--app-bg);

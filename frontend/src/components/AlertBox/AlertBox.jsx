@@ -14,6 +14,7 @@ const icons = {
   info: <FaInfoCircle />,
   warning: <FaExclamationTriangle />,
 };
+const titles = { success: 'Gotowe!', error: 'Coś poszło nie tak', info: 'Warto wiedzieć', warning: 'Zwróć uwagę' };
 
 const AlertBox = ({ type = "info", message, onClose }) => {
   useEffect(() => {
@@ -26,7 +27,7 @@ const AlertBox = ({ type = "info", message, onClose }) => {
 
   if (!message || typeof document === "undefined") return null;
 
-  const safeType = styles[type] ? type : "info";
+  const safeType = Object.prototype.hasOwnProperty.call(titles, type) ? type : "info";
 
   return createPortal(
     <div className={styles.alertBox}>
@@ -34,12 +35,16 @@ const AlertBox = ({ type = "info", message, onClose }) => {
         className={`${styles.alert} ${styles[safeType]}`}
         role="alert"
         aria-live="polite"
+        data-autoclose={Boolean(onClose)}
       >
         <span className={styles.icon} aria-hidden="true">
           {icons[safeType] || icons.info}
         </span>
 
-        <span className={styles.message}>{message}</span>
+        <div className={styles.content}>
+          <span className={styles.title}>{titles[safeType]}</span>
+          <span className={styles.message}>{message}</span>
+        </div>
 
         {onClose && (
           <button

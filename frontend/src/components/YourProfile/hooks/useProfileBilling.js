@@ -4,6 +4,7 @@ import {
   startSubscriptionCheckout,
   openBillingPortal,
   startExtensionCheckout,
+  reconcileBilling,
 } from "../../../api/billingApi";
 
 const DEFAULT_LIMITS = {
@@ -21,19 +22,35 @@ const useProfileBilling = ({ showAlert }) => {
   const [billingLoading, setBillingLoading] = useState(false);
   const [billingActionLoading, setBillingActionLoading] = useState("");
   const [isExtending, setIsExtending] = useState(false);
+  const [billingError, setBillingError] = useState(false);
 
   const fetchBillingStatus = async () => {
     try {
       setBillingLoading(true);
+      setBillingError(false);
 
       const data = await getBillingStatus();
       setBillingStatus(data);
     } catch (err) {
       console.error("❌ billing status error:", err);
-      setBillingStatus(null);
+      setBillingError(true);
     } finally {
       setBillingLoading(false);
     }
+  };
+
+  const handleReconcileBilling = async () => {
+    if (billingActionLoading) return null;
+    setBillingActionLoading("reconcile");
+    try {
+      const result = await reconcileBilling();
+      await fetchBillingStatus();
+      showAlert(result.message, result.restored ? "success" : "warning");
+      return result;
+    } catch (error) {
+      showAlert(error?.response?.data?.error || "Backend lub Stripe jest niedostępny. Spróbuj ponownie po przywróceniu połączenia.", "error");
+      return null;
+    } finally { setBillingActionLoading(""); }
   };
 
   const handleExtendVisibility = async () => {
@@ -190,6 +207,8 @@ const useProfileBilling = ({ showAlert }) => {
 
   return {
     billingStatus,
+    billingError,
+    handleReconcileBilling,
     billingLoading,
     billingActionLoading,
     isExtending,

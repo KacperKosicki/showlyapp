@@ -1,0 +1,39 @@
+// Shared by the public profile and the live design preview.
+@mixin profile-design-surface {
+  --pp-page: #f1eee4;
+  --pp-surface: #fffdf8;
+  --pp-surface-strong: var(--pp-surface);
+  --pp-ink: #171917;
+  --pp-muted: #686c65;
+  --pp-border: #171917;
+  --pp-shadow: #171917;
+  --pp-line: color-mix(in srgb, var(--pp-ink) 16%, transparent);
+  --pp-theme-soft: color-mix(in srgb, var(--pp-primary) 7%, var(--pp-surface));
+  --pp-theme-medium: color-mix(in srgb, var(--pp-primary) 15%, var(--pp-surface));
+  --pd-frame: var(--pp-border);
+  background-color: var(--pp-page);
+  color: var(--pp-ink);
+  font-family: var(--pd-body);
+
+  :global(html[data-theme="dark"]) & {
+    --pp-page: #1c1f1b;
+    --pp-surface: #111310;
+    --pp-ink: #f5f2e9;
+    --pp-muted: #a9ada4;
+    --pp-border: #85897e;
+    --pp-shadow: #050605;
+  }
+  &[data-design=soft] { --pd-frame: var(--pp-line); }
+  &[data-design=minimal] { --pd-frame: var(--pp-line); }
+  &[data-background=dots] {
+    background-image: radial-gradient(var(--pp-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  &[data-background=grid] {
+    background-image: linear-gradient(to right, var(--pp-line) 1px, transparent 1px), linear-gradient(to bottom, var(--pp-line) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+  &[data-background=gradient] {
+    background-image: linear-gradient(135deg, color-mix(in srgb, var(--pp-primary) 12%, transparent), color-mix(in srgb, var(--pp-secondary) 12%, transparent));
+  }
+}

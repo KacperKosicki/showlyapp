@@ -1,3 +1,4 @@
+import EditorGroup, { EditorSectionHeader } from './EditorGroup';
 import styles from "./DescriptionSection.module.scss";
 import { FaBriefcase } from 'react-icons/fa';
 
@@ -17,24 +18,11 @@ const DescriptionSection = ({
     <section className={`${styles.card} ${styles.descriptionCard}`}>
       <div className={styles.cardGlow} aria-hidden="true" />
 
-      <div className={styles.sectionTop}>
-        <div>
-          <span className={styles.sectionKicker}>O Tobie</span>
-
-          <h3 className={styles.sectionTitle}>Opis profilu</h3>
-
-          <p className={styles.sectionLead}>
+      <EditorSectionHeader kicker={<>O Tobie</>} title={<>Opis profilu</>} description={<>
             Opowiedz krótko, czym się zajmujesz, dla kogo jest Twoja oferta i dlaczego warto się z Tobą skontaktować.
-          </p>
-        </div>
+          </>} icon={<FaBriefcase />} />
 
-        <div className={styles.sectionBadge}>
-          <FaBriefcase />
-          <span>Oferta</span>
-        </div>
-      </div>
-
-      <div className={styles.descriptionBlock}>
+      <EditorGroup title="01 / Opowiedz o sobie"><div className={styles.descriptionBlock}>
         {isEditing ? (
           <div className={styles.descriptionEditor}>
             <div className={styles.textareaShell}>
@@ -103,7 +91,7 @@ const DescriptionSection = ({
             </div>
           </div>
         )}
-      </div>
+      </div></EditorGroup>
     </section>
   );
 };

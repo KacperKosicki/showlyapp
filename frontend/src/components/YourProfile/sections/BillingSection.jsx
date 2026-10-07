@@ -1,3 +1,5 @@
+import EditorGroup, { EditorSectionHeader } from './EditorGroup';
+import { FiCreditCard } from 'react-icons/fi';
 import styles from "./BillingSection.module.scss";
 
 const BillingSection = ({
@@ -10,35 +12,19 @@ const BillingSection = ({
   isPaidActive,
   onStartSubscription,
   onOpenBillingPortal,
+  onReconcile,
+  billingError,
 }) => {
   return (
 <section className={styles.billingPanel} id="billingSection">
+
   <div className={styles.billingGlowOne} aria-hidden="true" />
   <div className={styles.billingGlowTwo} aria-hidden="true" />
   <div className={styles.billingNoise} aria-hidden="true" />
 
-  <div className={styles.billingHeader}>
-    <div>
-      <p className={styles.billingEyebrow}>
-        <span>Showly.me</span>
-        Plan i widoczność profilu
-      </p>
+  <EditorSectionHeader kicker="Plan i widoczność profilu" title="Twój plan i limity" description="Zarządzaj widocznością profilu, zdjęciami, usługami i rezerwacjami. Wybierz plan dopasowany do swojej oferty." icon={<FiCreditCard />} />
 
-      <h2>Twój plan i limity</h2>
-
-      <p>
-        Zarządzaj widocznością profilu, zdjęciami, usługami i funkcjami rezerwacji.
-        Wybierz plan dopasowany do tego, jak chcesz pokazywać swoją ofertę klientom.
-      </p>
-    </div>
-
-    <div className={styles.currentPlanBadge}>
-      <span>Aktualnie</span>
-      <strong>{billingLoading ? "Ładowanie..." : billingLabel}</strong>
-    </div>
-  </div>
-
-  <div className={styles.billingStatusBox}>
+  <EditorGroup title="01 / Aktualny plan i wykorzystanie"><div className={styles.billingStatusBox}>
     <div>
       <span>Aktualny plan</span>
       <strong>{billingLabel}</strong>
@@ -63,9 +49,9 @@ const BillingSection = ({
       <span>Pracownicy</span>
       <strong>{billingLimits.staff || 0}</strong>
     </div>
-  </div>
+  </div></EditorGroup>
 
-  <div className={styles.planCards}>
+  <EditorGroup title="02 / Wybierz plan dla siebie"><div className={styles.planCards}>
     <article
       className={`${styles.planCard} ${styles.starterPlan} ${billingPlan === "free" ? styles.activePlan : ""
         }`}
@@ -86,7 +72,7 @@ const BillingSection = ({
         <b> 14,99 zł / kolejne 30 dni</b>.
       </p>
 
-      <ul>
+      <details className={styles.planDetails}><summary>Wszystkie funkcje planu</summary><ul>
         <li>Widoczność przez 30 dni</li>
         <li>Losowy link do profilu</li>
         <li>Do 3 zdjęć profilu</li>
@@ -96,7 +82,7 @@ const BillingSection = ({
         <li>Podstawowy wygląd profilu</li>
         <li>1 szybka odpowiedź profilu</li>
         <li>Opis profilu do 200 znaków</li>
-      </ul>
+      </ul></details>
 
       <button type="button" disabled className={styles.planButtonGhost}>
         {billingPlan === "free" ? "Aktywny plan" : "Plan podstawowy"}
@@ -123,7 +109,7 @@ const BillingSection = ({
         <b> Tylko 15 zł więcej niż zwykłe przedłużenie profilu.</b>
       </p>
 
-      <ul>
+      <details className={styles.planDetails}><summary>Wszystkie funkcje planu</summary><ul>
         <li>Widoczność profilu w cenie subskrypcji</li>
         <li>Własny link po nazwie i roli</li>
         <li>Własny banner w tle profilu</li>
@@ -136,7 +122,7 @@ const BillingSection = ({
         <li>3 szybkie odpowiedzi profilu</li>
         <li>Opis profilu do 500 znaków</li>
         <li>Promowanie i lepsza widoczność w Showly</li>
-      </ul>
+      </ul></details>
 
       {billingPlan === "standard" ? (
         <button type="button" disabled className={styles.planButtonGhost}>
@@ -174,7 +160,7 @@ const BillingSection = ({
         i pracowników.
       </p>
 
-      <ul>
+      <details className={styles.planDetails}><summary>Wszystkie funkcje planu</summary><ul>
         <li>Widoczność profilu w cenie subskrypcji</li>
         <li>Własny link po nazwie i roli</li>
         <li>Własny banner w tle profilu</li>
@@ -193,7 +179,7 @@ const BillingSection = ({
         <li>Bufor (przerwa) między rezerwacjami</li>
         <li>Zespół i do 3 pracowników</li>
         <li>Wyjątki dostępności</li>
-      </ul>
+      </ul></details>
 
       {billingPlan === "premium" ? (
         <button type="button" disabled className={styles.planButtonGhost}>
@@ -210,7 +196,7 @@ const BillingSection = ({
         </button>
       )}
     </article>
-  </div>
+  </div></EditorGroup>
 
   {isPaidActive && (
     <div className={styles.billingFooter}>
@@ -229,6 +215,12 @@ const BillingSection = ({
       </button>
     </div>
   )}
+<EditorGroup title="03 / Pomoc z płatnością"><div className={styles.recovery} role="status">
+    <p>{billingError ? 'Nie udało się pobrać statusu płatności. Brak połączenia nie oznacza utraty opłaconego planu.' : 'Płatność została pobrana, a wizytówka nie działa? Sprawdź subskrypcję — odzyskasz opłaconą widoczność po przerwie w działaniu serwera.'}</p>
+    <button type="button" disabled={!!billingActionLoading || billingLoading} onClick={onReconcile}>
+      {billingActionLoading === 'reconcile' ? 'Sprawdzanie płatności…' : 'Sprawdź płatność i przywróć profil'}
+    </button>
+  </div></EditorGroup>
 </section>
   );
 };

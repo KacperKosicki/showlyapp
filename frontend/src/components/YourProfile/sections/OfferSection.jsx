@@ -1,15 +1,7 @@
+import EditorGroup, { EditorSectionHeader } from './EditorGroup';
 import styles from "./OfferSection.module.scss";
 import LoadingButton from '../../ui/LoadingButton/LoadingButton';
-import {
-  FaCalendarAlt,
-  FaMoneyBillWave,
-  FaTools,
-  FaUsers,
-  FaTrash,
-  FaPlus,
-  FaTimes,
-  FaClock,
-} from 'react-icons/fa';
+import { FaCalendarAlt, FaTools, FaUsers, FaTrash, FaPlus, FaTimes } from 'react-icons/fa';
 import {
   SERVICE_NAME_MAX_LENGTH,
   SERVICE_SHORT_DESCRIPTION_MAX_LENGTH,
@@ -195,37 +187,15 @@ const OfferSection = ({
       <section className={`${styles.card} ${styles.offerCard}`}>
         <div className={styles.cardGlow} aria-hidden="true" />
 
-        <div className={styles.sectionTop}>
-          <div>
-            <span className={styles.sectionKicker}>Oferta i dostępność</span>
-
-            <h3 className={styles.sectionTitle}>Dostępność i usługi</h3>
-
-            <p className={styles.sectionLead}>
+        <EditorSectionHeader kicker={<>Oferta i dostępność</>} title={<>Dostępność i usługi</>} description={<>
               Ustaw cennik, dodaj usługi, wybierz tryb rezerwacji oraz określ dni i godziny,
               w których klienci mogą się z Tobą kontaktować.
-            </p>
-          </div>
-
-          <div className={styles.sectionBadge}>
-            <FaCalendarAlt />
-            <span>Oferta</span>
-          </div>
-        </div>
+            </>} icon={<FaCalendarAlt />} />
 
         <div className={styles.offerBody}>
           {/* CENNIK */}
-          <div className={`${styles.offerPanel} ${styles.pricePanel}`}>
-            <div className={styles.offerPanelHead}>
-              <div className={styles.offerIcon}>
-                <FaMoneyBillWave />
-              </div>
+          <EditorGroup title={<>01 / Cennik</>} description={<>Zakres cen widoczny na Twojej wizytówce.</>}>
 
-              <div>
-                <strong>Cennik</strong>
-                <span>Zakres cen widoczny na Twojej wizytówce.</span>
-              </div>
-            </div>
 
             {isEditing ? (
               <div className={styles.priceModernGrid}>
@@ -274,20 +244,11 @@ const OfferSection = ({
                 </div>
               </div>
             )}
-          </div>
+          </EditorGroup>
 
           {/* TRYB REZERWACJI */}
-          <div className={styles.offerPanel}>
-            <div className={styles.offerPanelHead}>
-              <div className={styles.offerIcon}>
-                <FaClock />
-              </div>
+          <EditorGroup title={<>02 / Tryb rezerwacji</>} description={<>Określ, jak klienci mają umawiać usługi.</>}>
 
-              <div>
-                <strong>Tryb rezerwacji</strong>
-                <span>Określ, jak klienci mają umawiać usługi.</span>
-              </div>
-            </div>
 
             {isEditing ? (
               <div className={styles.bookingModeGrid}>
@@ -361,22 +322,13 @@ const OfferSection = ({
                 </span>
               </div>
             )}
-          </div>
+          </EditorGroup>
 
           {/* USTAWIENIA REZERWACJI */}
-          <div className={`${styles.offerPanel} ${styles.bookingSettingsPanel}`}>
-            <div className={styles.offerPanelHead}>
-              <div className={styles.offerIcon}>
-                <FaClock />
-              </div>
-
-              <div>
-                <strong>Ustawienia rezerwacji</strong>
-                <span>
+          <EditorGroup title={<>03 / Ustawienia rezerwacji</>} description={<>
                   Skonfiguruj przerwę między usługami, automatyczne potwierdzanie oraz działanie zespołu.
-                </span>
-              </div>
-            </div>
+                </>}>
+
 
             <div className={styles.bookingSettingsGrid}>
               {/* BUFFER */}
@@ -583,20 +535,11 @@ const OfferSection = ({
                 )}
               </div>
             </div>
-          </div>
+          </EditorGroup>
 
           {/* GODZINY PRACY */}
-          <div className={styles.offerPanel}>
-            <div className={styles.offerPanelHead}>
-              <div className={styles.offerIcon}>
-                <FaClock />
-              </div>
+          <EditorGroup title={<>04 / Godziny pracy</>} description={<>Zakres godzin wykorzystywany przy dostępności.</>}>
 
-              <div>
-                <strong>Godziny pracy</strong>
-                <span>Zakres godzin wykorzystywany przy dostępności.</span>
-              </div>
-            </div>
 
             {isEditing ? (
               <div className={styles.timeGrid}>
@@ -649,20 +592,11 @@ const OfferSection = ({
                 </div>
               </div>
             )}
-          </div>
+          </EditorGroup>
 
           {/* DNI PRACY */}
-          <div className={styles.offerPanel}>
-            <div className={styles.offerPanelHead}>
-              <div className={styles.offerIcon}>
-                <FaCalendarAlt />
-              </div>
+          <EditorGroup title={<>05 / Dni pracy</>} description={<>Wybierz dni, w których zwykle przyjmujesz klientów.</>}>
 
-              <div>
-                <strong>Dni pracy</strong>
-                <span>Wybierz dni, w których zwykle przyjmujesz klientów.</span>
-              </div>
-            </div>
 
             {isEditing ? (
               <div className={styles.daysModernGrid}>
@@ -711,22 +645,13 @@ const OfferSection = ({
                 )}
               </div>
             )}
-          </div>
+          </EditorGroup>
 
           {/* USŁUGI */}
-          <div className={`${styles.offerPanel} ${styles.servicesPanel}`}>
-            <div className={styles.offerPanelHead}>
-              <div className={styles.offerIcon}>
-                <FaTools />
-              </div>
-
-              <div>
-                <strong>Usługi</strong>
-                <span>
+          <EditorGroup title={<>06 / Usługi</>} description={<>
                   Dodaj konkretne usługi, ich czas trwania i sposób wyceny.
-                </span>
-              </div>
-            </div>
+                </>}>
+
 
             {isEditing ? (
               <>
@@ -1164,13 +1089,10 @@ const OfferSection = ({
                   <small className={styles.error}>{formErrors.services}</small>
                 )}
 
-                <div className={styles.addServicePanel}>
-                  <div className={styles.addServiceHead}>
-                    <strong>Dodaj nową usługę</strong>
-                    <span>
+                <EditorGroup title={<>Dodaj nową usługę</>} description={<>
                       {editData.services?.length || 0}/{MAX_SERVICES} usług w obecnym planie
-                    </span>
-                  </div>
+                    </>}>
+
 
                   <div className={styles.addServiceGrid}>
                     <label className={styles.modernField}>
@@ -1426,7 +1348,7 @@ const OfferSection = ({
                   >
                     <FaPlus /> Dodaj usługę
                   </button>
-                </div>
+                </EditorGroup>
               </>
             ) : (
               <div className={styles.servicesViewGrid}>
@@ -1485,23 +1407,14 @@ const OfferSection = ({
                 )}
               </div>
             )}
-          </div>
+          </EditorGroup>
 
           {/* WYJĄTKI DOSTĘPNOŚCI */}
-          <div className={`${styles.offerPanel} ${styles.datesPanel}`}>
-            <div className={styles.offerPanelHead}>
-              <div className={styles.offerIcon}>
-                <FaCalendarAlt />
-              </div>
-
-              <div>
-                <strong>Wyjątki dostępności</strong>
-                <span>
+          <EditorGroup title={<>07 / Wyjątki dostępności</>} description={<>
                   Dodaj urlop, wyjazd, prywatną blokadę dnia albo konkretny zakres godzin,
                   którego nie chcesz udostępniać klientom.
-                </span>
-              </div>
-            </div>
+                </>}>
+
 
             {isEditing ? (
               <>
@@ -1720,7 +1633,7 @@ const OfferSection = ({
                 )}
               </div>
             )}
-          </div>
+          </EditorGroup>
         </div>
       </section>
 
@@ -1730,22 +1643,9 @@ const OfferSection = ({
       <section className={`${styles.card} ${styles.staffCard}`} id="staffSection">
         <div className={styles.cardGlow} aria-hidden="true" />
 
-        <div className={styles.sectionTop}>
-          <div>
-            <span className={styles.sectionKicker}>Zespół</span>
-
-            <h3 className={styles.sectionTitle}>Pracownicy</h3>
-
-            <p className={styles.sectionLead}>
+        <EditorSectionHeader kicker={<>Zespół</>} title={<>Pracownicy</>} description={<>
               Dodawaj członków zespołu, przypisuj im usługi i zarządzaj ich dostępnością w rezerwacjach.
-            </p>
-          </div>
-
-          <div className={styles.sectionBadge}>
-            <FaUsers />
-            <span>{canUseTeam ? `Premium · max ${MAX_STAFF}` : "Zablokowane"}</span>
-          </div>
-        </div>
+            </>} icon={<FaUsers />} />
 
         <div className={styles.staffBody}>
           {!canUseTeam && (
@@ -1772,7 +1672,7 @@ const OfferSection = ({
             </div>
           )}
 
-          <div className={styles.staffStatsGrid}>
+          <EditorGroup title="01 / Twój zespół w liczbach"><div className={styles.staffStatsGrid}>
             <div className={styles.staffStatCard}>
               <strong>{canUseTeam ? `${currentStaffCount}/${MAX_STAFF}` : currentStaffCount}</strong>
               <span>pracowników</span>
@@ -1794,9 +1694,10 @@ const OfferSection = ({
               </strong>
               <span>łączna pojemność</span>
             </div>
-          </div>
+          </div></EditorGroup>
 
           {/* Lista pracowników */}
+          <EditorGroup title="02 / Pracownicy i przypisane usługi">
           {staffLoading ? (
             <div className={styles.staffLoadingBox}>
               Ładowanie pracowników…
@@ -2034,21 +1935,15 @@ const OfferSection = ({
           )}
 
           {/* Dodawanie pracownika */}
+          </EditorGroup>
           {isEditing ? (
             canUseTeam ? (
-              <div className={styles.addStaffPanel}>
-                <div className={styles.addStaffHead}>
-                  <div>
-                    <strong>Dodaj pracownika</strong>
-                    <span>
+              <EditorGroup title={<>03 / Dodaj pracownika</>} description={<>
                       {hasReachedStaffLimit
                         ? `Osiągnięto limit ${MAX_STAFF} pracowników w planie Premium.`
                         : "Nowa osoba będzie mogła obsługiwać wybrane usługi w systemie rezerwacji."}
-                    </span>
-                  </div>
+                    </>}>
 
-                  <FaPlus />
-                </div>
 
                 <div className={styles.addStaffGrid}>
                   <label className={styles.modernField}>
@@ -2169,7 +2064,7 @@ const OfferSection = ({
                 >
                   <FaPlus /> {hasReachedStaffLimit ? "Limit pracowników" : "Dodaj pracownika"}
                 </LoadingButton>
-              </div>
+              </EditorGroup>
             ) : (
               <div className={styles.lockedFeatureBox}>
                 <div>

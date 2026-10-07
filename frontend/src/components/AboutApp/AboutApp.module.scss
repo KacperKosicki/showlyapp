@@ -1,4 +1,5 @@
 @import "../../styles/variables";
+@import "../../styles/sectionBackdrop";
 
 .section {
   --about-bg: #fffdf7;
@@ -13,6 +14,7 @@
   --about-green: #4f9b79;
   --about-shadow: #171917;
 
+  box-sizing: border-box;
   position: relative;
   z-index: 10;
   isolation: isolate;
@@ -49,44 +51,19 @@
 }
 
 .background {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
+  @include sectionBackdrop(var(--about-line), var(--about-violet));
 }
 
 .bigWord {
-  position: absolute;
-  top: -2%;
-  left: -0.04em;
-
-  font-family: $font-heading;
-  font-size: clamp(5rem, 23vw, 23rem);
-  font-weight: 800;
-  //line-height: 0.75;
-  letter-spacing: -0.095em;
-  color: transparent;
-  -webkit-text-stroke: 1px var(--about-line);
-  opacity: 0.34;
-  user-select: none;
+  @include backdropWord(var(--about-line), min(13vw, 15rem));
 }
 
 .dotField {
-  position: absolute;
-  right: -4%;
-  bottom: 2%;
-  width: min(46vw, 680px);
-  height: min(42vw, 620px);
-
-  background-image: radial-gradient(var(--about-line) 1.2px, transparent 1.2px);
-  background-size: 24px 24px;
-  mask-image: linear-gradient(315deg, #000, transparent 72%);
-  -webkit-mask-image: linear-gradient(315deg, #000, transparent 72%);
-  opacity: 0.68;
+  @include backdropDots(var(--about-line), 75deg);
 }
 
 .cornerArrow {
+  @include backdropArrowMotion;
   position: absolute;
   right: 3vw;
   top: 44%;
@@ -792,17 +769,6 @@
   .section {
     padding:
       clamp(4rem, 14vw, 5.5rem) max(0.9rem, var(--safe-right)) calc(clamp(4rem, 14vw, 5.5rem) + var(--safe-bottom)) max(0.9rem, var(--safe-left));
-  }
-
-  .bigWord {
-    top: 1%;
-    font-size: 36vw;
-  }
-
-  .dotField {
-    width: 85vw;
-    height: 85vw;
-    background-size: 19px 19px;
   }
 
   .cornerArrow {

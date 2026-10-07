@@ -1,3 +1,4 @@
+import EditorGroup, { EditorSectionHeader } from './EditorGroup';
 import styles from "./BasicInfoSection.module.scss";
 import { FaIdBadge, FaImage, FaMapMarkerAlt, FaUserTie } from 'react-icons/fa';
 
@@ -36,25 +37,12 @@ const BasicInfoSection = ({
     <section className={`${styles.card} ${styles.basicCard}`}>
       <div className={styles.cardGlow} aria-hidden="true" />
 
-      <div className={styles.sectionTop}>
-        <div>
-          <span className={styles.sectionKicker}>Profil publiczny</span>
-
-          <h3 className={styles.sectionTitle}>Dane podstawowe</h3>
-
-          <p className={styles.sectionLead}>
+      <EditorSectionHeader kicker={<>Profil publiczny</>} title={<>Dane podstawowe</>} description={<>
             {'To pierwsze informacje, kt\u00f3re widz\u0105 u\u017cytkownicy po wej\u015bciu na Twoj\u0105 wizyt\u00f3wk\u0119.'}
-          </p>
-        </div>
-
-        <div className={styles.sectionBadge}>
-          <FaIdBadge />
-          <span>Start</span>
-        </div>
-      </div>
+          </>} icon={<FaIdBadge />} />
 
       <div className={styles.basicInfoRow}>
-        <div className={styles.avatarColumn}>
+        <EditorGroup title="01 / Zdjęcie i banner"><div className={styles.avatarColumn}>
           <div className={styles.bannerPreview}>
             {bannerUrl ? (
               <img src={bannerUrl} alt="Banner profilu" className={styles.bannerImage} />
@@ -156,11 +144,11 @@ const BasicInfoSection = ({
               </div>
             </div>
           )}
-        </div>
+        </div></EditorGroup>
 
-        <div className={styles.basicInfoCol}>
+        <EditorGroup title="02 / Dane wizytówki"><div className={styles.basicInfoCol}>
           <div className={styles.inputBlock}>
-            <label>
+            <label htmlFor="profile-role">
               <FaUserTie />
               <span>Rola</span>
             </label>
@@ -170,6 +158,7 @@ const BasicInfoSection = ({
                 <input
                   type="text"
                   className={`${styles.formInput} ${formErrors.role ? styles.inputError : ''}`}
+                  id="profile-role"
                   value={editData.role || ''}
                   maxLength={40}
                   onChange={(e) => updateEditData('role', e.target.value)}
@@ -184,7 +173,7 @@ const BasicInfoSection = ({
           </div>
 
           <div className={styles.inputBlock}>
-            <label>
+            <label htmlFor="profile-type">
               <FaIdBadge />
               <span>Typ profilu</span>
             </label>
@@ -193,6 +182,7 @@ const BasicInfoSection = ({
               <>
                 <select
                   className={`${styles.formInput} ${formErrors.profileType ? styles.inputError : ''}`}
+                  id="profile-type"
                   value={editData.profileType || ''}
                   onChange={(e) => updateEditData('profileType', e.target.value)}
                   aria-invalid={!!formErrors.profileType}
@@ -214,7 +204,7 @@ const BasicInfoSection = ({
           </div>
 
           <div className={styles.inputBlock}>
-            <label>
+            <label htmlFor="profile-location">
               <FaMapMarkerAlt />
               <span>Lokalizacja</span>
             </label>
@@ -224,6 +214,7 @@ const BasicInfoSection = ({
                 <input
                   type="text"
                   className={`${styles.formInput} ${formErrors.location ? styles.inputError : ''}`}
+                  id="profile-location"
                   value={editData.location || ''}
                   maxLength={30}
                   onChange={(e) => updateEditData('location', e.target.value)}
@@ -238,7 +229,7 @@ const BasicInfoSection = ({
               <p>{profile.location || 'Nie podano'}</p>
             )}
           </div>
-        </div>
+        </div></EditorGroup>
       </div>
     </section>
   );

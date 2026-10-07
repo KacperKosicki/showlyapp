@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import styles from "./ReservationList.module.scss";
 import AlertBox from "../AlertBox/AlertBox";
 import { useLocation } from "react-router-dom";
@@ -17,6 +17,8 @@ import {
 } from "react-icons/fi";
 
 import ReservationCalendar from "./ReservationCalendar";
+import EditorGroup from "../YourProfile/sections/EditorGroup";
+import ReservationActionDialog from "./ReservationActionDialog";
 
 import { api } from "../../api/api";
 
@@ -295,6 +297,20 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
   const [disabledIds, setDisabledIds] = useState(new Set());
   const [accountNameMap, setAccountNameMap] = useState({});
+  const [actionDialog, setActionDialog] = useState(null);
+  const actionResolver = useRef(null);
+  const completeActionDialog = useCallback((value) => {
+    const resolve = actionResolver.current;
+    actionResolver.current = null;
+    setActionDialog(null);
+    resolve?.(value);
+  }, []);
+  const askReservationAction = (options) => new Promise((resolve) => {
+    actionResolver.current?.(null);
+    actionResolver.current = resolve;
+    setActionDialog(options);
+  });
+  useEffect(() => () => { actionResolver.current?.(null); actionResolver.current = null; }, []);
 
   const safeParse = (str) => {
     try {
@@ -1386,20 +1402,19 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     if (!message) return null;
 
     return (
-      <div className={styles.note}>
+      <div className={`${styles.note} ${styles.clientNote}`}>
         <div className={styles.noteHeader}>
           <FiFileText className={styles.noteIcon} aria-hidden="true" />
           <span>Informacja od klienta</span>
         </div>
 
         <div className={styles.noteBody}>
-          <strong>
+          <span className={styles.noteDate}>
             {res.clientNote?.createdAt
               ? new Date(res.clientNote.createdAt).toLocaleString("pl-PL")
               : "Wiadomość"}
-            :
-          </strong>{" "}
-          {message}
+          </span>
+          <p className={styles.noteMessage}>{message}</p>
         </div>
       </div>
     );
@@ -1433,15 +1448,13 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       return;
     }
 
-    const ok = window.confirm(
-      "Czy na pewno chcesz usunąć tę rezerwację offline z kalendarza? Ten slot zostanie zwolniony."
-    );
-
-    if (!ok) return;
-
-    const reason = window.prompt(
-      "Opcjonalnie wpisz powód usunięcia, np. klient zadzwonił i zrezygnował:"
-    );
+    const reason = await askReservationAction({
+      title: "Usunąć rezerwację offline?",
+      description: "Rezerwacja zostanie usunięta z kalendarza, a jej termin ponownie będzie dostępny. Możesz dodać powód usunięcia.",
+      label: "Powód usunięcia (opcjonalnie)",
+      confirmText: "Usuń rezerwację", danger: true,
+    });
+    if (reason === null) return;
 
     try {
       setDisabledIds((prev) => new Set(prev).add(`offline-cancel-${reservation._id}`));
@@ -1550,9 +1563,11 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       return;
     }
 
-    const text = window.prompt(
-      "Dodaj jedną ważną informację do rezerwacji, np. „Spóźnię się 10 minut”. Tej wiadomości nie będzie można później edytować."
-    );
+    const text = await askReservationAction({
+      title: "Dodaj informację do rezerwacji",
+      description: "Przekaż usługodawcy ważną wiadomość, np. o spóźnieniu. Możesz dodać jedną informację — po wysłaniu nie będzie można jej edytować.",
+      label: "Twoja wiadomość", confirmText: "Dodaj informację", required: true, minLength: 5,
+    });
 
     const message = String(text || "").trim();
 
@@ -1614,9 +1629,11 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   };
 
   const handleClientCancelWithReason = async (reservation) => {
-    const text = window.prompt(
-      "Podaj powód anulowania rezerwacji. Usługodawca zobaczy tę informację."
-    );
+    const text = await askReservationAction({
+      title: "Anulować rezerwację?",
+      description: "Podaj powód anulowania. Usługodawca otrzyma tę informację, a termin zostanie zwolniony.",
+      label: "Powód anulowania", confirmText: "Anuluj rezerwację", required: true, danger: true,
+    });
 
     const reason = String(text || "").trim();
 
@@ -2092,6 +2109,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     pendingSent > 0 ? `${pendingSent} oczek.` : `${clientReservations.length}`;
 
   const renderReservationGroup = ({
+    number = "01",
     label,
     title,
     badge,
@@ -2100,11 +2118,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     emptyText,
     children,
   }) => (
-    <section className={styles.reservationGroup}>
+    <EditorGroup title={`${number} / ${title}`} className={styles.reservationGroup}>
       <div className={styles.groupHeader}>
         <div>
           <span className={styles.groupLabel}>{label}</span>
-          <h4>{title}</h4>
         </div>
 
         <span className={styles.groupBadge}>{badge}</span>
@@ -2119,7 +2136,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
           <p>{emptyText}</p>
         </div>
       )}
-    </section>
+    </EditorGroup>
   );
 
   return (
@@ -2143,9 +2160,11 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         <div className={styles.layout}>
           <aside className={styles.side}>
 
-            <h2 className={styles.heading}>
+            <span className={styles.kicker}>Showly.me / Centrum rezerwacji</span>
+            <FiCalendar className={styles.headerIcon} aria-hidden="true" />
+            <h1 className={styles.heading}>
               Twoje <span>rezerwacje</span> i terminy
-            </h2>
+            </h1>
 
             <p className={styles.description}>
               {!isLogged ? (
@@ -2170,7 +2189,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
               )}
             </p>
 
-            <div className={styles.metaRow}>
+            <EditorGroup title="01 / Twoje rezerwacje w liczbach" className={styles.summaryGroup}><div className={styles.metaRow}>
               <div className={styles.metaCard}>
                 <strong>{loading ? "—" : totalPending}</strong>
                 <span>oczekujących rezerwacji</span>
@@ -2193,7 +2212,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                       : "brak profilu usługodawcy"}
                 </span>
               </div>
-            </div>
+            </div></EditorGroup>
 
             <div className={styles.infoBox}>
               <span>Lista • Kalendarz • Offline</span>
@@ -2212,6 +2231,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                     }`}
                   onClick={() => setViewMode("list")}
                   type="button"
+                  aria-pressed={viewMode === "list"}
                 >
                   <FiList /> Lista
                 </button>
@@ -2221,6 +2241,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                     }`}
                   onClick={() => setViewMode("calendar")}
                   type="button"
+                  aria-pressed={viewMode === "calendar"}
                 >
                   <FiGrid /> Kalendarz
                 </button>
@@ -2229,28 +2250,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
           </aside>
 
           <div className={styles.contentPanel}>
-            <div className={styles.chapterHead}>
-              <div>
-                <span className={styles.chapterLabel}>
-                  Centrum rezerwacji
-                </span>
-
-                <h3>
-                  {!isLogged
-                    ? "Zaloguj się, aby zobaczyć swoje rezerwacje."
-                    : loading
-                      ? "Pobieramy Twoje rezerwacje i kalendarz."
-                      : canUseCalendar && viewMode === "calendar"
-                        ? "Sprawdzaj terminy w widoku kalendarza."
-                        : "Zarządzaj wysłanymi i otrzymanymi rezerwacjami."}
-                </h3>
-              </div>
-
-              <span className={styles.chapterNumber}>
-                {loading ? "—" : totalPending}
-              </span>
-            </div>
-
             {!isLogged ? (
               <div className={styles.reservationsStack}>
                 {renderReservationGroup({
@@ -2265,7 +2264,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
               </div>
             ) : loading ? (
               <div className={styles.reservationsStack}>
-                <section className={styles.reservationGroup}>
+                <EditorGroup title="02 / Ładowanie rezerwacji" className={styles.reservationGroup}>
                   <div className={styles.groupHeader}>
                     <div>
                       <span className={styles.groupLabel}>Ładowanie</span>
@@ -2280,7 +2279,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                       <SkeletonItem key={index} />
                     ))}
                   </ul>
-                </section>
+                </EditorGroup>
               </div>
             ) : canUseCalendar && viewMode === "calendar" ? (
               <div className={styles.calendarPanelWrap}>
@@ -2326,6 +2325,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
               <div className={styles.reservationsStack}>
                 {hasProviderProfile &&
                   renderReservationGroup({
+                    number: "02",
                     label: "Do Twojego profilu",
                     title: "Otrzymane rezerwacje",
                     badge: receivedBadge,
@@ -2344,6 +2344,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                   })}
 
                 {renderReservationGroup({
+                  number: hasProviderProfile ? "03" : "02",
                   label: "Twoje konto → profile",
                   title: "Wysłane rezerwacje",
                   badge: sentBadge,
@@ -2363,6 +2364,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
                 {!hasProviderProfile &&
                   renderReservationGroup({
+                    number: "03",
                     label: "Profil usługodawcy",
                     title: "Rezerwacje do Twojego profilu",
                     badge: "—",
@@ -2377,6 +2379,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         </div>
       </div>
 
+      {actionDialog && <ReservationActionDialog {...actionDialog} onComplete={completeActionDialog} />}
     </section>
   );
 };

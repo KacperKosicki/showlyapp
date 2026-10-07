@@ -37,7 +37,7 @@ const billingEventSchema = new mongoose.Schema(
     // Status przetwarzania eventu po naszej stronie
     status: {
       type: String,
-      enum: ["received", "processed", "skipped", "failed"],
+      enum: ["received", "processing", "processed", "skipped", "failed"],
       default: "received",
     },
 
@@ -71,6 +71,7 @@ const billingEventSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    leaseUntil: { type: Date, default: null },
   },
   { timestamps: true }
 );

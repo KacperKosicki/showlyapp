@@ -1,3 +1,4 @@
+import EditorGroup, { EditorSectionHeader } from './EditorGroup';
 import styles from "./LinkMediaSection.module.scss";
 import { FaBriefcase, FaGlobe, FaLink, FaPlus, FaTags } from 'react-icons/fa';
 
@@ -35,37 +36,15 @@ const LinkMediaSection = ({
 <section className={`${styles.card} ${styles.mediaCard}`}>
   <div className={styles.cardGlow} aria-hidden="true" />
 
-  <div className={styles.sectionTop}>
-    <div>
-      <span className={styles.sectionKicker}>Widoczność profilu</span>
-
-      <h3 className={styles.sectionTitle}>Linki i media</h3>
-
-      <p className={styles.sectionLead}>
+  <EditorSectionHeader kicker={<>Widoczność profilu</>} title={<>Linki i media</>} description={<>
         Dodaj tagi, ważne linki oraz zdjęcia, które najlepiej pokazują Twoją ofertę,
         realizacje lub styl pracy.
-      </p>
-    </div>
-
-    <div className={styles.sectionBadge}>
-      <FaLink />
-      <span>Media</span>
-    </div>
-  </div>
+      </>} icon={<FaLink />} />
 
   <div className={styles.mediaBody}>
     {/* TAGI */}
-    <div className={styles.mediaPanel}>
-      <div className={styles.mediaPanelHead}>
-        <div className={styles.mediaIcon}>
-          <FaTags />
-        </div>
+    <EditorGroup title={<>01 / Tagi profilu</>} description={<>Pomagają użytkownikom szybciej zrozumieć, czym się zajmujesz.</>}>
 
-        <div>
-          <strong>Tagi profilu</strong>
-          <span>Pomagają użytkownikom szybciej zrozumieć, czym się zajmujesz.</span>
-        </div>
-      </div>
 
       {isEditing ? (
         <div className={styles.tagEditorGrid}>
@@ -118,20 +97,11 @@ const LinkMediaSection = ({
           <span>Nie dodałeś/aś jeszcze tagów do profilu.</span>
         </div>
       )}
-    </div>
+    </EditorGroup>
 
     {/* LINKI */}
-    <div className={styles.mediaPanel}>
-      <div className={styles.mediaPanelHead}>
-        <div className={styles.mediaIcon}>
-          <FaLink />
-        </div>
+    <EditorGroup title={<>02 / Linki zewnętrzne</>} description={<>Dodaj portfolio, stronę www, sklep, kalendarz lub inne ważne miejsce.</>}>
 
-        <div>
-          <strong>Linki zewnętrzne</strong>
-          <span>Dodaj portfolio, stronę www, sklep, kalendarz lub inne ważne miejsce.</span>
-        </div>
-      </div>
 
       {isEditing ? (
         <div className={styles.linksEditorGrid}>
@@ -194,22 +164,13 @@ const LinkMediaSection = ({
           <span>Nie dodałeś/aś jeszcze żadnego linku.</span>
         </div>
       )}
-    </div>
+    </EditorGroup>
 
     {/* GALERIA */}
-    <div className={`${styles.mediaPanel} ${styles.galleryPanel}`}>
-      <div className={styles.mediaPanelHead}>
-        <div className={styles.mediaIcon}>
-          <FaBriefcase />
-        </div>
-
-        <div>
-          <strong>Galeria zdjęć</strong>
-          <span>
+    <EditorGroup title={<>03 / Galeria zdjęć</>} description={<>
             Dodaj zdjęcia realizacji, produktów, miejsca pracy albo przykładowych efektów.
-          </span>
-        </div>
-      </div>
+          </>}>
+
 
       {!isEditing && (
         <>
@@ -338,7 +299,7 @@ const LinkMediaSection = ({
           </div>
         </div>
       )}
-    </div>
+    </EditorGroup>
   </div>
 </section>
 

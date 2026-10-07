@@ -541,7 +541,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
   }, [profileStatus, showFaq]);
 
   const ThreadSkeleton = () => (
-    <div className={styles.loadingBox}>
+    <div className={styles.loadingBox} role="status" aria-label="Ładowanie rozmowy">
       <div className={styles.skeletonThread}>
         <div className={`${styles.skeletonBubble} ${styles.left} ${styles.shimmer}`} />
         <div className={`${styles.skeletonBubble} ${styles.right} ${styles.shimmer}`} />
@@ -610,12 +610,15 @@ const ThreadView = ({ user, setUnreadCount }) => {
   };
 
   const myUid = auth.currentUser?.uid || user?.uid;
+  const messageCount = messages.length;
+  const conversationStatus = loading
+    ? "Ładowanie rozmowy"
+    : receiverId === "SYSTEM" || messages[messages.length - 1]?.isSystem
+      ? "Wiadomości od Showly"
+      : canReply ? "Możesz odpowiedzieć" : "Czekasz na odpowiedź";
 
   return (
     <div id="threadPageLayout" className={styles.page}>
-      <div className={styles.bgGlow} aria-hidden="true" />
-      <div className={styles.noiseLayer} aria-hidden="true" />
-
       <div className={styles.shell}>
         {flash && (
           <AlertBox
@@ -643,18 +646,12 @@ const ThreadView = ({ user, setUnreadCount }) => {
             </div>
 
             <header className={styles.hero}>
-              <div className={styles.heroDecor} aria-hidden="true">
-                <span className={styles.heroGlowA} />
-                <span className={styles.heroGlowB} />
-                <span className={styles.heroGrid} />
-              </div>
-
               <div className={styles.heroTopBar}>
                 <div className={styles.heroBadge} title={statusLabel || ""}>
                   <FaRegCommentDots />
                   <span>
-                    <strong>{messages.filter((m) => !m?.isSystem).length}</strong>{" "}
-                    wiadomości
+                    <strong>{messageCount}</strong>{" "}
+                    {messageCount === 1 ? "wiadomość" : "wiadomości"}
                   </span>
                 </div>
 
@@ -674,16 +671,16 @@ const ThreadView = ({ user, setUnreadCount }) => {
                   </span>
 
                   <div className={styles.titleRow}>
-                    <h2 className={styles.heroTitle}>
+                    <h1 className={styles.heroTitle}>
                       Rozmowa z {renderNameNode(receiverName)}
-                    </h2>
+                    </h1>
                   </div>
 
                   <div className={styles.metaRow}>
-                    <span>{canReply ? "Możesz odpowiedzieć" : "Czekasz na odpowiedź"}</span>
+                    <span className={styles.conversationStatus}>{conversationStatus}</span>
                     <span className={styles.dot} aria-hidden="true" />
                     <span>
-                      {amProfileSide ? "Piszesz jako wizytówka" : "Piszesz jako konto"}
+                      {receiverId === "SYSTEM" ? "Komunikaty dla Twojego konta" : amProfileSide ? "Piszesz jako wizytówka" : "Piszesz jako konto"}
                     </span>
                   </div>
                 </div>
@@ -709,18 +706,28 @@ const ThreadView = ({ user, setUnreadCount }) => {
                       </div>
                     )}
 
-                    <div className={styles.avatarRing} aria-hidden="true" />
                   </div>
                 </div>
               </div>
             </header>
 
-            <section className={styles.threadCard}>
+            <section className={styles.threadCard} aria-label="Historia rozmowy">
+              <div className={styles.threadHeading}>
+                <span className={styles.sectionKicker}>01 / Historia rozmowy</span>
+                <FaRegCommentDots aria-hidden="true" />
+              </div>
               {loading ? (
                 <ThreadSkeleton />
               ) : (
                 <>
                   <div className={styles.thread}>
+                    {messages.length === 0 && (
+                      <div className={styles.emptyState}>
+                        <FaRegCommentDots aria-hidden="true" />
+                        <h2>Tu zaczyna się rozmowa</h2>
+                        <p>Wiadomości w tej konwersacji pojawią się tutaj.</p>
+                      </div>
+                    )}
                     {messages.map((msg, i) => {
                       const displayContent = msg.isSystem
                         ? String(msg.content).replace(/\\n/g, "\n")
@@ -798,9 +805,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
                               )}
                             </p>
 
-                            <p className={styles.time}>
+                            <time className={styles.time} dateTime={Number.isNaN(new Date(msg.createdAt).getTime()) ? undefined : new Date(msg.createdAt).toISOString()}>
                               {new Date(msg.createdAt).toLocaleString("pl-PL")}
-                            </p>
+                            </time>
                           </div>
                         </div>
                       );
@@ -808,9 +815,18 @@ const ThreadView = ({ user, setUnreadCount }) => {
                   </div>
 
                   <div className={styles.replyArea}>
+                    <div className={styles.replyHeading}>
+                      <span className={styles.sectionKicker}>02 / Twoja odpowiedź</span>
+                      <p>Każda dobra współpraca zaczyna się od rozmowy.</p>
+                    </div>
                     {(() => {
                       const last = messages[messages.length - 1];
-                      if (!last) return null;
+                      if (!last) return (
+                        <div className={styles.infoBox}>
+                          <span className={styles.infoIcon}><FaInfoCircle /></span>
+                          <p>Możliwość odpowiedzi pojawi się po otrzymaniu wiadomości.</p>
+                        </div>
+                      );
 
                       if (last.isSystem || receiverId === "SYSTEM") {
                         return (
@@ -841,8 +857,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
                         return (
                           <form onSubmit={handleReply} className={styles.form}>
                             <div className={styles.senderHint}>{mySenderLabel}</div>
-
+                            <label className={styles.inputLabel} htmlFor="thread-reply">Treść wiadomości</label>
                             <textarea
+                              id="thread-reply"
                               className={styles.textarea}
                               placeholder="Napisz odpowiedź..."
                               value={newMessage}
@@ -851,11 +868,13 @@ const ThreadView = ({ user, setUnreadCount }) => {
                                 if (text.length <= maxChars) setNewMessage(text);
                               }}
                               required
+                              maxLength={maxChars}
+                              aria-describedby="thread-reply-counter"
                             />
 
                             <div className={styles.textareaMeta}>
                               <span>Odpowiadasz w aktualnej konwersacji.</span>
-                              <strong>
+                              <strong id="thread-reply-counter">
                                 {newMessage.length} / {maxChars}
                               </strong>
                             </div>
@@ -878,7 +897,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
                       );
                     })()}
 
-                    {errorMsg && <p className={styles.error}>{errorMsg}</p>}
+                    {errorMsg && <p className={styles.error} role="alert">{errorMsg}</p>}
                   </div>
                 </>
               )}
@@ -892,11 +911,11 @@ const ThreadView = ({ user, setUnreadCount }) => {
                   <div className={styles.faqHeader}>
                     <span className={styles.sectionKicker}>
                       <FaInfoCircle />
-                      FAQ
+                      Warto wiedzieć
                     </span>
 
                     <h3>
-                      Najczęstsze pytania i odpowiedzi{" "}
+                      Zanim zapytasz{" "}
                       <span className={styles.faqReceiverName}>
                         {receiverName || ""}
                       </span>

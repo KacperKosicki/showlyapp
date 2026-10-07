@@ -1,4 +1,5 @@
 @import "../../styles/variables";
+@import "../../styles/sectionBackdrop";
 
 .hero {
   --hero-bg: #f1eee4;
@@ -12,6 +13,7 @@
   --hero-orange: #ff8268;
   --hero-green: #4f9b79;
 
+  box-sizing: border-box;
   position: relative;
   // Hero tworzy warstwę nad kolejnymi sekcjami, dzięki czemu dropdown
   // wyszukiwarki może swobodnie nachodzić na komponent znajdujący się niżej.
@@ -55,45 +57,19 @@
 }
 
 .background {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
+  @include sectionBackdrop(var(--hero-line), var(--hero-violet));
 }
 
 .bigWord {
-  position: absolute;
-  top: 50%;
-  left: -0.04em;
-
-  font-family: $font-heading;
-  font-size: clamp(10rem, 28vw, 32rem);
-  font-weight: 800;
-  line-height: 0.7;
-  letter-spacing: -0.095em;
-
-  color: transparent;
-  -webkit-text-stroke: 1px var(--hero-line);
-  transform: translateY(-42%);
-  opacity: 0.42;
-  user-select: none;
+  @include backdropWord(var(--hero-line), min(22vw, 26rem));
 }
 
 .gridDot {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: min(42vw, 660px);
-  height: min(46vw, 660px);
-
-  background-image: radial-gradient(var(--hero-line) 1.2px, transparent 1.2px);
-  background-size: 24px 24px;
-  mask-image: linear-gradient(135deg, #000, transparent 72%);
-  opacity: 0.72;
+  @include backdropDots(var(--hero-line));
 }
 
 .scribble {
+  @include backdropArrowMotion;
   position: absolute;
   right: 3.5vw;
   bottom: 2.5vw;
@@ -773,12 +749,6 @@
   }
 
 
-
-  .gridDot {
-    width: 80vw;
-    height: 80vw;
-    background-size: 19px 19px;
-  }
 
   .layout {
     gap: 3.6rem;

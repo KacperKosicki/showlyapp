@@ -1,3 +1,4 @@
+import EditorGroup, { EditorSectionHeader } from './EditorGroup';
 import styles from "./ContactSocialSection.module.scss";
 import {
   FaMapMarkerAlt,
@@ -39,37 +40,15 @@ const ContactSocialSection = ({
 <section className={`${styles.card} ${styles.contactSocialCard}`}>
   <div className={styles.cardGlow} aria-hidden="true" />
 
-  <div className={styles.sectionTop}>
-    <div>
-      <span className={styles.sectionKicker}>Dane kontaktowe</span>
-
-      <h3 className={styles.sectionTitle}>Kontakt i social media</h3>
-
-      <p className={styles.sectionLead}>
+  <EditorSectionHeader kicker={<>Dane kontaktowe</>} title={<>Kontakt i social media</>} description={<>
         Uzupełnij dane kontaktowe i miejsca, w których klienci mogą Cię znaleźć
         lub szybko się z Tobą skontaktować.
-      </p>
-    </div>
-
-    <div className={styles.sectionBadge}>
-      <FaEnvelope />
-      <span>Kontakt</span>
-    </div>
-  </div>
+      </>} icon={<FaEnvelope />} />
 
   <div className={styles.contactSocialBody}>
     {/* KONTAKT */}
-    <div className={styles.contactPanel}>
-      <div className={styles.contactPanelHead}>
-        <div className={styles.contactIcon}>
-          <FaEnvelope />
-        </div>
+    <EditorGroup title={<>01 / Kontakt</>} description={<>E-mail, telefon oraz adres widoczny na profilu publicznym.</>}>
 
-        <div>
-          <strong>Kontakt</strong>
-          <span>E-mail, telefon oraz adres widoczny na profilu publicznym.</span>
-        </div>
-      </div>
 
       {isEditing ? (
         <div className={styles.contactModernGrid}>
@@ -215,20 +194,11 @@ const ContactSocialSection = ({
           </div>
         </div>
       )}
-    </div>
+    </EditorGroup>
 
     {/* SOCIAL MEDIA */}
-    <div className={styles.contactPanel}>
-      <div className={styles.contactPanelHead}>
-        <div className={styles.contactIcon}>
-          <FaGlobe />
-        </div>
+    <EditorGroup title={<>02 / Social media</>} description={<>Dodaj miejsca, w których pokazujesz swoje realizacje lub ofertę.</>}>
 
-        <div>
-          <strong>Social media</strong>
-          <span>Dodaj miejsca, w których pokazujesz swoje realizacje lub ofertę.</span>
-        </div>
-      </div>
 
       {!canUseSocialMedia && isEditing && (
         <div className={styles.upgradeNotice}>
@@ -414,7 +384,7 @@ const ContactSocialSection = ({
           )}
         </>
       )}
-    </div>
+    </EditorGroup>
   </div>
 </section>
   );

@@ -1,4 +1,5 @@
-import { FaBriefcase, FaEnvelope, FaIdBadge, FaStar, FaTimes } from 'react-icons/fa';
+import EditorGroup, { EditorSectionHeader } from './EditorGroup';
+import { FaEnvelope, FaIdBadge, FaTimes } from 'react-icons/fa';
 import styles from "./AdditionalInfoSection.module.scss";
 
 const AdditionalInfoSection = ({
@@ -17,37 +18,15 @@ const AdditionalInfoSection = ({
 <section className={`${styles.card} ${styles.extraCard}`}>
   <div className={styles.cardGlow} aria-hidden="true" />
 
-  <div className={styles.sectionTop}>
-    <div>
-      <span className={styles.sectionKicker}>Finalne ustawienia</span>
-
-      <h3 className={styles.sectionTitle}>Informacje dodatkowe</h3>
-
-      <p className={styles.sectionLead}>
+  <EditorSectionHeader kicker={<>Finalne ustawienia</>} title={<>Informacje dodatkowe</>} description={<>
         Uzupełnij dane biznesowe, szybkie odpowiedzi oraz sprawdź podsumowanie
         widoczności Twojego profilu.
-      </p>
-    </div>
-
-    <div className={styles.sectionBadge}>
-      <FaIdBadge />
-      <span>Final</span>
-    </div>
-  </div>
+      </>} icon={<FaIdBadge />} />
 
   <div className={styles.extraBody}>
     {/* DANE BIZNESOWE */}
-    <div className={styles.extraPanel}>
-      <div className={styles.extraPanelHead}>
-        <div className={styles.extraIcon}>
-          <FaBriefcase />
-        </div>
+    <EditorGroup title={<>01 / Dane biznesowe</>} description={<>Określ, czy działasz jako firma i podaj NIP, jeśli chcesz.</>}>
 
-        <div>
-          <strong>Dane biznesowe</strong>
-          <span>Określ, czy działasz jako firma i podaj NIP, jeśli chcesz.</span>
-        </div>
-      </div>
 
       {isEditing ? (
         <div className={styles.businessEditor}>
@@ -116,20 +95,11 @@ const AdditionalInfoSection = ({
           </div>
         </div>
       )}
-    </div>
+    </EditorGroup>
 
     {/* PODSUMOWANIE */}
-    <div className={styles.extraPanel}>
-      <div className={styles.extraPanelHead}>
-        <div className={styles.extraIcon}>
-          <FaStar />
-        </div>
+    <EditorGroup title={<>02 / Podsumowanie profilu</>} description={<>Najważniejsze dane widoczne po stronie profilu publicznego.</>}>
 
-        <div>
-          <strong>Podsumowanie profilu</strong>
-          <span>Najważniejsze dane widoczne po stronie profilu publicznego.</span>
-        </div>
-      </div>
 
       <div className={styles.extraStatsGrid}>
         <div className={styles.extraStatItem}>
@@ -168,23 +138,14 @@ const AdditionalInfoSection = ({
           </strong>
         </div>
       </div>
-    </div>
+    </EditorGroup>
 
     {/* SZYBKIE ODPOWIEDZI */}
-    <div className={`${styles.extraPanel} ${styles.quickAnswersPanel}`}>
-      <div className={styles.extraPanelHead}>
-        <div className={styles.extraIcon}>
-          <FaEnvelope />
-        </div>
-
-        <div>
-          <strong>Szybkie odpowiedzi</strong>
-          <span>
+    <EditorGroup title={<>03 / Szybkie odpowiedzi</>} description={<>
             Krótkie odpowiedzi widoczne przy formularzu wiadomości. Pomagają klientowi
             szybciej znaleźć podstawowe informacje.
-          </span>
-        </div>
-      </div>
+          </>}>
+
 
       {isEditing ? (
         <div className={styles.quickAnswersEditor}>
@@ -308,7 +269,7 @@ const AdditionalInfoSection = ({
           <span>Nie dodałeś/aś jeszcze mini FAQ do swojego profilu.</span>
         </div>
       )}
-    </div>
+    </EditorGroup>
   </div>
 </section>
     </>

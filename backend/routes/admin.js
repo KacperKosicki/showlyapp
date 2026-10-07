@@ -209,6 +209,7 @@ router.patch(
       }
 
       profile.isVisible = !!isVisible;
+      profile.visibilityBlockedByAdmin = !isVisible;
       await profile.save();
 
       const profileOwnerUid = String(profile.userId || "").trim();

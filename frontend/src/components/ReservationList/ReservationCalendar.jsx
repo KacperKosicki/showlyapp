@@ -18,6 +18,7 @@ import {
 } from "react-icons/fi";
 
 import styles from "./ReservationCalendar.module.scss";
+import EditorGroup, { EditorSectionHeader } from "../YourProfile/sections/EditorGroup";
 
 const toISODate = (date) => {
   if (!(date instanceof Date) || Number.isNaN(date.getTime())) {
@@ -334,16 +335,17 @@ const ReservationCalendar = ({
       ? createPortal(
 
         <div className={styles.modalOverlay} onClick={() => setOfflineOpen(false)}>
-          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalCard} role="dialog" aria-modal="true" aria-labelledby="offline-reservation-title" onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHead}>
-              <div className={styles.modalTitle}>
+              <h2 className={styles.modalTitle} id="offline-reservation-title">
                 <FiPlus /> Dodaj rezerwację offline
-              </div>
+              </h2>
 
               <button
                 className={styles.modalClose}
                 onClick={() => setOfflineOpen(false)}
                 type="button"
+                aria-label="Zamknij formularz rezerwacji"
               >
                 <FiX />
               </button>
@@ -383,7 +385,7 @@ const ReservationCalendar = ({
                 </div>
               )}
 
-              <div className={styles.modalGrid}>
+              <EditorGroup title="01 / Dane rezerwacji"><div className={styles.modalGrid}>
                 <label className={styles.field}>
                   <span>Data</span>
                   <input
@@ -584,7 +586,7 @@ const ReservationCalendar = ({
                 )}
               </div>
 
-              <div className={styles.modalActions}>
+              </EditorGroup><div className={styles.modalActions}>
                 <button
                   className={styles.modalSecondary}
                   onClick={() => setOfflineOpen(false)}
@@ -613,20 +615,7 @@ const ReservationCalendar = ({
     <>
       <section className={styles.calendarSection}>
         <div className={styles.calendarHeader}>
-          <div className={styles.calendarHeading}>
-            <span className={styles.chapterLabel}>
-              Widok kalendarza
-            </span>
-
-            <h3>
-              Kalendarz <span>rezerwacji</span>
-            </h3>
-
-            <p>
-              Wybierz dzień, aby sprawdzić rezerwacje, dostępność oraz
-              wolne godziny.
-            </p>
-          </div>
+          <EditorSectionHeader kicker="Zarządzanie terminami" title="Twój kalendarz rezerwacji" description="Wybierz dzień, sprawdź plan i dodaj rezerwacje przyjęte poza Showly." icon={<FiCalendar />} />
 
           <div className={styles.selectedDate}>
             <FiCalendar aria-hidden="true" />
@@ -638,7 +627,7 @@ const ReservationCalendar = ({
           </div>
         </div>
 
-        <div className={styles.summaryGrid}>
+        <EditorGroup title="01 / Wybrany dzień w liczbach"><div className={styles.summaryGrid}>
           <div className={styles.summaryCard}>
             <strong>{dayMeta?.total ?? 0}</strong>
             <span>Wszystkie rezerwacje</span>
@@ -658,10 +647,10 @@ const ReservationCalendar = ({
             <strong>{dayMeta?.pending ?? 0}</strong>
             <span>Oczekujące</span>
           </div>
-        </div>
+        </div></EditorGroup>
 
         <div className={styles.calendarLayout}>
-          <div className={styles.calendarColumn}>
+          <EditorGroup title="02 / Wybierz termin" className={styles.calendarColumn}>
             <div className={styles.calendarBox}>
               <Calendar
                 value={selectedDay}
@@ -693,7 +682,7 @@ const ReservationCalendar = ({
                 Niedostępne
               </span>
             </div>
-          </div>
+          </EditorGroup>
 
           <div className={styles.dayColumn}>
             <div className={styles.dayHeader}>
@@ -726,7 +715,7 @@ const ReservationCalendar = ({
             )}
 
             {isSlotMode && (
-              <div className={styles.daySection}>
+              <EditorGroup title="03 / Harmonogram dnia" className={styles.daySection}>
                 <div className={styles.sectionHeader}>
                   <div>
                     <span className={styles.sectionLabel}>
@@ -757,11 +746,11 @@ const ReservationCalendar = ({
                     {visibleTimelineBlocks.map(renderTimelineBlock)}
                   </div>
                 )}
-              </div>
+              </EditorGroup>
             )}
 
             {isDayBlockingMode && (
-              <div className={styles.daySection}>
+              <EditorGroup title="03 / Dostępność dnia" className={styles.daySection}>
                 <div className={styles.sectionHeader}>
                   <div>
                     <span className={styles.sectionLabel}>
@@ -776,11 +765,11 @@ const ReservationCalendar = ({
                   W tym trybie możesz dodać rezerwację offline
                   obejmującą cały wybrany dzień.
                 </div>
-              </div>
+              </EditorGroup>
             )}
 
             {hasProviderProfile && (
-              <div className={styles.daySection}>
+              <EditorGroup title="04 / Otrzymane rezerwacje" className={styles.daySection}>
                 <div className={styles.sectionHeader}>
                   <div>
                     <span className={styles.sectionLabel}>
@@ -809,10 +798,10 @@ const ReservationCalendar = ({
                     )}
                   </ul>
                 )}
-              </div>
+              </EditorGroup>
             )}
 
-            <div className={styles.daySection}>
+            <EditorGroup title={`${hasProviderProfile ? "05" : "04"} / Wysłane rezerwacje`} className={styles.daySection}>
               <div className={styles.sectionHeader}>
                 <div>
                   <span className={styles.sectionLabel}>
@@ -838,7 +827,7 @@ const ReservationCalendar = ({
                   )}
                 </ul>
               )}
-            </div>
+            </EditorGroup>
 
             {hasProviderProfile &&
               (isSlotMode || isDayBlockingMode) && (

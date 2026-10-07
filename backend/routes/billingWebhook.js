@@ -6,6 +6,7 @@ const router = express.Router();
 
 const Profile = require("../models/Profile");
 const BillingEvent = require("../models/BillingEvent");
+const recovery = require("../utils/billingRecovery");
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -44,30 +45,8 @@ const getSubscriptionMainPriceId = (subscription) => {
   return String(subscription?.items?.data?.[0]?.price?.id || "");
 };
 
-const createBillingEvent = async (event) => {
-  try {
-    const object = event?.data?.object || {};
-
-    await BillingEvent.create({
-      eventId: event.id,
-      type: event.type,
-      objectId: String(object.id || ""),
-      livemode: !!event.livemode,
-      status: "received",
-      metadata: {
-        objectType: object.object || "",
-      },
-    });
-
-    return true;
-  } catch (err) {
-    if (err?.code === 11000) {
-      return false;
-    }
-
-    throw err;
-  }
-};
+const { claimBillingEvent } = require("../utils/billingEvents");
+const createBillingEvent = event => claimBillingEvent(BillingEvent, event);
 
 const updateBillingEvent = async (eventId, update = {}) => {
   try {
@@ -76,11 +55,13 @@ const updateBillingEvent = async (eventId, update = {}) => {
       {
         ...update,
         processedAt: new Date(),
+        leaseUntil: null,
       },
       { new: true }
     );
   } catch (err) {
     console.error("❌ updateBillingEvent error:", err);
+    throw err;
   }
 };
 
@@ -93,110 +74,7 @@ const updateBillingEvent = async (eventId, update = {}) => {
  * - Ustawiamy visibleUntil na current_period_end ze Stripe.
  * - Dzięki temu webhook jest idempotentny i nie nabija podwójnych dni.
  */
-const applySubscriptionToProfile = async (subscription, fallback = {}) => {
-  const uid = String(subscription?.metadata?.uid || fallback.uid || "");
-  const profileId = String(subscription?.metadata?.profileId || fallback.profileId || "");
-
-  const priceId = getSubscriptionMainPriceId(subscription);
-
-  const plan = String(
-    subscription?.metadata?.plan ||
-      fallback.plan ||
-      getPlanFromPriceId(priceId)
-  );
-
-  if (!uid && !profileId) {
-    return {
-      ok: false,
-      reason: "Brak uid/profileId w metadata subskrypcji.",
-    };
-  }
-
-  if (!PAID_PLANS.includes(plan)) {
-    return {
-      ok: false,
-      reason: "Nieprawidłowy plan subskrypcji.",
-      uid,
-      profileId,
-      plan,
-      priceId,
-    };
-  }
-
-  const profile = uid
-    ? await Profile.findOne({ userId: uid })
-    : await Profile.findById(profileId);
-
-  if (!profile) {
-    return {
-      ok: false,
-      reason: "Nie znaleziono profilu.",
-      uid,
-      profileId,
-      plan,
-    };
-  }
-
-  const status = String(subscription.status || "inactive");
-
-  const currentPeriodStart = unixToDate(subscription.current_period_start);
-  const currentPeriodEnd = unixToDate(subscription.current_period_end);
-
-  profile.billing = {
-    ...(profile.billing || {}),
-    plan,
-    status,
-    stripeCustomerId: String(
-      subscription.customer || profile.billing?.stripeCustomerId || ""
-    ),
-    stripeSubscriptionId: String(subscription.id || ""),
-    stripePriceId: priceId,
-    currentPeriodStart,
-    currentPeriodEnd,
-    cancelAtPeriodEnd: !!subscription.cancel_at_period_end,
-    lastPaymentAt: ACTIVE_SUBSCRIPTION_STATUSES.includes(status)
-      ? new Date()
-      : profile.billing?.lastPaymentAt || null,
-  };
-
-  if (ACTIVE_SUBSCRIPTION_STATUSES.includes(status)) {
-    profile.isVisible = true;
-    profile.visibleUntil = currentPeriodEnd || addDays(new Date(), DURATION_DAYS);
-  }
-
-  /**
-   * Przy statusach typu canceled/unpaid/incomplete nie wyłączamy profilu od razu.
-   * Widoczność nadal zależy od visibleUntil.
-   * Dzięki temu np. ręcznie opłacony okres Free nie znika przypadkiem.
-   */
-
-  await profile.save();
-
-  console.log("✅ Zaktualizowano subskrypcję profilu:", {
-    uid: profile.userId,
-    profileId: String(profile._id),
-    plan,
-    status,
-    visibleUntil: profile.visibleUntil
-      ? new Date(profile.visibleUntil).toISOString()
-      : null,
-    currentPeriodEnd: currentPeriodEnd
-      ? currentPeriodEnd.toISOString()
-      : null,
-  });
-
-  return {
-    ok: true,
-    uid: profile.userId,
-    profileId: String(profile._id),
-    plan,
-    status,
-    priceId,
-    visibleUntil: profile.visibleUntil
-      ? new Date(profile.visibleUntil).toISOString()
-      : null,
-  };
-};
+const applySubscriptionToProfile = (subscription, fallback = {}) => recovery.applySubscriptionToProfile(Profile, subscription, fallback);
 
 /**
  * Jednorazowe przedłużenie widoczności.
@@ -266,17 +144,15 @@ const handleExtensionPayment = async (session) => {
     nextVisibleUntil = cap;
   }
 
-  profile.visibleUntil = nextVisibleUntil;
-  profile.isVisible = true;
-
-  if (session.customer) {
-    profile.billing = {
-      ...(profile.billing || {}),
-      stripeCustomerId: String(session.customer),
-    };
-  }
-
-  await profile.save();
+  // Zapis okresu i identyfikatora płatności w jednym atomowym kroku.
+  const fields = {
+    visibleUntil: { $min: [{ $add: [{ $max: [{ $ifNull: ["$visibleUntil", now] }, now] }, daysToAdd * 86400000] }, cap] },
+    appliedExtensionPayments: { $concatArrays: [{ $ifNull: ["$appliedExtensionPayments", []] }, [session.id]] },
+  };
+  if (!recovery.isModerationBlocked(profile, now)) fields.isVisible = { $cond: [{ $eq: ["$visibilityBlockedByAdmin", true] }, "$isVisible", true] };
+  if (session.customer) fields["billing.stripeCustomerId"] = recovery.idOf(session.customer);
+  const saved = await Profile.updateOne({ _id: profile._id, appliedExtensionPayments: { $ne: session.id } }, [{ $set: fields }]);
+  if (!saved.modifiedCount) return { ok: true, skipped: true, uid, reason: "Ta płatność już przedłużyła profil." };
 
   console.log("💰 Przedłużono widoczność profilu:", {
     uid,
@@ -354,6 +230,8 @@ const handleSubscriptionDeleted = async (subscription) => {
     };
   }
 
+  if (profile.billing?.stripeSubscriptionId && profile.billing.stripeSubscriptionId !== subscription.id) return { ok: true, skipped: true, reason: "Anulowanie starszej subskrypcji.", uid: profile.userId };
+
   /**
    * Po anulowaniu subskrypcji:
    * - profil wraca na Free,
@@ -395,7 +273,7 @@ const handleSubscriptionDeleted = async (subscription) => {
 };
 
 const handleInvoicePaid = async (invoice) => {
-  const subscriptionId = String(invoice.subscription || "");
+  const subscriptionId = recovery.getInvoiceSubscriptionId(invoice);
 
   if (!subscriptionId) {
     return {
@@ -411,7 +289,7 @@ const handleInvoicePaid = async (invoice) => {
 };
 
 const handleInvoicePaymentFailed = async (invoice) => {
-  const subscriptionId = String(invoice.subscription || "");
+  const subscriptionId = recovery.getInvoiceSubscriptionId(invoice);
 
   if (!subscriptionId) {
     return {
@@ -422,6 +300,8 @@ const handleInvoicePaymentFailed = async (invoice) => {
   }
 
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+  if (subscription.status !== "past_due") return applySubscriptionToProfile(subscription);
 
   const uid = String(subscription?.metadata?.uid || "");
   const profileId = String(subscription?.metadata?.profileId || "");
@@ -446,8 +326,8 @@ const handleInvoicePaymentFailed = async (invoice) => {
     };
   }
 
-  const currentPeriodStart = unixToDate(subscription.current_period_start);
-  const currentPeriodEnd = unixToDate(subscription.current_period_end);
+  const currentPeriodStart = recovery.getSubscriptionPeriod(subscription).start;
+  const currentPeriodEnd = recovery.getSubscriptionPeriod(subscription).end;
 
   profile.billing = {
     ...(profile.billing || {}),
@@ -461,7 +341,7 @@ const handleInvoicePaymentFailed = async (invoice) => {
     currentPeriodEnd,
     cancelAtPeriodEnd: !!subscription.cancel_at_period_end,
     lastPaymentFailedAt: new Date(),
-    graceUntil: addDays(new Date(), 7),
+    graceUntil: addDays(new Date(Number(invoice.created) * 1000 || Date.now()), 7),
   };
 
   /**
@@ -533,7 +413,7 @@ router.post(
           break;
 
         case "customer.subscription.updated":
-          result = await applySubscriptionToProfile(event.data.object);
+          result = await applySubscriptionToProfile(await stripe.subscriptions.retrieve(event.data.object.id));
           break;
 
         case "customer.subscription.deleted":
@@ -581,18 +461,18 @@ router.post(
 
       console.error("❌ Webhook result failed:", result);
 
-      return res.json({
+      return res.status(500).json({
         received: true,
         result,
       });
     } catch (err) {
       console.error("❌ Webhook handler error:", err);
 
-      if (event?.id) {
+      if (event?.id && !err.billingBusy) {
         await updateBillingEvent(event.id, {
           status: "failed",
           errorMessage: err?.message || "Webhook handler error.",
-        });
+        }).catch(logError => console.error("Nie zapisano błędu webhooka:", logError.message));
       }
 
       return res.status(500).send("Webhook handler error");

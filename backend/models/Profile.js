@@ -585,6 +585,8 @@ const profileSchema = new mongoose.Schema(
 
     // Widoczność profilu publicznego
     isVisible: { type: Boolean, default: true },
+    visibilityBlockedByAdmin: { type: Boolean },
+    appliedExtensionPayments: { type: [String], default: [], select: false },
 
     visibleUntil: {
       type: Date,
@@ -625,31 +627,7 @@ const profileSchema = new mongoose.Schema(
     hasBusiness: { type: Boolean, default: false },
     nip: { type: String, default: "", trim: true },
 
-    theme: {
-      variant: {
-        type: String,
-        enum: ["system", "violet", "blue", "green", "orange", "red", "dark"],
-        default: "system",
-      },
-
-      primary: {
-        type: String,
-        default: "",
-        validate: {
-          validator: (v) => !v || hex.test(v),
-          message: "theme.primary musi być HEX (#RGB lub #RRGGBB)",
-        },
-      },
-
-      secondary: {
-        type: String,
-        default: "",
-        validate: {
-          validator: (v) => !v || hex.test(v),
-          message: "theme.secondary musi być HEX (#RGB lub #RRGGBB)",
-        },
-      },
-    },
+    theme: { type: require("./ProfileDesign"), default: () => ({}) },
 
     slug: {
       type: String,

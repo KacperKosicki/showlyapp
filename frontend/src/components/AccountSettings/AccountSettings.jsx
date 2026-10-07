@@ -404,6 +404,41 @@ const AccountSettings = () => {
     );
   }
 
+  return (
+    <AccountSettingsView
+      user={user}
+      displayName={displayName}
+      preview={preview}
+      file={file}
+      loadingAction={loadingAction}
+      alert={alert}
+      setAlert={setAlert}
+      setDisplayName={setDisplayName}
+      onFileChange={onFileChange}
+      handleSaveAvatar={handleSaveAvatar}
+      handleRemoveAvatar={handleRemoveAvatar}
+      handleSaveDisplayName={handleSaveDisplayName}
+      handlePasswordReset={handlePasswordReset}
+    />
+  );
+};
+
+export const AccountSettingsView = ({
+  user,
+  displayName,
+  preview,
+  file,
+  loadingAction,
+  alert,
+  setAlert,
+  setDisplayName,
+  onFileChange,
+  handleSaveAvatar,
+  handleRemoveAvatar,
+  handleSaveDisplayName,
+  handlePasswordReset,
+}) => {
+  const fallbackImg = '/images/other/no-image.png';
   const hasAvatar = Boolean(preview && preview !== fallbackImg);
   const hasDisplayName = Boolean(displayName.trim());
 
@@ -425,7 +460,7 @@ const AccountSettings = () => {
             <div className={styles.titleBlock}>
               <span className={styles.kicker}>Konto Showly</span>
               <h1>Ustawienia konta</h1>
-              <p>Awatar, nazwa oraz bezpieczeństwo logowania.</p>
+              <p>Zadbaj o zdjęcie, nazwę i bezpieczeństwo swojego konta.</p>
             </div>
 
             <div className={styles.accountIdentity}>
@@ -434,7 +469,7 @@ const AccountSettings = () => {
               </span>
 
               <span className={styles.identityCopy}>
-                <small>Zalogowane konto</small>
+                <small>Twoje konto</small>
                 <strong>
                   {user?.displayName || displayName.trim() || "Użytkownik Showly"}
                 </strong>
@@ -453,7 +488,7 @@ const AccountSettings = () => {
 
                   <div>
                     <span className={styles.settingLabel}>Zdjęcie konta</span>
-                    <h2>Awatar użytkownika</h2>
+                    <h2>Zdjęcie profilowe</h2>
                   </div>
                 </div>
 
@@ -611,7 +646,7 @@ const AccountSettings = () => {
                     className={styles.secondaryButton}
                     icon={<FiLock />}
                   >
-                    Wyślij link do zmiany hasła
+                    Wyślij link
                   </ActionButton>
                 </div>
               </section>
@@ -620,7 +655,7 @@ const AccountSettings = () => {
 
           <footer className={styles.panelFooter}>
             <FiShield aria-hidden="true" />
-            <span>Każdą sekcję zapisujesz osobno.</span>
+            <span>Zmiany zapisujesz osobno w każdej sekcji.</span>
           </footer>
         </main>
       </div>

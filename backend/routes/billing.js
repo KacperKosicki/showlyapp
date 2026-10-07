@@ -6,6 +6,7 @@ const router = express.Router();
 
 const requireAuth = require("../middleware/requireAuth");
 const Profile = require("../models/Profile");
+const { applySubscriptionToProfile, isModerationBlocked } = require("../utils/billingRecovery");
 
 const {
   getPublicBilling,
@@ -315,6 +316,35 @@ router.post("/portal", requireAuth, async (req, res) => {
 // GET /api/billing/status
 // Status widoczności, planu, limitów i subskrypcji
 // ------------------------------------
+router.post("/reconcile", requireAuth, async (req, res) => {
+  try {
+    const profile = await Profile.findOne({ userId: req.auth.uid });
+    if (!profile) return res.status(404).json({ error: "Nie znaleziono wizytówki." });
+    const customerId = profile.billing?.stripeCustomerId;
+    let subscription;
+    if (profile.billing?.stripeSubscriptionId) {
+      try { subscription = await stripe.subscriptions.retrieve(profile.billing.stripeSubscriptionId); }
+      catch (error) { if (error.code !== "resource_missing") throw error; }
+    }
+    if (customerId && (!subscription || !["active", "trialing", "past_due"].includes(subscription.status))) {
+      const subscriptions = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 100 });
+      subscription = subscriptions.data.find(item => ["active", "trialing"].includes(item.status) && item.metadata?.uid === profile.userId)
+        || subscriptions.data.find(item => item.status === "past_due" && item.metadata?.uid === profile.userId)
+        || subscription;
+    }
+    if (!subscription) return res.status(409).json({ error: "Nie znaleziono subskrypcji tej wizytówki w Stripe. Skontaktuj się z obsługą i podaj numer płatności." });
+    const result = await applySubscriptionToProfile(Profile, subscription, { uid: profile.userId, profileId: String(profile._id) });
+    if (!result.ok) return res.status(409).json({ error: result.reason });
+    return res.json({ ...result, message: result.blockedByAdmin
+      ? "Płatność sprawdzona. Wizytówka ma blokadę administracyjną — wymaga kontaktu z obsługą."
+      : result.restored ? "Płatność potwierdzona. Twoja wizytówka jest ponownie widoczna."
+      : "Status został zaktualizowany. Subskrypcja nie ma aktualnie ważnego okresu widoczności — sprawdź płatność w panelu Stripe." });
+  } catch (error) {
+    console.error("Billing reconciliation failed:", error.message);
+    return res.status(503).json({ error: "Nie udało się sprawdzić subskrypcji. Spróbuj ponownie za chwilę." });
+  }
+});
+
 router.get("/status", requireAuth, async (req, res) => {
   try {
     const uid = String(req.auth?.uid || "");
@@ -324,7 +354,7 @@ router.get("/status", requireAuth, async (req, res) => {
     }
 
     const profile = await Profile.findOne({ userId: uid }).select(
-      "userId visibleUntil isVisible billing photos services links quickAnswers description bookingMode team"
+      "userId visibleUntil isVisible visibilityBlockedByAdmin billing photos services links quickAnswers description bookingMode team"
     );
 
     if (!profile) {
@@ -377,6 +407,8 @@ router.get("/status", requireAuth, async (req, res) => {
       visibility: {
         isVisible: !!profile.isVisible && visibleUntil > now,
         rawIsVisible: !!profile.isVisible,
+        blockedByAdmin: isModerationBlocked(profile, now),
+        canReconcile: !!(profile.billing?.stripeCustomerId || profile.billing?.stripeSubscriptionId),
         visibleUntil: visibleUntil.toISOString(),
         canExtend,
         renewWindowDays: RENEW_WINDOW_DAYS,

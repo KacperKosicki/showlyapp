@@ -1,3 +1,5 @@
+import { Children } from "react";
+import { normalizeProfileDesign, getProfileDesignVars, getProfileDesignAttributes, getProfileBookingPresentation } from "../../utils/profileDesign";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import styles from "./PublicProfile.module.scss";
@@ -162,32 +164,10 @@ const unlockBodyScroll = () => {
   });
 };
 
-const THEME_PRESETS = {
-  violet: { primary: "#6f4ef2", secondary: "#ff4081" },
-  purple: { primary: "#6f4ef2", secondary: "#a78bfa" },
-  pink: { primary: "#ec4899", secondary: "#fb7185" },
-  rose: { primary: "#e11d48", secondary: "#fb7185" },
-  blue: { primary: "#2563eb", secondary: "#06b6d4" },
-  green: { primary: "#22c55e", secondary: "#a3e635" },
-  orange: { primary: "#f97316", secondary: "#facc15" },
-  red: { primary: "#ef4444", secondary: "#fb7185" },
-  dark: { primary: "#111827", secondary: "#4b5563" },
-};
-
-const resolveProfileTheme = (theme) => {
-  const variant = typeof theme === "string" ? theme : theme?.variant || "violet";
-  const preset = THEME_PRESETS[variant] || THEME_PRESETS.violet;
-
-  const primary =
-    String(theme?.primary || theme?.accent || "").trim() || preset.primary;
-  const secondary =
-    String(theme?.secondary || theme?.accent2 || "").trim() || preset.secondary;
-
-  return {
-    primary,
-    secondary,
-    banner: `linear-gradient(135deg, ${primary}, ${secondary})`,
-  };
+const ProfileSections = ({ children, theme, className }) => {
+  const visible = Children.toArray(children).filter(child => child.props.id === 'overview' ? Object.values(theme.sections).slice(0, 4).some(Boolean) : theme.sections[child.props.id] !== false);
+  visible.sort((a, b) => theme.sectionOrder.indexOf(a.props.id) - theme.sectionOrder.indexOf(b.props.id));
+  return <main className={className}>{visible}</main>;
 };
 
 const PARTNER_COLORS = {
@@ -378,13 +358,17 @@ export default function PublicProfile() {
 
     const animatedElements = page.querySelectorAll(`.${styles.reveal}`);
 
+    if (typeof IntersectionObserver === "undefined") {
+      animatedElements.forEach(element => element.classList.add(styles.revealVisible));
+      return undefined;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add(styles.revealVisible);
-          } else {
-            entry.target.classList.remove(styles.revealVisible);
+            observer.unobserve(entry.target);
           }
         });
       },
@@ -850,7 +834,8 @@ export default function PublicProfile() {
     ""
   ).toLowerCase();
   const bannerSrc = normalizeAvatar(banner);
-  const showBanner = !!bannerSrc && ["standard", "premium"].includes(publicPlan);
+  const design = normalizeProfileDesign(profile.theme);
+  const showBanner = design.showBanner && !!bannerSrc && ["standard", "premium"].includes(publicPlan);
 
   const gallery = normalizePhotos(profile.photos);
   const hasGallery = gallery.length > 0;
@@ -878,13 +863,11 @@ export default function PublicProfile() {
   const myRating = ratedByArr.find((r) => r.userId === uid);
   const myRatingLabel = myRating?.rating ? Number(myRating.rating).toFixed(1) : null;
 
-  const themeVars = resolveProfileTheme(profile.theme);
+  const themeVars = getProfileDesignVars(design);
   const partner = resolvePartnerData(partnership);
 
   const cssVars = {
-    "--pp-primary": themeVars.primary,
-    "--pp-secondary": themeVars.secondary,
-    "--pp-banner": themeVars.banner,
+    ...themeVars,
     "--pp-banner-image": showBanner ? `url("${bannerSrc.replace(/"/g, "%22")}")` : "none",
     "--pp-partner": partner.color,
     "--pp-partner-soft": `color-mix(in srgb, ${partner.color} 16%, white)`,
@@ -907,31 +890,8 @@ export default function PublicProfile() {
     ? !!billingFeatures.socialMedia
     : true;
 
-  const canUseBooking = hasBillingFeatures
-    ? !!billingFeatures.booking
-    : true;
-
-  const canUseRequestBlocking = hasBillingFeatures
-    ? !!billingFeatures.requestBlocking
-    : true;
-
-  const rawBookingMode = String(profile?.bookingMode || "off").toLowerCase();
-
-  const bookingMode =
-    rawBookingMode === "calendar" && canUseBooking
-      ? "calendar"
-      : rawBookingMode === "request-blocking" && canUseRequestBlocking
-        ? "request-blocking"
-        : rawBookingMode === "request-open"
-          ? "request-open"
-          : "off";
-
-  const bookingEnabled = !["off", "none", "disabled", ""].includes(bookingMode);
-  const isCalendar = bookingMode === "calendar";
-
-  const allowBookingUI = bookingEnabled && profile?.showAvailableDates !== false;
+  const { bookingMode, isCalendar, allowBookingUI, bookBtnLabel } = getProfileBookingPresentation(profile);
   const showBookButton = !isOwner && allowBookingUI;
-  const bookBtnLabel = isCalendar ? "Zarezerwuj termin" : "Wyślij zapytanie";
 
   const getServiceCtaLabel = () => {
     if (isCalendar) return "Zarezerwuj tę usługę";
@@ -1028,7 +988,7 @@ export default function PublicProfile() {
   const priceShortLabel = hasPrice ? "od " + pf + " zł" : "brak danych";
 
   return (
-    <div ref={pageRef} className={styles.page} style={cssVars}>
+    <div ref={pageRef} className={styles.page} style={cssVars} {...getProfileDesignAttributes(design)}>
       <div className={styles.pageBackdrop} aria-hidden="true">
         <span className={styles.backdropLine} />
         <span className={styles.backdropCircle} />
@@ -1129,6 +1089,7 @@ export default function PublicProfile() {
                 )}
 
                 <h1 className={styles.heroTitle}>{name}</h1>
+                {design.tagline && <p className={styles.customTagline}>{design.tagline}</p>}
 
                 <div className={styles.heroMeta}>
                   <span>
@@ -1136,7 +1097,7 @@ export default function PublicProfile() {
                     {location || "Brak lokalizacji"}
                   </span>
 
-                  <span>
+                  <span hidden={!design.sections.reviews}>
                     <FaStar aria-hidden="true" />
                     <strong>{avgRatingLabel}</strong>
                     {reviewsCount} opinii
@@ -1169,7 +1130,7 @@ export default function PublicProfile() {
                 </div>
               </div>
 
-              <div className={styles.heroStat}>
+              <div className={styles.heroStat} hidden={!design.sections.price}>
                 <span className={styles.heroStatIcon}>
                   <FaMoneyBillWave aria-hidden="true" />
                 </span>
@@ -1179,7 +1140,7 @@ export default function PublicProfile() {
                 </div>
               </div>
 
-              <div className={styles.heroStat}>
+              <div className={styles.heroStat} hidden={!design.sections.services}>
                 <span className={styles.heroStatIcon}>
                   <FaListUl aria-hidden="true" />
                 </span>
@@ -1189,7 +1150,7 @@ export default function PublicProfile() {
                 </div>
               </div>
 
-              <div className={styles.heroStat}>
+              <div className={styles.heroStat} hidden={!design.sections.gallery}>
                 <span className={styles.heroStatIcon}>
                   <FaImage aria-hidden="true" />
                 </span>
@@ -1219,7 +1180,7 @@ export default function PublicProfile() {
                   onClick={startMessage}
                 >
                   <FaPaperPlane aria-hidden="true" />
-                  <span>Napisz wiadomość</span>
+                  <span>{design.ctaLabel || "Napisz wiadomość"}</span>
                 </button>
               )}
 
@@ -1264,15 +1225,16 @@ export default function PublicProfile() {
           </aside>
         </header>
 
-        <main className={styles.profileContent}>
+        <ProfileSections className={styles.profileContent} theme={design}>
           <section
             className={cn(
               styles.overviewBand,
-              !hasProfileContact && styles.overviewWithoutContact
+              (!hasProfileContact || !design.sections.contact) && styles.overviewWithoutContact
             )}
             id="overview"
           >
             <article
+              hidden={!design.sections.description}
               className={cn(
                 styles.aboutCard,
                 styles.reveal,
@@ -1309,7 +1271,7 @@ export default function PublicProfile() {
               )}
             </article>
 
-            {hasProfileContact && (
+            {hasProfileContact && design.sections.contact && (
               <section
                 className={cn(
                   styles.contactCard,
@@ -1399,6 +1361,7 @@ export default function PublicProfile() {
             )}
 
             <article
+              hidden={!design.sections.price}
               className={cn(
                 styles.priceCard,
                 styles.reveal,
@@ -1429,6 +1392,7 @@ export default function PublicProfile() {
             </article>
 
             <section
+              hidden={!design.sections.links}
               className={cn(
                 styles.resourcesCard,
                 styles.reveal,
@@ -1875,7 +1839,7 @@ export default function PublicProfile() {
               )}
             </div>
           </section>
-        </main>
+        </ProfileSections>
       </div>
 
       {fullscreenImage &&

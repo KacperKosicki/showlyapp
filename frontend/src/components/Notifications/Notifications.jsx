@@ -8,6 +8,7 @@ import axios from "axios";
 import { Link, useLocation } from "react-router-dom";
 import {
   FiArrowUpRight,
+  FiBell,
   FiInbox,
   FiMail,
   FiSend,
@@ -16,9 +17,21 @@ import {
 import { auth } from "../../firebase";
 
 import styles from "./Notifications.module.scss";
+import EditorGroup from "../YourProfile/sections/EditorGroup";
 
 const API = process.env.REACT_APP_API_URL;
 const DEFAULT_AVATAR = "/images/other/no-image.png";
+
+const formatCount = (count, singular, few, many) => {
+  const ending = count % 10;
+  const lastTwo = count % 100;
+  const word = count === 1
+    ? singular
+    : ending >= 2 && ending <= 4 && (lastTwo < 12 || lastTwo > 14)
+      ? few
+      : many;
+  return `${count} ${word}`;
+};
 
 const pickUrl = (value) => {
   if (!value) {
@@ -533,7 +546,7 @@ const Notifications = ({ user, setUnreadCount }) => {
               <div className={styles.bottomRow}>
                 {isUnread ? (
                   <span className={styles.unreadLabel}>
-                    {conversation.unreadCount} nieprzeczytane
+                    {formatCount(conversation.unreadCount, "nieprzeczytana", "nieprzeczytane", "nieprzeczytanych")}
                   </span>
                 ) : (
                   <span className={styles.readLabel}>Przeczytane</span>
@@ -593,6 +606,7 @@ const Notifications = ({ user, setUnreadCount }) => {
   );
 
   const renderGroup = ({
+    number,
     title,
     label,
     badge,
@@ -603,7 +617,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     emptyText,
     disabled = false,
   }) => (
-    <section className={styles.messageGroup}>
+    <EditorGroup title={`${number} / ${title}`} className={styles.messageGroup}>
       <header className={styles.groupHeader}>
         <span className={styles.groupIcon}>
           <Icon aria-hidden="true" />
@@ -611,7 +625,7 @@ const Notifications = ({ user, setUnreadCount }) => {
 
         <div className={styles.groupHeading}>
           <span className={styles.groupLabel}>{label}</span>
-          <h2>{title}</h2>
+          <p>{formatCount(items.length, "rozmowa", "rozmowy", "rozmów")} w tej sekcji</p>
         </div>
 
         <span className={styles.groupBadge}>{badge}</span>
@@ -630,7 +644,7 @@ const Notifications = ({ user, setUnreadCount }) => {
           )}
         </ul>
       )}
-    </section>
+    </EditorGroup>
   );
 
   return (
@@ -641,6 +655,7 @@ const Notifications = ({ user, setUnreadCount }) => {
             <div className={styles.titleBlock}>
               <span className={styles.kicker}>Showly / Wiadomości</span>
               <h1>Centrum wiadomości</h1>
+              <p>Rozmowy z klientami, kontakt z innymi profilami i komunikaty Showly w jednym miejscu.</p>
 
               {hasMyProfile && myProfile?.name ? (
                 <p>
@@ -649,7 +664,11 @@ const Notifications = ({ user, setUnreadCount }) => {
               ) : null}
             </div>
 
-            <div className={styles.headerStats}>
+            <FiBell className={styles.headerIcon} aria-hidden="true" />
+          </header>
+
+          <EditorGroup title="01 / Twoja skrzynka w liczbach" className={styles.summaryGroup}>
+            <div className={styles.headerStats} aria-live="polite">
               <div className={styles.headerStat}>
                 <span>Nieprzeczytane</span>
                 <strong>{loading ? "—" : totalUnread}</strong>
@@ -660,11 +679,11 @@ const Notifications = ({ user, setUnreadCount }) => {
                 <strong>{loading ? "—" : totalThreads}</strong>
               </div>
             </div>
-          </header>
+          </EditorGroup>
 
           <div className={styles.content}>
             {loading ? (
-              <section className={styles.messageGroup}>
+              <EditorGroup title="02 / Twoje wiadomości" className={styles.messageGroup}>
                 <header className={styles.groupHeader}>
                   <span className={styles.groupIcon}>
                     <FiMail aria-hidden="true" />
@@ -672,28 +691,29 @@ const Notifications = ({ user, setUnreadCount }) => {
 
                   <div className={styles.groupHeading}>
                     <span className={styles.groupLabel}>Ładowanie</span>
-                    <h2>Pobieramy Twoje wiadomości.</h2>
+                    <p role="status">Pobieramy Twoje wiadomości…</p>
                   </div>
 
                   <span className={styles.groupBadge}>—</span>
                 </header>
 
-                <ul className={styles.list}>
+                <ul className={styles.list} aria-hidden="true">
                   {Array.from({ length: 4 }).map((_, index) => (
                     <SkeletonItem key={index} />
                   ))}
                 </ul>
-              </section>
+              </EditorGroup>
             ) : (
               <div className={styles.messages}>
                 {renderGroup({
+                  number: "02",
                   title: `Wiadomości do profilu${
                     myProfile?.name ? ` „${myProfile.name}”` : ""
                   }`,
                   label: "Odebrane przez profil",
                   badge: hasMyProfile
                     ? inboxUnread > 0
-                      ? `${inboxUnread} nowe`
+                      ? formatCount(inboxUnread, "nowa", "nowe", "nowych")
                       : inboxToMyProfile.length
                     : "—",
                   Icon: FiInbox,
@@ -709,11 +729,12 @@ const Notifications = ({ user, setUnreadCount }) => {
                 })}
 
                 {renderGroup({
+                  number: "03",
                   title: "Rozmowy z innymi profilami",
                   label: "Wysłane z Twojego konta",
                   badge:
                     outboxUnread > 0
-                      ? `${outboxUnread} nowe`
+                      ? formatCount(outboxUnread, "nowa", "nowe", "nowych")
                       : myAccountToOtherProfiles.length,
                   Icon: FiSend,
                   items: myAccountToOtherProfiles,
@@ -724,11 +745,12 @@ const Notifications = ({ user, setUnreadCount }) => {
                 })}
 
                 {renderGroup({
+                  number: "04",
                   title: "Wiadomości systemowe",
                   label: "Komunikaty Showly",
                   badge:
                     systemUnread > 0
-                      ? `${systemUnread} nowe`
+                      ? formatCount(systemUnread, "nowa", "nowe", "nowych")
                       : systemConversations.length,
                   Icon: FiMail,
                   items: systemConversations,

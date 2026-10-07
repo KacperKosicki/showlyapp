@@ -3,6 +3,12 @@ import { auth } from "../firebase";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
+export const reconcileBilling = async () => {
+  const headers = await getAuthHeaders();
+  const res = await axios.post(`${API_URL}/api/billing/reconcile`, {}, { headers });
+  return res.data;
+};
+
 const getAuthHeaders = async () => {
   const user = auth.currentUser;
 

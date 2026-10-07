@@ -1,3 +1,4 @@
+import { normalizeProfileDesign } from "../../../utils/profileDesign";
 import { useState } from "react";
 import axios from "axios";
 
@@ -246,21 +247,10 @@ const useProfileSave = ({
       const { photoHashes, ...payload } = editData;
 
       const themeDraft = payload.theme || {};
-      const mappedTheme = {
-        variant: themeDraft.variant || "system",
-        primary: themeDraft.primary || "#6f4ef2",
-        secondary: themeDraft.secondary || "#ff4081",
-      };
+      const mappedTheme = normalizeProfileDesign(themeDraft);
 
-      const currentTheme = profile?.theme || {};
 
-      const safeTheme = canUsePremiumThemes
-        ? mappedTheme
-        : {
-          variant: currentTheme.variant || "system",
-          primary: currentTheme.primary || "#6f4ef2",
-          secondary: currentTheme.secondary || "#ff4081",
-        };
+      const safeTheme = canUsePremiumThemes ? mappedTheme : profile?.theme || {};
 
       const contact = payload.contact || {};
 

@@ -1,0 +1,99 @@
+// Decorative layers stay inside their own clipped container, below interactive content.
+@mixin sectionBackdrop($line, $accent) {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    width: clamp(11rem, 29vw, 30rem);
+    aspect-ratio: 1;
+    border: 1px solid $accent;
+    opacity: 0.13;
+    animation: backdropFloat 20s ease-in-out infinite alternate;
+  }
+
+  &::before {
+    top: 38%;
+    right: -13%;
+    border-radius: 50%;
+    box-shadow: 0 0 0 22px $line;
+  }
+
+  &::after {
+    left: -15%;
+    bottom: 8%;
+    border-radius: 22%;
+    border-style: dashed;
+    animation-delay: -10s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before,
+    &::after { animation: none; }
+  }
+}
+
+@mixin backdropWord($line, $size) {
+  position: absolute;
+  top: 0.12em;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: $font-heading;
+  font-size: $size;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.065em;
+  color: transparent;
+  -webkit-text-stroke: 1px $line;
+  opacity: 0.65;
+  user-select: none;
+}
+
+@mixin backdropDots($line, $angle: 115deg) {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient($line 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient($angle, transparent 20%, #000 100%);
+  -webkit-mask-image: linear-gradient($angle, transparent 20%, #000 100%);
+  opacity: 0.6;
+  animation: backdropDotsDrift 24s linear infinite;
+
+  @media (max-width: 760px) {
+    background-size: 20px 20px;
+    animation-name: backdropDotsDriftMobile;
+  }
+
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+@mixin backdropArrowMotion {
+  // Individual translate preserves each arrow's existing rotation.
+  animation: backdropArrowFloat 9s ease-in-out infinite alternate;
+  @media (prefers-reduced-motion: reduce) { animation: none; }
+}
+
+@keyframes backdropDotsDrift {
+  to { background-position: 24px 24px; }
+}
+
+@keyframes backdropDotsDriftMobile {
+  to { background-position: 20px 20px; }
+}
+
+@keyframes backdropFloat {
+  from { transform: translateY(0) rotate(-8deg); }
+  to { transform: translateY(-18px) rotate(8deg); }
+}
+
+@keyframes backdropArrowFloat {
+  from { translate: 0 0; }
+  to { translate: 0 -10px; }
+}

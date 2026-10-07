@@ -16,12 +16,12 @@ const ProfileHeader = ({ profile, isEditing, onEdit }) => {
 
       <div className={styles.headTop}>
         <div className={styles.headText}>
-          <h2 className={styles.heading}>Panel Twojego profilu</h2>
+          <h1 className={styles.heading}>Twoja wizytówka</h1>
 
           <p className={styles.description}>
             {profile ? (
               <>
-                Pomyślnie wczytano Twój profil: <strong>{profile.name}</strong>
+                Zarządzasz profilem: <strong>{profile.name}</strong>
               </>
             ) : (
               'Ładowanie danych…'
@@ -34,12 +34,12 @@ const ProfileHeader = ({ profile, isEditing, onEdit }) => {
             <Link
               to={profile?.slug ? `/${profile.slug}` : '#'}
               state={profile?.slug ? { scrollToId: 'profileWrapper' } : undefined}
-              className={styles.primary}
+              className={styles.secondary}
               style={!profile?.slug ? { pointerEvents: 'none', opacity: 0.6 } : undefined}
               aria-label="Przejdź do publicznego profilu"
               title={profile?.slug ? 'Zobacz swój publiczny profil' : 'Brak sluga profilu'}
             >
-              Przejdź do widoku profilu
+              Zobacz profil
             </Link>
 
             <button

@@ -1,3 +1,4 @@
+import { normalizeProfileDesign } from "../../../utils/profileDesign";
 import { useCallback, useState } from "react";
 import axios from "axios";
 
@@ -46,11 +47,7 @@ const normalizeServiceForEdit = (service = {}, index = 0) => ({
 const normalizeProfileForEdit = (profile = {}) => {
   const photos = profile.photos || [];
 
-  const normalizedTheme = {
-    variant: profile.theme?.variant || "system",
-    primary: profile.theme?.primary || "#6f4ef2",
-    secondary: profile.theme?.secondary || "#ff4081",
-  };
+  const normalizedTheme = normalizeProfileDesign(profile.theme);
 
   const normalizedContact = {
     email: profile.contact?.email || "",
@@ -104,11 +101,13 @@ const useProfileData = ({ user, authHeaders, fetchBillingStatus }) => {
   const [editData, setEditData] = useState({});
   const [initialEditData, setInitialEditData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     if (!user?.uid) return null;
 
+    setLoadError(false);
     try {
       const res = await axios.get(
         `${process.env.REACT_APP_API_URL}/api/profiles/by-user/${user.uid}`,
@@ -149,6 +148,7 @@ const useProfileData = ({ user, authHeaders, fetchBillingStatus }) => {
         setInitialEditData(null);
         setNotFound(true);
       } else {
+        setLoadError(true);
         console.error("Błąd podczas pobierania profilu:", err);
       }
 
@@ -165,6 +165,7 @@ const useProfileData = ({ user, authHeaders, fetchBillingStatus }) => {
     initialEditData,
     loading,
     notFound,
+    loadError,
     fetchProfile,
   };
 };
