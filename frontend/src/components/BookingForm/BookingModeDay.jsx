@@ -345,7 +345,7 @@ export default function BookingModeDay({
 
   return (
     <>
-<BookingSteps className={styles.progress} steps={[{ label: "Usługa i sposób", done: !serviceRequiredForBooking || Boolean(selectedService) }, { label: "Wybierz dzień", done: Boolean(selectedDate) }, { label: "Sprawdź i wyślij", done: false }]} />
+      <BookingSteps className={styles.progress} steps={[{ label: "Usługa i sposób", done: !serviceRequiredForBooking || Boolean(selectedService) }, { label: "Wybierz dzień", done: Boolean(selectedDate) }, { label: "Sprawdź i wyślij", done: false }]} />
       <div className={styles.topGrid}>
 
 
@@ -458,7 +458,7 @@ export default function BookingModeDay({
             <button
               type="button"
               disabled={isSubmitting || isBefore(startOfMonth(currentMonth), addMonths(startOfMonth(new Date()), 1))}
-                onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
               aria-label="Poprzedni miesiąc"
             >
               <FiChevronLeft aria-hidden="true" />
@@ -644,24 +644,24 @@ export default function BookingModeDay({
         </div>
       </div>
 
-        <label className={`${styles.field} ${styles.fieldWide}`}>
-          <div className={styles.fieldHeader}>
-            <div>
-              <span className={styles.fieldEyebrow}>03 / Dodatkowe informacje</span>
-              <h3 className={styles.fieldTitle}>Opis lub uwagi</h3>
-            </div>
-
-            <span className={styles.fieldHint}>opcjonalnie</span>
+      <label className={`${styles.field} ${styles.fieldWide}`}>
+        <div className={styles.fieldHeader}>
+          <div>
+            <span className={styles.fieldEyebrow}>03 / Dodatkowe informacje</span>
+            <h3 className={styles.fieldTitle}>Opis lub uwagi</h3>
           </div>
 
-          <textarea
-            className={styles.textarea}
-            rows="3"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Opisz, czego potrzebujesz w danym dniu…"
-          />
-        </label>
+          <span className={styles.fieldHint}>opcjonalnie</span>
+        </div>
+
+        <textarea
+          className={styles.textarea}
+          rows="3"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Opisz, czego potrzebujesz w danym dniu…"
+        />
+      </label>
 
       <form onSubmit={handleSubmit} className={styles.submitBar}>
         <LoadingButton

@@ -7,15 +7,12 @@
   --favorites-lime: #bfff55;
   --favorites-line: rgba(23, 25, 23, 0.18);
   width: 100%;
-  padding: clamp(104px, 10vw, 152px) clamp(16px, 3vw, 44px)
-    clamp(76px, 8vw, 124px);
+  padding: clamp(104px, 10vw, 152px) clamp(16px, 3vw, 44px) clamp(76px, 8vw, 124px);
   overflow: hidden;
   background:
-    radial-gradient(
-      circle at 7% 16%,
+    radial-gradient(circle at 7% 16%,
       rgba(112, 79, 247, 0.11),
-      transparent 24rem
-    ),
+      transparent 24rem),
     var(--app-bg, #f7f7f7);
   color: var(--favorites-ink);
 }
@@ -175,11 +172,9 @@
 .content {
   padding: clamp(22px, 3vw, 42px);
   background:
-    linear-gradient(
-      135deg,
+    linear-gradient(135deg,
       color-mix(in srgb, var(--favorites-purple) 6%, transparent),
-      transparent 42%
-    ),
+      transparent 42%),
     var(--favorites-paper);
 }
 
@@ -289,7 +284,7 @@
   scroll-snap-align: start;
 }
 
-.cardWrap > * {
+.cardWrap>* {
   width: 100%;
   max-width: none;
   min-width: 0;
@@ -466,12 +461,10 @@
   position: absolute;
   inset: 0;
   transform: translateX(-110%);
-  background: linear-gradient(
-    100deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.55) 48%,
-    transparent 76%
-  );
+  background: linear-gradient(100deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.55) 48%,
+      transparent 76%);
   animation: favoritesShimmer 1.25s infinite;
 }
 
@@ -502,8 +495,7 @@
 
 @media (max-width: 720px) {
   .section {
-    padding: calc(82px + var(--safe-top, 0px)) 10px
-      calc(60px + var(--safe-bottom, 0px));
+    padding: calc(82px + var(--safe-top, 0px)) 10px calc(60px + var(--safe-bottom, 0px));
   }
 
   .collection {
@@ -708,11 +700,9 @@
   --favorites-soft: #232630;
   --favorites-line: rgba(244, 241, 234, 0.17);
   background:
-    radial-gradient(
-      circle at 7% 16%,
+    radial-gradient(circle at 7% 16%,
       rgba(168, 149, 255, 0.14),
-      transparent 24rem
-    ),
+      transparent 24rem),
     var(--app-bg, #111216);
 }
 

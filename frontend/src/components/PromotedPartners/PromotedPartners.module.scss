@@ -17,10 +17,7 @@
   width: 100%;
   overflow: hidden;
   padding:
-    clamp(3.5rem, 7vw, 6.5rem)
-    max(clamp(1rem, 3vw, 2rem), var(--safe-right, 0px))
-    calc(clamp(3.5rem, 7vw, 6.5rem) + var(--safe-bottom, 0px))
-    max(clamp(1rem, 3vw, 2rem), var(--safe-left, 0px));
+    clamp(3.5rem, 7vw, 6.5rem) max(clamp(1rem, 3vw, 2rem), var(--safe-right, 0px)) calc(clamp(3.5rem, 7vw, 6.5rem) + var(--safe-bottom, 0px)) max(clamp(1rem, 3vw, 2rem), var(--safe-left, 0px));
   background: var(--app-bg, #f2eee4);
   color: var(--pp-ink);
   font-family: $font-accent;
@@ -95,7 +92,7 @@
   letter-spacing: 0.09em;
   text-transform: uppercase;
 
-  > span {
+  >span {
     width: 7px;
     height: 7px;
     border: 1px solid #111216;
@@ -134,7 +131,7 @@
   display: grid;
   gap: 0.55rem;
 
-  > div {
+  >div {
     min-width: 0;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
@@ -231,10 +228,7 @@
   display: flex;
   flex-direction: column;
   padding:
-    clamp(2rem, 3.3vw, 3.4rem)
-    0
-    clamp(1.5rem, 2.8vw, 2.8rem)
-    var(--gallery-pad);
+    clamp(2rem, 3.3vw, 3.4rem) 0 clamp(1.5rem, 2.8vw, 2.8rem) var(--gallery-pad);
   background: var(--pp-surface);
 }
 
@@ -378,7 +372,7 @@
   animation-delay: var(--card-delay, 0ms);
   transition: transform 190ms ease;
 
-  > article {
+  >article {
     width: 100%;
     max-width: none;
   }
@@ -638,9 +632,7 @@
     --pp-card-width: min(390px, 86vw);
 
     padding:
-      2.8rem max(0.85rem, var(--safe-right, 0px))
-      calc(3rem + var(--safe-bottom, 0px))
-      max(0.85rem, var(--safe-left, 0px));
+      2.8rem max(0.85rem, var(--safe-right, 0px)) calc(3rem + var(--safe-bottom, 0px)) max(0.85rem, var(--safe-left, 0px));
   }
 
   .frame {
@@ -758,12 +750,13 @@
     padding-left: max(0.7rem, var(--safe-left, 0px));
   }
 
-  .legend > div {
+  .legend>div {
     padding: 0.68rem;
   }
 }
 
 @media (hover: none) {
+
   .cardWrap:hover,
   .controlButton:hover:not(:disabled) {
     transform: none;
@@ -771,6 +764,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .reveal,
   .cardWrap,
   .controlButton,

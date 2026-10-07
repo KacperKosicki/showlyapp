@@ -14,10 +14,7 @@
   width: 100%;
   overflow: hidden;
   padding:
-    clamp(3.2rem, 6vw, 5.5rem)
-    max(clamp(1rem, 4vw, 3rem), var(--safe-right, 0px))
-    calc(clamp(1.5rem, 3vw, 2.5rem) + var(--safe-bottom, 0px))
-    max(clamp(1rem, 4vw, 3rem), var(--safe-left, 0px));
+    clamp(3.2rem, 6vw, 5.5rem) max(clamp(1rem, 4vw, 3rem), var(--safe-right, 0px)) calc(clamp(1.5rem, 3vw, 2.5rem) + var(--safe-bottom, 0px)) max(clamp(1rem, 4vw, 3rem), var(--safe-left, 0px));
   border-top: 2px solid var(--footer-border);
   background: var(--footer-bg);
   color: var(--footer-cream);
@@ -98,7 +95,7 @@
   padding-bottom: clamp(1.25rem, 2vw, 1.75rem);
   border-bottom: 1px solid var(--footer-line);
 
-  > p {
+  >p {
     margin: 0;
     color: var(--footer-muted);
     font-size: 0.65rem;
@@ -113,7 +110,7 @@
   align-items: center;
   gap: 0.58rem;
 
-  > strong {
+  >strong {
     color: var(--footer-cream);
     font-family: $font-heading;
     font-size: clamp(1.05rem, 1.6vw, 1.3rem);
@@ -121,7 +118,7 @@
     letter-spacing: -0.04em;
   }
 
-  > small {
+  >small {
     display: inline-flex;
     align-items: center;
     min-height: 19px;
@@ -206,10 +203,7 @@
   flex-direction: column;
   justify-content: center;
   padding:
-    clamp(3rem, 5vw, 5.5rem)
-    clamp(2rem, 4.5vw, 5rem)
-    clamp(3rem, 5vw, 5.5rem)
-    0;
+    clamp(3rem, 5vw, 5.5rem) clamp(2rem, 4.5vw, 5rem) clamp(3rem, 5vw, 5.5rem) 0;
   border-right: 1px solid var(--footer-line);
 }
 
@@ -255,7 +249,7 @@
   }
 }
 
-.statement > p {
+.statement>p {
   max-width: 570px;
   margin: clamp(1.3rem, 2vw, 1.9rem) 0 0;
   color: var(--footer-muted);
@@ -352,10 +346,7 @@
   flex-direction: column;
   justify-content: center;
   padding:
-    clamp(3rem, 5vw, 5.5rem)
-    0
-    clamp(3rem, 5vw, 5.5rem)
-    clamp(2rem, 4.5vw, 5rem);
+    clamp(3rem, 5vw, 5.5rem) 0 clamp(3rem, 5vw, 5.5rem) clamp(2rem, 4.5vw, 5rem);
 }
 
 .navigation {
@@ -449,7 +440,7 @@
   align-items: flex-start;
   gap: 0.8rem;
 
-  > svg {
+  >svg {
     flex: 0 0 auto;
     width: 1rem;
     height: 1rem;
@@ -595,7 +586,7 @@
 }
 
 @media (max-width: 820px) {
-  .topBar > p {
+  .topBar>p {
     display: none;
   }
 
@@ -609,8 +600,7 @@
 
   .statement {
     padding:
-      clamp(3rem, 8vw, 4.5rem)
-      0;
+      clamp(3rem, 8vw, 4.5rem) 0;
     border-right: 0;
     border-bottom: 1px solid var(--footer-line);
   }
@@ -620,24 +610,20 @@
     font-size: clamp(3.5rem, 10vw, 5.6rem);
   }
 
-  .statement > p {
+  .statement>p {
     max-width: 650px;
   }
 
   .utility {
     padding:
-      clamp(2.5rem, 7vw, 4rem)
-      0;
+      clamp(2.5rem, 7vw, 4rem) 0;
   }
 }
 
 @media (max-width: 580px) {
   .footer {
     padding:
-      3.4rem
-      max(1rem, var(--safe-right, 0px))
-      calc(1.5rem + var(--safe-bottom, 0px))
-      max(1rem, var(--safe-left, 0px));
+      3.4rem max(1rem, var(--safe-right, 0px)) calc(1.5rem + var(--safe-bottom, 0px)) max(1rem, var(--safe-left, 0px));
   }
 
   .footer::before,
@@ -645,7 +631,7 @@
     height: 6px;
   }
 
-  .wordmark > small {
+  .wordmark>small {
     display: none;
   }
 
@@ -725,7 +711,7 @@
     height: 35px;
   }
 
-  .wordmark > strong {
+  .wordmark>strong {
     font-size: 1rem;
   }
 
@@ -735,6 +721,7 @@
 }
 
 @media (hover: none) {
+
   .topShortcut:hover,
   .primaryAction:hover:not(:disabled) {
     transform: none;
@@ -742,6 +729,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .topShortcut,
   .primaryAction,
   .secondaryAction,

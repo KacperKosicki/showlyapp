@@ -318,7 +318,7 @@
     letter-spacing: -0.025em;
   }
 
-  div > span {
+  div>span {
     font-size: 0.76rem;
     line-height: 1.45;
     color: var(--search-muted);
@@ -354,8 +354,7 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--search-muted) 40%, transparent)
-    transparent;
+  scrollbar-color: color-mix(in srgb, var(--search-muted) 40%, transparent) transparent;
 
   &::-webkit-scrollbar {
     width: 7px;
@@ -723,6 +722,7 @@
 }
 
 @media (max-width: 520px) {
+
   .wrapper,
   .searchContainer,
   .inputArea,
@@ -938,6 +938,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .searchContainer,
   .searchButton,
   .searchButton svg,

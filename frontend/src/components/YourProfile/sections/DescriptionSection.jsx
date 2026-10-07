@@ -19,8 +19,8 @@ const DescriptionSection = ({
       <div className={styles.cardGlow} aria-hidden="true" />
 
       <EditorSectionHeader kicker={<>O Tobie</>} title={<>Opis profilu</>} description={<>
-            Opowiedz krótko, czym się zajmujesz, dla kogo jest Twoja oferta i dlaczego warto się z Tobą skontaktować.
-          </>} icon={<FaBriefcase />} />
+        Opowiedz krótko, czym się zajmujesz, dla kogo jest Twoja oferta i dlaczego warto się z Tobą skontaktować.
+      </>} icon={<FaBriefcase />} />
 
       <EditorGroup title="01 / Opowiedz o sobie"><div className={styles.descriptionBlock}>
         {isEditing ? (

@@ -137,9 +137,8 @@ const Navbar = ({
 
   return (
     <header
-      className={`${styles.navbarShell} ${
-        scrolled ? styles.scrolled : ""
-      }`}
+      className={`${styles.navbarShell} ${scrolled ? styles.scrolled : ""
+        }`}
     >
       <nav className={styles.navbar} aria-label="Główna nawigacja Showly">
         <Link

@@ -16,10 +16,7 @@
   z-index: 5000;
   width: 100%;
   padding:
-    calc(env(safe-area-inset-top, 0px) + 0.9rem)
-    max(clamp(1rem, 4vw, 3.5rem), var(--safe-right))
-    0
-    max(clamp(1rem, 4vw, 3.5rem), var(--safe-left));
+    calc(env(safe-area-inset-top, 0px) + 0.9rem) max(clamp(1rem, 4vw, 3.5rem), var(--safe-right)) 0 max(clamp(1rem, 4vw, 3.5rem), var(--safe-left));
 
   pointer-events: none;
   isolation: isolate;
@@ -33,7 +30,7 @@
     box-sizing: border-box;
   }
 
-  > * {
+  >* {
     pointer-events: auto;
   }
 }
@@ -332,7 +329,7 @@
   justify-content: center;
   overflow: visible;
 
-  > * {
+  >* {
     min-width: 0;
   }
 }
@@ -442,10 +439,7 @@
 @media (max-width: 720px) {
   .navbarShell {
     padding:
-      calc(env(safe-area-inset-top, 0px) + 0.6rem)
-      max(0.7rem, var(--safe-right))
-      0
-      max(0.7rem, var(--safe-left));
+      calc(env(safe-area-inset-top, 0px) + 0.6rem) max(0.7rem, var(--safe-right)) 0 max(0.7rem, var(--safe-left));
   }
 
   .navbar,
@@ -600,6 +594,7 @@
 }
 
 @media (hover: none) {
+
   .logoWrap:hover,
   .themeToggle:hover,
   .registerPrompt:hover {
@@ -616,6 +611,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .navbarShell,
   .navbar,
   .logoWrap,

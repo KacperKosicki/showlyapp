@@ -1,54 +1,63 @@
 @import '../../../styles/profileEditor';
 @include profile-editor-card('.editBar');
+
 .editBar {
-  position:sticky;
-  top:var(--yp-sticky-top);
-  z-index:50;
-  padding:12px 16px;
-  border:1.5px solid var(--yp-frame);
-  border-radius:12px;
-  background:var(--app-surface);
-  box-shadow:3px 4px 0 var(--yp-shadow);
+  position: sticky;
+  top: var(--yp-sticky-top);
+  z-index: 50;
+  padding: 12px 16px;
+  border: 1.5px solid var(--yp-frame);
+  border-radius: 12px;
+  background: var(--app-surface);
+  box-shadow: 3px 4px 0 var(--yp-shadow);
 }
+
 .editBarInner {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
+
 .editHint {
-  font-size:.76rem;
-  color:var(--app-muted);
+  font-size: .76rem;
+  color: var(--app-muted);
 }
+
 .editBarBtns {
-  display:flex;
-  gap:8px;
+  display: flex;
+  gap: 8px;
 }
+
 .ghost {
-  min-height:44px;
-  padding:9px 14px;
-  border:1px solid var(--app-border);
-  border-radius:9px;
-  background:transparent;
-  color:var(--app-text);
-  font:inherit;
-  font-size:.78rem;
-  cursor:pointer;
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 1px solid var(--app-border);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--app-text);
+  font: inherit;
+  font-size: .78rem;
+  cursor: pointer;
 }
+
 @media(max-width:600px) {
   .editBar {
-    top:var(--yp-sticky-top);
+    top: var(--yp-sticky-top);
   }
+
   .editBarInner {
-    flex-direction:column;
-    align-items:stretch;
-    gap:8px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
   }
-  .editBarBtns > * {
-    flex:1;
+
+  .editBarBtns>* {
+    flex: 1;
   }
+
   .editHint {
-    text-align:center;
+    text-align: center;
   }
 
 }

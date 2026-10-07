@@ -34,8 +34,11 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+
     &::before,
-    &::after { animation: none; }
+    &::after {
+      animation: none;
+    }
   }
 }
 
@@ -81,31 +84,50 @@
     animation-name: backdropDotsDriftMobile;
   }
 
-  @media (prefers-reduced-motion: reduce) { animation: none; }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 @mixin backdropArrowMotion {
   // Individual translate preserves each arrow's existing rotation.
   animation: backdropArrowFloat 9s ease-in-out infinite alternate;
-  @media (prefers-reduced-motion: reduce) { animation: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 }
 
 @keyframes backdropDotsDrift {
-  to { background-position: 24px 24px; }
+  to {
+    background-position: 24px 24px;
+  }
 }
 
 @keyframes backdropDotsDriftMobile {
-  to { background-position: 20px 20px; }
+  to {
+    background-position: 20px 20px;
+  }
 }
 
 @keyframes backdropFloat {
-  from { transform: translateY(0) rotate(-8deg); }
-  to { transform: translateY(-18px) rotate(8deg); }
+  from {
+    transform: translateY(0) rotate(-8deg);
+  }
+
+  to {
+    transform: translateY(-18px) rotate(8deg);
+  }
 }
 
 @keyframes backdropArrowFloat {
-  from { translate: 0 0; }
-  to { translate: 0 -10px; }
+  from {
+    translate: 0 0;
+  }
+
+  to {
+    translate: 0 -10px;
+  }
 }
 
 @mixin scrollReveal {
@@ -115,10 +137,23 @@
       border-color 200ms ease, color 200ms ease;
     transition-delay: var(--reveal-delay, 0ms);
   }
-  [data-reveal-state="pending"] { opacity: 0; translate: 0 28px; }
+
+  [data-reveal-state="pending"] {
+    opacity: 0;
+    translate: 0 28px;
+  }
+
   [data-reveal-state="visible"],
-  [data-reveal]:focus-within { opacity: 1; translate: 0 0; }
+  [data-reveal]:focus-within {
+    opacity: 1;
+    translate: 0 0;
+  }
+
   @media (prefers-reduced-motion: reduce) {
-    [data-reveal] { opacity: 1; translate: none; transition: none; }
+    [data-reveal] {
+      opacity: 1;
+      translate: none;
+      transition: none;
+    }
   }
 }

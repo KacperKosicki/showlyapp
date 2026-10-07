@@ -64,9 +64,8 @@ const normalizeAvatar = (value = "") => {
 
 const LoadingDots = ({ active }) => (
   <span
-    className={`${styles.loadingDots} ${
-      active ? styles.loadingDotsActive : ""
-    }`}
+    className={`${styles.loadingDots} ${active ? styles.loadingDotsActive : ""
+      }`}
     aria-hidden="true"
   >
     <span />
@@ -356,7 +355,7 @@ const AccountSettings = () => {
         method: "PATCH",
         headers,
         body: JSON.stringify({ displayName: cleanDisplayName }),
-      }).catch(() => {});
+      }).catch(() => { });
 
       setUser(auth.currentUser);
       showAlert("success", "Zaktualizowano nazwę wyświetlaną.");

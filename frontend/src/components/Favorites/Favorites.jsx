@@ -100,11 +100,11 @@ const Favorites = ({ currentUser, setAlert }) => {
 
           const partnership = derivedIsPartner
             ? {
-                isPartner: true,
-                tier: String(derivedTier || "partner").toLowerCase(),
-                badgeText: String(derivedBadgeText || "PARTNER SHOWLY"),
-                ...(derivedColor ? { color: derivedColor } : {}),
-              }
+              isPartner: true,
+              tier: String(derivedTier || "partner").toLowerCase(),
+              badgeText: String(derivedBadgeText || "PARTNER SHOWLY"),
+              ...(derivedColor ? { color: derivedColor } : {}),
+            }
             : parsedPartnership || {};
 
           const userId =
@@ -468,27 +468,27 @@ const Favorites = ({ currentUser, setAlert }) => {
                 >
                   {viewStatus === "loading"
                     ? Array.from({ length: 4 }).map((_, index) => (
-                        <div
-                          className={styles.cardWrap}
-                          key={index}
-                          role="listitem"
-                        >
-                          <SkeletonCard />
-                        </div>
-                      ))
+                      <div
+                        className={styles.cardWrap}
+                        key={index}
+                        role="listitem"
+                      >
+                        <SkeletonCard />
+                      </div>
+                    ))
                     : profiles.map((profile, index) => (
-                        <div
-                          className={styles.cardWrap}
-                          key={profile.userId || profile._id || index}
-                          role="listitem"
-                        >
-                          <UserCard
-                            user={profile}
-                            currentUser={currentUser}
-                            setAlert={setAlert}
-                          />
-                        </div>
-                      ))}
+                      <div
+                        className={styles.cardWrap}
+                        key={profile.userId || profile._id || index}
+                        role="listitem"
+                      >
+                        <UserCard
+                          user={profile}
+                          currentUser={currentUser}
+                          setAlert={setAlert}
+                        />
+                      </div>
+                    ))}
                 </div>
 
                 <div className={styles.mobileHint}>

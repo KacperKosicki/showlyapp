@@ -50,9 +50,9 @@ const getReviewsCount = (profile = {}) => {
 
   const count = Number(
     profile?.reviewsCount ??
-      profile?.ratingCount ??
-      profile?.reviews ??
-      0
+    profile?.ratingCount ??
+    profile?.reviews ??
+    0
   );
 
   return Number.isFinite(count) ? count : 0;
@@ -61,10 +61,10 @@ const getReviewsCount = (profile = {}) => {
 const getSearchText = (profile = {}) => {
   const tags = Array.isArray(profile?.tags)
     ? profile.tags
-        .map((tag) =>
-          typeof tag === "string" ? tag : tag?.label
-        )
-        .filter(Boolean)
+      .map((tag) =>
+        typeof tag === "string" ? tag : tag?.label
+      )
+      .filter(Boolean)
     : [];
 
   return normalizeText(

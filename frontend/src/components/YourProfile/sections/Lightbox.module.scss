@@ -1,34 +1,37 @@
 .lightbox {
-  position:fixed;
-  z-index:9999;
-  inset:0;
-  display:grid;
-  place-items:center;
-  padding:64px 20px 24px;
-  background:#111310e8;
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 64px 20px 24px;
+  background: #111310e8;
 }
+
 .lightbox img {
-  max-width:100%;
-  max-height:calc(100dvh - 90px);
-  border:1px solid #85897e;
-  border-radius:12px;
-  box-shadow:4px 5px 0 #050605;
-  object-fit:contain;
+  max-width: 100%;
+  max-height: calc(100dvh - 90px);
+  border: 1px solid #85897e;
+  border-radius: 12px;
+  box-shadow: 4px 5px 0 #050605;
+  object-fit: contain;
 }
+
 .lightboxClose {
-  position:absolute;
-  top:max(16px,env(safe-area-inset-top));
-  right:20px;
-  min-width:44px;
-  min-height:44px;
-  border:1px solid #171917;
-  border-radius:9px;
-  background:#d8ff72;
-  color:#171917;
-  cursor:pointer;
-  font-size:18px;
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: 20px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #171917;
+  border-radius: 9px;
+  background: #d8ff72;
+  color: #171917;
+  cursor: pointer;
+  font-size: 18px;
 }
+
 .lightboxClose:focus-visible {
-  outline:3px solid #a79dff;
-  outline-offset:3px;
+  outline: 3px solid #a79dff;
+  outline-offset: 3px;
 }

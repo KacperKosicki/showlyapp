@@ -1,102 +1,146 @@
 @import '../../../styles/profileEditor';
 @include profile-editor-card('.card');
+
 .contactSocialBody {
-  display:grid;
-  gap:0;
+  display: grid;
+  gap: 0;
 }
+
 .contactPanel {
   @include settings-panel;
 }
+
 .contactPanelHead {
   @include settings-panel-heading;
 }
+
 .contactIcon {
-  display:grid;
-  place-items:center;
-  width:32px;
-  height:32px;
-  border:1px solid var(--app-border);
-  border-radius:8px;
-  background:var(--app-surface);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: var(--app-surface);
 }
-.contactModernGrid,.contactViewGrid,.socialEditorGrid {
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:14px;
+
+.contactModernGrid,
+.contactViewGrid,
+.socialEditorGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
 }
-.contactWideField,.contactAddressCard {
-  grid-column:1/-1;
+
+.contactWideField,
+.contactAddressCard {
+  grid-column: 1/-1;
 }
+
 .contactInfoCard {
   @include settings-value-card;
-  display:grid;
-  gap:4px;
-  padding:12px;
-  border:1px solid var(--app-border);
-  border-radius:9px;
-  background:var(--app-surface);
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 9px;
+  background: var(--app-surface);
 }
-.contactInfoCard > svg { color:var(--app-primary); }
-.socialLinkCard small { display:block; color:var(--app-muted); font-size:.75rem; margin-top:4px; }
+
+.contactInfoCard>svg {
+  color: var(--app-primary);
+}
+
+.socialLinkCard small {
+  display: block;
+  color: var(--app-muted);
+  font-size: .75rem;
+  margin-top: 4px;
+}
+
 .contactInfoCard span {
-  font-size:.72rem;
-  color:var(--app-muted);
+  font-size: .72rem;
+  color: var(--app-muted);
 }
+
 .contactInfoCard a {
-  color:var(--app-text);
-  text-decoration:none;
+  color: var(--app-text);
+  text-decoration: none;
 }
+
 .socialLinksGrid {
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
+
 .socialLinkCard {
-  display:flex;
-  align-items:center;
-  gap:9px;
-  padding:12px;
-  min-width:0;
-  border:1px solid var(--app-border);
-  border-radius:9px;
-  color:var(--app-text);
-  background:var(--app-surface);
-  text-decoration:none;
-  font-size:.8rem;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px;
+  min-width: 0;
+  border: 1px solid var(--app-border);
+  border-radius: 9px;
+  color: var(--app-text);
+  background: var(--app-surface);
+  text-decoration: none;
+  font-size: .8rem;
 }
+
 .socialLinkCard svg {
-  flex-shrink:0;
-  color:var(--app-primary);
+  flex-shrink: 0;
+  color: var(--app-primary);
 }
-.socialLinkCard > div {
-  min-width:0;
-  display:grid;
+
+.socialLinkCard>div {
+  min-width: 0;
+  display: grid;
 }
+
 .socialLinkCard span {
-  font-size:.7rem;
-  color:var(--app-muted);
+  font-size: .7rem;
+  color: var(--app-muted);
 }
+
 @media(max-width:700px) {
   .socialLinksGrid {
-    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
 }
+
 @media(max-width:500px) {
-  .contactModernGrid,.contactViewGrid,.socialEditorGrid,.socialLinksGrid {
-    grid-template-columns:minmax(0,1fr);
+
+  .contactModernGrid,
+  .contactViewGrid,
+  .socialEditorGrid,
+  .socialLinksGrid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
 }
+
 .contactSocialCard {
-  min-width:0;
+  min-width: 0;
 }
+
 .contactIcon {
-  flex-shrink:0;
+  flex-shrink: 0;
 }
+
 @container (max-width:600px) {
-  .socialLinksGrid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .socialLinksGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
+
 @container (max-width:430px) {
-  .contactModernGrid,.contactViewGrid,.socialEditorGrid,.socialLinksGrid { grid-template-columns:minmax(0,1fr); }
+
+  .contactModernGrid,
+  .contactViewGrid,
+  .socialEditorGrid,
+  .socialLinksGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

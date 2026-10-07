@@ -29,9 +29,9 @@ const getReviewsCount = (profile = {}) => {
 
   const count = Number(
     profile?.reviewsCount ??
-      profile?.ratingCount ??
-      profile?.reviews ??
-      0
+    profile?.ratingCount ??
+    profile?.reviews ??
+    0
   );
 
   return Number.isFinite(count) ? count : 0;
@@ -397,9 +397,8 @@ const UserCardList = ({ currentUser, setAlert }) => {
                     }}
                   >
                     <span
-                      className={`${styles.rankBadge} ${
-                        isLeader ? styles.rankLeader : ""
-                      } ${isPodium ? styles.rankPodium : ""}`}
+                      className={`${styles.rankBadge} ${isLeader ? styles.rankLeader : ""
+                        } ${isPodium ? styles.rankPodium : ""}`}
                       aria-label={`Pozycja ${position} w rankingu`}
                     >
                       {isLeader && <FiAward aria-hidden="true" />}

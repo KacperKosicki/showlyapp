@@ -16,10 +16,7 @@
   min-height: 100vh;
 
   padding:
-    clamp(1.25rem, 3vw, 2.5rem)
-    max(clamp(1rem, 3vw, 2rem), var(--safe-right))
-    calc(clamp(2rem, 5vw, 4rem) + var(--safe-bottom))
-    max(clamp(1rem, 3vw, 2rem), var(--safe-left));
+    clamp(1.25rem, 3vw, 2.5rem) max(clamp(1rem, 3vw, 2rem), var(--safe-right)) calc(clamp(2rem, 5vw, 4rem) + var(--safe-bottom)) max(clamp(1rem, 3vw, 2rem), var(--safe-left));
 
   background: var(--app-bg);
   color: var(--app-text);
@@ -210,7 +207,7 @@
 .receiverDetails {
   min-width: 0;
 
-  > span {
+  >span {
     display: block;
     margin-bottom: 0.3rem;
 
@@ -294,7 +291,7 @@
   padding-top: 1.1rem;
   border-top: 1px solid var(--app-border);
 
-  > span {
+  >span {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
@@ -611,12 +608,10 @@ div.textarea {
 
     transform: translateX(-100%);
 
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.48),
-      transparent
-    );
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.48),
+        transparent);
 
     animation: shimmer 1.2s infinite;
   }
@@ -642,10 +637,7 @@ div.textarea {
 @media (max-width: 680px) {
   .section {
     padding:
-      1rem
-      max(0.8rem, var(--safe-right))
-      calc(2rem + var(--safe-bottom))
-      max(0.8rem, var(--safe-left));
+      1rem max(0.8rem, var(--safe-right)) calc(2rem + var(--safe-bottom)) max(0.8rem, var(--safe-left));
   }
 
   .backButton {
@@ -721,6 +713,7 @@ div.textarea {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

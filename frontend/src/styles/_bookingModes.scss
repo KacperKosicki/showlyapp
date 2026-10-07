@@ -2,109 +2,781 @@
 
 // Shared local classes keep all booking modes consistent without styling other forms.
 @mixin bookingModeStyles {
-  .blankDay { min-width: 0; }
-  .toggleRow { display: grid; gap: .6rem; }
-  .form, .slotsForm { display: grid; gap: 1.2rem; min-width: 0; }
-  .progress { list-style: none; display: flex; gap: .6rem; padding: 0; margin: 0 0 1.5rem; }
-  .progress li { display: flex; align-items: center; gap: .6rem; flex: 1; min-width: 0; padding: .7rem; border: 1px solid var(--booking-line); border-radius: 10px; background: var(--booking-bg); color: var(--booking-muted); }
-  .progress li > span { font-family: $font-heading; font-size: .85rem; font-weight: 800; }
-  .progress strong { font-size: .7rem; line-height: 1.4; }
-  .progress li[data-state=current] { border-color: var(--booking-frame); color: var(--booking-ink); box-shadow: 2px 3px 0 var(--booking-frame); }
-  .progress li[data-state=complete] { background: var(--booking-lime); border-color: var(--booking-frame); color: #171917; }
-  .topGrid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; margin-bottom: 1.3rem; }
-  .topGrid > :last-child:nth-child(odd) { grid-column: 1/-1; }
-  .field, .toggleField { display: block; min-width: 0; padding: 1.15rem; border: 1px solid var(--booking-frame); border-radius: 15px; background: var(--booking-bg); box-shadow: 3px 4px 0 var(--booking-frame); }
-  .fieldWide, .messageField { grid-column: 1/-1; }
-  .fieldHeader { display: flex; justify-content: space-between; align-items: flex-start; gap: .8rem; margin-bottom: 1rem; }
-  .fieldEyebrow, .cardLabel, .previewLabel { display: inline-block; color: var(--booking-purple); font-size: .65rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
-  .fieldTitle { margin: .4rem 0 0; font-family: $font-heading; font-size: 1.2rem; line-height: 1.2; letter-spacing: -.04em; }
-  .fieldHint { font-size: .65rem; padding: .3rem .45rem; border: 1px solid var(--booking-line); border-radius: 6px; color: var(--booking-muted); background: var(--booking-paper); }
-  .input, .select, .textarea { width: 100%; min-width: 0; min-height: 48px; padding: .8rem; border: 1px solid var(--booking-line); border-radius: 9px; color: var(--booking-ink); background: var(--booking-paper); font-family: $font-accent; font-size: 1rem; line-height: 1.5; }
-  .textarea { resize: vertical; min-height: 100px; }
-  .input::placeholder, .textarea::placeholder { color: var(--booking-muted); }
-  .input:focus, .select:focus, .textarea:focus { outline: 3px solid color-mix(in srgb,var(--booking-purple) 22%,transparent); border-color: var(--booking-purple); outline-offset: 1px; }
-  .selectWrap { position: relative; }
-  .select { appearance: none; padding-right: 2.3rem; cursor: pointer; }
-  .selectChevron { position: absolute; top: 50%; right: .8rem; translate: 0 -50%; pointer-events: none; color: var(--booking-purple); }
-  .selectChevron svg { width: 18px; height: 18px; }
-  .mainGrid { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(0,1fr); gap: 1.2rem; margin: 1.5rem 0; align-items: start; }
-  .calendarCard, .infoCard, .slotsInfoCard, .slotsOnlyCard { min-width: 0; padding: 1.2rem; border: 1px solid var(--booking-frame); border-radius: 18px; background: var(--booking-bg); box-shadow: 3px 4px 0 var(--booking-frame); }
-  .slotsOnlyCard { margin-top: 1.5rem; }
-  .cardHead, .infoHeader, .slotsHeader { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .8rem; margin-bottom: 1.1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--booking-line); }
-  .cardHead h3, .infoTitle, .slotsTitle { margin: .4rem 0 0; font-family: $font-heading; font-size: 1.4rem; line-height: 1.2; letter-spacing: -.05em; }
-  .cardNumber, .emptyNumber, .introNumber, .previewNumber { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border: 1px solid var(--booking-frame); border-radius: 8px; background: var(--booking-lime); color: #171917; font-family: $font-heading; font-size: .85rem; font-weight: 700; }
-  .monthNav { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: 1rem; }
-  .monthNav button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--booking-frame); border-radius: 9px; background: var(--booking-paper); color: var(--booking-ink); box-shadow: 2px 3px 0 var(--booking-frame); cursor: pointer; }
-  .monthLabel { font-family: $font-heading; font-size: .95rem; font-weight: 600; text-transform: capitalize; text-align: center; }
-  .calendarGrid { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: .4rem; padding: .2rem .15rem .5rem; }
-  .weekday { text-align: center; padding: .3rem 0; font-size: .65rem; color: var(--booking-muted); }
-  .day { min-width: 0; min-height: 42px; padding: .4rem 0; border: 1px solid var(--booking-line); border-radius: 8px; background: var(--booking-paper); color: var(--booking-ink); font-family: $font-accent; font-size: .85rem; cursor: pointer; }
-  .selectedDay { background: var(--booking-lime); border-color: var(--booking-frame); color: #171917; box-shadow: 2px 3px 0 var(--booking-frame); font-weight: 700; }
-  .disabledDay, .dayPast, .dayLocked { opacity: .4; cursor: default; background: var(--booking-bg); }
-  .dayUnavailable, .overrideBlockedDay { color: #ad3551; border-style: dashed; text-decoration: line-through; background: color-mix(in srgb,#d74067 8%,var(--booking-paper)); cursor: default; }
-  .emptyState, .preSelect, .introBox, .infoBox, .warnBox { padding: 1.2rem; border: 1px solid var(--booking-line); border-radius: 14px; background: var(--booking-bg); margin-bottom: 1.2rem; }
-  .emptyState { padding: 0; border: 0; margin: 0; }
-  .emptyState strong, .preSelect strong, .introBox strong { display: block; margin: .8rem 0 .5rem; font-family: $font-heading; font-size: 1.25rem; line-height: 1.2; letter-spacing: -.04em; }
-  .emptyState p, .preSelect p, .introBox p, .infoBox p, .warnBox p, .toggleHint, .infoSub, .muted, .previewEmpty { margin: .5rem 0 0; font-size: .8rem; color: var(--booking-muted); line-height: 1.7; }
-  .introBox { display: flex; align-items: flex-start; gap: 1rem; margin: 0; }
-  .introBox strong { margin-top: 0; }
-  .infoBox strong, .warnBox strong { font-size: .85rem; }
-  .warnBox { border-color: var(--booking-frame); border-left: 5px solid var(--booking-lime); }
-  .toggleLabel, .slotFilter { display: flex; align-items: center; gap: .6rem; min-height: 44px; font-size: .8rem; cursor: pointer; }
-  .toggleLabel input, .slotFilter input { width: 18px; height: 18px; flex-shrink: 0; accent-color: var(--booking-purple); }
-  .summaryRow { display: grid; gap: .35rem; padding: .8rem 0; border-bottom: 1px solid var(--booking-line); }
-  .summaryLabel { color: var(--booking-muted); font-size: .7rem; }
-  .summaryValue { font-size: .85rem; overflow-wrap: anywhere; }
-  .modePill, .pickedPill { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .45rem; padding: .5rem .65rem; border: 1px solid var(--booking-frame); border-radius: 7px; background: var(--booking-paper); font-size: .7rem; }
-  .modeDot, .pickedDot { width: 7px; height: 7px; border-radius: 50%; background: var(--booking-purple); }
-  .pickedMuted { color: var(--booking-muted); }
-  .fullLegendBar { display: grid; gap: .6rem; margin: 1rem 0; }
-  .legendBadges { display: flex; flex-wrap: wrap; gap: .5rem; }
-  .legendItem { display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .5rem; border: 1px solid var(--booking-line); border-radius: 6px; background: var(--booking-paper); font-size: .65rem; color: var(--booking-muted); }
-  .legendBox { width: 9px; height: 9px; border: 1px solid var(--booking-line); border-radius: 2px; flex-shrink: 0; }
-  .legendFree { background: var(--booking-paper); }
-  .legendSelected { background: var(--booking-lime); }
-  .legendReserved, .legendUnavailable { background: #d74067; }
-  .legendPending { background: #c28b20; }
-  .legendDisabled, .legendLocked { background: #89908a; }
-  .legendMetaFull { color: var(--booking-muted); font-size: .7rem; line-height: 1.6; }
-  .slotsGrid { display: grid; grid-template-columns: repeat(auto-fill,minmax(76px,1fr)); gap: .6rem; max-height: 280px; overflow-y: auto; padding: .3rem .4rem .6rem .2rem; scrollbar-width: thin; scrollbar-color: var(--booking-purple) var(--booking-bg); }
-  .slot { min-height: 44px; padding: .6rem; border: 1px solid var(--booking-line); border-radius: 8px; font-family: $font-accent; font-size: .85rem; background: var(--booking-paper); color: var(--booking-ink); cursor: pointer; }
-  .slotSelected { border-color: var(--booking-frame); background: var(--booking-lime); color: #171917; font-weight: 700; box-shadow: 2px 3px 0 var(--booking-frame); }
-  .slotDisabled { opacity: .4; }
-  .slotReserved { color: #ad3551; background: color-mix(in srgb,#d74067 10%,var(--booking-paper)); text-decoration: line-through; }
-  .slotPending { color: var(--booking-ink); background: color-mix(in srgb,#c28b20 15%,var(--booking-paper)); border-style: dashed; }
-  .slot:disabled { cursor: default; }
-  .day:focus-visible, .slot:focus-visible, .monthNav button:focus-visible, .previewHead:focus-visible { outline: 3px solid var(--booking-purple); outline-offset: 2px; }
-  .submitBar { position: relative; bottom: auto; z-index: auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.1rem; margin-top: 1.2rem; border: 1px solid var(--booking-frame); border-radius: 14px; background: var(--booking-paper); box-shadow: 4px 5px 0 var(--booking-frame); }
-  .submit { flex-shrink: 0; min-height: 48px; padding: .8rem 1rem; border: 1px solid var(--booking-frame); border-radius: 9px; background: var(--booking-lime); color: #171917; box-shadow: 3px 3px 0 var(--booking-frame); font-family: $font-accent; font-size: .85rem; font-weight: 650; cursor: pointer; }
-  .monthNav button:disabled { opacity: .4; cursor: default; box-shadow: none; }
-  @media(hover: hover) { .day:not(:disabled):hover, .slot:not(:disabled):hover, .monthNav button:not(:disabled):hover { border-color: var(--booking-purple); background: color-mix(in srgb,var(--booking-lime) 25%,var(--booking-paper)); } .submit:not(:disabled):hover { background: #cafa51; } }
-  .submit:focus-visible { outline: 3px solid var(--booking-purple); outline-offset: 4px; }
-  .submit:disabled { opacity: .5; cursor: default; box-shadow: none; }
-  .submitHint { font-size: .73rem; color: var(--booking-muted); line-height: 1.6; }
-  .bookingSummary { margin: 0; padding: 1rem; border: 1px solid var(--booking-frame); border-radius: 12px; background: var(--booking-paper); border-top: 4px solid var(--booking-lime); font-size: .85rem; line-height: 1.7; }
-  .bookingSummary strong { display: block; font-family: $font-heading; font-size: 1.1rem; margin-bottom: .3rem; }
-  .previewBox { padding: 1.1rem; border: 1px solid var(--booking-frame); border-radius: 14px; background: var(--booking-bg); }
-  .previewHead { display: flex; align-items: center; justify-content: space-between; gap: 1rem; list-style: none; min-height: 44px; cursor: pointer; }
-  .previewHead::-webkit-details-marker { display: none; }
-  .previewHead strong { display: block; margin-top: .4rem; font-family: $font-heading; font-size: 1.1rem; }
-  .previewHead > svg { flex-shrink: 0; color: var(--booking-purple); }
-  .previewBox[open] .previewHead > svg { rotate: 180deg; }
-  .previewContent { white-space: pre-wrap; overflow-wrap: anywhere; margin: 1rem 0 0; padding: 1rem; border: 1px solid var(--booking-line); border-radius: 9px; background: var(--booking-paper); color: var(--booking-ink); font-family: $font-accent; font-size: .85rem; line-height: 1.7; }
-  @media(max-width: 1250px) { .mainGrid { grid-template-columns: 1fr; } }
+  .blankDay {
+    min-width: 0;
+  }
+
+  .toggleRow {
+    display: grid;
+    gap: .6rem;
+  }
+
+  .form,
+  .slotsForm {
+    display: grid;
+    gap: 1.2rem;
+    min-width: 0;
+  }
+
+  .progress {
+    list-style: none;
+    display: flex;
+    gap: .6rem;
+    padding: 0;
+    margin: 0 0 1.5rem;
+  }
+
+  .progress li {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex: 1;
+    min-width: 0;
+    padding: .7rem;
+    border: 1px solid var(--booking-line);
+    border-radius: 10px;
+    background: var(--booking-bg);
+    color: var(--booking-muted);
+  }
+
+  .progress li>span {
+    font-family: $font-heading;
+    font-size: .85rem;
+    font-weight: 800;
+  }
+
+  .progress strong {
+    font-size: .7rem;
+    line-height: 1.4;
+  }
+
+  .progress li[data-state=current] {
+    border-color: var(--booking-frame);
+    color: var(--booking-ink);
+    box-shadow: 2px 3px 0 var(--booking-frame);
+  }
+
+  .progress li[data-state=complete] {
+    background: var(--booking-lime);
+    border-color: var(--booking-frame);
+    color: #171917;
+  }
+
+  .topGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.3rem;
+  }
+
+  .topGrid> :last-child:nth-child(odd) {
+    grid-column: 1/-1;
+  }
+
+  .field,
+  .toggleField {
+    display: block;
+    min-width: 0;
+    padding: 1.15rem;
+    border: 1px solid var(--booking-frame);
+    border-radius: 15px;
+    background: var(--booking-bg);
+    box-shadow: 3px 4px 0 var(--booking-frame);
+  }
+
+  .fieldWide,
+  .messageField {
+    grid-column: 1/-1;
+  }
+
+  .fieldHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: .8rem;
+    margin-bottom: 1rem;
+  }
+
+  .fieldEyebrow,
+  .cardLabel,
+  .previewLabel {
+    display: inline-block;
+    color: var(--booking-purple);
+    font-size: .65rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .fieldTitle {
+    margin: .4rem 0 0;
+    font-family: $font-heading;
+    font-size: 1.2rem;
+    line-height: 1.2;
+    letter-spacing: -.04em;
+  }
+
+  .fieldHint {
+    font-size: .65rem;
+    padding: .3rem .45rem;
+    border: 1px solid var(--booking-line);
+    border-radius: 6px;
+    color: var(--booking-muted);
+    background: var(--booking-paper);
+  }
+
+  .input,
+  .select,
+  .textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: .8rem;
+    border: 1px solid var(--booking-line);
+    border-radius: 9px;
+    color: var(--booking-ink);
+    background: var(--booking-paper);
+    font-family: $font-accent;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+
+  .input::placeholder,
+  .textarea::placeholder {
+    color: var(--booking-muted);
+  }
+
+  .input:focus,
+  .select:focus,
+  .textarea:focus {
+    outline: 3px solid color-mix(in srgb, var(--booking-purple) 22%, transparent);
+    border-color: var(--booking-purple);
+    outline-offset: 1px;
+  }
+
+  .selectWrap {
+    position: relative;
+  }
+
+  .select {
+    appearance: none;
+    padding-right: 2.3rem;
+    cursor: pointer;
+  }
+
+  .selectChevron {
+    position: absolute;
+    top: 50%;
+    right: .8rem;
+    translate: 0 -50%;
+    pointer-events: none;
+    color: var(--booking-purple);
+  }
+
+  .selectChevron svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .mainGrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 1.2rem;
+    margin: 1.5rem 0;
+    align-items: start;
+  }
+
+  .calendarCard,
+  .infoCard,
+  .slotsInfoCard,
+  .slotsOnlyCard {
+    min-width: 0;
+    padding: 1.2rem;
+    border: 1px solid var(--booking-frame);
+    border-radius: 18px;
+    background: var(--booking-bg);
+    box-shadow: 3px 4px 0 var(--booking-frame);
+  }
+
+  .slotsOnlyCard {
+    margin-top: 1.5rem;
+  }
+
+  .cardHead,
+  .infoHeader,
+  .slotsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .8rem;
+    margin-bottom: 1.1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--booking-line);
+  }
+
+  .cardHead h3,
+  .infoTitle,
+  .slotsTitle {
+    margin: .4rem 0 0;
+    font-family: $font-heading;
+    font-size: 1.4rem;
+    line-height: 1.2;
+    letter-spacing: -.05em;
+  }
+
+  .cardNumber,
+  .emptyNumber,
+  .introNumber,
+  .previewNumber {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border: 1px solid var(--booking-frame);
+    border-radius: 8px;
+    background: var(--booking-lime);
+    color: #171917;
+    font-family: $font-heading;
+    font-size: .85rem;
+    font-weight: 700;
+  }
+
+  .monthNav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-bottom: 1rem;
+  }
+
+  .monthNav button {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--booking-frame);
+    border-radius: 9px;
+    background: var(--booking-paper);
+    color: var(--booking-ink);
+    box-shadow: 2px 3px 0 var(--booking-frame);
+    cursor: pointer;
+  }
+
+  .monthLabel {
+    font-family: $font-heading;
+    font-size: .95rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    text-align: center;
+  }
+
+  .calendarGrid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: .4rem;
+    padding: .2rem .15rem .5rem;
+  }
+
+  .weekday {
+    text-align: center;
+    padding: .3rem 0;
+    font-size: .65rem;
+    color: var(--booking-muted);
+  }
+
+  .day {
+    min-width: 0;
+    min-height: 42px;
+    padding: .4rem 0;
+    border: 1px solid var(--booking-line);
+    border-radius: 8px;
+    background: var(--booking-paper);
+    color: var(--booking-ink);
+    font-family: $font-accent;
+    font-size: .85rem;
+    cursor: pointer;
+  }
+
+  .selectedDay {
+    background: var(--booking-lime);
+    border-color: var(--booking-frame);
+    color: #171917;
+    box-shadow: 2px 3px 0 var(--booking-frame);
+    font-weight: 700;
+  }
+
+  .disabledDay,
+  .dayPast,
+  .dayLocked {
+    opacity: .4;
+    cursor: default;
+    background: var(--booking-bg);
+  }
+
+  .dayUnavailable,
+  .overrideBlockedDay {
+    color: #ad3551;
+    border-style: dashed;
+    text-decoration: line-through;
+    background: color-mix(in srgb, #d74067 8%, var(--booking-paper));
+    cursor: default;
+  }
+
+  .emptyState,
+  .preSelect,
+  .introBox,
+  .infoBox,
+  .warnBox {
+    padding: 1.2rem;
+    border: 1px solid var(--booking-line);
+    border-radius: 14px;
+    background: var(--booking-bg);
+    margin-bottom: 1.2rem;
+  }
+
+  .emptyState {
+    padding: 0;
+    border: 0;
+    margin: 0;
+  }
+
+  .emptyState strong,
+  .preSelect strong,
+  .introBox strong {
+    display: block;
+    margin: .8rem 0 .5rem;
+    font-family: $font-heading;
+    font-size: 1.25rem;
+    line-height: 1.2;
+    letter-spacing: -.04em;
+  }
+
+  .emptyState p,
+  .preSelect p,
+  .introBox p,
+  .infoBox p,
+  .warnBox p,
+  .toggleHint,
+  .infoSub,
+  .muted,
+  .previewEmpty {
+    margin: .5rem 0 0;
+    font-size: .8rem;
+    color: var(--booking-muted);
+    line-height: 1.7;
+  }
+
+  .introBox {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin: 0;
+  }
+
+  .introBox strong {
+    margin-top: 0;
+  }
+
+  .infoBox strong,
+  .warnBox strong {
+    font-size: .85rem;
+  }
+
+  .warnBox {
+    border-color: var(--booking-frame);
+    border-left: 5px solid var(--booking-lime);
+  }
+
+  .toggleLabel,
+  .slotFilter {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    min-height: 44px;
+    font-size: .8rem;
+    cursor: pointer;
+  }
+
+  .toggleLabel input,
+  .slotFilter input {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    accent-color: var(--booking-purple);
+  }
+
+  .summaryRow {
+    display: grid;
+    gap: .35rem;
+    padding: .8rem 0;
+    border-bottom: 1px solid var(--booking-line);
+  }
+
+  .summaryLabel {
+    color: var(--booking-muted);
+    font-size: .7rem;
+  }
+
+  .summaryValue {
+    font-size: .85rem;
+    overflow-wrap: anywhere;
+  }
+
+  .modePill,
+  .pickedPill {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .45rem;
+    padding: .5rem .65rem;
+    border: 1px solid var(--booking-frame);
+    border-radius: 7px;
+    background: var(--booking-paper);
+    font-size: .7rem;
+  }
+
+  .modeDot,
+  .pickedDot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--booking-purple);
+  }
+
+  .pickedMuted {
+    color: var(--booking-muted);
+  }
+
+  .fullLegendBar {
+    display: grid;
+    gap: .6rem;
+    margin: 1rem 0;
+  }
+
+  .legendBadges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+  }
+
+  .legendItem {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .35rem .5rem;
+    border: 1px solid var(--booking-line);
+    border-radius: 6px;
+    background: var(--booking-paper);
+    font-size: .65rem;
+    color: var(--booking-muted);
+  }
+
+  .legendBox {
+    width: 9px;
+    height: 9px;
+    border: 1px solid var(--booking-line);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .legendFree {
+    background: var(--booking-paper);
+  }
+
+  .legendSelected {
+    background: var(--booking-lime);
+  }
+
+  .legendReserved,
+  .legendUnavailable {
+    background: #d74067;
+  }
+
+  .legendPending {
+    background: #c28b20;
+  }
+
+  .legendDisabled,
+  .legendLocked {
+    background: #89908a;
+  }
+
+  .legendMetaFull {
+    color: var(--booking-muted);
+    font-size: .7rem;
+    line-height: 1.6;
+  }
+
+  .slotsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    gap: .6rem;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: .3rem .4rem .6rem .2rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--booking-purple) var(--booking-bg);
+  }
+
+  .slot {
+    min-height: 44px;
+    padding: .6rem;
+    border: 1px solid var(--booking-line);
+    border-radius: 8px;
+    font-family: $font-accent;
+    font-size: .85rem;
+    background: var(--booking-paper);
+    color: var(--booking-ink);
+    cursor: pointer;
+  }
+
+  .slotSelected {
+    border-color: var(--booking-frame);
+    background: var(--booking-lime);
+    color: #171917;
+    font-weight: 700;
+    box-shadow: 2px 3px 0 var(--booking-frame);
+  }
+
+  .slotDisabled {
+    opacity: .4;
+  }
+
+  .slotReserved {
+    color: #ad3551;
+    background: color-mix(in srgb, #d74067 10%, var(--booking-paper));
+    text-decoration: line-through;
+  }
+
+  .slotPending {
+    color: var(--booking-ink);
+    background: color-mix(in srgb, #c28b20 15%, var(--booking-paper));
+    border-style: dashed;
+  }
+
+  .slot:disabled {
+    cursor: default;
+  }
+
+  .day:focus-visible,
+  .slot:focus-visible,
+  .monthNav button:focus-visible,
+  .previewHead:focus-visible {
+    outline: 3px solid var(--booking-purple);
+    outline-offset: 2px;
+  }
+
+  .submitBar {
+    position: relative;
+    bottom: auto;
+    z-index: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem;
+    margin-top: 1.2rem;
+    border: 1px solid var(--booking-frame);
+    border-radius: 14px;
+    background: var(--booking-paper);
+    box-shadow: 4px 5px 0 var(--booking-frame);
+  }
+
+  .submit {
+    flex-shrink: 0;
+    min-height: 48px;
+    padding: .8rem 1rem;
+    border: 1px solid var(--booking-frame);
+    border-radius: 9px;
+    background: var(--booking-lime);
+    color: #171917;
+    box-shadow: 3px 3px 0 var(--booking-frame);
+    font-family: $font-accent;
+    font-size: .85rem;
+    font-weight: 650;
+    cursor: pointer;
+  }
+
+  .monthNav button:disabled {
+    opacity: .4;
+    cursor: default;
+    box-shadow: none;
+  }
+
+  @media(hover: hover) {
+
+    .day:not(:disabled):hover,
+    .slot:not(:disabled):hover,
+    .monthNav button:not(:disabled):hover {
+      border-color: var(--booking-purple);
+      background: color-mix(in srgb, var(--booking-lime) 25%, var(--booking-paper));
+    }
+
+    .submit:not(:disabled):hover {
+      background: #cafa51;
+    }
+  }
+
+  .submit:focus-visible {
+    outline: 3px solid var(--booking-purple);
+    outline-offset: 4px;
+  }
+
+  .submit:disabled {
+    opacity: .5;
+    cursor: default;
+    box-shadow: none;
+  }
+
+  .submitHint {
+    font-size: .73rem;
+    color: var(--booking-muted);
+    line-height: 1.6;
+  }
+
+  .bookingSummary {
+    margin: 0;
+    padding: 1rem;
+    border: 1px solid var(--booking-frame);
+    border-radius: 12px;
+    background: var(--booking-paper);
+    border-top: 4px solid var(--booking-lime);
+    font-size: .85rem;
+    line-height: 1.7;
+  }
+
+  .bookingSummary strong {
+    display: block;
+    font-family: $font-heading;
+    font-size: 1.1rem;
+    margin-bottom: .3rem;
+  }
+
+  .previewBox {
+    padding: 1.1rem;
+    border: 1px solid var(--booking-frame);
+    border-radius: 14px;
+    background: var(--booking-bg);
+  }
+
+  .previewHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    list-style: none;
+    min-height: 44px;
+    cursor: pointer;
+  }
+
+  .previewHead::-webkit-details-marker {
+    display: none;
+  }
+
+  .previewHead strong {
+    display: block;
+    margin-top: .4rem;
+    font-family: $font-heading;
+    font-size: 1.1rem;
+  }
+
+  .previewHead>svg {
+    flex-shrink: 0;
+    color: var(--booking-purple);
+  }
+
+  .previewBox[open] .previewHead>svg {
+    rotate: 180deg;
+  }
+
+  .previewContent {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    margin: 1rem 0 0;
+    padding: 1rem;
+    border: 1px solid var(--booking-line);
+    border-radius: 9px;
+    background: var(--booking-paper);
+    color: var(--booking-ink);
+    font-family: $font-accent;
+    font-size: .85rem;
+    line-height: 1.7;
+  }
+
+  @media(max-width: 1250px) {
+    .mainGrid {
+      grid-template-columns: 1fr;
+    }
+  }
+
   @media(max-width: 600px) {
-    .topGrid { grid-template-columns: 1fr; }
-    .field, .toggleField, .calendarCard, .slotsInfoCard, .infoCard, .slotsOnlyCard { padding: 1rem; }
-    .fieldHeader { flex-wrap: wrap; gap: .5rem; }
-    .progress { gap: .4rem; }
-    .progress li { flex-direction: column; align-items: flex-start; gap: .4rem; padding: .6rem; }
-    .progress strong { font-size: .65rem; }
-    .calendarGrid { gap: .25rem; }
-    .day { min-height: 44px; font-size: .8rem; }
-    .submitBar { flex-direction: column; align-items: stretch; bottom: .6rem; padding: .9rem; }
-    .submit { width: 100%; }
-    .submitHint { font-size: .7rem; }
-    .introBox { padding: 1rem; }
+    .topGrid {
+      grid-template-columns: 1fr;
+    }
+
+    .field,
+    .toggleField,
+    .calendarCard,
+    .slotsInfoCard,
+    .infoCard,
+    .slotsOnlyCard {
+      padding: 1rem;
+    }
+
+    .fieldHeader {
+      flex-wrap: wrap;
+      gap: .5rem;
+    }
+
+    .progress {
+      gap: .4rem;
+    }
+
+    .progress li {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: .4rem;
+      padding: .6rem;
+    }
+
+    .progress strong {
+      font-size: .65rem;
+    }
+
+    .calendarGrid {
+      gap: .25rem;
+    }
+
+    .day {
+      min-height: 44px;
+      font-size: .8rem;
+    }
+
+    .submitBar {
+      flex-direction: column;
+      align-items: stretch;
+      bottom: .6rem;
+      padding: .9rem;
+    }
+
+    .submit {
+      width: 100%;
+    }
+
+    .submitHint {
+      font-size: .7rem;
+    }
+
+    .introBox {
+      padding: 1rem;
+    }
   }
 }

@@ -1,237 +1,296 @@
 @import '../../../styles/profileEditor';
 @include profile-editor-card('.billingPanel');
+
 .billingHeader {
-  display:flex;
-  justify-content:space-between;
-  align-items:start;
-  gap:16px;
-  margin-bottom:18px;
-  padding-bottom:20px;
-  border-bottom:2px solid var(--app-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--app-border);
 }
+
 .billingHeader h2 {
-  font-family:$font-heading;
-  font-size:clamp(1.5rem,2.4vw,2.1rem);
-  line-height:1.25;
-  margin:5px 0 8px;
-  letter-spacing:-.03em;
+  font-family: $font-heading;
+  font-size: clamp(1.5rem, 2.4vw, 2.1rem);
+  line-height: 1.25;
+  margin: 5px 0 8px;
+  letter-spacing: -.03em;
 }
+
 .billingHeader p {
-  font-size:.8rem;
-  margin:0;
-  color:var(--app-muted);
-  max-width:620px;
+  font-size: .8rem;
+  margin: 0;
+  color: var(--app-muted);
+  max-width: 620px;
 }
+
 .billingEyebrow {
-  display:flex;
-  gap:8px;
-  font-size:.66rem!important;
-  text-transform:uppercase;
-  letter-spacing:.05em;
+  display: flex;
+  gap: 8px;
+  font-size: .66rem !important;
+  text-transform: uppercase;
+  letter-spacing: .05em;
 }
+
 .billingEyebrow span {
-  color:var(--app-primary);
+  color: var(--app-primary);
 }
+
 .currentPlanBadge {
-  display:grid;
-  gap:4px;
-  flex-shrink:0;
-  padding:9px 14px;
-  border:1px solid var(--yp-frame);
-  border-radius:9px;
-  background:var(--yp-lime);
-  color:#171917;
+  display: grid;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 9px 14px;
+  border: 1px solid var(--yp-frame);
+  border-radius: 9px;
+  background: var(--yp-lime);
+  color: #171917;
 }
+
 .currentPlanBadge span {
-  font-size:.65rem;
+  font-size: .65rem;
 }
+
 .currentPlanBadge strong {
-  font-size:.9rem;
+  font-size: .9rem;
 }
-.billingGlowOne,.billingGlowTwo,.billingNoise {
-  display:none;
+
+.billingGlowOne,
+.billingGlowTwo,
+.billingNoise {
+  display: none;
 }
+
 .billingStatusBox {
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:10px;
-  padding:0;
-  margin-bottom:0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+  margin-bottom: 0;
 }
-.billingStatusBox > div {
+
+.billingStatusBox>div {
   @include settings-value-card;
-  padding:12px;
+  padding: 12px;
 }
+
 .billingStatusBox span {
-  font-size:.7rem;
-  color:var(--app-muted);
+  font-size: .7rem;
+  color: var(--app-muted);
 }
+
 .billingStatusBox strong {
-  font-size:.85rem;
+  font-size: .85rem;
 }
+
 .planCards {
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:16px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
+
 .planCard {
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  min-width:0;
-  padding:18px;
-  border:1px solid var(--app-border);
-  border-radius:12px;
-  background:var(--app-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: var(--app-surface);
 }
+
 .activePlan {
-  border:1.5px solid var(--yp-frame);
-  box-shadow:2px 3px 0 var(--yp-shadow);
+  border: 1.5px solid var(--yp-frame);
+  box-shadow: 2px 3px 0 var(--yp-shadow);
 }
+
 .planBadge {
-  align-self:flex-start;
-  padding:3px 7px;
-  border:1px solid var(--app-border);
-  border-radius:6px;
-  color:var(--app-muted);
-  font-size:.64rem;
+  align-self: flex-start;
+  padding: 3px 7px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  color: var(--app-muted);
+  font-size: .64rem;
 }
+
 .activePlan .planBadge {
-  background:var(--yp-lime);
-  color:#171917;
-  border-color:var(--yp-frame);
+  background: var(--yp-lime);
+  color: #171917;
+  border-color: var(--yp-frame);
 }
+
 .planTop {
-  display:grid;
-  align-items:start;
-  gap:14px;
+  display: grid;
+  align-items: start;
+  gap: 14px;
 }
+
 .planTop h3 {
-  font-family:$font-accent;
-  margin:0;
-  font-size:1.05rem;
+  font-family: $font-accent;
+  margin: 0;
+  font-size: 1.05rem;
 }
+
 .planTop p {
-  font-size:.7rem;
-  color:var(--app-muted);
-  margin:3px 0 0;
+  font-size: .7rem;
+  color: var(--app-muted);
+  margin: 3px 0 0;
 }
-.planTop > strong {
-  display:block;
-  padding-top:12px;
-  border-top:1px solid var(--app-border);
-  font-size:1.2rem;
+
+.planTop>strong {
+  display: block;
+  padding-top: 12px;
+  border-top: 1px solid var(--app-border);
+  font-size: 1.2rem;
 }
+
 .planTop small {
-  font-size:.68rem;
-  font-weight:400;
+  font-size: .68rem;
+  font-weight: 400;
 }
+
 .planDesc {
-  margin:0;
-  color:var(--app-muted);
-  font-size:.78rem;
+  margin: 0;
+  color: var(--app-muted);
+  font-size: .78rem;
 }
+
 .planCard ul {
-  padding-left:17px;
-  margin:0 0 5px;
-  flex:1;
-  font-size:.77rem;
+  padding-left: 17px;
+  margin: 0 0 5px;
+  flex: 1;
+  font-size: .77rem;
 }
+
 .planCard li {
-  margin-bottom:7px;
+  margin-bottom: 7px;
 }
-.planButtonGhost,.portalButton {
+
+.planButtonGhost,
+.portalButton {
   @extend .secondary;
 }
+
 .billingFooter {
-  display:flex;
-  justify-content:space-between;
-  flex-wrap:wrap;
-  gap:12px;
-  margin-top:20px;
-  padding-top:16px;
-  border-top:1px solid var(--app-border);
-  font-size:.76rem;
-  color:var(--app-muted);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--app-border);
+  font-size: .76rem;
+  color: var(--app-muted);
 }
+
 .recovery {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  flex-wrap:wrap;
-  gap:12px;
-  padding:14px;
-  margin-bottom:20px;
-  border:1px solid var(--app-border);
-  border-radius:10px;
-  background:var(--app-bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 20px;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: var(--app-bg);
 }
+
 .recovery p {
-  margin:0;
-  flex:1;
-  min-width:min(100%,260px);
-  color:var(--app-muted);
-  font-size:.76rem;
+  margin: 0;
+  flex: 1;
+  min-width: min(100%, 260px);
+  color: var(--app-muted);
+  font-size: .76rem;
 }
+
 .recovery button {
   @extend .secondary;
 }
+
 @media(max-width:800px) {
   .planCards {
-    grid-template-columns:minmax(0,1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
+
   .planCard {
-    padding:16px;
+    padding: 16px;
   }
+
   .billingStatusBox {
-    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
 }
+
 @media(max-width:500px) {
   .billingHeader {
-    flex-direction:column;
+    flex-direction: column;
   }
+
   .billingStatusBox {
-    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
   .recovery button {
-    width:100%;
+    width: 100%;
   }
 
 }
+
 .starterPlan {
-  min-width:0;
+  min-width: 0;
 }
+
 .standardPlan {
-  min-width:0;
+  min-width: 0;
 }
+
 .premiumPlan {
-  min-width:0;
+  min-width: 0;
 }
+
 .planDetails {
-  flex:1;
-  font-size:.77rem;
+  flex: 1;
+  font-size: .77rem;
 }
+
 .planDetails summary {
-  display:list-item;
-  min-height:44px;
-  padding:10px 0;
-  color:var(--app-primary);
-  cursor:pointer;
+  display: list-item;
+  min-height: 44px;
+  padding: 10px 0;
+  color: var(--app-primary);
+  cursor: pointer;
 }
+
 .planDetails ul {
-  margin-top:8px;
+  margin-top: 8px;
 }
+
 .planDetails summary:focus-visible {
-  outline:3px solid var(--app-primary);
-  outline-offset:3px;
+  outline: 3px solid var(--app-primary);
+  outline-offset: 3px;
 }
+
 @container (max-width:680px) {
-  .planCards { grid-template-columns:minmax(0,1fr); }
-  .billingStatusBox { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .planCards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .billingStatusBox {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
+
 @container (max-width:420px) {
-  .billingHeader { flex-direction:column; }
-  .billingStatusBox { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .billingHeader {
+    flex-direction: column;
+  }
+
+  .billingStatusBox {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

@@ -571,7 +571,7 @@ export default function BookingModeCalendar({
 
   return (
     <>
-<BookingSteps className={styles.progress} steps={[{ label: "Usługa", done: Boolean(selectedService) && (!isUserPick || Boolean(selectedStaffId)) }, { label: "Dzień i godzina", done: Boolean(selectedDate && selectedSlot) }, { label: "Sprawdź i wyślij", done: false }]} />
+      <BookingSteps className={styles.progress} steps={[{ label: "Usługa", done: Boolean(selectedService) && (!isUserPick || Boolean(selectedStaffId)) }, { label: "Dzień i godzina", done: Boolean(selectedDate && selectedSlot) }, { label: "Sprawdź i wyślij", done: false }]} />
       <div className={styles.topGrid}>
 
 
@@ -752,7 +752,7 @@ export default function BookingModeCalendar({
                     `}
                     aria-label={format(day, "d MMMM yyyy", { locale: pl })}
                     aria-pressed={Boolean(sel)}
-                  disabled={disabled}
+                    disabled={disabled}
                     title={
                       blockedByOverride
                         ? "Ten dzień został oznaczony jako niedostępny przez usługodawcę."
@@ -895,24 +895,24 @@ export default function BookingModeCalendar({
               ))}
             </div>
 
-        <label className={`${styles.field} ${styles.fieldWide}`}>
-          <div className={styles.fieldHeader}>
-            <div>
-              <span className={styles.fieldEyebrow}>03 / Dodatkowe informacje</span>
-              <h3 className={styles.fieldTitle}>Opis lub uwagi do rezerwacji</h3>
-            </div>
+            <label className={`${styles.field} ${styles.fieldWide}`}>
+              <div className={styles.fieldHeader}>
+                <div>
+                  <span className={styles.fieldEyebrow}>03 / Dodatkowe informacje</span>
+                  <h3 className={styles.fieldTitle}>Opis lub uwagi do rezerwacji</h3>
+                </div>
 
-            <span className={styles.fieldHint}>opcjonalnie</span>
-          </div>
+                <span className={styles.fieldHint}>opcjonalnie</span>
+              </div>
 
-          <textarea
-            className={styles.textarea}
-            rows="3"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Np. strzyżenie + mycie, wrażliwa skóra, preferowana godzina…"
-          />
-        </label>
+              <textarea
+                className={styles.textarea}
+                rows="3"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Np. strzyżenie + mycie, wrażliwa skóra, preferowana godzina…"
+              />
+            </label>
 
             {selectedSlot && <div className={styles.bookingSummary} aria-live="polite"><strong>Twoja rezerwacja</strong>{selectedService.name}<br />{format(selectedDate, "d MMMM yyyy", { locale: pl })} · godz. {selectedSlot}<br />Czas usługi: {durationToMinutes(selectedService)} min{selectedStaffId && <><br />{staffList.find((staff) => String(staff._id) === String(selectedStaffId))?.name}</>}</div>}
             <div className={styles.submitBar}>

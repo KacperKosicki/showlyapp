@@ -60,27 +60,27 @@ const Footer = ({
   const profileAction =
     loadingProfileStatus && isLoggedIn
       ? {
-          label: "Sprawdzanie profilu...",
-          path: null,
-          scrollToId: null,
-          Icon: FiStar,
-          disabled: true,
-        }
+        label: "Sprawdzanie profilu...",
+        path: null,
+        scrollToId: null,
+        Icon: FiStar,
+        disabled: true,
+      }
       : isLoggedIn && hasProfile
         ? {
-            label: "Zarządzaj profilem",
-            path: "/profil",
-            scrollToId: "profileWrapper",
-            Icon: FiStar,
-            disabled: false,
-          }
+          label: "Zarządzaj profilem",
+          path: "/profil",
+          scrollToId: "profileWrapper",
+          Icon: FiStar,
+          disabled: false,
+        }
         : {
-            label: "Stwórz profil",
-            path: "/stworz-profil",
-            scrollToId: "scrollToId",
-            Icon: FiUserPlus,
-            disabled: false,
-          };
+          label: "Stwórz profil",
+          path: "/stworz-profil",
+          scrollToId: "scrollToId",
+          Icon: FiUserPlus,
+          disabled: false,
+        };
 
   const creatorLinks = [
     {

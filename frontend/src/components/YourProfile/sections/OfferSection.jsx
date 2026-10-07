@@ -188,9 +188,9 @@ const OfferSection = ({
         <div className={styles.cardGlow} aria-hidden="true" />
 
         <EditorSectionHeader kicker={<>Oferta i dostępność</>} title={<>Dostępność i usługi</>} description={<>
-              Ustaw cennik, dodaj usługi, wybierz tryb rezerwacji oraz określ dni i godziny,
-              w których klienci mogą się z Tobą kontaktować.
-            </>} icon={<FaCalendarAlt />} />
+          Ustaw cennik, dodaj usługi, wybierz tryb rezerwacji oraz określ dni i godziny,
+          w których klienci mogą się z Tobą kontaktować.
+        </>} icon={<FaCalendarAlt />} />
 
         <div className={styles.offerBody}>
           {/* CENNIK */}
@@ -326,8 +326,8 @@ const OfferSection = ({
 
           {/* USTAWIENIA REZERWACJI */}
           <EditorGroup title={<>03 / Ustawienia rezerwacji</>} description={<>
-                  Skonfiguruj przerwę między usługami, automatyczne potwierdzanie oraz działanie zespołu.
-                </>}>
+            Skonfiguruj przerwę między usługami, automatyczne potwierdzanie oraz działanie zespołu.
+          </>}>
 
 
             <div className={styles.bookingSettingsGrid}>
@@ -649,8 +649,8 @@ const OfferSection = ({
 
           {/* USŁUGI */}
           <EditorGroup title={<>06 / Usługi</>} description={<>
-                  Dodaj konkretne usługi, ich czas trwania i sposób wyceny.
-                </>}>
+            Dodaj konkretne usługi, ich czas trwania i sposób wyceny.
+          </>}>
 
 
             {isEditing ? (
@@ -1090,8 +1090,8 @@ const OfferSection = ({
                 )}
 
                 <EditorGroup title={<>Dodaj nową usługę</>} description={<>
-                      {editData.services?.length || 0}/{MAX_SERVICES} usług w obecnym planie
-                    </>}>
+                  {editData.services?.length || 0}/{MAX_SERVICES} usług w obecnym planie
+                </>}>
 
 
                   <div className={styles.addServiceGrid}>
@@ -1411,9 +1411,9 @@ const OfferSection = ({
 
           {/* WYJĄTKI DOSTĘPNOŚCI */}
           <EditorGroup title={<>07 / Wyjątki dostępności</>} description={<>
-                  Dodaj urlop, wyjazd, prywatną blokadę dnia albo konkretny zakres godzin,
-                  którego nie chcesz udostępniać klientom.
-                </>}>
+            Dodaj urlop, wyjazd, prywatną blokadę dnia albo konkretny zakres godzin,
+            którego nie chcesz udostępniać klientom.
+          </>}>
 
 
             {isEditing ? (
@@ -1644,8 +1644,8 @@ const OfferSection = ({
         <div className={styles.cardGlow} aria-hidden="true" />
 
         <EditorSectionHeader kicker={<>Zespół</>} title={<>Pracownicy</>} description={<>
-              Dodawaj członków zespołu, przypisuj im usługi i zarządzaj ich dostępnością w rezerwacjach.
-            </>} icon={<FaUsers />} />
+          Dodawaj członków zespołu, przypisuj im usługi i zarządzaj ich dostępnością w rezerwacjach.
+        </>} icon={<FaUsers />} />
 
         <div className={styles.staffBody}>
           {!canUseTeam && (
@@ -1698,251 +1698,251 @@ const OfferSection = ({
 
           {/* Lista pracowników */}
           <EditorGroup title="02 / Pracownicy i przypisane usługi">
-          {staffLoading ? (
-            <div className={styles.staffLoadingBox}>
-              Ładowanie pracowników…
-            </div>
-          ) : staff.length ? (
-            <div className={`${styles.staffGrid} ${!canUseTeam ? styles.lockedSection : ""}`}>
-              {staff.map((st) => {
-                const edit = staffEdits[st._id] || st;
-                const services = editData.services || [];
-                const selected = new Set((edit?.serviceIds || []).map(String));
-                const initials = String(edit.name || st.name || "P")
-                  .trim()
-                  .slice(0, 1)
-                  .toUpperCase();
+            {staffLoading ? (
+              <div className={styles.staffLoadingBox}>
+                Ładowanie pracowników…
+              </div>
+            ) : staff.length ? (
+              <div className={`${styles.staffGrid} ${!canUseTeam ? styles.lockedSection : ""}`}>
+                {staff.map((st) => {
+                  const edit = staffEdits[st._id] || st;
+                  const services = editData.services || [];
+                  const selected = new Set((edit?.serviceIds || []).map(String));
+                  const initials = String(edit.name || st.name || "P")
+                    .trim()
+                    .slice(0, 1)
+                    .toUpperCase();
 
-                return (
-                  <article key={st._id} className={styles.staffPersonCard}>
-                    <div className={styles.staffPersonTop}>
-                      <div className={styles.staffAvatar}>
-                        <span>{initials}</span>
+                  return (
+                    <article key={st._id} className={styles.staffPersonCard}>
+                      <div className={styles.staffPersonTop}>
+                        <div className={styles.staffAvatar}>
+                          <span>{initials}</span>
+                        </div>
+
+                        <div className={styles.staffPersonMain}>
+                          <span className={styles.staffId}>#{String(st._id).slice(-5)}</span>
+
+                          {isEditing && canUseTeam ? (
+                            <>
+                              <input
+                                className={styles.formInput}
+                                value={edit.name ?? ""}
+                                maxLength={STAFF_NAME_MAX_LENGTH}
+                                onChange={(e) =>
+                                  setStaffEdits((prev) => ({
+                                    ...prev,
+                                    [st._id]: {
+                                      ...edit,
+                                      name: cleanStaffName(e.target.value),
+                                    },
+                                  }))
+                                }
+                                placeholder="Imię i nazwisko"
+                              />
+
+                              <small className={styles.fieldCounter}>
+                                {(edit.name || "").length}/{STAFF_NAME_MAX_LENGTH}
+                              </small>
+                            </>
+                          ) : (
+                            <strong>{st.name}</strong>
+                          )}
+                        </div>
+
+                        {!isEditing && (
+                          <span
+                            className={`${styles.statusPill} ${st.active ? styles.statusActive : styles.statusInactive
+                              }`}
+                          >
+                            {st.active ? "Aktywny" : "Nieaktywny"}
+                          </span>
+                        )}
                       </div>
 
-                      <div className={styles.staffPersonMain}>
-                        <span className={styles.staffId}>#{String(st._id).slice(-5)}</span>
+                      <div className={styles.staffDetailsGrid}>
+                        <div className={styles.staffDetailBox}>
+                          <span>Status</span>
 
-                        {isEditing && canUseTeam ? (
-                          <>
+                          {isEditing && canUseTeam ? (
+                            <label className={styles.staffSwitch}>
+                              <input
+                                type="checkbox"
+                                checked={!!(edit.active ?? true)}
+                                onChange={(e) =>
+                                  setStaffEdits((prev) => ({
+                                    ...prev,
+                                    [st._id]: { ...edit, active: e.target.checked },
+                                  }))
+                                }
+                              />
+                              <strong>{edit.active !== false ? "Aktywny" : "Nieaktywny"}</strong>
+                            </label>
+                          ) : (
+                            <strong>{st.active ? "Aktywny" : "Nieaktywny"}</strong>
+                          )}
+                        </div>
+
+                        <div className={styles.staffDetailBox}>
+                          <span>Pojemność</span>
+
+                          {isEditing && canUseTeam ? (
                             <input
+                              type="number"
+                              min={1}
                               className={styles.formInput}
-                              value={edit.name ?? ""}
-                              maxLength={STAFF_NAME_MAX_LENGTH}
+                              value={edit.capacity ?? 1}
                               onChange={(e) =>
                                 setStaffEdits((prev) => ({
                                   ...prev,
                                   [st._id]: {
                                     ...edit,
-                                    name: cleanStaffName(e.target.value),
+                                    capacity: Math.max(
+                                      1,
+                                      parseInt(e.target.value || "1", 10)
+                                    ),
                                   },
                                 }))
                               }
-                              placeholder="Imię i nazwisko"
                             />
-
-                            <small className={styles.fieldCounter}>
-                              {(edit.name || "").length}/{STAFF_NAME_MAX_LENGTH}
-                            </small>
-                          </>
-                        ) : (
-                          <strong>{st.name}</strong>
-                        )}
+                          ) : (
+                            <strong>{st.capacity || 1}</strong>
+                          )}
+                        </div>
                       </div>
 
-                      {!isEditing && (
-                        <span
-                          className={`${styles.statusPill} ${st.active ? styles.statusActive : styles.statusInactive
-                            }`}
-                        >
-                          {st.active ? "Aktywny" : "Nieaktywny"}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className={styles.staffDetailsGrid}>
-                      <div className={styles.staffDetailBox}>
-                        <span>Status</span>
+                      <div className={styles.staffServicesBox}>
+                        <div className={styles.staffMiniTitle}>
+                          <FaTools />
+                          <span>Przypisane usługi</span>
+                        </div>
 
                         {isEditing && canUseTeam ? (
-                          <label className={styles.staffSwitch}>
-                            <input
-                              type="checkbox"
-                              checked={!!(edit.active ?? true)}
-                              onChange={(e) =>
-                                setStaffEdits((prev) => ({
-                                  ...prev,
-                                  [st._id]: { ...edit, active: e.target.checked },
-                                }))
-                              }
-                            />
-                            <strong>{edit.active !== false ? "Aktywny" : "Nieaktywny"}</strong>
-                          </label>
-                        ) : (
-                          <strong>{st.active ? "Aktywny" : "Nieaktywny"}</strong>
-                        )}
-                      </div>
+                          services.length ? (
+                            <div className={styles.staffServicePicker}>
+                              {services.map((service) => {
+                                const serviceId = String(service._id);
+                                const checked = selected.has(serviceId);
 
-                      <div className={styles.staffDetailBox}>
-                        <span>Pojemność</span>
+                                return (
+                                  <label
+                                    key={service._id}
+                                    className={`${styles.staffServiceChip} ${checked ? styles.staffServiceChipActive : ""
+                                      }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      onChange={(e) => {
+                                        const next = new Set(selected);
 
-                        {isEditing && canUseTeam ? (
-                          <input
-                            type="number"
-                            min={1}
-                            className={styles.formInput}
-                            value={edit.capacity ?? 1}
-                            onChange={(e) =>
-                              setStaffEdits((prev) => ({
-                                ...prev,
-                                [st._id]: {
-                                  ...edit,
-                                  capacity: Math.max(
-                                    1,
-                                    parseInt(e.target.value || "1", 10)
-                                  ),
-                                },
-                              }))
-                            }
-                          />
-                        ) : (
-                          <strong>{st.capacity || 1}</strong>
-                        )}
-                      </div>
-                    </div>
+                                        if (e.target.checked) {
+                                          next.add(serviceId);
+                                        } else {
+                                          next.delete(serviceId);
+                                        }
 
-                    <div className={styles.staffServicesBox}>
-                      <div className={styles.staffMiniTitle}>
-                        <FaTools />
-                        <span>Przypisane usługi</span>
-                      </div>
+                                        setStaffEdits((prev) => ({
+                                          ...prev,
+                                          [st._id]: {
+                                            ...edit,
+                                            serviceIds: Array.from(next),
+                                          },
+                                        }));
+                                      }}
+                                    />
 
-                      {isEditing && canUseTeam ? (
-                        services.length ? (
-                          <div className={styles.staffServicePicker}>
-                            {services.map((service) => {
-                              const serviceId = String(service._id);
-                              const checked = selected.has(serviceId);
-
-                              return (
-                                <label
-                                  key={service._id}
-                                  className={`${styles.staffServiceChip} ${checked ? styles.staffServiceChipActive : ""
-                                    }`}
-                                >
-                                  <input
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={(e) => {
-                                      const next = new Set(selected);
-
-                                      if (e.target.checked) {
-                                        next.add(serviceId);
-                                      } else {
-                                        next.delete(serviceId);
-                                      }
-
-                                      setStaffEdits((prev) => ({
-                                        ...prev,
-                                        [st._id]: {
-                                          ...edit,
-                                          serviceIds: Array.from(next),
-                                        },
-                                      }));
-                                    }}
-                                  />
-
-                                  <span>{service.name}</span>
-                                </label>
+                                    <span>{service.name}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className={styles.infoMuted}>
+                              Najpierw dodaj usługi w sekcji wyżej.
+                            </div>
+                          )
+                        ) : (st.serviceIds || []).length ? (
+                          <div className={styles.staffServiceTags}>
+                            {(st.serviceIds || []).map((id) => {
+                              const service = services.find(
+                                (s) => String(s._id) === String(id)
                               );
+
+                              return service ? (
+                                <span key={id}>{service.name}</span>
+                              ) : null;
                             })}
                           </div>
                         ) : (
                           <div className={styles.infoMuted}>
-                            Najpierw dodaj usługi w sekcji wyżej.
+                            Brak przypisanych usług.
                           </div>
-                        )
-                      ) : (st.serviceIds || []).length ? (
-                        <div className={styles.staffServiceTags}>
-                          {(st.serviceIds || []).map((id) => {
-                            const service = services.find(
-                              (s) => String(s._id) === String(id)
-                            );
-
-                            return service ? (
-                              <span key={id}>{service.name}</span>
-                            ) : null;
-                          })}
-                        </div>
-                      ) : (
-                        <div className={styles.infoMuted}>
-                          Brak przypisanych usług.
-                        </div>
-                      )}
-                    </div>
-
-                    {isEditing && canUseTeam && (
-                      <div className={styles.staffActions}>
-                        <LoadingButton
-                          type="button"
-                          isLoading={deletingStaffIds.includes(st._id)}
-                          disabled={deletingStaffIds.includes(st._id)}
-                          className={styles.danger}
-                          onClick={() => deleteStaff(st._id)}
-                        >
-                          <FaTrash /> Usuń
-                        </LoadingButton>
-
-                        {staffEdits[st._id] && (
-                          <button
-                            type="button"
-                            className={styles.secondary}
-                            onClick={() =>
-                              setStaffEdits((prev) => {
-                                const copy = { ...prev };
-                                delete copy[st._id];
-                                return copy;
-                              })
-                            }
-                          >
-                            <FaTimes /> Cofnij zmiany
-                          </button>
                         )}
                       </div>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-          ) : (
-            <div className={styles.staffEmpty}>
-              <div className={styles.emptyIcon}>
-                <FaUsers />
+
+                      {isEditing && canUseTeam && (
+                        <div className={styles.staffActions}>
+                          <LoadingButton
+                            type="button"
+                            isLoading={deletingStaffIds.includes(st._id)}
+                            disabled={deletingStaffIds.includes(st._id)}
+                            className={styles.danger}
+                            onClick={() => deleteStaff(st._id)}
+                          >
+                            <FaTrash /> Usuń
+                          </LoadingButton>
+
+                          {staffEdits[st._id] && (
+                            <button
+                              type="button"
+                              className={styles.secondary}
+                              onClick={() =>
+                                setStaffEdits((prev) => {
+                                  const copy = { ...prev };
+                                  delete copy[st._id];
+                                  return copy;
+                                })
+                              }
+                            >
+                              <FaTimes /> Cofnij zmiany
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
               </div>
+            ) : (
+              <div className={styles.staffEmpty}>
+                <div className={styles.emptyIcon}>
+                  <FaUsers />
+                </div>
 
-              <strong>
-                {canUseTeam
-                  ? "Nie dodałeś/aś jeszcze żadnych pracowników"
-                  : "Pracownicy są zablokowani w obecnym planie"}
-              </strong>
+                <strong>
+                  {canUseTeam
+                    ? "Nie dodałeś/aś jeszcze żadnych pracowników"
+                    : "Pracownicy są zablokowani w obecnym planie"}
+                </strong>
 
-              <p>
-                {canUseTeam
-                  ? "Dodaj pierwszą osobę do zespołu i przypisz jej usługi, które może obsługiwać."
-                  : "Przejdź na Premium, aby zarządzać zespołem i rezerwacjami dla wielu osób."}
-              </p>
-            </div>
-          )}
+                <p>
+                  {canUseTeam
+                    ? "Dodaj pierwszą osobę do zespołu i przypisz jej usługi, które może obsługiwać."
+                    : "Przejdź na Premium, aby zarządzać zespołem i rezerwacjami dla wielu osób."}
+                </p>
+              </div>
+            )}
 
-          {/* Dodawanie pracownika */}
+            {/* Dodawanie pracownika */}
           </EditorGroup>
           {isEditing ? (
             canUseTeam ? (
               <EditorGroup title={<>03 / Dodaj pracownika</>} description={<>
-                      {hasReachedStaffLimit
-                        ? `Osiągnięto limit ${MAX_STAFF} pracowników w planie Premium.`
-                        : "Nowa osoba będzie mogła obsługiwać wybrane usługi w systemie rezerwacji."}
-                    </>}>
+                {hasReachedStaffLimit
+                  ? `Osiągnięto limit ${MAX_STAFF} pracowników w planie Premium.`
+                  : "Nowa osoba będzie mogła obsługiwać wybrane usługi w systemie rezerwacji."}
+              </>}>
 
 
                 <div className={styles.addStaffGrid}>

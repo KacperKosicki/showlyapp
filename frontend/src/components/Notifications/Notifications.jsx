@@ -511,9 +511,8 @@ const Notifications = ({ user, setUnreadCount }) => {
     return (
       <li
         key={conversation._id}
-        className={`${styles.item} ${
-          isUnread ? styles.unread : styles.read
-        } ${variant === "system" ? styles.itemSystem : ""}`}
+        className={`${styles.item} ${isUnread ? styles.unread : styles.read
+          } ${variant === "system" ? styles.itemSystem : ""}`}
       >
         <Link
           to={`/konwersacja/${conversation._id}`}
@@ -707,9 +706,8 @@ const Notifications = ({ user, setUnreadCount }) => {
               <div className={styles.messages}>
                 {renderGroup({
                   number: "02",
-                  title: `Wiadomości do profilu${
-                    myProfile?.name ? ` „${myProfile.name}”` : ""
-                  }`,
+                  title: `Wiadomości do profilu${myProfile?.name ? ` „${myProfile.name}”` : ""
+                    }`,
                   label: "Odebrane przez profil",
                   badge: hasMyProfile
                     ? inboxUnread > 0

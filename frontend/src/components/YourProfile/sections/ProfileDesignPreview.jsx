@@ -42,7 +42,7 @@ const ProfileDesignPreview = ({ profile, editData, isEditing }) => {
             </div>
             <div className={styles.previewPanel}>
               <span className={styles.previewAddress}>showly.me/{data?.slug || profile?.slug || 'twoja-marka'}</span>
-              <div className={styles.previewStats}>{stats.map(({key, icon: Icon, value, label}) => <div key={key}><Icon aria-hidden="true" /><strong>{value}</strong><span>{label}</span></div>)}</div>
+              <div className={styles.previewStats}>{stats.map(({ key, icon: Icon, value, label }) => <div key={key}><Icon aria-hidden="true" /><strong>{value}</strong><span>{label}</span></div>)}</div>
               {booking.allowBookingUI && <span className={`${styles.previewButton} ${styles.previewPrimary}`}>{booking.bookBtnLabel}<FiArrowUpRight aria-hidden="true" /></span>}
               <span className={styles.previewButton}>{theme.ctaLabel || 'Napisz wiadomość'}<FiArrowUpRight aria-hidden="true" /></span>
             </div>

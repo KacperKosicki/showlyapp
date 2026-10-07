@@ -850,10 +850,7 @@ $dark-pink: #ff4f9a;
   min-height: 100vh;
 
   padding:
-    clamp(1.25rem, 3vw, 2.5rem)
-    max(clamp(1rem, 3vw, 2rem), var(--safe-right))
-    calc(clamp(2rem, 5vw, 4rem) + var(--safe-bottom))
-    max(clamp(1rem, 3vw, 2rem), var(--safe-left));
+    clamp(1.25rem, 3vw, 2.5rem) max(clamp(1rem, 3vw, 2rem), var(--safe-right)) calc(clamp(2rem, 5vw, 4rem) + var(--safe-bottom)) max(clamp(1rem, 3vw, 2rem), var(--safe-left));
 
   background: var(--app-bg);
   color: var(--app-text);
@@ -1086,6 +1083,7 @@ $dark-pink: #ff4f9a;
 }
 
 @media (max-width: 480px) {
+
   .infoBlock,
   .form {
     padding: 0.9rem;
@@ -1097,6 +1095,7 @@ $dark-pink: #ff4f9a;
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .field input,
   .field textarea,
   .submitButton,

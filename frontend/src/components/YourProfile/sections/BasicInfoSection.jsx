@@ -38,8 +38,8 @@ const BasicInfoSection = ({
       <div className={styles.cardGlow} aria-hidden="true" />
 
       <EditorSectionHeader kicker={<>Profil publiczny</>} title={<>Dane podstawowe</>} description={<>
-            {'To pierwsze informacje, kt\u00f3re widz\u0105 u\u017cytkownicy po wej\u015bciu na Twoj\u0105 wizyt\u00f3wk\u0119.'}
-          </>} icon={<FaIdBadge />} />
+        {'To pierwsze informacje, kt\u00f3re widz\u0105 u\u017cytkownicy po wej\u015bciu na Twoj\u0105 wizyt\u00f3wk\u0119.'}
+      </>} icon={<FaIdBadge />} />
 
       <div className={styles.basicInfoRow}>
         <EditorGroup title="01 / Zdjęcie i banner"><div className={styles.avatarColumn}>

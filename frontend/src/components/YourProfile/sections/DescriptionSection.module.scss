@@ -1,79 +1,97 @@
 @import '../../../styles/profileEditor';
 @include profile-editor-card('.card');
-.descriptionBlock,.descriptionEditor {
-  display:grid;
-  gap:12px;
+
+.descriptionBlock,
+.descriptionEditor {
+  display: grid;
+  gap: 12px;
 }
+
 .textareaShell {
-  position:relative;
+  position: relative;
 }
+
 .descriptionTextarea {
-  width:100%;
-  min-height:170px;
-  padding:14px;
-  border:1px solid var(--app-border);
-  border-radius:10px;
-  background:var(--app-bg);
-  color:var(--app-text);
-  font:inherit;
-  resize:vertical;
+  width: 100%;
+  min-height: 170px;
+  padding: 14px;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: var(--app-bg);
+  color: var(--app-text);
+  font: inherit;
+  resize: vertical;
 }
-.textareaDecor,.quoteMark {
-  display:none;
+
+.textareaDecor,
+.quoteMark {
+  display: none;
 }
-.descMeta,.descriptionFooter {
-  display:flex;
-  justify-content:space-between;
-  flex-wrap:wrap;
-  gap:8px;
-  color:var(--app-muted);
-  font-size:.72rem;
+
+.descMeta,
+.descriptionFooter {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--app-muted);
+  font-size: .72rem;
 }
+
 .descLeft {
-  display:grid;
-  gap:3px;
+  display: grid;
+  gap: 3px;
 }
+
 .counterPill {
-  font-variant-numeric:tabular-nums;
+  font-variant-numeric: tabular-nums;
 }
+
 .descProgress {
-  height:3px;
-  border-radius:3px;
-  background:var(--app-border);
-  overflow:hidden;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--app-border);
+  overflow: hidden;
 }
+
 .descProgress span {
-  display:block;
-  height:100%;
-  background:var(--app-primary);
+  display: block;
+  height: 100%;
+  background: var(--app-primary);
 }
+
 .descriptionPreview {
   @include settings-panel;
-  padding:18px;
-  border:1px solid var(--app-border);
-  border-radius:12px;
-  background:var(--app-bg);
+  padding: 18px;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: var(--app-bg);
 }
+
 .descriptionText {
-  margin:0 0 12px;
-  white-space:pre-wrap;
-  font-size:.875rem;
-  line-height:1.85;
+  margin: 0 0 12px;
+  white-space: pre-wrap;
+  font-size: .875rem;
+  line-height: 1.85;
 }
+
 .descriptionEmpty {
-  padding:18px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  color:var(--app-muted);
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--app-muted);
 }
+
 .emptyIcon {
-  flex-shrink:0;
-  font-size:22px;
+  flex-shrink: 0;
+  font-size: 22px;
 }
+
 .descriptionCard {
-  min-width:0;
+  min-width: 0;
 }
+
 .descRight {
-  min-width:0;
+  min-width: 0;
 }

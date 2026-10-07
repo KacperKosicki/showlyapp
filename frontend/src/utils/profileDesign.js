@@ -60,9 +60,11 @@ export const getProfileBookingPresentation = (profile = {}) => {
   const bookingMode = raw === 'calendar' && (!hasFeatures || features.booking) ? 'calendar'
     : raw === 'request-blocking' && (!hasFeatures || features.requestBlocking) ? 'request-blocking'
       : raw === 'request-open' ? 'request-open' : 'off';
-  return { bookingMode, isCalendar: bookingMode === 'calendar',
+  return {
+    bookingMode, isCalendar: bookingMode === 'calendar',
     allowBookingUI: bookingMode !== 'off' && profile.showAvailableDates !== false,
-    bookBtnLabel: bookingMode === 'calendar' ? 'Zarezerwuj termin' : 'Wyślij zapytanie' };
+    bookBtnLabel: bookingMode === 'calendar' ? 'Zarezerwuj termin' : 'Wyślij zapytanie'
+  };
 };
 export const normalizeProfileDesign = (input = {}) => {
   const source = typeof input === 'string' ? { variant: input } : input || {};
@@ -103,7 +105,8 @@ export const contrastInk = (hex) => {
 };
 export const getProfileDesignAttributes = (input) => {
   const theme = normalizeProfileDesign(input);
-  return Object.fromEntries(Object.entries({ design: theme.style, layout: theme.layout, motion: theme.motion,
+  return Object.fromEntries(Object.entries({
+    design: theme.style, layout: theme.layout, motion: theme.motion,
     background: theme.backgroundStyle, decorations: theme.decorations, alignment: theme.heroAlignment,
     buttons: theme.buttonStyle, services: theme.serviceLayout, width: theme.contentWidth,
   }).map(([key, value]) => [`data-${key}`, value]));

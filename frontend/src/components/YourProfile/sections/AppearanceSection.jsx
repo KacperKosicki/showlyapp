@@ -6,9 +6,11 @@ import styles from './AppearanceSection.module.scss';
 const AppearanceSection = ({ profile, editData, isEditing, canUsePremiumThemes, onEditDataChange, showPreview = true }) => {
   const source = isEditing ? editData?.theme : profile?.theme;
   // Keep the draft intact while typing; normalization trims text on save.
-  const theme = { ...normalizeProfileDesign(source), ...(isEditing && {
-    tagline: source?.tagline ?? '', ctaLabel: source?.ctaLabel ?? '',
-  }) };
+  const theme = {
+    ...normalizeProfileDesign(source), ...(isEditing && {
+      tagline: source?.tagline ?? '', ctaLabel: source?.ctaLabel ?? '',
+    })
+  };
   const editable = isEditing && canUsePremiumThemes;
   const update = (changes) => onEditDataChange(prev => ({ ...prev, theme: { ...normalizeProfileDesign(prev.theme), tagline: prev.theme?.tagline ?? '', ctaLabel: prev.theme?.ctaLabel ?? '', ...changes } }));
   const move = (index, direction) => {

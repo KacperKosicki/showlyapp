@@ -1,23 +1,27 @@
 @import '../../../styles/profileEditor';
 @include profile-editor-card('.card');
+
 .noticeCard {
-  display:flex;
-  flex-wrap:wrap;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
+
 .noticeContent {
-  flex:1;
-  min-width:min(100%,260px);
+  flex: 1;
+  min-width: min(100%, 260px);
 }
+
 .noticeTitle {
-  margin:0 0 5px;
-  font-size:.9rem;
-  font-weight:600;
+  margin: 0 0 5px;
+  font-size: .9rem;
+  font-weight: 600;
 }
+
 .noticeText {
-  margin:5px 0 0;
-  font-size:.8rem;
-  color:var(--app-muted);
+  margin: 5px 0 0;
+  font-size: .8rem;
+  color: var(--app-muted);
 }

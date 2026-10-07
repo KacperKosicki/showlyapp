@@ -267,7 +267,7 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
         query, place, category: activeCategory, type: activeType, booking: activeBooking,
         sort, ratedOnly, favoritesOnly: Boolean(currentUser?.uid) && favoritesOnly,
     }, { category: normalizeCategory, type: getProfileTypeLabel, booking: getBookingLabel }),
-    [profiles, query, place, activeCategory, activeType, activeBooking, sort, ratedOnly, favoritesOnly, currentUser?.uid]);
+        [profiles, query, place, activeCategory, activeType, activeBooking, sort, ratedOnly, favoritesOnly, currentUser?.uid]);
 
     useEffect(() => { setVisibleCount(12); }, [query, place, activeCategory, activeType, activeBooking, sort, ratedOnly, favoritesOnly]);
 
@@ -298,8 +298,10 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
         if (!track) return;
         const width = track.querySelector('[role="listitem"]')?.getBoundingClientRect().width || 360;
         const gap = parseFloat(getComputedStyle(track).gap) || 20;
-        track.scrollTo({ left: Math.max(0, Math.min(track.scrollLeft + direction * (width + gap), track.scrollWidth - track.clientWidth)),
-            behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        track.scrollTo({
+            left: Math.max(0, Math.min(track.scrollLeft + direction * (width + gap), track.scrollWidth - track.clientWidth)),
+            behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'
+        });
     };
 
     const resetFilters = () => {
@@ -357,7 +359,7 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
                             <label className={styles.sortLabel}>Pokaż najpierw<select value={sort} onChange={e => setSort(e.target.value)}><option value="popular">Najczęściej odwiedzane</option><option value="rating">Najlepiej oceniane</option><option value="newest">Najnowsze</option></select></label>
                         </div>
                         {chips.length > 0 && <div className={styles.activeFilters} aria-label="Aktywne filtry">{chips.map(chip => <button key={chip.label} type="button" onClick={chip.clear} aria-label={'Usuń filtr: ' + chip.label}>{chip.label}<FiX aria-hidden="true" /></button>)}<button type="button" onClick={resetFilters}>Wyczyść wszystkie</button></div>}
-                        {loading ? <div className={styles.skeletons} aria-label="Ładowanie profili" aria-busy="true">{[0,1,2].map(i => <div key={i} />)}</div> : fetchError ? <div className={styles.empty}><FiRefreshCw aria-hidden="true" /><h3>Spróbujmy jeszcze raz.</h3><p>Nie udało się wczytać katalogu. Odśwież wyniki za chwilę.</p><button type="button" onClick={() => setReloadKey(key => key + 1)}>Wczytaj ponownie</button></div> : filteredProfiles.length === 0 ? <div className={styles.empty}><FiSearch aria-hidden="true" /><h3>Poszukajmy trochę szerzej.</h3><p>Spróbuj krótszej nazwy, innej miejscowości lub usuń jeden z filtrów.</p><button type="button" onClick={resetFilters}>Pokaż wszystkie profile</button></div> : <>
+                        {loading ? <div className={styles.skeletons} aria-label="Ładowanie profili" aria-busy="true">{[0, 1, 2].map(i => <div key={i} />)}</div> : fetchError ? <div className={styles.empty}><FiRefreshCw aria-hidden="true" /><h3>Spróbujmy jeszcze raz.</h3><p>Nie udało się wczytać katalogu. Odśwież wyniki za chwilę.</p><button type="button" onClick={() => setReloadKey(key => key + 1)}>Wczytaj ponownie</button></div> : filteredProfiles.length === 0 ? <div className={styles.empty}><FiSearch aria-hidden="true" /><h3>Poszukajmy trochę szerzej.</h3><p>Spróbuj krótszej nazwy, innej miejscowości lub usuń jeden z filtrów.</p><button type="button" onClick={resetFilters}>Pokaż wszystkie profile</button></div> : <>
                             <div className={styles.carouselTop}><p>Przesuwaj karty lub użyj strzałek, żeby odkrywać kolejne profile.</p><div className={styles.carouselControls}><button type="button" aria-label="Poprzedni profil" disabled={!canLeft} onClick={() => scrollProfiles(-1)}><FiArrowLeft aria-hidden="true" /></button><button type="button" aria-label="Następny profil" disabled={!canRight} onClick={() => scrollProfiles(1)}><FiArrowRight aria-hidden="true" /></button></div></div>
                             <div className={styles.cardsTrack} ref={trackRef} onScroll={updateCarousel} role="list" aria-label="Lista profili Showly" tabIndex={0} onKeyDown={event => { if (event.target !== event.currentTarget) return; if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); scrollProfiles(event.key === 'ArrowRight' ? 1 : -1); } }}>{filteredProfiles.slice(0, visibleCount).map(profile => <div className={styles.cardShell} key={profile._id || profile.userId || profile.id} role="listitem"><UserCard user={profile} currentUser={currentUser} setAlert={setAlert} /></div>)}</div>
                             <div className={styles.resultsFooter}><span>Widzisz {Math.min(visibleCount, filteredProfiles.length)} z {filteredProfiles.length} profili</span>{visibleCount < filteredProfiles.length && <button type="button" onClick={() => setVisibleCount(count => count + 12)}>Odkryj kolejne profile <FiArrowDown aria-hidden="true" /></button>}</div>

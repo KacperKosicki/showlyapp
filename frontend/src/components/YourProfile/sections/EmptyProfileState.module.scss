@@ -1,66 +1,82 @@
 @import '../../../styles/profileEditor';
 @include profile-editor-card('.emptyCard');
+
 .wrapper {
   @include settings-tokens;
-  min-height:70vh;
-  padding:100px 16px 60px;
-  background:var(--app-bg);
-  color:var(--app-text);
-  font-family:$font-body;
+  min-height: 70vh;
+  padding: 100px 16px 60px;
+  background: var(--app-bg);
+  color: var(--app-text);
+  font-family: $font-body;
 }
+
 .emptyCard {
-  max-width:760px;
-  margin:0 auto;
-  padding:28px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px;
 }
+
 .emptyBadge {
-  font-size:.66rem;
-  text-transform:uppercase;
-  color:var(--app-primary);
-  letter-spacing:.06em;
+  font-size: .66rem;
+  text-transform: uppercase;
+  color: var(--app-primary);
+  letter-spacing: .06em;
 }
+
 .emptyTitle {
-  font-family:$font-accent;
-  font-size:clamp(1.3rem,3vw,1.8rem);
-  line-height:1.25;
-  letter-spacing:-.03em;
-  margin:10px 0;
+  font-family: $font-accent;
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  line-height: 1.25;
+  letter-spacing: -.03em;
+  margin: 10px 0;
 }
+
 .emptyDesc {
-  color:var(--app-muted);
-  font-size:.85rem;
+  color: var(--app-muted);
+  font-size: .85rem;
 }
+
 .emptyList {
-  list-style:none;
-  padding:0;
-  margin:20px 0;
-  display:grid;
-  gap:12px;
+  list-style: none;
+  padding: 0;
+  margin: 20px 0;
+  display: grid;
+  gap: 12px;
 }
+
 .emptyList li {
-  display:flex;
-  gap:10px;
-  align-items:center;
-  font-size:.8rem;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: .8rem;
 }
+
 .dot {
-  width:6px;
-  height:6px;
-  background:var(--app-primary);
-  border-radius:50%;
-  flex-shrink:0;
+  width: 6px;
+  height: 6px;
+  background: var(--app-primary);
+  border-radius: 50%;
+  flex-shrink: 0;
 }
+
 .emptyCtas {
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
+
 .ghostLight {
   @extend .secondary;
 }
+
 .emptyArt {
-  display:none;
+  display: none;
 }
-.emptyWrap,.ctaPrimary,.bubble,.two,.three {
-  min-width:0;
+
+.emptyWrap,
+.ctaPrimary,
+.bubble,
+.two,
+.three {
+  min-width: 0;
 }

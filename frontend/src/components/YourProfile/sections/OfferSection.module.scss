@@ -1,502 +1,673 @@
 @import '../../../styles/profileEditor';
 @include profile-editor-card('.card');
-.offerBody,.staffBody {
-  display:grid;
-  gap:0;
+
+.offerBody,
+.staffBody {
+  display: grid;
+  gap: 0;
 }
-.offerPanel,.addServicePanel,.addStaffPanel {
+
+.offerPanel,
+.addServicePanel,
+.addStaffPanel {
   @include settings-panel;
 }
-.offerPanelHead,.addServiceHead,.addStaffHead {
+
+.offerPanelHead,
+.addServiceHead,
+.addStaffHead {
   @include settings-panel-heading;
 }
+
 .offerIcon {
-  display:grid;
-  place-items:center;
-  width:32px;
-  height:32px;
-  border:1px solid var(--app-border);
-  border-radius:8px;
-  background:var(--app-surface);
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: var(--app-surface);
 }
-.priceModernGrid,.timeGrid,.serviceEditGrid,.addServiceGrid,.bookingSettingsGrid,.addStaffGrid,.staffDetailsGrid {
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:14px;
+
+.priceModernGrid,
+.timeGrid,
+.serviceEditGrid,
+.addServiceGrid,
+.bookingSettingsGrid,
+.addStaffGrid,
+.staffDetailsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
 }
-.priceShowcase,.timeView {
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:16px;
+
+.priceShowcase,
+.timeView {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
-.priceShowcase > div,.timeView > div {
+
+.priceShowcase>div,
+.timeView>div {
   @include settings-value-card;
 }
-.priceShowcase span,.timeView span {
-  color:var(--app-muted);
-  font-size:.72rem;
+
+.priceShowcase span,
+.timeView span {
+  color: var(--app-muted);
+  font-size: .72rem;
 }
+
 .priceShowcase strong {
-  font-size:1.2rem;
+  font-size: 1.2rem;
 }
+
 .timeView strong {
-  font-size:.95rem;
+  font-size: .95rem;
 }
+
 .bookingModeGrid {
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
+
 .bookingModeCard {
-  position:relative;
-  min-width:0;
-  display:flex;
-  align-items:flex-start;
-  gap:9px;
-  padding:14px;
-  border:1px solid var(--app-border);
-  border-radius:10px;
-  background:var(--app-surface);
-  cursor:pointer;
-  font-size:.8rem;
+  position: relative;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 14px;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: var(--app-surface);
+  cursor: pointer;
+  font-size: .8rem;
 }
+
 .bookingModeCard input {
-  margin-top:4px;
-  accent-color:var(--app-primary);
+  margin-top: 4px;
+  accent-color: var(--app-primary);
 }
+
 .bookingModeCard strong {
-  display:block;
-  font-size:.82rem;
+  display: block;
+  font-size: .82rem;
 }
-.bookingModeCard small,.bookingModeCard p {
-  margin:4px 0 0;
-  color:var(--app-muted);
-  font-size:.72rem;
+
+.bookingModeCard small,
+.bookingModeCard p {
+  margin: 4px 0 0;
+  color: var(--app-muted);
+  font-size: .72rem;
 }
+
 .bookingModeActive {
-  border-color:var(--app-primary);
-  background:color-mix(in srgb,var(--app-primary) 6%,var(--app-surface));
+  border-color: var(--app-primary);
+  background: color-mix(in srgb, var(--app-primary) 6%, var(--app-surface));
 }
+
 .bookingModeLocked {
-  opacity:.6;
+  opacity: .6;
 }
+
 .bookingSettingCard {
-  padding:14px;
-  border:1px solid var(--app-border);
-  border-radius:10px;
-  background:var(--app-surface);
+  padding: 14px;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: var(--app-surface);
 }
+
 .bookingSettingTop {
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-bottom:10px;
-  font-size:.82rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: .82rem;
 }
-.settingViewBox,.modeView {
+
+.settingViewBox,
+.modeView {
   @include settings-value-card;
-  padding:12px;
-  border:1px solid var(--app-border);
-  border-radius:9px;
-  background:var(--app-surface);
-  font-size:.82rem;
+  padding: 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 9px;
+  background: var(--app-surface);
+  font-size: .82rem;
 }
-.daysModernGrid,.daysModernView {
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-  margin-top:14px;
+
+.daysModernGrid,
+.daysModernView {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
 }
-.dayModernBtn,.daysModernView span {
-  min-height:44px;
-  padding:9px 13px;
-  border:1px solid var(--app-border);
-  border-radius:8px;
-  background:var(--app-surface);
-  color:var(--app-text);
-  font:inherit;
-  font-size:.76rem;
-  cursor:pointer;
+
+.dayModernBtn,
+.daysModernView span {
+  min-height: 44px;
+  padding: 9px 13px;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  font: inherit;
+  font-size: .76rem;
+  cursor: pointer;
 }
+
 .dayModernActive {
-  background:var(--yp-lime);
-  color:#171917;
-  border-color:var(--yp-frame);
+  background: var(--yp-lime);
+  color: #171917;
+  border-color: var(--yp-frame);
 }
-.servicesEditList,.availabilityList {
-  display:grid;
-  gap:14px;
+
+.servicesEditList,
+.availabilityList {
+  display: grid;
+  gap: 14px;
 }
-.serviceModernEdit,.serviceModernView,.staffPersonCard {
-  padding:16px;
-  border:1px solid var(--app-border);
-  border-radius:12px;
-  background:var(--app-surface);
-  min-width:0;
+
+.serviceModernEdit,
+.serviceModernView,
+.staffPersonCard {
+  padding: 16px;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  background: var(--app-surface);
+  min-width: 0;
 }
+
 .serviceModernTop {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
 }
+
 .serviceModernTop h4 {
-  margin:0;
-  font-size:.95rem;
+  margin: 0;
+  font-size: .95rem;
 }
-.serviceModernTop > div { display:grid; gap:6px; min-width:0; }
-.serviceModernTop > div > span { font-size:.72rem; color:var(--app-muted); }
-.serviceModernView > strong { display:block; margin:12px 0; font-family:$font-accent; font-size:1.1rem; }
+
+.serviceModernTop>div {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.serviceModernTop>div>span {
+  font-size: .72rem;
+  color: var(--app-muted);
+}
+
+.serviceModernView>strong {
+  display: block;
+  margin: 12px 0;
+  font-family: $font-accent;
+  font-size: 1.1rem;
+}
+
 .serviceRemoveBtn {
-  min-width:44px;
-  min-height:44px;
-  border:1px solid var(--app-border);
-  border-radius:8px;
-  background:transparent;
-  color:#c52f40;
-  cursor:pointer;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: transparent;
+  color: #c52f40;
+  cursor: pointer;
 }
+
 .serviceImageEditor {
-  display:flex;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:14px;
-  margin-bottom:16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 16px;
 }
-.serviceImagePreview,.serviceImageEmpty {
-  position:relative;
-  width:140px;
-  height:100px;
-  border-radius:9px;
-  border:1px solid var(--app-border);
-  overflow:hidden;
-}
-.serviceImagePreview img {
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
+
+.serviceImagePreview,
 .serviceImageEmpty {
-  display:grid;
-  place-content:center;
-  gap:5px;
-  color:var(--app-muted);
-  font-size:.72rem;
+  position: relative;
+  width: 140px;
+  height: 100px;
+  border-radius: 9px;
+  border: 1px solid var(--app-border);
+  overflow: hidden;
 }
+
+.serviceImagePreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.serviceImageEmpty {
+  display: grid;
+  place-content: center;
+  gap: 5px;
+  color: var(--app-muted);
+  font-size: .72rem;
+}
+
 .serviceImageEmpty svg {
-  margin:auto;
+  margin: auto;
 }
+
 .serviceImageBadge {
-  position:absolute;
-  bottom:6px;
-  left:6px;
-  padding:3px 6px;
-  border-radius:5px;
-  background:#171917cc;
-  color:#fff;
-  font-size:.65rem;
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  background: #171917cc;
+  color: #fff;
+  font-size: .65rem;
 }
+
 .serviceImageActions {
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
+
 .serviceEditGrid {
-  margin-bottom:14px;
+  margin-bottom: 14px;
 }
+
 .addServicePanel {
-  margin-top:18px;
+  margin-top: 18px;
 }
+
 .addServiceGrid {
-  margin-bottom:16px;
+  margin-bottom: 16px;
 }
-.servicesViewGrid,.staffGrid {
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:16px;
+
+.servicesViewGrid,
+.staffGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
+
 .serviceModernMedia {
-  position:relative;
-  height:150px;
-  overflow:hidden;
-  border-radius:8px;
-  margin-bottom:12px;
+  position: relative;
+  height: 150px;
+  overflow: hidden;
+  border-radius: 8px;
+  margin-bottom: 12px;
 }
+
 .serviceModernMedia img {
-  width:100%;
-  height:100%;
-  object-fit:cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
+
 .serviceModernView h4 {
-  margin:0 0 7px;
-  font-size:1rem;
+  margin: 0 0 7px;
+  font-size: 1rem;
 }
+
 .serviceModernView p {
-  font-size:.8rem;
-  color:var(--app-muted);
+  font-size: .8rem;
+  color: var(--app-muted);
 }
+
 .serviceModernFeatured {
-  border-color:var(--app-primary);
+  border-color: var(--app-primary);
 }
+
 .serviceBadges {
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
-.featuredBadge,.inactiveBadge,.statusPill {
-  padding:3px 7px;
-  border:1px solid var(--app-border);
-  border-radius:6px;
-  font-size:.66rem;
+
+.featuredBadge,
+.inactiveBadge,
+.statusPill {
+  padding: 3px 7px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  font-size: .66rem;
 }
-.featuredBadge,.statusActive {
-  background:var(--yp-lime);
-  color:#171917;
+
+.featuredBadge,
+.statusActive {
+  background: var(--yp-lime);
+  color: #171917;
 }
-.inactiveBadge,.statusInactive {
-  color:var(--app-muted);
+
+.inactiveBadge,
+.statusInactive {
+  color: var(--app-muted);
 }
+
 .serviceMetaRow {
-  display:flex;
-  flex-wrap:wrap;
-  gap:12px;
-  padding-top:10px;
-  border-top:1px solid var(--app-border);
-  font-size:.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--app-border);
+  font-size: .75rem;
 }
+
 .availabilityEditor {
-  display:grid;
-  gap:14px;
+  display: grid;
+  gap: 14px;
 }
-.availabilityEditor > div {
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:12px;
+
+.availabilityEditor>div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
+
 .availabilityItem {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:12px;
-  padding:12px;
-  border:1px solid var(--app-border);
-  border-radius:9px;
-  background:var(--app-surface);
-  font-size:.8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--app-border);
+  border-radius: 9px;
+  background: var(--app-surface);
+  font-size: .8rem;
 }
+
 .availabilityItem button {
-  min-height:44px;
-  border:1px solid var(--app-border);
-  border-radius:8px;
-  background:transparent;
-  color:#c52f40;
-  padding:8px 12px;
-  cursor:pointer;
+  min-height: 44px;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  background: transparent;
+  color: #c52f40;
+  padding: 8px 12px;
+  cursor: pointer;
 }
+
 .staffStatsGrid {
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
+
 .staffStatCard {
-  display:grid;
-  gap:4px;
-  padding:14px;
-  border:1px solid var(--app-border);
-  border-radius:10px;
-  background:var(--app-bg);
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--app-border);
+  border-radius: 10px;
+  background: var(--app-bg);
 }
+
 .staffStatCard strong {
-  font-size:1.2rem;
+  font-size: 1.2rem;
 }
+
 .staffStatCard span {
-  color:var(--app-muted);
-  font-size:.72rem;
+  color: var(--app-muted);
+  font-size: .72rem;
 }
+
 .staffPersonTop {
-  display:flex;
-  align-items:center;
-  gap:10px;
-  margin-bottom:16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
 }
+
 .staffAvatar {
-  width:42px;
-  height:42px;
-  display:grid;
-  place-items:center;
-  border:1px solid var(--yp-frame);
-  border-radius:10px;
-  background:var(--yp-lime);
-  color:#171917;
-  flex-shrink:0;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--yp-frame);
+  border-radius: 10px;
+  background: var(--yp-lime);
+  color: #171917;
+  flex-shrink: 0;
 }
+
 .staffPersonMain {
-  min-width:0;
-  flex:1;
+  min-width: 0;
+  flex: 1;
 }
+
 .staffPersonMain strong {
-  font-size:.9rem;
+  font-size: .9rem;
 }
+
 .staffId {
-  display:block;
-  font-size:.65rem;
-  color:var(--app-muted);
+  display: block;
+  font-size: .65rem;
+  color: var(--app-muted);
 }
+
 .staffDetailBox {
   @include settings-value-card;
-  font-size:.78rem;
+  font-size: .78rem;
 }
-.staffDetailBox > span {
-  display:block;
-  color:var(--app-muted);
-  margin-bottom:5px;
+
+.staffDetailBox>span {
+  display: block;
+  color: var(--app-muted);
+  margin-bottom: 5px;
 }
+
 .staffSwitch {
-  display:flex;
-  align-items:center;
-  gap:8px;
-  min-height:44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
 }
+
 .staffSwitch input {
-  accent-color:var(--app-primary);
+  accent-color: var(--app-primary);
 }
+
 .staffServicesBox {
-  margin-top:16px;
-  padding-top:14px;
-  border-top:1px solid var(--app-border);
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--app-border);
 }
+
 .staffMiniTitle {
-  display:flex;
-  gap:8px;
-  align-items:center;
-  margin-bottom:10px;
-  font-size:.76rem;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: .76rem;
 }
-.staffServicePicker,.staffServiceTags,.staffActions {
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
-}
+
+.staffServicePicker,
+.staffServiceTags,
 .staffActions {
-  margin-top:16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
+
+.staffActions {
+  margin-top: 16px;
+}
+
 .staffServiceChip {
-  display:flex;
-  align-items:center;
-  gap:7px;
-  min-height:44px;
-  padding:7px 10px;
-  border:1px solid var(--app-border);
-  border-radius:8px;
-  font-size:.72rem;
-  background:var(--app-bg);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  font-size: .72rem;
+  background: var(--app-bg);
 }
+
 .staffServiceChip input {
-  accent-color:var(--app-primary);
+  accent-color: var(--app-primary);
 }
+
 .staffServiceChipActive {
-  border-color:var(--app-primary);
+  border-color: var(--app-primary);
 }
+
 .staffServiceTags span {
-  padding:4px 8px;
-  border:1px solid var(--app-border);
-  border-radius:6px;
-  font-size:.7rem;
+  padding: 4px 8px;
+  border: 1px solid var(--app-border);
+  border-radius: 6px;
+  font-size: .7rem;
 }
-.staffEmpty,.staffLoadingBox {
-  padding:20px;
-  border:1px dashed var(--app-border);
-  border-radius:12px;
-  text-align:center;
-  color:var(--app-muted);
+
+.staffEmpty,
+.staffLoadingBox {
+  padding: 20px;
+  border: 1px dashed var(--app-border);
+  border-radius: 12px;
+  text-align: center;
+  color: var(--app-muted);
 }
+
 .staffEmpty h4 {
-  font-size:1rem;
+  font-size: 1rem;
 }
+
 .emptyIcon {
-  color:var(--app-primary);
-  font-size:24px;
+  color: var(--app-primary);
+  font-size: 24px;
 }
+
 .lockedSection {
-  opacity:.6;
+  opacity: .6;
 }
+
 .addStaffGrid {
-  margin-bottom:16px;
+  margin-bottom: 16px;
 }
+
 @media(max-width:850px) {
   .bookingModeGrid {
-    grid-template-columns:minmax(0,1fr);
+    grid-template-columns: minmax(0, 1fr);
   }
 
 }
+
 @media(max-width:600px) {
-  .priceModernGrid,.timeGrid,.serviceEditGrid,.addServiceGrid,.bookingSettingsGrid,.addStaffGrid,.staffDetailsGrid,.servicesViewGrid,.staffGrid,.availabilityEditor > div {
-    grid-template-columns:minmax(0,1fr);
+
+  .priceModernGrid,
+  .timeGrid,
+  .serviceEditGrid,
+  .addServiceGrid,
+  .bookingSettingsGrid,
+  .addStaffGrid,
+  .staffDetailsGrid,
+  .servicesViewGrid,
+  .staffGrid,
+  .availabilityEditor>div {
+    grid-template-columns: minmax(0, 1fr);
   }
-  .offerBody,.staffBody {
-    gap:16px;
+
+  .offerBody,
+  .staffBody {
+    gap: 16px;
   }
+
   .staffStatsGrid {
-    gap:7px;
+    gap: 7px;
   }
+
   .staffStatCard {
-    padding:10px;
+    padding: 10px;
   }
-  .serviceModernEdit,.serviceModernView,.staffPersonCard {
-    padding:13px;
+
+  .serviceModernEdit,
+  .serviceModernView,
+  .staffPersonCard {
+    padding: 13px;
   }
 
 }
+
 .offerCard {
-  min-width:0;
+  min-width: 0;
 }
+
 .pricePanel {
-  min-width:0;
+  min-width: 0;
 }
+
 .bookingSettingsPanel {
-  min-width:0;
+  min-width: 0;
 }
+
 .teamBookingCard {
-  min-width:0;
+  min-width: 0;
 }
+
 .servicesPanel {
-  min-width:0;
+  min-width: 0;
 }
+
 .datesPanel {
-  min-width:0;
+  min-width: 0;
 }
+
 .staffCard {
-  min-width:0;
+  min-width: 0;
 }
+
 .bookingModeCard {
-  display:grid;
-  gap:5px;
-  text-align:left;
-  font:inherit;
+  display: grid;
+  gap: 5px;
+  text-align: left;
+  font: inherit;
 }
-.bookingModeCard > span {
-  font-size:.75rem;
-  line-height:1.6;
-  color:var(--app-muted);
+
+.bookingModeCard>span {
+  font-size: .75rem;
+  line-height: 1.6;
+  color: var(--app-muted);
 }
-.bookingSettingTop,.modeView {
-  display:grid;
-  gap:5px;
+
+.bookingSettingTop,
+.modeView {
+  display: grid;
+  gap: 5px;
 }
-.bookingSettingTop span,.modeView span {
-  font-size:.73rem;
-  color:var(--app-muted);
+
+.bookingSettingTop span,
+.modeView span {
+  font-size: .73rem;
+  color: var(--app-muted);
 }
+
 .offerIcon {
-  flex-shrink:0;
+  flex-shrink: 0;
 }
+
 @container (max-width:680px) {
-  .bookingModeGrid { grid-template-columns:minmax(0,1fr); }
+  .bookingModeGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
+
 @container (max-width:500px) {
-  .priceModernGrid,.timeGrid,.serviceEditGrid,.addServiceGrid,.bookingSettingsGrid,.addStaffGrid,.staffDetailsGrid,.servicesViewGrid,.staffGrid,.availabilityEditor > div {
-    grid-template-columns:minmax(0,1fr);
+
+  .priceModernGrid,
+  .timeGrid,
+  .serviceEditGrid,
+  .addServiceGrid,
+  .bookingSettingsGrid,
+  .addStaffGrid,
+  .staffDetailsGrid,
+  .servicesViewGrid,
+  .staffGrid,
+  .availabilityEditor>div {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

@@ -94,7 +94,10 @@
   text-transform: uppercase;
 }
 
-.header > div:first-child { flex: 1; min-width: 0; }
+.header>div:first-child {
+  flex: 1;
+  min-width: 0;
+}
 
 .header h2 {
   margin: 0;
@@ -105,7 +108,9 @@
   letter-spacing: -0.07em;
 }
 
-.header h2>span { @include marker-highlight(var(--discover-lime)); }
+.header h2>span {
+  @include marker-highlight(var(--discover-lime));
+}
 
 .intro {
   flex: 0 1 350px;
@@ -172,7 +177,10 @@
   font-size: 1.1rem;
 }
 
-.categoryCount svg { width: 18px; height: 18px; }
+.categoryCount svg {
+  width: 18px;
+  height: 18px;
+}
 
 .grid {
   display: grid;
@@ -493,7 +501,7 @@
   color: #365326;
 }
 
-.letterArt > svg {
+.letterArt>svg {
   position: absolute;
   right: -0.45em;
   top: -0.3em;

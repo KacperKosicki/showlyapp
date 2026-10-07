@@ -1470,8 +1470,8 @@ export default function PublicProfile() {
                   const durationLabel =
                     service?.duration?.value && service?.duration?.unit
                       ? service.duration.value +
-                        " " +
-                        mapUnit(service.duration.unit)
+                      " " +
+                      mapUnit(service.duration.unit)
                       : "Brak czasu";
                   const serviceName =
                     service.name || "Usługa " + (index + 1);
@@ -1669,13 +1669,13 @@ export default function PublicProfile() {
                         "/images/other/no-image.png";
                       const dateLabel = review.createdAt
                         ? new Date(review.createdAt).toLocaleDateString(
-                            "pl-PL",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )
+                          "pl-PL",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )
                         : "";
 
                       return (

@@ -406,9 +406,8 @@ const UserCard = ({
       style={cardStyle}
     >
       <header
-        className={`${styles.visual} ${
-          showBanner ? styles.visualWithBanner : ""
-        }`}
+        className={`${styles.visual} ${showBanner ? styles.visualWithBanner : ""
+          }`}
       >
         {!showBanner && (
           <div className={styles.visualShapes} aria-hidden="true">
@@ -430,9 +429,8 @@ const UserCard = ({
 
           <button
             type="button"
-            className={`${styles.favoriteButton} ${
-              isFavorite ? styles.favoriteActive : ""
-            }`}
+            className={`${styles.favoriteButton} ${isFavorite ? styles.favoriteActive : ""
+              }`}
             onClick={(event) => {
               if (
                 blockIfPreview(
@@ -500,9 +498,8 @@ const UserCard = ({
         {description?.trim() && (
           <div className={styles.descriptionBox}>
             <p
-              className={`${styles.description} ${
-                isExpanded ? styles.descriptionExpanded : ""
-              }`}
+              className={`${styles.description} ${isExpanded ? styles.descriptionExpanded : ""
+                }`}
             >
               {description}
             </p>

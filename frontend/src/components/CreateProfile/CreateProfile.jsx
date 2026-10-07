@@ -108,7 +108,7 @@ const CreateProfile = ({
       if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
         try {
           URL.revokeObjectURL(form.avatar);
-        } catch {}
+        } catch { }
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -131,7 +131,7 @@ const CreateProfile = ({
     if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
       try {
         URL.revokeObjectURL(form.avatar);
-      } catch {}
+      } catch { }
     }
     setAvatarFile(null);
     setForm(prev => ({
@@ -573,456 +573,456 @@ const CreateProfile = ({
   const activeLinksCount = form.links.filter(link => link.trim() !== "").length;
   const servicesCount = form.services.length;
   return <section id="scrollToId" className={styles.section}>
-      <div className={styles.inner}><header className={styles.intro}><span className={styles.overline}>Showly.me / Nowa wizytówka</span><h1 className={styles.heading}>
-              Stwórz swój <span>profil</span> Showly.
-            </h1><p className={styles.description}>
-              Uzupełnij podstawowe informacje, dodaj usługi, linki oraz opis działalności.
-              Podgląd wizytówki aktualizuje się na bieżąco, więc od razu widzisz,
-              jak profil będzie wyglądał publicznie.
-            </p><div className={styles.metaRow}>
-              <div className={styles.metaCard}>
-                <strong>
-                  {activeTagsCount}/{TAGS_LIMIT}
-                </strong>
-                <span>aktywnych tagów</span>
+    <div className={styles.inner}><header className={styles.intro}><span className={styles.overline}>Showly.me / Nowa wizytówka</span><h1 className={styles.heading}>
+      Stwórz swój profil w Showly.
+    </h1><p className={styles.description}>
+        Uzupełnij podstawowe informacje, dodaj usługi, linki oraz opis działalności.
+        Podgląd wizytówki aktualizuje się na bieżąco, więc od razu widzisz,
+        jak profil będzie wyglądał publicznie.
+      </p><div className={styles.metaRow}>
+        <div className={styles.metaCard}>
+          <strong>
+            {activeTagsCount}/{TAGS_LIMIT}
+          </strong>
+          <span>aktywnych tagów</span>
+        </div>
+
+        <div className={styles.metaCard}>
+          <strong>
+            {servicesCount}/{CREATE_PLAN.limits.services}
+          </strong>
+          <span>dodanych usług</span>
+        </div>
+
+        <div className={styles.metaCard}>
+          <strong>
+            {activeLinksCount}/{CREATE_PLAN.limits.links}
+          </strong>
+          <span>linków w planie Starter</span>
+        </div>
+      </div><div className={styles.planNotice}>
+        <div className={styles.planNoticeContent}>
+          <span className={styles.planEyebrow}>Plan startowy</span>
+
+          <h3 className={styles.planTitle}>
+            Tworzysz profil w planie {CREATE_PLAN.label}
+          </h3>
+
+          <p className={styles.planText}>
+            Na start możesz dodać podstawowe informacje, opis, tagi, linki
+            i kilka usług. Po utworzeniu profilu odblokujesz możliwość przejścia
+            na Standard lub Premium w panelu zarządzania profilem.
+          </p>
+
+          <div className={styles.planLimits}>
+            <span>{TAGS_LIMIT} tagi</span>
+            <span>{CREATE_PLAN.limits.links} link</span>
+            <span>{CREATE_PLAN.limits.services} usługi</span>
+            <span>{CREATE_PLAN.limits.descriptionLength} znaków opisu</span>
+          </div>
+        </div>
+
+        <div className={styles.planBadge}>{CREATE_PLAN.label}</div>
+      </div></header><div className={styles.layout}><div className={styles.contentPanel}><form onSubmit={handleSubmit} className={styles.formColumn}>
+        <section className={styles.contentBox} id="create-section-1"><EditorSectionHeader kicker="Dane podstawowe" title="Przedstaw się" description="Nazwa, rola i lokalizacja pomogą innym znaleźć Twoją wizytówkę." icon={<FiUser />} /><EditorGroup title="01 / Dane wizytówki"><div className={styles.fieldGrid}>
+          <label className={styles.formField}>
+            <span className={styles.fieldLabel}>
+              <FiUser className={styles.fieldIcon} />
+              Nazwa Twojego profilu
+            </span>
+            <input className={styles.formInput} type="text" name="name" value={form.name} onChange={handleChange} maxLength={30} placeholder="Np. Twoja Nazwa" />
+            {formErrors.name && <small className={styles.error}>{formErrors.name}</small>}
+          </label>
+
+          <label className={styles.formField}>
+            <span className={styles.fieldLabel}>
+              <FiBriefcase className={styles.fieldIcon} />
+              Rola / Zawód / Tematyka
+            </span>
+            <input className={styles.formInput} type="text" name="role" value={form.role} onChange={handleChange} maxLength={40} placeholder="Np. Korepetytor / DJ / Grafik" />
+            {formErrors.role && <small className={styles.error}>{formErrors.role}</small>}
+          </label>
+
+          <label className={styles.formField}>
+            <span className={styles.fieldLabel}>
+              <FiGrid className={styles.fieldIcon} />
+              Typ profilu
+            </span>
+            <select className={styles.formSelect} name="profileType" value={form.profileType} onChange={handleChange}>
+              <option value="" disabled>
+                -- Wybierz typ profilu --
+              </option>
+              <option value="zawodowy">Zawodowy</option>
+              <option value="hobbystyczny">Hobbystyczny</option>
+              <option value="serwis">Serwis</option>
+              <option value="społeczność">Społeczność / serwer / blog</option>
+            </select>
+            {formErrors.profileType && <small className={styles.error}>{formErrors.profileType}</small>}
+          </label>
+
+          <label className={styles.formField}>
+            <span className={styles.fieldLabel}>
+              <FiMapPin className={styles.fieldIcon} />
+              Lokalizacja
+            </span>
+            <input className={styles.formInput} type="text" name="location" value={form.location} onChange={handleChange} maxLength={30} placeholder="Np. Poznań / cała Polska" />
+            {formErrors.location && <small className={styles.error}>{formErrors.location}</small>}
+          </label>
+        </div></EditorGroup></section>
+
+        <section className={styles.contentBox} id="create-section-2"><EditorSectionHeader kicker="Wygląd i opis" title="Pokaż, kim jesteś" description="Dodaj zdjęcie, opowiedz o sobie i wybierz tagi pasujące do Twojej działalności." icon={<FiImage />} /><EditorGroup title="01 / Zdjęcie profilowe"><div className={styles.formField}>
+          <span className={styles.fieldLabel}>
+            <FiImage className={styles.fieldIcon} />
+            Avatar
+          </span>
+
+          <div className={styles.avatarUploader}>
+            <div className={styles.avatarPreviewBox}>
+              <img src={form.avatar || DEFAULT_AVATAR} alt="Podgląd avatara" className={styles.avatarPreview} />
+            </div>
+
+            <div className={styles.avatarActions}>
+              <input className={styles.formFile} type="file" aria-label="Wybierz zdjęcie profilowe" accept="image/*" ref={fileInputRef} disabled={avatarUploading || loading} onChange={e => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (!file.type?.startsWith("image/")) {
+                  setFormErrors(p => ({
+                    ...p,
+                    avatar: "Plik musi być obrazkiem."
+                  }));
+                  return;
+                }
+                if (file.size > 3 * 1024 * 1024) {
+                  setFormErrors(p => ({
+                    ...p,
+                    avatar: "Maksymalny rozmiar avatara to 3MB."
+                  }));
+                  return;
+                }
+                setFormErrors(p => ({
+                  ...p,
+                  avatar: ""
+                }));
+                if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
+                  try {
+                    URL.revokeObjectURL(form.avatar);
+                  } catch { }
+                }
+                const previewUrl = URL.createObjectURL(file);
+                setAvatarFile(file);
+                setForm(prev => ({
+                  ...prev,
+                  avatar: previewUrl
+                }));
+              }} />
+
+              <LoadingButton type="button" isLoading={resetAvatarLoading} disabled={resetAvatarLoading || avatarUploading || loading} className={styles.secondaryButton} onClick={resetAvatarLocal}>
+                Przywróć domyślny avatar
+              </LoadingButton>
+
+              {(avatarUploading || loading) && <small className={styles.helperText}>Przetwarzanie avatara...</small>}
+              {formErrors.avatar && <small className={styles.error}>{formErrors.avatar}</small>}
+            </div>
+          </div>
+        </div></EditorGroup><EditorGroup title="02 / Opis działalności"><label className={styles.formField}>
+          <span className={styles.fieldLabel}>
+            <FiFileText className={styles.fieldIcon} />
+            Opis działalności / O mnie
+          </span>
+          <textarea className={styles.formTextarea} name="description" value={form.description} onChange={handleChange} maxLength={CREATE_PLAN.limits.descriptionLength} placeholder="Napisz kilka zdań o sobie, swojej działalności i tym, co oferujesz..." />
+          <small className={styles.counterText}>
+            {form.description.length}/{CREATE_PLAN.limits.descriptionLength} znaków — plan Starter
+          </small>
+          {formErrors.description && <small className={styles.error}>{formErrors.description}</small>}
+        </label></EditorGroup><EditorGroup title="03 / Tagi i tematyka"><div className={styles.formField}>
+          <span className={styles.fieldLabel}>
+            <FiTag className={styles.fieldIcon} />
+            Tagi — {activeTagsCount}/{TAGS_LIMIT}
+          </span>
+
+          <div className={styles.inlineGrid}>
+            {form.tags.map((tag, index) => <div key={index} className={styles.tagInputWrapper}>
+              <input className={styles.formInput} type="text" placeholder={`Tag ${index + 1}`} value={tag} maxLength={TAG_MAX_LENGTH} onChange={e => handleTagChange(index, e.target.value)} aria-label={`Tag ${index + 1}`} />
+            </div>)}
+          </div>
+
+          {formErrors.tags && <small className={styles.error}>{formErrors.tags}</small>}
+        </div></EditorGroup></section>
+
+        <section className={styles.contentBox} id="create-section-3"><EditorSectionHeader kicker="Twoja oferta" title="Usługi i dostępność" description="Przygotuj ofertę i zdecyduj, w jaki sposób klienci mogą się z Tobą kontaktować." icon={<FiCalendar />} /><EditorGroup title="01 / Cennik"><div className={styles.fieldGrid}>
+          <label className={styles.formField}>
+            <span className={styles.fieldLabel}>
+              <FiDollarSign className={styles.fieldIcon} />
+              Cennik od
+            </span>
+            <input className={styles.formInput} type="number" name="priceFrom" value={form.priceFrom} onChange={handleChange} min={1} max={100000} placeholder="Np. 100" />
+            {formErrors.priceFrom && <small className={styles.error}>{formErrors.priceFrom}</small>}
+          </label>
+
+          <label className={styles.formField}>
+            <span className={styles.fieldLabel}>
+              <FiDollarSign className={styles.fieldIcon} />
+              Cennik do
+            </span>
+            <input className={styles.formInput} type="number" name="priceTo" value={form.priceTo} onChange={handleChange} min={form.priceFrom ? Number(form.priceFrom) : 1} max={1000000} placeholder="Np. 1000" />
+            {formErrors.priceTo && <small className={styles.error}>{formErrors.priceTo}</small>}
+          </label>
+        </div></EditorGroup><EditorGroup title="02 / Twoje usługi">{form.services.length > 0 && <ul className={styles.serviceList}>
+          {form.services.map((s, i) => <li key={i} className={styles.serviceItem}>
+            <div className={styles.serviceItemTop}>
+              <div>
+                <strong className={styles.serviceName}>{s.name}</strong>
+                {s.shortDescription && <p className={styles.serviceDesc}>{s.shortDescription}</p>}
               </div>
 
-              <div className={styles.metaCard}>
-                <strong>
-                  {servicesCount}/{CREATE_PLAN.limits.services}
-                </strong>
-                <span>dodanych usług</span>
+              <span className={styles.serviceBadge}>{mapCategory(s.category)}</span>
+            </div>
+
+            <div className={styles.serviceMeta}>
+              <span>{formatServicePrice(s)}</span>
+              <span>
+                {s.duration.value} {mapUnit(s.duration.unit)}
+              </span>
+              <span>
+                {s.booking?.enabled ? s.booking.type === "calendar" ? "rezerwacja" : "zapytanie" : "bez rezerwacji"}
+              </span>
+            </div>
+
+            <button type="button" className={styles.removeServiceBtn} onClick={() => setForm(prev => ({
+              ...prev,
+              services: prev.services.filter((_, idx) => idx !== i)
+            }))}>
+              <FiTrash2 />
+              Usuń usługę
+            </button>
+          </li>)}
+        </ul>}{form.services.length === 0 && <p className={styles.emptyState}>Nie masz jeszcze dodanych usług. Przygotuj pierwszą ofertę poniżej.</p>}</EditorGroup><EditorGroup title="03 / Dodaj usługę"><div className={styles.serviceCard}>
+          <div className={styles.serviceCardHead}>
+            <h4 className={styles.serviceCardTitle}>Dodaj usługę / ofertę</h4>
+            <span className={styles.serviceCardPill}>
+              {servicesCount}/{CREATE_PLAN.limits.services} w planie Starter
+            </span>
+          </div>
+
+          <div className={styles.serviceGrid}>
+            <div>
+              <label className={styles.formField}><span className={styles.fieldLabel}>Nazwa usługi / oferty</span><input className={styles.formInput} type="text" placeholder="Nazwa (np. Strzyżenie męskie)" value={newService.name} maxLength={SERVICE_NAME_MAX_LENGTH} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
+                ...prev,
+                name: cleanServiceText(e.target.value, SERVICE_NAME_MAX_LENGTH)
+              }))} aria-label="Nazwa usługi / oferty" /></label>
+
+              <small className={styles.fieldCounter}>
+                {newService.name.length}/{SERVICE_NAME_MAX_LENGTH}
+              </small>
+            </div>
+
+            <label className={styles.formField}><span className={styles.fieldLabel}>Rodzaj oferty</span><select className={styles.formSelect} value={newService.category} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService({
+              ...newService,
+              category: e.target.value
+            })} aria-label="Rodzaj oferty">
+              <option value="service">Usługa</option>
+              <option value="product">Produkt</option>
+              <option value="project">Projekt</option>
+              <option value="artwork">Obraz / dzieło</option>
+              <option value="handmade">Rękodzieło</option>
+              <option value="lesson">Lekcja</option>
+              <option value="consultation">Konsultacja</option>
+              <option value="event">Event</option>
+              <option value="custom">Inne</option>
+            </select></label>
+
+            <div>
+              <label className={styles.formField}><span className={styles.fieldLabel}>Krótki opis (opcjonalnie)</span><input className={styles.formInput} type="text" placeholder="Krótki opis (opcjonalnie)" value={newService.shortDescription} maxLength={SERVICE_SHORT_DESCRIPTION_MAX_LENGTH} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
+                ...prev,
+                shortDescription: cleanServiceText(e.target.value, SERVICE_SHORT_DESCRIPTION_MAX_LENGTH)
+              }))} aria-label="Krótki opis (opcjonalnie)" /></label>
+
+              <small className={styles.fieldCounter}>
+                {newService.shortDescription.length}/{SERVICE_SHORT_DESCRIPTION_MAX_LENGTH}
+              </small>
+            </div>
+
+            <label className={styles.formField}><span className={styles.fieldLabel}>Sposób wyceny</span><select className={styles.formSelect} value={newService.priceMode} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService({
+              ...newService,
+              priceMode: e.target.value,
+              priceValue: "",
+              priceFrom: "",
+              priceTo: ""
+            })} aria-label="Sposób wyceny">
+              <option value="contact">Wycena indywidualna</option>
+              <option value="fixed">Cena stała</option>
+              <option value="from">Cena od</option>
+              <option value="range">Zakres cen</option>
+              <option value="free">Darmowe</option>
+            </select></label>
+
+            {(newService.priceMode === "fixed" || newService.priceMode === "from") && <div>
+              <label className={styles.formField}><span className={styles.fieldLabel}>Cena w zł</span><input className={styles.formInput} type="number" inputMode="numeric" placeholder={newService.priceMode === "fixed" ? "Cena" : "Cena od"} min="0" max={SERVICE_PRICE_MAX} value={newService.priceValue} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
+                ...prev,
+                priceValue: cleanIntegerInput(e.target.value, 7)
+              }))} aria-label="Cena w zł" /></label>
+
+              <small className={styles.fieldCounter}>
+                Dostępny zakres: 0–{SERVICE_PRICE_MAX} zł
+              </small>
+            </div>}
+
+            {newService.priceMode === "range" && <>
+              <div>
+                <label className={styles.formField}><span className={styles.fieldLabel}>Cena od</span><input className={styles.formInput} type="number" inputMode="numeric" placeholder="Cena od" min="0" max={SERVICE_PRICE_MAX} value={newService.priceFrom} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
+                  ...prev,
+                  priceFrom: cleanIntegerInput(e.target.value, 7)
+                }))} aria-label="Cena od" /></label>
+
+                <small className={styles.fieldCounter}>
+                  Dostępny zakres: 0–{SERVICE_PRICE_MAX} zł
+                </small>
               </div>
 
-              <div className={styles.metaCard}>
-                <strong>
-                  {activeLinksCount}/{CREATE_PLAN.limits.links}
-                </strong>
-                <span>linków w planie Starter</span>
+              <div>
+                <label className={styles.formField}><span className={styles.fieldLabel}>Cena do</span><input className={styles.formInput} type="number" inputMode="numeric" placeholder="Cena do" min="0" max={SERVICE_PRICE_MAX} value={newService.priceTo} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
+                  ...prev,
+                  priceTo: cleanIntegerInput(e.target.value, 7)
+                }))} aria-label="Cena do" /></label>
+
+                <small className={styles.fieldCounter}>
+                  Dostępny zakres: 0–{SERVICE_PRICE_MAX} zł
+                </small>
               </div>
-            </div><div className={styles.planNotice}>
-              <div className={styles.planNoticeContent}>
-                <span className={styles.planEyebrow}>Plan startowy</span>
+            </>}
 
-                <h3 className={styles.planTitle}>
-                  Tworzysz profil w planie {CREATE_PLAN.label}
-                </h3>
+            <div>
+              <label className={styles.formField}><span className={styles.fieldLabel}>Czas</span><input className={styles.formInput} type="number" inputMode="numeric" placeholder="Czas" min={SERVICE_DURATION_LIMITS[newService.durationUnit]?.min || 1} max={SERVICE_DURATION_LIMITS[newService.durationUnit]?.max || 999} value={newService.durationValue} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
+                ...prev,
+                durationValue: cleanIntegerInput(e.target.value, 4)
+              }))} aria-label="Czas" /></label>
 
-                <p className={styles.planText}>
-                  Na start możesz dodać podstawowe informacje, opis, tagi, linki
-                  i kilka usług. Po utworzeniu profilu odblokujesz możliwość przejścia
-                  na Standard lub Premium w panelu zarządzania profilem.
-                </p>
+              <small className={styles.fieldCounter}>
+                Dostępny zakres: {getDurationLimitText(newService.durationUnit)}
+              </small>
+            </div>
 
-                <div className={styles.planLimits}>
-                  <span>{TAGS_LIMIT} tagi</span>
-                  <span>{CREATE_PLAN.limits.links} link</span>
-                  <span>{CREATE_PLAN.limits.services} usługi</span>
-                  <span>{CREATE_PLAN.limits.descriptionLength} znaków opisu</span>
-                </div>
-              </div>
+            <label className={styles.formField}><span className={styles.fieldLabel}>Jednostka czasu</span><select className={styles.formSelect} value={newService.durationUnit} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService({
+              ...newService,
+              durationUnit: e.target.value
+            })} aria-label="Jednostka czasu">
+              <option value="minutes">Minuty</option>
+              <option value="hours">Godziny</option>
+              <option value="days">Dni</option>
+              <option value="weeks">Tygodnie</option>
+            </select></label>
+          </div>
 
-              <div className={styles.planBadge}>{CREATE_PLAN.label}</div>
-            </div></header><div className={styles.layout}><div className={styles.contentPanel}><form onSubmit={handleSubmit} className={styles.formColumn}>
-              <section className={styles.contentBox} id="create-section-1"><EditorSectionHeader kicker="Dane podstawowe" title="Przedstaw się" description="Nazwa, rola i lokalizacja pomogą innym znaleźć Twoją wizytówkę." icon={<FiUser />} /><EditorGroup title="01 / Dane wizytówki"><div className={styles.fieldGrid}>
-                  <label className={styles.formField}>
-                    <span className={styles.fieldLabel}>
-                      <FiUser className={styles.fieldIcon} />
-                      Nazwa Twojego profilu
-                    </span>
-                    <input className={styles.formInput} type="text" name="name" value={form.name} onChange={handleChange} maxLength={30} placeholder="Np. Twoja Nazwa" />
-                    {formErrors.name && <small className={styles.error}>{formErrors.name}</small>}
-                  </label>
+          <div className={styles.serviceOptions}>
+            <label className={styles.checkboxInline}>
+              <input type="checkbox" checked={newService.bookingEnabled} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
+                ...prev,
+                bookingEnabled: e.target.checked,
+                bookingType: e.target.checked ? "request" : "none"
+              }))} />
+              Umożliw zapytanie o usługę
+            </label>
 
-                  <label className={styles.formField}>
-                    <span className={styles.fieldLabel}>
-                      <FiBriefcase className={styles.fieldIcon} />
-                      Rola / Zawód / Tematyka
-                    </span>
-                    <input className={styles.formInput} type="text" name="role" value={form.role} onChange={handleChange} maxLength={40} placeholder="Np. Korepetytor / DJ / Grafik" />
-                    {formErrors.role && <small className={styles.error}>{formErrors.role}</small>}
-                  </label>
+            {newService.bookingEnabled && <label className={styles.formField}><span className={styles.fieldLabel}>Tryb zapytania</span><select className={styles.formSelect} value={newService.bookingType} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService({
+              ...newService,
+              bookingType: e.target.value
+            })} aria-label="Tryb zapytania">
+              <option value="request">Zapytanie — Starter</option>
+              <option value="calendar" disabled>
+                Kalendarz — Premium
+              </option>
+            </select></label>}
+          </div>
 
-                  <label className={styles.formField}>
-                    <span className={styles.fieldLabel}>
-                      <FiGrid className={styles.fieldIcon} />
-                      Typ profilu
-                    </span>
-                    <select className={styles.formSelect} name="profileType" value={form.profileType} onChange={handleChange}>
-                      <option value="" disabled>
-                        -- Wybierz typ profilu --
-                      </option>
-                      <option value="zawodowy">Zawodowy</option>
-                      <option value="hobbystyczny">Hobbystyczny</option>
-                      <option value="serwis">Serwis</option>
-                      <option value="społeczność">Społeczność / serwer / blog</option>
-                    </select>
-                    {formErrors.profileType && <small className={styles.error}>{formErrors.profileType}</small>}
-                  </label>
+          <button type="button" className={styles.addServiceBtn} onClick={handleAddService} disabled={servicesCount >= CREATE_PLAN.limits.services}>
+            <FiPlus />
+            {servicesCount >= CREATE_PLAN.limits.services ? "Limit usług w planie Starter" : "Dodaj usługę"}
+          </button>
 
-                  <label className={styles.formField}>
-                    <span className={styles.fieldLabel}>
-                      <FiMapPin className={styles.fieldIcon} />
-                      Lokalizacja
-                    </span>
-                    <input className={styles.formInput} type="text" name="location" value={form.location} onChange={handleChange} maxLength={30} placeholder="Np. Poznań / cała Polska" />
-                    {formErrors.location && <small className={styles.error}>{formErrors.location}</small>}
-                  </label>
-                </div></EditorGroup></section>
+          {serviceError && <small className={styles.error}>{serviceError}</small>}
+        </div></EditorGroup><EditorGroup title="04 / Zapytania i dostępność"><label className={styles.formField}>
+          <span className={styles.fieldLabel}>
+            <FiClock className={styles.fieldIcon} />
+            Tryb działania rezerwacji
+          </span>
+          <select className={styles.formSelect} name="bookingMode" value={form.bookingMode} onChange={handleChange}>
+            <option value="calendar" disabled>
+              Kalendarz godzinowy — dostępny w Premium
+            </option>
+            <option value="request-blocking" disabled>
+              Blokowanie dni — dostępne w Premium
+            </option>
+            <option value="request-open">Zapytanie bez blokowania — Starter</option>
+          </select>
 
-              <section className={styles.contentBox} id="create-section-2"><EditorSectionHeader kicker="Wygląd i opis" title="Pokaż, kim jesteś" description="Dodaj zdjęcie, opowiedz o sobie i wybierz tagi pasujące do Twojej działalności." icon={<FiImage />} /><EditorGroup title="01 / Zdjęcie profilowe"><div className={styles.formField}>
-                    <span className={styles.fieldLabel}>
-                      <FiImage className={styles.fieldIcon} />
-                      Avatar
-                    </span>
+          <small className={styles.helperText}>
+            W planie Starter dostępny jest tryb zapytań. Kalendarz i blokowanie
+            dni odblokujesz po przejściu na Premium.
+          </small>
 
-                    <div className={styles.avatarUploader}>
-                      <div className={styles.avatarPreviewBox}>
-                        <img src={form.avatar || DEFAULT_AVATAR} alt="Podgląd avatara" className={styles.avatarPreview} />
-                      </div>
+          {formErrors.bookingMode && <small className={styles.error}>{formErrors.bookingMode}</small>}
+        </label>{formErrors.services && <small className={styles.error}>{formErrors.services}</small>}</EditorGroup></section>
 
-                      <div className={styles.avatarActions}>
-                        <input className={styles.formFile} type="file" aria-label="Wybierz zdjęcie profilowe" accept="image/*" ref={fileInputRef} disabled={avatarUploading || loading} onChange={e => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        if (!file.type?.startsWith("image/")) {
-                          setFormErrors(p => ({
-                            ...p,
-                            avatar: "Plik musi być obrazkiem."
-                          }));
-                          return;
-                        }
-                        if (file.size > 3 * 1024 * 1024) {
-                          setFormErrors(p => ({
-                            ...p,
-                            avatar: "Maksymalny rozmiar avatara to 3MB."
-                          }));
-                          return;
-                        }
-                        setFormErrors(p => ({
-                          ...p,
-                          avatar: ""
-                        }));
-                        if (typeof form.avatar === "string" && form.avatar.startsWith("blob:")) {
-                          try {
-                            URL.revokeObjectURL(form.avatar);
-                          } catch {}
-                        }
-                        const previewUrl = URL.createObjectURL(file);
-                        setAvatarFile(file);
-                        setForm(prev => ({
-                          ...prev,
-                          avatar: previewUrl
-                        }));
-                      }} />
+        <section className={styles.contentBox} id="create-section-4"><EditorSectionHeader kicker="Linki i media" title="Daj się znaleźć" description="Połącz wizytówkę ze swoją stroną lub miejscem, w którym pokazujesz realizacje." icon={<FiLink />} /><EditorGroup title="01 / Twoje linki"><div className={styles.inlineGrid}>
+          {form.links.map((link, index) => <label key={index} className={styles.formField}>
+            <span className={styles.fieldLabel}>Link {index + 1}</span>
+            <input className={styles.formInput} type="url" placeholder="https://..." value={link} onChange={e => handleLinkChange(index, e.target.value)} />
+          </label>)}
+        </div><small className={styles.counterText}>
+            {activeLinksCount}/{CREATE_PLAN.limits.links} wykorzystanych linków — plan Starter
+          </small>{formErrors.links && <small className={styles.error}>{formErrors.links}</small>}</EditorGroup></section>
 
-                        <LoadingButton type="button" isLoading={resetAvatarLoading} disabled={resetAvatarLoading || avatarUploading || loading} className={styles.secondaryButton} onClick={resetAvatarLocal}>
-                          Przywróć domyślny avatar
-                        </LoadingButton>
+        <section className={styles.contentBox} id="create-section-5"><EditorSectionHeader kicker="Informacje dodatkowe" title="Gotowe do publikacji" description="Uzupełnij dane firmy i sprawdź wizytówkę przed jej utworzeniem." icon={<FiCheckCircle />} /><EditorGroup title="01 / Dane firmy"><label className={`${styles.formField} ${styles.checkboxBox}`}>
+          <span className={styles.checkboxInline}>
+            <input type="checkbox" name="hasBusiness" checked={form.hasBusiness} onChange={handleChange} />
+            Posiadam działalność gospodarczą
+          </span>
+        </label>{form.hasBusiness && <label className={styles.formField}>
+          <span className={styles.fieldLabel}>NIP (opcjonalnie)</span>
+          <input className={styles.formInput} type="text" name="nip" value={form.nip} onChange={handleChange} placeholder="Np. 1234567890" />
+        </label>}</EditorGroup><EditorGroup title="02 / Utwórz wizytówkę"><div className={`${styles.termsBox} ${formErrors.regulations ? styles.termsBoxError : ""}`}>
+          <label className={styles.termsLabel}>
+            <input type="checkbox" checked={acceptedRegulations} onChange={e => {
+              setAcceptedRegulations(e.target.checked);
+              if (e.target.checked) {
+                setFormErrors(prev => ({
+                  ...prev,
+                  regulations: ""
+                }));
+              }
+            }} aria-invalid={!!formErrors.regulations} />
 
-                        {(avatarUploading || loading) && <small className={styles.helperText}>Przetwarzanie avatara...</small>}
-                        {formErrors.avatar && <small className={styles.error}>{formErrors.avatar}</small>}
-                      </div>
-                    </div>
-                  </div></EditorGroup><EditorGroup title="02 / Opis działalności"><label className={styles.formField}>
-                    <span className={styles.fieldLabel}>
-                      <FiFileText className={styles.fieldIcon} />
-                      Opis działalności / O mnie
-                    </span>
-                    <textarea className={styles.formTextarea} name="description" value={form.description} onChange={handleChange} maxLength={CREATE_PLAN.limits.descriptionLength} placeholder="Napisz kilka zdań o sobie, swojej działalności i tym, co oferujesz..." />
-                    <small className={styles.counterText}>
-                      {form.description.length}/{CREATE_PLAN.limits.descriptionLength} znaków — plan Starter
-                    </small>
-                    {formErrors.description && <small className={styles.error}>{formErrors.description}</small>}
-                  </label></EditorGroup><EditorGroup title="03 / Tagi i tematyka"><div className={styles.formField}>
-                    <span className={styles.fieldLabel}>
-                      <FiTag className={styles.fieldIcon} />
-                      Tagi — {activeTagsCount}/{TAGS_LIMIT}
-                    </span>
+            <span>
+              Potwierdzam, że rozumiem i akceptuję{" "}
+              <Link to="/regulamin" target="_blank" rel="noopener noreferrer" onClick={event => event.stopPropagation()}>
+                regulamin serwisu
+              </Link>
+              .
+            </span>
+          </label>
+        </div>{formErrors.regulations && <small className={styles.error}>{formErrors.regulations}</small>}<LoadingButton type="submit" isLoading={loading} disabled={loading || avatarUploading} className={styles.submitButton}>
+              Utwórz profil
+            </LoadingButton>{formErrors.general && <p className={styles.error}>{formErrors.general}</p>}</EditorGroup></section>
+      </form></div><aside className={styles.previewColumn} aria-label="Podgląd wizytówki na żywo"><div className={styles.contentBox}>
+        <div className={styles.contentHeader}>
+          <h3 className={styles.contentTitle}>Podgląd tworzonego profilu</h3>
+          <span className={styles.badge}>Live</span>
+        </div>
 
-                    <div className={styles.inlineGrid}>
-                      {form.tags.map((tag, index) => <div key={index} className={styles.tagInputWrapper}>
-                          <input className={styles.formInput} type="text" placeholder={`Tag ${index + 1}`} value={tag} maxLength={TAG_MAX_LENGTH} onChange={e => handleTagChange(index, e.target.value)} aria-label={`Tag ${index + 1}`} />
-                        </div>)}
-                    </div>
+        <div className={styles.previewCardWrap}>
+          <UserCard user={{
+            ...form,
+            tags: form.tags.filter(tag => tag.trim() !== "" && tag.length <= TAG_MAX_LENGTH),
+            links: form.links.filter(link => link.trim() !== ""),
+            rating: 0,
+            reviews: 0,
+            availableDates: [],
+            userId: uid
+          }} currentUser={user} isPreview={true} onPreviewBlocked={msg => setPreviewMsg(msg)} />
+        </div>
 
-                    {formErrors.tags && <small className={styles.error}>{formErrors.tags}</small>}
-                  </div></EditorGroup></section>
-
-              <section className={styles.contentBox} id="create-section-3"><EditorSectionHeader kicker="Twoja oferta" title="Usługi i dostępność" description="Przygotuj ofertę i zdecyduj, w jaki sposób klienci mogą się z Tobą kontaktować." icon={<FiCalendar />} /><EditorGroup title="01 / Cennik"><div className={styles.fieldGrid}>
-                  <label className={styles.formField}>
-                    <span className={styles.fieldLabel}>
-                      <FiDollarSign className={styles.fieldIcon} />
-                      Cennik od
-                    </span>
-                    <input className={styles.formInput} type="number" name="priceFrom" value={form.priceFrom} onChange={handleChange} min={1} max={100000} placeholder="Np. 100" />
-                    {formErrors.priceFrom && <small className={styles.error}>{formErrors.priceFrom}</small>}
-                  </label>
-
-                  <label className={styles.formField}>
-                    <span className={styles.fieldLabel}>
-                      <FiDollarSign className={styles.fieldIcon} />
-                      Cennik do
-                    </span>
-                    <input className={styles.formInput} type="number" name="priceTo" value={form.priceTo} onChange={handleChange} min={form.priceFrom ? Number(form.priceFrom) : 1} max={1000000} placeholder="Np. 1000" />
-                    {formErrors.priceTo && <small className={styles.error}>{formErrors.priceTo}</small>}
-                  </label>
-                </div></EditorGroup><EditorGroup title="02 / Twoje usługi">{form.services.length > 0 && <ul className={styles.serviceList}>
-                    {form.services.map((s, i) => <li key={i} className={styles.serviceItem}>
-                        <div className={styles.serviceItemTop}>
-                          <div>
-                            <strong className={styles.serviceName}>{s.name}</strong>
-                            {s.shortDescription && <p className={styles.serviceDesc}>{s.shortDescription}</p>}
-                          </div>
-
-                          <span className={styles.serviceBadge}>{mapCategory(s.category)}</span>
-                        </div>
-
-                        <div className={styles.serviceMeta}>
-                          <span>{formatServicePrice(s)}</span>
-                          <span>
-                            {s.duration.value} {mapUnit(s.duration.unit)}
-                          </span>
-                          <span>
-                            {s.booking?.enabled ? s.booking.type === "calendar" ? "rezerwacja" : "zapytanie" : "bez rezerwacji"}
-                          </span>
-                        </div>
-
-                        <button type="button" className={styles.removeServiceBtn} onClick={() => setForm(prev => ({
-                      ...prev,
-                      services: prev.services.filter((_, idx) => idx !== i)
-                    }))}>
-                          <FiTrash2 />
-                          Usuń usługę
-                        </button>
-                      </li>)}
-                  </ul>}{form.services.length === 0 && <p className={styles.emptyState}>Nie masz jeszcze dodanych usług. Przygotuj pierwszą ofertę poniżej.</p>}</EditorGroup><EditorGroup title="03 / Dodaj usługę"><div className={styles.serviceCard}>
-                  <div className={styles.serviceCardHead}>
-                    <h4 className={styles.serviceCardTitle}>Dodaj usługę / ofertę</h4>
-                    <span className={styles.serviceCardPill}>
-                      {servicesCount}/{CREATE_PLAN.limits.services} w planie Starter
-                    </span>
-                  </div>
-
-                  <div className={styles.serviceGrid}>
-                    <div>
-                      <label className={styles.formField}><span className={styles.fieldLabel}>Nazwa usługi / oferty</span><input className={styles.formInput} type="text" placeholder="Nazwa (np. Strzyżenie męskie)" value={newService.name} maxLength={SERVICE_NAME_MAX_LENGTH} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
-                          ...prev,
-                          name: cleanServiceText(e.target.value, SERVICE_NAME_MAX_LENGTH)
-                        }))} aria-label="Nazwa usługi / oferty" /></label>
-
-                      <small className={styles.fieldCounter}>
-                        {newService.name.length}/{SERVICE_NAME_MAX_LENGTH}
-                      </small>
-                    </div>
-
-                    <label className={styles.formField}><span className={styles.fieldLabel}>Rodzaj oferty</span><select className={styles.formSelect} value={newService.category} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService({
-                        ...newService,
-                        category: e.target.value
-                      })} aria-label="Rodzaj oferty">
-                      <option value="service">Usługa</option>
-                      <option value="product">Produkt</option>
-                      <option value="project">Projekt</option>
-                      <option value="artwork">Obraz / dzieło</option>
-                      <option value="handmade">Rękodzieło</option>
-                      <option value="lesson">Lekcja</option>
-                      <option value="consultation">Konsultacja</option>
-                      <option value="event">Event</option>
-                      <option value="custom">Inne</option>
-                    </select></label>
-
-                    <div>
-                      <label className={styles.formField}><span className={styles.fieldLabel}>Krótki opis (opcjonalnie)</span><input className={styles.formInput} type="text" placeholder="Krótki opis (opcjonalnie)" value={newService.shortDescription} maxLength={SERVICE_SHORT_DESCRIPTION_MAX_LENGTH} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
-                          ...prev,
-                          shortDescription: cleanServiceText(e.target.value, SERVICE_SHORT_DESCRIPTION_MAX_LENGTH)
-                        }))} aria-label="Krótki opis (opcjonalnie)" /></label>
-
-                      <small className={styles.fieldCounter}>
-                        {newService.shortDescription.length}/{SERVICE_SHORT_DESCRIPTION_MAX_LENGTH}
-                      </small>
-                    </div>
-
-                    <label className={styles.formField}><span className={styles.fieldLabel}>Sposób wyceny</span><select className={styles.formSelect} value={newService.priceMode} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService({
-                        ...newService,
-                        priceMode: e.target.value,
-                        priceValue: "",
-                        priceFrom: "",
-                        priceTo: ""
-                      })} aria-label="Sposób wyceny">
-                      <option value="contact">Wycena indywidualna</option>
-                      <option value="fixed">Cena stała</option>
-                      <option value="from">Cena od</option>
-                      <option value="range">Zakres cen</option>
-                      <option value="free">Darmowe</option>
-                    </select></label>
-
-                    {(newService.priceMode === "fixed" || newService.priceMode === "from") && <div>
-                        <label className={styles.formField}><span className={styles.fieldLabel}>Cena w zł</span><input className={styles.formInput} type="number" inputMode="numeric" placeholder={newService.priceMode === "fixed" ? "Cena" : "Cena od"} min="0" max={SERVICE_PRICE_MAX} value={newService.priceValue} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
-                          ...prev,
-                          priceValue: cleanIntegerInput(e.target.value, 7)
-                        }))} aria-label="Cena w zł" /></label>
-
-                        <small className={styles.fieldCounter}>
-                          Dostępny zakres: 0–{SERVICE_PRICE_MAX} zł
-                        </small>
-                      </div>}
-
-                    {newService.priceMode === "range" && <>
-                        <div>
-                          <label className={styles.formField}><span className={styles.fieldLabel}>Cena od</span><input className={styles.formInput} type="number" inputMode="numeric" placeholder="Cena od" min="0" max={SERVICE_PRICE_MAX} value={newService.priceFrom} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
-                            ...prev,
-                            priceFrom: cleanIntegerInput(e.target.value, 7)
-                          }))} aria-label="Cena od" /></label>
-
-                          <small className={styles.fieldCounter}>
-                            Dostępny zakres: 0–{SERVICE_PRICE_MAX} zł
-                          </small>
-                        </div>
-
-                        <div>
-                          <label className={styles.formField}><span className={styles.fieldLabel}>Cena do</span><input className={styles.formInput} type="number" inputMode="numeric" placeholder="Cena do" min="0" max={SERVICE_PRICE_MAX} value={newService.priceTo} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
-                            ...prev,
-                            priceTo: cleanIntegerInput(e.target.value, 7)
-                          }))} aria-label="Cena do" /></label>
-
-                          <small className={styles.fieldCounter}>
-                            Dostępny zakres: 0–{SERVICE_PRICE_MAX} zł
-                          </small>
-                        </div>
-                      </>}
-
-                    <div>
-                      <label className={styles.formField}><span className={styles.fieldLabel}>Czas</span><input className={styles.formInput} type="number" inputMode="numeric" placeholder="Czas" min={SERVICE_DURATION_LIMITS[newService.durationUnit]?.min || 1} max={SERVICE_DURATION_LIMITS[newService.durationUnit]?.max || 999} value={newService.durationValue} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
-                          ...prev,
-                          durationValue: cleanIntegerInput(e.target.value, 4)
-                        }))} aria-label="Czas" /></label>
-
-                      <small className={styles.fieldCounter}>
-                        Dostępny zakres: {getDurationLimitText(newService.durationUnit)}
-                      </small>
-                    </div>
-
-                    <label className={styles.formField}><span className={styles.fieldLabel}>Jednostka czasu</span><select className={styles.formSelect} value={newService.durationUnit} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService({
-                        ...newService,
-                        durationUnit: e.target.value
-                      })} aria-label="Jednostka czasu">
-                      <option value="minutes">Minuty</option>
-                      <option value="hours">Godziny</option>
-                      <option value="days">Dni</option>
-                      <option value="weeks">Tygodnie</option>
-                    </select></label>
-                  </div>
-
-                  <div className={styles.serviceOptions}>
-                    <label className={styles.checkboxInline}>
-                      <input type="checkbox" checked={newService.bookingEnabled} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService(prev => ({
-                        ...prev,
-                        bookingEnabled: e.target.checked,
-                        bookingType: e.target.checked ? "request" : "none"
-                      }))} />
-                      Umożliw zapytanie o usługę
-                    </label>
-
-                    {newService.bookingEnabled && <label className={styles.formField}><span className={styles.fieldLabel}>Tryb zapytania</span><select className={styles.formSelect} value={newService.bookingType} disabled={servicesCount >= CREATE_PLAN.limits.services} onChange={e => setNewService({
-                        ...newService,
-                        bookingType: e.target.value
-                      })} aria-label="Tryb zapytania">
-                        <option value="request">Zapytanie — Starter</option>
-                        <option value="calendar" disabled>
-                          Kalendarz — Premium
-                        </option>
-                      </select></label>}
-                  </div>
-
-                  <button type="button" className={styles.addServiceBtn} onClick={handleAddService} disabled={servicesCount >= CREATE_PLAN.limits.services}>
-                    <FiPlus />
-                    {servicesCount >= CREATE_PLAN.limits.services ? "Limit usług w planie Starter" : "Dodaj usługę"}
-                  </button>
-
-                  {serviceError && <small className={styles.error}>{serviceError}</small>}
-                </div></EditorGroup><EditorGroup title="04 / Zapytania i dostępność"><label className={styles.formField}>
-                  <span className={styles.fieldLabel}>
-                    <FiClock className={styles.fieldIcon} />
-                    Tryb działania rezerwacji
-                  </span>
-                  <select className={styles.formSelect} name="bookingMode" value={form.bookingMode} onChange={handleChange}>
-                    <option value="calendar" disabled>
-                      Kalendarz godzinowy — dostępny w Premium
-                    </option>
-                    <option value="request-blocking" disabled>
-                      Blokowanie dni — dostępne w Premium
-                    </option>
-                    <option value="request-open">Zapytanie bez blokowania — Starter</option>
-                  </select>
-
-                  <small className={styles.helperText}>
-                    W planie Starter dostępny jest tryb zapytań. Kalendarz i blokowanie
-                    dni odblokujesz po przejściu na Premium.
-                  </small>
-
-                  {formErrors.bookingMode && <small className={styles.error}>{formErrors.bookingMode}</small>}
-                </label>{formErrors.services && <small className={styles.error}>{formErrors.services}</small>}</EditorGroup></section>
-
-              <section className={styles.contentBox} id="create-section-4"><EditorSectionHeader kicker="Linki i media" title="Daj się znaleźć" description="Połącz wizytówkę ze swoją stroną lub miejscem, w którym pokazujesz realizacje." icon={<FiLink />} /><EditorGroup title="01 / Twoje linki"><div className={styles.inlineGrid}>
-                  {form.links.map((link, index) => <label key={index} className={styles.formField}>
-                      <span className={styles.fieldLabel}>Link {index + 1}</span>
-                      <input className={styles.formInput} type="url" placeholder="https://..." value={link} onChange={e => handleLinkChange(index, e.target.value)} />
-                    </label>)}
-                </div><small className={styles.counterText}>
-                  {activeLinksCount}/{CREATE_PLAN.limits.links} wykorzystanych linków — plan Starter
-                </small>{formErrors.links && <small className={styles.error}>{formErrors.links}</small>}</EditorGroup></section>
-
-              <section className={styles.contentBox} id="create-section-5"><EditorSectionHeader kicker="Informacje dodatkowe" title="Gotowe do publikacji" description="Uzupełnij dane firmy i sprawdź wizytówkę przed jej utworzeniem." icon={<FiCheckCircle />} /><EditorGroup title="01 / Dane firmy"><label className={`${styles.formField} ${styles.checkboxBox}`}>
-                    <span className={styles.checkboxInline}>
-                      <input type="checkbox" name="hasBusiness" checked={form.hasBusiness} onChange={handleChange} />
-                      Posiadam działalność gospodarczą
-                    </span>
-                  </label>{form.hasBusiness && <label className={styles.formField}>
-                      <span className={styles.fieldLabel}>NIP (opcjonalnie)</span>
-                      <input className={styles.formInput} type="text" name="nip" value={form.nip} onChange={handleChange} placeholder="Np. 1234567890" />
-                    </label>}</EditorGroup><EditorGroup title="02 / Utwórz wizytówkę"><div className={`${styles.termsBox} ${formErrors.regulations ? styles.termsBoxError : ""}`}>
-                    <label className={styles.termsLabel}>
-                      <input type="checkbox" checked={acceptedRegulations} onChange={e => {
-                      setAcceptedRegulations(e.target.checked);
-                      if (e.target.checked) {
-                        setFormErrors(prev => ({
-                          ...prev,
-                          regulations: ""
-                        }));
-                      }
-                    }} aria-invalid={!!formErrors.regulations} />
-
-                      <span>
-                        Potwierdzam, że rozumiem i akceptuję{" "}
-                        <Link to="/regulamin" target="_blank" rel="noopener noreferrer" onClick={event => event.stopPropagation()}>
-                          regulamin serwisu
-                        </Link>
-                        .
-                      </span>
-                    </label>
-                  </div>{formErrors.regulations && <small className={styles.error}>{formErrors.regulations}</small>}<LoadingButton type="submit" isLoading={loading} disabled={loading || avatarUploading} className={styles.submitButton}>
-                    Utwórz profil
-                  </LoadingButton>{formErrors.general && <p className={styles.error}>{formErrors.general}</p>}</EditorGroup></section>
-            </form></div><aside className={styles.previewColumn} aria-label="Podgląd wizytówki na żywo"><div className={styles.contentBox}>
-                  <div className={styles.contentHeader}>
-                    <h3 className={styles.contentTitle}>Podgląd tworzonego profilu</h3>
-                    <span className={styles.badge}>Live</span>
-                  </div>
-
-                  <div className={styles.previewCardWrap}>
-                    <UserCard user={{
-                ...form,
-                tags: form.tags.filter(tag => tag.trim() !== "" && tag.length <= TAG_MAX_LENGTH),
-                links: form.links.filter(link => link.trim() !== ""),
-                rating: 0,
-                reviews: 0,
-                availableDates: [],
-                userId: uid
-              }} currentUser={user} isPreview={true} onPreviewBlocked={msg => setPreviewMsg(msg)} />
-                  </div>
-
-                  {previewMsg && <p className={styles.error}>{previewMsg}</p>}
-                </div></aside></div></div>
-    </section>;
+        {previewMsg && <p className={styles.error}>{previewMsg}</p>}
+      </div></aside></div></div>
+  </section>;
 };
 export default CreateProfile;

@@ -10,10 +10,12 @@
   --#{$prefix}-info: #315cbd;
   --#{$prefix}-disabled: #667085;
   --#{$prefix}-shadow: 3px 4px 0 color-mix(in srgb, var(--yp-frame) 15%, transparent);
+
   @each $status in accent, success, warning, danger, info, disabled {
     --#{$prefix}-#{$status}-soft: color-mix(in srgb, var(--#{$prefix}-#{$status}) 8%, var(--app-surface));
     --#{$prefix}-#{$status}-border: color-mix(in srgb, var(--#{$prefix}-#{$status}) 35%, var(--app-border));
   }
+
   :global(html[data-theme='dark']) & {
     --#{$prefix}-success: #80d6af;
     --#{$prefix}-warning: #f0c17b;

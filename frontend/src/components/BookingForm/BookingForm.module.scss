@@ -5,7 +5,7 @@
   --booking-paper: #fffdf7;
   --booking-ink: #171917;
   --booking-muted: #686c65;
-  --booking-line: rgba(23,25,23,.18);
+  --booking-line: rgba(23, 25, 23, .18);
   --booking-frame: #171917;
   --booking-lime: #d8ff72;
   --booking-purple: #6557ef;
@@ -13,73 +13,372 @@
   position: relative;
   width: 100%;
   min-height: 70svh;
-  padding: 3rem max(clamp(1rem,4vw,3.5rem),var(--safe-right,0px)) 5rem max(clamp(1rem,4vw,3.5rem),var(--safe-left,0px));
+  padding: 3rem max(clamp(1rem, 4vw, 3.5rem), var(--safe-right, 0px)) 5rem max(clamp(1rem, 4vw, 3.5rem), var(--safe-left, 0px));
   scroll-margin-top: 6rem;
   background: var(--booking-bg);
   color: var(--booking-ink);
   font-family: $font-accent;
-  *, *::before, *::after { box-sizing: border-box; }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
 }
+
 :global(html[data-theme="dark"]) .pageWrap {
   --booking-bg: #111310;
   --booking-paper: #1c1f1b;
   --booking-ink: #f5f2e9;
   --booking-muted: #a9ada4;
-  --booking-line: rgba(245,242,233,.2);
+  --booking-line: rgba(245, 242, 233, .2);
   --booking-frame: #080809;
   --booking-lime: #d2f56f;
   --booking-purple: #9d92ff;
 }
-.inner { width: min(1480px,100%); margin: auto; }
-.layout { display: grid; grid-template-columns: minmax(270px,340px) minmax(0,1fr); gap: 2rem; align-items: start; }
-.side { position: sticky; top: 7rem; display: grid; gap: 1.25rem; min-width: 0; padding: 1.6rem; border: 1px solid var(--booking-frame); border-radius: 24px; background: var(--booking-paper); box-shadow: 5px 6px 0 var(--booking-frame); }
-.backButton { display: inline-flex; align-items: center; gap: .6rem; width: fit-content; min-height: 44px; padding: .6rem .8rem; border: 1px solid var(--booking-line); border-radius: 9px; background: var(--booking-bg); color: var(--booking-ink); font-family: $font-accent; font-size: .75rem; cursor: pointer; }
-.backButton:focus-visible { outline: 3px solid var(--booking-purple); outline-offset: 4px; }
-.overline { display: inline-flex; align-items: center; gap: .5rem; width: fit-content; padding: .45rem .6rem; border: 1px solid var(--booking-frame); border-radius: 7px; background: var(--booking-lime); color: #171917; font-size: .65rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-.heading { margin: 0; font-family: $font-heading; font-size: clamp(2rem,2.5vw,2.6rem); font-weight: 800; line-height: 1.08; letter-spacing: -.065em; }
-.heading span { display: block; margin-top: .2em; }
-.description { margin: 0; color: var(--booking-muted); font-size: .85rem; line-height: 1.7; }
-.providerBox { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-top: 1px solid var(--booking-line); border-bottom: 1px solid var(--booking-line); }
-.avatarBox { width: 66px; height: 66px; border: 1px solid var(--booking-frame); border-radius: 14px; background: var(--booking-bg); box-shadow: 3px 4px 0 var(--bf-primary,var(--booking-lime)); flex-shrink: 0; overflow: hidden; }
-.avatar { width: 100%; height: 100%; object-fit: cover; }
-.providerInfo { min-width: 0; }
-.providerLabel, .chapterLabel { color: var(--booking-purple); font-size: .65rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }
-.providerName { display: block; margin-top: .4rem; font-family: $font-heading; font-size: 1.1rem; letter-spacing: -.04em; overflow-wrap: anywhere; }
-.providerRole { margin: .4rem 0 0; font-size: .75rem; color: var(--booking-muted); line-height: 1.5; }
-.metaList { display: grid; gap: .9rem; }
-.metaItem { display: flex; align-items: flex-start; gap: .75rem; }
-.metaIcon { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--booking-frame); border-radius: 8px; background: var(--booking-lime); color: #171917; flex-shrink: 0; }
-.metaIcon svg { width: 12px; height: 12px; }
-.metaItem strong { font-size: .7rem; }
-.metaItem p { margin: .25rem 0 0; color: var(--booking-muted); font-size: .75rem; line-height: 1.5; overflow-wrap: anywhere; }
-.content { min-width: 0; padding: clamp(1.2rem,2.5vw,2rem); border: 1px solid var(--booking-frame); border-radius: 24px; background: var(--booking-paper); box-shadow: 6px 7px 0 var(--booking-frame); }
-.chapterHead { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-bottom: 1.4rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--booking-line); }
-.chapterHead h2 { margin: .6rem 0 0; font-family: $font-heading; font-size: clamp(1.7rem,2.4vw,2.5rem); line-height: 1.15; letter-spacing: -.055em; }
-.chapterNumber { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--booking-frame); border-radius: 11px; background: var(--booking-lime); color: #171917; box-shadow: 3px 3px 0 var(--booking-frame); flex-shrink: 0; }
-.body { min-width: 0; }
-.unavailableBox, .loadingCard { padding: 2rem; border: 1px solid var(--booking-line); border-radius: 16px; background: var(--booking-paper); }
-.loadingCard { max-width: 680px; margin: auto; display: grid; gap: 1rem; border-color: var(--booking-frame); box-shadow: 5px 6px 0 var(--booking-frame); }
-.loadingCard strong, .unavailableBox strong { font-family: $font-heading; font-size: 1.6rem; letter-spacing: -.04em; }
-.loadingCard > span { color: var(--booking-purple); font-size: .7rem; }
-.loadingCard p, .unavailableBox p { color: var(--booking-muted); font-size: .9rem; line-height: 1.7; }
-@media(max-width: 1050px) {
-  .layout { grid-template-columns: 1fr; }
-  .side { position: relative; top: auto; grid-template-columns: 1fr 1fr; gap: 1rem 2rem; }
-  .backButton, .overline { grid-column: 1/-1; }
-  .heading, .description { grid-column: 1; }
-  .providerBox { grid-column: 2; grid-row: 3; border: 0; padding: 0; }
-  .metaList { grid-column: 2; grid-row: 4; }
+
+.inner {
+  width: min(1480px, 100%);
+  margin: auto;
 }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(270px, 340px) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.side {
+  position: sticky;
+  top: 7rem;
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+  padding: 1.6rem;
+  border: 1px solid var(--booking-frame);
+  border-radius: 24px;
+  background: var(--booking-paper);
+  box-shadow: 5px 6px 0 var(--booking-frame);
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  width: fit-content;
+  min-height: 44px;
+  padding: .6rem .8rem;
+  border: 1px solid var(--booking-line);
+  border-radius: 9px;
+  background: var(--booking-bg);
+  color: var(--booking-ink);
+  font-family: $font-accent;
+  font-size: .75rem;
+  cursor: pointer;
+}
+
+.backButton:focus-visible {
+  outline: 3px solid var(--booking-purple);
+  outline-offset: 4px;
+}
+
+.overline {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  width: fit-content;
+  padding: .45rem .6rem;
+  border: 1px solid var(--booking-frame);
+  border-radius: 7px;
+  background: var(--booking-lime);
+  color: #171917;
+  font-size: .65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.heading {
+  margin: 0;
+  font-family: $font-heading;
+  font-size: clamp(2rem, 2.5vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -.065em;
+}
+
+.heading span {
+  display: block;
+  margin-top: .2em;
+}
+
+.description {
+  margin: 0;
+  color: var(--booking-muted);
+  font-size: .85rem;
+  line-height: 1.7;
+}
+
+.providerBox {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--booking-line);
+  border-bottom: 1px solid var(--booking-line);
+}
+
+.avatarBox {
+  width: 66px;
+  height: 66px;
+  border: 1px solid var(--booking-frame);
+  border-radius: 14px;
+  background: var(--booking-bg);
+  box-shadow: 3px 4px 0 var(--bf-primary, var(--booking-lime));
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.providerInfo {
+  min-width: 0;
+}
+
+.providerLabel,
+.chapterLabel {
+  color: var(--booking-purple);
+  font-size: .65rem;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.providerName {
+  display: block;
+  margin-top: .4rem;
+  font-family: $font-heading;
+  font-size: 1.1rem;
+  letter-spacing: -.04em;
+  overflow-wrap: anywhere;
+}
+
+.providerRole {
+  margin: .4rem 0 0;
+  font-size: .75rem;
+  color: var(--booking-muted);
+  line-height: 1.5;
+}
+
+.metaList {
+  display: grid;
+  gap: .9rem;
+}
+
+.metaItem {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+}
+
+.metaIcon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--booking-frame);
+  border-radius: 8px;
+  background: var(--booking-lime);
+  color: #171917;
+  flex-shrink: 0;
+}
+
+.metaIcon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.metaItem strong {
+  font-size: .7rem;
+}
+
+.metaItem p {
+  margin: .25rem 0 0;
+  color: var(--booking-muted);
+  font-size: .75rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.content {
+  min-width: 0;
+  padding: clamp(1.2rem, 2.5vw, 2rem);
+  border: 1px solid var(--booking-frame);
+  border-radius: 24px;
+  background: var(--booking-paper);
+  box-shadow: 6px 7px 0 var(--booking-frame);
+}
+
+.chapterHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1.4rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--booking-line);
+}
+
+.chapterHead h2 {
+  margin: .6rem 0 0;
+  font-family: $font-heading;
+  font-size: clamp(1.7rem, 2.4vw, 2.5rem);
+  line-height: 1.15;
+  letter-spacing: -.055em;
+}
+
+.chapterNumber {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--booking-frame);
+  border-radius: 11px;
+  background: var(--booking-lime);
+  color: #171917;
+  box-shadow: 3px 3px 0 var(--booking-frame);
+  flex-shrink: 0;
+}
+
+.body {
+  min-width: 0;
+}
+
+.unavailableBox,
+.loadingCard {
+  padding: 2rem;
+  border: 1px solid var(--booking-line);
+  border-radius: 16px;
+  background: var(--booking-paper);
+}
+
+.loadingCard {
+  max-width: 680px;
+  margin: auto;
+  display: grid;
+  gap: 1rem;
+  border-color: var(--booking-frame);
+  box-shadow: 5px 6px 0 var(--booking-frame);
+}
+
+.loadingCard strong,
+.unavailableBox strong {
+  font-family: $font-heading;
+  font-size: 1.6rem;
+  letter-spacing: -.04em;
+}
+
+.loadingCard>span {
+  color: var(--booking-purple);
+  font-size: .7rem;
+}
+
+.loadingCard p,
+.unavailableBox p {
+  color: var(--booking-muted);
+  font-size: .9rem;
+  line-height: 1.7;
+}
+
+@media(max-width: 1050px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .side {
+    position: relative;
+    top: auto;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 2rem;
+  }
+
+  .backButton,
+  .overline {
+    grid-column: 1/-1;
+  }
+
+  .heading,
+  .description {
+    grid-column: 1;
+  }
+
+  .providerBox {
+    grid-column: 2;
+    grid-row: 3;
+    border: 0;
+    padding: 0;
+  }
+
+  .metaList {
+    grid-column: 2;
+    grid-row: 4;
+  }
+}
+
 @media(max-width: 600px) {
-  .pageWrap { padding: 2rem .9rem 4rem; }
-  .layout { gap: 1.5rem; }
-  .side { display: flex; flex-direction: column; padding: 1.2rem; gap: 1rem; }
-  .heading { font-size: 1.65rem; }
-  .heading span { display: block; }
-  .description, .overline, .metaList { display: none; }
-  .providerBox { padding-top: 1rem; border-top: 1px solid var(--booking-line); }
-  .metaList { grid-template-columns: 1fr 1fr; gap: .8rem; }
-  .metaItem:last-child { display: none; }
-  .content { padding: 1.1rem; }
-  .chapterHead h2 { font-size: 1.7rem; }
+  .pageWrap {
+    padding: 2rem .9rem 4rem;
+  }
+
+  .layout {
+    gap: 1.5rem;
+  }
+
+  .side {
+    display: flex;
+    flex-direction: column;
+    padding: 1.2rem;
+    gap: 1rem;
+  }
+
+  .heading {
+    font-size: 1.65rem;
+  }
+
+  .heading span {
+    display: block;
+  }
+
+  .description,
+  .overline,
+  .metaList {
+    display: none;
+  }
+
+  .providerBox {
+    padding-top: 1rem;
+    border-top: 1px solid var(--booking-line);
+  }
+
+  .metaList {
+    grid-template-columns: 1fr 1fr;
+    gap: .8rem;
+  }
+
+  .metaItem:last-child {
+    display: none;
+  }
+
+  .content {
+    padding: 1.1rem;
+  }
+
+  .chapterHead h2 {
+    font-size: 1.7rem;
+  }
 }
