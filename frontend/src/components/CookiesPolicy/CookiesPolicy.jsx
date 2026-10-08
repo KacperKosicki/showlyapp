@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import styles from "./CookiesPolicy.module.scss";
+import useScrollReveal from "../../utils/useScrollReveal";
 import {
   FiCoffee,
   FiShield,
@@ -10,10 +11,13 @@ import {
   FiInfo,
   FiCheckCircle,
   FiLock,
+  FiArrowDownRight,
 } from "react-icons/fi";
 
 export default function CookiesPolicy() {
   const location = useLocation();
+  const sectionRef = useScrollReveal();
+  const chapters = ["Czym są pliki cookies?", "Cookies techniczne", "Preferencje użytkownika", "Cookies analityczne", "Jak zmienić decyzję?"];
 
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
@@ -40,19 +44,22 @@ export default function CookiesPolicy() {
   }, [location.state, location.pathname]);
 
   return (
-    <section id="scrollToId" className={styles.section}>
+    <section id="scrollToId" ref={sectionRef} className={styles.section} aria-labelledby="cookies-title">
+      <div className={styles.backdrop} aria-hidden="true"><span>COOKIES</span></div>
       <div className={styles.inner}>
+        <header className={styles.header} data-reveal>
+          <div>
+            <h1 id="cookies-title">Małe pliki.<br /><span>Jasne zasady.</span></h1>
+            <p className={styles.description}>Wyjaśniamy, w jaki sposób Showly.me może korzystać z plików cookies oraz podobnych technologii, takich jak localStorage.</p>
+          </div>
+          <div className={styles.documentBadge} aria-hidden="true"><FiShield /><strong>Polityka<br />cookies.</strong><small>Cookies / localStorage</small></div>
+        </header>
         <div className={styles.layout}>
           <aside className={styles.side}>
-            <span className={styles.overline}>Showly Legal</span>
-
-            <h2 className={styles.heading}>Polityka cookies.</h2>
-
-            <p className={styles.description}>
-              Wyjaśniamy, w jaki sposób Showly.me może korzystać z plików
-              cookies oraz podobnych technologii, takich jak localStorage.
-            </p>
-
+            <nav className={styles.contents} aria-label="Spis treści polityki cookies">
+              <span className={styles.sideLabel}>W tym dokumencie</span>
+              {chapters.map((chapter, index) => <a key={chapter} href={`#cookies-${index + 1}`}><b>{String(index + 1).padStart(2, "0")}</b><span>{chapter}</span><FiArrowDownRight aria-hidden="true" /></a>)}
+            </nav>
             <div className={styles.metaList}>
               <div className={styles.metaItem}>
                 <strong>Techniczne</strong>
@@ -141,20 +148,16 @@ export default function CookiesPolicy() {
                 </p>
 
                 <p>
-                  E-mail: <strong>kontakt@showly.me</strong>
+                  E-mail: <a href="mailto:kontakt@showly.me">kontakt@showly.me</a>
                 </p>
               </div>
             </div>
           </aside>
 
-          <main className={styles.content}>
+          <div className={styles.content}>
             <div className={styles.chapterHead}>
               <div>
-                <span className={styles.chapterLabel}>
-                  Cookies / localStorage / Prywatność
-                </span>
-
-                <h1>Pliki cookies i podobne technologie.</h1>
+                <h2>Pliki cookies i podobne technologie.</h2>
               </div>
 
               <span className={styles.chapterNumber}>00</span>
@@ -183,7 +186,7 @@ export default function CookiesPolicy() {
             </div>
 
             <div className={styles.sections}>
-              <article className={styles.sectionCard}>
+              <article id="cookies-1" className={styles.sectionCard} data-reveal>
                 <div className={styles.cardTop}>
                   <span className={styles.cardIcon}>
                     <FiCoffee />
@@ -217,7 +220,7 @@ export default function CookiesPolicy() {
                 </div>
               </article>
 
-              <article className={styles.sectionCard}>
+              <article id="cookies-2" className={styles.sectionCard} data-reveal>
                 <div className={styles.cardTop}>
                   <span className={styles.cardIcon}>
                     <FiShield />
@@ -247,7 +250,7 @@ export default function CookiesPolicy() {
                 </div>
               </article>
 
-              <article className={styles.sectionCard}>
+              <article id="cookies-3" className={styles.sectionCard} data-reveal>
                 <div className={styles.cardTop}>
                   <span className={styles.cardIcon}>
                     <FiSettings />
@@ -290,7 +293,7 @@ export default function CookiesPolicy() {
                 </div>
               </article>
 
-              <article className={styles.sectionCard}>
+              <article id="cookies-4" className={styles.sectionCard} data-reveal>
                 <div className={styles.cardTop}>
                   <span className={styles.cardIcon}>
                     <FiBarChart2 />
@@ -318,7 +321,7 @@ export default function CookiesPolicy() {
                 </div>
               </article>
 
-              <article className={styles.sectionCard}>
+              <article id="cookies-5" className={styles.sectionCard} data-reveal>
                 <div className={styles.cardTop}>
                   <span className={styles.cardIcon}>
                     <FiRefreshCcw />
@@ -349,7 +352,7 @@ export default function CookiesPolicy() {
                 </div>
               </article>
             </div>
-          </main>
+          </div>
         </div>
       </div>
     </section>
