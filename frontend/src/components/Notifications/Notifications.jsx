@@ -551,7 +551,7 @@ const Notifications = ({ user, setUnreadCount }) => {
           {...(!unavailable ? { to: `/konwersacja/${conversation._id}`, state: { scrollToId: 'threadPageLayout' } } : {})}
           className={styles.link}
         >
-          <div className={styles.row}>
+          <div className={`${styles.row} ${styles.conversationRow}`}>
             <div className={styles.avatarWrap}>
               <AvatarNode src={avatarSrc} variant={variant} />
 
@@ -571,6 +571,8 @@ const Notifications = ({ user, setUnreadCount }) => {
                   {formatMessageDate(lastMessage.createdAt)}
                 </time>
               </div>
+              <p className={styles.message}>{lastMessage.content}</p>
+            </div>
 
               {variant === "announcement" && (
                 <div className={styles.announcementContext}>
@@ -578,7 +580,6 @@ const Notifications = ({ user, setUnreadCount }) => {
                   <strong>{conversation.announcement?.title || "Rozmowa dotycząca ogłoszenia"}</strong>
                 </div>
               )}
-              <p className={styles.message}>{lastMessage.content}</p>
               {unavailable && <div className={styles.unavailableNotice}><strong>{status[0]}</strong><p>{status[1]}</p></div>}
 
               <div className={styles.bottomRow}>
@@ -594,7 +595,6 @@ const Notifications = ({ user, setUnreadCount }) => {
                   {unavailable ? 'Rozmowa niedostępna' : <>Otwórz rozmowę<FiArrowUpRight aria-hidden="true" /></>}
                 </span>
               </div>
-            </div>
           </div>
         </ItemContainer>
       </li>

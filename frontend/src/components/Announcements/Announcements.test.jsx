@@ -21,6 +21,23 @@ jest.mock('react-router-dom', () => ({
 }), { virtual: true });
 const mount = (element, route = '/') => { mockInitialSearch = route.split('?')[1] || ''; return render(<MemoryRouter>{element}</MemoryRouter>); };
 beforeEach(() => announcementApi.mockReset());
+test('deletion can be cancelled and only confirmation removes the selected announcement', async () => {
+  announcementApi.mockImplementation(async (path) => path === '/mine'
+    ? { items: [{ ...examples[0], _id: 'to-delete', state: 'draft' }], applications: [], activeId: null }
+    : { ok: true });
+  mount(<MyAnnouncements />);
+  const trigger = await screen.findByText('Usuń', { selector: 'summary' });
+  const confirmation = trigger.closest('details');
+  fireEvent.click(trigger);
+  expect(confirmation).toHaveAttribute('open');
+  fireEvent.click(screen.getByRole('button', { name: 'Anuluj' }));
+  expect(confirmation).not.toHaveAttribute('open');
+  expect(trigger).toHaveFocus();
+  expect(announcementApi.mock.calls.some(([, options]) => options?.method === 'DELETE')).toBe(false);
+  fireEvent.click(trigger);
+  fireEvent.click(screen.getByRole('button', { name: 'Tak, usuń ogłoszenie' }));
+  await waitFor(() => expect(announcementApi).toHaveBeenCalledWith('/to-delete', expect.objectContaining({ method: 'DELETE', authenticated: true })));
+});
 test('search combines category and location and returns real announcement cards', async () => {
   announcementApi.mockResolvedValue({ items: [{ ...examples[0], _id: 'real', authorName: 'Anna' }], total: 1 });
   mount(<Announcements user={{ uid: 'account' }} />);

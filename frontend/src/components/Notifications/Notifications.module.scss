@@ -635,3 +635,22 @@
   strong { display: block; font-size: .85rem; }
   p { margin: 6px 0 0; font-size: .78rem; line-height: 1.6; }
 }
+
+.row.conversationRow {
+  row-gap: 0;
+
+  > .itemBody > .message {
+    margin-top: 6px;
+  }
+
+  > .unavailableNotice,
+  > .announcementContext {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  > .bottomRow {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+}
