@@ -27,7 +27,7 @@ export default function ShowlyJourney() {
 
   return (
     <section ref={sectionRef} className={styles.section} id="showlyJourney" aria-labelledby="journey-title">
-      <div className={styles.backdrop} aria-hidden="true"><span className={styles.bigWord}>TWÓJ RUCH</span><span className={styles.dots} /></div>
+      <div className={styles.backdrop} aria-hidden="true"><span className={styles.bigWord}>TWÓJ RUCH</span><span className={styles.backdropShape} /></div>
       <div className={styles.inner}>
         <header className={styles.header} data-reveal>
           <div><h2 id="journey-title">Od pierwszego pomysłu<span>do pierwszej rozmowy.</span></h2></div>

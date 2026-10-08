@@ -3,6 +3,8 @@
 /* AdminPanel — szeroki dashboard administracyjny Showly */
 
 .section {
+  position: relative;
+  isolation: isolate;
   --admin-ink: #161816;
   --admin-paper: var(--app-surface, #fffdf7);
   --admin-soft: var(--app-surface-soft, #f2eee7);
@@ -24,11 +26,7 @@
   min-height: 100vh;
   padding:
     clamp(1rem, 3vw, 2.6rem) max(clamp(1rem, 3vw, 2.25rem), var(--safe-right, 0px)) calc(clamp(2.5rem, 6vw, 5rem) + var(--safe-bottom, 0px)) max(clamp(1rem, 3vw, 2.25rem), var(--safe-left, 0px));
-  background:
-    radial-gradient(circle at 8% 7%,
-      rgba(186, 255, 88, 0.12),
-      transparent 21rem),
-    var(--app-bg);
+  background: var(--app-bg);
   color: var(--admin-text);
   font-family: $font-accent;
 
@@ -977,11 +975,7 @@
   --admin-danger-soft: rgba(255, 105, 135, 0.14);
   --admin-primary-text: #111216;
 
-  background:
-    radial-gradient(circle at 8% 7%,
-      rgba(186, 255, 88, 0.07),
-      transparent 21rem),
-    var(--app-bg);
+  background: var(--app-bg);
 }
 
 @media (max-width: 1180px) {

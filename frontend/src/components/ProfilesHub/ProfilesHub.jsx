@@ -355,7 +355,7 @@ const ProfilesHub = ({ currentUser, setAlert }) => {
                     </details>
                     <div className={styles.content}>
                         <div className={styles.resultsTop}>
-                            <div aria-live="polite" aria-atomic="true"><span className={styles.resultsLabel}><FiGrid aria-hidden="true" /> Twoje odkrycia</span><h3>{loading ? 'Szukamy profili…' : fetchError ? 'Katalog chwilowo niedostępny' : filteredProfiles.length + ' ' + (filteredProfiles.length === 1 ? 'dopasowany profil' : 'dopasowanych profili')}</h3></div>
+                            <div aria-live="polite" aria-atomic="true"><h3>{loading ? 'Szukamy profili…' : fetchError ? 'Katalog chwilowo niedostępny' : filteredProfiles.length + ' ' + (filteredProfiles.length === 1 ? 'dopasowany profil' : 'dopasowanych profili')}</h3></div>
                             <label className={styles.sortLabel}>Pokaż najpierw<select value={sort} onChange={e => setSort(e.target.value)}><option value="popular">Najczęściej odwiedzane</option><option value="rating">Najlepiej oceniane</option><option value="newest">Najnowsze</option></select></label>
                         </div>
                         {chips.length > 0 && <div className={styles.activeFilters} aria-label="Aktywne filtry">{chips.map(chip => <button key={chip.label} type="button" onClick={chip.clear} aria-label={'Usuń filtr: ' + chip.label}>{chip.label}<FiX aria-hidden="true" /></button>)}<button type="button" onClick={resetFilters}>Wyczyść wszystkie</button></div>}

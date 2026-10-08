@@ -3,6 +3,7 @@
 @import "../../styles/sectionBackdrop";
 
 .section {
+  --page-content-gap: clamp(32px, 4vw, 56px);
   --j-bg: #f1eee4;
   --j-paper: #fffdf7;
   --j-ink: #171917;
@@ -50,15 +51,41 @@
 }
 
 .backdrop {
-  @include sectionBackdrop(var(--j-line), var(--j-accent));
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 1000px;
+    background: radial-gradient(ellipse at 7% 35%, color-mix(in srgb, var(--j-lime) 13%, transparent), transparent 48%),
+      radial-gradient(ellipse at 90% 15%, color-mix(in srgb, var(--j-accent) 10%, transparent), transparent 48%);
+  }
 }
 
 .bigWord {
   @include backdropWord(var(--j-line), min(12vw, 12rem));
+  top: calc(112px + var(--safe-top, 0px));
+
+  @media (max-width: 760px) {
+    top: calc(96px + var(--safe-top, 0px));
+    transform: translateX(-40%);
+  }
 }
 
-.dots {
-  @include backdropDots(var(--j-line));
+.backdropShape {
+  position: absolute;
+  top: 170px;
+  right: -220px;
+  width: clamp(420px, 44vw, 680px);
+  height: 700px;
+  border-radius: 48% 52% 65% 35% / 63% 38% 62% 37%;
+  background: color-mix(in srgb, var(--j-accent) 5%, transparent);
+  transform: rotate(18deg);
 }
 
 .inner {
@@ -71,33 +98,26 @@
 .header {
   display: grid;
   grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
-  align-items: end;
-  gap: 3rem;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3rem);
   margin-bottom: 2.5rem;
 }
 
-.kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  font-size: .7rem;
-  font-weight: 600;
-  color: var(--j-accent);
-  text-transform: uppercase;
-  letter-spacing: .05em;
-}
-
 .header h2 {
-  margin: 0 0 1rem;
+  margin: 1.2rem 0 0;
   font-family: $font-heading;
-  font-size: clamp(3.5rem, 6.2vw, 6.7rem);
+  font-size: clamp(2.25rem, 3.8vw, 3.5rem);
   font-weight: 800;
-  line-height: 1.08;
-  letter-spacing: -.065em;
+  line-height: 1.2;
+  letter-spacing: -.05em;
 }
 
 .header h2 span {
   @include marker-highlight(var(--j-lime));
+  display: block;
+  width: fit-content;
+  margin-top: .08em;
+  color: #171917;
 }
 
 .header>p {
@@ -732,7 +752,7 @@
   }
 
   .header h2 {
-    font-size: clamp(2rem, 8vw, 2.8rem);
+    font-size: clamp(1.8rem, 6.7vw, 2.35rem);
   }
 
   .workshop {

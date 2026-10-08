@@ -17,6 +17,7 @@ import {
   FiX,
 } from "react-icons/fi";
 
+import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import styles from "./ReservationCalendar.module.scss";
 import EditorGroup, { EditorSectionHeader } from "../YourProfile/sections/EditorGroup";
 
@@ -614,6 +615,7 @@ const ReservationCalendar = ({
   return (
     <>
       <section className={styles.calendarSection}>
+        <PanelBackdrop compact />
         <div className={styles.calendarHeader}>
           <EditorSectionHeader kicker="Zarządzanie terminami" title="Twój kalendarz rezerwacji" description="Wybierz dzień, sprawdź plan i dodaj rezerwacje przyjęte poza Showly." icon={<FiCalendar />} />
 

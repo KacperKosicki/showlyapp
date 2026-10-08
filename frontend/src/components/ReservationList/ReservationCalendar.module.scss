@@ -5,6 +5,8 @@
 ========================================================= */
 
 .calendarSection {
+  position: relative;
+  isolation: isolate;
   --calendar-accent: var(--app-primary);
   --calendar-accent-soft: rgba(111, 78, 242, 0.09);
   --calendar-accent-border: rgba(111, 78, 242, 0.22);

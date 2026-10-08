@@ -2,6 +2,8 @@
 @include profile-editor-card('.emptyCard');
 
 .wrapper {
+  position: relative;
+  isolation: isolate;
   @include settings-tokens;
   min-height: 70vh;
   padding: 100px 16px 60px;

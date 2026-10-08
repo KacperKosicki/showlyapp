@@ -3,6 +3,7 @@
 @import "../../styles/sectionBackdrop";
 
 .section {
+  --page-content-gap: clamp(32px, 4vw, 56px);
   --hub-bg: #f1eee4;
   --hub-paper: #fffdf7;
   --hub-ink: #171917;
@@ -61,6 +62,12 @@
 
 .bigWord {
   @include backdropWord(var(--hub-line), min(8.1vw, 10rem));
+  top: calc(112px + var(--safe-top, 0px));
+
+  @media (max-width: 760px) {
+    top: calc(96px + var(--safe-top, 0px));
+    transform: translateX(-40%);
+  }
 }
 
 .dotField {
@@ -435,16 +442,6 @@
   padding-bottom: 1.1rem;
   border-bottom: 1px solid var(--hub-line);
   margin-bottom: 1rem;
-}
-
-.resultsLabel {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  font-size: .7rem;
-  color: var(--hub-violet);
-  text-transform: uppercase;
-  letter-spacing: .06em;
 }
 
 .resultsTop h3 {

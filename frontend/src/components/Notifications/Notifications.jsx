@@ -1,3 +1,4 @@
+import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import {
   useCallback,
   useEffect,
@@ -685,6 +686,7 @@ const Notifications = ({ user, setUnreadCount }) => {
 
   return (
     <section id="scrollToId" className={styles.section}>
+      <PanelBackdrop word="ROZMOWY" />
       <div className={styles.inner}>
         <div className={styles.panel}>
           <header className={styles.panelHeader}>

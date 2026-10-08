@@ -1,3 +1,4 @@
+import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import {
   useEffect,
   useMemo,
@@ -868,6 +869,7 @@ export default function AdminPanel() {
 
   return (
     <section id="adminPanel" className={styles.section}>
+      <PanelBackdrop word="ZARZĄDZANIE" />
       <div className={styles.inner}>
         {alert && (
           <div className={styles.alertSlot}>

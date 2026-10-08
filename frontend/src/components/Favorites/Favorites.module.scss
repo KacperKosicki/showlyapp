@@ -1,4 +1,6 @@
 .section {
+  position: relative;
+  isolation: isolate;
   --favorites-ink: #171917;
   --favorites-paper: #fbfaf6;
   --favorites-soft: #f0edff;
@@ -9,11 +11,7 @@
   width: 100%;
   padding: clamp(104px, 10vw, 152px) clamp(16px, 3vw, 44px) clamp(76px, 8vw, 124px);
   overflow: hidden;
-  background:
-    radial-gradient(circle at 7% 16%,
-      rgba(112, 79, 247, 0.11),
-      transparent 24rem),
-    var(--app-bg, #f7f7f7);
+  background: var(--app-bg, #f7f7f7);
   color: var(--favorites-ink);
 }
 
@@ -699,11 +697,7 @@
   --favorites-paper: #191b20;
   --favorites-soft: #232630;
   --favorites-line: rgba(244, 241, 234, 0.17);
-  background:
-    radial-gradient(circle at 7% 16%,
-      rgba(168, 149, 255, 0.14),
-      transparent 24rem),
-    var(--app-bg, #111216);
+  background: var(--app-bg, #111216);
 }
 
 :global(html[data-theme="dark"]) .collection {

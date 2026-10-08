@@ -1,0 +1,79 @@
+@import '../../styles/variables';
+
+.backdrop {
+  --backdrop-accent: var(--app-primary, #6557ef);
+  --backdrop-lime: var(--yp-lime, #d8ff72);
+  --backdrop-line: rgba(23, 25, 23, .16);
+
+  :global(html[data-theme="dark"]) & {
+    --backdrop-line: rgba(245, 242, 233, .17);
+  }
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 900px;
+    background: radial-gradient(ellipse at 88% 18%, color-mix(in srgb, var(--backdrop-accent) 12%, transparent), transparent 48%),
+      radial-gradient(ellipse at 8% 48%, color-mix(in srgb, var(--backdrop-lime) 13%, transparent), transparent 45%);
+  }
+}
+
+.word {
+  position: absolute;
+  top: 45px;
+  left: 3%;
+  font: 800 clamp(140px, 17vw, 300px)/1 $font-heading;
+  letter-spacing: -.06em;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--backdrop-line);
+  opacity: .65;
+}
+
+.shape {
+  position: absolute;
+  width: 540px;
+  height: 680px;
+  top: 100px;
+  right: -160px;
+  border-radius: 42% 58% 65% 35% / 60% 35% 65% 40%;
+  background: color-mix(in srgb, var(--backdrop-accent) 6%, transparent);
+  transform: rotate(25deg);
+  animation: shapeFloat 22s ease-in-out infinite alternate;
+}
+
+.swoop {
+  position: absolute;
+  width: 360px;
+  height: 700px;
+  left: -290px;
+  top: 590px;
+  border: 1px solid color-mix(in srgb, var(--backdrop-accent) 25%, transparent);
+  border-radius: 50%;
+  transform: rotate(-25deg);
+}
+
+.compact {
+  opacity: .65;
+  &::before { height: 600px; }
+  .shape { width: 300px; height: 380px; top: 40px; right: -130px; }
+  .swoop { top: 180px; height: 400px; }
+}
+
+@keyframes shapeFloat { to { transform: translate(-14px, 18px) rotate(29deg); } }
+
+@media (max-width: 760px) {
+  .word { top: 90px; left: -45px; font-size: 140px; opacity: .45; }
+  .shape { width: 400px; height: 540px; right: -220px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shape { animation: none; }
+}

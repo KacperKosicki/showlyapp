@@ -1,3 +1,4 @@
+import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./Favorites.module.scss";
 import UserCard from "../UserCard/UserCard";
@@ -390,6 +391,7 @@ const Favorites = ({ currentUser, setAlert }) => {
 
   return (
     <section id="scrollToId" className={styles.section}>
+      <PanelBackdrop word="ULUBIONE" />
       <div className={styles.inner}>
         <div className={styles.collection}>
           <header className={styles.hero}>

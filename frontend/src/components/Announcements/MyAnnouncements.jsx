@@ -1,3 +1,4 @@
+import AnnouncementBackdrop from './AnnouncementBackdrop';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { FiPlus, FiEdit3, FiEye, FiEyeOff, FiCheck, FiTrash2, FiMessageSquare } from 'react-icons/fi';
@@ -6,7 +7,6 @@ import { applicationStatuses, budgetLabel, formatDate, statuses } from './announ
 import AnnouncementForm from './AnnouncementForm';
 import ApplicationProposal from './ApplicationProposal';
 import AlertBox from '../AlertBox/AlertBox';
-import AnnouncementBackdrop from './AnnouncementBackdrop';
 import styles from './Announcements.module.scss';
 
 export default function MyAnnouncements() {

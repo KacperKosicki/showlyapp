@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
+import PanelBackdrop from '../../PanelBackdrop/PanelBackdrop';
 import styles from "./EmptyProfileState.module.scss";
 
 const EmptyProfileState = () => {
   return (
     <div className={`${styles.wrapper} ${styles.emptyWrap}`} id="scrollToId">
+      <PanelBackdrop word="TWÓJ PROFIL" />
       <div
         className={styles.emptyCard}
         id="profileWrapper"

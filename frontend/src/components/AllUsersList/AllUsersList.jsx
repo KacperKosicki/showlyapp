@@ -1,5 +1,4 @@
 import {
-  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -7,12 +6,11 @@ import {
 } from "react";
 import axios from "axios";
 import {
-  FiArrowLeft,
-  FiArrowRight,
   FiChevronDown,
   FiSearch,
   FiSliders,
   FiUsers,
+  FiArrowUpRight,
   FiX,
 } from "react-icons/fi";
 
@@ -115,15 +113,11 @@ const getAuthHeader = async () => {
 
 const AllUsersList = ({ currentUser, setAlert }) => {
   const sectionRef = useRef(null);
-  const scrollerRef = useRef(null);
-  const animationFrameRef = useRef(null);
 
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState("default");
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -246,7 +240,7 @@ const AllUsersList = ({ currentUser, setAlert }) => {
 
     const elements = section.querySelectorAll(`.${styles.reveal}`);
 
-    if (typeof IntersectionObserver === "undefined") {
+    if (typeof IntersectionObserver === "undefined" || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       elements.forEach((element) => {
         element.classList.add(styles.revealVisible);
       });
@@ -273,105 +267,6 @@ const AllUsersList = ({ currentUser, setAlert }) => {
 
     return () => observer.disconnect();
   }, [loading]);
-
-  const updateCarouselState = useCallback(() => {
-    const scroller = scrollerRef.current;
-
-    if (!scroller) {
-      setCanScrollLeft(false);
-      setCanScrollRight(false);
-      return;
-    }
-
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-
-    animationFrameRef.current = requestAnimationFrame(() => {
-      const maxScroll = Math.max(
-        0,
-        scroller.scrollWidth - scroller.clientWidth
-      );
-      const currentScroll = Math.max(0, scroller.scrollLeft);
-
-      setCanScrollLeft(currentScroll > 4);
-      setCanScrollRight(
-        maxScroll > 4 && currentScroll < maxScroll - 4
-      );
-    });
-  }, []);
-
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-
-    if (!scroller) {
-      setCanScrollLeft(false);
-      setCanScrollRight(false);
-      return undefined;
-    }
-
-    const handleLayoutChange = () => updateCarouselState();
-
-    scroller.addEventListener("scroll", handleLayoutChange, {
-      passive: true,
-    });
-    window.addEventListener("resize", handleLayoutChange);
-
-    let resizeObserver;
-
-    if (typeof ResizeObserver !== "undefined") {
-      resizeObserver = new ResizeObserver(handleLayoutChange);
-      resizeObserver.observe(scroller);
-    }
-
-    const frame = requestAnimationFrame(() => {
-      scroller.scrollTo({ left: 0, behavior: "auto" });
-      updateCarouselState();
-    });
-
-    return () => {
-      cancelAnimationFrame(frame);
-      scroller.removeEventListener("scroll", handleLayoutChange);
-      window.removeEventListener("resize", handleLayoutChange);
-      resizeObserver?.disconnect();
-
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [visibleUsers, updateCarouselState]);
-
-  const scrollByCard = (direction) => {
-    const scroller = scrollerRef.current;
-
-    if (!scroller) {
-      return;
-    }
-
-    const firstCard = scroller.querySelector(`.${styles.cardWrap}`);
-    const cardWidth = firstCard?.getBoundingClientRect().width || 410;
-    const scrollerStyles = getComputedStyle(scroller);
-    const gap =
-      parseFloat(
-        scrollerStyles.columnGap || scrollerStyles.gap || "0"
-      ) || 18;
-    const maxScroll = Math.max(
-      0,
-      scroller.scrollWidth - scroller.clientWidth
-    );
-    const target = Math.min(
-      Math.max(
-        scroller.scrollLeft + direction * (cardWidth + gap),
-        0
-      ),
-      maxScroll
-    );
-
-    scroller.scrollTo({
-      left: target <= 6 ? 0 : target,
-      behavior: "smooth",
-    });
-  };
 
   const clearSearch = () => {
     setSearch("");
@@ -418,217 +313,62 @@ const AllUsersList = ({ currentUser, setAlert }) => {
   }
 
   return (
-    <section
-      ref={sectionRef}
-      className={styles.section}
-      id="showly-directory"
-      aria-labelledby="showly-directory-title"
-    >
+    <section ref={sectionRef} className={styles.section} id="showly-directory" aria-labelledby="showly-directory-title">
+      <div className={styles.backdrop} aria-hidden="true"><span className={styles.backdropWord}>ODKRYWAJ</span><span className={styles.backdropShape} /></div>
       <div className={styles.frame}>
-        <aside
-          className={`${styles.intro} ${styles.reveal} ${styles.fromLeft}`}
-        >
-          <span className={styles.introCircle} aria-hidden="true" />
-
+        <header className={`${styles.intro} ${styles.reveal}`}>
           <div className={styles.introTop}>
-            <span className={styles.kicker}>
-              <FiUsers aria-hidden="true" />
-              Showly / Katalog
-            </span>
-
-            <h2 id="showly-directory-title">
-              Wszystkie profile. Jedno miejsce do szukania.
-            </h2>
-
-            <p className={styles.introCopy}>
-              Przeglądaj publiczne profile usługodawców, twórców i
-              specjalistów. Szukaj po nazwie, branży, roli, tagach lub
-              lokalizacji.
-            </p>
+            <h2 id="showly-directory-title">Twój pomysł.<br /><span>Ich możliwości.</span></h2>
+            <p className={styles.introCopy}>Różne historie, branże i talenty. Przejrzyj wizytówki, poznaj ofertę i znajdź osobę, z którą zrobisz coś dobrego.</p>
           </div>
-
-          <div className={styles.profileTotal}>
-            <strong>{String(users.length).padStart(2, "0")}</strong>
-            <div>
-              <span>publicznych profili</span>
-              <small>aktualnie dostępnych w Showly</small>
+          <div className={styles.directoryFolder}>
+            <span className={styles.folderTab}>Ludzie do Twoich pomysłów</span>
+            <div className={styles.folderBody}>
+              <span className={styles.folderLabel}>Katalog Showly<FiArrowUpRight aria-hidden="true" /></span>
+              <strong>{String(users.length).padStart(2, "0")}</strong>
+              <span className={styles.folderCaption}>{getResultsLabel(users.length)} do odkrycia</span>
+              <div className={styles.folderFooter}><span>Każda branża.<br />Własny charakter.</span><FiUsers aria-hidden="true" /></div>
             </div>
           </div>
-        </aside>
+        </header>
 
-        <div
-          className={`${styles.gallery} ${styles.reveal} ${styles.fromRight}`}
-          style={{ "--reveal-delay": "90ms" }}
-        >
-          <header className={styles.galleryHeader}>
-            <div className={styles.galleryHeading}>
-              <span className={styles.galleryLabel}>Katalog Showly</span>
-
-              <h3>Znajdź profil dopasowany do swoich potrzeb.</h3>
-
-              <p>
-                Wyniki aktualizują się od razu podczas wpisywania.
-              </p>
+        <div className={styles.gallery}>
+          <div className={`${styles.searchPanel} ${styles.reveal}`} style={{ "--reveal-delay": "100ms" }}>
+            <div className={styles.searchIntro}><FiSearch aria-hidden="true" /><div><h3>Od czego zaczynamy?</h3><p>Wpisz nazwę, usługę lub miejscowość.</p></div></div>
+            <div className={styles.filters}>
+              <label className={styles.searchField} htmlFor="showly-search">
+                <span className={styles.srOnly}>Szukaj profilu</span><FiSearch aria-hidden="true" />
+                <input id="showly-search" type="search" aria-label="Szukaj profilu" placeholder="Kogo szukasz?" value={search} onChange={event => setSearch(event.target.value)} autoComplete="off" />
+                {search && <button type="button" className={styles.clearButton} onClick={clearSearch} aria-label="Wyczyść wyszukiwanie"><FiX aria-hidden="true" /></button>}
+              </label>
+              <label className={styles.sortField} htmlFor="showly-sort">
+                <FiSliders aria-hidden="true" /><span className={styles.srOnly}>Sortuj profile</span>
+                <select id="showly-sort" value={sortMode} onChange={event => setSortMode(event.target.value)}>{sortOptions.map(option => <option value={option.value} key={option.value}>{option.label}</option>)}</select>
+                <FiChevronDown className={styles.selectArrow} aria-hidden="true" />
+              </label>
             </div>
-
-            <div className={styles.headerTools}>
-              <div className={styles.resultSummary} aria-live="polite">
-                <span>Wyniki</span>
-                <strong>{getResultsLabel(visibleUsers.length)}</strong>
-              </div>
-
-              <div
-                className={styles.controls}
-                role="group"
-                aria-label="Nawigacja po profilach"
-              >
-                <button
-                  type="button"
-                  className={styles.controlButton}
-                  onClick={() => scrollByCard(-1)}
-                  disabled={!canScrollLeft}
-                  aria-label="Poprzedni profil"
-                >
-                  <FiArrowLeft aria-hidden="true" />
-                </button>
-
-                <button
-                  type="button"
-                  className={styles.controlButton}
-                  onClick={() => scrollByCard(1)}
-                  disabled={!canScrollRight}
-                  aria-label="Następny profil"
-                >
-                  <FiArrowRight aria-hidden="true" />
-                </button>
-              </div>
-            </div>
+          </div>
+          <header className={`${styles.galleryHeader} ${styles.reveal}`}>
+            <div className={styles.galleryHeading}><span className={styles.galleryLabel}>Wszystkie talenty w jednym miejscu</span><h3>{hasSearchQuery ? "Pasują do Twojego pomysłu." : "Poznaj ludzi. Zobacz możliwości."}</h3></div>
+            <div className={styles.resultSummary} aria-live="polite" aria-atomic="true"><span>Znaleziono</span><strong>{getResultsLabel(visibleUsers.length)}</strong></div>
           </header>
-
-          <div className={styles.filters}>
-            <label className={styles.searchField} htmlFor="showly-search">
-              <FiSearch aria-hidden="true" />
-              <span className={styles.srOnly}>Szukaj profilu</span>
-
-              <input
-                id="showly-search"
-                type="search"
-                placeholder="Nazwa, branża, rola albo lokalizacja…"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                autoComplete="off"
-              />
-
-              {search && (
-                <button
-                  type="button"
-                  className={styles.clearButton}
-                  onClick={clearSearch}
-                  aria-label="Wyczyść wyszukiwanie"
-                >
-                  <FiX aria-hidden="true" />
-                </button>
-              )}
-            </label>
-
-            <label className={styles.sortField} htmlFor="showly-sort">
-              <FiSliders aria-hidden="true" />
-              <span className={styles.srOnly}>Sortuj profile</span>
-
-              <select
-                id="showly-sort"
-                value={sortMode}
-                onChange={(event) => setSortMode(event.target.value)}
-              >
-                {sortOptions.map((option) => (
-                  <option value={option.value} key={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-
-              <FiChevronDown
-                className={styles.selectArrow}
-                aria-hidden="true"
-              />
-            </label>
-          </div>
-
-          <div className={styles.carousel}>
-            {visibleUsers.length > 0 ? (
-              <div
-                ref={scrollerRef}
-                className={styles.track}
-                role="list"
-                aria-label="Wszystkie profile Showly"
-              >
-                {visibleUsers.map((user, index) => (
-                  <div
-                    className={styles.cardWrap}
-                    key={user._id || user.userId || index}
-                    role="listitem"
-                    style={{
-                      "--card-delay": `${Math.min(
-                        index * 55,
-                        330
-                      )}ms`,
-                    }}
-                  >
-                    <UserCard
-                      user={user}
-                      currentUser={currentUser}
-                      setAlert={setAlert}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className={styles.emptyState} role="status">
-                <span className={styles.emptyIcon}>
-                  <FiSearch aria-hidden="true" />
-                </span>
-
-                <div>
-                  <span>
-                    {hasSearchQuery ? "Brak dopasowania" : "Brak profili"}
-                  </span>
-                  <h3>
-                    {hasSearchQuery
-                      ? "Nie znaleźliśmy takiego profilu."
-                      : "Katalog jest obecnie pusty."}
-                  </h3>
-                  <p>
-                    {hasSearchQuery
-                      ? "Spróbuj wpisać krótszą nazwę, inną branżę, rolę albo miejscowość."
-                      : "Gdy pojawią się publiczne wizytówki, zobaczysz je właśnie w tym miejscu."}
-                  </p>
+          {visibleUsers.length > 0 ? (
+            <div className={styles.track} role="list" aria-label="Wszystkie profile Showly">
+              {visibleUsers.map((user, index) => (
+                <div className={styles.cardWrap} key={user._id || user.userId || index} role="listitem">
+                  <div className={styles.cardCaption} aria-hidden="true"><span>Profil / {String(index + 1).padStart(2, "0")}</span><i /><FiArrowUpRight /></div>
+                  <UserCard user={user} currentUser={currentUser} setAlert={setAlert} />
                 </div>
-
-                {hasSearchQuery && (
-                  <button type="button" onClick={clearSearch}>
-                    Wyczyść wyszukiwanie
-                  </button>
-                )}
-              </div>
-            )}
-
-            {visibleUsers.length > 1 && (
-              <div className={styles.mobileHint} aria-hidden="true">
-                <FiArrowLeft />
-                <span>Przesuń katalog</span>
-                <FiArrowRight />
-              </div>
-            )}
-          </div>
-
-          <div className={styles.directoryNote}>
-            <FiUsers aria-hidden="true" />
-
-            <p>
-              <strong>Wszystkie publiczne wizytówki w jednym miejscu.</strong>
-              <span>Katalog aktualizuje się razem z profilami Showly.</span>
-            </p>
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className={styles.emptyState} role="status">
+              <span className={styles.emptyIcon}><FiSearch aria-hidden="true" /></span>
+              <div><h3>{hasSearchQuery ? "Jeszcze nie znaleźliśmy tej osoby." : "Tutaj zacznie się coś dobrego."}</h3><p>{hasSearchQuery ? "Spróbuj innej nazwy, branży lub miejscowości." : "Pierwsze publiczne wizytówki pojawią się właśnie tutaj."}</p></div>
+              {hasSearchQuery && <button type="button" onClick={clearSearch}>Pokaż wszystkie profile<FiArrowUpRight aria-hidden="true" /></button>}
+            </div>
+          )}
+          <footer className={styles.directoryNote}><FiUsers aria-hidden="true" /><p><strong>Dobry pomysł potrzebuje właściwych ludzi.</strong><span>Katalog aktualizuje się razem z profilami Showly.</span></p><span className={styles.noteSign} aria-hidden="true">Zacznij od poznania.<FiArrowUpRight /></span></footer>
         </div>
       </div>
     </section>

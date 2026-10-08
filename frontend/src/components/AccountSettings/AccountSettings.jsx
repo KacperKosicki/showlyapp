@@ -1,3 +1,4 @@
+import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import { useEffect, useState } from "react";
 import {
   onAuthStateChanged,
@@ -443,6 +444,7 @@ export const AccountSettingsView = ({
 
   return (
     <section id="scrollToId" className={styles.section}>
+      <PanelBackdrop word="TWOJE KONTO" />
       <div className={styles.inner}>
         {alert && (
           <div className={styles.alertSlot}>

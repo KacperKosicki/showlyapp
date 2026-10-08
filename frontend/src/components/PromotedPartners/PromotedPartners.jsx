@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   FiArrowLeft,
   FiArrowRight,
   FiAward,
   FiShield,
   FiZap,
+  FiArrowUpRight,
 } from "react-icons/fi";
 
 import axios from "axios";
@@ -270,7 +272,7 @@ const PromotedPartners = ({ currentUser, setAlert }) => {
 
     const elements = section.querySelectorAll(`.${styles.reveal}`);
 
-    if (typeof IntersectionObserver === "undefined") {
+    if (typeof IntersectionObserver === "undefined" || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       elements.forEach((element) => {
         element.classList.add(styles.revealVisible);
       });
@@ -385,7 +387,7 @@ const PromotedPartners = ({ currentUser, setAlert }) => {
 
     scroller.scrollTo({
       left: target <= 6 ? 0 : target,
-      behavior: "smooth",
+      behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? "auto" : "smooth",
     });
   };
 
@@ -427,26 +429,23 @@ const PromotedPartners = ({ currentUser, setAlert }) => {
       id="promoted-partners"
       aria-labelledby="promoted-partners-title"
     >
+      <div className={styles.backdrop} aria-hidden="true">
+        <span className={styles.backdropWord}>DOBRE POŁĄCZENIA</span>
+        <span className={styles.backdropShape} />
+      </div>
       <div className={styles.frame}>
         <div
-          className={`${styles.intro} ${styles.reveal} ${styles.fromLeft}`}
+          className={`${styles.intro} ${styles.reveal}`}
         >
-          <span className={styles.introCircle} aria-hidden="true" />
-
           <div className={styles.introTop}>
-            <span className={styles.kicker}>
-              <span aria-hidden="true" />
-              Showly / Wyróżnione
-            </span>
-
             <h2 id="promoted-partners-title">
-              Jedna lista. Profile warte uwagi.
+              Dobrzy ludzie.<br /><span>Świetne możliwości.</span>
             </h2>
 
             <p className={styles.introCopy}>
-              Łączymy aktywne plany Standard i Premium ze statusami
-              partnerskimi Showly. Bez powtarzania tych samych profili
-              w osobnych sekcjach.
+              Za każdym profilem stoi ktoś, kto potrafi więcej.
+              Poznaj wyróżnione osoby i firmy — może właśnie tutaj
+              zacznie się Twoja następna współpraca.
             </p>
           </div>
 
@@ -458,8 +457,8 @@ const PromotedPartners = ({ currentUser, setAlert }) => {
                 </span>
 
                 <p>
-                  <strong>Plan profilu</strong>
-                  <span>Standard albo Premium</span>
+                  <strong>Promowane profile</strong>
+                  <span>Standard i Premium</span>
                 </p>
               </div>
 
@@ -469,8 +468,8 @@ const PromotedPartners = ({ currentUser, setAlert }) => {
                 </span>
 
                 <p>
-                  <strong>Status Showly</strong>
-                  <span>Partner, zweryfikowany, ambasador lub founder</span>
+                  <strong>Partnerzy Showly</strong>
+                  <span>Ludzie tworzący naszą społeczność</span>
                 </p>
               </div>
             </div>
@@ -483,18 +482,14 @@ const PromotedPartners = ({ currentUser, setAlert }) => {
         </div>
 
         <div
-          className={`${styles.gallery} ${styles.reveal} ${styles.fromRight}`}
+          className={`${styles.gallery} ${styles.reveal}`}
           style={{ "--reveal-delay": "90ms" }}
         >
           <header className={styles.galleryHeader}>
             <div className={styles.galleryHeading}>
-              <span className={styles.galleryLabel}>
-                Promowane i partnerskie
-              </span>
-              <h3>Sprawdź, kto wyróżnia się w Showly.</h3>
+              <h3>W centrum uwagi.</h3>
               <p>
-                Powód wyróżnienia widzisz przy każdej wizytówce.
-                Szczegóły oferty pozostają bezpośrednio na karcie profilu.
+                Różne talenty. Jeden dobry początek.
               </p>
             </div>
 
@@ -529,6 +524,7 @@ const PromotedPartners = ({ currentUser, setAlert }) => {
             <div
               ref={scrollerRef}
               className={styles.track}
+              tabIndex={0}
               role="list"
               aria-label="Promowane i partnerskie profile Showly"
             >
@@ -545,12 +541,12 @@ const PromotedPartners = ({ currentUser, setAlert }) => {
                       "--card-delay": `${Math.min(index * 65, 325)}ms`,
                     }}
                   >
-                    <span
-                      className={`${styles.reasonBadge} ${styles[reason.className]}`}
-                    >
-                      <ReasonIcon aria-hidden="true" />
-                      {reason.label}
-                    </span>
+                    <div className={styles.cardCaption}>
+                      <span className={styles.cardNumber} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                      <span className={`${styles.reasonBadge} ${styles[reason.className]}`}>
+                        <ReasonIcon aria-hidden="true" />{reason.label}
+                      </span>
+                    </div>
 
                     <UserCard
                       user={profile}
@@ -569,6 +565,10 @@ const PromotedPartners = ({ currentUser, setAlert }) => {
             </div>
           </div>
         </div>
+        <footer className={styles.sectionFooter}>
+          <span>Dobry kontakt to dopiero początek.</span>
+          <Link to="/profile">Poznaj wszystkie profile <FiArrowUpRight aria-hidden="true" /></Link>
+        </footer>
       </div>
     </section>
   );

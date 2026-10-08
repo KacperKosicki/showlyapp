@@ -1,3 +1,4 @@
+import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import styles from "./ReservationList.module.scss";
 import AlertBox from "../AlertBox/AlertBox";
@@ -2141,6 +2142,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
   return (
     <section id="scrollToId" className={styles.page}>
+      <PanelBackdrop word="REZERWACJE" />
       <div className={styles.bgGlow} aria-hidden="true" />
 
       {alert.show && (

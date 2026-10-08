@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import {
   FiArrowLeft,
   FiArrowRight,
   FiAward,
   FiMessageCircle,
   FiStar,
+  FiArrowUpRight,
 } from "react-icons/fi";
 
 import { auth } from "../../firebase";
@@ -161,7 +163,7 @@ const UserCardList = ({ currentUser, setAlert }) => {
 
     const elements = section.querySelectorAll(`.${styles.reveal}`);
 
-    if (typeof IntersectionObserver === "undefined") {
+    if (typeof IntersectionObserver === "undefined" || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       elements.forEach((element) => {
         element.classList.add(styles.revealVisible);
       });
@@ -280,7 +282,7 @@ const UserCardList = ({ currentUser, setAlert }) => {
 
     scroller.scrollTo({
       left: target <= 6 ? 0 : target,
-      behavior: "smooth",
+      behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? "auto" : "smooth",
     });
   };
 
@@ -321,167 +323,68 @@ const UserCardList = ({ currentUser, setAlert }) => {
   }
 
   return (
-    <section
-      ref={sectionRef}
-      className={styles.section}
-      id="showly-ranking"
-      aria-labelledby="showly-ranking-title"
-    >
+    <section ref={sectionRef} className={styles.section} id="showly-ranking" aria-labelledby="showly-ranking-title">
+      <div className={styles.backdrop} aria-hidden="true">
+        <span className={styles.backdropWord}>DOBRE OPINIE</span>
+        <span className={styles.backdropShape} />
+      </div>
       <div className={styles.frame}>
-        <div
-          className={`${styles.gallery} ${styles.reveal} ${styles.fromLeft}`}
-        >
+        <header className={`${styles.intro} ${styles.reveal}`}>
+          <div className={styles.introTop}>
+            <h2 id="showly-ranking-title">Dobra robota.<br /><span>Dobre opinie.</span></h2>
+            <p className={styles.introCopy}>Najlepszą rekomendację piszą ludzie. Poznaj profile, które zbierają najwyższe oceny — i znajdź kogoś do swojego następnego pomysłu.</p>
+          </div>
+          <div className={styles.rankingTicket} aria-label={`Ranking obejmuje maksymalnie ${TOP_RATED_LIMIT} profili`}>
+            <span className={styles.ticketTop}><FiAward aria-hidden="true" />Wybór społeczności</span>
+            <strong>TOP <span>{TOP_RATED_LIMIT}</span></strong>
+            <span className={styles.ticketBottom}>Dobre słowo ma znaczenie.</span>
+          </div>
+        </header>
+
+        <div className={`${styles.criteria} ${styles.reveal}`} style={{ "--reveal-delay": "60ms" }} aria-label="Jak ustalamy kolejność rankingu">
+          <div><span className={styles.criteriaIcon}><FiStar aria-hidden="true" /></span><p><strong>Najpierw ocena</strong><span>Wyższa średnia, wyższa pozycja.</span></p></div>
+          <div><span className={styles.criteriaIcon}><FiMessageCircle aria-hidden="true" /></span><p><strong>Potem liczba opinii</strong><span>Więcej głosów rozstrzyga remis.</span></p></div>
+          <span className={styles.criteriaNote}>Wasze oceny. Wasz ranking.<FiArrowUpRight aria-hidden="true" /></span>
+        </div>
+
+        <div className={`${styles.gallery} ${styles.reveal}`} style={{ "--reveal-delay": "100ms" }}>
           <header className={styles.galleryHeader}>
             <div className={styles.galleryHeading}>
-              <span className={styles.galleryLabel}>
-                Ranking użytkowników
-              </span>
-
-              <h3>Najwyżej oceniane profile w Showly.</h3>
-
-              <p>
-                Ranking zaczyna się od najwyższej średniej. Przy tej
-                samej ocenie wyżej trafia profil z większą liczbą opinii.
-              </p>
+              <span className={styles.galleryLabel}>Ludzie / doświadczenia / rekomendacje</span>
+              <h3>Wysoko oceniani. Warci poznania.</h3>
             </div>
-
-            <div
-              className={styles.controls}
-              role="group"
-              aria-label="Nawigacja rankingu profili"
-            >
-              <button
-                type="button"
-                className={styles.controlButton}
-                onClick={() => scrollByCard(-1)}
-                disabled={!canScrollLeft}
-                aria-label="Poprzedni profil"
-              >
-                <FiArrowLeft aria-hidden="true" />
-              </button>
-
-              <button
-                type="button"
-                className={styles.controlButton}
-                onClick={() => scrollByCard(1)}
-                disabled={!canScrollRight}
-                aria-label="Następny profil"
-              >
-                <FiArrowRight aria-hidden="true" />
-              </button>
+            <div className={styles.controls} role="group" aria-label="Nawigacja rankingu profili">
+              <button type="button" className={styles.controlButton} onClick={() => scrollByCard(-1)} disabled={!canScrollLeft} aria-label="Poprzedni profil"><FiArrowLeft aria-hidden="true" /></button>
+              <button type="button" className={styles.controlButton} onClick={() => scrollByCard(1)} disabled={!canScrollRight} aria-label="Następny profil"><FiArrowRight aria-hidden="true" /></button>
             </div>
           </header>
-
           <div className={styles.carousel}>
-            <div
-              ref={scrollerRef}
-              className={styles.track}
-              role="list"
-              aria-label="Najlepiej oceniane profile Showly"
-            >
+            <div ref={scrollerRef} className={styles.track} role="list" tabIndex={0} aria-label="Najlepiej oceniane profile Showly">
               {profiles.map((profile, index) => {
                 const position = index + 1;
-                const isLeader = position === 1;
-                const isPodium = position <= 3;
-
+                const reviewCount = getReviewsCount(profile);
                 return (
-                  <div
-                    className={styles.cardWrap}
-                    key={profile._id || profile.userId || index}
-                    role="listitem"
-                    style={{
-                      "--card-delay": `${Math.min(
-                        index * 65,
-                        325
-                      )}ms`,
-                    }}
-                  >
-                    <span
-                      className={`${styles.rankBadge} ${isLeader ? styles.rankLeader : ""
-                        } ${isPodium ? styles.rankPodium : ""}`}
-                      aria-label={`Pozycja ${position} w rankingu`}
-                    >
-                      {isLeader && <FiAward aria-hidden="true" />}
-                      <strong>
-                        #{String(position).padStart(2, "0")}
-                      </strong>
-                    </span>
-
-                    <UserCard
-                      user={profile}
-                      currentUser={currentUser}
-                      setAlert={setAlert}
-                    />
+                  <div className={styles.cardWrap} key={profile._id || profile.userId || index} role="listitem">
+                    <div className={styles.cardCaption}>
+                      <span className={`${styles.rankBadge} ${position === 1 ? styles.rankLeader : ""} ${position <= 3 ? styles.rankPodium : ""}`} aria-label={`Pozycja ${position} w rankingu`}>
+                        {position === 1 && <FiAward aria-hidden="true" />}<strong>#{String(position).padStart(2, "0")}</strong>
+                      </span>
+                      <span className={styles.ratingSummary} aria-label={`Ocena ${getRating(profile).toFixed(1)}, liczba opinii: ${reviewCount}`}>
+                        <FiStar aria-hidden="true" /><strong>{getRating(profile).toFixed(1)}</strong><span>({reviewCount})</span>
+                      </span>
+                    </div>
+                    <UserCard user={profile} currentUser={currentUser} setAlert={setAlert} />
                   </div>
                 );
               })}
             </div>
-
-            <div className={styles.mobileHint} aria-hidden="true">
-              <FiArrowLeft />
-              <span>Przesuń ranking</span>
-              <FiArrowRight />
-            </div>
+            <div className={styles.mobileHint} aria-hidden="true"><FiArrowLeft /><span>Przesuń i poznaj kolejne osoby</span><FiArrowRight /></div>
           </div>
         </div>
-
-        <aside
-          className={`${styles.intro} ${styles.reveal} ${styles.fromRight}`}
-          style={{ "--reveal-delay": "90ms" }}
-        >
-          <span className={styles.introCircle} aria-hidden="true" />
-          <span className={styles.introMark} aria-hidden="true">
-            ★
-          </span>
-
-          <div className={styles.introTop}>
-            <span className={styles.kicker}>
-              <FiAward aria-hidden="true" />
-              Showly / Ranking
-            </span>
-
-            <h2 id="showly-ranking-title">
-              Dobre opinie mówią więcej niż obietnice.
-            </h2>
-
-            <p className={styles.introCopy}>
-              Tutaj pokazujemy maksymalnie dziesięć profili z najwyższą
-              oceną użytkowników. Bez dodatkowego zgłoszenia i bez
-              ręcznego wyróżniania.
-            </p>
-          </div>
-
-          <div className={styles.introBottom}>
-            <div className={styles.criteria}>
-              <div>
-                <span className={styles.criteriaIcon}>
-                  <FiStar aria-hidden="true" />
-                </span>
-
-                <p>
-                  <strong>Najpierw średnia</strong>
-                  <span>wyższa ocena oznacza wyższą pozycję</span>
-                </p>
-              </div>
-
-              <div>
-                <span className={styles.criteriaIcon}>
-                  <FiMessageCircle aria-hidden="true" />
-                </span>
-
-                <p>
-                  <strong>Później opinie</strong>
-                  <span>ich liczba rozstrzyga przy remisie</span>
-                </p>
-              </div>
-            </div>
-
-            <div className={styles.rankingTotal}>
-              <span>Lista obejmuje</span>
-              <strong>TOP {TOP_RATED_LIMIT}</strong>
-            </div>
-          </div>
-        </aside>
+        <footer className={styles.sectionFooter}>
+          <span>Każda współpraca zaczyna się od poznania.</span>
+          <Link to="/profile">Znajdź kogoś dla siebie<FiArrowUpRight aria-hidden="true" /></Link>
+        </footer>
       </div>
     </section>
   );

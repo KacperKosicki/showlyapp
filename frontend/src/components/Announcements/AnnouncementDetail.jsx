@@ -1,10 +1,10 @@
+import AnnouncementBackdrop from './AnnouncementBackdrop';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { FiArrowLeft, FiCalendar, FiMapPin, FiCreditCard, FiSend, FiMessageSquare } from 'react-icons/fi';
 import { announcementApi } from './announcementApi';
 import { applicationStatuses, budgetLabel, categoryName, countLabel, dateLabel, formatDate, scopes, statuses, workModes } from './announcementData';
 import AlertBox from '../AlertBox/AlertBox';
-import AnnouncementBackdrop from './AnnouncementBackdrop';
 import { categoryVisual } from './announcementVisuals';
 import styles from './Announcements.module.scss';
 

@@ -1,3 +1,4 @@
+import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 // YourProfile.jsx
 import { useState, useRef } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
@@ -283,6 +284,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   // =========================
   return (
     <div className={styles.wrapper} data-editing={isEditing} id="scrollToId">
+      <PanelBackdrop word="TWÓJ PROFIL" />
       {alert && (
         <AlertBox
           type={alert.type}
