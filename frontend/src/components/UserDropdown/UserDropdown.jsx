@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   FiArrowUpRight,
   FiBell,
   FiCalendar,
+  FiClipboard,
   FiChevronDown,
   FiHeart,
   FiLogOut,
@@ -50,8 +51,15 @@ const UserDropdown = ({
   setUnreadCount,
   pendingReservationsCount,
   setAlert,
+  menuOpen,
+  onMenuOpenChange,
 }) => {
-  const [open, setOpen] = useState(false);
+  const [localOpen, setLocalOpen] = useState(false);
+  const open = menuOpen ?? localOpen;
+  const setOpen = useCallback(value => {
+    setLocalOpen(value);
+    onMenuOpenChange?.(value);
+  }, [onMenuOpenChange]);
   const [profileStatus, setProfileStatus] = useState("loading");
   const [remainingDays, setRemainingDays] = useState(null);
   const [profileVisible, setProfileVisible] = useState(false);
@@ -301,9 +309,9 @@ const UserDropdown = ({
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("pointerdown", handleClickOutside);
+    return () => document.removeEventListener("pointerdown", handleClickOutside);
+  }, [setOpen]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -315,7 +323,21 @@ const UserDropdown = ({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open, setOpen]);
+
+  useEffect(() => {
+    if (open) dropdownRef.current?.querySelector('[role="menuitem"]')?.focus();
   }, [open]);
+
+  const handleMenuKeys = (event) => {
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const items = Array.from(dropdownRef.current?.querySelectorAll('[role="menuitem"]') || []);
+    if (!items.length) return;
+    const current = items.indexOf(document.activeElement);
+    const index = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+    items[index].focus();
+  };
 
   const handleNavigate = (path, scrollToId = null) => {
     setOpen(false);
@@ -359,7 +381,7 @@ const UserDropdown = ({
         type="button"
         ref={triggerRef}
         className={`${styles.trigger} ${open ? styles.triggerOpen : ""}`}
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => setOpen(!open)}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={open ? "Zamknij menu użytkownika" : "Otwórz menu użytkownika"}
@@ -396,7 +418,9 @@ const UserDropdown = ({
       <div
         className={`${styles.menu} ${open ? styles.menuVisible : ""}`}
         role="menu"
+        aria-label="Moje konto"
         aria-hidden={!open}
+        onKeyDown={handleMenuKeys}
         onWheel={(event) => event.stopPropagation()}
         onTouchMove={(event) => event.stopPropagation()}
       >
@@ -549,6 +573,10 @@ const UserDropdown = ({
               <FiHeart className={styles.itemIcon} aria-hidden="true" />
               <span>Ulubione profile</span>
             </span>
+            <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
+          </button>
+          <button type="button" className={styles.item} role="menuitem" onClick={() => handleNavigate('/twoje-ogloszenia', 'announcements')}>
+            <span className={styles.itemLeft}><FiClipboard className={styles.itemIcon} aria-hidden="true" /><span>Twoje ogłoszenia i zgłoszenia</span></span>
             <FiArrowUpRight className={styles.itemArrow} aria-hidden="true" />
           </button>
         </div>

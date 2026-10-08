@@ -61,6 +61,7 @@
 
 .dotField {
   @include backdropDots(var(--about-line), 75deg);
+  @include mobileBackdropDots(5rem, left);
 }
 
 .cornerArrow {
@@ -938,3 +939,13 @@
     transform: none;
   }
 }
+.announcementIntro {
+  display:flex; align-items:center; justify-content:space-between; gap:32px; margin-top:40px; padding:clamp(20px,3vw,36px);
+  border:1px solid var(--about-ink); border-radius:22px; background:var(--about-paper); box-shadow:5px 6px 0 var(--about-ink);
+  > div { min-width:0; }
+  > div > span { color:var(--about-violet); font-family:$font-accent; font-size:.7rem; text-transform:uppercase; font-weight:600; }
+  h3 { margin:12px 0; font-family:$font-heading; font-size:clamp(1.4rem,2.3vw,2.2rem); line-height:1.2; letter-spacing:-.04em; }
+  p { max-width:780px; margin:0; color:var(--about-muted); font-size:.9rem; line-height:1.75; }
+  > button { flex-shrink:0; }
+}
+@media(max-width:760px) { .announcementIntro { flex-direction:column; align-items:stretch; gap:22px; } }

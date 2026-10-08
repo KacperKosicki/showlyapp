@@ -46,6 +46,7 @@
 
 .dotField {
   @include backdropDots(var(--discover-line));
+  @include mobileBackdropDots(6rem, right);
 }
 
 

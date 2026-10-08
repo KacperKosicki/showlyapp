@@ -14,7 +14,7 @@ module.exports = async function requireAuth(req, res, next) {
       return res.status(401).json({ message: "Nieprawidłowy token." });
     }
 
-    const decoded = await admin.auth().verifyIdToken(token);
+    const decoded = await admin.auth().verifyIdToken(token, true);
 
     req.auth = {
       uid: decoded.uid,

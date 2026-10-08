@@ -3,6 +3,7 @@ import axios from "axios";
 import styles from "./ThreadView.module.scss";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import AlertBox from "../AlertBox/AlertBox";
+import { conversationStatus as unavailableStatus } from '../Notifications/conversationStatus';
 
 import {
   FaArrowLeft,
@@ -73,6 +74,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
   const [flash, setFlash] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [unavailableReason, setUnavailableReason] = useState(null);
 
   const maxChars = 800;
 
@@ -258,6 +260,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
       });
 
       setChannel(ch);
+      setUnavailableReason(null);
       setFirstFromUid(ff || (msgs?.[0]?.fromUid ?? null));
 
       const amap = {};
@@ -298,6 +301,11 @@ const ThreadView = ({ user, setUnreadCount }) => {
       sessionStorage.removeItem("draft");
     } catch (err) {
       console.error("❌ Błąd pobierania konwersacji:", err);
+      if ([404, 409, 410].includes(err.response?.status)) {
+        setUnavailableReason(err.response?.data?.code || (err.response.status === 404 ? 'conversation_missing' : 'unavailable'));
+        setCanReply(false);
+        setMessages([]);
+      }
       if ([401, 403].includes(err.response?.status)) navigate("/");
     } finally {
       setLoading(false);
@@ -596,6 +604,11 @@ const ThreadView = ({ user, setUnreadCount }) => {
       fetchThread();
     } catch (err) {
       console.error("❌ Błąd wysyłania odpowiedzi:", err);
+      if ([409, 410].includes(err.response?.status) && err.response?.data?.code) {
+        setUnavailableReason(err.response.data.code);
+        setCanReply(false);
+        setMessages([]);
+      }
 
       if (err.response?.status === 403) {
         setErrorMsg(
@@ -610,6 +623,14 @@ const ThreadView = ({ user, setUnreadCount }) => {
   };
 
   const myUid = auth.currentUser?.uid || user?.uid;
+  if (unavailableReason) {
+    const status = unavailableStatus(unavailableReason);
+    return <div id="threadPageLayout" className={styles.page}><div className={styles.shell}><div className={styles.threadWrapper}>
+      <div className={styles.unavailableBox} role="status"><FaLock aria-hidden="true" /><h2>{status[0]}</h2><p>{status[1]}</p>
+        <button type="button" onClick={() => navigate('/powiadomienia')}><FaArrowLeft aria-hidden="true" />Wróć do powiadomień</button>
+      </div>
+    </div></div></div>;
+  }
   const messageCount = messages.length;
   const conversationStatus = loading
     ? "Ładowanie rozmowy"
@@ -634,7 +655,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
               <button
                 onClick={() =>
                   navigate("/powiadomienia", {
-                    state: { scrollToId: "threadPageLayout" },
+                    state: { scrollToId: channel === "profile_to_account" ? "announcementConversations" : "scrollToId" },
                   })
                 }
                 className={styles.backButton}

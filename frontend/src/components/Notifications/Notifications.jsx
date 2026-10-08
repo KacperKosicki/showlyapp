@@ -5,10 +5,12 @@ import {
   useState,
 } from "react";
 import axios from "axios";
+import { conversationStatus } from './conversationStatus';
 import { Link, useLocation } from "react-router-dom";
 import {
   FiArrowUpRight,
   FiBell,
+  FiClipboard,
   FiInbox,
   FiMail,
   FiSend,
@@ -336,6 +338,13 @@ const Notifications = ({ user, setUnreadCount }) => {
     if (variant === "inbox") {
       return normalizeAvatar(conversation.withAvatar) || "";
     }
+    if (variant === "announcement") {
+      const myUid = user?.uid || auth.currentUser?.uid;
+      const profileAvatar = conversation.firstFromUid !== myUid
+        ? normalizeAvatar(profileMetaMap[otherUid]?.avatar)
+        : "";
+      return profileAvatar || normalizeAvatar(conversation.withAvatar) || DEFAULT_AVATAR;
+    }
 
     const profileMeta = profileMetaMap[otherUid];
 
@@ -383,6 +392,11 @@ const Notifications = ({ user, setUnreadCount }) => {
     [conversations]
   );
 
+  const announcementConversations = useMemo(
+    () => conversations.filter((conversation) => conversation.channel === "profile_to_account"),
+    [conversations]
+  );
+
   const hasMyProfile = Boolean(myProfile?._id);
 
   const systemUnread = systemConversations.reduce(
@@ -401,7 +415,10 @@ const Notifications = ({ user, setUnreadCount }) => {
     0
   );
 
-  const totalUnread = inboxUnread + outboxUnread + systemUnread;
+  const announcementUnread = announcementConversations.reduce(
+    (total, conversation) => total + (conversation.unreadCount || 0), 0
+  );
+  const totalUnread = inboxUnread + outboxUnread + systemUnread + announcementUnread;
   const totalThreads = conversations.length;
 
   const renderNameNode = (rawName) =>
@@ -458,6 +475,9 @@ const Notifications = ({ user, setUnreadCount }) => {
     const isUnread = (conversation.unreadCount || 0) > 0;
     const otherUid = conversation.withUid;
     const avatarSrc = getAvatarSrc(conversation, variant);
+    const unavailable = conversation.availability?.canOpen === false || conversation.announcement?.deleted;
+    const status = conversationStatus(conversation.announcement?.deleted ? 'announcement_deleted' : conversation.availability?.reason);
+    const ItemContainer = unavailable ? 'div' : Link;
 
     let header;
 
@@ -492,6 +512,18 @@ const Notifications = ({ user, setUnreadCount }) => {
           </span>
         </>
       );
+    } else if (variant === "announcement") {
+      const isApplicant = conversation.firstFromUid === (user?.uid || auth.currentUser?.uid);
+      const rawName = getName(otherUid, conversation.withDisplayName, isApplicant ? "account" : "profile");
+      header = (
+        <>
+          <FiClipboard className={styles.icon} aria-hidden="true" />
+          <span className={styles.metaText}>
+            {isApplicant ? "Twoje zgłoszenie · rozmowa z " : "Twoje ogłoszenie · zgłoszenie od "}
+            {renderNameNode(rawName)}
+          </span>
+        </>
+      );
     } else {
       const systemName = (
         conversation.withDisplayName || "Showly.me"
@@ -514,10 +546,9 @@ const Notifications = ({ user, setUnreadCount }) => {
         className={`${styles.item} ${isUnread ? styles.unread : styles.read
           } ${variant === "system" ? styles.itemSystem : ""}`}
       >
-        <Link
-          to={`/konwersacja/${conversation._id}`}
+        <ItemContainer
+          {...(!unavailable ? { to: `/konwersacja/${conversation._id}`, state: { scrollToId: 'threadPageLayout' } } : {})}
           className={styles.link}
-          state={{ scrollToId: "threadPageLayout" }}
         >
           <div className={styles.row}>
             <div className={styles.avatarWrap}>
@@ -540,7 +571,14 @@ const Notifications = ({ user, setUnreadCount }) => {
                 </time>
               </div>
 
+              {variant === "announcement" && (
+                <div className={styles.announcementContext}>
+                  <span>Ogłoszenie{conversation.announcement?.deleted ? " · usunięte" : ""}</span>
+                  <strong>{conversation.announcement?.title || "Rozmowa dotycząca ogłoszenia"}</strong>
+                </div>
+              )}
               <p className={styles.message}>{lastMessage.content}</p>
+              {unavailable && <div className={styles.unavailableNotice}><strong>{status[0]}</strong><p>{status[1]}</p></div>}
 
               <div className={styles.bottomRow}>
                 {isUnread ? (
@@ -552,13 +590,12 @@ const Notifications = ({ user, setUnreadCount }) => {
                 )}
 
                 <span className={styles.openLink}>
-                  Otwórz rozmowę
-                  <FiArrowUpRight aria-hidden="true" />
+                  {unavailable ? 'Rozmowa niedostępna' : <>Otwórz rozmowę<FiArrowUpRight aria-hidden="true" /></>}
                 </span>
               </div>
             </div>
           </div>
-        </Link>
+        </ItemContainer>
       </li>
     );
   };
@@ -654,7 +691,7 @@ const Notifications = ({ user, setUnreadCount }) => {
             <div className={styles.titleBlock}>
               <span className={styles.kicker}>Showly / Wiadomości</span>
               <h1>Centrum wiadomości</h1>
-              <p>Rozmowy z klientami, kontakt z innymi profilami i komunikaty Showly w jednym miejscu.</p>
+              <p>Rozmowy z klientami, kontakt z profilami, zgłoszenia do ogłoszeń i komunikaty Showly w jednym miejscu.</p>
 
               {hasMyProfile && myProfile?.name ? (
                 <p>
@@ -742,8 +779,22 @@ const Notifications = ({ user, setUnreadCount }) => {
                     "Gdy rozpoczniesz rozmowę z inną wizytówką, pojawi się ona w tej sekcji.",
                 })}
 
-                {renderGroup({
+                <div id="announcementConversations" className={styles.announcementGroup}>{renderGroup({
                   number: "04",
+                  title: "Rozmowy z ogłoszeń",
+                  label: "Twoje ogłoszenia i wysłane zgłoszenia",
+                  badge: announcementUnread > 0
+                    ? formatCount(announcementUnread, "nowa", "nowe", "nowych")
+                    : announcementConversations.length,
+                  Icon: FiClipboard,
+                  items: announcementConversations,
+                  variant: "announcement",
+                  emptyTitle: "Brak rozmów z ogłoszeń",
+                  emptyText: "Gdy usługodawca odpowie na Twoje ogłoszenie lub wyślesz zgłoszenie ze swojego profilu, rozmowa pojawi się tutaj.",
+                })}</div>
+
+                {renderGroup({
+                  number: "05",
                   title: "Wiadomości systemowe",
                   label: "Komunikaty Showly",
                   badge:

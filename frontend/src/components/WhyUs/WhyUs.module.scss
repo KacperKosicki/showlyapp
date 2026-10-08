@@ -51,6 +51,7 @@
 
 .dotField {
   @include backdropDots(var(--why-line));
+  @include mobileBackdropDots(40%, left);
 }
 
 .inner {

@@ -833,3 +833,13 @@
     transition: none;
   }
 }
+.unavailableBox {
+  padding: clamp(24px, 5vw, 48px);
+  display: grid;
+  justify-items: start;
+  gap: 18px;
+  > svg { padding: 14px; width: 52px; height: 52px; border: 1px solid var(--app-text); border-radius: 12px; background: #caff65; color: #191b17; box-shadow: 3px 3px 0 var(--app-text); }
+  h2, p { margin: 0; }
+  p { line-height: 1.7; }
+  button { display: flex; align-items: center; gap: 10px; padding: 14px 18px; font: inherit; font-weight: 600; border: 1px solid var(--app-text); border-radius: 10px; color: var(--app-text); background: var(--app-bg); cursor: pointer; box-shadow: 3px 3px 0 var(--app-text); }
+}

@@ -426,7 +426,7 @@
   transform: translate(2px, -2px);
 }
 
-@media (max-width: 1040px) {
+@media (max-width: 1200px) {
   .navbar {
     grid-template-columns: minmax(210px, 1fr) auto;
   }
@@ -651,3 +651,25 @@
     opacity: 1;
   }
 }
+.navLink { text-decoration:none; display:inline-flex; align-items:center; }
+.navLinks .announcementsNav { position: relative; padding: 12px 10px 8px; border: 1px solid currentColor; border-radius: 8px; }
+.newBadge { position: absolute; top: -9px; left: 10px; padding: 2px 5px; border: 1px solid #171917; border-radius: 4px; color: #171917; background: #d8ff72; font-size: .48rem; line-height: 1.4; letter-spacing: .05em; text-transform: uppercase; transform: rotate(-4deg); }
+.navbarShell .mobileNavigationWrap { display:none; position:static; z-index:auto; }
+.navbarShell .mobileMenuToggle { display:grid; place-items:center; transform:none; svg { display:block; width:20px; height:20px; } }
+.navbarShell .mobileMenuToggle[aria-expanded=true] { background:var(--nav-lime); color:#171917; border-color:var(--nav-shadow); }
+.mobileNavigation {
+  animation:navigationEnter .18s ease-out both;
+  a { text-decoration:none; }
+}
+.mobileNavigationHeader {
+  display:grid; gap:5px; padding:.85rem; border-bottom:1px solid var(--dropdown-line);
+  small { color:var(--dropdown-accent); font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; }
+  strong { font-family:$font-heading; font-size:1.05rem; }
+}
+.mobileNavigationNew { padding:4px 6px; border:1px solid var(--dropdown-border); border-radius:5px; background:var(--dropdown-lime); color:#171717; font-size:.57rem; }
+@media(max-width:1200px) { .navbarShell .mobileNavigationWrap { display:block; } }
+@media(max-width:410px) { .mobileNavigationHeader { padding:.72rem; } }
+@keyframes navigationEnter { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+@media(prefers-reduced-motion:reduce) { .mobileNavigation { animation:none; } }
+
+@media(max-width:360px) { .authButtons .registerPrompt { display:none; } }

@@ -65,6 +65,7 @@
 
 .dotField {
   @include backdropDots(var(--hub-line));
+  @include mobileBackdropDots(7rem, right);
 }
 
 .inner {

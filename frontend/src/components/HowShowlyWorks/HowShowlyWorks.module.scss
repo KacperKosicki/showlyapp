@@ -53,6 +53,7 @@
 
 .gridDot {
   @include backdropDots(var(--works-line));
+  @include mobileBackdropDots(35%, right);
 }
 
 .scribble {

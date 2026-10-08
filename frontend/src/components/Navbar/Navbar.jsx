@@ -1,6 +1,13 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FiArrowUpRight,
+  FiClipboard,
+  FiMenu,
+  FiX,
+  FiInfo,
+  FiZap,
+  FiStar,
+  FiUsers,
   FiMoon,
   FiSun,
   FiUser,
@@ -9,15 +16,16 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import UserDropdown from "../UserDropdown/UserDropdown";
+import dropdownStyles from "../UserDropdown/UserDropdown.module.scss";
 import styles from "./Navbar.module.scss";
 
 const THEME_STORAGE_KEY = "theme";
 
 const navItems = [
-  { label: "O Showly", scrollToId: "about-app" },
-  { label: "Jak działa", scrollToId: "how-showly-works" },
-  { label: "Promowane profile", scrollToId: "promoted-partners-title" },
-  { label: "Wszystkie profile", scrollToId: "showly-directory" },
+  { label: "O Showly", scrollToId: "about-app", Icon: FiInfo },
+  { label: "Jak działa", scrollToId: "how-showly-works", Icon: FiZap },
+  { label: "Promowane profile", scrollToId: "promoted-partners-title", Icon: FiStar },
+  { label: "Wszystkie profile", scrollToId: "showly-directory", Icon: FiUsers },
 ];
 
 const getInitialTheme = () => {
@@ -49,6 +57,56 @@ const Navbar = ({
 
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState(getInitialTheme);
+  const [activeMenu, setActiveMenu] = useState(null);
+  const navigationOpen = activeMenu === 'navigation';
+  const navigationRef = useRef(null);
+  const navigationTriggerRef = useRef(null);
+  const navigationMenuRef = useRef(null);
+  const handleAccountMenuChange = useCallback(open => {
+    setActiveMenu(current => open ? 'account' : current === 'account' ? null : current);
+  }, []);
+
+  useEffect(() => { setActiveMenu(null); }, [location.pathname, location.key]);
+
+  useEffect(() => {
+    const closeOnDesktop = () => {
+      if (window.innerWidth > 1200) setActiveMenu(current => current === 'navigation' ? null : current);
+    };
+    window.addEventListener('resize', closeOnDesktop);
+    return () => window.removeEventListener('resize', closeOnDesktop);
+  }, []);
+
+  useEffect(() => {
+    if (!navigationOpen) return undefined;
+    navigationMenuRef.current?.querySelector('[role="menuitem"]')?.focus();
+    const closeOutside = event => {
+      if (!navigationRef.current?.contains(event.target)) {
+        setActiveMenu(current => current === 'navigation' ? null : current);
+      }
+    };
+    const closeWithEscape = event => {
+      if (event.key === 'Escape') {
+        setActiveMenu(null);
+        navigationTriggerRef.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeWithEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('keydown', closeWithEscape);
+    };
+  }, [navigationOpen]);
+
+  const handleNavigationKeys = event => {
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const items = [...navigationMenuRef.current.querySelectorAll('[role="menuitem"]')];
+    const current = items.indexOf(document.activeElement);
+    const index = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1
+      : (current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+    items[index]?.focus();
+  };
 
   const isDarkTheme = theme === "dark";
 
@@ -108,6 +166,7 @@ const Navbar = ({
   };
 
   const handleSectionNavigate = (scrollToId) => {
+    setActiveMenu(null);
     if (location.pathname === "/") {
       const element = document.getElementById(scrollToId);
 
@@ -159,7 +218,7 @@ const Navbar = ({
           <span className={styles.beta}>Beta</span>
         </Link>
 
-        <div className={styles.navLinks} aria-label="Sekcje strony głównej">
+        <div className={styles.navLinks} aria-label="Nawigacja Showly">
           {navItems.map((item) => (
             <button
               type="button"
@@ -170,9 +229,39 @@ const Navbar = ({
               {item.label}
             </button>
           ))}
+          <Link className={`${styles.navLink} ${styles.announcementsNav}`} to="/ogloszenia" state={{ scrollToId: 'announcements' }}><span className={styles.newBadge}>Nowość</span>Ogłoszenia</Link>
         </div>
 
         <div className={styles.right}>
+          <div className={`${styles.mobileNavigationWrap} ${dropdownStyles.dropdown}`} ref={navigationRef}>
+            <button type="button" ref={navigationTriggerRef}
+              className={`${styles.themeToggle} ${styles.mobileMenuToggle}`}
+              onClick={() => setActiveMenu(current => current === 'navigation' ? null : 'navigation')}
+              aria-label={navigationOpen ? 'Zamknij menu nawigacji' : 'Otwórz menu nawigacji'}
+              aria-expanded={navigationOpen} aria-haspopup="menu" aria-controls="showly-mobile-navigation">
+              {navigationOpen ? <FiX aria-hidden="true" /> : <FiMenu aria-hidden="true" />}
+            </button>
+            {navigationOpen && <div id="showly-mobile-navigation" ref={navigationMenuRef}
+              className={`${dropdownStyles.menu} ${dropdownStyles.menuVisible} ${styles.mobileNavigation}`} role="menu" aria-label="Nawigacja Showly"
+              onKeyDown={handleNavigationKeys}
+              onBlur={event => {
+                if (event.relatedTarget && !navigationRef.current?.contains(event.relatedTarget)) {
+                  setActiveMenu(current => current === 'navigation' ? null : current);
+                }
+              }}>
+              <div className={styles.mobileNavigationHeader}><small>Poznaj Showly</small><strong>Dokąd chcesz przejść?</strong></div>
+              <div className={dropdownStyles.menuList}>
+              {navItems.map(({ label, scrollToId, Icon }) => <button type="button" role="menuitem"
+                className={dropdownStyles.item} key={scrollToId} onClick={() => handleSectionNavigate(scrollToId)}>
+                <span className={dropdownStyles.itemLeft}><Icon className={dropdownStyles.itemIcon} aria-hidden="true" /><span>{label}</span></span><FiArrowUpRight className={dropdownStyles.itemArrow} aria-hidden="true" />
+              </button>)}
+              <Link role="menuitem" className={dropdownStyles.item} to="/ogloszenia"
+                state={{ scrollToId: 'announcements' }} onClick={() => setActiveMenu(null)}>
+                <span className={dropdownStyles.itemLeft}><FiClipboard className={dropdownStyles.itemIcon} aria-hidden="true" /><span>Ogłoszenia</span></span><small className={styles.mobileNavigationNew}>Nowość</small>
+              </Link>
+              </div>
+            </div>}
+          </div>
           <button
             type="button"
             className={styles.themeToggle}
@@ -209,6 +298,8 @@ const Navbar = ({
                 setUnreadCount={setUnreadCount}
                 pendingReservationsCount={pendingReservationsCount}
                 setAlert={setAlert}
+                menuOpen={activeMenu === 'account'}
+                onMenuOpenChange={handleAccountMenuChange}
               />
             </div>
           ) : (

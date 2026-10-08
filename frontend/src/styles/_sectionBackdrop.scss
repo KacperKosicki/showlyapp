@@ -89,6 +89,22 @@
   }
 }
 
+// On phones, dots form a small faded accent at the edge instead of filling the section.
+@mixin mobileBackdropDots($top: 8rem, $side: right) {
+  @media (max-width: 760px) {
+    inset: auto;
+    top: $top;
+    #{$side}: -2rem;
+    width: min(68vw, 260px);
+    height: 280px;
+    $center: 80%;
+    @if $side == left { $center: 20%; }
+    mask-image: radial-gradient(ellipse at $center 50%, #000 0%, rgba(0, 0, 0, .5) 35%, transparent 72%);
+    -webkit-mask-image: radial-gradient(ellipse at $center 50%, #000 0%, rgba(0, 0, 0, .5) 35%, transparent 72%);
+    opacity: .5;
+  }
+}
+
 @mixin backdropArrowMotion {
   // Individual translate preserves each arrow's existing rotation.
   animation: backdropArrowFloat 9s ease-in-out infinite alternate;

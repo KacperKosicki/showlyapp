@@ -2,7 +2,12 @@ const express = require("express");
 const router = express.Router();
 
 const Conversation = require("../models/Conversation");
+const AnnouncementApplication = require("../models/AnnouncementApplication");
 const User = require("../models/User");
+const Profile = require("../models/Profile");
+const admin = require("../utils/firebaseAdmin");
+const { createAvailabilityResolver } = require("../utils/conversationAvailability");
+const resolveAvailability = createAvailabilityResolver({ User, Profile, Application: AnnouncementApplication, admin });
 const { sendPushToUserUid } = require("../utils/sendPushNotification");
 
 const requireAuth = require("../middleware/requireAuth");
@@ -10,6 +15,20 @@ const requireAuth = require("../middleware/requireAuth");
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
 const CHANNELS = ["account_to_profile", "profile_to_account", "system"];
+
+async function checkAvailability(convo, res) {
+  const state = (await resolveAvailability([convo])).get(String(convo._id));
+  if (state.reason === 'announcement_deleted') {
+    await Conversation.deleteOne({ _id: convo._id, channel: 'profile_to_account' });
+    res.status(410).json({ code: state.reason, message: 'Ogłoszenie zostało usunięte wraz z rozmową.' });
+    return false;
+  }
+  if (!state.canOpen) {
+    res.status(409).json({ code: state.reason, message: 'Rozmowa jest niedostępna. Historia została zachowana; sprawdź stan w Powiadomieniach.' });
+    return false;
+  }
+  return true;
+}
 
 function makePairKey(a, b) {
   return [String(a), String(b)].sort().join("|");
@@ -33,18 +52,6 @@ async function getUsersMapByFirebaseUid(uids = []) {
   });
 
   return map;
-}
-
-// opcjonalne: jeśli chcesz zachować auto-tworzenie usera w DB
-async function ensureUser(uid) {
-  const firebaseUid = String(uid || "");
-  if (!firebaseUid) return null;
-
-  let u = await User.findOne({ firebaseUid }).select("_id firebaseUid").lean();
-  if (!u) {
-    u = await User.create({ firebaseUid });
-  }
-  return u;
 }
 
 /**
@@ -72,6 +79,7 @@ router.post("/send", requireAuth, async (req, res) => {
 
       const isParticipant = convo.participants?.some((p) => p.uid === from);
       if (!isParticipant) return res.status(403).json({ message: "Brak dostępu do tej konwersacji" });
+      if (!await checkAvailability(convo, res)) return;
 
       const last = convo.messages?.[convo.messages.length - 1];
       if (last && last.fromUid === from) {
@@ -110,7 +118,10 @@ router.post("/send", requireAuth, async (req, res) => {
     if (!CHANNELS.includes(ch)) return res.status(400).json({ message: "Nieprawidłowy channel" });
     if (from === toUid) return res.status(400).json({ message: "Nie możesz pisać do siebie." });
 
-    await Promise.all([ensureUser(from), ensureUser(toUid)]);
+    // Do not recreate deleted accounts or reuse an announcement thread as an enquiry.
+    if (ch !== 'account_to_profile') return res.status(400).json({ message: 'Użyj istniejącego wątku, aby odpowiedzieć na ogłoszenie.' });
+    const candidate = { _id: 'new', channel: ch, firstFromUid: from, participants: [{ uid: from }, { uid: toUid }] };
+    if (!await checkAvailability(candidate, res)) return;
 
     const pairKey = makePairKey(from, toUid);
 
@@ -199,8 +210,13 @@ router.get("/by-uid/:uid", requireAuth, async (req, res) => {
     });
 
     const usersMap = await getUsersMapByFirebaseUid(otherUids);
+    // Application IDs are also the IDs of their dedicated conversation threads.
+    // Resolve in one batch, including applications created before this view existed.
+    const availability = await resolveAvailability(conversations);
+    const deletedIds = conversations.filter(c => availability.get(String(c._id)).reason === 'announcement_deleted').map(c => c._id);
+    if (deletedIds.length) await Conversation.deleteMany({ _id: { $in: deletedIds }, channel: 'profile_to_account' });
 
-    const result = conversations.map((c) => {
+    const result = conversations.filter(c => availability.get(String(c._id)).reason !== 'announcement_deleted').map((c) => {
       const other = (c.participants || []).find((p) => p.uid !== authUid);
       const otherInfo =
         usersMap.get(other?.uid) || {
@@ -219,9 +235,11 @@ router.get("/by-uid/:uid", requireAuth, async (req, res) => {
         withDisplayName: otherInfo.displayName,
         withAvatar: otherInfo.avatar,
         lastMessage,
-        unreadCount,
+        unreadCount: availability.get(String(c._id)).canOpen ? unreadCount : 0,
         updatedAt: c.updatedAt,
         firstFromUid: c.firstFromUid || (c.messages?.[0]?.fromUid ?? null),
+        availability: availability.get(String(c._id)),
+        ...(c.channel === "profile_to_account" ? { announcement: availability.get(String(c._id)).announcement || null } : {}),
       };
     });
 
@@ -248,6 +266,7 @@ router.get("/:id", requireAuth, async (req, res) => {
 
     const isParticipant = (convo.participants || []).some((p) => p.uid === requesterUid);
     if (!isParticipant) return res.status(403).json({ message: "Brak dostępu do tej konwersacji" });
+    if (!await checkAvailability(convo, res)) return;
 
     const participantUids = (convo.participants || []).map((p) => p.uid);
     const usersMap = await getUsersMapByFirebaseUid(participantUids);
@@ -286,6 +305,7 @@ router.patch("/:id/read", requireAuth, async (req, res) => {
 
     const isParticipant = (convo.participants || []).some((p) => p.uid === uid);
     if (!isParticipant) return res.status(403).json({ message: "Brak dostępu do tej konwersacji" });
+    if (!await checkAvailability(convo, res)) return;
 
     let changed = false;
     (convo.messages || []).forEach((m) => {
@@ -336,7 +356,10 @@ router.get("/check/:uid1/:uid2", requireAuth, async (req, res) => {
 
     const convo = await Conversation.findOne(query).sort({ updatedAt: -1 }).lean();
 
-    if (convo) return res.json({ exists: true, id: convo._id });
+    if (convo) {
+      if (!await checkAvailability(convo, res)) return;
+      return res.json({ exists: true, id: convo._id });
+    }
     return res.json({ exists: false });
   } catch (err) {
     console.error("❌ /conversations/check error:", err);

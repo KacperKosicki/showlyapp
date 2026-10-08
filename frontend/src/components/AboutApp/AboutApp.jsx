@@ -306,6 +306,11 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
           <strong>Showly daje jej dobry adres.</strong>
           <FiArrowRight aria-hidden="true" />
         </div>
+
+        <section className={`${styles.announcementIntro} ${styles.reveal} ${styles.fromBottom}`}>
+          <div><span>Nowość w Showly / Ogłoszenia</span><h3>Nie tylko pokazujesz ofertę.<br />Możesz też powiedzieć, czego szukasz.</h3><p>Wystaw ogłoszenie ze swojego konta: opisz pomysł, termin, miejsce i budżet. Usługodawcy odpowiedzą ze swoimi profilami, a Ty poznasz ich propozycje w jednym panelu.</p></div>
+          <button className={styles.primaryButton} onClick={() => handleNavigate('/ogloszenia', 'announcements')}><span>Odkryj ogłoszenia</span><FiArrowUpRight aria-hidden="true" /></button>
+        </section>
       </div>
     </section>
   );

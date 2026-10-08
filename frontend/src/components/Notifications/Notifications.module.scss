@@ -23,6 +23,23 @@
 
 @include profile-editor-card('.panel');
 
+.announcementContext {
+  display: grid;
+  gap: 5px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--app-border);
+  border-left: 3px solid var(--yp-lime);
+  border-radius: 10px;
+  background: var(--app-bg);
+  overflow-wrap: anywhere;
+
+  > span { color: var(--app-muted); font-size: .66rem; }
+  > strong { font-family: $font-heading; font-size: .9rem; line-height: 1.5; }
+}
+
+.announcementGroup { scroll-margin-top: 100px; }
+
 .panelHeader {
   display: flex;
   align-items: flex-start;
@@ -605,4 +622,14 @@
   .shimmer::after {
     animation: none;
   }
+}
+.unavailableNotice {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--app-border);
+  border-left: 4px solid #caff65;
+  border-radius: 10px;
+  background: var(--app-bg);
+  strong { display: block; font-size: .85rem; }
+  p { margin: 6px 0 0; font-size: .78rem; line-height: 1.6; }
 }

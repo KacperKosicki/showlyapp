@@ -54,3 +54,10 @@ test("notification counts remain visible and navigation closes the menu", async 
   expect(mockNavigate).toHaveBeenCalledWith("/powiadomienia", { state: { scrollToId: "scrollToId" } });
   expect(screen.getByRole("button", { name: "Otwórz menu użytkownika" })).toHaveAttribute("aria-expanded", "false");
 });
+
+test('announcements management is accessible to accounts without a provider profile', async () => {
+  renderMenu();
+  fireEvent.click(screen.getByRole('button', { name: 'Otwórz menu użytkownika' }));
+  fireEvent.click(await screen.findByRole('menuitem', { name: 'Twoje ogłoszenia i zgłoszenia' }));
+  expect(mockNavigate).toHaveBeenCalledWith('/twoje-ogloszenia', { state: { scrollToId: 'announcements' } });
+});

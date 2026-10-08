@@ -51,6 +51,8 @@ app.use('/api/favorites', require('./routes/favorites'));
 // Wiadomości
 app.use('/api/conversations', require('./routes/conversations'));
 
+app.use('/api/announcements', require('./routes/announcements'));
+
 // Rezerwacje
 app.use('/api/reservations', require('./routes/reservations'));
 
@@ -67,6 +69,11 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(async () => {
     console.log('✅ Połączono z MongoDB (SHOWLY)');
+
+    // Publication ownership and one application per account are database-enforced.
+    for (const name of ['Announcement', 'AnnouncementPublication', 'AnnouncementApplication']) {
+      await require(`./models/${name}`).createIndexes();
+    }
 
     try {
       const VisitLock = require('./models/VisitLock');

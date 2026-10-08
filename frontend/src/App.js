@@ -10,6 +10,7 @@ import WhyUs from "./components/WhyUs/WhyUs";
 import AllUsersList from "./components/AllUsersList/AllUsersList";
 import Footer from "./components/Footer/Footer";
 import AboutApp from "./components/AboutApp/AboutApp";
+import AnnouncementStrip from "./components/Announcements/AnnouncementStrip";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 import PromotedPartners from "./components/PromotedPartners/PromotedPartners";
 import HowShowlyWorks from "./components/HowShowlyWorks/HowShowlyWorks";
@@ -40,6 +41,9 @@ const Regulations = lazy(() => import("./components/Regulations/Regulations"));
 const CookiesPolicy = lazy(() => import("./components/CookiesPolicy/CookiesPolicy"));
 const ShowlyJourney = lazy(() => import("./components/ShowlyJourney/ShowlyJourney"));
 const ProfilesHub = lazy(() => import("./components/ProfilesHub/ProfilesHub"));
+const Announcements = lazy(() => import('./components/Announcements/Announcements'));
+const AnnouncementDetail = lazy(() => import('./components/Announcements/AnnouncementDetail'));
+const MyAnnouncements = lazy(() => import('./components/Announcements/MyAnnouncements'));
 const AdminPanel = lazy(() => import("./components/AdminPanel/AdminPanel"));
 
 const API = process.env.REACT_APP_API_URL;
@@ -214,6 +218,8 @@ function App() {
       "/profil",
       "/wiadomosc",
       "/powiadomienia",
+      "/ogloszenia",
+      "/twoje-ogloszenia",
       "/ulubione",
       "/konwersacja",
       "/rezerwacja",
@@ -531,6 +537,7 @@ function App() {
                   hasProfile={hasProfile}
                   loadingProfileStatus={loadingProfileStatus}
                 />
+                <AnnouncementStrip />
                 <HowShowlyWorks />
                 <PromotedPartners currentUser={safeUser} setAlert={setAlert} />
                 <DiscoverShowly />
@@ -573,6 +580,9 @@ function App() {
           />
 
           <Route path="/verify-success" element={<VerifySuccess />} />
+          <Route path="/ogloszenia" element={<><Announcements user={safeUser} /><Footer {...footerProps} /></>} />
+          <Route path="/ogloszenia/:id" element={<><AnnouncementDetail user={safeUser} /><Footer {...footerProps} /></>} />
+          <Route path="/twoje-ogloszenia" element={<AuthRoute user={safeUser} loading={loadingUser || loadingToken}><MyAnnouncements /><Footer {...footerProps} /></AuthRoute>} />
 
           <Route
             path="/szukaj"
