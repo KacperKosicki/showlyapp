@@ -19,10 +19,10 @@ export default function AnnouncementStrip() {
 
   return (
     <section className={styles.section} aria-labelledby="announcement-strip-title">
-      <div className={styles.leftBackdrop} aria-hidden="true">
-        <span className={styles.leftRing} />
-        <span className={styles.leftDots} />
-        <span className={styles.travellingDot} />
+      <div className={styles.sceneBackdrop} aria-hidden="true">
+        <span className={styles.sceneWord}>A CO, GDYBY…</span>
+        <span className={styles.sceneShape} />
+        <span className={styles.sceneAsterisk}>✳</span>
       </div>
       <div className={styles.inner}>
         <div className={styles.copy}>
@@ -33,15 +33,11 @@ export default function AnnouncementStrip() {
             <Link to="/twoje-ogloszenia?nowe=1" state={{ scrollToId: 'announcements' }} className={styles.primary}><FiPlus />Dodaj swój pomysł</Link>
             <Link to="/ogloszenia" state={{ scrollToId: 'announcements' }}>Odkryj ogłoszenia <FiArrowUpRight /></Link>
           </div>
-          <div className={styles.journey} aria-label="Jak działają ogłoszenia">
-            <span><b>01</b>Twój pomysł</span><FiArrowRight aria-hidden="true" /><span><b>02</b>Czyjś talent</span><FiArrowRight aria-hidden="true" /><span><b>03</b>Rozmowa</span>
-          </div>
           <small>Wystawiasz z konta. Odpowiadasz ze swoją wizytówką.</small>
         </div>
         <div className={styles.playground}>
-          <div className={styles.orbit} aria-hidden="true" />
-          <div className={styles.dots} aria-hidden="true" />
-          <span className={styles.spark} aria-hidden="true">+</span>
+          <svg className={styles.ideaTrail} viewBox="0 0 620 470" fill="none" aria-hidden="true"><path d="M20 290C-20 80 166-10 350 30S672 195 540 343 260 478 331 389 482 376 565 415" /><path d="m545 400 20 15-23 4" /></svg>
+          <span className={styles.spark} aria-hidden="true">✳</span>
           <span className={styles.sticker} aria-hidden="true">Mały pomysł.<br />Dużo możliwości.</span>
           <div className={styles.stage} onPointerMove={move} onPointerLeave={() => setTilt({ x: 0, y: 0 })} style={{ '--tilt-x': `${tilt.x}deg`, '--tilt-y': `${tilt.y}deg` }}>
             <div className={styles.deck}>
@@ -65,6 +61,10 @@ export default function AnnouncementStrip() {
           </div>
           <p className={styles.hint}>Trzy pomysły na początek. Twój może być zupełnie inny.</p>
         </div>
+      </div>
+      <div className={styles.journey} aria-label="Jak działają ogłoszenia">
+        <span><b>01 /</b>Twój pomysł</span><FiArrowRight aria-hidden="true" /><span><b>02 /</b>Czyjś talent</span><FiArrowRight aria-hidden="true" /><span><b>03 /</b>Dobra rozmowa</span>
+        <strong>Jest miejsce na Twój pomysł.<FiArrowUpRight aria-hidden="true" /></strong>
       </div>
     </section>
   );

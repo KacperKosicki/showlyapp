@@ -105,6 +105,11 @@
   }
 }
 
+.subpage .navbar {
+  border-color: var(--nav-line);
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--nav-shadow) 12%, transparent);
+}
+
 .logoWrap {
   width: fit-content;
   min-width: 0;

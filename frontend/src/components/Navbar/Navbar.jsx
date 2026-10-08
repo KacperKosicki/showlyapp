@@ -54,6 +54,7 @@ const Navbar = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const isHomePage = location.pathname === "/";
 
   const [scrolled, setScrolled] = useState(false);
   const [theme, setTheme] = useState(getInitialTheme);
@@ -141,11 +142,12 @@ const Navbar = ({
     const darkTop = "#111310";
     const darkScrolled = "#1c1f1b";
 
+    const floating = scrolled || !isHomePage;
     const statusColor = isDarkTheme
-      ? scrolled
+      ? floating
         ? darkScrolled
         : darkTop
-      : scrolled
+      : floating
         ? lightScrolled
         : lightTop;
 
@@ -159,7 +161,7 @@ const Navbar = ({
 
     metaTheme.setAttribute("content", statusColor);
     document.documentElement.style.setProperty("--app-status-bg", statusColor);
-  }, [isDarkTheme, scrolled]);
+  }, [isDarkTheme, scrolled, isHomePage]);
 
   const handleAuthNavigate = (path, scrollToId) => {
     navigate(path, { state: { scrollToId } });
@@ -196,7 +198,7 @@ const Navbar = ({
 
   return (
     <header
-      className={`${styles.navbarShell} ${scrolled ? styles.scrolled : ""
+      className={`${styles.navbarShell} ${!isHomePage ? styles.subpage : ""} ${scrolled || !isHomePage ? styles.scrolled : ""
         }`}
     >
       <nav className={styles.navbar} aria-label="Główna nawigacja Showly">

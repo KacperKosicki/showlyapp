@@ -1,0 +1,16 @@
+.home, .page {
+  min-width: 0;
+}
+
+.page {
+  // Each view paints its own background all the way up behind the floating navbar.
+  > :first-child {
+    padding-top: calc(112px + var(--safe-top, 0px));
+  }
+
+  @media (max-width: 760px) {
+    > :first-child {
+      padding-top: calc(96px + var(--safe-top, 0px));
+    }
+  }
+}

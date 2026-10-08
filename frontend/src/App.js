@@ -4,6 +4,7 @@ import { lazy, Suspense, useState, useEffect, useMemo, useCallback } from "react
 
 // Elementy potrzebne od razu na stronie głównej pozostają w głównym bundle.
 import Navbar from "./components/Navbar/Navbar";
+import PageLayout from "./components/PageLayout/PageLayout";
 import Hero from "./components/Hero/Hero";
 import UserCardList from "./components/UserCardList/UserCardList";
 import WhyUs from "./components/WhyUs/WhyUs";
@@ -525,6 +526,7 @@ function App() {
         />
       )}
 
+      <PageLayout>
       <Suspense fallback={<AppLoader />}>
         <Routes>
           <Route
@@ -593,7 +595,6 @@ function App() {
             path="/billing/success"
             element={
               <>
-                <Hero {...heroProps} />
                 <BillingSuccess triggerRefresh={triggerRefresh} />
                 <Footer {...footerProps} />
               </>
@@ -604,7 +605,6 @@ function App() {
             path="/billing/cancel"
             element={
               <>
-                <Hero {...heroProps} />
                 <BillingCancel triggerRefresh={triggerRefresh} />
                 <Footer {...footerProps} />
               </>
@@ -620,7 +620,6 @@ function App() {
                 loading={loadingUser || loadingToken || loadingRole}
               >
                 <>
-                  <Hero {...heroProps} />
                   <AdminPanel />
                   <Footer {...footerProps} />
                 </>
@@ -632,7 +631,6 @@ function App() {
             path="/stworz-profil"
             element={
               <>
-                <Hero {...heroProps} />
                 {safeUser && loadingProfileStatus ? (
                   <p style={{ padding: "2rem", textAlign: "center" }}>
                     Sprawdzanie profilu...
@@ -655,7 +653,6 @@ function App() {
             path="/profil"
             element={
               <>
-                <Hero {...heroProps} />
                 <YourProfile user={safeUser} setRefreshTrigger={setRefreshTrigger} />
                 <Footer {...footerProps} />
               </>
@@ -672,7 +669,6 @@ function App() {
             element={
               <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
                 <>
-                  <Hero {...heroProps} />
                   <MessageForm user={safeUser} />
                   <Footer {...footerProps} />
                 </>
@@ -685,7 +681,6 @@ function App() {
             element={
               <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
                 <>
-                  <Hero {...heroProps} />
                   <Notifications user={safeUser} setUnreadCount={setUnreadCount} />
                   <Footer {...footerProps} />
                 </>
@@ -698,7 +693,6 @@ function App() {
             element={
               <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
                 <>
-                  <Hero {...heroProps} />
                   <Favorites currentUser={safeUser} />
                   <Footer {...footerProps} />
                 </>
@@ -711,7 +705,6 @@ function App() {
             element={
               <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
                 <>
-                  <Hero {...heroProps} />
                   <ThreadView
                     user={safeUser}
                     setUnreadCount={setUnreadCount}
@@ -728,7 +721,6 @@ function App() {
             element={
               <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
                 <>
-                  <Hero {...heroProps} />
                   <BookingForm user={safeUser} />
                   <Footer {...footerProps} />
                 </>
@@ -741,7 +733,6 @@ function App() {
             element={
               <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
                 <>
-                  <Hero {...heroProps} />
                   <AccountSettings />
                   <Footer {...footerProps} />
                 </>
@@ -754,7 +745,6 @@ function App() {
             element={
               <AuthRoute user={safeUser} loading={loadingUser || loadingToken}>
                 <>
-                  <Hero {...heroProps} />
                   <ReservationList
                     user={safeUser}
                     resetPendingReservationsCount={resetPendingReservationsCount}
@@ -769,7 +759,6 @@ function App() {
             path="/kontakt"
             element={
               <>
-                <Hero {...heroProps} />
                 <Contact />
                 <Footer {...footerProps} />
               </>
@@ -780,7 +769,6 @@ function App() {
             path="/profile"
             element={
               <>
-                <Hero {...heroProps} />
                 <ProfilesHub currentUser={safeUser} setAlert={setAlert} />
                 <Footer {...footerProps} />
               </>
@@ -791,7 +779,6 @@ function App() {
             path="/jak-to-dziala"
             element={
               <>
-                <Hero {...heroProps} />
                 <ShowlyJourney />
                 <Footer {...footerProps} />
               </>
@@ -802,7 +789,6 @@ function App() {
             path="/regulamin"
             element={
               <>
-                <Hero {...heroProps} />
                 <Regulations />
                 <Footer {...footerProps} />
               </>
@@ -813,7 +799,6 @@ function App() {
             path="/polityka-cookies"
             element={
               <>
-                <Hero {...heroProps} />
                 <CookiesPolicy />
                 <Footer {...footerProps} />
               </>
@@ -824,7 +809,6 @@ function App() {
             path="/:slug"
             element={
               <>
-                <Hero {...heroProps} />
                 <PublicProfile />
                 <Footer {...footerProps} />
               </>
@@ -832,6 +816,7 @@ function App() {
           />
         </Routes>
       </Suspense>
+      </PageLayout>
     </Router>
   );
 }

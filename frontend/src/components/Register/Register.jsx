@@ -9,7 +9,6 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider } from "../../firebase";
 import styles from "./Register.module.scss";
-import Hero from "../Hero/Hero";
 import Footer from "../Footer/Footer";
 import axios from "axios";
 import { useLocation, useNavigate, Link } from "react-router-dom";
@@ -264,7 +263,6 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
   return (
     <>
-      <Hero user={user} setUser={setUser} />
 
       <section className={styles.section} aria-labelledby="register-heading">
         <div id="registerBox" className={styles.inner}>

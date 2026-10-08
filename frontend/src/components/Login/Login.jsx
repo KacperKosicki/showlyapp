@@ -10,7 +10,6 @@ import {
 import { auth, googleProvider } from "../../firebase";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import styles from "./Login.module.scss";
-import Hero from "../Hero/Hero";
 import Footer from "../Footer/Footer";
 import axios from "axios";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
@@ -287,7 +286,6 @@ const Login = ({ setUser, setRefreshTrigger }) => {
 
   return (
     <>
-      <Hero />
 
       <section className={styles.section} aria-labelledby="login-heading">
         <div className={styles.inner} id="loginBox">
