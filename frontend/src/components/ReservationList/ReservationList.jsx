@@ -15,6 +15,8 @@ import {
   FiUser,
   FiList,
   FiGrid,
+  FiMessageSquare,
+  FiTrash2,
 } from "react-icons/fi";
 
 import ReservationCalendar from "./ReservationCalendar";
@@ -1742,7 +1744,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                       className={`${styles.actionBtn} ${styles.cancelBtn}`}
                       disabled={disabledIds.has(`cancel-${res._id}`)}
                     >
-                      ❌ Anuluj z powodem
+                      <FiXCircle aria-hidden="true" /> Anuluj z powodem
                     </button>
 
                     {!res.clientNote?.message && (
@@ -1751,7 +1753,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                         className={`${styles.actionBtn} ${styles.acceptBtn}`}
                         disabled={disabledIds.has(`note-${res._id}`)}
                       >
-                        💬 Dodaj informację
+                        <FiMessageSquare aria-hidden="true" /> Dodaj informację
                       </button>
                     )}
                   </>
@@ -1764,7 +1766,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                       className={`${styles.actionBtn} ${styles.acceptBtn}`}
                       disabled={disabledIds.has(res._id)}
                     >
-                      ✅ Potwierdź
+                      <FiCheckCircle aria-hidden="true" /> Potwierdź
                     </button>
 
                     <button
@@ -1772,7 +1774,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                       className={`${styles.actionBtn} ${styles.rejectBtn}`}
                       disabled={disabledIds.has(res._id)}
                     >
-                      ❌ Odrzuć
+                      <FiXCircle aria-hidden="true" /> Odrzuć
                     </button>
                   </>
                 )}
@@ -1783,7 +1785,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                     className={`${styles.actionBtn} ${styles.cancelBtn}`}
                     disabled={disabledIds.has(`offline-cancel-${res._id}`)}
                   >
-                    🗑 Usuń offline
+                    <FiTrash2 aria-hidden="true" /> Usuń offline
                   </button>
                 )}
               </div>
