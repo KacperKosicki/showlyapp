@@ -19,6 +19,7 @@ import UserDropdown from "../UserDropdown/UserDropdown";
 import dropdownStyles from "../UserDropdown/UserDropdown.module.scss";
 import styles from "./Navbar.module.scss";
 import BetaTestBanner from '../BetaTestBanner/BetaTestBanner';
+import { updateBrowserTheme } from '../../utils/browserTheme';
 
 const THEME_STORAGE_KEY = "theme";
 
@@ -152,16 +153,8 @@ const Navbar = ({
         ? lightScrolled
         : lightTop;
 
-    let metaTheme = document.querySelector('meta[name="theme-color"]');
-
-    if (!metaTheme) {
-      metaTheme = document.createElement("meta");
-      metaTheme.setAttribute("name", "theme-color");
-      document.head.appendChild(metaTheme);
-    }
-
-    metaTheme.setAttribute("content", statusColor);
-    document.documentElement.style.setProperty("--app-status-bg", statusColor);
+    document.documentElement.style.setProperty('--browser-nav-color', statusColor);
+    updateBrowserTheme(statusColor);
   }, [isDarkTheme, scrolled, isHomePage]);
 
   const handleAuthNavigate = (path, scrollToId) => {

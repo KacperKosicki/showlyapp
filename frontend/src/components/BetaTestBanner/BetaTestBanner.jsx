@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiArrowUpRight, FiPause, FiPlay, FiX, FiZap } from 'react-icons/fi';
 import styles from './BetaTestBanner.module.scss';
+import { updateBrowserTheme } from '../../utils/browserTheme';
 
 const DISMISS_KEY = 'showly:beta-banner-dismissed';
 const message = 'Trwają testy Showly! Zaloguj się lub załóż konto i stwórz profil z najwyższym planem Premium za darmo. Bez karty, bez opłat — przez cały czas testów.';
@@ -47,7 +48,13 @@ export default function BetaTestBanner({ user }) {
   const visible = campaign !== null && dismissed !== campaign;
   useLayoutEffect(() => {
     document.documentElement.style.setProperty('--beta-banner-height', visible ? '40px' : '0px');
-    return () => document.documentElement.style.removeProperty('--beta-banner-height');
+    document.documentElement.setAttribute('data-beta-banner-visible', String(visible));
+    updateBrowserTheme(document.documentElement.style.getPropertyValue('--browser-nav-color') || '#fffdf7');
+    return () => {
+      document.documentElement.style.removeProperty('--beta-banner-height');
+      document.documentElement.removeAttribute('data-beta-banner-visible');
+      updateBrowserTheme(document.documentElement.style.getPropertyValue('--browser-nav-color') || '#fffdf7');
+    };
   }, [visible]);
 
   const dismiss = () => {

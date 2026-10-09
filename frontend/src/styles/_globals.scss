@@ -19,7 +19,6 @@
   --app-muted: rgba(21, 21, 21, 0.62);
   --app-border: rgba(21, 21, 21, 0.12);
   --app-primary: #6f4ef2;
-  --app-status-bg: #ffffff;
 
   color-scheme: light;
 }
@@ -32,7 +31,6 @@ html[data-theme="dark"] {
   --app-muted: rgba(244, 241, 234, 0.68);
   --app-border: rgba(244, 241, 234, 0.16);
   --app-primary: #a895ff;
-  --app-status-bg: #111216;
 
   color-scheme: dark;
 }
@@ -64,25 +62,6 @@ body {
   transition:
     background 0.22s ease,
     color 0.22s ease;
-}
-
-body::before {
-  content: "";
-
-  position: fixed;
-  top: 0;
-  right: 0;
-  left: 0;
-
-  height: env(safe-area-inset-top, 0px);
-
-  z-index: 9998;
-
-  pointer-events: none;
-
-  background: var(--app-status-bg);
-
-  transition: background 0.22s ease;
 }
 
 #root {

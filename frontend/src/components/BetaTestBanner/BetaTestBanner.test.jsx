@@ -50,3 +50,18 @@ test('does not advertise free Premium if status cannot be verified', async () =>
   await waitFor(() => expect(document.documentElement.style.getPropertyValue('--beta-banner-height')).toBe('0px'));
   expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
 });
+
+test('on iPhone, closing the banner also clears its system theme tint', async () => {
+  const original = navigator.userAgent;
+  Object.defineProperty(navigator, 'userAgent', { configurable: true, value: 'Mozilla iPhone' });
+  try {
+    render(<BetaTestBanner />);
+    const close = await screen.findByRole('button', { name: 'Zamknij informację o testach' });
+    expect(document.querySelector('meta[name="theme-color"]').content).toBe('#d8ff72');
+    fireEvent.click(close);
+    expect(document.querySelector('meta[name="theme-color"]')).toBeNull();
+    expect(document.documentElement.getAttribute('data-beta-banner-visible')).toBe('false');
+  } finally {
+    Object.defineProperty(navigator, 'userAgent', { configurable: true, value: original });
+  }
+});
