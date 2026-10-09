@@ -24,6 +24,13 @@ app.use('/api/billing/webhook', require('./routes/billingWebhook'));
 // 🔥 2) JSON middleware dla reszty requestów
 app.use(express.json({ limit: '20mb' }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+app.use('/api', require('./middleware/platformSettings'));
+app.get('/api/platform/status', (req, res) => {
+  const { isBetaPremiumEnabled, getBetaCampaignId } = require('./utils/betaAccess');
+  const { getPlan } = require('./config/plans');
+  const enabled = isBetaPremiumEnabled();
+  res.json({ betaPremiumEnabled: enabled, betaCampaignId: enabled ? getBetaCampaignId() : null, createPlan: { ...getPlan(enabled ? 'premium' : 'free'), key: enabled ? 'premium' : 'free' } });
+});
 
 // Static
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

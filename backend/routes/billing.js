@@ -1,3 +1,4 @@
+const { isBetaPremiumEnabled, isProfileVisible, checkoutBlocked } = require('../utils/betaAccess');
 // routes/billing.js
 const express = require("express");
 const Stripe = require("stripe");
@@ -20,7 +21,15 @@ if (!stripeSecret) {
   console.warn("⚠️ Brak STRIPE_SECRET_KEY w env!");
 }
 
-const stripe = new Stripe(stripeSecret);
+const stripe = stripeSecret ? new Stripe(stripeSecret) : null;
+router.use((req, res, next) => {
+  if (req.path.startsWith('/checkout-')) {
+    const message = checkoutBlocked();
+    if (message) return res.status(409).json({ error: message, code: 'BETA_PREMIUM_ENABLED' });
+  }
+  if (req.path !== '/status' && !stripe) return res.status(503).json({ error: 'Płatności nie są jeszcze dostępne.' });
+  return next();
+});
 
 // Jednorazowe przedłużenie profilu
 const RENEW_WINDOW_DAYS = Number(process.env.RENEW_WINDOW_DAYS ?? 7);
@@ -52,7 +61,8 @@ const getSubscriptionPriceId = (plan) => {
 };
 
 const getOrCreateStripeCustomer = async (profile, uid) => {
-  if (profile?.billing?.stripeCustomerId) {
+  const oldTestCustomer = profile.billing?.paymentEnvironment === 'test' && /^(sk|rk)_live_/.test(stripeSecret || '');
+  if (profile?.billing?.stripeCustomerId && !oldTestCustomer) {
     return profile.billing.stripeCustomerId;
   }
 
@@ -65,7 +75,9 @@ const getOrCreateStripeCustomer = async (profile, uid) => {
 
   profile.billing = {
     ...(profile.billing || {}),
+    ...(oldTestCustomer ? { plan: 'free', status: 'inactive', stripeSubscriptionId: '', stripePriceId: '', currentPeriodStart: null, currentPeriodEnd: null, cancelAtPeriodEnd: false, graceUntil: null } : {}),
     stripeCustomerId: customer.id,
+    paymentEnvironment: /^(sk|rk)_live_/.test(stripeSecret || '') ? 'live' : 'test',
   };
 
   await profile.save();
@@ -109,7 +121,7 @@ router.post("/checkout-extension", requireAuth, async (req, res) => {
      * bo widoczność odnawia się automatycznie z subskrypcją.
      */
     if (
-      PAID_PLANS.includes(profile.billing?.plan) &&
+      PAID_PLANS.includes(getEffectivePlanKey(profile, { allowPastDue: true })) &&
       ACTIVE_SUBSCRIPTION_STATUSES.includes(profile.billing?.status)
     ) {
       return res.status(409).json({
@@ -208,7 +220,8 @@ router.post("/checkout-subscription", requireAuth, async (req, res) => {
 
     if (
       profile.billing?.stripeSubscriptionId &&
-      ACTIVE_SUBSCRIPTION_STATUSES.includes(profile.billing?.status)
+      ACTIVE_SUBSCRIPTION_STATUSES.includes(profile.billing?.status) &&
+      !(profile.billing?.paymentEnvironment === 'test' && /^(sk|rk)_live_/.test(stripeSecret || ''))
     ) {
       return res.status(409).json({
         error: "Masz już aktywną subskrypcję. Zarządzaj nią w panelu płatności.",
@@ -380,7 +393,7 @@ router.get("/status", requireAuth, async (req, res) => {
      * bo widoczność idzie z subskrypcji.
      */
     const canExtend =
-      !hasActivePaidSubscription &&
+      !isBetaPremiumEnabled() && !!stripe && !hasActivePaidSubscription &&
       visibleUntil <= addDays(now, RENEW_WINDOW_DAYS);
 
     const effectivePlanKey = getEffectivePlanKey(profile, {
@@ -403,13 +416,16 @@ router.get("/status", requireAuth, async (req, res) => {
 
     return res.json({
       now: now.toISOString(),
+      payments: { enabled: !!stripe && !isBetaPremiumEnabled() },
+      canManageSubscription: !!stripe && !!profile.billing?.stripeSubscriptionId &&
+        !(profile.billing?.paymentEnvironment === 'test' && /^(sk|rk)_live_/.test(stripeSecret || '')),
 
       visibility: {
-        isVisible: !!profile.isVisible && visibleUntil > now,
+        isVisible: isProfileVisible(profile, now),
         rawIsVisible: !!profile.isVisible,
         blockedByAdmin: isModerationBlocked(profile, now),
         canReconcile: !!(profile.billing?.stripeCustomerId || profile.billing?.stripeSubscriptionId),
-        visibleUntil: visibleUntil.toISOString(),
+        visibleUntil: isBetaPremiumEnabled() ? null : visibleUntil.toISOString(),
         canExtend,
         renewWindowDays: RENEW_WINDOW_DAYS,
         durationDays: DURATION_DAYS,
@@ -420,8 +436,8 @@ router.get("/status", requireAuth, async (req, res) => {
 
       plan: {
         effectivePlan: effectivePlanKey,
-        label: effectivePlan.label,
-        priceLabel: effectivePlan.priceLabel,
+        label: publicBilling.label,
+        priceLabel: publicBilling.priceLabel,
         description: effectivePlan.description,
         features: effectivePlan.features,
         limits: effectivePlan.limits,
@@ -431,7 +447,7 @@ router.get("/status", requireAuth, async (req, res) => {
 
       legacy: {
         canExtend,
-        visibleUntil: visibleUntil.toISOString(),
+        visibleUntil: isBetaPremiumEnabled() ? null : visibleUntil.toISOString(),
         renewWindowDays: RENEW_WINDOW_DAYS,
         durationDays: DURATION_DAYS,
         autoRenewedBySubscription: hasActivePaidSubscription,

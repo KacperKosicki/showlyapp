@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createAvailabilityResolver } = require('../utils/conversationAvailability');
+const { runWithSettings } = require('../utils/betaAccess');
 const query = value => ({ select() { return this; }, populate() { return this; }, lean: async () => value });
 const thread = { _id: 'enquiry', channel: 'account_to_profile', firstFromUid: 'client', participants: [{ uid: 'client' }, { uid: 'provider' }] };
 function resolver({ profile, firebaseUsers, fail = false, application = null } = {}) {
@@ -32,6 +33,16 @@ test('profile visibility and expiration never erase history and resume when rest
 test('a missing Firebase account is recognized even when its Mongo account still exists', async () => {
   const state = (await resolver({ firebaseUsers: [{ uid: 'client' }] })([thread])).get('enquiry');
   assert.equal(state.reason, 'account_missing');
+});
+
+test('beta reopens expired profiles, while moderation and deleted announcements remain unavailable', async () => {
+  await runWithSettings({ betaPremiumEnabled: true }, async () => {
+    const expired = { userId: 'provider', isVisible: false, visibleUntil: new Date(0), visibilityBlockedByAdmin: false };
+    assert.equal((await resolver({ profile: expired })([thread])).get('enquiry').canOpen, true);
+    assert.equal((await resolver({ profile: { ...expired, visibilityBlockedByAdmin: true } })([thread])).get('enquiry').canOpen, false);
+    const state = await resolver({ profile: expired, application: { _id: 'enquiry', announcementId: null } })([{ ...thread, channel: 'profile_to_account' }]);
+    assert.equal(state.get('enquiry').reason, 'announcement_deleted');
+  });
 });
 
 test('Firebase failure is temporary unavailability rather than deletion or a ban', async () => {

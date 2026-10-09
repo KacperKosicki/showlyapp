@@ -19,7 +19,7 @@ if (!webhookSecret) {
   console.warn("⚠️ Brak STRIPE_WEBHOOK_SECRET w env!");
 }
 
-const stripe = new Stripe(stripeSecret);
+const stripe = stripeSecret ? new Stripe(stripeSecret) : null;
 
 const DURATION_DAYS = Number(process.env.DURATION_DAYS ?? 30);
 const MAX_FORWARD_DAYS = Number(process.env.MAX_FORWARD_DAYS ?? 37);
@@ -332,6 +332,7 @@ const handleInvoicePaymentFailed = async (invoice) => {
   profile.billing = {
     ...(profile.billing || {}),
     status: "past_due",
+    paymentEnvironment: subscription.livemode ? 'live' : 'test',
     stripeCustomerId: String(
       subscription.customer || profile.billing?.stripeCustomerId || ""
     ),
@@ -379,12 +380,16 @@ router.post(
     let event;
 
     try {
-      if (!webhookSecret) {
+      if (!stripe || !webhookSecret) {
         console.error("❌ Brak STRIPE_WEBHOOK_SECRET w env!");
         return res.status(500).send("Missing STRIPE_WEBHOOK_SECRET");
       }
 
       event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      const liveMode = /^(sk|rk)_live_/.test(stripeSecret || '');
+      if (typeof event.livemode === 'boolean' && event.livemode !== liveMode) {
+        return res.status(400).send('Niezgodny tryb płatności Stripe.');
+      }
     } catch (err) {
       console.error("❌ Webhook signature error:", err.message);
       return res.status(400).send(`Webhook Error: ${err.message}`);

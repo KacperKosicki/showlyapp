@@ -8,7 +8,7 @@ import { api } from "../../api/api";
 import { FiUser, FiMapPin, FiTag, FiBriefcase, FiImage, FiFileText, FiDollarSign, FiClock, FiLink, FiCheckCircle, FiGrid, FiCalendar, FiPlus, FiTrash2 } from "react-icons/fi";
 import { TAGS_LIMIT, TAG_MAX_LENGTH, SERVICE_NAME_MAX_LENGTH, SERVICE_SHORT_DESCRIPTION_MAX_LENGTH, SERVICE_PRICE_MAX, SERVICE_DURATION_LIMITS } from "../constants/validationLimits";
 const DEFAULT_AVATAR = "/images/other/no-image.png";
-const CREATE_PLAN = {
+const DEFAULT_CREATE_PLAN = {
   key: "free",
   name: "Free",
   label: "Starter",
@@ -39,6 +39,15 @@ const CreateProfile = ({
   user,
   setRefreshTrigger
 }) => {
+  const [CREATE_PLAN, setCreatePlan] = useState(DEFAULT_CREATE_PLAN);
+  const [betaPremiumEnabled, setBetaPremiumEnabled] = useState(false);
+  useEffect(() => {
+    let active = true;
+    api.get('/api/platform/status').then(({ data }) => {
+      if (active && data.createPlan) { setCreatePlan(data.createPlan); setBetaPremiumEnabled(data.betaPremiumEnabled === true); }
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
   const [form, setForm] = useState({
     name: "",
     avatar: DEFAULT_AVATAR,
@@ -156,7 +165,7 @@ const CreateProfile = ({
       return;
     }
     if (name === "bookingMode") {
-      if (value === "calendar" || value === "request-blocking") {
+      if (!CREATE_PLAN.features.booking && (value === "calendar" || value === "request-blocking")) {
         setFormErrors(prev => ({
           ...prev,
           bookingMode: "Kalendarz i blokowanie dni są dostępne w planie Premium. Na start wybierz zapytania."
@@ -362,7 +371,7 @@ const CreateProfile = ({
   };
   const handleAddService = () => {
     if (form.services.length >= CREATE_PLAN.limits.services) {
-      setServiceError(`Plan Starter pozwala dodać maksymalnie ${CREATE_PLAN.limits.services} usługi. Po utworzeniu profilu możesz przejść na Standard lub Premium.`);
+      setServiceError(`Plan ${CREATE_PLAN.label} pozwala dodać maksymalnie ${CREATE_PLAN.limits.services} usługi. Po utworzeniu profilu możesz przejść na Standard lub Premium.`);
       return;
     }
     const name = cleanServiceText(newService.name, SERVICE_NAME_MAX_LENGTH).trim();
@@ -405,11 +414,11 @@ const CreateProfile = ({
       return;
     }
     const bookingEnabled = !!newService.bookingEnabled;
-    if (bookingEnabled && newService.bookingType === "calendar") {
+    if (!CREATE_PLAN.features.booking && bookingEnabled && newService.bookingType === "calendar") {
       setServiceError("Kalendarz godzinowy jest dostępny w planie Premium. W planie Starter możesz dodać usługę jako zapytanie.");
       return;
     }
-    const bookingType = bookingEnabled ? "request" : "none";
+    const bookingType = bookingEnabled ? (CREATE_PLAN.features.booking && newService.bookingType === "calendar" ? "calendar" : "request") : "none";
     setForm(prev => ({
       ...prev,
       services: [...prev.services, {
@@ -491,18 +500,18 @@ const CreateProfile = ({
     }
     const nonEmptyLinks = form.links.filter(link => link.trim() !== "");
     if (nonEmptyLinks.length > CREATE_PLAN.limits.links) {
-      errors.links = `Plan Starter pozwala dodać maksymalnie ${CREATE_PLAN.limits.links} linki.`;
+      errors.links = `Plan ${CREATE_PLAN.label} pozwala dodać maksymalnie ${CREATE_PLAN.limits.links} linki.`;
     }
     if (form.description.length > CREATE_PLAN.limits.descriptionLength) {
-      errors.description = `Opis nie może przekraczać ${CREATE_PLAN.limits.descriptionLength} znaków w planie Starter.`;
+      errors.description = `Opis nie może przekraczać ${CREATE_PLAN.limits.descriptionLength} znaków w planie ${CREATE_PLAN.label}.`;
     }
     if (!form.profileType) {
       errors.profileType = "Wybierz typ profilu";
     }
     if ((form.services || []).length > CREATE_PLAN.limits.services) {
-      errors.services = `Plan Starter pozwala dodać maksymalnie ${CREATE_PLAN.limits.services} usługi.`;
+      errors.services = `Plan ${CREATE_PLAN.label} pozwala dodać maksymalnie ${CREATE_PLAN.limits.services} usługi.`;
     }
-    if (form.bookingMode === "calendar" || form.bookingMode === "request-blocking") {
+    if (!CREATE_PLAN.features.booking && (form.bookingMode === "calendar" || form.bookingMode === "request-blocking")) {
       errors.bookingMode = "Kalendarz i blokowanie dni są dostępne w planie Premium. W planie Starter wybierz zapytania.";
     }
     const priceFromNum = Number(form.priceFrom);
@@ -598,20 +607,18 @@ const CreateProfile = ({
           <strong>
             {activeLinksCount}/{CREATE_PLAN.limits.links}
           </strong>
-          <span>linków w planie Starter</span>
+          <span>linków w planie {CREATE_PLAN.label}</span>
         </div>
       </div><div className={styles.planNotice}>
         <div className={styles.planNoticeContent}>
-          <span className={styles.planEyebrow}>Plan startowy</span>
+          <span className={styles.planEyebrow}>{betaPremiumEnabled ? "Bezpłatne testy" : "Plan startowy"}</span>
 
           <h3 className={styles.planTitle}>
             Tworzysz profil w planie {CREATE_PLAN.label}
           </h3>
 
           <p className={styles.planText}>
-            Na start możesz dodać podstawowe informacje, opis, tagi, linki
-            i kilka usług. Po utworzeniu profilu odblokujesz możliwość przejścia
-            na Standard lub Premium w panelu zarządzania profilem.
+            {betaPremiumEnabled ? "Premium jest bezpłatne przez cały czas trwania testów. Pełne limity i rezerwacje od razu — bez karty, Stripe i automatycznej płatnej subskrypcji." : "Na start możesz dodać podstawowe informacje, opis, tagi, linki i kilka usług. Po utworzeniu profilu możesz zmienić plan w panelu zarządzania profilem."}
           </p>
 
           <div className={styles.planLimits}>
@@ -731,7 +738,7 @@ const CreateProfile = ({
           </span>
           <textarea className={styles.formTextarea} name="description" value={form.description} onChange={handleChange} maxLength={CREATE_PLAN.limits.descriptionLength} placeholder="Napisz kilka zdań o sobie, swojej działalności i tym, co oferujesz..." />
           <small className={styles.counterText}>
-            {form.description.length}/{CREATE_PLAN.limits.descriptionLength} znaków — plan Starter
+            {form.description.length}/{CREATE_PLAN.limits.descriptionLength} znaków — plan {CREATE_PLAN.label}
           </small>
           {formErrors.description && <small className={styles.error}>{formErrors.description}</small>}
         </label></EditorGroup><EditorGroup title="03 / Tagi i tematyka"><div className={styles.formField}>
@@ -800,7 +807,7 @@ const CreateProfile = ({
           <div className={styles.serviceCardHead}>
             <h4 className={styles.serviceCardTitle}>Dodaj usługę / ofertę</h4>
             <span className={styles.serviceCardPill}>
-              {servicesCount}/{CREATE_PLAN.limits.services} w planie Starter
+              {servicesCount}/{CREATE_PLAN.limits.services} w planie {CREATE_PLAN.label}
             </span>
           </div>
 
@@ -928,7 +935,7 @@ const CreateProfile = ({
               bookingType: e.target.value
             })} aria-label="Tryb zapytania">
               <option value="request">Zapytanie — Starter</option>
-              <option value="calendar" disabled>
+              <option value="calendar" disabled={!CREATE_PLAN.features.booking}>
                 Kalendarz — Premium
               </option>
             </select></label>}
@@ -936,7 +943,7 @@ const CreateProfile = ({
 
           <button type="button" className={styles.addServiceBtn} onClick={handleAddService} disabled={servicesCount >= CREATE_PLAN.limits.services}>
             <FiPlus />
-            {servicesCount >= CREATE_PLAN.limits.services ? "Limit usług w planie Starter" : "Dodaj usługę"}
+            {servicesCount >= CREATE_PLAN.limits.services ? `Limit usług w planie ${CREATE_PLAN.label}` : "Dodaj usługę"}
           </button>
 
           {serviceError && <small className={styles.error}>{serviceError}</small>}
@@ -946,10 +953,10 @@ const CreateProfile = ({
             Tryb działania rezerwacji
           </span>
           <select className={styles.formSelect} name="bookingMode" value={form.bookingMode} onChange={handleChange}>
-            <option value="calendar" disabled>
+            <option value="calendar" disabled={!CREATE_PLAN.features.booking}>
               Kalendarz godzinowy — dostępny w Premium
             </option>
-            <option value="request-blocking" disabled>
+            <option value="request-blocking" disabled={!CREATE_PLAN.features.requestBlocking}>
               Blokowanie dni — dostępne w Premium
             </option>
             <option value="request-open">Zapytanie bez blokowania — Starter</option>
@@ -969,7 +976,7 @@ const CreateProfile = ({
             <input className={styles.formInput} type="url" placeholder="https://..." value={link} onChange={e => handleLinkChange(index, e.target.value)} />
           </label>)}
         </div><small className={styles.counterText}>
-            {activeLinksCount}/{CREATE_PLAN.limits.links} wykorzystanych linków — plan Starter
+            {activeLinksCount}/{CREATE_PLAN.limits.links} wykorzystanych linków — plan {CREATE_PLAN.label}
           </small>{formErrors.links && <small className={styles.error}>{formErrors.links}</small>}</EditorGroup></section>
 
         <section className={styles.contentBox} id="create-section-5"><EditorSectionHeader kicker="Informacje dodatkowe" title="Gotowe do publikacji" description="Uzupełnij dane firmy i sprawdź wizytówkę przed jej utworzeniem." icon={<FiCheckCircle />} /><EditorGroup title="01 / Dane firmy"><label className={`${styles.formField} ${styles.checkboxBox}`}>

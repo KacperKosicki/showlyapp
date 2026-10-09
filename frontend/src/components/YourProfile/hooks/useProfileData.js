@@ -127,7 +127,7 @@ const useProfileData = ({ user, authHeaders, fetchBillingStatus }) => {
       const now = new Date();
       const until = new Date(loadedProfile.visibleUntil);
 
-      if (until < now) {
+      if (!loadedProfile.billingPublic?.betaPremiumEnabled && loadedProfile.visibleUntil && until < now) {
         loadedProfile.isVisible = false;
       }
 

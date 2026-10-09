@@ -102,6 +102,7 @@ const quickAnswerSchema = new mongoose.Schema(
 // =========================
 const billingSchema = new mongoose.Schema(
   {
+    paymentEnvironment: { type: String, enum: ['test', 'live', 'unknown'], default: 'unknown' },
     plan: {
       type: String,
       enum: ["free", "standard", "premium"],

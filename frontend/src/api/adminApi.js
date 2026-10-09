@@ -4,6 +4,8 @@ import { api } from "./api";
 export const adminApi = {
   // ===== dashboard =====
   stats: () => api.get("/api/admin/stats"),
+  betaPremium: () => api.get('/api/admin/beta-premium'),
+  setBetaPremium: (enabled) => api.patch('/api/admin/beta-premium', { enabled }),
 
   // ===== users =====
   users: (page = 1, limit = 50) =>

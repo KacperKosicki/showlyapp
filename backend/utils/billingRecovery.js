@@ -37,6 +37,7 @@ const buildSubscriptionUpdate = (profile, subscription, fallback = {}, now = new
     'billing.currentPeriodStart': period.start, 'billing.currentPeriodEnd': period.end,
     'billing.cancelAtPeriodEnd': !!subscription.cancel_at_period_end,
   };
+  if (typeof subscription.livemode === 'boolean') set['billing.paymentEnvironment'] = subscription.livemode ? 'live' : 'test';
   if (active) set['billing.graceUntil'] = null;
   const canRestore = !!entitledUntil && entitledUntil > now && !isModerationBlocked(profile, now);
   return { set, entitledUntil, canRestore, plan, status };

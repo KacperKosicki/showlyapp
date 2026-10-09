@@ -132,7 +132,7 @@ const AdditionalInfoSection = ({
               <div>
                 <span>Widoczny do</span>
                 <strong>
-                  {profile.visibleUntil
+                  {profile.billingPublic?.betaPremiumEnabled ? 'Przez cały okres testów' : profile.visibleUntil
                     ? new Date(profile.visibleUntil).toLocaleDateString("pl-PL")
                     : "Brak daty"}
                 </strong>

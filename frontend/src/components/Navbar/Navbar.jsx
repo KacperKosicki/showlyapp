@@ -18,6 +18,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import UserDropdown from "../UserDropdown/UserDropdown";
 import dropdownStyles from "../UserDropdown/UserDropdown.module.scss";
 import styles from "./Navbar.module.scss";
+import BetaTestBanner from '../BetaTestBanner/BetaTestBanner';
 
 const THEME_STORAGE_KEY = "theme";
 
@@ -197,6 +198,8 @@ const Navbar = ({
   };
 
   return (
+    <>
+    <BetaTestBanner user={user} />
     <header
       className={`${styles.navbarShell} ${!isHomePage ? styles.subpage : ""} ${scrolled || !isHomePage ? styles.scrolled : ""
         }`}
@@ -338,6 +341,7 @@ const Navbar = ({
         </div>
       </nav>
     </header>
+    </>
   );
 };
 

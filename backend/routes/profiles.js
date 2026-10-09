@@ -1,3 +1,4 @@
+const { isBetaPremiumEnabled, isProfileVisible, visibleProfileQuery, betaVisibility } = require('../utils/betaAccess');
 const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
@@ -123,14 +124,7 @@ async function generateRandomProfileSlug(currentProfileId = null) {
 }
 
 function getProfilePlan(profile = {}) {
-  return String(
-    profile?.billing?.effectivePlan ||
-    profile?.billing?.plan ||
-    profile?.plan?.effectivePlan ||
-    profile?.plan?.plan ||
-    profile?.plan ||
-    "free"
-  ).toLowerCase();
+  return getEffectivePlanKey(profile, { allowPastDue: true });
 }
 
 function canUsePrettyProfileSlug(profile = {}) {
@@ -566,15 +560,12 @@ router.get("/search", async (req, res) => {
     const now = new Date();
 
     // opcjonalnie automatyczne wygaszenie starych profili
-    await Profile.updateMany(
+    if (!isBetaPremiumEnabled()) await Profile.updateMany(
       { isVisible: true, visibleUntil: { $lt: now }, visibilityBlockedByAdmin: { $ne: true } },
       { $set: { isVisible: false, visibilityBlockedByAdmin: false } }
     );
 
-    const baseMatch = {
-      isVisible: true,
-      visibleUntil: { $gte: now },
-    };
+    const baseMatch = visibleProfileQuery(now);
 
     const selectFields = {
       name: 1,
@@ -694,6 +685,7 @@ router.get("/search", async (req, res) => {
           photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
           services: normalizeServicesOut(req, profile.services, profile.updatedAt),
           billingPublic: getPublicBilling(profile),
+          ...betaVisibility(profile),
           matchedServices,
         };
       })
@@ -1282,15 +1274,12 @@ router.delete(
 router.get("/", async (req, res) => {
   try {
     const now = new Date();
-    await Profile.updateMany(
+    if (!isBetaPremiumEnabled()) await Profile.updateMany(
       { isVisible: true, visibleUntil: { $lt: now }, visibilityBlockedByAdmin: { $ne: true } },
       { $set: { isVisible: false, visibilityBlockedByAdmin: false } }
     );
 
-    const visible = await Profile.find({
-      isVisible: true,
-      visibleUntil: { $gte: now },
-    }).lean();
+    const visible = await Profile.find(visibleProfileQuery(now)).lean();
 
     const normalized = visible.map((profile) => ({
       ...profile,
@@ -1299,6 +1288,7 @@ router.get("/", async (req, res) => {
       photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),
       services: normalizeServicesOut(req, profile.services, profile.updatedAt),
       billingPublic: getPublicBilling(profile),
+      ...betaVisibility(profile),
     }));
 
     res.json(normalized);
@@ -1331,6 +1321,7 @@ router.get("/by-user/:uid", async (req, res) => {
       photos,
       services,
       billingPublic: getPublicBilling(profile),
+      ...betaVisibility(profile),
     });
   } catch (err) {
     console.error("❌ Błąd w GET /by-user/:uid:", err);
@@ -1347,7 +1338,7 @@ router.get("/slug/:slug", async (req, res) => {
     if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
     const now = new Date();
-    if (!profile.isVisible || profile.visibleUntil < now) {
+    if (!isProfileVisible(profile, now)) {
       return res.status(403).json({ message: "Profil jest obecnie niewidoczny." });
     }
 
@@ -1403,6 +1394,7 @@ router.get("/slug/:slug", async (req, res) => {
       isFavorite,
       favoritesCount,
       billingPublic: getPublicBilling(profile),
+      ...betaVisibility(profile),
     });
   } catch (err) {
     console.error("❌ Błąd w GET /slug/:slug:", err);
@@ -1419,13 +1411,13 @@ router.patch("/:uid/visit", async (req, res) => {
     const viewerUid = req.headers.uid || null;
 
     const profile = await Profile.findOne({ userId: ownerUid }).select(
-      "visits isVisible visibleUntil userId"
+      "visits isVisible visibleUntil userId visibilityBlockedByAdmin"
     );
 
     if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
     const now = new Date();
-    if (!profile.isVisible || (profile.visibleUntil && profile.visibleUntil < now)) {
+    if (!isProfileVisible(profile, now)) {
       return res.status(403).json({ message: "Profil niewidoczny/nieaktywny." });
     }
 
@@ -1459,13 +1451,13 @@ router.patch("/slug/:slug/visit", async (req, res) => {
     const viewerUid = req.headers.uid || null;
 
     const profile = await Profile.findOne({ slug }).select(
-      "userId visits isVisible visibleUntil"
+      "userId visits isVisible visibleUntil visibilityBlockedByAdmin"
     );
 
     if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
     const now = new Date();
-    if (!profile.isVisible || (profile.visibleUntil && profile.visibleUntil < now)) {
+    if (!isProfileVisible(profile, now)) {
       return res.status(403).json({ message: "Profil niewidoczny/nieaktywny." });
     }
 
@@ -1554,6 +1546,8 @@ router.post("/", requireAuth, async (req, res) => {
       message: "Profil utworzony",
       profile: {
         ...newProfile.toObject(),
+        billingPublic: getPublicBilling(newProfile),
+        ...betaVisibility(newProfile),
         avatar: normalizeAvatarOut(req, newProfile.avatar, newProfile.updatedAt),
         banner: normalizeBannerOut(req, newProfile.banner, newProfile.updatedAt),
         photos: normalizePhotosOut(req, newProfile.photos, newProfile.updatedAt),
@@ -1571,7 +1565,9 @@ router.post("/", requireAuth, async (req, res) => {
           "🎉 Dziękujemy za utworzenie profilu w Showly!",
           "",
           "✅ Co masz na start:",
-          "• Twój profil jest widoczny przez 30 dni (możesz przedłużyć w „Twój profil”).",
+          isBetaPremiumEnabled()
+            ? "• Na czas testów masz bezpłatne Premium i widoczność przez cały okres testów. Bez karty i aktywacji w Stripe. Po testach wróci Twój dotychczasowy plan; nie uruchomimy automatycznej płatnej subskrypcji."
+            : "• Twój profil jest widoczny przez 30 dni (możesz przedłużyć w „Twój profil”).",
           "• Domyślny tryb rezerwacji: „Zapytanie bez blokowania” — możesz zmienić w każdej chwili.",
           "",
           "👉 Uzupełnij podstawowe informacje:",
@@ -1947,6 +1943,8 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
       message: "Profil zaktualizowany",
       profile: {
         ...profile.toObject(),
+        billingPublic: getPublicBilling(profile),
+        ...betaVisibility(profile),
         avatar: normalizeAvatarOut(req, profile.avatar, profile.updatedAt),
         banner: normalizeBannerOut(req, profile.banner, profile.updatedAt),
         photos: normalizePhotosOut(req, profile.photos, profile.updatedAt),

@@ -7,7 +7,8 @@ const useProfileVisibility = ({ profile, billingStatus }) => {
     const now = new Date();
     const until = profile?.visibleUntil ? new Date(profile.visibleUntil) : null;
 
-    const isTimeExpired = until ? until.getTime() < now.getTime() : false;
+    const beta = billingStatus?.billing?.betaPremiumEnabled ?? profile?.billingPublic?.betaPremiumEnabled;
+    const isTimeExpired = !beta && until ? until.getTime() < now.getTime() : false;
     const isAdminHidden = billingStatus?.visibility?.blockedByAdmin ?? (profile?.visibilityBlockedByAdmin === true || (profile?.isVisible === false && !isTimeExpired));
 
     const daysLeft = until
@@ -17,7 +18,7 @@ const useProfileVisibility = ({ profile, billingStatus }) => {
     const isExpired = isTimeExpired;
 
     const canExtend =
-      !isAdminHidden &&
+      !beta && billingStatus?.payments?.enabled !== false && !isAdminHidden &&
       !billingStatus?.visibility?.autoRenewedBySubscription &&
       (isExpired || !!billingStatus?.visibility?.canExtend || !!billingStatus?.legacy?.canExtend);
 

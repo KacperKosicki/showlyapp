@@ -3,13 +3,15 @@ import { FiCreditCard } from 'react-icons/fi';
 import styles from "./BillingSection.module.scss";
 
 const BillingSection = ({
+  betaPremiumEnabled = false,
+  paymentsEnabled = false,
+  canManageSubscription = false,
   billingLoading,
   billingLabel,
   billingCurrentStatus,
   billingLimits,
   billingPlan,
   billingActionLoading,
-  isPaidActive,
   onStartSubscription,
   onOpenBillingPortal,
   onReconcile,
@@ -22,8 +24,13 @@ const BillingSection = ({
       <div className={styles.billingGlowTwo} aria-hidden="true" />
       <div className={styles.billingNoise} aria-hidden="true" />
 
-      <EditorSectionHeader kicker="Plan i widoczność profilu" title="Twój plan i limity" description="Zarządzaj widocznością profilu, zdjęciami, usługami i rezerwacjami. Wybierz plan dopasowany do swojej oferty." icon={<FiCreditCard />} />
+      <EditorSectionHeader kicker="Plan i widoczność profilu" title="Twój plan i limity" description={betaPremiumEnabled ? "Testuj wszystkie możliwości Showly — Premium jest teraz dostępne bezpłatnie dla każdego profilu." : "Zarządzaj widocznością profilu, zdjęciami, usługami i rezerwacjami. Wybierz plan dopasowany do swojej oferty."} icon={<FiCreditCard />} />
 
+      {betaPremiumEnabled && <div className={styles.betaNotice} role="status">
+        <span>SHOWLY BETA / 0 ZŁ</span><h3>Premium dla każdego. Na czas testów.</h3>
+        <p>Twój profil ma najwyższy plan, pełne limity i widoczność przez cały czas trwania testów. Bez karty i bez aktywowania subskrypcji w Stripe.</p>
+        <p>Po zakończeniu testów wróci Twój dotychczasowy plan. Dostęp testowy nie uruchomi płatnej subskrypcji ani automatycznego obciążenia.</p>
+      </div>}
       <EditorGroup unshadedPreview title="01 / Aktualny plan i wykorzystanie"><div className={styles.billingStatusBox}>
         <div>
           <span>Aktualny plan</span>
@@ -32,7 +39,7 @@ const BillingSection = ({
 
         <div>
           <span>Status</span>
-          <strong>{billingCurrentStatus}</strong>
+          <strong>{betaPremiumEnabled ? "Bezpłatny dostęp testowy" : billingCurrentStatus}</strong>
         </div>
 
         <div>
@@ -51,6 +58,8 @@ const BillingSection = ({
         </div>
       </div></EditorGroup>
 
+      {!betaPremiumEnabled && <>
+      {!paymentsEnabled && <p role="status">Zakup planów jest obecnie niedostępny.</p>}
       <EditorGroup unshadedPreview title="02 / Wybierz plan dla siebie"><div className={styles.planCards}>
         <article
           className={`${styles.planCard} ${styles.starterPlan} ${billingPlan === "free" ? styles.activePlan : ""
@@ -133,7 +142,7 @@ const BillingSection = ({
               type="button"
               className={styles.planButton}
               onClick={() => onStartSubscription("standard")}
-              disabled={billingActionLoading === "standard"}
+              disabled={!paymentsEnabled || billingLoading || billingActionLoading === "standard"}
             >
               {billingActionLoading === "standard" ? "Przekierowanie..." : "Wybierz Standard"}
             </button>
@@ -190,7 +199,7 @@ const BillingSection = ({
               type="button"
               className={styles.planButton}
               onClick={() => onStartSubscription("premium")}
-              disabled={billingActionLoading === "premium"}
+              disabled={!paymentsEnabled || billingLoading || billingActionLoading === "premium"}
             >
               {billingActionLoading === "premium" ? "Przekierowanie..." : "Wybierz Premium"}
             </button>
@@ -198,7 +207,8 @@ const BillingSection = ({
         </article>
       </div></EditorGroup>
 
-      {isPaidActive && (
+      </>}
+      {canManageSubscription && (
         <div className={styles.billingFooter}>
           <p>
             Subskrypcją możesz zarządzać w bezpiecznym panelu Stripe — anulowanie,
@@ -215,12 +225,12 @@ const BillingSection = ({
           </button>
         </div>
       )}
-      <EditorGroup unshadedPreview title="03 / Pomoc z płatnością"><div className={styles.recovery} role="status">
+      {!betaPremiumEnabled && <EditorGroup unshadedPreview title="03 / Pomoc z płatnością"><div className={styles.recovery} role="status">
         <p>{billingError ? 'Nie udało się pobrać statusu płatności. Brak połączenia nie oznacza utraty opłaconego planu.' : 'Płatność została pobrana, a wizytówka nie działa? Sprawdź subskrypcję — odzyskasz opłaconą widoczność po przerwie w działaniu serwera.'}</p>
         <button type="button" disabled={!!billingActionLoading || billingLoading} onClick={onReconcile}>
           {billingActionLoading === 'reconcile' ? 'Sprawdzanie płatności…' : 'Sprawdź płatność i przywróć profil'}
         </button>
-      </div></EditorGroup>
+      </div></EditorGroup>}
     </section>
   );
 };

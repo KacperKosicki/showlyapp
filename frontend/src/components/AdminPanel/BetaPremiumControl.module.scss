@@ -1,0 +1,18 @@
+.panel {
+  display: flex; align-items: flex-start; gap: 20px; padding: clamp(20px, 3vw, 32px);
+  margin-bottom: 24px; border: 1px solid var(--app-border); border-radius: 24px;
+  background: radial-gradient(ellipse at 0 0, rgba(185,255,92,.14), transparent 65%), var(--app-surface);
+  color: var(--app-text);
+}
+.active { border-color: #88b844; }
+.icon { display: grid; place-items: center; flex-shrink: 0; width: 48px; height: 48px; border-radius: 15px; background: #d8ff72; color: #182214; font-size: 25px; }
+.content { flex: 1; min-width: 0; h3 { margin: 8px 0 12px; font-size: clamp(1.25rem, 2vw, 1.65rem); } p { margin: 0 0 14px; line-height: 1.65; } }
+.eyebrow { color: var(--app-muted); font-size: .65rem; font-weight: 700; letter-spacing: .1em; }
+.status { display: inline-block; border: 1px solid var(--app-border); padding: 7px 12px; border-radius: 30px; font-size: .75rem; font-weight: 700; margin-bottom: 14px; }
+.content .note { color: var(--app-muted); font-size: .75rem; margin-bottom: 0; }
+.toggle, .confirm button { display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 13px 18px; border: 1px solid #26321e; border-radius: 12px; background: #d8ff72; color: #182214; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; box-shadow: 3px 3px 0 #26321e; transition: transform .18s, box-shadow .18s; &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 3px 5px 0 #26321e; } &:disabled { cursor: wait; opacity: .55; } &:focus-visible { outline: 3px solid #9677ff; outline-offset: 4px; } }
+.confirm { margin-top: 18px; padding: 18px; border: 1px solid var(--app-border); border-radius: 14px; button { margin: 0 10px 10px 0; } button:last-child { background: var(--app-surface); color: var(--app-text); border-color: var(--app-border); box-shadow: none; } }
+.error { color: #d34d4d; margin-top: 15px !important; }
+@media (max-width: 950px) { .panel { flex-wrap: wrap; } .content { flex-basis: calc(100% - 70px); } .toggle { margin-left: 68px; } }
+@media (max-width: 540px) { .panel { gap: 14px; } .icon { width: 36px; height: 36px; font-size: 20px; } .content { flex-basis: calc(100% - 50px); } .toggle { width: 100%; margin-left: 0; } }
+@media (prefers-reduced-motion: reduce) { .toggle { transition: none; } }

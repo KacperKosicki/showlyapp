@@ -9,6 +9,7 @@ const User = require("../models/User");
 const Profile = require("../models/Profile");
 const Reservation = require("../models/Reservation");
 const Report = require("../models/Report");
+router.use(require('./platformSettingsAdmin'));
 const { sendSystemMessage } = require("../utils/systemMessages");
 const firebaseAdmin = require("../utils/firebaseAdmin");
 const {

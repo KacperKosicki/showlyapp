@@ -1,16 +1,17 @@
 .home, .page {
   min-width: 0;
 }
+.home { padding-top: var(--beta-banner-height, 0px); }
 
 .page {
   // Each view paints its own background all the way up behind the floating navbar.
   > :first-child {
-    padding-top: calc(112px + var(--safe-top, 0px) + var(--page-content-gap, 0px));
+    padding-top: calc(112px + var(--safe-top, 0px) + var(--page-content-gap, 0px) + var(--beta-banner-height, 0px));
   }
 
   @media (max-width: 760px) {
     > :first-child {
-      padding-top: calc(96px + var(--safe-top, 0px) + var(--page-content-gap, 0px));
+      padding-top: calc(96px + var(--safe-top, 0px) + var(--page-content-gap, 0px) + var(--beta-banner-height, 0px));
     }
   }
 }

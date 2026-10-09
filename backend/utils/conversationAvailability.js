@@ -1,3 +1,4 @@
+const { isBetaPremiumEnabled, isProfileVisible } = require('./betaAccess');
 // Resolve dependencies in batches so an inbox does not query once per thread.
 function createAvailabilityResolver({ User, Profile, Application, admin }) {
   return async function resolve(conversations) {
@@ -39,6 +40,8 @@ function createAvailabilityResolver({ User, Profile, Application, admin }) {
         const profile = profileMap.get(providerUid);
         if (reason === 'active') {
           if (!profile) reason = 'profile_missing';
+          else if (isBetaPremiumEnabled() && !isProfileVisible(profile, new Date(now))) reason = 'profile_blocked';
+          else if (isBetaPremiumEnabled()) reason = 'active';
           else if (profile.visibilityBlockedByAdmin) reason = 'profile_blocked';
           else if (profile.visibleUntil && new Date(profile.visibleUntil).getTime() <= now) reason = 'profile_expired';
           else if (profile.isVisible === false) reason = 'profile_hidden';

@@ -318,6 +318,9 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
         <div className={styles.editorLayout}>
           <div className={styles.editorSections}>
             <BillingSection
+              betaPremiumEnabled={billingStatus?.billing?.betaPremiumEnabled === true}
+              paymentsEnabled={billingStatus?.payments?.enabled === true}
+              canManageSubscription={billingStatus?.canManageSubscription === true}
               billingError={billingError}
               onReconcile={async () => { const result = await handleReconcileBilling(); if (result) await fetchProfile(); }}
               billingLoading={billingLoading}

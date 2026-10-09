@@ -18,6 +18,7 @@ import styles from "./AdminPanel.module.scss";
 import AlertBox from "../AlertBox/AlertBox";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
 import { adminApi } from "../../api/adminApi";
+import BetaPremiumControl from './BetaPremiumControl';
 
 const TABS = [
   { key: "dashboard", label: "Dashboard", Icon: FiGrid },
@@ -1034,6 +1035,7 @@ export default function AdminPanel() {
                       </div>
                     </div>
 
+                    <BetaPremiumControl />
                     <div className={styles.dashboardNote}>
                       <span className={styles.dashboardNoteIcon} aria-hidden="true">
                         <FiActivity />

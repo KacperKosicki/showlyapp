@@ -1,5 +1,6 @@
 // config/plans.js
 
+const { isBetaPremiumEnabled } = require('../utils/betaAccess');
 const PLANS = {
   free: {
     label: "Starter",
@@ -98,7 +99,11 @@ function getBilling(profile) {
 }
 
 function getEffectivePlanKey(profile, options = {}) {
+  if (isBetaPremiumEnabled()) return 'premium';
   const billing = getBilling(profile);
+
+  // Test Stripe subscriptions do not grant paid access after switching to live payments.
+  if (billing.paymentEnvironment === 'test' && /^(sk|rk)_live_/.test(process.env.STRIPE_SECRET_KEY || '')) return 'free';
 
   const plan = billing.plan || "free";
   const status = billing.status || "inactive";
@@ -162,6 +167,12 @@ function getPublicBilling(profile) {
     cancelAtPeriodEnd: !!billing.cancelAtPeriodEnd,
     limits: effectivePlan.limits,
     features: effectivePlan.features,
+    betaPremiumEnabled: isBetaPremiumEnabled(),
+    ...(isBetaPremiumEnabled() ? {
+      plan: 'premium', status: 'beta', label: 'Premium — testy',
+      priceLabel: '0 zł / czas testów', currentPeriodStart: null,
+      currentPeriodEnd: null, cancelAtPeriodEnd: false,
+    } : {}),
   };
 }
 

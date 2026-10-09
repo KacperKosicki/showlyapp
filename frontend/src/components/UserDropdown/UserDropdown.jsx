@@ -63,6 +63,7 @@ const UserDropdown = ({
   const [profileStatus, setProfileStatus] = useState("loading");
   const [remainingDays, setRemainingDays] = useState(null);
   const [profileVisible, setProfileVisible] = useState(false);
+  const [betaPremium, setBetaPremium] = useState(false);
   const [photoURL, setPhotoURL] = useState("");
   const [userRole, setUserRole] = useState("user");
   const [providerReservationsCount, setProviderReservationsCount] = useState(0);
@@ -207,6 +208,7 @@ const UserDropdown = ({
         }
 
         const billingVisibility = billingData?.visibility || null;
+        setBetaPremium(billingData?.billing?.betaPremiumEnabled === true || profile?.billingPublic?.betaPremiumEnabled === true);
         const visibleUntil =
           billingVisibility?.visibleUntil || profile?.visibleUntil || null;
         const daysLeft = countDaysLeft(visibleUntil);
@@ -481,7 +483,7 @@ const UserDropdown = ({
                     }
                   >
                     {profileVisible
-                      ? remainingDays !== null
+                      ? betaPremium ? 'Premium · bezpłatne testy' : remainingDays !== null
                         ? `Aktywny jeszcze ${remainingDays} ${remainingDays === 1 ? "dzień" : "dni"
                         }`
                         : "Profil aktywny"

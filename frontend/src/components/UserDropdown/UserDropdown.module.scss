@@ -589,13 +589,13 @@
 
   .menu {
     position: fixed;
-    top: calc(env(safe-area-inset-top, 0px) + 4.65rem);
+    top: calc(env(safe-area-inset-top, 0px) + 4.65rem + var(--beta-banner-height, 0px));
     left: 0.65rem;
     right: 0.65rem;
     z-index: 10050;
 
     width: auto;
-    max-height: calc(100svh - 5.35rem - env(safe-area-inset-top, 0px));
+    max-height: calc(100svh - 5.35rem - env(safe-area-inset-top, 0px) - var(--beta-banner-height, 0px));
 
     border-radius: 14px;
     box-shadow: 5px 6px 0 var(--dropdown-shadow);
@@ -605,10 +605,10 @@
 
 @media (max-width: 410px) {
   .menu {
-    top: calc(env(safe-area-inset-top, 0px) + 4.35rem);
+    top: calc(env(safe-area-inset-top, 0px) + 4.35rem + var(--beta-banner-height, 0px));
     left: 0.48rem;
     right: 0.48rem;
-    max-height: calc(100svh - 4.9rem - env(safe-area-inset-top, 0px));
+    max-height: calc(100svh - 4.9rem - env(safe-area-inset-top, 0px) - var(--beta-banner-height, 0px));
   }
 
   .accountHeader {
