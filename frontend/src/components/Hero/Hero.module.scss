@@ -187,7 +187,8 @@
   font-family: $font-accent;
   font-size: 0.72rem;
   font-weight: 850;
-  line-height: 1;
+  line-height: 1.4;
+  text-align: center;
   letter-spacing: 0.055em;
   text-transform: uppercase;
 
@@ -225,7 +226,6 @@
 
 .primaryBtn {
   min-width: 225px;
-  justify-content: space-between;
   border-radius: 14px;
   background: var(--hero-ink);
   color: var(--hero-bg);
@@ -781,7 +781,6 @@
   }
 
   .textBtn {
-    justify-content: space-between;
     padding-inline: 0.25rem;
   }
 

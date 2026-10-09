@@ -1,16 +1,18 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import {
-  FiArrowRight,
   FiArrowUp,
   FiArrowUpRight,
   FiMail,
+  FiSend,
   FiStar,
   FiUserPlus,
 } from "react-icons/fi";
 
 import styles from "./Footer.module.scss";
+import useScrollReveal from "../../utils/useScrollReveal";
 
 const productLinks = [
+  { label: "Ogłoszenia", path: "/ogloszenia", scrollToId: "announcements" },
   {
     label: "Strona główna",
     path: "/",
@@ -52,6 +54,7 @@ const Footer = ({
   loadingProfileStatus = false,
 }) => {
   const year = new Date().getFullYear();
+  const revealRef = useScrollReveal();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -83,6 +86,7 @@ const Footer = ({
         };
 
   const creatorLinks = [
+    { label: "Twoje ogłoszenia", path: "/twoje-ogloszenia", scrollToId: "announcements" },
     {
       label: isLoggedIn && hasProfile ? "Twój profil" : "Stwórz profil",
       path: isLoggedIn && hasProfile ? "/profil" : "/stworz-profil",
@@ -176,137 +180,49 @@ const Footer = ({
   const ProfileIcon = profileAction.Icon;
 
   return (
-    <footer className={styles.footer} id="footer">
-      <span className={styles.decorCircle} aria-hidden="true" />
-      <span className={styles.decorWord} aria-hidden="true">
-        SHOWLY
-      </span>
-
+    <footer className={styles.footer} id="footer" ref={revealRef}>
+      <div className={styles.backdrop} aria-hidden="true"><span>SHOWLY.</span></div>
       <div className={styles.inner}>
         <div className={styles.topBar}>
           <div className={styles.wordmark} aria-label="Showly.me Beta">
-            <span className={styles.logoMark} aria-hidden="true">
-              S
-            </span>
-
-            <strong>Showly.me</strong>
-            <small>Beta</small>
+            <img src="/images/other/logo-showly.png" alt="" />
+            <strong>Showly.me</strong><small>Beta</small>
           </div>
-
-          <p>Profile, które prowadzą do kontaktu.</p>
-
-          <button
-            type="button"
-            className={styles.topShortcut}
-            onClick={scrollToTop}
-            aria-label="Wróć na górę strony"
-          >
-            <span>Do góry</span>
-            <FiArrowUp aria-hidden="true" />
-          </button>
+          <p>Miejsce dla ofert, pomysłów i współpracy.</p>
+          <button type="button" className={styles.topShortcut} onClick={scrollToTop} aria-label="Wróć na górę strony"><span>Do góry</span><FiArrowUp aria-hidden="true" /></button>
         </div>
-
-        <div className={styles.main}>
+        <div className={styles.main} data-reveal>
           <section className={styles.statement}>
-            <span className={styles.kicker}>Twój profil w sieci</span>
-
-            <h2>
-              Twoja oferta.
-              <span>Jeden dobry link.</span>
-            </h2>
-
-            <p>
-              Zbierz usługi, realizacje, opinie i kontakt w jednym miejscu,
-              które łatwo pokażesz każdemu klientowi.
-            </p>
-
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.primaryAction}
-                disabled={profileAction.disabled}
-                onClick={() =>
-                  handleNavigate(
-                    profileAction.path,
-                    profileAction.scrollToId
-                  )
-                }
-              >
-                <ProfileIcon aria-hidden="true" />
-                <span>{profileAction.label}</span>
-
-                {!profileAction.disabled && (
-                  <FiArrowRight aria-hidden="true" />
-                )}
-              </button>
-
-              <button
-                type="button"
-                className={styles.secondaryAction}
-                onClick={() => handleNavigate("/profile", "profilesHub")}
-              >
-                <span>Przeglądaj profile</span>
-                <FiArrowUpRight aria-hidden="true" />
-              </button>
-            </div>
+            <h2>Dobrych ludzi.<br /><span>Warto poznać.</span></h2>
+            <p>Jedni mają pomysł. Inni mają talent. W Showly możecie znaleźć się nawzajem i zrobić coś dobrego.</p>
+            <button type="button" className={styles.discoverLink} onClick={() => handleNavigate('/profile', 'profilesHub')}>Poznaj profile <FiArrowUpRight aria-hidden="true" /></button>
           </section>
-
-          <div className={styles.utility}>
-            <div className={styles.navigation}>
-              <nav
-                className={styles.navGroup}
-                aria-label="Nawigacja platformy"
-              >
-                <span className={styles.navTitle}>Platforma</span>
-                {renderLinks(productLinks)}
-              </nav>
-
-              <nav
-                className={styles.navGroup}
-                aria-label="Nawigacja użytkownika"
-              >
-                <span className={styles.navTitle}>Dla Ciebie</span>
-                {renderLinks(creatorLinks)}
-              </nav>
-            </div>
-
-            <div className={styles.contact}>
-              <div className={styles.contactHeading}>
-                <FiMail aria-hidden="true" />
-
-                <div>
-                  <span>Kontakt</span>
-                  <p>Pomoc z profilem albo zgłoszenie problemu.</p>
-                </div>
-              </div>
-
-              <a href="mailto:kontakt@showly.me" className={styles.email}>
-                <span>kontakt@showly.me</span>
-                <FiArrowUpRight aria-hidden="true" />
-              </a>
-            </div>
+          <div className={styles.invites}>
+            <section className={styles.ideaInvite}>
+              <FiSend className={styles.inviteIcon} aria-hidden="true" />
+              <div><h3>Masz pomysł?</h3><p>Znajdź człowieka, który pomoże go zrealizować.</p></div>
+              <button type="button" className={styles.ideaAction} onClick={() => handleNavigate('/ogloszenia', 'announcements')}>Odkryj ogłoszenia <FiArrowUpRight aria-hidden="true" /></button>
+            </section>
+            <section className={styles.profileInvite}>
+              <ProfileIcon className={styles.inviteIcon} aria-hidden="true" />
+              <div><h3>Masz talent?</h3><p>Daj się znaleźć. Pokaż, co możesz zrobić dla innych.</p></div>
+              <button type="button" className={styles.profileAction} disabled={profileAction.disabled} onClick={() => handleNavigate(profileAction.path, profileAction.scrollToId)}>{profileAction.label}{!profileAction.disabled && <FiArrowUpRight aria-hidden="true" />}</button>
+            </section>
           </div>
         </div>
-
+        <div className={styles.utility}>
+          <div className={styles.contact}>
+            <span className={styles.navTitle}>Porozmawiajmy</span>
+            <p>Masz pytanie, pomysł lub coś nie działa?<br />Napisz do nas.</p>
+            <a href="mailto:kontakt@showly.me" className={styles.email}><FiMail aria-hidden="true" /><span>kontakt@showly.me</span><FiArrowUpRight aria-hidden="true" /></a>
+          </div>
+          <nav className={styles.navGroup} aria-label="Nawigacja platformy"><span className={styles.navTitle}>Odkrywaj Showly</span>{renderLinks(productLinks)}</nav>
+          <nav className={styles.navGroup} aria-label="Nawigacja użytkownika"><span className={styles.navTitle}>Twoje miejsce</span>{renderLinks(creatorLinks)}</nav>
+        </div>
         <div className={styles.bottom}>
           <span className={styles.copy}>© {year} Showly.me</span>
-
-          <div className={styles.legalLinks}>
-            {legalLinks.map((link) => (
-              <button
-                key={link.label}
-                type="button"
-                className={styles.legalLink}
-                onClick={() =>
-                  handleNavigate(link.path, link.scrollToId)
-                }
-              >
-                {link.label}
-              </button>
-            ))}
-          </div>
-
-          <span className={styles.bottomNote}>Showly.me / Beta</span>
+          <div className={styles.legalLinks}>{legalLinks.map(link => <button key={link.label} type="button" className={styles.legalLink} onClick={() => handleNavigate(link.path, link.scrollToId)}>{link.label}</button>)}</div>
+          <span className={styles.bottomNote}><i aria-hidden="true" />Projekt w fazie beta</span>
         </div>
       </div>
     </footer>

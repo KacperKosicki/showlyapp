@@ -197,7 +197,7 @@ const ContactSocialSection = ({
         </EditorGroup>
 
         {/* SOCIAL MEDIA */}
-        <EditorGroup title={<>02 / Social media</>} description={<>Dodaj miejsca, w których pokazujesz swoje realizacje lub ofertę.</>}>
+        <EditorGroup unshadedPreview title={<>02 / Social media</>} description={<>Dodaj miejsca, w których pokazujesz swoje realizacje lub ofertę.</>}>
 
 
           {!canUseSocialMedia && isEditing && (

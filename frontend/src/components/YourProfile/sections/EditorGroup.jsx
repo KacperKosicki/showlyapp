@@ -11,8 +11,8 @@ export const EditorSectionHeader = ({ kicker, title, description, icon }) => (
   </header>
 );
 
-const EditorGroup = ({ title, description, children, className = '' }) => (
-  <fieldset className={`${styles.group} ${className}`}>
+const EditorGroup = ({ title, description, children, className = '', unshadedPreview = false }) => (
+  <fieldset className={`${styles.group} ${unshadedPreview ? styles.unshadedPreview : ''} ${className}`}>
     <legend>{title}</legend>
     {description && <p className={styles.groupDescription}>{description}</p>}
     <div className={styles.groupContent}>{children}</div>

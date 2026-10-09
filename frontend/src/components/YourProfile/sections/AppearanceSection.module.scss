@@ -113,6 +113,11 @@
   width: 100%;
 }
 
+[data-editing="false"] .group.unshadedPreview {
+  --editor-panel-background: var(--app-surface);
+  background: var(--app-surface);
+}
+
 .groupContent {
   display: grid;
   gap: 16px;

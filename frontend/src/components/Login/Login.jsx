@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -11,13 +11,14 @@ import { auth, googleProvider } from "../../firebase";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import styles from "./Login.module.scss";
 import Footer from "../Footer/Footer";
+import AlertBox from "../AlertBox/AlertBox";
 import axios from "axios";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
+import useScrollReveal from "../../utils/useScrollReveal";
 import {
   FiMail,
   FiLock,
   FiArrowRight,
-  FiShield,
   FiMessageCircle,
   FiCalendar,
   FiUserPlus,
@@ -35,6 +36,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const revealRef = useScrollReveal();
 
   useEffect(() => {
     return () => sessionStorage.removeItem("authFlow");
@@ -283,82 +285,40 @@ const Login = ({ setUser, setRefreshTrigger }) => {
   };
 
   const isBusy = isLoggingEmail || isLoggingGoogle || isResettingPassword;
+  const dismissAlert = useCallback(() => {
+    setError("");
+    setMessage("");
+  }, []);
+  const notice = error ? { type: "error", message: error }
+    : message ? { type: "success", message }
+      : isBusy ? { type: "info", message: isResettingPassword
+        ? "Wysyłamy link do resetu hasła…"
+        : isLoggingGoogle ? "Dokończ logowanie w oknie Google…" : "Logujemy Cię do Showly…" }
+        : null;
 
   return (
     <>
 
-      <section className={styles.section} aria-labelledby="login-heading">
+      <section className={styles.section} aria-labelledby="login-heading" ref={revealRef}>
+        <div className={styles.background} aria-hidden="true"><span>WRACAJ.</span></div>
         <div className={styles.inner} id="loginBox">
           <div className={styles.layout}>
-            <aside className={styles.side}>
-              <span className={styles.chapterLabel}>Twoje konto. Twoje możliwości.</span>
-
-              <h1 className={styles.heading} id="login-heading">
-                Wróć do swojego <span>profilu online.</span>
-              </h1>
-
-              <p className={styles.description}>
-                Zaloguj się, aby zarządzać wizytówką, wiadomościami,
-                rezerwacjami, opiniami i ustawieniami konta w jednym miejscu.
-              </p>
-
-              <div className={styles.metaRow}>
-                <div className={styles.metaCard}>
-                  <strong>1</strong>
-                  <span>konto do profilu i rezerwacji</span>
-                </div>
-
-                <div className={styles.metaCard}>
-                  <strong>24/7</strong>
-                  <span>dostęp do Twojej wizytówki</span>
-                </div>
-
-                <div className={styles.metaCard}>
-                  <strong>360°</strong>
-                  <span>Twój profil w jednym miejscu</span>
-                </div>
-              </div>
-
-              <div className={styles.infoBox}>
-                <span>Po zalogowaniu możesz:</span>
-
+            <div className={styles.side} data-reveal>
+              <h1 className={styles.heading} id="login-heading">Dobrze Cię<br /><span>widzieć.</span></h1>
+              <p className={styles.description}>Twoje pomysły, ludzie i plany czekają. Zaloguj się i wróć do tego, co dla Ciebie ważne.</p>
+              <aside className={styles.workspaceCard} aria-labelledby="login-workspace-title">
+                <h2 id="login-workspace-title">Jedno konto. Twój świat.</h2>
                 <div className={styles.featureList}>
-                  <p>
-                    <FiCheckCircle />
-                    edytować profil, zdjęcia, opis i ofertę,
-                  </p>
-
-                  <p>
-                    <FiMessageCircle />
-                    odpowiadać na wiadomości od klientów,
-                  </p>
-
-                  <p>
-                    <FiCalendar />
-                    sprawdzać zapytania i rezerwacje,
-                  </p>
-
-                  <p>
-                    <FiShield />
-                    zarządzać bezpieczeństwem konta.
-                  </p>
+                  <article className={styles.featureTile}><span className={styles.tileNumber} aria-hidden="true">01</span><span className={styles.featureArt} aria-hidden="true"><FiCheckCircle /></span><p><strong>Profil i ogłoszenia</strong><span>Twoja oferta. Twój pomysł. Twoje miejsce.</span></p></article>
+                  <article className={styles.featureTile}><span className={styles.tileNumber} aria-hidden="true">02</span><span className={styles.featureArt} aria-hidden="true"><FiMessageCircle /></span><p><strong>Twoje rozmowy</strong><span>Dobre rzeczy zaczynają się od „cześć”.</span></p></article>
+                  <article className={styles.featureTile}><span className={styles.tileNumber} aria-hidden="true">03</span><span className={styles.featureArt} aria-hidden="true"><FiCalendar /></span><p><strong>Plany i terminy</strong><span>Zrób miejsce na kolejne możliwości.</span></p></article>
                 </div>
-              </div>
-            </aside>
-
-            <div className={styles.content}>
+              </aside>
+            </div>
+            <div className={styles.content} data-reveal>
               <div className={styles.chapterHead}>
-                <div>
-                  <span className={styles.chapterLabel}>Logowanie do konta</span>
-                  <h2 className={styles.loginTitle}>Zaloguj się do Showly</h2>
-
-                  <p className={styles.subtitle}>
-                    Wpisz dane konta albo kontynuuj przez Google. Po zalogowaniu
-                    wrócisz do zarządzania swoim profilem.
-                  </p>
-                </div>
-
-                <span className={styles.chapterNumber} aria-hidden="true"><FiArrowRight /></span>
+                <h2 className={styles.loginTitle}>Zaloguj się.</h2>
+                <p className={styles.subtitle}>Wpisz dane swojego konta lub kontynuuj przez Google.</p>
               </div>
 
               <div className={styles.loginPanel}>
@@ -456,19 +416,12 @@ const Login = ({ setUser, setRefreshTrigger }) => {
                   </div>
                 </form>
 
-                {(error || message) && (
-                  <div className={styles.statusStack}>
-                    {error && <div className={styles.error} role="alert">{error}</div>}
-                    {message && <div className={styles.success} role="status">{message}</div>}
-                  </div>
-                )}
-
                 <div className={styles.bottomBox}>
                   <div>
                     <p className={styles.registerLink}>Nie masz jeszcze konta?</p>
 
                     <span className={styles.registerHint}>
-                      Utwórz profil i zacznij zbierać swoją ofertę w jednym linku.
+                      Dołącz do Showly i znajdź swoje możliwości.
                     </span>
                   </div>
 
@@ -487,6 +440,7 @@ const Login = ({ setUser, setRefreshTrigger }) => {
         </div>
       </section>
 
+      {notice && <AlertBox type={notice.type} message={notice.message} onClose={isBusy ? undefined : dismissAlert} />}
       <Footer />
     </>
   );

@@ -24,7 +24,7 @@ const BillingSection = ({
 
       <EditorSectionHeader kicker="Plan i widoczność profilu" title="Twój plan i limity" description="Zarządzaj widocznością profilu, zdjęciami, usługami i rezerwacjami. Wybierz plan dopasowany do swojej oferty." icon={<FiCreditCard />} />
 
-      <EditorGroup title="01 / Aktualny plan i wykorzystanie"><div className={styles.billingStatusBox}>
+      <EditorGroup unshadedPreview title="01 / Aktualny plan i wykorzystanie"><div className={styles.billingStatusBox}>
         <div>
           <span>Aktualny plan</span>
           <strong>{billingLabel}</strong>
@@ -51,7 +51,7 @@ const BillingSection = ({
         </div>
       </div></EditorGroup>
 
-      <EditorGroup title="02 / Wybierz plan dla siebie"><div className={styles.planCards}>
+      <EditorGroup unshadedPreview title="02 / Wybierz plan dla siebie"><div className={styles.planCards}>
         <article
           className={`${styles.planCard} ${styles.starterPlan} ${billingPlan === "free" ? styles.activePlan : ""
             }`}
@@ -215,7 +215,7 @@ const BillingSection = ({
           </button>
         </div>
       )}
-      <EditorGroup title="03 / Pomoc z płatnością"><div className={styles.recovery} role="status">
+      <EditorGroup unshadedPreview title="03 / Pomoc z płatnością"><div className={styles.recovery} role="status">
         <p>{billingError ? 'Nie udało się pobrać statusu płatności. Brak połączenia nie oznacza utraty opłaconego planu.' : 'Płatność została pobrana, a wizytówka nie działa? Sprawdź subskrypcję — odzyskasz opłaconą widoczność po przerwie w działaniu serwera.'}</p>
         <button type="button" disabled={!!billingActionLoading || billingLoading} onClick={onReconcile}>
           {billingActionLoading === 'reconcile' ? 'Sprawdzanie płatności…' : 'Sprawdź płatność i przywróć profil'}

@@ -100,7 +100,7 @@ const LinkMediaSection = ({
           </EditorGroup>
 
           {/* LINKI */}
-          <EditorGroup title={<>02 / Linki zewnętrzne</>} description={<>Dodaj portfolio, stronę www, sklep, kalendarz lub inne ważne miejsce.</>}>
+          <EditorGroup unshadedPreview title={<>02 / Linki zewnętrzne</>} description={<>Dodaj portfolio, stronę www, sklep, kalendarz lub inne ważne miejsce.</>}>
 
 
             {isEditing ? (
@@ -167,7 +167,7 @@ const LinkMediaSection = ({
           </EditorGroup>
 
           {/* GALERIA */}
-          <EditorGroup title={<>03 / Galeria zdjęć</>} description={<>
+          <EditorGroup unshadedPreview title={<>03 / Galeria zdjęć</>} description={<>
             Dodaj zdjęcia realizacji, produktów, miejsca pracy albo przykładowych efektów.
           </>}>
 

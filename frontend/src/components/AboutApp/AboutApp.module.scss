@@ -167,14 +167,15 @@
   padding: 0.88rem 1rem;
   display: inline-flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 1.1rem;
 
   cursor: pointer;
   font-family: $font-accent;
   font-size: 0.68rem;
   font-weight: 850;
-  line-height: 1;
+  line-height: 1.4;
+  text-align: center;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   transition:

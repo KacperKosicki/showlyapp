@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
@@ -10,6 +10,8 @@ import {
 import { auth, googleProvider } from "../../firebase";
 import styles from "./Register.module.scss";
 import Footer from "../Footer/Footer";
+import AlertBox from "../AlertBox/AlertBox";
+import useScrollReveal from "../../utils/useScrollReveal";
 import axios from "axios";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
@@ -19,6 +21,9 @@ import {
   FiLock,
   FiArrowRight,
   FiCheckCircle,
+  FiArrowUpRight,
+  FiSend,
+  FiUsers,
 } from "react-icons/fi";
 
 const API = process.env.REACT_APP_API_URL;
@@ -40,6 +45,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const revealRef = useScrollReveal();
 
   const syncUserWithMongo = async (firebaseUser, provider) => {
     if (!firebaseUser?.email || !firebaseUser?.uid) {
@@ -84,17 +90,6 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
 
     return () => clearTimeout(timeout);
   }, [location.state, location.pathname]);
-
-  useEffect(() => {
-    if (!message && !error) return;
-
-    const timer = setTimeout(() => {
-      setMessage("");
-      setError("");
-    }, 6000);
-
-    return () => clearTimeout(timer);
-  }, [message, error]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
@@ -260,22 +255,41 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
   };
 
   const isBusy = isRegistering || isGoogleLoading;
+  const dismissAlert = useCallback(() => { setError(""); setMessage(""); }, []);
+  const notice = error ? { type: "error", message: error }
+    : message ? { type: "success", message }
+      : isBusy ? { type: "info", message: isGoogleLoading ? "Dokończ rejestrację w oknie Google…" : "Tworzymy Twoje konto…" } : null;
 
   return (
     <>
 
-      <section className={styles.section} aria-labelledby="register-heading">
+      <section className={styles.section} aria-labelledby="register-heading" ref={revealRef}>
+        <div className={styles.background} aria-hidden="true"><span>POCZĄTEK.</span></div>
         <div id="registerBox" className={styles.inner}>
-          <header className={styles.intro}>
-            <h1 id="register-heading" className={styles.heading}>
-              Twoja oferta.<br /><span>Twój dobry start.</span>
-            </h1>
-            <p className={styles.description}>
-              Zacznij od konta. Potem dodaj ofertę, zdjęcia i pokaż klientom swój profil.
-            </p>
-          </header>
+          <div className={styles.intro} data-reveal>
+            <h1 id="register-heading" className={styles.heading}>Twój pomysł.<br /><span>Dobry start.</span></h1>
+            <p className={styles.description}>Pokaż, co potrafisz. Znajdź kogoś do współpracy. Jedno konto otwiera wiele możliwości — wybierz swoją.</p>
+            <aside className={styles.possibilities} aria-label="Możliwości Twojego konta">
+              <article className={styles.startCard}>
+                <span className={styles.stepNumber} aria-hidden="true">01</span>
+                <span className={styles.stepIcon} aria-hidden="true"><FiUser /></span>
+                <div><h2>Zacznij od siebie.</h2><p>Załóż konto i znajdź swoje miejsce w Showly.</p></div>
+              </article>
+              <article className={styles.startCard}>
+                <span className={styles.stepNumber} aria-hidden="true">02</span>
+                <span className={styles.stepIcon} aria-hidden="true"><FiSend /></span>
+                <div><h2>Pomysł lub oferta.</h2><p>Dodaj ogłoszenie albo stwórz własną wizytówkę.</p></div>
+              </article>
+              <article className={styles.startCard}>
+                <span className={styles.stepNumber} aria-hidden="true">03</span>
+                <span className={styles.stepIcon} aria-hidden="true"><FiUsers /></span>
+                <div><h2>Daj się poznać.</h2><p>Rozmawiaj, poznawaj ludzi i planuj współpracę.</p></div>
+              </article>
+              <span className={styles.startArrow} aria-hidden="true"><FiArrowUpRight /></span>
+            </aside>
+          </div>
 
-          <div className={styles.card}>
+          <div className={styles.card} data-reveal>
             {emailSent ? (
               <div className={styles.activation} role="status">
                 <span className={styles.activationIcon}><FiCheckCircle aria-hidden="true" /></span>
@@ -295,10 +309,10 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
               <>
                 <div className={styles.cardHeader}>
                   <div>
-                    <span className={styles.eyebrow}>Konto w Showly</span>
-                    <h2>Stwórz swoje konto</h2>
+                    <h2>Dołącz do Showly.</h2>
+                    <p>Zacznij przez Google lub użyj adresu e-mail.</p>
                   </div>
-                  <span className={styles.headerIcon} aria-hidden="true"><FiUser /></span>
+
                 </div>
 
                 <div className={styles.cardBody}>
@@ -356,13 +370,6 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
                       </div>
                     </div>
 
-                    {(error || message) && (
-                      <div className={styles.statusStack}>
-                        {error && <div className={styles.error} role="alert">{error}</div>}
-                        {message && <div className={styles.success} role="status">{message}</div>}
-                      </div>
-                    )}
-
                     <LoadingButton type="submit" isLoading={isRegistering} disabled={isBusy} className={styles.submitButton}>
                       <span className={styles.buttonInner}>Utwórz konto <FiArrowRight aria-hidden="true" /></span>
                     </LoadingButton>
@@ -382,6 +389,7 @@ const Register = ({ user, setUser, setRefreshTrigger }) => {
         </div>
       </section>
 
+      {notice && <AlertBox type={notice.type} message={notice.message} onClose={isBusy ? undefined : dismissAlert} />}
       <Footer />
     </>
   );
