@@ -3,6 +3,7 @@ import { FiArrowUpRight, FiCalendar, FiMapPin, FiCreditCard } from 'react-icons/
 import { budgetLabel, categoryName, dateLabel, workModes } from './announcementData';
 import styles from './Announcements.module.scss';
 import { categoryVisual } from './announcementVisuals';
+import AnnouncementAuthor from './AnnouncementAuthor';
 
 export default function AnnouncementCard({ item, example = false, duplicate = false, compact = false }) {
   const { Icon, color } = categoryVisual(item.category);
@@ -16,6 +17,6 @@ export default function AnnouncementCard({ item, example = false, duplicate = fa
       <div><dt><FiCalendar aria-hidden="true" /> Termin</dt><dd>{dateLabel(item) || 'Termin do ustalenia'}</dd></div>
       <div><dt><FiCreditCard aria-hidden="true" /> Budżet</dt><dd>{budgetLabel(item)}</dd></div>
     </dl>
-    <div className={styles.cardFooter}><span>{example ? 'Tak może wyglądać Twoje ogłoszenie' : `Wystawia: ${item.authorName || 'Użytkownik Showly'}`}</span><Link tabIndex={duplicate ? -1 : undefined} to={example ? '/ogloszenia' : `/ogloszenia/${item._id}`} state={{ scrollToId: 'announcements' }} aria-label={`Zobacz ogłoszenie: ${item.title}`}>Zobacz <FiArrowUpRight aria-hidden="true" /></Link></div>
+    <div className={styles.cardFooter}>{example ? <span>Tak może wyglądać Twoje ogłoszenie</span> : <AnnouncementAuthor name={item.authorName} avatar={item.authorAvatar} />}<Link tabIndex={duplicate ? -1 : undefined} to={example ? '/ogloszenia' : `/ogloszenia/${item._id}`} state={{ scrollToId: 'announcements' }} aria-label={`Zobacz ogłoszenie: ${item.title}`}>Zobacz <FiArrowUpRight aria-hidden="true" /></Link></div>
   </article>;
 }

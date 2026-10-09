@@ -58,7 +58,7 @@
 .card { grid-column: 1; grid-row: 1; min-width: 0; padding: clamp(24px, 3.2vw, 44px); border: 1px solid var(--register-border); border-radius: 26px; background: var(--register-paper); box-shadow: -7px 8px 0 var(--register-shadow); }
 .cardHeader { padding-bottom: 24px; border-bottom: 1px solid var(--register-line); margin-bottom: 24px; h2 { margin: 0 0 12px; font-family: $font-heading; font-size: clamp(2rem, 3vw, 2.8rem); line-height: 1.1; letter-spacing: -.055em; } p { margin: 0; color: var(--register-muted); font-size: .8rem; line-height: 1.7; } }
 .googleButton, .submitButton, .primaryLink { display: inline-flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 52px; padding: 13px 16px; border: 1px solid var(--register-border); border-radius: 11px; font-family: inherit; font-size: .8rem; font-weight: 600; line-height: 1.5; text-align: center; cursor: pointer; text-decoration: none; transition: transform .18s, box-shadow .18s, background .18s; }
-.googleButton { background: var(--register-paper); color: var(--register-ink); > span:first-child { gap: 12px; } }
+.googleButton { background: var(--register-paper); color: var(--register-ink); white-space: nowrap; > span:first-child { gap: 12px; min-width: 0; flex-wrap: nowrap; white-space: nowrap; } }
 .googleIcon { display: grid; place-items: center; flex: 0 0 26px; height: 26px; border-radius: 6px; background: #fff; img { display: block; width: 18px; height: 18px; } }
 .divider { display: flex; align-items: center; gap: 14px; margin: 22px 0; color: var(--register-muted); font-size: .7rem; &::before, &::after { content: ''; flex: 1; height: 1px; background: var(--register-line); } }
 .form { display: grid; gap: 20px; }
@@ -96,6 +96,7 @@
   .possibilities { grid-row: 4; max-width: 640px; margin: 0; }
 }
 @media (max-width: 540px) {
+  .googleButton { padding-inline: 10px; font-size: clamp(.75rem, 3.2vw, .8rem); > span:first-child { gap: 8px; } }
   .section { padding-inline: max(18px, var(--safe-left, 0px)) max(18px, var(--safe-right, 0px)); }
   .background > span { top: calc(96px + var(--safe-top, 0px)); font-size: 20vw; opacity: .4; }
   .inner { gap: 26px; }

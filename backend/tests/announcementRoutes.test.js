@@ -7,6 +7,7 @@ const announcementId = objectId(), applicationId = objectId();
 const query = value => ({ lean: async () => value, select() { return this; }, populate() { return this; }, sort() { return this; }, then(resolve, reject) { return Promise.resolve(value).then(resolve, reject); } });
 let item, app, profile, visible, created, savedApplication, conversationInsert, conversationAppend, previousConversation, deletedConversations, disappearDuringCreation, announcementReads;
 const Announcement = {
+  collection: { name: 'announcements' },
   findOne: filter => {
     announcementReads++;
     return query(item && !(disappearDuringCreation && announcementReads > 1) && (!filter.ownerUid || filter.ownerUid === item.ownerUid) && !(filter.deletedAt === null && item.deletedAt) ? item : null);
@@ -21,7 +22,7 @@ const Publication = { deleteOne: async () => { visible = false; }, exists: async
 const stubs = {
   '../models/Announcement': Announcement, '../models/AnnouncementPublication': Publication,
   '../models/AnnouncementApplication': Application, '../models/Profile': { findOne: () => query(profile) },
-  '../models/User': { findOne: () => query({ displayName: 'Autor', email: 'private@example.com' }) },
+  '../models/User': { collection: { name: 'users' }, findOne: () => query({ displayName: 'Autor', email: 'private@example.com' }) },
   '../models/Conversation': {
     deleteMany: async filter => { deletedConversations = filter; },
     deleteOne: async filter => { deletedConversations = filter; },
@@ -43,7 +44,7 @@ try {
 } finally { Module._load = originalLoad; }
 async function call(method, route, uid, body = {}) {
   const layer = router.stack.find(layer => layer.route?.path === route && layer.route.methods[method]);
-  const req = { params: { id: announcementId, applicationId }, body, headers: uid ? { authorization: 'Bearer test' } : {}, testUid: uid };
+  const req = { query: {}, params: { id: announcementId, applicationId }, body, headers: uid ? { authorization: 'Bearer test' } : {}, testUid: uid };
   const res = { code: 200, status(value) { this.code = value; return this; }, json(value) { this.body = value; return this; } };
   const invoke = async index => { if (layer.route.stack[index]) await layer.route.stack[index].handle(req, res, () => invoke(index + 1)); };
   await invoke(0); return res;
@@ -54,6 +55,26 @@ test.beforeEach(() => {
   visible = true; profile = null; created = null; app = null;
   savedApplication = null; conversationInsert = null; conversationAppend = null; previousConversation = null;
   item = { _id: announcementId, ownerUid: 'owner', state: 'open', title: 'Szukam DJ-a', description: 'Opis ogłoszenia', publishedAt: new Date(), expiresAt: new Date(Date.now() + 86400000) };
+});
+
+test('public cards load account avatars after pagination without exposing account or owner data', async () => {
+  let pipeline;
+  Publication.aggregate = async stages => {
+    pipeline = stages;
+    return [{ items: [{ _id: announcementId, authorName: 'Autor', authorAvatar: 'https://example.com/avatar.jpg' }], count: [{ total: 1 }] }];
+  };
+  const result = await call('get', '/', null);
+  assert.equal(result.code, 200);
+  assert.equal(result.body.items[0].authorAvatar, 'https://example.com/avatar.jpg');
+  const stages = pipeline.at(-1).$facet.items;
+  assert.ok(stages.findIndex(stage => stage.$limit) < stages.findIndex(stage => stage.$lookup));
+  assert.equal(stages.find(stage => stage.$lookup).$lookup.from, 'users');
+  assert.deepEqual(stages.find(stage => stage.$lookup).$lookup.pipeline[1].$project, { _id: 0, avatar: 1 });
+  const projection = stages.at(-1).$project;
+  assert.equal(projection.authorAvatar, 1);
+  assert.equal(projection.ownerUid, undefined);
+  assert.equal(projection.authorAccount, undefined);
+  assert.equal(projection.email, undefined);
 });
 
 test('deleting a listing removes only its application threads and cannot recreate them through an old link', async () => {

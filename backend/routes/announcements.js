@@ -27,7 +27,7 @@ async function owned(req) {
   if (!item) throw error('Nie znaleziono Twojego ogłoszenia.', 404);
   return item;
 }
-const publicFields = { _id: 1, title: 1, description: 1, authorName: 1, category: 1, workMode: 1, location: 1, scope: 1, dateMode: 1, dateFrom: 1, dateTo: 1, budgetMode: 1, budgetMin: 1, budgetMax: 1, publishedAt: 1, expiresAt: 1 };
+const publicFields = { _id: 1, title: 1, description: 1, authorName: 1, authorAvatar: 1, category: 1, workMode: 1, location: 1, scope: 1, dateMode: 1, dateFrom: 1, dateTo: 1, budgetMode: 1, budgetMin: 1, budgetMax: 1, publishedAt: 1, expiresAt: 1 };
 const serialize = (item) => Object.fromEntries(Object.keys(publicFields).map(key => [key, item[key]]));
 const optionalAuth = (req, res, next) => req.headers.authorization ? requireAuth(req, res, next) : next();
 async function notify(uid, title, body) {
@@ -89,7 +89,12 @@ router.get('/', wrap(async (req, res) => {
     { $unwind: '$item' }, { $match: match },
     { $replaceRoot: { newRoot: { $mergeObjects: ['$item', { publishedAt: '$publishedAt', expiresAt: '$expiresAt' }] } } },
     { $sort: { publishedAt: -1, _id: -1 } },
-    { $facet: { items: [{ $skip: (page - 1) * limit }, { $limit: limit }, { $project: publicFields }], count: [{ $count: 'total' }] } },
+    { $facet: { items: [{ $skip: (page - 1) * limit }, { $limit: limit },
+      { $lookup: { from: User.collection.name, let: { uid: '$ownerUid' }, pipeline: [
+        { $match: { $expr: { $eq: ['$firebaseUid', '$$uid'] } } }, { $project: { _id: 0, avatar: 1 } }, { $limit: 1 },
+      ], as: 'authorAccount' } },
+      { $set: { authorAvatar: { $ifNull: [{ $arrayElemAt: ['$authorAccount.avatar', 0] }, ''] } } },
+      { $project: publicFields }], count: [{ $count: 'total' }] } },
   ]);
   res.json({ items: result[0]?.items || [], total: result[0]?.count[0]?.total || 0, page, limit });
 }));

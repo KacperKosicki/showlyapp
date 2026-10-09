@@ -45,7 +45,8 @@ test('search combines category and location and returns real announcement cards'
   fireEvent.change(screen.getByLabelText('Miejscowość'), { target: { value: 'Poznań' } });
   fireEvent.click(screen.getByRole('button', { name: 'Muzyka i wydarzenia' }));
   await waitFor(() => expect(announcementApi.mock.calls.some(([path]) => path.includes('location=Pozna') && path.includes('category=music'))).toBe(true));
-  expect(screen.getByText('Wystawia: Anna')).toBeInTheDocument();
+  expect(screen.getByText('Wystawia')).toBeInTheDocument();
+  expect(screen.getByText('Anna')).toBeInTheDocument();
 });
 test('creating another listing requires explicit replacement and submits that choice to the API', async () => {
   announcementApi.mockImplementation(async (path, options = {}) => {
