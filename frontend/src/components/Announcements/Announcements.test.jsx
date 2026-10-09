@@ -73,6 +73,16 @@ test('an account without a provider profile is directed to profile creation inst
   expect(await screen.findByRole('link', { name: 'Stwórz profil usługodawcy' })).toHaveAttribute('href', '/stworz-profil');
   expect(screen.queryByLabelText('Twoja propozycja')).not.toBeInTheDocument();
 });
+
+test('published announcement header displays the account avatar beside the author', async () => {
+  announcementApi.mockResolvedValue({ ...examples[0], state: 'active', authorName: 'Kacper Kosicki', authorAvatar: 'https://example.com/account.jpg', applicationCount: 0 });
+  const { container } = mount(<AnnouncementDetail />);
+  await screen.findByRole('heading', { name: examples[0].title, level: 1 });
+  const header = container.querySelector('article header');
+  expect(header.querySelector('img')).toHaveAttribute('src', 'https://example.com/account.jpg');
+  expect(header).toHaveTextContent('Wystawia');
+  expect(header).toHaveTextContent('Kacper Kosicki');
+});
 test('a provider sends an application with an optional proposed budget', async () => {
   announcementApi.mockImplementation(async (path, options = {}) => options.method === 'POST' ? { conversationId: 'thread' } : { ...examples[0], state: 'active', profile: { name: 'DJ Studio' }, isOwner: false, canApply: true });
   mount(<Routes><Route path="/ogloszenia/:id" element={<AnnouncementDetail user={{ uid: 'provider' }} />} /></Routes>, '/ogloszenia/123');
