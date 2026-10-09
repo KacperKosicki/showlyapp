@@ -209,6 +209,8 @@ router.get('/:id', optionalAuth, wrap(async (req, res) => {
   const state = statusOf(item, publication);
   const isOwner = req.auth?.uid === item.ownerUid;
   if (state !== 'active' && !isOwner) throw error('Ogłoszenie jest ukryte lub wygasło.', 404);
+  const author = await User.findOne({ firebaseUid: item.ownerUid }).select('avatar -_id').lean();
+  item.authorAvatar = author?.avatar || '';
   const profile = req.auth ? await Profile.findOne({ userId: req.auth.uid }).select('name slug').lean() : null;
   const ownApplication = req.auth ? await Application.findOne({ announcementId: item._id, applicantUid: req.auth.uid }).lean() : null;
   res.json({ ...serialize(item), ...(publication ? { publishedAt: publication.publishedAt, expiresAt: publication.expiresAt } : {}), state, isOwner, profile, canApply: Boolean(profile && !isOwner && state === 'active'), ownApplication, applicationCount: await Application.countDocuments({ announcementId: item._id, status: { $ne: 'withdrawn' } }) });

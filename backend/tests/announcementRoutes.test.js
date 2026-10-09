@@ -22,7 +22,7 @@ const Publication = { deleteOne: async () => { visible = false; }, exists: async
 const stubs = {
   '../models/Announcement': Announcement, '../models/AnnouncementPublication': Publication,
   '../models/AnnouncementApplication': Application, '../models/Profile': { findOne: () => query(profile) },
-  '../models/User': { collection: { name: 'users' }, findOne: () => query({ displayName: 'Autor', email: 'private@example.com' }) },
+  '../models/User': { collection: { name: 'users' }, findOne: () => query({ displayName: 'Autor', email: 'private@example.com', avatar: 'https://example.com/avatar.jpg' }) },
   '../models/Conversation': {
     deleteMany: async filter => { deletedConversations = filter; },
     deleteOne: async filter => { deletedConversations = filter; },
@@ -75,6 +75,14 @@ test('public cards load account avatars after pagination without exposing accoun
   assert.equal(projection.ownerUid, undefined);
   assert.equal(projection.authorAccount, undefined);
   assert.equal(projection.email, undefined);
+});
+
+test('public announcement details include the author avatar without exposing private account data', async () => {
+  const result = await call('get', '/:id', null);
+  assert.equal(result.code, 200);
+  assert.equal(result.body.authorAvatar, 'https://example.com/avatar.jpg');
+  assert.equal(result.body.ownerUid, undefined);
+  assert.equal(result.body.email, undefined);
 });
 
 test('deleting a listing removes only its application threads and cannot recreate them through an old link', async () => {
