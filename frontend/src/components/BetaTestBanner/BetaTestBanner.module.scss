@@ -74,22 +74,6 @@
   opacity: .6;
 }
 
-.join {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-  font-weight: 800;
-  color: inherit;
-  text-decoration: none;
-  padding: 5px 0;
-  border-bottom: 1px solid currentColor;
-
-  &:hover {
-    border-bottom-color: transparent;
-  }
-}
-
 .control {
   flex-shrink: 0;
   display: grid;
@@ -108,15 +92,13 @@
   }
 }
 
-.join:focus-visible,
 .control:focus-visible {
   outline: 2px solid #172014;
   outline-offset: 2px;
 }
 
 .banner:hover .track,
-.banner:focus-within .track,
-.paused .track {
+.banner:focus-within .track {
   animation-play-state: paused;
 }
 
@@ -143,21 +125,7 @@
     font-size: 11px;
   }
 
-  .badge {
-    font-size: 10px;
-    gap: 4px;
-
-    svg,
-    span {
-      display: none;
-    }
-  }
-
-  .join {
-    font-size: 10px;
-    max-width: 82px;
-    line-height: 1.15;
-  }
+  .badge { display: none; }
 
   .copy {
     gap: 16px;
@@ -193,8 +161,7 @@
   }
 
   .copy+.copy,
-  .dot,
-  .pause {
+  .dot {
     display: none;
   }
 

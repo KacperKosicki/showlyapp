@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import BetaTestBanner from './BetaTestBanner';
-jest.mock('react-router-dom', () => ({ Link: ({ to, children, ...props }) => <a href={to} {...props}>{children}</a> }), { virtual: true });
 const originalFetch = global.fetch;
 const status = (enabled, id = 'first-round') => ({ ok: true, json: async () => ({ betaPremiumEnabled: enabled, betaCampaignId: id }) });
 beforeEach(() => { sessionStorage.clear(); global.fetch = jest.fn().mockResolvedValue(status(true)); });
@@ -10,7 +9,8 @@ afterEach(() => { global.fetch = originalFetch; jest.useRealTimers(); });
 test('appears only during beta and reserves space above navigation', async () => {
   const { unmount } = render(<BetaTestBanner />);
   await screen.findByRole('complementary', { name: 'Bezpłatne testy Showly' });
-  expect(screen.getByRole('link', { name: 'Dołącz za darmo' })).toHaveAttribute('href', '/register');
+  expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  expect(screen.getAllByRole('button')).toHaveLength(1);
   expect(document.documentElement.style.getPropertyValue('--beta-banner-height')).toBe('40px');
   global.fetch.mockResolvedValue(status(false));
   fireEvent(window, new Event('showly:beta-premium-changed'));
@@ -26,19 +26,18 @@ test('closing is remembered across pages and reloads in this session; a new roun
   expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   expect(document.documentElement.style.getPropertyValue('--beta-banner-height')).toBe('0px');
   unmount();
-  render(<BetaTestBanner user={{ uid: 'owner' }} />);
+  render(<BetaTestBanner />);
   await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(2));
   expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
   global.fetch.mockResolvedValue(status(true, 'second-round'));
   fireEvent(window, new Event('showly:beta-premium-changed'));
-  expect(await screen.findByRole('link', { name: 'Sprawdź Premium' })).toHaveAttribute('href', '/profil');
+  expect(await screen.findByRole('complementary', { name: 'Bezpłatne testy Showly' })).toBeInTheDocument();
 });
 
-test('can pause motion and rechecks status without reloading the page', async () => {
+test('rechecks status without reloading the page', async () => {
   jest.useFakeTimers();
   render(<BetaTestBanner />);
-  fireEvent.click(await screen.findByRole('button', { name: 'Wstrzymaj przesuwanie komunikatu' }));
-  expect(screen.getByRole('button', { name: 'Wznów przesuwanie komunikatu' })).toHaveAttribute('aria-pressed', 'true');
+  await screen.findByRole('button', { name: 'Zamknij informację o testach' });
   global.fetch.mockResolvedValue(status(false));
   await act(async () => { jest.advanceTimersByTime(60000); });
   expect(screen.queryByRole('complementary')).not.toBeInTheDocument();

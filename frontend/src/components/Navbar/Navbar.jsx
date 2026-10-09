@@ -192,7 +192,7 @@ const Navbar = ({
 
   return (
     <>
-    <BetaTestBanner user={user} />
+    <BetaTestBanner />
     <header
       className={`${styles.navbarShell} ${!isHomePage ? styles.subpage : ""} ${scrolled || !isHomePage ? styles.scrolled : ""
         }`}
