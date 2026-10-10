@@ -1,4 +1,5 @@
 import { normalizeProfileDesign } from "../../../utils/profileDesign";
+import { normalizeAvailabilityStatus } from '../../../utils/profileAvailabilityStatus';
 import { useCallback, useState } from "react";
 import axios from "axios";
 
@@ -67,6 +68,7 @@ const normalizeProfileForEdit = (profile = {}) => {
 
   return {
     ...profile,
+    availabilityStatus: normalizeAvailabilityStatus(profile.availabilityStatus),
     projects: Array.isArray(profile.projects) ? profile.projects : [],
     services: (profile.services || []).map((service, index) =>
       normalizeServiceForEdit(service, index)

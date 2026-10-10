@@ -1,4 +1,5 @@
 import EditorGroup, { EditorSectionHeader } from './EditorGroup';
+import AvailabilityStatusEditor from './AvailabilityStatusEditor';
 import styles from "./BasicInfoSection.module.scss";
 import { FaIdBadge, FaImage, FaMapMarkerAlt, FaUserTie } from 'react-icons/fa';
 
@@ -235,6 +236,9 @@ const BasicInfoSection = ({
           </div>
         </div></EditorGroup>
       </div>
+      <EditorGroup unshadedPreview title="03 / Status dostępności">
+        <AvailabilityStatusEditor data={currentData} isEditing={isEditing} onChange={onEditDataChange} error={formErrors.availabilityStatus} />
+      </EditorGroup>
     </section>
   );
 };

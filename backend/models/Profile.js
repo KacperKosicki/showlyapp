@@ -450,6 +450,7 @@ const profileSchema = new mongoose.Schema(
     },
 
     location: { type: String, default: "", trim: true },
+    availabilityStatus: { type: require('./ProfileAvailabilityStatus'), default: () => ({}) },
     tags: { type: [String], default: [] },
 
     priceFrom: { type: Number, default: null, min: 0 },

@@ -1,6 +1,7 @@
 import { normalizeProfileDesign } from "../../../utils/profileDesign";
 import { useState } from "react";
 import { validateProjects } from '../../../utils/profileProjects';
+import { normalizeAvailabilityStatus, validateAvailabilityStatus } from '../../../utils/profileAvailabilityStatus';
 import axios from "axios";
 
 const EMPTY_SOCIALS = {
@@ -48,6 +49,8 @@ const useProfileSave = ({
 
   const validateEditData = (data) => {
     const errors = {};
+    const availabilityError = validateAvailabilityStatus(data.availabilityStatus);
+    if (availabilityError) errors.availabilityStatus = availabilityError;
     const projectError = validateProjects(data.projects || []);
     if (projectError) errors.projects = projectError;
 
@@ -323,6 +326,10 @@ const useProfileSave = ({
         `${process.env.REACT_APP_API_URL}/api/profiles/update/${user.uid}`,
         {
           ...payload,
+          availabilityStatus: (() => {
+            const status = normalizeAvailabilityStatus(payload.availabilityStatus);
+            return { ...status, note: status.note.trim(), availableFrom: status.state === 'from-date' ? status.availableFrom : '', until: status.state === 'hidden' ? '' : status.until };
+          })(),
           services: safeServices,
           links: safeLinks,
           bookingMode: safeBookingMode,

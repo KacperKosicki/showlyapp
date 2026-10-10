@@ -1,0 +1,11 @@
+.status { --availability-color: #cfff69; display: inline-flex; flex-direction: column; vertical-align: middle; width: fit-content; max-width: 100%; margin: 12px 0; padding: 10px 14px; border: 1px solid #ffffff45; border-radius: 14px; background: #171917ed; color: #fffdf7; font-family: var(--pd-body, inherit); text-shadow: none; box-shadow: 0 4px 16px #00000014; text-align: left; overflow-wrap: anywhere; }
+.status[data-availability=limited] { --availability-color: #ffd484; }
+.status[data-availability=from-date] { --availability-color: #c2adff; }
+.status[data-availability=unavailable] { --availability-color: #ffadb3; }
+.label { display: flex; align-items: center; gap: 9px; font-size: .76rem; font-weight: 600; line-height: 1.5; }
+.label > svg { width: 16px; height: 16px; flex: 0 0 16px; color: var(--availability-color); }
+.note { display: block; margin-top: 5px; padding-left: 25px; font-size: .7rem; line-height: 1.6; color: #fffdf7c9; white-space: pre-line; }
+.compact { margin: 8px 0; padding: 7px 10px; border-radius: 10px; }
+.compact .label { font-size: .62rem; gap: 6px; }
+.compact .label > svg { width: 12px; height: 12px; flex-basis: 12px; }
+.compact .note { padding-left: 18px; font-size: .58rem; }

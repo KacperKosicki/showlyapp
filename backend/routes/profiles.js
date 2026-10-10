@@ -1683,6 +1683,7 @@ const allowedFields = [
   "links",
   "quickAnswers",
   "projects",
+  "availabilityStatus",
   "showAvailableDates",
   "services",
   "bookingMode",
@@ -1708,6 +1709,28 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
     if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
     const updates = { ...req.body };
+
+    if (updates.availabilityStatus !== undefined) {
+      const status = updates.availabilityStatus;
+      const states = ['hidden', 'open', 'limited', 'from-date', 'unavailable'];
+      if (!status || typeof status !== 'object' || Array.isArray(status) || !states.includes(status.state) ||
+        ['availableFrom', 'until', 'note'].some(key => status[key] !== undefined && typeof status[key] !== 'string')) {
+        return res.status(400).json({ message: 'Podaj poprawny status dostępności.' });
+      }
+      updates.availabilityStatus = {
+        state: status.state,
+        availableFrom: status.state === 'from-date' ? status.availableFrom || '' : '',
+        until: status.state === 'hidden' ? '' : status.until || '',
+        note: status.note || '',
+      };
+      const validDate = value => !value || /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+        Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
+      if (!validDate(updates.availabilityStatus.availableFrom) || !validDate(updates.availabilityStatus.until) ||
+        (status.state === 'from-date' && !status.availableFrom) ||
+        (status.state === 'from-date' && status.until && status.availableFrom > status.until) || status.note?.trim().length > 120) {
+        return res.status(400).json({ message: 'Sprawdź daty dostępności i długość wiadomości (do 120 znaków).' });
+      }
+    }
 
     if (updates.projects !== undefined) {
       if (!Array.isArray(updates.projects) || updates.projects.length > 6 ||

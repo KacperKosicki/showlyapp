@@ -58,7 +58,7 @@ const AppearanceSection = ({ profile, editData, isEditing, canUsePremiumThemes, 
             <label className={styles.field}><span>Tekst przycisku wiadomości</span><input type="text" maxLength={40} aria-describedby="cta-count" value={theme.ctaLabel} placeholder="Napisz wiadomość" onChange={event => update({ ctaLabel: event.target.value })} /></label>
             <p className={styles.help} id="cta-count">{theme.ctaLabel.length}/40 znaków · Puste pole przywraca „Napisz wiadomość”.</p>
             <label className={styles.field}><span>Komunikat pod nazwą profilu</span><input type="text" maxLength={60} value={theme.availabilityLabel} placeholder="Np. Przyjmuję zlecenia na listopad" onChange={event => update({ availabilityLabel: event.target.value })} /></label>
-            <p className={styles.help}>Twoja własna informacja o dostępności lub sposobie pracy. Puste pole ukrywa komunikat.</p>
+            <p className={styles.help}>Dodatkowa informacja o sposobie pracy. Status dostępności ustawisz w sekcji „Dane podstawowe”. Puste pole ukrywa komunikat.</p>
             <div className={styles.grid}>{select('galleryLayout', 'Układ galerii realizacji')}</div>
             <label className={styles.check}><input type="checkbox" checked={theme.showSectionNav} onChange={event => update({ showSectionNav: event.target.checked })} />Skróty do widocznych sekcji pod wizytówką</label>
             <h3 className={styles.subheading}>Co pokażesz na wizytówce?</h3>

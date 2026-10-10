@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import PortfolioProjects from '../../PublicProfile/PortfolioProjects';
+import AvailabilityBadge from '../../ui/AvailabilityBadge/AvailabilityBadge';
 import { FiArrowUpRight, FiEye, FiImage, FiList, FiMapPin } from 'react-icons/fi';
 import { SECTION_LABELS, normalizeProfileDesign, getProfileDesignVars, getProfileDesignAttributes, profileImageUrl, getProfileBookingPresentation } from '../../../utils/profileDesign';
 import styles from './AppearanceSection.module.scss';
@@ -39,6 +40,7 @@ const ProfileDesignPreview = ({ profile, editData, isEditing }) => {
               <p>{data?.role || 'Twój sposób działania'}</p>
               <h3>{data?.name || 'Twoja marka'}</h3>
               {theme.tagline && <p>{theme.tagline}</p>}
+              <AvailabilityBadge value={data?.availabilityStatus} compact />
               {theme.availabilityLabel && <span className={styles.previewAvailability}>{theme.availabilityLabel}</span>}
               <span className={styles.previewLocation}><FiMapPin aria-hidden="true" />{data?.location || 'Twoja lokalizacja'}</span>
             </div>

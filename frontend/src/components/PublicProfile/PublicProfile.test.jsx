@@ -9,12 +9,12 @@ jest.mock('react-router-dom', () => ({ useParams: () => ({ slug: 'test-profile' 
 jest.mock('../../api/reportApi', () => ({ reportApi: { create: jest.fn() } }));
 const originalFetch = global.fetch;
 afterEach(() => { global.fetch = originalFetch; });
-const load = async (theme, projects = []) => {
+const load = async (theme, projects = [], availabilityStatus) => {
   global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ name: 'Testowa marka', role: 'Fotografia', userId: 'owner', slug: 'test-profile', theme, banner: { url: 'https://example.com/banner.jpg' }, billingPublic: { effectivePlan: 'premium' }, photos: [], services: [{ _id: 'service1', name: 'Sesja', isActive: true, price: { type: 'fixed', amount: 100 }, booking: { enabled: false } }], ratedBy: [], tags: [], links: [], description: 'Opis marki' }) });
   const originalResponse = global.fetch;
   global.fetch = jest.fn(async (...args) => {
     const response = await originalResponse(...args);
-    return { ...response, json: async () => ({ ...(await response.json()), projects }) };
+    return { ...response, json: async () => ({ ...(await response.json()), projects, availabilityStatus }) };
   });
   const result = render(<PublicProfile />);
   await screen.findByRole('heading', { name: 'Testowa marka' });
@@ -53,6 +53,12 @@ test('projects without photos still display and follow gallery visibility settin
 test('hiding the gallery also hides its portfolio projects', async () => {
   await load({ sections: { gallery: false } }, [{ title: 'Ukryta realizacja' }]);
   expect(screen.queryByRole('heading', { name: 'Ukryta realizacja' })).toBeNull();
+});
+
+test('public identity displays the saved availability status and note', async () => {
+  await load({}, [], { state: 'limited', note: 'Napisz, aby ustalić termin' });
+  expect(screen.getByText('Ostatnie wolne terminy')).toBeTruthy();
+  expect(screen.getByText('Napisz, aby ustalić termin')).toBeTruthy();
 });
 
 test('public page applies the saved full layout and typography controls', async () => {

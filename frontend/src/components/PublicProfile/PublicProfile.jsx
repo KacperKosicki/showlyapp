@@ -1,5 +1,6 @@
 import DataLoader from '../ui/DataLoader/DataLoader';
 import PortfolioProjects from './PortfolioProjects';
+import AvailabilityBadge from '../ui/AvailabilityBadge/AvailabilityBadge';
 import { Children } from "react";
 import { normalizeProfileDesign, getProfileDesignVars, getProfileDesignAttributes, getProfileBookingPresentation } from "../../utils/profileDesign";
 import { useEffect, useRef, useState } from "react";
@@ -1089,6 +1090,7 @@ export default function PublicProfile() {
 
                 <h1 className={styles.heroTitle}>{name}</h1>
                 {design.tagline && <p className={styles.customTagline}>{design.tagline}</p>}
+                <AvailabilityBadge value={profile.availabilityStatus} />
                 {design.availabilityLabel && <span className={styles.availabilityNote} aria-label="Informacja od autora profilu">{design.availabilityLabel}</span>}
 
                 <div className={styles.heroMeta}>
