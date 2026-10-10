@@ -1682,6 +1682,7 @@ const allowedFields = [
   "tags",
   "links",
   "quickAnswers",
+  "projects",
   "showAvailableDates",
   "services",
   "bookingMode",
@@ -1707,6 +1708,21 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
     if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
     const updates = { ...req.body };
+
+    if (updates.projects !== undefined) {
+      if (!Array.isArray(updates.projects) || updates.projects.length > 6 ||
+        updates.projects.some(item => !item || typeof item !== 'object' || Array.isArray(item))) {
+        return res.status(400).json({ message: 'Podaj listę maksymalnie 6 realizacji.' });
+      }
+      updates.projects = updates.projects.map(item => ({
+        title: typeof item.title === 'string' ? item.title.trim() : '',
+        category: typeof item.category === 'string' ? item.category.trim() : '',
+        description: typeof item.description === 'string' ? item.description.trim() : '',
+        outcome: typeof item.outcome === 'string' ? item.outcome.trim() : '',
+        photoKey: typeof item.photoKey === 'string' ? item.photoKey : '',
+        featured: item.featured === true,
+      }));
+    }
 
     if (updates.avatar) {
       const avatarUrl = typeof updates.avatar === "string" ? updates.avatar : updates.avatar?.url;

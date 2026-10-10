@@ -1,5 +1,6 @@
 import { normalizeProfileDesign } from "../../../utils/profileDesign";
 import { useState } from "react";
+import { validateProjects } from '../../../utils/profileProjects';
 import axios from "axios";
 
 const EMPTY_SOCIALS = {
@@ -47,6 +48,8 @@ const useProfileSave = ({
 
   const validateEditData = (data) => {
     const errors = {};
+    const projectError = validateProjects(data.projects || []);
+    if (projectError) errors.projects = projectError;
 
     if (!data.role?.trim()) {
       errors.role = "Podaj rolę (maks. 40 znaków)";

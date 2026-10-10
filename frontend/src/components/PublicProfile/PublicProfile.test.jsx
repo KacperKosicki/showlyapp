@@ -9,8 +9,13 @@ jest.mock('react-router-dom', () => ({ useParams: () => ({ slug: 'test-profile' 
 jest.mock('../../api/reportApi', () => ({ reportApi: { create: jest.fn() } }));
 const originalFetch = global.fetch;
 afterEach(() => { global.fetch = originalFetch; });
-const load = async (theme) => {
+const load = async (theme, projects = []) => {
   global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ name: 'Testowa marka', role: 'Fotografia', userId: 'owner', slug: 'test-profile', theme, banner: { url: 'https://example.com/banner.jpg' }, billingPublic: { effectivePlan: 'premium' }, photos: [], services: [{ _id: 'service1', name: 'Sesja', isActive: true, price: { type: 'fixed', amount: 100 }, booking: { enabled: false } }], ratedBy: [], tags: [], links: [], description: 'Opis marki' }) });
+  const originalResponse = global.fetch;
+  global.fetch = jest.fn(async (...args) => {
+    const response = await originalResponse(...args);
+    return { ...response, json: async () => ({ ...(await response.json()), projects }) };
+  });
   const result = render(<PublicProfile />);
   await screen.findByRole('heading', { name: 'Testowa marka' });
   return result.container;
@@ -35,6 +40,19 @@ test('legacy hero becomes split and disabling a banner keeps a gradient fallback
   expect(container.querySelector('[data-design]').dataset.layout).toBe('split');
   expect(container.querySelector(`.${styles.profileHeroWithBanner}`)).toBe(null);
   expect(container.querySelector('[data-design]').style.getPropertyValue('--pp-banner')).toContain('#123456');
+});
+
+test('projects without photos still display and follow gallery visibility settings', async () => {
+  const project = { title: 'Nowa realizacja', outcome: 'Gotowy projekt', photoKey: '' };
+  const container = await load({ showSectionNav: true }, [project]);
+  expect(screen.getByRole('heading', { name: 'Nowa realizacja' })).toBeTruthy();
+  expect(container.querySelector('#gallery')).toBeTruthy();
+  expect(screen.getByRole('link', { name: 'Realizacje' })).toBeTruthy();
+});
+
+test('hiding the gallery also hides its portfolio projects', async () => {
+  await load({ sections: { gallery: false } }, [{ title: 'Ukryta realizacja' }]);
+  expect(screen.queryByRole('heading', { name: 'Ukryta realizacja' })).toBeNull();
 });
 
 test('public page applies the saved full layout and typography controls', async () => {

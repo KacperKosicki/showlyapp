@@ -67,6 +67,7 @@ const normalizeProfileForEdit = (profile = {}) => {
 
   return {
     ...profile,
+    projects: Array.isArray(profile.projects) ? profile.projects : [],
     services: (profile.services || []).map((service, index) =>
       normalizeServiceForEdit(service, index)
     ),

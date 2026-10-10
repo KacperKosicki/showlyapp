@@ -1,4 +1,5 @@
 import EditorGroup, { EditorSectionHeader } from './EditorGroup';
+import PortfolioEditor from './PortfolioEditor';
 import styles from "./LinkMediaSection.module.scss";
 import { FaBriefcase, FaGlobe, FaLink, FaPlus, FaTags } from 'react-icons/fa';
 
@@ -299,6 +300,9 @@ const LinkMediaSection = ({
                 </div>
               </div>
             )}
+          </EditorGroup>
+          <EditorGroup unshadedPreview title={<>04 / Portfolio realizacji</>}>
+            <PortfolioEditor profile={profile} editData={editData} isEditing={isEditing} setEditData={setEditData} error={formErrors.projects} />
           </EditorGroup>
         </div>
       </section>

@@ -1,4 +1,5 @@
 import DataLoader from '../ui/DataLoader/DataLoader';
+import PortfolioProjects from './PortfolioProjects';
 import { Children } from "react";
 import { normalizeProfileDesign, getProfileDesignVars, getProfileDesignAttributes, getProfileBookingPresentation } from "../../utils/profileDesign";
 import { useEffect, useRef, useState } from "react";
@@ -835,7 +836,8 @@ export default function PublicProfile() {
   const showBanner = design.showBanner && !!bannerSrc && ["standard", "premium"].includes(publicPlan);
 
   const gallery = normalizePhotos(profile.photos);
-  const hasGallery = gallery.length > 0;
+  const projects = (profile.projects || []).filter(project => project.title?.trim());
+  const hasGallery = gallery.length > 0 || projects.length > 0;
 
   const ratedByArr = Array.isArray(profile?.ratedBy) ? profile.ratedBy : [];
 
@@ -1581,7 +1583,7 @@ export default function PublicProfile() {
               <header className={styles.sectionHeader}>
                 <div className={styles.sectionHeaderCopy}>
                   <h2>Realizacje</h2>
-                  <p>Kliknij zdjęcie, aby otworzyć pełny podgląd.</p>
+                  <p>{projects.length ? 'Projekty, pomysły i efekty pracy.' : 'Kliknij zdjęcie, aby otworzyć pełny podgląd.'}</p>
 
                   {gallery.length > 1 && (
                     <span className={styles.swipeHint}>
@@ -1591,6 +1593,7 @@ export default function PublicProfile() {
                 </div>
               </header>
 
+              <PortfolioProjects projects={projects} photos={profile.photos || []} onOpenPhoto={openLightbox} />
               <div className={styles.galleryGrid}>
                 {gallery.map((src, index) => (
                   <button

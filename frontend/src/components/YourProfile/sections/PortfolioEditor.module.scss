@@ -1,0 +1,26 @@
+.editor { min-width: 0; display: grid; gap: 20px; }
+.intro { padding: clamp(18px, 3vw, 28px); border-left: 4px solid var(--app-primary); border-radius: 12px; background: radial-gradient(ellipse at top left, color-mix(in srgb, #cfff69 16%, transparent), transparent 75%), var(--app-surface); }
+.intro > span { color: var(--app-muted); font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+.intro h3 { margin: 10px 0; font-size: clamp(1.35rem, 3vw, 1.9rem); }
+.intro p, .hint { color: var(--app-muted); font-size: .85rem; line-height: 1.7; margin: 0; }
+.project { min-width: 0; padding: clamp(14px, 3vw, 24px); border: 1px solid var(--app-border); border-radius: 12px; background: var(--app-surface); }
+.project header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 20px; }
+.actions { display: flex; gap: 6px; }
+.editor button { font: inherit; color: var(--app-text); cursor: pointer; }
+.actions button { display: grid; place-items: center; width: 36px; height: 36px; background: var(--app-surface); border: 1px solid var(--app-border); border-radius: 8px; }
+.actions button:last-child { color: #d0444d; }
+.editor button:disabled { opacity: .4; cursor: not-allowed; }
+.editor button:focus-visible, .fields :is(input, textarea, select):focus-visible { outline: 2px solid var(--app-primary); outline-offset: 3px; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.fields label { display: grid; gap: 8px; font-size: .85rem; font-weight: 600; min-width: 0; }
+.fields small { font-weight: 400; color: var(--app-muted); }
+.fields :is(input:not([type=checkbox]), textarea, select) { box-sizing: border-box; width: 100%; min-width: 0; padding: 12px; font: inherit; color: var(--app-text); border: 1px solid var(--app-border); border-radius: 8px; background: var(--app-bg); }
+.fields textarea { resize: vertical; }
+.full { grid-column: 1 / -1; }
+.fields .featured { display: flex; align-items: center; gap: 10px; align-self: end; min-height: 44px; }
+.featured input { accent-color: var(--app-primary); width: 18px; height: 18px; }
+.add { display: flex; justify-content: center; align-items: center; gap: 10px; padding: 14px; border: 1px solid var(--app-border); border-radius: 10px; background: color-mix(in srgb, var(--app-primary) 12%, var(--app-surface)); transition: background .2s; }
+.add:hover:not(:disabled), .actions button:hover:not(:disabled) { background: color-mix(in srgb, var(--app-primary) 22%, var(--app-surface)); }
+.add span { margin-left: auto; font-size: .75rem; }
+.error { color: #d0444d; }
+@media(max-width: 600px) { .fields { grid-template-columns: minmax(0, 1fr); } .project header > strong { font-size: .8rem; } }

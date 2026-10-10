@@ -1,0 +1,30 @@
+.grid { --portfolio-surface: var(--pp-surface, var(--app-surface, #fffdf8)); --portfolio-ink: var(--pp-ink, var(--app-text, #171917)); --portfolio-muted: var(--pp-muted, var(--app-muted, #686c65)); --portfolio-accent: var(--pp-primary, var(--app-primary, #9170ff)); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 3vw, 28px); margin-bottom: 28px; }
+.card { min-width: 0; overflow: hidden; color: var(--portfolio-ink); background: var(--portfolio-surface); border: var(--pd-border-width, 1px) var(--pd-border-style, solid) var(--pp-line, var(--app-border, #deddd3)); border-radius: var(--pd-radius, 16px); transition: border-color .2s, transform .2s; }
+.card[data-featured=true] { border-color: var(--portfolio-accent); }
+.card:hover { transform: translateY(-3px); border-color: var(--portfolio-accent); }
+.media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--portfolio-surface); }
+.media img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+.card:hover .media img { transform: scale(1.035); }
+.media button { position: absolute; bottom: 14px; right: 14px; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--portfolio-ink); background: var(--portfolio-surface); border: 1px solid currentColor; cursor: pointer; }
+.media button:focus-visible { outline: 3px solid var(--portfolio-accent); outline-offset: 3px; }
+.poster { position: relative; min-height: 140px; overflow: hidden; padding: 24px; background: radial-gradient(ellipse at 0 0, color-mix(in srgb, var(--portfolio-accent) 24%, transparent), transparent 80%), var(--portfolio-surface); }
+.poster > svg { width: 36px; height: 36px; color: var(--portfolio-accent); }
+.poster > span { position: absolute; right: 16px; bottom: -24px; font-size: 140px; font-weight: 800; line-height: 1; opacity: .08; }
+.copy { padding: clamp(18px, 3vw, 28px); }
+.meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; color: var(--portfolio-muted); font-size: .7rem; font-weight: 600; }
+.meta > span { display: inline-flex; align-items: center; gap: 5px; }
+.meta > span:last-child:not(:first-child) { color: var(--portfolio-accent); }
+.copy h3 { font-family: var(--pd-heading, inherit); font-size: clamp(1.1rem, 2vw, 1.5rem); line-height: 1.25; margin: 14px 0; overflow-wrap: anywhere; }
+.copy p { font-size: .88rem; line-height: 1.75; color: var(--portfolio-muted); white-space: pre-line; overflow-wrap: anywhere; margin: 0; }
+.outcome { display: flex; gap: 12px; margin-top: 20px; padding: 16px; border-radius: min(var(--pd-radius, 10px), 12px); background: color-mix(in srgb, var(--portfolio-accent) 9%, var(--portfolio-surface)); }
+.outcome > svg { flex-shrink: 0; color: var(--portfolio-accent); margin-top: 3px; }
+.outcome span { display: block; margin-bottom: 6px; font-size: .65rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; }
+.outcome p { color: var(--portfolio-ink); }
+.compact { grid-template-columns: minmax(0, 1fr); gap: 10px; margin-bottom: 12px; }
+.compact .copy { padding: 14px; }
+.compact .copy h3 { font-size: 1rem; }
+.compact .copy p { font-size: .75rem; }
+.compact .poster { min-height: 75px; }
+@media(max-width: 700px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+@media(prefers-reduced-motion: reduce) { .card, .media img { transition: none; } .card:hover, .card:hover .media img { transform: none; } }
+

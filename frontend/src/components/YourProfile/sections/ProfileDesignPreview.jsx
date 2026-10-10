@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import PortfolioProjects from '../../PublicProfile/PortfolioProjects';
 import { FiArrowUpRight, FiEye, FiImage, FiList, FiMapPin } from 'react-icons/fi';
 import { SECTION_LABELS, normalizeProfileDesign, getProfileDesignVars, getProfileDesignAttributes, profileImageUrl, getProfileBookingPresentation } from '../../../utils/profileDesign';
 import styles from './AppearanceSection.module.scss';
@@ -48,7 +49,7 @@ const ProfileDesignPreview = ({ profile, editData, isEditing }) => {
               <span className={styles.previewButton}>{theme.ctaLabel || 'Napisz wiadomość'}<FiArrowUpRight aria-hidden="true" /></span>
             </div>
           </div>
-          {theme.showSectionNav && <div className={styles.previewSectionNav} aria-label="Podgląd skrótów do sekcji">{theme.sectionOrder.filter(key => key === 'overview' ? ['description', 'contact', 'price', 'links'].some(section => theme.sections[section]) : theme.sections[key] && (key !== 'gallery' || photos.length > 0) && (key !== 'services' || services.length > 0)).map(key => <span key={key}>{SECTION_LABELS[key]}</span>)}</div>}
+          {theme.showSectionNav && <div className={styles.previewSectionNav} aria-label="Podgląd skrótów do sekcji">{theme.sectionOrder.filter(key => key === 'overview' ? ['description', 'contact', 'price', 'links'].some(section => theme.sections[section]) : theme.sections[key] && (key !== 'gallery' || photos.length > 0 || data?.projects?.length > 0) && (key !== 'services' || services.length > 0)).map(key => <span key={key}>{SECTION_LABELS[key]}</span>)}</div>}
           <div className={styles.previewContent}>{theme.sectionOrder.map(key => {
             const visible = key === 'overview' ? ['description', 'contact', 'price', 'links'].some(section => theme.sections[section]) : theme.sections[key];
             if (!visible) return null;
@@ -59,7 +60,7 @@ const ProfileDesignPreview = ({ profile, editData, isEditing }) => {
                 {theme.sections.price && Number(data?.priceFrom) > 0 && <p>Od {data.priceFrom} zł</p>}
                 {theme.sections.links && !!data?.links?.length && <p>{data.links.length} linków do Twojej pracy</p>}
               </> : key === 'services' ? <div className={styles.previewServices}>{services.length ? services.slice(0, 3).map((service, index) => <p key={service._id || index}>{service.name || service.title || 'Twoja usługa'}</p>) : <p>Twoja oferta. Konkretne możliwości.</p>}</div>
-                : key === 'gallery' ? <div className={styles.previewPhotos}>{photos.length ? photos.slice(0, 3).map((photo, index) => <img key={index} src={profileImageUrl(photo)} alt="" />) : <p>Miejsce na Twoje realizacje.</p>}</div>
+                : key === 'gallery' ? <><PortfolioProjects projects={data?.projects || []} photos={photos} compact /><div className={styles.previewPhotos}>{photos.length ? photos.slice(0, 3).map((photo, index) => <img key={index} src={profileImageUrl(photo)} alt="" />) : !data?.projects?.length && <p>Miejsce na Twoje realizacje.</p>}</div></>
                   : <p>Głos Twoich klientów.</p>}
             </div>;
           })}</div>

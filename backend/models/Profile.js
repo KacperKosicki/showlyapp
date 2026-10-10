@@ -603,6 +603,15 @@ const profileSchema = new mongoose.Schema(
       maxlength: 8000,
     },
 
+    projects: {
+      type: [require('./ProfileProject')],
+      default: [],
+      validate: {
+        validator: (items) => items.length <= 6,
+        message: 'Możesz dodać maksymalnie 6 realizacji.',
+      },
+    },
+
     links: { type: [String], default: [] },
 
     contact: {
