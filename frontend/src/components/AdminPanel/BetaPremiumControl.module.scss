@@ -1,6 +1,6 @@
 .panel {
   display: flex; align-items: flex-start; gap: 20px; padding: clamp(20px, 3vw, 32px);
-  margin-bottom: 24px; border: 1px solid var(--app-border); border-radius: 24px;
+  margin-block: 24px; border: 1px solid var(--app-border); border-radius: 24px;
   background: radial-gradient(ellipse at 0 0, rgba(185,255,92,.14), transparent 65%), var(--app-surface);
   color: var(--app-text);
 }

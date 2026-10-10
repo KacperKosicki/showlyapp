@@ -5,6 +5,7 @@ import styles from "./MessageForm.module.scss";
 import axios from "axios";
 import AlertBox from "../AlertBox/AlertBox";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
+import { FiArrowRight, FiArrowUpRight } from "react-icons/fi";
 
 import {
   FaArrowLeft,
@@ -297,6 +298,7 @@ const MessageForm = ({ user }) => {
 
   const renderMessageLayout = ({ isLoading = false }) => (
     <div id="messageFormContainer" className={styles.section}>
+      <div className={styles.backdrop} aria-hidden="true"><span>POROZMAWIAJMY</span></div>
       <div className={styles.inner}>
         {alert && !isLoading && (
           <AlertBox
@@ -326,7 +328,7 @@ const MessageForm = ({ user }) => {
 
         <div className={styles.layout}>
           <aside className={styles.side}>
-
+            <div className={styles.sideIntro}><span className={styles.sideSymbol} aria-hidden="true"><FaRegCommentDots /></span><span>Dobry kontakt. Dobry początek.</span><FiArrowUpRight aria-hidden="true" /></div>
             <h1 className={styles.heading}>
               {isLoading ? (
                 <>Przygotowuję <span>rozmowę.</span></>
@@ -338,7 +340,7 @@ const MessageForm = ({ user }) => {
             <p className={styles.description}>
               {isLoading
                 ? "Sprawdzam, czy istnieje już wątek oraz pobieram dane odbiorcy."
-                : "Wyślij pierwszą wiadomość. Po wysłaniu automatycznie przejdziesz do utworzonej konwersacji."}
+                : "Masz pytanie, plan lub pomysł na współpracę? Zacznij od krótkiej wiadomości."}
             </p>
 
             <div className={styles.receiverCard}>
@@ -378,25 +380,21 @@ const MessageForm = ({ user }) => {
 
             <div className={styles.metaRow}>
               <div className={styles.metaCard}>
-                <strong>1</strong>
-                <span>wiadomość tworzy nowy wątek</span>
+                <strong>01</strong>
+                <span>Opowiedz, czego szukasz</span>
               </div>
 
               <div className={styles.metaCard}>
-                <strong>800</strong>
-                <span>maksymalna liczba znaków</span>
+                <strong>02</strong>
+                <span>Ustalcie szczegóły w rozmowie</span>
               </div>
 
-              <div className={styles.metaCard}>
-                <strong>konto</strong>
-                <span>nadawca wiadomości</span>
-              </div>
             </div>
 
             <div className={styles.infoBox}>
               <span>
                 <FaShieldAlt />
-                Bezpieczny wątek
+                Rozmowa w Showly
               </span>
 
               <p>
@@ -410,24 +408,24 @@ const MessageForm = ({ user }) => {
             <div className={styles.chapterHead}>
               <div>
                 <span className={styles.chapterLabel}>
-                  {isLoading ? "Ładowanie formularza" : "Nowa wiadomość"}
+                  {isLoading ? "Ładowanie formularza" : "Miejsce na Twój pierwszy krok"}
                 </span>
 
                 <h2>
                   {isLoading
                     ? "Przygotowuję formularz wiadomości."
-                    : "Napisz pierwszą wiadomość do profilu."}
+                    : "Jedna wiadomość. Nowe możliwości."}
                 </h2>
               </div>
 
-              <span className={styles.chapterNumber}>01</span>
+              <span className={styles.chapterNumber} aria-hidden="true"><FaPaperPlane /></span>
             </div>
 
             <section className={styles.messagePanel}>
               <div className={styles.panelHeader}>
                 <span className={styles.panelBadge}>
                   <FaRegCommentDots />
-                  Konto ➜ Wizytówka
+                  Konto <FiArrowRight aria-hidden="true" /> Wizytówka
                 </span>
 
                 <span className={styles.panelBadgeSoft}>
@@ -458,12 +456,7 @@ const MessageForm = ({ user }) => {
                   <form onSubmit={handleSend} className={styles.form}>
                     <div className={styles.formHeader}>
                       <div>
-                        <span className={styles.sectionKicker}>
-                          <FaPaperPlane />
-                          Wiadomość
-                        </span>
-
-                        <h3 className={styles.formTitle}>Napisz wiadomość</h3>
+                        <h3 className={styles.formTitle}><label htmlFor="newProfileMessage">Co chcesz zaproponować?</label></h3>
 
                         <p className={styles.formSub}>
                           Krótko opisz, o co chcesz zapytać. Odbiorca zobaczy
@@ -478,6 +471,9 @@ const MessageForm = ({ user }) => {
 
                     <textarea
                       className={styles.textarea}
+                      id="newProfileMessage"
+                      maxLength={maxChars}
+                      aria-describedby="profileMessageCounter"
                       value={message}
                       onChange={(e) => {
                         const text = e.target.value;
@@ -492,7 +488,7 @@ const MessageForm = ({ user }) => {
                       <span>
                         Wiadomość trafi bezpośrednio do właściciela wizytówki.
                       </span>
-                      <strong>
+                      <strong id="profileMessageCounter">
                         {message.length} / {maxChars}
                       </strong>
                     </div>
