@@ -4,6 +4,7 @@
   position: relative;
   isolation: isolate;
   @include settings-tokens;
+  --yp-sticky-top: calc(112px + var(--safe-top, 0px) + var(--beta-banner-height, 0px));
   box-sizing: border-box;
   width: 100%;
   min-height: 80vh;
@@ -59,7 +60,7 @@
 }
 
 .wrapper[data-editing=true] .editorLayout {
-  --yp-sticky-top: calc(172px + var(--safe-top, 0px));
+  --yp-sticky-top: calc(208px + var(--safe-top, 0px) + var(--beta-banner-height, 0px));
 }
 
 @media(max-width:1200px) {
@@ -153,6 +154,7 @@
 
 @media(max-width:600px) {
   .wrapper {
+    --yp-sticky-top: calc(96px + var(--safe-top, 0px) + var(--beta-banner-height, 0px));
     padding-top: calc(86px + var(--safe-top, 0px));
     padding-left: 12px;
     padding-right: 12px;

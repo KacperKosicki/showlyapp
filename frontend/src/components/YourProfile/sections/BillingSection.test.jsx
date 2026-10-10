@@ -10,7 +10,12 @@ test('beta explains free access and removes purchase and payment recovery action
   expect(screen.queryByText('Sprawdź płatność i przywróć profil')).not.toBeInTheDocument();
   expect(screen.queryByText('Zarządzaj subskrypcją')).not.toBeInTheDocument();
 });
-test('an existing subscription remains manageable in beta', () => {
+test('beta hides the entire portal section even when the API allows managing a subscription', () => {
   render(<BillingSection {...props} betaPremiumEnabled canManageSubscription />);
+  expect(screen.queryByRole('button', { name: 'Zarządzaj subskrypcją' })).not.toBeInTheDocument();
+  expect(screen.queryByText(/Subskrypcją możesz zarządzać/)).not.toBeInTheDocument();
+});
+test('an existing subscription is manageable after beta ends', () => {
+  render(<BillingSection {...props} canManageSubscription />);
   expect(screen.getByRole('button', { name: 'Zarządzaj subskrypcją' })).toBeEnabled();
 });

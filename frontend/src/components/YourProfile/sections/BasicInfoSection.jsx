@@ -75,6 +75,7 @@ const BasicInfoSection = ({
 
           {isEditing && (
             <div className={styles.controls}>
+              <div className={styles.bannerActions}>
               <label className={styles.fileBtn}>
                 <input
                   type="file"
@@ -94,6 +95,7 @@ const BasicInfoSection = ({
                   {'Usu\u0144 zdj\u0119cie'}
                 </button>
               )}
+              </div>
 
               <small className={styles.hint}>
                 {'Kwadratowe zdj\u0119cie wygl\u0105da najlepiej. Maksymalnie ok. 2-3 MB.'}
@@ -102,6 +104,7 @@ const BasicInfoSection = ({
               <div className={styles.bannerControls}>
                 {canUseBanner ? (
                   <>
+                    <div className={styles.bannerActions}>
                     <label className={styles.fileBtn}>
                       <input
                         type="file"
@@ -123,6 +126,7 @@ const BasicInfoSection = ({
                         {'Usu\u0144 banner'}
                       </button>
                     )}
+                    </div>
 
                     <small className={styles.hint}>
                       {'Najlepiej sprawdza si\u0119 szerokie zdj\u0119cie, np. 1800 x 720 px.'}

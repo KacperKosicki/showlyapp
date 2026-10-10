@@ -7,6 +7,7 @@ const router = express.Router();
 
 const requireAuth = require("../middleware/requireAuth");
 const Profile = require("../models/Profile");
+const { canManageBillingSubscription } = require('../utils/billingPortalAccess');
 const { applySubscriptionToProfile, isModerationBlocked } = require("../utils/billingRecovery");
 
 const {
@@ -22,6 +23,9 @@ if (!stripeSecret) {
 }
 
 const stripe = stripeSecret ? new Stripe(stripeSecret) : null;
+const canManageSubscription = profile => canManageBillingSubscription(profile, {
+  betaEnabled: isBetaPremiumEnabled(), stripeAvailable: !!stripe, stripeSecret,
+});
 router.use((req, res, next) => {
   if (req.path.startsWith('/checkout-')) {
     const message = checkoutBlocked();
@@ -288,8 +292,6 @@ router.post("/portal", requireAuth, async (req, res) => {
       return res.status(401).json({ error: "Brak autoryzacji" });
     }
 
-    const frontendUrl = cleanFrontendUrl();
-
     const profile = await Profile.findOne({ userId: uid }).select(
       "userId billing"
     );
@@ -302,12 +304,22 @@ router.post("/portal", requireAuth, async (req, res) => {
 
     const customerId = profile.billing?.stripeCustomerId;
 
+    if (!canManageSubscription(profile)) {
+      return res.status(409).json({
+        error: isBetaPremiumEnabled()
+          ? 'Testowe Premium jest bezpłatne i nie wymaga zarządzania subskrypcją.'
+          : 'Ten profil nie ma subskrypcji dostępnej do zarządzania.',
+        code: isBetaPremiumEnabled() ? 'BETA_PREMIUM_ENABLED' : 'SUBSCRIPTION_PORTAL_UNAVAILABLE',
+      });
+    }
+
     if (!customerId) {
       return res.status(400).json({
         error: "Ten profil nie ma jeszcze klienta Stripe.",
       });
     }
 
+    const frontendUrl = cleanFrontendUrl();
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${frontendUrl}/profil?billing=portal-return`,
@@ -417,8 +429,7 @@ router.get("/status", requireAuth, async (req, res) => {
     return res.json({
       now: now.toISOString(),
       payments: { enabled: !!stripe && !isBetaPremiumEnabled() },
-      canManageSubscription: !!stripe && !!profile.billing?.stripeSubscriptionId &&
-        !(profile.billing?.paymentEnvironment === 'test' && /^(sk|rk)_live_/.test(stripeSecret || '')),
+      canManageSubscription: canManageSubscription(profile),
 
       visibility: {
         isVisible: isProfileVisible(profile, now),

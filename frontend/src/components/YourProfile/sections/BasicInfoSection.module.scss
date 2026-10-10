@@ -92,6 +92,20 @@
   border-top: 1px solid var(--app-border);
 }
 
+.bannerActions {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+
+  > .fileBtn,
+  > .danger {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 8px;
+    text-align: center;
+  }
+}
+
 .bannerLocked {
   display: grid;
   gap: 10px;

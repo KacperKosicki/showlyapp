@@ -208,11 +208,10 @@ const BillingSection = ({
       </div></EditorGroup>
 
       </>}
-      {canManageSubscription && (
+      {!betaPremiumEnabled && canManageSubscription && (
         <div className={styles.billingFooter}>
           <p>
-            Subskrypcją możesz zarządzać w bezpiecznym panelu Stripe — anulowanie,
-            zmiana karty i historia płatności.
+            Subskrypcją możesz zarządzać w bezpiecznym panelu Stripe — anulowanie, zmiana karty i historia płatności.
           </p>
 
           <button
