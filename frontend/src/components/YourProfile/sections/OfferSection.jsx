@@ -184,7 +184,7 @@ const OfferSection = ({
       {/* =========================
   Dostępność i usługi
 ========================= */}
-      <section className={`${styles.card} ${styles.offerCard}`}>
+      <section id="offerSection" className={`${styles.card} ${styles.offerCard}`}>
         <div className={styles.cardGlow} aria-hidden="true" />
 
         <EditorSectionHeader kicker={<>Oferta i dostępność</>} title={<>Dostępność i usługi</>} description={<>

@@ -37,7 +37,7 @@ const ContactSocialSection = ({
   const hasSocialLinks = socialItems.some((item) => item.value);
 
   return (
-    <section className={`${styles.card} ${styles.contactSocialCard}`}>
+    <section id="contactSection" className={`${styles.card} ${styles.contactSocialCard}`}>
       <div className={styles.cardGlow} aria-hidden="true" />
 
       <EditorSectionHeader kicker={<>Dane kontaktowe</>} title={<>Kontakt i social media</>} description={<>

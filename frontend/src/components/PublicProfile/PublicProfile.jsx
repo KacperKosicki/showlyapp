@@ -44,7 +44,7 @@ import {
   FaCheck,
 } from "react-icons/fa6";
 
-import { FiFlag } from "react-icons/fi";
+import { FiFlag, FiArrowUpRight } from "react-icons/fi";
 import { reportApi } from "../../api/reportApi";
 
 const cn = (...classes) => classes.filter(Boolean).join(" ");
@@ -1090,6 +1090,7 @@ export default function PublicProfile() {
 
                 <h1 className={styles.heroTitle}>{name}</h1>
                 {design.tagline && <p className={styles.customTagline}>{design.tagline}</p>}
+                {design.availabilityLabel && <span className={styles.availabilityNote} aria-label="Informacja od autora profilu">{design.availabilityLabel}</span>}
 
                 <div className={styles.heroMeta}>
                   <span>
@@ -1225,6 +1226,7 @@ export default function PublicProfile() {
           </aside>
         </header>
 
+        {design.showSectionNav && <nav className={styles.sectionNav} aria-label="Sekcje profilu">{design.sectionOrder.filter(key => key === 'overview' ? ['description', 'contact', 'price', 'links'].some(section => design.sections[section]) : design.sections[key] && (key !== 'gallery' || hasGallery) && (key !== 'services' || visibleServices.length > 0)).map(key => <a key={key} href={`#${key}`}>{({ overview: 'Poznaj mnie', services: 'Oferta', gallery: 'Realizacje', reviews: 'Opinie' })[key]}<FiArrowUpRight aria-hidden="true" /></a>)}</nav>}
         <ProfileSections className={styles.profileContent} theme={design}>
           <section
             className={cn(

@@ -8,11 +8,11 @@ const AppearanceSection = ({ profile, editData, isEditing, canUsePremiumThemes, 
   // Keep the draft intact while typing; normalization trims text on save.
   const theme = {
     ...normalizeProfileDesign(source), ...(isEditing && {
-      tagline: source?.tagline ?? '', ctaLabel: source?.ctaLabel ?? '',
+      tagline: source?.tagline ?? '', ctaLabel: source?.ctaLabel ?? '', availabilityLabel: source?.availabilityLabel ?? '',
     })
   };
   const editable = isEditing && canUsePremiumThemes;
-  const update = (changes) => onEditDataChange(prev => ({ ...prev, theme: { ...normalizeProfileDesign(prev.theme), tagline: prev.theme?.tagline ?? '', ctaLabel: prev.theme?.ctaLabel ?? '', ...changes } }));
+  const update = (changes) => onEditDataChange(prev => ({ ...prev, theme: { ...normalizeProfileDesign(prev.theme), tagline: prev.theme?.tagline ?? '', ctaLabel: prev.theme?.ctaLabel ?? '', availabilityLabel: prev.theme?.availabilityLabel ?? '', ...changes } }));
   const move = (index, direction) => {
     const order = [...theme.sectionOrder];
     [order[index], order[index + direction]] = [order[index + direction], order[index]];
@@ -27,9 +27,10 @@ const AppearanceSection = ({ profile, editData, isEditing, canUsePremiumThemes, 
         <div className={styles.settings}>
           <fieldset disabled={!editable}>
             <legend>01 / Wybierz kierunek</legend>
-            <div className={styles.presets}>{DESIGN_PRESETS.map(preset => <button type="button" key={preset.name} onClick={() => update({ ...preset.theme, sections: theme.sections, sectionOrder: theme.sectionOrder, ctaLabel: theme.ctaLabel, tagline: theme.tagline })}><span style={{ background: `linear-gradient(135deg,${preset.theme.primary},${preset.theme.secondary})` }} aria-hidden="true" />{preset.name}</button>)}</div>
+            <div className={styles.presets}>{DESIGN_PRESETS.map(preset => <button type="button" key={preset.name} onClick={() => update({ ...preset.theme, sections: theme.sections, sectionOrder: theme.sectionOrder, ctaLabel: theme.ctaLabel, tagline: theme.tagline, availabilityLabel: theme.availabilityLabel })}><span style={{ background: `linear-gradient(135deg,${preset.theme.primary},${preset.theme.secondary})` }} aria-hidden="true" />{preset.name}</button>)}</div>
+            <p className={styles.help}>Portfolio przenosi wizytówkę na bok strony. Atelier odwraca układ i umieszcza dane na osobnej karcie. Terminal stawia na techniczną typografię i mocny kontrast. Każdy kierunek możesz dalej edytować.</p>
             <div className={styles.grid}>{select('style', 'Charakter kart')}{select('mode', 'Motyw strony')}{select('headingFont', 'Czcionka nagłówków')}{select('bodyFont', 'Czcionka tekstu')}{select('layout', 'Układ wizytówki')}{select('density', 'Odstępy')}{select('contentWidth', 'Szerokość profilu')}{select('serviceLayout', 'Prezentacja usług')}</div>
-            <p className={styles.help}>Układ „Wizytówka + panel kontaktu” łączy banner i dane w jednej ramce, ze statystykami obok na desktopie. Na telefonie panel przechodzi pod banner.</p>
+            <p className={styles.help}>Boczna wizytówka zmienia układ całej strony: dane i kontakt po lewej, oferta i realizacje po prawej. Na telefonie treść układa się w jednej kolumnie.</p>
           </fieldset>
           <fieldset disabled={!editable}>
             <legend>02 / Kolory i detale</legend>
@@ -38,15 +39,17 @@ const AppearanceSection = ({ profile, editData, isEditing, canUsePremiumThemes, 
             <div className={styles.grid}>{[['primary', 'Akcent główny', '#6557ef'], ['secondary', 'Akcent dodatkowy', '#d8ff72'], ['background', 'Tło strony', '#f1eee4'], ['surface', 'Tło kart', '#fffdf8'], ['text', 'Tekst', '#171917'], ['muted', 'Tekst pomocniczy', '#686c65'], ['border', 'Kolor obramowań', '#171917'], ['heroText', 'Tekst na bannerze', '#ffffff']].map(([key, label, fallback]) => <label className={styles.field} key={key}><span>{label}</span><div className={styles.colorField}><input aria-label={label} type="color" value={theme[key] || fallback} onChange={event => update({ [key]: event.target.value, variant: 'custom' })} /><code>{theme[key] || 'Automatycznie'}</code><button type="button" aria-label={`Resetuj: ${label}`} onClick={() => update({ [key]: key === 'primary' ? '#6557ef' : key === 'secondary' ? '#d8ff72' : key === 'heroText' ? '#ffffff' : '' })}>↺</button></div></label>)}</div>
             <div className={styles.grid}>{select('backgroundStyle', 'Wzór tła')}{select('bannerStyle', 'Tło wizytówki')}{select('radius', 'Kształt kart')}{select('shadow', 'Cienie')}{select('motion', 'Efekty wejścia')}<label className={styles.field}><span>Kąt gradientu: {theme.gradientAngle}°</span><input type="range" min="0" max="360" step="5" value={theme.gradientAngle} onChange={event => update({ gradientAngle: Number(event.target.value) })} /></label></div>
             <label className={styles.check}><input type="checkbox" checked={theme.decorations} onChange={event => update({ decorations: event.target.checked })} />Kształty i dekoracje w tle</label>
-            <div className={styles.grid}>{select('borderStyle', 'Rodzaj obramowania')}{select('buttonStyle', 'Styl przycisków')}<label className={styles.field}><span>Grubość obramowania: {theme.borderWidth} px</span><input aria-label="Grubość obramowania" type="range" min="1" max="3" value={theme.borderWidth} onChange={event => update({ borderWidth: Number(event.target.value) })} /></label></div>
+            <div className={styles.grid}>{select('cardSurface', 'Powierzchnia kart')}{select('sectionHeading', 'Nagłówki sekcji')}{select('borderStyle', 'Rodzaj obramowania')}{select('buttonStyle', 'Styl przycisków')}<label className={styles.field}><span>Grubość obramowania: {theme.borderWidth} px</span><input aria-label="Grubość obramowania" type="range" min="1" max="6" value={theme.borderWidth} onChange={event => update({ borderWidth: Number(event.target.value) })} /></label></div>
           </fieldset>
           <fieldset disabled={!editable}>
             <legend>03 / Banner i pierwsze wrażenie</legend>
-            <div className={styles.grid}>{select('heroAlignment', 'Wyrównanie danych na bannerze')}{select('titleSize', 'Wielkość nazwy profilu')}{select('avatarShape', 'Kształt zdjęcia profilowego')}{select('bannerPosition', 'Kadrowanie zdjęcia w tle')}</div>
+            <div className={styles.grid}>{select('identityStyle', 'Prezentacja danych na bannerze')}{select('titleCase', 'Pisownia nazwy')}{select('titleWeight', 'Grubość nazwy')}{select('letterSpacing', 'Odstępy między literami')}{select('heroAlignment', 'Wyrównanie danych na bannerze')}{select('titleSize', 'Wielkość nazwy profilu')}{select('avatarShape', 'Kształt zdjęcia profilowego')}{select('bannerPosition', 'Kadrowanie zdjęcia w tle')}</div>
             <label className={styles.check}><input type="checkbox" checked={theme.showBanner} onChange={event => update({ showBanner: event.target.checked })} />Pokaż wgrane zdjęcie jako banner</label>
             <p className={styles.help}>Gdy wyłączysz zdjęcie, użyjemy wybranego koloru lub gradientu. Zdjęcie pozostanie zapisane. Wgraj je w sekcji zdjęć i mediów.</p>
             <label className={styles.field}><span>Przyciemnienie bannera: {theme.bannerOverlay}%</span><input aria-label="Przyciemnienie bannera" type="range" min="0" max="85" step="5" value={theme.bannerOverlay} onChange={event => update({ bannerOverlay: Number(event.target.value) })} /></label>
             <p className={styles.help}>Dopasuj przyciemnienie i kolor tekstu tak, aby nazwa była czytelna na Twoim zdjęciu.</p>
+            <div className={styles.grid}>{select('heroHeight', 'Wysokość wizytówki')}<label className={styles.field}><span>Rozmycie tła bannera: {theme.bannerBlur} px</span><input aria-label="Rozmycie tła bannera" type="range" min="0" max="12" value={theme.bannerBlur} onChange={event => update({ bannerBlur: Number(event.target.value) })} /></label></div>
+            <p className={styles.help}>Rozmywamy wyłącznie tło — avatar, nazwa i przyciski pozostają ostre.</p>
           </fieldset>
           <fieldset disabled={!editable}>
             <legend>04 / Treść i sekcje</legend>
@@ -54,6 +57,10 @@ const AppearanceSection = ({ profile, editData, isEditing, canUsePremiumThemes, 
             <p className={styles.help} id="tagline-count">{theme.tagline.length}/120 znaków · Jedno zdanie, które zapamiętają Twoi klienci.</p>
             <label className={styles.field}><span>Tekst przycisku wiadomości</span><input type="text" maxLength={40} aria-describedby="cta-count" value={theme.ctaLabel} placeholder="Napisz wiadomość" onChange={event => update({ ctaLabel: event.target.value })} /></label>
             <p className={styles.help} id="cta-count">{theme.ctaLabel.length}/40 znaków · Puste pole przywraca „Napisz wiadomość”.</p>
+            <label className={styles.field}><span>Komunikat pod nazwą profilu</span><input type="text" maxLength={60} value={theme.availabilityLabel} placeholder="Np. Przyjmuję zlecenia na listopad" onChange={event => update({ availabilityLabel: event.target.value })} /></label>
+            <p className={styles.help}>Twoja własna informacja o dostępności lub sposobie pracy. Puste pole ukrywa komunikat.</p>
+            <div className={styles.grid}>{select('galleryLayout', 'Układ galerii realizacji')}</div>
+            <label className={styles.check}><input type="checkbox" checked={theme.showSectionNav} onChange={event => update({ showSectionNav: event.target.checked })} />Skróty do widocznych sekcji pod wizytówką</label>
             <h3 className={styles.subheading}>Co pokażesz na wizytówce?</h3>
             <div className={styles.visibility}>{Object.entries(VISIBILITY_LABELS).map(([key, label]) => <label className={styles.check} key={key}><input type="checkbox" checked={theme.sections[key]} onChange={event => update({ sections: { ...theme.sections, [key]: event.target.checked } })} />{label}</label>)}</div>
             <p className={styles.help}>Ukrycie sekcji zmienia prezentację strony. Dane pozostają zapisane w profilu.</p>

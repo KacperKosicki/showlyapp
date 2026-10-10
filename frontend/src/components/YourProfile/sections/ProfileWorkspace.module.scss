@@ -1,0 +1,37 @@
+@import '../../../styles/profileEditor';
+.workspace { padding: clamp(18px, 2.5vw, 30px); border: 1px solid var(--app-border); border-radius: 24px; background: color-mix(in srgb, var(--app-surface) 92%, transparent); }
+.top { display: flex; justify-content: space-between; gap: 24px; align-items: center; margin-bottom: 25px; }
+.kicker { color: var(--app-primary); font: 600 .62rem $font-accent; text-transform: uppercase; letter-spacing: .08em; }
+.top h2 { margin: 8px 0; font: 600 clamp(1.3rem, 2.2vw, 2rem)/1.2 $font-heading; letter-spacing: -.045em; }
+.top p { margin: 0; color: var(--app-muted); font-size: .76rem; line-height: 1.7; }
+.progress { flex-shrink: 0; width: 180px; padding-left: 22px; border-left: 1px solid var(--app-border); }
+.progress > span { font: 500 .9rem $font-accent; color: var(--app-muted); }
+.progress strong { font: 600 2.4rem/1 $font-heading; color: var(--app-text); }
+.progress p { margin-block: 7px 10px; font-size: .64rem; }
+.track { height: 5px; overflow: hidden; border-radius: 6px; background: var(--app-border); }
+.track span { display: block; height: 100%; background: var(--app-primary); transition: width .25s; }
+.tiles { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+.tile { display: flex; flex-direction: column; min-width: 0; padding: 17px 14px 12px; border: 1px solid var(--app-border); border-radius: 14px; background: var(--app-surface); color: var(--app-text); text-decoration: none; transition: transform .2s, border-color .2s, box-shadow .2s; }
+.tile:nth-child(3) { background: color-mix(in srgb, var(--app-primary) 8%, var(--app-surface)); }
+.tile:hover { transform: translateY(-4px); border-color: var(--app-primary); box-shadow: 0 10px 25px #1719170a; }
+.tile:focus-visible, .bottom a:focus-visible { outline: 3px solid var(--app-primary); outline-offset: 4px; }
+.tileTop { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.tileTop svg { width: 32px; height: 32px; padding: 7px; border-radius: 9px; background: color-mix(in srgb, var(--yp-lime) 65%, var(--app-surface)); color: #171917; }
+.tileTop span { font: 500 .6rem $font-accent; color: var(--app-muted); }
+.tile > strong { font: 600 .88rem $font-heading; }
+.detail { display: block; margin: 6px 0 16px; color: var(--app-muted); font-size: .64rem; line-height: 1.5; }
+.tileBottom { display: flex; align-items: center; gap: 5px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--app-border); font-size: .59rem; color: var(--app-muted); }
+.tileBottom > svg { width: 12px; height: 12px; flex-shrink: 0; }
+.tileBottom > svg:last-child { margin-left: auto; }
+.tile[data-ready=true] .tileBottom > svg:first-child { color: var(--app-primary); }
+.bottom { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-top: 22px; }
+.bottom p { margin: 0; font-size: .73rem; line-height: 1.7; }
+.bottom p > span { display: block; color: var(--app-muted); font-size: .62rem; }
+.bottom p a { color: var(--app-primary); text-decoration: none; font-weight: 600; }
+.bottom p svg { vertical-align: middle; }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.tools a { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 11px; min-height: 40px; border: 1px solid var(--app-border); border-radius: 9px; color: var(--app-text); text-decoration: none; font-size: .66rem; }
+.tools a:hover { background: var(--app-surface); border-color: var(--app-primary); }
+@media (max-width: 1100px) { .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .top { align-items: flex-start; gap: 16px; } .progress { width: 105px; padding-left: 12px; } .top p { font-size: .7rem; } .top h2 { font-size: 1.3rem; } .progress strong { font-size: 1.8rem; } .progress p { font-size: .56rem; } .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; } .tile { padding: 14px 12px 11px; } .tileTop { margin-bottom: 12px; } .bottom { flex-direction: column; align-items: flex-start; gap: 12px; } .tools { width: 100%; } .tools a { flex: 1; padding-inline: 7px; font-size: .62rem; } }
+@media (prefers-reduced-motion: reduce) { .tile, .track span { transition: none; } .tile:hover { transform: none; } }

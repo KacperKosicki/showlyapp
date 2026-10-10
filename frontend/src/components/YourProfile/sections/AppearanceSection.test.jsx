@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '@testing-library/jest-dom';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AppearanceSection from './AppearanceSection';
@@ -76,4 +77,34 @@ test('edits new appearance settings and applies them to the preview', () => {
   expect(preview.getAttribute('data-alignment')).toBe('left');
   expect(preview.style.getPropertyValue('--pd-avatar-radius')).toBe('50%');
   expect(preview.style.getPropertyValue('--pd-banner-overlay')).toBe('0.75');
+});
+
+test('new compositions update the live preview and preserve the personal availability text', () => {
+  render(<Editor />);
+  fireEvent.change(screen.getByLabelText('Komunikat pod nazwą profilu'), { target: { value: 'Przyjmuję zlecenia ' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Aura', exact: true }));
+  fireEvent.change(screen.getByLabelText('Wysokość wizytówki'), { target: { value: 'cinematic' } });
+  fireEvent.change(screen.getByLabelText('Układ galerii realizacji'), { target: { value: 'mosaic' } });
+  fireEvent.change(screen.getByLabelText('Rozmycie tła bannera'), { target: { value: '7' } });
+  expect(current()).toMatchObject({ style: 'aura', galleryLayout: 'mosaic', heroHeight: 'cinematic', bannerBlur: 7, availabilityLabel: 'Przyjmuję zlecenia ', showSectionNav: true });
+  const preview = screen.getByLabelText('Podgląd wyglądu wizytówki').querySelector('[data-design]');
+  expect(preview).toHaveAttribute('data-design', 'aura');
+  expect(preview).toHaveAttribute('data-gallery', 'mosaic');
+  expect(preview.style.getPropertyValue('--pd-banner-blur')).toBe('7px');
+  expect(preview).toHaveTextContent('Przyjmuję zlecenia');
+  fireEvent.click(screen.getByLabelText('Skróty do widocznych sekcji pod wizytówką'));
+  expect(screen.queryByLabelText('Podgląd skrótów do sekcji')).not.toBeInTheDocument();
+});
+
+test('new page compositions and individual controls reach the live preview', () => {
+  render(<Editor />);
+  fireEvent.click(screen.getByRole('button', { name: 'Atelier' }));
+  expect(current()).toMatchObject({ layout: 'reverse', identityStyle: 'card', headingFont: 'playfair' });
+  fireEvent.change(screen.getByLabelText('Układ wizytówki'), { target: { value: 'sidebar' } });
+  fireEvent.change(screen.getByLabelText('Powierzchnia kart'), { target: { value: 'glass' } });
+  fireEvent.change(screen.getByLabelText('Grubość nazwy'), { target: { value: 'black' } });
+  const preview = screen.getByLabelText('Podgląd wyglądu wizytówki').querySelector('[data-design]');
+  expect(preview).toHaveAttribute('data-layout', 'sidebar');
+  expect(preview).toHaveAttribute('data-card-surface', 'glass');
+  expect(preview.style.getPropertyValue('--pd-title-weight')).toBe('800');
 });

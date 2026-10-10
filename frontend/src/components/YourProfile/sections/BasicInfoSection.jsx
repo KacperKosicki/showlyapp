@@ -34,7 +34,7 @@ const BasicInfoSection = ({
   };
 
   return (
-    <section className={`${styles.card} ${styles.basicCard}`}>
+    <section id="basicInfoSection" className={`${styles.card} ${styles.basicCard}`}>
       <div className={styles.cardGlow} aria-hidden="true" />
 
       <EditorSectionHeader kicker={<>Profil publiczny</>} title={<>Dane podstawowe</>} description={<>

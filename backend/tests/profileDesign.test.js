@@ -25,3 +25,21 @@ test('rejects unsupported presentation values', () => {
   const errors=new Theme({theme:{borderWidth:100,bannerOverlay:100,avatarShape:'triangle',border:'url(evil)'}}).validateSync().errors;
   for(const key of ['borderWidth','bannerOverlay','avatarShape','border']) assert.ok(errors[`theme.${key}`]);
 });
+
+test('extended compositions and personal availability survive persistence', () => {
+  const settings = { style: 'aura', backgroundStyle: 'aurora', heroHeight: 'cinematic', galleryLayout: 'mosaic', bannerBlur: 8, showSectionNav: true, availabilityLabel: 'Przyjmuję zlecenia' };
+  const doc = new Theme({ theme: settings });
+  assert.equal(doc.validateSync(), undefined);
+  const copy = new Theme(JSON.parse(JSON.stringify(doc)));
+  for (const [key, value] of Object.entries(settings)) assert.equal(copy.theme[key], value, key);
+  const errors = new Theme({ theme: { heroHeight: 'evil', galleryLayout: 'evil', bannerBlur: 100, availabilityLabel: 'a'.repeat(61) } }).validateSync().errors;
+  for (const key of ['heroHeight', 'galleryLayout', 'bannerBlur', 'availabilityLabel']) assert.ok(errors[`theme.${key}`]);
+});
+
+test('full profile architecture survives schema serialization', () => {
+  const settings = { layoutVersion: 2, layout: 'sidebar', identityStyle: 'card', headingFont: 'playfair', bodyFont: 'mono', titleCase: 'uppercase', titleWeight: 'black', letterSpacing: 'wide', cardSurface: 'glass', sectionHeading: 'label', borderStyle: 'double', borderWidth: 6, buttonStyle: 'raised' };
+  const doc = new Theme({ theme: settings });
+  assert.equal(doc.validateSync(), undefined);
+  const copy = new Theme(JSON.parse(JSON.stringify(doc)));
+  for (const [key, value] of Object.entries(settings)) assert.equal(copy.theme[key], value, key);
+});

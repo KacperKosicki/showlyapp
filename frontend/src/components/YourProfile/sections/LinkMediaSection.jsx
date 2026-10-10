@@ -33,7 +33,7 @@ const LinkMediaSection = ({
       {/* =========================
   Linki i media
 ========================= */}
-      <section className={`${styles.card} ${styles.mediaCard}`}>
+      <section id="mediaSection" className={`${styles.card} ${styles.mediaCard}`}>
         <div className={styles.cardGlow} aria-hidden="true" />
 
         <EditorSectionHeader kicker={<>Widoczność profilu</>} title={<>Linki i media</>} description={<>

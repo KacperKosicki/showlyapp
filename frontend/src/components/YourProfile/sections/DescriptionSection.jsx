@@ -15,7 +15,7 @@ const DescriptionSection = ({
   const progressWidth = Math.min((descriptionLength / maxDescription) * 100, 100);
 
   return (
-    <section className={`${styles.card} ${styles.descriptionCard}`}>
+    <section id="descriptionSection" className={`${styles.card} ${styles.descriptionCard}`}>
       <div className={styles.cardGlow} aria-hidden="true" />
 
       <EditorSectionHeader kicker={<>O Tobie</>} title={<>Opis profilu</>} description={<>

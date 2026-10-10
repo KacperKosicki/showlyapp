@@ -15,7 +15,7 @@ const AdditionalInfoSection = ({
       {/* =========================
   Informacje dodatkowe
 ========================= */}
-      <section className={`${styles.card} ${styles.extraCard}`}>
+      <section id="additionalInfoSection" className={`${styles.card} ${styles.extraCard}`}>
         <div className={styles.cardGlow} aria-hidden="true" />
 
         <EditorSectionHeader kicker={<>Finalne ustawienia</>} title={<>Informacje dodatkowe</>} description={<>

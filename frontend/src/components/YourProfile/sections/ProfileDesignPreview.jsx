@@ -38,6 +38,7 @@ const ProfileDesignPreview = ({ profile, editData, isEditing }) => {
               <p>{data?.role || 'Twój sposób działania'}</p>
               <h3>{data?.name || 'Twoja marka'}</h3>
               {theme.tagline && <p>{theme.tagline}</p>}
+              {theme.availabilityLabel && <span className={styles.previewAvailability}>{theme.availabilityLabel}</span>}
               <span className={styles.previewLocation}><FiMapPin aria-hidden="true" />{data?.location || 'Twoja lokalizacja'}</span>
             </div>
             <div className={styles.previewPanel}>
@@ -47,6 +48,7 @@ const ProfileDesignPreview = ({ profile, editData, isEditing }) => {
               <span className={styles.previewButton}>{theme.ctaLabel || 'Napisz wiadomość'}<FiArrowUpRight aria-hidden="true" /></span>
             </div>
           </div>
+          {theme.showSectionNav && <div className={styles.previewSectionNav} aria-label="Podgląd skrótów do sekcji">{theme.sectionOrder.filter(key => key === 'overview' ? ['description', 'contact', 'price', 'links'].some(section => theme.sections[section]) : theme.sections[key] && (key !== 'gallery' || photos.length > 0) && (key !== 'services' || services.length > 0)).map(key => <span key={key}>{SECTION_LABELS[key]}</span>)}</div>}
           <div className={styles.previewContent}>{theme.sectionOrder.map(key => {
             const visible = key === 'overview' ? ['description', 'contact', 'price', 'links'].some(section => theme.sections[section]) : theme.sections[key];
             if (!visible) return null;

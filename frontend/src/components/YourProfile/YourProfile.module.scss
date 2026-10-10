@@ -50,7 +50,7 @@
 }
 
 .wrapper[data-editing=false] .editorSections fieldset {
-  opacity: .7;
+  opacity: 1;
 }
 
 @media(prefers-reduced-motion:reduce) {
@@ -173,4 +173,22 @@
     padding: 8px 10px;
   }
 
+}
+
+// The workspace cards stay calm inside, with a more expressive outer frame.
+.editorSections > section {
+  position: relative;
+  border-color: var(--app-border);
+  background: radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--app-primary) 5%, transparent), transparent 45%), var(--app-surface);
+  box-shadow: 0 12px 35px #17191708, 0 1px 0 var(--app-border);
+}
+.editorSections > section::before {
+  content: ''; position: absolute; top: 0; left: 26px; right: 26px; height: 3px;
+  background: linear-gradient(90deg, var(--app-primary), color-mix(in srgb, var(--yp-lime) 65%, var(--app-surface)), transparent);
+  border-radius: 0 0 5px 5px; pointer-events: none;
+}
+.editorSections > section:nth-of-type(3n)::before { background: linear-gradient(90deg, var(--yp-lime), var(--app-primary), transparent); }
+.wrapper :is(input:not([type=range]), select, textarea):focus-visible { outline: 3px solid color-mix(in srgb, var(--app-primary) 35%, transparent); outline-offset: 3px; }
+@media (max-width: 600px) {
+  .editorSections > section::before { left: 18px; right: 18px; }
 }

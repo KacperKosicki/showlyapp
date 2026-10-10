@@ -2937,3 +2937,88 @@ $ease-showly: cubic-bezier(0.16, 1, 0.3, 1);
     border-bottom: var(--pd-border-width) var(--pd-border-style) var(--pd-frame);
   }
 }
+
+// Extended compositions shared with the live editor preview.
+.page.page[data-design] {
+  @include profile-design-compositions(':is(.aboutCard, .priceCard, .contactCard, .resourcesCard, .contentSection, .serviceCard, .reviewCard)', ':is(.heroTitle, .sectionHeader h2, .aboutCard h2)', '.heroVisual', '.heroBackdrop');
+  .availabilityNote { display: inline-flex; align-items: center; gap: 9px; max-width: 100%; padding: 9px 14px; border: 1px solid #ffffff40; border-radius: 30px; background: #171917c9; color: #fffdf7; font-size: .72rem; line-height: 1.5; overflow-wrap: anywhere; &::before { content: ''; width: 7px; height: 7px; flex-shrink: 0; border-radius: 50%; background: var(--pp-secondary); } }
+  .sectionNav { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0; padding: 14px 0; border-bottom: 1px solid var(--pp-line); a { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 44px; padding: 9px 16px; border: 1px solid var(--pd-frame); border-radius: min(var(--pd-radius), 24px); background: var(--pp-surface); color: var(--pp-ink); font: 600 .76rem var(--pd-body); text-decoration: none; svg { width: 15px; height: 15px; } &:hover { background: var(--pp-secondary); color: var(--pd-secondary-ink); } &:focus-visible { outline: 3px solid var(--pp-primary); outline-offset: 3px; } } }
+  .profileContent > section { scroll-margin-top: calc(124px + var(--beta-banner-height, 0px) + var(--safe-top, 0px)); }
+}
+.page.page[data-gallery]:not([data-gallery=classic]) {
+  .galleryGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: auto; gap: 14px; margin: 0; padding: 0; overflow: visible; }
+  .galleryItem { grid-column: auto; grid-row: auto; min-height: 0; height: auto; aspect-ratio: 4 / 3; }
+}
+.page.page[data-gallery=portrait] .galleryItem { aspect-ratio: 3 / 4; }
+.page.page[data-gallery=mosaic] {
+  .galleryGrid { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 180px; }
+  .galleryItem { aspect-ratio: auto; height: 100%; }
+  .galleryItem:nth-child(5n + 1) { grid-column: span 2; grid-row: span 2; }
+}
+@media (max-width: 900px) {
+  .page.page[data-design] .heroVisual { min-height: min(var(--pd-hero-height), 520px); }
+}
+@media (max-width: 600px) {
+  .page.page[data-design] .heroVisual { min-height: min(var(--pd-hero-height), 480px); }
+  .page.page[data-hero-height=compact] .heroVisual { min-height: 330px; }
+  .page.page[data-design] .sectionNav { gap: 8px; a { flex: 1 1 calc(50% - 8px); padding-inline: 10px; font-size: .7rem; } }
+  .page.page[data-gallery]:not([data-gallery=classic]) .galleryGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .page.page[data-gallery=mosaic] .galleryGrid { grid-auto-rows: 140px; }
+}
+
+// Architecture choices change the entire page, not only its banner.
+.page.page[data-design] {
+  @include profile-design-details(':is(.aboutCard, .priceCard, .contactCard, .resourcesCard, .contentSection, .serviceCard, .reviewCard, .ratingCard)', '.heroTitle', ':is(.sectionHeader h2, .aboutCard h2, .contactCard h2, .resourcesCard h2)', ':is(.actionPrimary, .actionSecondary, .serviceCta, .submitRating)');
+  &[data-identity=card] {
+    .heroVisual { display: grid; align-items: center; }
+    .heroCenter { min-height: 0; width: calc(100% - 3rem); margin: 1.5rem; padding: var(--pd-padding); background: var(--pp-surface); border: var(--pd-border-width) var(--pd-border-style) var(--pd-frame); border-radius: var(--pd-radius); box-shadow: var(--pd-shadow); color: var(--pp-ink); }
+    :is(.heroTitle, .heroRole, .customTagline) { color: var(--pp-ink); text-shadow: none; }
+    .availabilityNote { background: var(--pp-theme-soft); border-color: var(--pp-line); color: var(--pp-ink); }
+    .heroMeta > span { color: var(--pp-ink); background: var(--pp-theme-soft); border-color: var(--pp-line); }
+    .heroMeta svg { color: var(--pp-ink); }
+  }
+  &[data-layout=reverse] {
+    .profileHero { grid-template-columns: minmax(320px, .72fr) minmax(0, 1.7fr); }
+    .heroPanel { grid-column: 1; grid-row: 1; }
+    .heroVisual { grid-column: 2; grid-row: 1; border-right: 0; border-left: var(--pd-border-width) var(--pd-border-style) var(--pd-frame); }
+  }
+  &[data-layout=sidebar] {
+    .shell { display: grid; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); gap: var(--pd-gap); align-items: start; grid-template-rows: auto 1fr; }
+    .profileHero { grid-column: 1; grid-row: 1 / span 2; grid-template-columns: minmax(0, 1fr); min-height: 0; }
+    .heroVisual { min-height: 320px; border-right: 0; border-bottom: var(--pd-border-width) var(--pd-border-style) var(--pd-frame); }
+    .heroCenter { padding: 2rem 1.25rem; }
+    .heroTitle { font-size: calc(2.4rem * var(--pd-title-scale)); }
+    .heroPanel { gap: 1rem; }
+    .alertWrap { grid-column: 1 / -1; grid-row: 1; }
+    .shell:has(> .alertWrap) { grid-template-rows: auto auto 1fr; }
+    .shell:has(> .alertWrap) .profileHero { grid-row: 2 / span 2; }
+    .sectionNav { grid-row: 1; margin: 0; padding-top: 0; }
+    .profileContent { grid-row: 2; }
+    .shell:not(:has(> .sectionNav)) .profileContent { grid-row: 1 / span 2; }
+    .shell:has(> .alertWrap) .sectionNav { grid-row: 2; }
+    .shell:has(> .alertWrap) .profileContent { grid-row: 3; }
+    .shell:has(> .alertWrap):not(:has(> .sectionNav)) .profileContent { grid-row: 2 / span 2; }
+    .profileContent, .sectionNav { grid-column: 2; min-width: 0; }
+    .profileContent { margin-top: 0; }
+    .overviewBand { grid-template-columns: minmax(0, 1fr); }
+    .servicesGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 1000px) {
+    &[data-layout=sidebar] {
+      .shell { display: block; }
+      .profileHero { margin-bottom: var(--pd-mobile-gap); }
+      .heroVisual { min-height: var(--pd-hero-height); }
+      .heroTitle { font-size: clamp(calc(2rem * var(--pd-title-scale)), calc(7vw * var(--pd-title-scale)), calc(3.4rem * var(--pd-title-scale))); }
+      .sectionNav { margin-bottom: var(--pd-mobile-gap); }
+    }
+    &[data-layout=reverse] {
+      .profileHero { grid-template-columns: minmax(0, 1fr); }
+      .heroVisual { grid-column: 1; grid-row: 1; border-left: 0; border-bottom: var(--pd-border-width) var(--pd-border-style) var(--pd-frame); }
+      .heroPanel { grid-column: 1; grid-row: 2; }
+    }
+  }
+  @media (max-width: 600px) {
+    &[data-layout=sidebar] .servicesGrid { grid-template-columns: minmax(0, 1fr); }
+    &[data-identity=card] .heroCenter { width: calc(100% - 1.5rem); margin: .75rem; }
+  }
+}

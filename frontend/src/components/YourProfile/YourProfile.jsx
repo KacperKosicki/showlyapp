@@ -2,7 +2,7 @@ import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 // YourProfile.jsx
 import { useState, useRef } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { FiArrowUpRight } from 'react-icons/fi';
+import ProfileWorkspace from './sections/ProfileWorkspace';
 import styles from './YourProfile.module.scss';
 import AlertBox from "../AlertBox/AlertBox";
 import EmptyProfileState from './sections/EmptyProfileState';
@@ -295,17 +295,14 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       )}
 
       <div className={styles.inner} id="profileWrapper">
-        <nav className={styles.editorNav} aria-label="Zarządzanie wizytówką">
-          <a href="#appearanceSection">Wygląd i układ</a>
-          <a href="#profileDesignPreview">Podgląd na żywo</a>
-          <a href="#billingSection">Plan i widoczność</a>
-          {profile?.slug && <a href={`/${profile.slug}`} target="_blank" rel="noreferrer">Podgląd publiczny <FiArrowUpRight aria-hidden="true" /></a>}
-        </nav>
         <ProfileHeader
           profile={profile}
+          editData={editData}
           isEditing={isEditing}
           onEdit={() => setIsEditing(true)}
         />
+
+        <ProfileWorkspace profile={profile} editData={editData} isEditing={isEditing} />
 
         {/* Pasek zapisu edycji */}
         {isEditing && (

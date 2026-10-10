@@ -26,7 +26,7 @@ test('new presentation choices survive save normalization and produce shared var
   expect(getProfileDesignAttributes(theme)).toMatchObject({ 'data-alignment': 'left', 'data-buttons': 'outline', 'data-services': 'list' });
 });
 test('clamps banner and border values, and keeps text readable on accent colors', () => {
-  expect(normalizeProfileDesign({ borderWidth: 200, bannerOverlay: -20, heroText: 'url(evil)' })).toMatchObject({ borderWidth: 3, bannerOverlay: 0, heroText: '#ffffff' });
+  expect(normalizeProfileDesign({ borderWidth: 200, bannerOverlay: -20, heroText: 'url(evil)' })).toMatchObject({ borderWidth: 6, bannerOverlay: 0, heroText: '#ffffff' });
   expect(contrastInk('#fff')).toBe('#171917'); expect(contrastInk('#000')).toBe('#ffffff');
 });
 test('preview and public profile use the same booking button rules', () => {
@@ -34,4 +34,21 @@ test('preview and public profile use the same booking button rules', () => {
   expect(getProfileBookingPresentation({ bookingMode: 'calendar' })).toMatchObject({ isCalendar: true, allowBookingUI: true, bookBtnLabel: 'Zarezerwuj termin' });
   expect(getProfileBookingPresentation({ bookingMode: 'request-open', showAvailableDates: false }).allowBookingUI).toBe(false);
   expect(getProfileBookingPresentation({}).allowBookingUI).toBe(false);
+});
+
+test('extended compositions persist and drive identical public and preview settings', () => {
+  const theme = normalizeProfileDesign({ style: 'aura', backgroundStyle: 'aurora', heroHeight: 'cinematic', galleryLayout: 'mosaic', bannerBlur: 8, showSectionNav: true, availabilityLabel: 'Przyjmuję zlecenia' });
+  expect(normalizeProfileDesign(JSON.parse(JSON.stringify(theme)))).toEqual(theme);
+  expect(getProfileDesignAttributes(theme)).toMatchObject({ 'data-design': 'aura', 'data-gallery': 'mosaic', 'data-hero-height': 'cinematic', 'data-background': 'aurora' });
+  expect(getProfileDesignVars(theme)).toMatchObject({ '--pd-banner-blur': '8px', '--pd-hero-height': '660px', '--pd-preview-hero-height': '360px' });
+  expect(normalizeProfileDesign({ bannerBlur: 99, availabilityLabel: 'a'.repeat(100) }).bannerBlur).toBe(12);
+  expect(normalizeProfileDesign({ availabilityLabel: 'a'.repeat(100) }).availabilityLabel).toHaveLength(60);
+  expect(normalizeProfileDesign({ heroHeight: 'evil', galleryLayout: 'evil', showSectionNav: 'false' })).toMatchObject({ heroHeight: 'normal', galleryLayout: 'classic', showSectionNav: false });
+});
+
+test('full page architecture and typography round-trip safely', () => {
+  const theme = normalizeProfileDesign({ layoutVersion: 2, layout: 'sidebar', headingFont: 'playfair', bodyFont: 'mono', identityStyle: 'card', titleCase: 'uppercase', titleWeight: 'black', letterSpacing: 'wide', cardSurface: 'glass', sectionHeading: 'label', borderStyle: 'double', borderWidth: 6, buttonStyle: 'raised' });
+  expect(normalizeProfileDesign(JSON.parse(JSON.stringify(theme)))).toEqual(theme);
+  expect(getProfileDesignAttributes(theme)).toMatchObject({ 'data-layout': 'sidebar', 'data-identity': 'card', 'data-card-surface': 'glass', 'data-section-heading': 'label' });
+  expect(getProfileDesignVars(theme)).toMatchObject({ '--pd-title-weight': 800, '--pd-title-spacing': '.055em', '--pd-border-width': '6px', '--pd-body': '"IBM Plex Mono", monospace' });
 });

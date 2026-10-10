@@ -36,3 +36,16 @@ test('legacy hero becomes split and disabling a banner keeps a gradient fallback
   expect(container.querySelector(`.${styles.profileHeroWithBanner}`)).toBe(null);
   expect(container.querySelector('[data-design]').style.getPropertyValue('--pp-banner')).toContain('#123456');
 });
+
+test('public page applies the saved full layout and typography controls', async () => {
+  const theme = normalizeProfileDesign({ layoutVersion: 2, layout: 'sidebar', identityStyle: 'card', headingFont: 'playfair', bodyFont: 'manrope', titleCase: 'uppercase', titleWeight: 'black', letterSpacing: 'wide', cardSurface: 'glass', sectionHeading: 'label', buttonStyle: 'raised', showSectionNav: true });
+  const container = await load(theme);
+  const page = container.querySelector('[data-design]');
+  expect(page.dataset.layout).toBe('sidebar');
+  expect(page.dataset.identity).toBe('card');
+  expect(page.dataset.cardSurface).toBe('glass');
+  expect(page.dataset.sectionHeading).toBe('label');
+  expect(page.style.getPropertyValue('--pd-heading')).toBe('"Playfair Display", Georgia, serif');
+  expect(page.style.getPropertyValue('--pd-title-weight')).toBe('800');
+  expect(screen.getByRole('navigation', { name: 'Sekcje profilu' })).toBeTruthy();
+});
