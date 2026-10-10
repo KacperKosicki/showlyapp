@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import {
   useEffect,
   useMemo,
@@ -283,12 +284,7 @@ const AllUsersList = ({ currentUser, setAlert }) => {
           className={`${styles.frame} ${styles.loadingFrame}`}
           aria-live="polite"
         >
-          <div className={styles.loadingIntro}>
-            <span className={styles.loadingPill} />
-            <span className={styles.loadingTitle} />
-            <span className={styles.loadingTitleShort} />
-            <span className={styles.loadingText} />
-          </div>
+          <div className={styles.loadingIntro}><DataLoader label="Ładujemy katalog profili…" layout="none" /><span className={styles.loadingPill} aria-hidden="true" /><span className={styles.loadingTitle} aria-hidden="true" /><span className={styles.loadingTitleShort} aria-hidden="true" /><span className={styles.loadingText} aria-hidden="true" /></div>
 
           <div className={styles.loadingGallery}>
             <div className={styles.loadingGalleryHead}>

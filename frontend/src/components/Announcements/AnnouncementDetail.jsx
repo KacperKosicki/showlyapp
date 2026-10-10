@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import AnnouncementBackdrop from './AnnouncementBackdrop';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -36,7 +37,7 @@ export default function AnnouncementDetail({ user }) {
   return <section className={`${styles.section} ${styles.detailPage}`} id="announcements"><AnnouncementBackdrop /><div className={styles.inner}>
     <Link className={styles.back} to="/ogloszenia" state={{ scrollToId: 'announcements' }}><FiArrowLeft />Wszystkie ogłoszenia</Link>
     {alert && <AlertBox {...alert} onClose={() => setAlert(null)} />}
-    {loading ? <div className={styles.empty} role="status">Ładujemy ogłoszenie…</div> : error ? <div className={styles.empty} role="alert"><strong>{error}</strong><button onClick={() => setRefresh(value => value + 1)}>Spróbuj ponownie</button></div> : item && <div className={styles.detailLayout}>
+    {loading ? <DataLoader label="Ładujemy ogłoszenie…" detail="Za chwilę poznasz pomysł i jego autora." layout="profile" /> : error ? <div className={styles.empty} role="alert"><strong>{error}</strong><button onClick={() => setRefresh(value => value + 1)}>Spróbuj ponownie</button></div> : item && <div className={styles.detailLayout}>
       <article className={`${styles.panel} ${styles.detailPanel}`} style={{ '--idea-color': color }}>
         <header className={styles.detailHeader}>
           <div className={styles.detailCoverTop}><span className={styles.detailCoverLabel}><Icon aria-hidden="true" />POMYSŁ SZUKA TALENTU</span><span className={styles.detailCoverArrow} aria-hidden="true"><FiArrowUpRight /></span></div>

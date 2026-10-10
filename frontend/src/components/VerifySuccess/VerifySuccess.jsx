@@ -1,3 +1,4 @@
+import AppLoader from '../AppLoader/AppLoader';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../firebase';
@@ -50,10 +51,7 @@ const VerifySuccess = () => {
   }, [navigate]);
 
   return (
-    <div className="verify-success">
-      <h2>✅ E-mail został zweryfikowany!</h2>
-      <p>Za chwilę zostaniesz przekierowany na stronę główną...</p>
-    </div>
+<AppLoader label="Przygotowujemy Twoje konto…" detail="Za chwilę wrócisz na stronę główną." />
   );
 };
 

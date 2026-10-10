@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import { createPortal } from "react-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -353,7 +354,7 @@ const ReservationCalendar = ({
             </div>
 
             <div className={styles.modalBody}>
-              {metaLoading && <div className={styles.modalHint}>Ładowanie danych profilu…</div>}
+              {metaLoading && <DataLoader label="Ładujemy dane profilu…" compact />}
 
               <div className={styles.modalInfo}>
                 <FiInfo />

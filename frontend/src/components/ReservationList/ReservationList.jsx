@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import styles from "./ReservationList.module.scss";
@@ -2269,14 +2270,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
             ) : loading ? (
               <div className={styles.reservationsStack}>
                 <EditorGroup title="02 / Ładowanie rezerwacji" className={styles.reservationGroup}>
-                  <div className={styles.groupHeader}>
-                    <div>
-                      <span className={styles.groupLabel}>Ładowanie</span>
-                      <h4>Ładowanie rezerwacji</h4>
-                    </div>
-
-                    <span className={styles.groupBadge}>—</span>
-                  </div>
+                  <DataLoader label="Ładujemy Twoje rezerwacje…" layout="none" />
 
                   <ul className={styles.list}>
                     {Array.from({ length: 4 }).map((_, index) => (

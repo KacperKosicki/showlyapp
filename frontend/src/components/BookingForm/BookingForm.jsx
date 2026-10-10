@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
@@ -211,12 +212,14 @@ export default function BookingForm({ user }) {
     return (
       <section className={styles.pageWrap} id="booking-form">
         <div className={styles.inner}>
-          <div className={styles.loadingCard}>
+          <>
+          {!loadError ? <DataLoader label="Ładujemy formularz rezerwacji…" detail="Sprawdzamy usługi i dostępność tego profilu." layout="form" /> : <div className={styles.loadingCard}>
             <span>SHOWLY / REZERWACJE</span>
-            <strong>{loadError ? "Nie udało się wczytać formularza" : "Przygotowujemy Twoją rezerwację…"}</strong>
-            <p>{loadError ? "Spróbuj ponownie. Twój wybór usługi został zachowany." : "Sprawdzamy usługi i dostępność tego profilu."}</p>
+            <strong>Nie udało się wczytać formularza</strong>
+            <p>Spróbuj ponownie. Twój wybór usługi został zachowany.</p>
             {loadError && <button type="button" className={styles.backButton} onClick={() => setReloadKey(value => value + 1)}>Spróbuj ponownie</button>}
-          </div>
+          </div>}
+          </>
         </div>
       </section>
     );

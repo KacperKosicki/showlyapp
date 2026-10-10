@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import { useEffect, useId, useRef, useState } from "react";
 import {
   FiArrowUpRight,
@@ -313,15 +314,7 @@ const SearchBar = ({ variant = "default" }) => {
           </header>
 
           {loading ? (
-            <div className={styles.dropdownState} role="status">
-              <span className={styles.stateMark} aria-hidden="true">
-                ···
-              </span>
-              <div>
-                <strong>Przeszukuję Showly</strong>
-                <span>To potrwa tylko chwilę.</span>
-              </div>
-            </div>
+            <div className={styles.dropdownState}><DataLoader label="Szukamy pasujących profili…" compact /></div>
           ) : results.length === 0 ? (
             <div className={styles.dropdownState} role="status">
               <span className={styles.stateMark} aria-hidden="true">

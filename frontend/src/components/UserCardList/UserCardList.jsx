@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
@@ -307,12 +308,7 @@ const UserCardList = ({ currentUser, setAlert }) => {
             </div>
           </div>
 
-          <div className={styles.loadingIntro}>
-            <span className={styles.loadingPill} />
-            <span className={styles.loadingTitle} />
-            <span className={styles.loadingTitleShort} />
-            <span className={styles.loadingText} />
-          </div>
+          <div className={styles.loadingIntro}><DataLoader label="Ładujemy najlepiej oceniane profile…" layout="none" /><span className={styles.loadingPill} aria-hidden="true" /><span className={styles.loadingTitle} aria-hidden="true" /><span className={styles.loadingTitleShort} aria-hidden="true" /><span className={styles.loadingText} aria-hidden="true" /></div>
         </div>
       </section>
     );

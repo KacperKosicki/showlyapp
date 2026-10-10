@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 // YourProfile.jsx
 import { useState, useRef } from 'react';
@@ -260,7 +261,7 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
   });
 
   if (!user) return <Navigate to="/login" replace />;
-  if (loading) return <div className={styles.wrapper}>⏳ Ładowanie profilu…</div>;
+  if (loading) return <div className={styles.wrapper}><div className={styles.inner}><DataLoader label="Ładujemy Twoją wizytówkę…" detail="Dane, wygląd i oferta zaraz będą pod ręką." layout="profile" /></div></div>;
   if (loadError && !profile) return <div className={styles.wrapper}><div className={styles.connectionError} role="alert"><h1>Nie możemy teraz pobrać wizytówki.</h1><p>Serwer jest niedostępny. Nie oznacza to usunięcia ani blokady Twojego profilu. Spróbuj ponownie po przywróceniu połączenia.</p><button type="button" onClick={fetchProfile}>Spróbuj ponownie</button></div></div>;
   if (notFound || !profile) return <EmptyProfileState />;
 

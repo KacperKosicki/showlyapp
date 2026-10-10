@@ -1,3 +1,4 @@
+import DataLoader from '../../ui/DataLoader/DataLoader';
 import EditorGroup, { EditorSectionHeader } from './EditorGroup';
 import { FiCreditCard } from 'react-icons/fi';
 import styles from "./BillingSection.module.scss";
@@ -24,6 +25,7 @@ const BillingSection = ({
       <div className={styles.billingGlowTwo} aria-hidden="true" />
       <div className={styles.billingNoise} aria-hidden="true" />
 
+      {billingLoading && <DataLoader label="Sprawdzamy Twój plan…" compact />}
       <EditorSectionHeader kicker="Plan i widoczność profilu" title="Twój plan i limity" description={betaPremiumEnabled ? "Testuj wszystkie możliwości Showly — Premium jest teraz dostępne bezpłatnie dla każdego profilu." : "Zarządzaj widocznością profilu, zdjęciami, usługami i rezerwacjami. Wybierz plan dopasowany do swojej oferty."} icon={<FiCreditCard />} />
 
       {betaPremiumEnabled && <div className={styles.betaNotice} role="status">

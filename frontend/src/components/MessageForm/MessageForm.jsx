@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 // MessageForm.jsx
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
@@ -442,14 +443,7 @@ const MessageForm = ({ user }) => {
 
                   <div className={`${styles.textarea} ${styles.shimmer}`} />
 
-                  <LoadingButton
-                    type="button"
-                    isLoading={true}
-                    disabled={true}
-                    className={styles.primaryBtn}
-                  >
-                    Ładowanie
-                  </LoadingButton>
+                  <DataLoader label="Ładujemy formularz wiadomości…" layout="none" />
                 </div>
               ) : (
                 <>

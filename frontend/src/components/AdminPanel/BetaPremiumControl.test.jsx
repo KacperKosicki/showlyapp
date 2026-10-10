@@ -26,3 +26,11 @@ test('a failed save does not pretend Premium was enabled', async () => {
   await screen.findByRole('alert');
   expect(screen.getByText('Wyłączone · standardowe plany')).toBeInTheDocument();
 });
+
+test('does not keep announcing loading after a failed settings request', async () => {
+  adminApi.betaPremium.mockRejectedValueOnce(new Error('offline'));
+  render(<BetaPremiumControl />);
+  await screen.findByRole('alert');
+  expect(screen.queryByText('Ładujemy ustawienia testów…')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Włącz testowe Premium' })).toBeDisabled();
+});

@@ -1,3 +1,4 @@
+import DataLoader from '../../ui/DataLoader/DataLoader';
 import EditorGroup, { EditorSectionHeader } from './EditorGroup';
 import styles from "./OfferSection.module.scss";
 import LoadingButton from '../../ui/LoadingButton/LoadingButton';
@@ -1699,9 +1700,7 @@ const OfferSection = ({
           {/* Lista pracowników */}
           <EditorGroup title="02 / Pracownicy i przypisane usługi">
             {staffLoading ? (
-              <div className={styles.staffLoadingBox}>
-                Ładowanie pracowników…
-              </div>
+              <DataLoader label="Ładujemy zespół…" layout="list" />
             ) : staff.length ? (
               <div className={`${styles.staffGrid} ${!canUseTeam ? styles.lockedSection : ""}`}>
                 {staff.map((st) => {

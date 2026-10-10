@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 // BookingModeCalendar.jsx
 import { useEffect, useMemo, useState, useCallback } from "react";
 import {
@@ -91,6 +92,8 @@ export default function BookingModeCalendar({
   preselectedServiceId,
 }) {
   const [reservedSlots, setReserved] = useState([]); // { date, fromTime, toTime }
+  const [reservationsPending, setReservationsPending] = useState(0);
+  const reservationsLoading = reservationsPending > 0;
   const [pendingSlots, setPending] = useState([]); // { date, fromTime, toTime }
   const [reservationsAll, setReservationsAll] = useState([]); // RAW rezerwacje całego zespołu
 
@@ -202,6 +205,8 @@ export default function BookingModeCalendar({
   const fetchReservations = useCallback(async () => {
     if (!provider?.userId) return;
 
+    setReservationsPending(count => count + 1);
+    try {
     const { data } = await api.get(`/api/reservations/busy/${provider.userId}`);
 
     const filtered =
@@ -224,6 +229,7 @@ export default function BookingModeCalendar({
 
     setReserved(booked);
     setPending(pending);
+    } finally { setReservationsPending(count => Math.max(0, count - 1)); }
   }, [provider?.userId, isUserPick, selectedStaffId]);
 
   // ✅ Ładuj rezerwacje po wejściu (i przy zmianie provider)
@@ -681,6 +687,7 @@ export default function BookingModeCalendar({
       {selectedService ? (
         <div className={styles.mainGrid}>
           <section className={styles.calendarCard}>
+            {reservationsLoading && <DataLoader label="Sprawdzamy dostępne terminy…" compact />}
             <div className={styles.cardHead}>
               <div>
                 <span className={styles.cardLabel}>Kalendarz</span>
@@ -885,7 +892,7 @@ export default function BookingModeCalendar({
                   `}
                   aria-pressed={selectedSlot === s.label}
                   aria-label={`Godzina ${s.label}, ${s.status === "free" ? "wolna" : s.status === "reserved" ? "zajęta" : s.status === "pending" ? "oczekująca" : "niedostępna"}`}
-                  disabled={s.status !== "free" || isSubmitting}
+                  disabled={s.status !== "free" || isSubmitting || reservationsLoading}
                   onClick={() =>
                     !isSubmitting && s.status === "free" && setSlot(s.label)
                   }
@@ -919,7 +926,7 @@ export default function BookingModeCalendar({
               <LoadingButton
                 type="submit"
                 isLoading={isSubmitting}
-                disabled={!selectedSlot || isSubmitting}
+                disabled={!selectedSlot || isSubmitting || reservationsLoading}
                 className={styles.submit}
               >
                 Rezerwuj termin

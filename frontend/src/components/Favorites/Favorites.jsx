@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./Favorites.module.scss";
@@ -462,6 +463,7 @@ const Favorites = ({ currentUser, setAlert }) => {
 
             {showCarousel ? (
               <div className={styles.carousel}>
+                {viewStatus === "loading" && <DataLoader label="Ładujemy ulubione profile…" layout="none" />}
                 <div
                   className={styles.grid}
                   ref={scrollerRef}

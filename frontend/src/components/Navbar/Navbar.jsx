@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FiArrowUpRight,
@@ -278,14 +279,7 @@ const Navbar = ({
           </button>
 
           {loadingUser && !user ? (
-            <div
-              className={styles.loadingSlot}
-              role="status"
-              aria-label="Ładowanie użytkownika"
-            >
-              <span className={styles.loadingDot} />
-              <span className={styles.loadingLine} />
-            </div>
+            <div className={styles.loadingSlot}><DataLoader label="Ładujemy konto…" compact hideLabelOnMobile /></div>
           ) : user ? (
             <div className={styles.userSlot}>
               <UserDropdown

@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import { Children } from "react";
 import { normalizeProfileDesign, getProfileDesignVars, getProfileDesignAttributes, getProfileBookingPresentation } from "../../utils/profileDesign";
 import { useEffect, useRef, useState } from "react";
@@ -779,11 +780,7 @@ export default function PublicProfile() {
   if (loading) {
     return (
       <div className={cn(styles.state, styles.loadingState)}>
-        <div className={styles.loadingCard}>
-          <span className={styles.loadingOrb} />
-          <strong>Wczytywanie wizytówki...</strong>
-          <p>Ładujemy profil, galerię, opinie i dostępne opcje kontaktu.</p>
-        </div>
+<DataLoader label="Ładujemy wizytówkę…" detail="Poznaj ofertę, realizacje i możliwości kontaktu." layout="profile" />
       </div>
     );
   }

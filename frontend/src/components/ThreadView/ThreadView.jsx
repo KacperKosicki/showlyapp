@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import { useEffect, useState, useCallback, useMemo } from "react";
 import axios from "axios";
 import styles from "./ThreadView.module.scss";
@@ -549,7 +550,8 @@ const ThreadView = ({ user, setUnreadCount }) => {
   }, [profileStatus, showFaq]);
 
   const ThreadSkeleton = () => (
-    <div className={styles.loadingBox} role="status" aria-label="Ładowanie rozmowy">
+    <div className={styles.loadingBox}>
+      <DataLoader label="Ładujemy rozmowę…" layout="none" />
       <div className={styles.skeletonThread}>
         <div className={`${styles.skeletonBubble} ${styles.left} ${styles.shimmer}`} />
         <div className={`${styles.skeletonBubble} ${styles.right} ${styles.shimmer}`} />
@@ -944,7 +946,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
                   </div>
 
                   {profileStatus === "loading" && (
-                    <p className={styles.noFaq}>Ładowanie profilu…</p>
+                    <DataLoader label="Ładujemy informacje o profilu…" compact />
                   )}
 
                   {profileStatus === "missing" && (

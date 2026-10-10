@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import { useEffect, useState } from "react";
 import {
@@ -390,15 +391,7 @@ const AccountSettings = () => {
     return (
       <section className={styles.section}>
         <div className={styles.inner}>
-          <div className={styles.loadingPanel} role="status">
-            <span className={styles.loadingMark} aria-hidden="true">
-              <FiUser />
-            </span>
-            <div>
-              <strong>Ustawienia konta</strong>
-              <span>Ładujemy Twoje dane…</span>
-            </div>
-          </div>
+<DataLoader label="Ładujemy ustawienia konta…" detail="Przygotowujemy Twoje dane i ustawienia." layout="form" />
         </div>
       </section>
     );

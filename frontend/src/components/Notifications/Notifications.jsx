@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import {
   useCallback,
@@ -722,18 +723,7 @@ const Notifications = ({ user, setUnreadCount }) => {
           <div className={styles.content}>
             {loading ? (
               <EditorGroup title="02 / Twoje wiadomości" className={styles.messageGroup}>
-                <header className={styles.groupHeader}>
-                  <span className={styles.groupIcon}>
-                    <FiMail aria-hidden="true" />
-                  </span>
-
-                  <div className={styles.groupHeading}>
-                    <span className={styles.groupLabel}>Ładowanie</span>
-                    <p role="status">Pobieramy Twoje wiadomości…</p>
-                  </div>
-
-                  <span className={styles.groupBadge}>—</span>
-                </header>
+                <DataLoader label="Ładujemy Twoje wiadomości…" layout="none" />
 
                 <ul className={styles.list} aria-hidden="true">
                   {Array.from({ length: 4 }).map((_, index) => (

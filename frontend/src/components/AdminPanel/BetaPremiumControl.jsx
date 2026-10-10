@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import { useEffect, useState } from 'react';
 import { FiZap, FiCheck, FiPower } from 'react-icons/fi';
 import { adminApi } from '../../api/adminApi';
@@ -32,7 +33,7 @@ export default function BetaPremiumControl() {
       <span className={styles.eyebrow}>SHOWLY / TRYB TESTOWY</span>
       <h3 id="beta-premium-title">Premium dla wszystkich</h3>
       <p>Jednym przełącznikiem udostępnij najwyższy plan istniejącym i nowym profilom. Pełne limity, rezerwacje i widoczność na czas testów — bez karty i zakupów w Stripe.</p>
-      <span className={styles.status} role="status">{settings ? (settings.enabled ? 'Włączone · bezpłatne Premium' : 'Wyłączone · standardowe plany') : 'Pobieranie ustawień…'}</span>
+      <span className={styles.status} role={settings ? 'status' : undefined}>{settings ? (settings.enabled ? 'Włączone · bezpłatne Premium' : 'Wyłączone · standardowe plany') : error ? 'Ustawienia są chwilowo niedostępne.' : <DataLoader label="Ładujemy ustawienia testów…" compact />}</span>
       <p className={styles.note}>Wyłączenie przywraca dotychczasowe plany i terminy widoczności. Zapisane dane pozostają. Nikogo nie zapisze automatycznie na płatny plan. Ten tryb nie anuluje istniejących subskrypcji Stripe.</p>
       {confirmOff && <div className={styles.confirm}>
         <p>Kończysz bezpłatny dostęp Premium. Profile z wygasłym okresem widoczności przestaną być publiczne; funkcje i limity wrócą do zapisanych planów.</p>

@@ -1,3 +1,4 @@
+import DataLoader from '../ui/DataLoader/DataLoader';
 import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import {
   useEffect,
@@ -933,6 +934,7 @@ export default function AdminPanel() {
             </div>
           </header>
 
+          {loading && <DataLoader label="Ładujemy dane panelu admina…" layout="none" />}
           <nav className={styles.tabs} aria-label="Nawigacja panelu admina">
             {TABS.map((t, index) => {
               const TabIcon = t.Icon;
@@ -1135,7 +1137,7 @@ export default function AdminPanel() {
                             </tr>
                           ))}
 
-                          {users.length === 0 && (
+                          {!loading && users.length === 0 && (
                             <tr>
                               <td colSpan={6} className={styles.empty}>
                                 Brak danych
@@ -1444,7 +1446,7 @@ export default function AdminPanel() {
                             );
                           })}
 
-                          {profiles.length === 0 && (
+                          {!loading && profiles.length === 0 && (
                             <tr>
                               <td colSpan={11} className={styles.empty}>
                                 Brak danych
@@ -1706,7 +1708,7 @@ export default function AdminPanel() {
                             </tr>
                           ))}
 
-                          {pagedReports.length === 0 && (
+                          {!loading && pagedReports.length === 0 && (
                             <tr>
                               <td
                                 colSpan={reportTab === "review" ? 10 : 8}

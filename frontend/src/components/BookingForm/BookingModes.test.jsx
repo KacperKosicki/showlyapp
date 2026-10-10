@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { format, addDays } from 'date-fns';
 import { pl } from 'date-fns/locale';
@@ -50,4 +50,18 @@ test('open inquiry requires a message and preview includes optional details', ()
     expect(screen.getByRole('button', { name: 'Wyślij zapytanie' })).toBeEnabled();
     fireEvent.click(screen.getByText('Co zostanie wysłane?'));
     expect(screen.getByText(/Telefon: 500 600 700/)).toHaveTextContent('Proszę o wycenę strony');
+});
+
+test('calendar keeps time selection disabled while availability is still being fetched', async () => {
+    let resolve;
+    api.get.mockReturnValue(new Promise(done => { resolve = done; }));
+    render(<Calendar {...props} preselectedServiceId="service-1" />);
+    await waitFor(() => expect(screen.getByRole('combobox')).toHaveValue('service-1'));
+    await pickTomorrow();
+    const slots = await screen.findAllByRole('button', { name: /Godzina .*wolna/ });
+    expect(screen.getByText('Sprawdzamy dostępne terminy…')).toBeInTheDocument();
+    slots.forEach(slot => expect(slot).toBeDisabled());
+    await act(async () => { resolve({ data: [] }); });
+    await waitFor(() => expect(slots[0]).toBeEnabled());
+    expect(screen.queryByText('Sprawdzamy dostępne terminy…')).not.toBeInTheDocument();
 });
