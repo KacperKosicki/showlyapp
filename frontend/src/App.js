@@ -15,7 +15,6 @@ import AnnouncementStrip from "./components/Announcements/AnnouncementStrip";
 import ScrollToTop from "./components/ScrollToTop/ScrollToTop";
 import PromotedPartners from "./components/PromotedPartners/PromotedPartners";
 import HowShowlyWorks from "./components/HowShowlyWorks/HowShowlyWorks";
-import DiscoverShowly from "./components/DiscoverShowly/DiscoverShowly";
 import AlertBox from "./components/AlertBox/AlertBox";
 import CookieBanner from "./components/CookieBanner/CookieBanner";
 import AppLoader from "./components/AppLoader/AppLoader";
@@ -539,12 +538,11 @@ function App() {
                   hasProfile={hasProfile}
                   loadingProfileStatus={loadingProfileStatus}
                 />
-                <AnnouncementStrip />
-                <HowShowlyWorks />
                 <PromotedPartners currentUser={safeUser} setAlert={setAlert} />
-                <DiscoverShowly />
+                <AnnouncementStrip />
+                <HowShowlyWorks user={safeUser} hasProfile={hasProfile} />
                 <UserCardList currentUser={safeUser} setAlert={setAlert} />
-                <WhyUs />
+                <WhyUs user={safeUser} hasProfile={hasProfile} />
                 <AllUsersList currentUser={safeUser} setAlert={setAlert} />
                 <Footer {...footerProps} />
               </>

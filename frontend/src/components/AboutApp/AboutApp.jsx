@@ -1,12 +1,19 @@
 import { useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FiArrowRight,
   FiArrowUpRight,
   FiEdit3,
   FiEye,
+  FiImage,
   FiLink2,
   FiSmartphone,
+  FiCamera,
+  FiHeadphones,
+  FiScissors,
+  FiPenTool,
+  FiBookOpen,
+  FiMapPin,
 } from "react-icons/fi";
 
 import styles from "./AboutApp.module.scss";
@@ -33,12 +40,12 @@ const benefits = [
 ];
 
 const industries = [
-  { label: "Fotografowie", mark: "FO", tone: "violetAvatar" },
-  { label: "DJ-e", mark: "DJ", tone: "orangeAvatar" },
-  { label: "Beauty", mark: "BE", tone: "greenAvatar" },
-  { label: "Freelancerzy", mark: "FR", tone: "darkAvatar" },
-  { label: "Korepetytorzy", mark: "KO", tone: "limeAvatar" },
-  { label: "Usługi lokalne", mark: "UL", tone: "paperAvatar" },
+  { label: "Fotografowie", detail: "Kadry, które zostają.", image: "photography", query: "fotograf", icon: FiCamera },
+  { label: "DJ-e", detail: "Nadaj wydarzeniu rytm.", image: "music", query: "DJ", icon: FiHeadphones },
+  { label: "Beauty", detail: "Dbałość o każdy detal.", image: "beauty", query: "beauty", icon: FiScissors },
+  { label: "Freelancerzy", detail: "Od pomysłu do projektu.", image: "freelance", query: "projektowanie", icon: FiPenTool },
+  { label: "Korepetytorzy", detail: "Wiedza, którą się dzielisz.", image: "learning", query: "korepetycje", icon: FiBookOpen },
+  { label: "Usługi lokalne", detail: "Dobry fach. Blisko Ciebie.", image: "your-work", query: "florystyka", icon: FiMapPin },
 ];
 
 const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
@@ -187,6 +194,21 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
               <FiArrowUpRight aria-hidden="true" />
             </div>
 
+            <div className={styles.workCover}>
+              <img
+                src="/images/about-app/your-work.jpg"
+                alt="Ilustracja pracy florysty: dłonie układające bukiet w jasnej pracowni"
+                loading="lazy"
+                width="1536"
+                height="1024"
+              />
+              <span className={styles.workCoverLabel}>
+                <FiImage aria-hidden="true" /> Twoja praca, Twój styl.
+              </span>
+              <span className={styles.workCoverArrow} aria-hidden="true"><FiArrowUpRight /></span>
+              <small>Ilustracja możliwości profilu</small>
+            </div>
+
             <div className={styles.linkCardBody}>
               <span className={styles.cardLabel}>Twój profil</span>
               <h3>Wszystko, co klient chce wiedzieć. Od razu.</h3>
@@ -280,36 +302,41 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
             </div>
           </div>
 
-          <div
-            className={`${styles.audienceList} ${styles.reveal} ${styles.fromRight}`}
-            style={{ "--reveal-delay": "100ms" }}
-          >
-            {industries.map((industry) => (
-              <article className={styles.industry} key={industry.label}>
-                <span
-                  className={`${styles.industryAvatar} ${styles[industry.tone]}`}
-                  aria-hidden="true"
-                >
-                  {industry.mark}
-                </span>
-                <strong>{industry.label}</strong>
-                <FiArrowUpRight aria-hidden="true" />
-              </article>
-            ))}
+          <div className={`${styles.industryGallery} ${styles.reveal} ${styles.fromRight}`} style={{ "--reveal-delay": "100ms" }}>
+            <div className={styles.galleryHeading}><span>Różne branże. Wspólny adres.</span><FiArrowUpRight aria-hidden="true" /></div>
+            <div className={styles.audienceList}>
+              {industries.map((industry) => {
+                const Icon = industry.icon;
+                return <Link className={styles.industry} key={industry.label} to={`/profile?q=${encodeURIComponent(industry.query)}`} state={{ scrollToId: "profilesHub" }} aria-label={`Zobacz profile: ${industry.label}`}>
+                  <img src={`/images/about-app/${industry.image}.jpg`} alt="" loading="lazy" width="640" height="800" />
+                  <span className={styles.industryIcon}><Icon aria-hidden="true" /></span>
+                  <div className={styles.industryCaption}><span>{industry.detail}</span><strong>{industry.label}</strong><FiArrowUpRight aria-hidden="true" /></div>
+                </Link>;
+              })}
+            </div>
+            <p className={styles.galleryNote}><span>To tylko początek.</span> Jest też miejsce na Twoją specjalizację.<small>Zdjęcia ilustracyjne · wybierz branżę i sprawdź profile</small></p>
           </div>
         </section>
 
-        <div
-          className={`${styles.closingStrip} ${styles.reveal} ${styles.fromBottom}`}
-        >
-          <span>Twoja oferta już istnieje.</span>
-          <strong>Showly daje jej dobry adres.</strong>
-          <FiArrowRight aria-hidden="true" />
-        </div>
-
-        <section className={`${styles.announcementIntro} ${styles.reveal} ${styles.fromBottom}`}>
-          <div><span>Nowość w Showly / Ogłoszenia</span><h3>Nie tylko pokazujesz ofertę.<br />Możesz też powiedzieć, czego szukasz.</h3><p>Wystaw ogłoszenie ze swojego konta: opisz pomysł, termin, miejsce i budżet. Usługodawcy odpowiedzą ze swoimi profilami, a Ty poznasz ich propozycje w jednym panelu.</p></div>
-          <button className={styles.primaryButton} onClick={() => handleNavigate('/ogloszenia', 'announcements')}><span>Odkryj ogłoszenia</span><FiArrowUpRight aria-hidden="true" /></button>
+        <section className={`${styles.opportunity} ${styles.reveal} ${styles.fromBottom}`} aria-labelledby="about-opportunity-title">
+          <div className={styles.opportunityBackdrop} aria-hidden="true">POŁĄCZMY TO.<FiArrowUpRight /></div>
+          <header className={styles.opportunityTop}><span><FiLink2 aria-hidden="true" /> Twoja oferta już istnieje.</span><strong>Showly daje jej dobry adres.</strong><FiArrowUpRight aria-hidden="true" /></header>
+          <div className={styles.opportunityBody}>
+            <div className={styles.opportunityCopy}>
+              <span className={styles.opportunityLabel}>Druga strona dobrej współpracy / Ogłoszenia</span>
+              <h3 id="about-opportunity-title">Ty masz pomysł.<br />Ktoś ma <span>ten talent.</span></h3>
+              <p>Nie tylko pokazujesz ofertę. Możesz też powiedzieć, czego szukasz. Opisz pomysł, termin, miejsce i budżet — usługodawcy odpowiedzą ze swoimi profilami.</p>
+              <button className={styles.primaryButton} onClick={() => handleNavigate('/ogloszenia', 'announcements')}><span>Odkryj ogłoszenia</span><FiArrowUpRight aria-hidden="true" /></button>
+              <small>Ogłoszenie dodasz z konta. Własna wizytówka nie jest wymagana.</small>
+            </div>
+            <figure className={styles.connectionScene}>
+              <div className={styles.talentPortrait}><img src="/images/about-app/music.jpg" alt="Ilustracja pracy DJ-a przy konsolecie" width="640" height="800" loading="lazy" /><span><FiHeadphones aria-hidden="true" /> Czyjś talent</span><strong>Dobry rytm.<br />Dobry człowiek.</strong></div>
+              <FiArrowUpRight className={styles.connectionArrow} aria-hidden="true" />
+              <div className={styles.ideaSheet}><span className={styles.ideaSheetLabel}><FiEdit3 aria-hidden="true" /> Twój pomysł <span>01</span></span><h4>Szukam DJ-a na kameralne wesele.</h4><p>Muzyka, która połączy pokolenia. Masz własny styl? Porozmawiajmy.</p><div className={styles.ideaDetails}><span><FiMapPin aria-hidden="true" /> Poznań</span><span><FiHeadphones aria-hidden="true" /> Wydarzenie</span></div><div className={styles.ideaReply}><FiLink2 aria-hidden="true" /><span>Poznaj ofertę osoby,<br /><strong>która odpowie na Twój pomysł.</strong></span></div></div>
+              <figcaption>Tak może zacząć się współpraca. Przykład ogłoszenia i ilustracja.</figcaption>
+            </figure>
+          </div>
+          <ol className={styles.opportunitySteps} aria-label="Od pomysłu do kontaktu"><li><span>01</span><div><strong>Opisz, czego szukasz.</strong><small>Twój pomysł trafia do ogłoszeń.</small></div></li><li><span>02</span><div><strong>Poznaj zainteresowane osoby.</strong><small>Sprawdź profile i propozycje.</small></div></li><li><span>03</span><div><strong>Ustalcie szczegóły.</strong><small>Rozmowa to początek współpracy.</small></div></li></ol>
         </section>
       </div>
     </section>

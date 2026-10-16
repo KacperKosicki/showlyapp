@@ -1,0 +1,20 @@
+Tool: built-in image_gen (imagegen skill).
+Output: photography.jpg, music.jpg, beauty.jpg, freelance.jpg, learning.jpg, each JPEG quality 84, 640 x 800.
+Illustrative generated scenes; not actual Showly providers or customers.
+
+photography.jpg
+Use case: photorealistic-natural. Asset type: category photograph for Showly independent services website. Close crop of a professional photographer's hands adjusting a black mirrorless camera, studio backdrop in muted lavender, warm natural daylight. Tactile black camera and cotton shirt, no faces. High-end authentic magazine photography, rich tactile detail, distinct composition with main action near center, suitable for a tall 4:5 crop. No borders, no collage, no text, no logos, no watermark, no web interface, no grid. Illustrative generic scene, not a real Showly provider or customer.
+
+music.jpg
+Use case: photorealistic-natural. Asset type: category photograph for Showly independent services website. Close-up of a DJ's hands performing on a professional mixing console, atmospheric deep violet and warm coral club lighting, elegant cinematic editorial photo, no faces. High-end authentic magazine photography, rich tactile detail, distinct composition with main action near center, suitable for a tall 4:5 crop. No borders, no collage, no text, no logos, no watermark, no web interface, no grid. Illustrative generic scene, not a real Showly provider or customer.
+
+beauty.jpg
+Use case: photorealistic-natural. Asset type: category photograph for Showly independent services website. Close-up of a makeup artist's hand holding a brush applying subtle makeup near an adult client's cheek, warm cream beauty studio, sage green and dusty blush accents, elegant natural light, face only partially framed. High-end authentic magazine photography, rich tactile detail, distinct composition with main action near center, suitable for a tall 4:5 crop. No borders, no collage, no text, no logos, no watermark, no web interface, no grid. Illustrative generic scene, not a real Showly provider or customer.
+
+freelance.jpg
+Use case: photorealistic-natural. Asset type: category photograph for Showly independent services website. Overhead close-up of a freelance designer's hands sketching a visual concept in a paper notebook beside a laptop, charcoal desk with restrained violet and lime stationery, natural light. Screen has no legible text. High-end authentic magazine photography, rich tactile detail, distinct composition with main action near center, suitable for a tall 4:5 crop. No borders, no collage, no text, no logos, no watermark, no web interface, no grid. Illustrative generic scene, not a real Showly provider or customer.
+
+learning.jpg
+Use case: photorealistic-natural. Asset type: category photograph for Showly independent services website. Warm overhead close-up of an adult tutor and adult student's hands pointing at a geometry drawing in a notebook at a cream desk, subtle lime and lilac stationery, natural daylight. No faces, no readable text. High-end authentic magazine photography, rich tactile detail, distinct composition with main action near center, suitable for a tall 4:5 crop. No borders, no collage, no text, no logos, no watermark, no web interface, no grid. Illustrative generic scene, not a real Showly provider or customer.
+
+

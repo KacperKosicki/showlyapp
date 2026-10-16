@@ -1,0 +1,6 @@
+Tool: built-in image_gen (imagegen skill).
+Final asset: creative-work.jpg (JPEG quality 85, 1254 x 1254).
+Illustrative generated artwork; does not portray actual Showly customers.
+
+Prompt:
+Use case: ads-marketing. Asset type: photographic editorial collage for Showly website section, image only, no typography. Create a bold premium magazine cut-paper collage celebrating independent service professionals: close-up hands holding a professional camera as the dominant subject, a small secondary crop of hands at a music mixing desk, and a third crop of someone sketching designs in a notebook. Realistic photographic texture, black and white duotone images on a warm off-white paper base, torn paper edges, acid lime #d8ff72 paper strip, restrained violet #6557ef accent, dark charcoal shadows. Asymmetrical art direction, striking diagonal composition, close crops, actual tactile grain and paper layering. Portrait-ish square composition. No text, no letters, no logos, no watermarks, no web UI, no cards, no rounded rectangles, no aperture symbol, no grid. This is an illustrative conceptual collage, not a real customer testimonial. Save final image locally and return output file path.
