@@ -1,514 +1,99 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { FiAlertCircle, FiArrowUpRight, FiCheck, FiGrid, FiHeart, FiList, FiLock, FiRefreshCw, FiSearch, FiX } from 'react-icons/fi';
+import { api } from '../../api/api';
 import DataLoader from '../ui/DataLoader/DataLoader';
 import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import styles from "./Favorites.module.scss";
-import UserCard from "../UserCard/UserCard";
-import { FiAlertCircle, FiArrowUpRight, FiHeart, FiLock } from "react-icons/fi";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { Link, useLocation } from "react-router-dom";
-import { api } from "../../api/api";
+import UserCard from '../UserCard/UserCard';
+import AlertBox from '../AlertBox/AlertBox';
+import { filterFavorites, normalizeFavoriteProfile } from './favoriteProfiles';
+import styles from './FavoritesApp.module.scss';
 
-const Favorites = ({ currentUser, setAlert }) => {
+const Favorites = ({ currentUser }) => {
   const [loading, setLoading] = useState(true);
   const [profiles, setProfiles] = useState([]);
-  const [error, setError] = useState("");
-
+  const [error, setError] = useState('');
+  const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [sort, setSort] = useState('default');
+  const [layout, setLayout] = useState('grid');
+  const [retry, setRetry] = useState(0);
+  const [alert, setAlert] = useState(null);
+  const [now, setNow] = useState(() => new Date());
+  const closeAlert = useCallback(() => setAlert(null), []);
   const location = useLocation();
 
-  const scrollerRef = useRef(null);
-  const rafRef = useRef(null);
-
-  const [canLeft, setCanLeft] = useState(false);
-  const [canRight, setCanRight] = useState(false);
-
   useEffect(() => {
-    let alive = true;
-
-    const run = async () => {
-      setLoading(true);
-      setError("");
-
-      try {
-        const { data } = await api.get("/api/favorites/my");
-
-        if (!alive) return;
-
-        const list = Array.isArray(data) ? data : [];
-
-        const normalized = list.map((it) => {
-          const p = it?.profile || it?.profileData || it?.profileDoc || it;
-
-          const rawTheme =
-            p?.theme ?? it?.theme ?? it?.profileTheme ?? it?.themeConfig;
-
-          let theme = rawTheme;
-
-          if (typeof rawTheme === "string") {
-            try {
-              theme = JSON.parse(rawTheme);
-            } catch {
-              theme = undefined;
-            }
-          }
-
-          const rawPartnership =
-            p?.partnership ??
-            it?.partnership ??
-            it?.partnerData ??
-            it?.profilePartnership;
-
-          let parsedPartnership = rawPartnership;
-
-          if (typeof rawPartnership === "string") {
-            try {
-              parsedPartnership = JSON.parse(rawPartnership);
-            } catch {
-              parsedPartnership = undefined;
-            }
-          }
-
-          const derivedIsPartner =
-            parsedPartnership?.isPartner ??
-            p?.isPartner ??
-            it?.isPartner ??
-            p?.partner ??
-            it?.partner ??
-            false;
-
-          const derivedTier =
-            parsedPartnership?.tier ??
-            p?.partnerTier ??
-            it?.partnerTier ??
-            p?.tier ??
-            it?.tier ??
-            "partner";
-
-          const derivedBadgeText =
-            parsedPartnership?.badgeText ??
-            parsedPartnership?.label ??
-            p?.partnerLabel ??
-            it?.partnerLabel ??
-            p?.badgeText ??
-            it?.badgeText ??
-            "PARTNER SHOWLY";
-
-          const derivedColor =
-            parsedPartnership?.color ??
-            p?.partnerColor ??
-            it?.partnerColor ??
-            p?.color ??
-            it?.color ??
-            "";
-
-          const partnership = derivedIsPartner
-            ? {
-              isPartner: true,
-              tier: String(derivedTier || "partner").toLowerCase(),
-              badgeText: String(derivedBadgeText || "PARTNER SHOWLY"),
-              ...(derivedColor ? { color: derivedColor } : {}),
-            }
-            : parsedPartnership || {};
-
-          const userId =
-            p?.userId ||
-            it?.userId ||
-            it?.profileUserId ||
-            it?.profileId ||
-            p?._id ||
-            it?._id;
-
-          return {
-            ...it,
-            ...p,
-            ...(theme ? { theme } : {}),
-            partnership,
-            ...(userId ? { userId } : {}),
-            isFavorite: true,
-          };
-        });
-
-        setProfiles(normalized);
-      } catch (e) {
-        if (!alive) return;
-
-        setError("Nie udało się pobrać listy ulubionych.");
-
-        if (typeof setAlert === "function") {
-          setAlert({
-            type: "error",
-            message: "Nie udało się pobrać listy ulubionych.",
-          });
-        }
-      } finally {
-        if (!alive) return;
-        setLoading(false);
-      }
-    };
-
-    if (currentUser?.uid) {
-      run();
-    } else {
-      setProfiles([]);
-      setError("");
-      setLoading(false);
-    }
-
-    return () => {
-      alive = false;
-    };
-  }, [currentUser?.uid, setAlert]);
-
-  useEffect(() => {
-    const scrollTo = location.state?.scrollToId;
-
-    if (!scrollTo || loading) return;
-
-    const tryScroll = () => {
-      const el = document.getElementById(scrollTo);
-
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        window.history.replaceState({}, document.title, location.pathname);
-      } else {
-        requestAnimationFrame(tryScroll);
-      }
-    };
-
-    requestAnimationFrame(tryScroll);
-  }, [location.state, location.pathname, loading]);
-
-  const count = useMemo(() => profiles.length, [profiles]);
-
-  const viewStatus = !currentUser?.uid
-    ? "guest"
-    : loading
-      ? "loading"
-      : error
-        ? "error"
-        : count === 0
-          ? "empty"
-          : "ready";
-
-  const updateArrows = useCallback(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-
-    if (rafRef.current) {
-      cancelAnimationFrame(rafRef.current);
-    }
-
-    rafRef.current = requestAnimationFrame(() => {
-      const max = Math.max(0, el.scrollWidth - el.clientWidth);
-      const x = Math.max(0, el.scrollLeft);
-
-      setCanLeft(x > 4);
-      setCanRight(max > 4 && x < max - 4);
-    });
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-
-    updateArrows();
-
-    const handleScroll = () => updateArrows();
-
-    el.addEventListener("scroll", handleScroll, { passive: true });
-    window.addEventListener("resize", handleScroll);
-
-    let resizeObserver;
-
-    if (typeof ResizeObserver !== "undefined") {
-      resizeObserver = new ResizeObserver(handleScroll);
-      resizeObserver.observe(el);
-    }
-
-    return () => {
-      el.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", handleScroll);
-
-      if (resizeObserver) {
-        resizeObserver.disconnect();
-      }
-
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-    };
-  }, [viewStatus, profiles.length, updateArrows]);
+    let alive = true;
+    setProfiles([]); setError(''); setAlert(null); setQuery(''); setFilter('all');
+    setLoading(!!currentUser?.uid);
+    if (currentUser?.uid) api.get('/api/favorites/my').then(({ data }) => {
+      if (alive) setProfiles((Array.isArray(data) ? data : []).map(normalizeFavoriteProfile));
+    }).catch(() => {
+      if (alive) setError('Nie udało się pobrać ulubionych. Spróbuj ponownie.');
+    }).finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [currentUser?.uid, retry]);
 
   useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
+    const id = location.state?.scrollToId;
+    if (id && !loading) document.getElementById(id)?.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  }, [location.state, loading]);
 
-    const frame = requestAnimationFrame(() => {
-      el.scrollTo({
-        left: 0,
-        behavior: "auto",
-      });
+  useEffect(() => {
+    const update = event => {
+      if (event.detail?.isFav === false) setProfiles(prev => prev.filter(profile => profile.userId !== event.detail.profileUserId));
+    };
+    window.addEventListener('showly:favorites-updated', update);
+    return () => window.removeEventListener('showly:favorites-updated', update);
+  }, []);
 
-      updateArrows();
-    });
+  const filtered = useMemo(() => filterFavorites(profiles, { query, filter, sort, now }), [profiles, query, filter, sort, now]);
+  const availableCount = filterFavorites(profiles, { filter: 'available', now }).length;
+  const guest = !currentUser?.uid;
+  const ready = !guest && !loading && !error;
 
-    return () => cancelAnimationFrame(frame);
-  }, [viewStatus, profiles.length, updateArrows]);
-
-  const scrollByCard = (dir = 1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-
-    const firstCard = el.querySelector(`.${styles.cardWrap}`);
-    const cardW = firstCard?.getBoundingClientRect().width || 420;
-
-    const computed = getComputedStyle(el);
-    const gap = parseFloat(computed.columnGap || computed.gap || "0") || 24;
-
-    const step = cardW + gap;
-    const max = Math.max(0, el.scrollWidth - el.clientWidth);
-    const next = Math.min(Math.max(el.scrollLeft + dir * step, 0), max);
-
-    el.scrollTo({
-      left: next <= 8 ? 0 : next,
-      behavior: "smooth",
-    });
-
-    window.setTimeout(updateArrows, 320);
-  };
-
-  const viewCopy = {
-    guest: {
-      title: "Profile, które chcesz mieć pod ręką.",
-      text: "Zaloguj się, aby zobaczyć własną listę zapisanych wizytówek.",
-      listTitle: "Twoja lista czeka na zalogowanie",
-    },
-    loading: {
-      title: "Twoje ulubione w jednym miejscu.",
-      text: "Pobieramy profile zapisane na Twoim koncie.",
-      listTitle: "Ładujemy zapisane profile",
-    },
-    error: {
-      title: "Twoje ulubione w jednym miejscu.",
-      text: "Lista jest chwilowo niedostępna. Twoje zapisane profile nie zostały usunięte.",
-      listTitle: "Nie udało się pobrać listy",
-    },
-    empty: {
-      title: "Zapisuj profile na później.",
-      text: "Kliknij serce przy wybranej wizytówce, a znajdziesz ją później właśnie tutaj.",
-      listTitle: "Brak zapisanych profili",
-    },
-    ready: {
-      title: "Profile, które chcesz mieć pod ręką.",
-      text: "Wracaj do zapisanych wizytówek, porównuj oferty i wybieraj bez ponownego szukania.",
-      listTitle: "Zapisane profile",
-    },
-  };
-
-  const currentCopy = viewCopy[viewStatus];
-
-  const SkeletonCard = () => (
-    <div className={`${styles.skeletonCard} ${styles.shimmer}`}>
-      <div className={styles.skeletonHero}>
-        <span className={styles.skeletonBadge} />
-        <span className={styles.skeletonAvatar} />
-      </div>
-
-      <div className={styles.skeletonBody}>
-        <div className={styles.skeletonLineLg} />
-        <div className={styles.skeletonLineMd} />
-        <div className={styles.skeletonLineSm} />
+  return <section id="scrollToId" className={styles.section}>
+    {alert && <AlertBox type={alert.type} message={alert.message} onClose={closeAlert} />}
+    <PanelBackdrop word="ULUBIONE" />
+    <div className={styles.app}>
+      <header className={styles.header}>
+        <div className={styles.heading}>
+          <h1>Dobre kontakty.<span>Na później.</span></h1>
+          <p>Niektóre profile po prostu warto zapisać. Wracaj do ludzi, których styl, oferta i pomysły zostały Ci w głowie.</p>
+          <Link className={styles.explore} to="/profile" state={{ scrollToId: 'profilesHub' }}>Odkryj kolejne profile <FiArrowUpRight aria-hidden="true" /></Link>
+          <div className={styles.introNotes}><span><FiLock aria-hidden="true" /> Kolekcja tylko dla Ciebie</span><span><FiCheck aria-hidden="true" /> {availableCount} przyjmuje zlecenia</span></div>
+        </div>
+        <aside className={styles.collectionCard} aria-label="Podsumowanie ulubionych">
+          <span className={styles.collectionTab}><FiHeart aria-hidden="true" /> W dobrym towarzystwie</span>
+          <div className={styles.collectionBody}>
+            <div className={styles.collectionTop}><span>Twoje ulubione</span><FiHeart aria-hidden="true" /></div>
+            <strong>{loading || error ? '—' : String(profiles.length).padStart(2, '0')}</strong>
+            <span className={styles.collectionCaption}>zapisanych profili, do których możesz wrócić</span>
+            <div className={styles.collectionFooter}><div className={styles.avatarStack} aria-hidden="true">{profiles.slice(0, 4).map((profile, index) => <span key={profile.userId || index}>{(profile.name || 'S').slice(0, 1).toUpperCase()}</span>)}{!profiles.length && <FiHeart />}</div><FiArrowUpRight aria-hidden="true" /></div>
+          </div>
+        </aside>
+      </header>
+      <div className={styles.workspace}>
+        <div className={styles.main}>
+          <div className={styles.toolbar}>
+            <div className={styles.searchIntro}><span><FiHeart aria-hidden="true" /></span><div><h2>Twoi ludzie. Pod ręką.</h2><p>Znajdź właściwy kontakt w swojej kolekcji.</p></div></div>
+            <label className={styles.search}><FiSearch aria-hidden="true" /><input type="search" aria-label="Szukaj w ulubionych" placeholder="Nazwa, usługa lub miasto…" value={query} disabled={!ready || !profiles.length} onChange={event => setQuery(event.target.value)} /></label>
+            <div className={styles.viewModes} role="group" aria-label="Widok ulubionych"><button type="button" aria-label="Widok listy" aria-pressed={layout === 'list'} onClick={() => setLayout('list')}><FiList /></button><button type="button" aria-label="Widok kart" aria-pressed={layout === 'grid'} onClick={() => setLayout('grid')}><FiGrid /></button></div>
+          </div>
+          <div className={styles.filterBar}><div className={styles.tabs} role="group" aria-label="Filtr ulubionych"><button type="button" disabled={!ready} aria-pressed={filter === 'all'} onClick={() => setFilter('all')}>Wszystkie <span>{profiles.length}</span></button><button type="button" disabled={!ready} aria-pressed={filter === 'available'} onClick={() => setFilter('available')}>Przyjmują zlecenia <span>{availableCount}</span></button></div><label className={styles.sort}><span>Sortuj</span><select aria-label="Sortuj ulubione" value={sort} disabled={!ready} onChange={event => setSort(event.target.value)}><option value="default">Domyślnie</option><option value="name">Nazwa A–Z</option><option value="rating">Najwyżej oceniane</option></select></label></div>
+          {loading && !guest ? <DataLoader label="Ładujemy ulubione profile…" layout={layout === 'grid' ? 'cards' : 'list'} /> : guest ? <div className={styles.empty}><FiLock aria-hidden="true" /><h2>Twoja kolekcja czeka.</h2><p>Zaloguj się, aby wrócić do zapisanych profili.</p><Link className={styles.explore} to="/login" state={{ scrollToId: 'loginBox' }}>Przejdź do logowania <FiArrowUpRight aria-hidden="true" /></Link></div> : error ? <div className={styles.empty}><FiAlertCircle aria-hidden="true" /><h2>Spróbujmy jeszcze raz.</h2><p>{error}</p><button className={styles.explore} type="button" onClick={() => setRetry(value => value + 1)}><FiRefreshCw aria-hidden="true" /> Wczytaj ponownie</button></div> : !profiles.length ? <div className={styles.empty}><FiHeart aria-hidden="true" /><h2>Tu zaczyna się Twoja lista.</h2><p>Kliknij serce przy profilu, który Cię zainteresuje. Później łatwo do niego wrócisz.</p><Link className={styles.explore} to="/profile" state={{ scrollToId: 'profilesHub' }}>Znajdź pierwszy profil <FiArrowUpRight aria-hidden="true" /></Link></div> : !filtered.length ? <div className={styles.empty}><FiSearch aria-hidden="true" /><h2>Nie ma takich profili na Twojej liście.</h2><p>Zmień wyszukiwanie lub pokaż wszystkie zapisane osoby.</p><button className={styles.explore} type="button" onClick={() => { setQuery(''); setFilter('all'); }}>Wyczyść filtry <FiX aria-hidden="true" /></button></div> : <>
+            <div className={styles.resultCount} aria-live="polite">Wyświetlono {filtered.length} z {profiles.length} zapisanych profili</div>
+            <ul className={styles.profiles} data-layout={layout} aria-label="Lista ulubionych profili Showly">{filtered.map((profile, index) => <li key={profile.userId || profile._id || index}><UserCard user={profile} currentUser={currentUser} setAlert={setAlert} /></li>)}</ul>
+          </>}
+        </div>
       </div>
     </div>
-  );
-
-  const renderStateBox = () => {
-    if (viewStatus === "guest") {
-      return (
-        <div className={styles.emptyState}>
-          <span className={styles.emptyIconWrap}>
-            <FiLock aria-hidden="true" />
-          </span>
-
-          <div className={styles.emptyCopy}>
-            <strong>Zaloguj się, aby zobaczyć ulubione</strong>
-            <p>Zapisane wizytówki są przypisane do Twojego konta.</p>
-          </div>
-
-          <Link
-            className={styles.cta}
-            to="/login"
-            state={{ scrollToId: "loginBox" }}
-          >
-            <span>Przejdź do logowania</span>
-            <FiArrowUpRight aria-hidden="true" />
-          </Link>
-        </div>
-      );
-    }
-
-    if (viewStatus === "error") {
-      return (
-        <div className={`${styles.emptyState} ${styles.errorState}`}>
-          <span className={styles.emptyIconWrap}>
-            <FiAlertCircle aria-hidden="true" />
-          </span>
-
-          <div className={styles.emptyCopy}>
-            <strong>Błąd pobierania danych</strong>
-            <p>{error}</p>
-          </div>
-        </div>
-      );
-    }
-
-    if (viewStatus === "empty") {
-      return (
-        <div className={styles.emptyState}>
-          <span className={styles.emptyIconWrap}>
-            <FiHeart aria-hidden="true" />
-          </span>
-
-          <div className={styles.emptyCopy}>
-            <strong>Nic tu jeszcze nie ma</strong>
-            <p>Dodaj pierwszy profil do swojej prywatnej kolekcji.</p>
-          </div>
-
-          <Link
-            className={styles.cta}
-            to="/profile"
-            state={{ scrollToId: "profilesHub" }}
-          >
-            <span>Przeglądaj profile</span>
-            <FiArrowUpRight aria-hidden="true" />
-          </Link>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
-  const showCarousel = viewStatus === "ready" || viewStatus === "loading";
-
-  return (
-    <section id="scrollToId" className={styles.section}>
-      <PanelBackdrop word="ULUBIONE" />
-      <div className={styles.inner}>
-        <div className={styles.collection}>
-          <header className={styles.hero}>
-            <div className={styles.heroCopy}>
-              <span className={styles.kicker}>
-                <FiHeart aria-hidden="true" />
-                Twoja kolekcja
-              </span>
-
-              <h1>{currentCopy.title}</h1>
-              <p>{currentCopy.text}</p>
-            </div>
-
-            <div className={styles.summary} aria-live="polite">
-              <span className={styles.summaryIcon} aria-hidden="true">
-                <FiHeart />
-              </span>
-
-              <strong>
-                {viewStatus === "ready"
-                  ? String(count).padStart(2, "0")
-                  : viewStatus === "loading"
-                    ? "—"
-                    : viewStatus === "error"
-                      ? "!"
-                      : "00"}
-              </strong>
-
-              <small>
-                {count === 1 ? "zapisany profil" : "zapisanych profili"}
-              </small>
-            </div>
-          </header>
-
-          <div className={styles.content}>
-            <div className={styles.listBar}>
-              <div className={styles.listHeading}>
-                <span>Ulubione</span>
-                <h2>{currentCopy.listTitle}</h2>
-              </div>
-
-              {showCarousel && (
-                <div className={styles.controls} aria-label="Sterowanie listą">
-                  <button
-                    type="button"
-                    className={`${styles.navBtn} ${!canLeft ? styles.disabled : ""}`}
-                    onClick={() => scrollByCard(-1)}
-                    disabled={!canLeft}
-                    aria-label="Przewiń w lewo"
-                    title="Przewiń w lewo"
-                  >
-                    <FaChevronLeft aria-hidden="true" />
-                  </button>
-
-                  <button
-                    type="button"
-                    className={`${styles.navBtn} ${!canRight ? styles.disabled : ""}`}
-                    onClick={() => scrollByCard(1)}
-                    disabled={!canRight}
-                    aria-label="Przewiń w prawo"
-                    title="Przewiń w prawo"
-                  >
-                    <FaChevronRight aria-hidden="true" />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {showCarousel ? (
-              <div className={styles.carousel}>
-                {viewStatus === "loading" && <DataLoader label="Ładujemy ulubione profile…" layout="none" />}
-                <div
-                  className={styles.grid}
-                  ref={scrollerRef}
-                  role="list"
-                  aria-label="Lista ulubionych profili Showly"
-                >
-                  {viewStatus === "loading"
-                    ? Array.from({ length: 4 }).map((_, index) => (
-                      <div
-                        className={styles.cardWrap}
-                        key={index}
-                        role="listitem"
-                      >
-                        <SkeletonCard />
-                      </div>
-                    ))
-                    : profiles.map((profile, index) => (
-                      <div
-                        className={styles.cardWrap}
-                        key={profile.userId || profile._id || index}
-                        role="listitem"
-                      >
-                        <UserCard
-                          user={profile}
-                          currentUser={currentUser}
-                          setAlert={setAlert}
-                        />
-                      </div>
-                    ))}
-                </div>
-
-                <div className={styles.mobileHint}>
-                  <span>←</span>
-                  <p>Przesuń, aby zobaczyć więcej</p>
-                  <span>→</span>
-                </div>
-              </div>
-            ) : (
-              renderStateBox()
-            )}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+  </section>;
 };
-
 export default Favorites;

@@ -7,6 +7,7 @@ const Profile = require("../models/Profile");
 
 const requireAuth = require("../middleware/requireAuth");
 const { getPublicBilling } = require("../config/plans");
+const { betaVisibility } = require('../utils/betaAccess');
 
 /**
  * POST /api/favorites/toggle
@@ -113,12 +114,18 @@ router.get("/my", requireAuth, async (req, res) => {
         visits: 1,
         profileType: 1,
         description: 1,
+        'services.name': 1,
+        'services.isActive': 1,
         links: 1,
         theme: 1,
         partnership: 1,
         billing: 1,
         slug: 1,
         bookingMode: 1,
+        availabilityStatus: 1,
+        isVisible: 1,
+        visibleUntil: 1,
+        visibilityBlockedByAdmin: 1,
         availableDates: 1,
       }
     ).lean();
@@ -129,6 +136,7 @@ router.get("/my", requireAuth, async (req, res) => {
 
         return {
           ...publicProfile,
+          ...betaVisibility(p),
           billingPublic: getPublicBilling(p),
           isFavorite: true,
         };

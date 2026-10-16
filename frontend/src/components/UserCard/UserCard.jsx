@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiArrowUpRight,
@@ -151,6 +151,8 @@ const UserCard = ({
     typeof user.favoritesCount === "number" ? user.favoritesCount : 0
   );
   const [isFavorite, setIsFavorite] = useState(!!user.isFavorite);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const favoritePending = useRef(false);
 
   const authHeaders = useCallback(async () => {
     const firebaseUser = auth.currentUser;
@@ -283,6 +285,7 @@ const UserCard = ({
   const partnerLabel = getPartnerLabel(partnership);
 
   const toggleFavorite = async () => {
+    if (favoritePending.current) return;
     if (!currentUser) {
       showAlert("Aby dodać do ulubionych, musisz być zalogowany.");
       return;
@@ -296,6 +299,8 @@ const UserCard = ({
       return;
     }
 
+    favoritePending.current = true;
+    setFavoriteLoading(true);
     const previousValue = isFavorite;
     const nextValue = !previousValue;
     setIsFavorite(nextValue);
@@ -342,6 +347,9 @@ const UserCard = ({
           ? "Brak autoryzacji. Zaloguj się ponownie."
           : "Nie udało się zaktualizować ulubionych."
       );
+    } finally {
+      favoritePending.current = false;
+      setFavoriteLoading(false);
     }
   };
 
@@ -431,6 +439,8 @@ const UserCard = ({
             type="button"
             className={`${styles.favoriteButton} ${isFavorite ? styles.favoriteActive : ""
               }`}
+            disabled={favoriteLoading}
+            aria-busy={favoriteLoading}
             onClick={(event) => {
               if (
                 blockIfPreview(

@@ -27,7 +27,7 @@
 
 .word {
   position: absolute;
-  top: 45px;
+  top: var(--backdrop-word-top, 45px);
   left: 3%;
   font: 800 clamp(140px, 17vw, 300px)/1 $font-heading;
   letter-spacing: -.06em;
@@ -70,7 +70,7 @@
 @keyframes shapeFloat { to { transform: translate(-14px, 18px) rotate(29deg); } }
 
 @media (max-width: 760px) {
-  .word { top: 90px; left: -45px; font-size: 140px; opacity: .45; }
+  .word { top: var(--backdrop-word-top, 90px); left: -45px; font-size: 140px; opacity: .45; }
   .shape { width: 400px; height: 540px; right: -220px; }
 }
 
