@@ -7,7 +7,7 @@ const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   useLocation: () => ({ pathname: '/konto' }),
   useNavigate: () => mockNavigate,
-  Link: ({ to, state, children, ...props }) => <a href={to} {...props}>{children}</a>,
+  Link: ({ to, state, children, onClick, ...props }) => <a href={to} {...props} onClick={event => { event.preventDefault(); onClick?.(event); }}>{children}</a>,
 }), { virtual: true });
 jest.mock('../../firebase', () => ({ auth: { currentUser: null } }));
 jest.mock('firebase/auth', () => ({ signOut: jest.fn() }));
@@ -45,7 +45,7 @@ test('navigation supports keyboard selection, Escape and closing after choosing 
   fireEvent.keyDown(menu, { key: 'End' });
   expect(within(menu).getByRole('menuitem', { name: /Ogłoszenia/ })).toHaveFocus();
   fireEvent.keyDown(menu, { key: 'ArrowUp' });
-  expect(within(menu).getByRole('menuitem', { name: 'Wszystkie profile' })).toHaveFocus();
+  expect(within(menu).getByRole('menuitem', { name: 'Cennik' })).toHaveFocus();
   fireEvent.keyDown(menu, { key: 'Escape' });
   expect(screen.getByRole('button', { name: 'Otwórz menu nawigacji' })).toHaveFocus();
   openNavigation();
@@ -66,5 +66,15 @@ test('outside touches close both menus and announcement selection closes navigat
   const link = screen.getByRole('menuitem', { name: /Ogłoszenia/ });
   expect(link).toHaveAttribute('href', '/ogloszenia');
   fireEvent.click(link);
+  expect(screen.queryByRole('menu', { name: 'Nawigacja Showly' })).not.toBeInTheDocument();
+});
+
+test('pricing is available in the public navigation and closes the mobile menu', async () => {
+  await showNavbar();
+  expect(screen.getByRole('link', { name: 'Cennik' })).toHaveAttribute('href', '/cennik');
+  openNavigation();
+  const pricing = screen.getByRole('menuitem', { name: 'Cennik' });
+  expect(pricing).toHaveAttribute('href', '/cennik');
+  fireEvent.click(pricing);
   expect(screen.queryByRole('menu', { name: 'Nawigacja Showly' })).not.toBeInTheDocument();
 });

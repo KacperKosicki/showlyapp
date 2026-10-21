@@ -221,6 +221,7 @@
   letter-spacing: 0.075em;
   text-transform: uppercase;
   white-space: nowrap;
+  text-decoration: none;
 
   transition:
     background 0.2s ease,
@@ -255,6 +256,12 @@
     outline: 3px solid color-mix(in srgb, var(--nav-violet) 30%, transparent);
     outline-offset: 2px;
   }
+}
+
+.pricingNav {
+  display: inline-flex;
+  align-items: center;
+  &[aria-current='page'] { background: var(--nav-lime); color: #171917; }
 }
 
 .right {
@@ -431,7 +438,7 @@
   transform: translate(2px, -2px);
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1320px) {
   .navbar {
     grid-template-columns: minmax(210px, 1fr) auto;
   }
@@ -747,7 +754,7 @@
   font-size: .57rem;
 }
 
-@media(max-width:1200px) {
+@media(max-width:1320px) {
   .navbarShell .mobileNavigationWrap {
     display: block;
   }

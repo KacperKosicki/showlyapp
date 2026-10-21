@@ -65,6 +65,7 @@ const RESERVED_PUBLIC_SLUGS = new Set([
   "admin",
   "api",
   "billing",
+  "cennik",
   "kontakt",
   "konto",
   "konwersacja",

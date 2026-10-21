@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FiArrowUpRight,
   FiClipboard,
+  FiCreditCard,
   FiMenu,
   FiX,
   FiInfo,
@@ -228,6 +229,7 @@ const Navbar = ({
               {item.label}
             </button>
           ))}
+          <Link className={`${styles.navLink} ${styles.pricingNav}`} to="/cennik" aria-current={location.pathname === '/cennik' ? 'page' : undefined}>Cennik</Link>
           <Link className={`${styles.navLink} ${styles.announcementsNav}`} to="/ogloszenia" state={{ scrollToId: 'announcements' }}><span className={styles.newBadge}>Nowość</span>Ogłoszenia</Link>
         </div>
 
@@ -254,6 +256,9 @@ const Navbar = ({
                 className={dropdownStyles.item} key={scrollToId} onClick={() => handleSectionNavigate(scrollToId)}>
                 <span className={dropdownStyles.itemLeft}><Icon className={dropdownStyles.itemIcon} aria-hidden="true" /><span>{label}</span></span><FiArrowUpRight className={dropdownStyles.itemArrow} aria-hidden="true" />
               </button>)}
+              <Link role="menuitem" className={dropdownStyles.item} to="/cennik" aria-current={location.pathname === '/cennik' ? 'page' : undefined} onClick={() => setActiveMenu(null)}>
+                <span className={dropdownStyles.itemLeft}><FiCreditCard className={dropdownStyles.itemIcon} aria-hidden="true" /><span>Cennik</span></span><FiArrowUpRight className={dropdownStyles.itemArrow} aria-hidden="true" />
+              </Link>
               <Link role="menuitem" className={dropdownStyles.item} to="/ogloszenia"
                 state={{ scrollToId: 'announcements' }} onClick={() => setActiveMenu(null)}>
                 <span className={dropdownStyles.itemLeft}><FiClipboard className={dropdownStyles.itemIcon} aria-hidden="true" /><span>Ogłoszenia</span></span><small className={styles.mobileNavigationNew}>Nowość</small>

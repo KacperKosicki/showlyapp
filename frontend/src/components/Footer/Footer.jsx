@@ -12,6 +12,7 @@ import styles from "./Footer.module.scss";
 import useScrollReveal from "../../utils/useScrollReveal";
 
 const productLinks = [
+  { label: "Cennik", path: "/cennik" },
   { label: "Ogłoszenia", path: "/ogloszenia", scrollToId: "announcements" },
   {
     label: "Strona główna",

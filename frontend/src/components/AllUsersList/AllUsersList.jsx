@@ -1,5 +1,6 @@
 import DataLoader from '../ui/DataLoader/DataLoader';
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -8,6 +9,8 @@ import {
 import axios from "axios";
 import {
   FiChevronDown,
+  FiArrowLeft,
+  FiArrowRight,
   FiSearch,
   FiSliders,
   FiUsers,
@@ -114,6 +117,8 @@ const getAuthHeader = async () => {
 
 const AllUsersList = ({ currentUser, setAlert }) => {
   const sectionRef = useRef(null);
+  const trackRef = useRef(null);
+  const [scrollState, setScrollState] = useState({ previous: false, next: false, first: 1, last: 1 });
 
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState("default");
@@ -232,6 +237,57 @@ const AllUsersList = ({ currentUser, setAlert }) => {
 
   const hasSearchQuery = Boolean(normalizeText(search));
 
+  const updateScrollState = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const bounds = track.getBoundingClientRect();
+    const visible = Array.from(track.children).reduce((indices, card, index) => {
+      const rect = card.getBoundingClientRect();
+      // Count cards that are mostly visible, leaving the next-card preview out.
+      const overlap = Math.min(rect.right, bounds.right) - Math.max(rect.left, bounds.left);
+      if (overlap >= rect.width * 0.5) indices.push(index + 1);
+      return indices;
+    }, []);
+    setScrollState({
+      previous: track.scrollLeft > 2,
+      next: track.scrollWidth - track.clientWidth - track.scrollLeft > 2,
+      first: visible[0] || 1,
+      last: visible[visible.length - 1] || 1,
+    });
+  }, []);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return undefined;
+    track.scrollLeft = 0;
+    updateScrollState();
+    const observer = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(updateScrollState)
+      : null;
+    observer?.observe(track);
+    window.addEventListener('resize', updateScrollState);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', updateScrollState);
+    };
+  }, [visibleUsers, loading, updateScrollState]);
+
+  const scrollProfiles = (direction) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    track.scrollBy({ left: direction * track.clientWidth, behavior: reducedMotion ? 'instant' : 'smooth' });
+  };
+
+  const handleTrackKeyDown = (event) => {
+    // Leave keyboard events inside links and card controls to UserCard.
+    if (event.target !== event.currentTarget) return;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      scrollProfiles(event.key === 'ArrowLeft' ? -1 : 1);
+    }
+  };
+
   useEffect(() => {
     const section = sectionRef.current;
 
@@ -349,13 +405,23 @@ const AllUsersList = ({ currentUser, setAlert }) => {
             <div className={styles.resultSummary} aria-live="polite" aria-atomic="true"><span>Znaleziono</span><strong>{getResultsLabel(visibleUsers.length)}</strong></div>
           </header>
           {visibleUsers.length > 0 ? (
-            <div className={styles.track} role="list" aria-label="Wszystkie profile Showly">
+            <div className={styles.catalog}>
+              <div className={styles.trackToolbar}>
+                <p id="showly-directory-scroll-hint"><span className={styles.catalogDot} aria-hidden="true" />Przeglądaj profile<span className={styles.scrollHint}>Przesuń listę, by odkryć więcej</span></p>
+                <div className={styles.trackControls}>
+                  <button type="button" onClick={() => scrollProfiles(-1)} disabled={!scrollState.previous} aria-label="Poprzednie profile" aria-controls="showly-profile-track"><FiArrowLeft aria-hidden="true" /></button>
+                  <button type="button" onClick={() => scrollProfiles(1)} disabled={!scrollState.next} aria-label="Następne profile" aria-controls="showly-profile-track"><FiArrowRight aria-hidden="true" /></button>
+                </div>
+              </div>
+            <div ref={trackRef} id="showly-profile-track" className={styles.track} role="list" tabIndex={0} aria-label="Wszystkie profile Showly" aria-describedby="showly-directory-scroll-hint" onScroll={updateScrollState} onKeyDown={handleTrackKeyDown}>
               {visibleUsers.map((user, index) => (
                 <div className={styles.cardWrap} key={user._id || user.userId || index} role="listitem">
                   <div className={styles.cardCaption} aria-hidden="true"><span>Profil / {String(index + 1).padStart(2, "0")}</span><i /><FiArrowUpRight /></div>
                   <UserCard user={user} currentUser={currentUser} setAlert={setAlert} />
                 </div>
               ))}
+            </div>
+              <div className={styles.trackFooter}><span>Widoczne <strong>{scrollState.first === scrollState.last ? scrollState.first : `${scrollState.first}–${scrollState.last}`}</strong> z {visibleUsers.length}</span><span>Kolejny profil, nowe możliwości.<FiArrowUpRight aria-hidden="true" /></span></div>
             </div>
           ) : (
             <div className={styles.emptyState} role="status">

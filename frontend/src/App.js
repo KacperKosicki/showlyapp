@@ -41,6 +41,7 @@ const Regulations = lazy(() => import("./components/Regulations/Regulations"));
 const CookiesPolicy = lazy(() => import("./components/CookiesPolicy/CookiesPolicy"));
 const ShowlyJourney = lazy(() => import("./components/ShowlyJourney/ShowlyJourney"));
 const ProfilesHub = lazy(() => import("./components/ProfilesHub/ProfilesHub"));
+const Pricing = lazy(() => import("./components/Pricing/Pricing"));
 const Announcements = lazy(() => import('./components/Announcements/Announcements'));
 const AnnouncementDetail = lazy(() => import('./components/Announcements/AnnouncementDetail'));
 const MyAnnouncements = lazy(() => import('./components/Announcements/MyAnnouncements'));
@@ -580,6 +581,7 @@ function App() {
           />
 
           <Route path="/verify-success" element={<VerifySuccess />} />
+          <Route path="/cennik" element={<><Pricing user={safeUser} hasProfile={hasProfile} /><Footer {...footerProps} /></>} />
           <Route path="/ogloszenia" element={<><Announcements user={safeUser} /><Footer {...footerProps} /></>} />
           <Route path="/ogloszenia/:id" element={<><AnnouncementDetail user={safeUser} /><Footer {...footerProps} /></>} />
           <Route path="/twoje-ogloszenia" element={<AuthRoute user={safeUser} loading={loadingUser || loadingToken}><MyAnnouncements /><Footer {...footerProps} /></AuthRoute>} />

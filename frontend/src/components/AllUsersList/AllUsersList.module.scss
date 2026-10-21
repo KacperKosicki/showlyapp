@@ -214,6 +214,64 @@
   min-width: 0;
 }
 
+.catalog {
+  --track-gap: 24px;
+  --card-width: calc((100% - 2 * var(--track-gap)) / 3);
+  min-width: 0;
+  padding: 0 20px;
+  border: 1px solid var(--all-line);
+  border-radius: 22px;
+  background: var(--all-surface);
+}
+
+.trackToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--all-line);
+
+  p { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; font-size: 12px; font-weight: 700; }
+}
+
+.catalogDot { width: 8px; height: 8px; flex-shrink: 0; border-radius: 50%; background: var(--all-purple); }
+.scrollHint { color: var(--all-muted); font-size: 11px; font-weight: 400; }
+.trackControls {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+
+  button {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--all-ink);
+    border-radius: 50%;
+    background: var(--all-lime);
+    color: #171917;
+    cursor: pointer;
+    transition: background .2s, transform .2s;
+    svg { width: 20px; height: 20px; }
+    &:hover:not(:disabled) { background: var(--all-orange); transform: translateY(-2px); }
+    &:disabled { border-color: var(--all-line); background: var(--all-bg); color: var(--all-muted); opacity: .5; cursor: default; }
+  }
+}
+
+.trackFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0 20px;
+  color: var(--all-muted);
+  font-size: 11px;
+  strong { color: var(--all-ink); font-variant-numeric: tabular-nums; }
+  > span:last-child { display: inline-flex; align-items: center; gap: 8px; }
+}
+
 .searchPanel {
   display: grid;
   grid-template-columns: 1fr 1.65fr;
@@ -410,15 +468,27 @@
 }
 
 .track {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: start;
-  gap: 42px 28px;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--track-gap);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--all-purple) var(--all-bg);
+  padding: 24px 0 22px;
+
+  &:focus-visible { outline: 2px solid var(--all-purple); outline-offset: 5px; border-radius: 8px; }
+  &::-webkit-scrollbar { height: 7px; }
+  &::-webkit-scrollbar-track { background: var(--all-bg); border-radius: 8px; }
+  &::-webkit-scrollbar-thumb { background: var(--all-purple); border-radius: 8px; }
 }
 
 .cardWrap {
+  flex: 0 0 var(--card-width);
   min-width: 0;
-  padding-right: 12px;
+  padding: 3px 14px 3px 3px;
+  scroll-snap-align: start;
 
   >article {
     width: 100%;
@@ -669,11 +739,12 @@
     grid-template-columns: minmax(0, 1fr) 240px;
   }
 
-  .track,
   .loadingCards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 38px 26px;
   }
+
+  .catalog { --card-width: calc((100% - var(--track-gap)) / 2); }
 }
 
 @media (max-width: 720px) {
@@ -778,17 +849,37 @@
     font-size: 12px;
   }
 
-  .track,
   .loadingCards {
     grid-template-columns: 1fr;
     gap: 34px;
   }
 
   .cardWrap {
-    max-width: 460px;
-    width: 100%;
-    margin-inline: auto;
+    margin: 0;
   }
+
+  .catalog { --track-gap: 12px; --card-width: 90%; padding-inline: 12px; border-radius: 18px; }
+  .trackToolbar { padding-block: 12px; gap: 10px; p { gap: 7px; font-size: 11px; } }
+  .scrollHint { flex-basis: 100%; font-size: 10px; }
+  .track { padding-top: 18px; }
+  .trackControls { gap: 6px; }
+  .trackFooter { padding-block: 12px 16px; > span:last-child { display: none; } }
+  .searchField input, .sortField select { font-size: 16px; }
+
+  // Keep the introduction compact so profiles are quicker to reach on mobile.
+  .directoryFolder { width: 100%; margin: 0; transform: none; }
+  .folderTab { display: none; }
+  .folderBody {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 16px;
+    padding: 16px 18px;
+    border-radius: 14px;
+    box-shadow: 3px 4px 0 var(--all-orange);
+    > strong { grid-column: 2; grid-row: 1 / 3; align-self: center; margin: 0; font-size: 44px; }
+  }
+  .folderCaption { margin: 0; }
+  .folderFooter { display: none; }
 
   .directoryNote {
     align-items: flex-start;
