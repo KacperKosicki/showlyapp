@@ -12,6 +12,12 @@ const userSchema = new mongoose.Schema({
   role:         { type: String, enum: ['user', 'mod', 'admin'], default: 'user' },
 
   pushTokens:   { type: [String], default: [] }, // 👈 NOWE
+  notificationPreferences: {
+    reservationRequests: { type: Boolean, default: true },
+    reservationUpdates: { type: Boolean, default: true },
+    messages: { type: Boolean, default: true },
+    announcements: { type: Boolean, default: true },
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

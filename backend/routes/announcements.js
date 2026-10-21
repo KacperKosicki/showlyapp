@@ -31,7 +31,7 @@ const publicFields = { _id: 1, title: 1, description: 1, authorName: 1, authorAv
 const serialize = (item) => Object.fromEntries(Object.keys(publicFields).map(key => [key, item[key]]));
 const optionalAuth = (req, res, next) => req.headers.authorization ? requireAuth(req, res, next) : next();
 async function notify(uid, title, body) {
-  try { await sendPushToUserUid(uid, { title, body, url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/twoje-ogloszenia` }); } catch (err) { console.error('Announcement notification:', err.message); }
+  try { await sendPushToUserUid(uid, { category: 'announcements', title, body, url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/twoje-ogloszenia` }); } catch (err) { console.error('Announcement notification:', err.message); }
 }
 async function conversationFor(application, announcement, renewed = false) {
   const exists = await Announcement.findOne({ _id: announcement._id, deletedAt: null }).lean();

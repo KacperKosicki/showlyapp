@@ -94,6 +94,10 @@ const reservationSchema = new mongoose.Schema(
 
     clientSeen: { type: Boolean, default: false },
     providerSeen: { type: Boolean, default: false },
+    clientUpdateType: { type: String, default: '' },
+    providerUpdateType: { type: String, default: '' },
+    clientUpdateAt: { type: Date, default: null },
+    providerUpdateAt: { type: Date, default: null },
 
     clientNote: {
       message: {
@@ -106,6 +110,11 @@ const reservationSchema = new mongoose.Schema(
         type: Date,
         default: null,
       },
+    },
+
+    providerNote: {
+      message: { type: String, trim: true, maxlength: 500, default: '' },
+      createdAt: { type: Date, default: null },
     },
 
     cancellationReason: {
@@ -137,6 +146,9 @@ reservationSchema.index(
 );
 
 reservationSchema.index({ providerUserId: 1, date: 1, status: 1 });
+reservationSchema.index({ userId: 1, clientSeen: 1, status: 1 });
+reservationSchema.index({ providerUserId: 1, providerSeen: 1, status: 1 });
+reservationSchema.index({ status: 1, pendingExpiresAt: 1 });
 
 reservationSchema.index(
   { providerProfileId: 1, staffId: 1, startAt: 1, endAt: 1, status: 1 },

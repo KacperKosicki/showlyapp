@@ -10,6 +10,31 @@ const cloudinary = require('../config/cloudinary'); // ✅ popraw ścieżkę je�
 
 const requireAuth = require("../middleware/requireAuth");
 const requireOwnerOrAdmin = require("../middleware/requireOwnerOrAdmin");
+const { normalizePreferences, validatePreferences } = require('../utils/notificationPreferences');
+
+router.get('/notification-preferences', requireAuth, async (req, res) => {
+  try {
+    const user = await User.findOne({ firebaseUid: req.auth.uid }).select('notificationPreferences').lean();
+    if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika.' });
+    return res.json(normalizePreferences(user.notificationPreferences));
+  } catch { return res.status(500).json({ message: 'Nie udało się odczytać ustawień powiadomień.' }); }
+});
+router.patch('/notification-preferences', requireAuth, async (req, res) => {
+  if (!validatePreferences(req.body)) return res.status(400).json({ message: 'Nieprawidłowe ustawienia powiadomień.' });
+  try {
+    const fields = Object.fromEntries(Object.entries(req.body).map(([key, value]) => [`notificationPreferences.${key}`, value]));
+    const user = await User.findOneAndUpdate({ firebaseUid: req.auth.uid }, { $set: fields }, { new: true, runValidators: true }).select('notificationPreferences').lean();
+    if (!user) return res.status(404).json({ message: 'Nie znaleziono użytkownika.' });
+    return res.json(normalizePreferences(user.notificationPreferences));
+  } catch { return res.status(500).json({ message: 'Nie udało się zapisać ustawień powiadomień.' }); }
+});
+router.post('/push-device-status', requireAuth, async (req, res) => {
+  if (typeof req.body?.token !== 'string' || req.body.token.length > 4096) return res.status(400).json({ message: 'Nieprawidłowy token urządzenia.' });
+  try {
+    const user = await User.exists({ firebaseUid: req.auth.uid, pushTokens: req.body.token });
+    return res.json({ enabled: Boolean(user) });
+  } catch { return res.status(500).json({ message: 'Nie udało się sprawdzić urządzenia.' }); }
+});
 
 /* =========================
    Helpers

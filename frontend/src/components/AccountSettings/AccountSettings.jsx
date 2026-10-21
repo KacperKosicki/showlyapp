@@ -18,6 +18,7 @@ import { useLocation } from "react-router-dom";
 
 import { auth } from "../../firebase";
 import AlertBox from "../AlertBox/AlertBox";
+import NotificationSettings from './NotificationSettings';
 import styles from "./AccountSettings.module.scss";
 
 const API = process.env.REACT_APP_API_URL;
@@ -647,6 +648,7 @@ export const AccountSettingsView = ({
             </div>
           </div>
 
+          <NotificationSettings user={user} />
           <footer className={styles.panelFooter}>
             <FiShield aria-hidden="true" />
             <span>Zmiany zapisujesz osobno w każdej sekcji.</span>

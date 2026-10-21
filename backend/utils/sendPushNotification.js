@@ -1,14 +1,17 @@
 const admin = require("./firebaseAdmin");
 const User = require("../models/User");
+const { normalizePreferences } = require('./notificationPreferences');
 
-async function sendPushToUserUid(userUid, { title, body, url = "/" }) {
+async function deliverPush(userUid, { title, body, url = "/", category = 'messages' }) {
   if (!userUid) {
     return { ok: false, reason: "no-user-uid" };
   }
 
   const user = await User.findOne({ firebaseUid: userUid })
-    .select("pushTokens")
+    .select("pushTokens notificationPreferences")
     .lean();
+
+  if (normalizePreferences(user?.notificationPreferences)[category] === false) return { ok: false, reason: 'disabled-by-user' };
 
   const tokens = Array.isArray(user?.pushTokens)
     ? user.pushTokens.filter(Boolean)
@@ -25,6 +28,7 @@ async function sendPushToUserUid(userUid, { title, body, url = "/" }) {
       title: String(title || "Nowe powiadomienie"),
       body: String(body || ""),
       url: String(url || "/"),
+      category,
     },
   };
 
@@ -41,7 +45,6 @@ async function sendPushToUserUid(userUid, { title, body, url = "/" }) {
     if (!r.success) {
       console.error(
         "❌ Push token error:",
-        tokens[i],
         r.error?.code,
         r.error?.message
       );
@@ -68,6 +71,15 @@ async function sendPushToUserUid(userUid, { title, body, url = "/" }) {
     successCount: response.successCount,
     failureCount: response.failureCount,
   };
+}
+
+// A notification transport failure must never turn a committed booking/message into a 500.
+async function sendPushToUserUid(userUid, payload) {
+  try { return await deliverPush(userUid, payload); }
+  catch (error) {
+    console.error('Push delivery failed:', error?.code || error?.message);
+    return { ok: false, reason: 'delivery-failed' };
+  }
 }
 
 module.exports = { sendPushToUserUid };

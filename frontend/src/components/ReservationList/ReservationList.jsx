@@ -20,6 +20,7 @@ import {
   FiTrash2,
 } from "react-icons/fi";
 
+import { isReservationUnread, reservationUpdateLabel } from './reservationUpdates';
 import ReservationCalendar from "./ReservationCalendar";
 import EditorGroup from "../YourProfile/sections/EditorGroup";
 import ReservationActionDialog from "./ReservationActionDialog";
@@ -264,7 +265,7 @@ const getDayAvailabilityInfo = (meta, dateStr = "") => {
   return null;
 };
 
-const ReservationList = ({ user, resetPendingReservationsCount }) => {
+const ReservationList = ({ user }) => {
   const location = useLocation();
   const isLogged = !!user?.uid;
 
@@ -402,45 +403,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
     setClientReservations(resClient.data || []);
     setServiceReservations(resService.data || []);
+    window.dispatchEvent(new Event("showly:reservations-changed"));
   }, [isLogged, user?.uid]);
-
-  const markProviderReservationsAsSeen = useCallback(async (reservations = []) => {
-    if (!isLogged || !user?.uid) return;
-
-    const unseenProviderReservations = reservations.filter((reservation) => {
-      const status = String(reservation.status || "").toLowerCase();
-
-      const isRelevantStatus =
-        status === "oczekująca" ||
-        status === "zaakceptowana";
-
-      return isRelevantStatus && reservation.providerSeen === false;
-    });
-
-    if (!unseenProviderReservations.length) return;
-
-    try {
-      await Promise.all(
-        unseenProviderReservations.map((reservation) =>
-          api.patch(`/api/reservations/${reservation._id}/seen`, {
-            who: "provider",
-          })
-        )
-      );
-
-      setServiceReservations((prev) =>
-        prev.map((reservation) =>
-          unseenProviderReservations.some((x) => x._id === reservation._id)
-            ? { ...reservation, providerSeen: true }
-            : reservation
-        )
-      );
-
-      resetPendingReservationsCount?.();
-    } catch (err) {
-      console.error("❌ Nie udało się oznaczyć rezerwacji jako widziane:", err);
-    }
-  }, [isLogged, user?.uid, resetPendingReservationsCount]);
 
   useEffect(() => {
     if (!isLogged) {
@@ -467,14 +431,14 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
         setClientReservations(clientData);
         setServiceReservations(serviceData);
 
-        await markProviderReservationsAsSeen(serviceData);
+
       } catch (e) {
         console.error("❌ Błąd pobierania:", e);
       } finally {
         setLoading(false);
       }
     })();
-  }, [isLogged, user?.uid, fetchProviderMeta, markProviderReservationsAsSeen]);
+  }, [isLogged, user?.uid, fetchProviderMeta ]);
 
   useEffect(() => {
     if (!offlineOpen) return;
@@ -503,9 +467,6 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     };
   }, [offlineOpen]);
 
-  useEffect(() => {
-    if (!loading && resetPendingReservationsCount) resetPendingReservationsCount();
-  }, [loading, resetPendingReservationsCount]);
 
   useEffect(() => {
     const scrollTo = location.state?.scrollToId;
@@ -1256,41 +1217,21 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     );
   };
 
-  const markSeen = async (id, who) => {
+  const markSeen = async (reservation, who) => {
     try {
-      await api.patch(`/api/reservations/${id}/seen`, { who });
-      if (who === "client") {
-        setClientReservations((prev) => prev.filter((r) => r._id !== id));
-      } else {
-        setServiceReservations((prev) => prev.filter((r) => r._id !== id));
-      }
-    } catch (e) {
-      console.error("❌ markSeen error", e);
+      await api.patch(`/api/reservations/${reservation._id}/seen`, { who, viewedUpdatedAt: reservation.updatedAt });
+      const update = previous => previous.flatMap(item => item._id !== reservation._id ? [item] : ['anulowana', 'odrzucona'].includes(item.status) ? [] : [{ ...item, [who + 'Seen']: true }]);
+      if (who === 'client') setClientReservations(update); else setServiceReservations(update);
+      window.dispatchEvent(new Event('showly:reservations-changed'));
+    } catch {
+      setAlert({ show: true, type: 'warning', message: 'Nie udało się oznaczyć zmiany jako przeczytanej. Sprawdź aktualną rezerwację i spróbuj ponownie.' });
+      await refetch().catch(() => {});
     }
   };
 
-  const renderClosedInfo = (res, viewer) => {
-    if (!["anulowana", "odrzucona"].includes(res.status)) return null;
-
-    const who = viewer === "sent" ? "client" : "provider";
-    const unseen = viewer === "sent" ? !res.clientSeen : !res.providerSeen;
-    if (!unseen) return null;
-
-    const label =
-      res.closedReason === "expired"
-        ? "Rezerwacja wygasła (brak potwierdzenia w czasie)."
-        : res.status === "anulowana"
-          ? "Klient anulował rezerwację."
-          : "Usługodawca odrzucił rezerwację.";
-
-    return (
-      <div className={styles.closedInfo}>
-        <span>{label}</span>
-        <button className={styles.seenBtn} onClick={() => markSeen(res._id, who)}>
-          OK, widzę
-        </button>
-      </div>
-    );
+  const renderClosedInfo = (reservation, variant) => {
+    if (!isReservationUnread(reservation, variant)) return null;
+    return <div className={styles.closedInfo}><span><strong>Nowa aktualizacja</strong><br />{reservationUpdateLabel(reservation, variant)}</span><button type="button" className={styles.seenBtn} onClick={() => markSeen(reservation, variant === 'sent' ? 'client' : 'provider')}>Oznacz jako przeczytane</button></div>;
   };
 
   const formatDatePL = (iso) => {
@@ -1400,8 +1341,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     );
   };
 
-  const renderClientNote = (res) => {
-    const message = String(res.clientNote?.message || "").trim();
+  const renderClientNote = (res, who = "client") => {
+    const message = String(res[who + "Note"]?.message || "").trim();
 
     if (!message) return null;
 
@@ -1409,13 +1350,13 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
       <div className={`${styles.note} ${styles.clientNote}`}>
         <div className={styles.noteHeader}>
           <FiFileText className={styles.noteIcon} aria-hidden="true" />
-          <span>Informacja od klienta</span>
+          <span>{who === "client" ? "Informacja od klienta" : "Informacja od usługodawcy"}</span>
         </div>
 
         <div className={styles.noteBody}>
           <span className={styles.noteDate}>
-            {res.clientNote?.createdAt
-              ? new Date(res.clientNote.createdAt).toLocaleString("pl-PL")
+            {res[who + "Note"]?.createdAt
+              ? new Date(res[who + "Note"].createdAt).toLocaleString("pl-PL")
               : "Wiadomość"}
           </span>
           <p className={styles.noteMessage}>{message}</p>
@@ -1556,8 +1497,8 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     }
   };
 
-  const handleClientNote = async (reservation) => {
-    if (reservation.clientNote?.message) {
+  const handleClientNote = async (reservation, who = "client") => {
+    if (reservation[who + "Note"]?.message) {
       setAlert({
         show: true,
         type: "info",
@@ -1569,7 +1510,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
     const text = await askReservationAction({
       title: "Dodaj informację do rezerwacji",
-      description: "Przekaż usługodawcy ważną wiadomość, np. o spóźnieniu. Możesz dodać jedną informację — po wysłaniu nie będzie można jej edytować.",
+      description: "Przekaż drugiej stronie ważną wiadomość, np. o spóźnieniu. Możesz dodać jedną informację — po wysłaniu nie będzie można jej edytować.",
       label: "Twoja wiadomość", confirmText: "Dodaj informację", required: true, minLength: 5,
     });
 
@@ -1600,7 +1541,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     try {
       setDisabledIds((prev) => new Set(prev).add(`note-${reservation._id}`));
 
-      await api.patch(`/api/reservations/${reservation._id}/client-note`, {
+      await api.patch(`/api/reservations/${reservation._id}/${who}-note`, {
         message,
       });
 
@@ -1632,10 +1573,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     }
   };
 
-  const handleClientCancelWithReason = async (reservation) => {
+  const handleClientCancelWithReason = async (reservation, who = "client") => {
     const text = await askReservationAction({
       title: "Anulować rezerwację?",
-      description: "Podaj powód anulowania. Usługodawca otrzyma tę informację, a termin zostanie zwolniony.",
+      description: "Podaj powód anulowania. Druga strona otrzyma tę informację, a termin zostanie zwolniony.",
       label: "Powód anulowania", confirmText: "Anuluj rezerwację", required: true, danger: true,
     });
 
@@ -1656,7 +1597,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
     try {
       setDisabledIds((prev) => new Set(prev).add(`cancel-${reservation._id}`));
 
-      await api.patch(`/api/reservations/${reservation._id}/cancel-by-client`, {
+      await api.patch(`/api/reservations/${reservation._id}/cancel-by-${who}`, {
         reason,
       });
 
@@ -1702,22 +1643,24 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
 
   const renderItem = (res, variant) => {
     const isPending = res.status === "oczekująca";
+    const isUnread = isReservationUnread(res, variant);
     const created = res.createdAt || res.updatedAt || Date.now();
     const isOffline = !!res.offline;
     const isClosed = ["anulowana", "odrzucona"].includes(res.status);
 
     const canClientManage = variant === "sent" && !isClosed;
     const canProviderRespond = variant === "received" && isPending;
+    const canProviderManage = variant === "received" && !isOffline && !isClosed;
     const canRemoveOffline = variant === "received" && isOffline && !isClosed;
-    const showBottomRow = canClientManage || canProviderRespond || canRemoveOffline;
+    const showBottomRow = canClientManage || canProviderRespond || canRemoveOffline || canProviderManage;
 
     return (
-      <li key={res._id} className={`${styles.item} ${isPending ? styles.unread : styles.read}`}>
+      <li key={res._id} className={`${styles.item} ${isUnread ? styles.unread : styles.read}`}>
         <div className={`${styles.link} ${getReservationLinkClass(res.status)}`}>
           <div className={styles.row}>
             <div className={styles.avatarWrap}>
               <AvatarNode variant={variant} isOffline={isOffline} />
-              {isPending && <span className={styles.badgeDot} aria-hidden="true" />}
+              {isUnread && <span className={styles.badgeDot} aria-hidden="true" />}
             </div>
 
             <div className={styles.head}>
@@ -1729,6 +1672,7 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
               {renderInfo(res)}
               {renderDescription(res, variant)}
               {renderClientNote(res)}
+              {renderClientNote(res, "provider")}
               {res.status === "oczekująca" && res.pendingExpiresAt && (
                 <Countdown until={res.pendingExpiresAt} onExpire={() => refetch()} />
               )}
@@ -1780,6 +1724,10 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
                   </>
                 )}
 
+                {canProviderManage && <>
+                  {!res.providerNote?.message && <button type="button" className={styles.actionBtn} disabled={disabledIds.has(`note-${res._id}`)} onClick={() => handleClientNote(res, 'provider')}><FiMessageSquare aria-hidden="true" />Dodaj informację dla klienta</button>}
+                  {res.status === 'zaakceptowana' && <button type="button" className={`${styles.actionBtn} ${styles.cancelBtn}`} disabled={disabledIds.has(`cancel-${res._id}`)} onClick={() => handleClientCancelWithReason(res, 'provider')}><FiXCircle aria-hidden="true" />Anuluj z powodem</button>}
+                </>}
                 {canRemoveOffline && (
                   <button
                     onClick={() => handleCancelOfflineByProvider(res)}
@@ -2051,20 +1999,14 @@ const ReservationList = ({ user, resetPendingReservationsCount }) => {
   }, [loading]);
 
   useEffect(() => {
-    if (!isLogged) return;
-
-    const hasPendings =
-      clientReservations.some((r) => r.status === "oczekująca") ||
-      serviceReservations.some((r) => r.status === "oczekująca");
-
-    if (!hasPendings) return;
-
-    const id = setInterval(() => {
-      refetch();
-    }, 30000);
-
-    return () => clearInterval(id);
-  }, [isLogged, clientReservations, serviceReservations, refetch]);
+    if (!isLogged) return undefined;
+    const refresh = () => { if (document.visibilityState !== 'hidden') refetch().catch(() => {}); };
+    const interval = setInterval(refresh, 30000);
+    window.addEventListener('focus', refresh);
+    window.addEventListener('showly:push-received', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    return () => { clearInterval(interval); window.removeEventListener('focus', refresh); window.removeEventListener('showly:push-received', refresh); document.removeEventListener('visibilitychange', refresh); };
+  }, [isLogged, refetch]);
 
   const SkeletonItem = () => (
     <li className={`${styles.item} ${styles.skeletonItem}`}>

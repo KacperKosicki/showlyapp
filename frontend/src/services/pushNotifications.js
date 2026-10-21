@@ -6,6 +6,7 @@ import {
   isSupported,
 } from "firebase/messaging";
 import { auth, app } from "../firebase";
+import { inspectPushEnvironment } from './pushSupport';
 
 const API = process.env.REACT_APP_API_URL;
 const VAPID_KEY =
@@ -102,12 +103,6 @@ export const enablePushNotifications = async (uid) => {
       return { success: false, reason: "unsupported" };
     }
 
-    const messaging = await getMessagingSafe();
-    if (!messaging) {
-      console.log("❌ Firebase Messaging nie jest wspierany w tej przeglądarce");
-      return { success: false, reason: "unsupported" };
-    }
-
     let permission = Notification.permission;
 
     if (permission !== "granted") {
@@ -118,6 +113,9 @@ export const enablePushNotifications = async (uid) => {
       console.log("❌ Brak zgody na powiadomienia");
       return { success: false, reason: "denied" };
     }
+
+    const messaging = await getMessagingSafe();
+    if (!messaging) return { success: false, reason: 'unsupported' };
 
     const registration = await registerPushServiceWorker();
     if (!registration) {
@@ -156,7 +154,6 @@ export const enablePushNotifications = async (uid) => {
       };
     }
 
-    console.log("✅ FCM token zapisany:", fcmToken);
     console.log("✅ save-push-token response:", data);
 
     return { success: true, token: fcmToken };
@@ -217,7 +214,6 @@ export const disablePushNotifications = async (uid) => {
       console.warn("⚠️ deleteToken warning:", err);
     });
 
-    console.log("✅ Push wyłączony dla urządzenia:", currentToken);
     console.log("✅ remove-push-token response:", data);
 
     return { success: true, token: currentToken };
@@ -235,22 +231,16 @@ export async function initForegroundPushListener() {
     if (!messaging) return;
 
     onMessage(messaging, (payload) => {
-      console.log("📩 Foreground message:", payload);
+      window.dispatchEvent(new Event('showly:push-received'));
 
       const title = payload?.data?.title || "Nowe powiadomienie";
       const body = payload?.data?.body || "Masz nowe zdarzenie";
       const url = payload?.data?.url || "/";
 
-      if (Notification.permission === "granted") {
-        const n = new Notification(title, {
-          body,
-          icon: "/logo192.png?v=showly-20261021",
-        });
-
-        n.onclick = () => {
-          window.focus();
-          window.location.href = url;
-        };
+      if ('Notification' in window && Notification.permission === "granted") {
+        navigator.serviceWorker?.ready.then(registration => registration.showNotification(title, {
+          body, icon: '/logo192.png?v=showly-20261021', data: { url },
+        })).catch(error => console.warn('Nie udało się wyświetlić powiadomienia:', error));
       }
     });
 
@@ -265,3 +255,18 @@ export const getBrowserNotificationState = () => {
   if (!("Notification" in window)) return "unsupported";
   return Notification.permission; // default | granted | denied
 };
+
+export async function getPushDeviceState() {
+  const state = inspectPushEnvironment();
+  if (!['granted', 'default', 'denied'].includes(state)) return { state, enabled: false };
+  if (!(await getMessagingSafe())) return { state: 'unsupported', enabled: false };
+  if (state !== 'granted') return { state, enabled: false };
+  const token = await getCurrentPushToken();
+  if (!token) throw new Error('Device token unavailable');
+  const response = await fetch(`${API}/api/users/push-device-status`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', ...(await getAuthHeader()) }, body: JSON.stringify({ token }),
+  });
+  if (!response.ok) throw new Error('Device status unavailable');
+  const data = await response.json();
+  return { state, enabled: data.enabled === true };
+}

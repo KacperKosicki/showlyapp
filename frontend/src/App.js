@@ -101,7 +101,7 @@ function App() {
   const [hasProfile, setHasProfile] = useState(false);
   const [loadingProfileStatus, setLoadingProfileStatus] = useState(false);
 
-  const resetPendingReservationsCount = () => setPendingReservationsCount(0);
+
 
   const triggerRefresh = useCallback(() => {
     setRefreshTrigger(Date.now());
@@ -407,39 +407,26 @@ function App() {
   }, [safeUser?.uid, token, authFetch]);
 
   useEffect(() => {
-    if (!safeUser?.uid || !token) {
-      setPendingReservationsCount(0);
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const fetchPendingReservations = async () => {
+    if (!safeUser?.uid || !token) { setPendingReservationsCount(0); return undefined; }
+    setPendingReservationsCount(0);
+    let active = true;
+    let request;
+    const refresh = async () => {
+      if (document.visibilityState === 'hidden') return;
+      request?.abort(); const controller = new AbortController(); request = controller;
       try {
-        const res = await authFetch(
-          `${API}/api/reservations/by-provider/${safeUser.uid}`,
-          { signal: controller.signal }
-        );
-
+        const res = await authFetch(`${API}/api/reservations/unread-count`, { signal: request.signal });
         if (!res.ok) return;
-
         const data = await res.json();
-
-        const pending = Array.isArray(data)
-          ? data.filter((r) => r?.status === "oczekująca").length
-          : 0;
-
-        setPendingReservationsCount(pending);
-      } catch (err) {
-        if (err?.name === "AbortError") return;
-
-        console.error("❌ Błąd pobierania liczby rezerwacji:", err);
-      }
+        if (active && !controller.signal.aborted) setPendingReservationsCount(Number(data.count) || 0);
+      } catch (error) { if (error.name !== 'AbortError') console.error('Reservation updates unavailable'); }
     };
-
-    fetchPendingReservations();
-
-    return () => controller.abort();
+    refresh();
+    const interval = setInterval(refresh, 30000);
+    const events = ['focus', 'showly:reservations-changed', 'showly:push-received'];
+    events.forEach(event => window.addEventListener(event, refresh));
+    document.addEventListener('visibilitychange', refresh);
+    return () => { active = false; request?.abort(); clearInterval(interval); events.forEach(event => window.removeEventListener(event, refresh)); document.removeEventListener('visibilitychange', refresh); };
   }, [safeUser?.uid, token, refreshTrigger, authFetch]);
 
   useEffect(() => {
@@ -747,7 +734,7 @@ function App() {
                 <>
                   <ReservationList
                     user={safeUser}
-                    resetPendingReservationsCount={resetPendingReservationsCount}
+
                   />
                   <Footer {...footerProps} />
                 </>

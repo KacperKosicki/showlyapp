@@ -66,12 +66,16 @@ const UserDropdown = ({
   const [betaPremium, setBetaPremium] = useState(false);
   const [photoURL, setPhotoURL] = useState("");
   const [userRole, setUserRole] = useState("user");
-  const [providerReservationsCount, setProviderReservationsCount] = useState(0);
+
 
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
   const triggerRef = useRef(null);
+
+  useEffect(() => {
+    if (open) window.dispatchEvent(new Event('showly:reservations-changed'));
+  }, [open]);
 
   const displayEmail = user?.email || auth.currentUser?.email || "Konto";
   const showProfileActions = !loadingUser;
@@ -266,42 +270,6 @@ const UserDropdown = ({
   }, [user?.uid, refreshTrigger, location.pathname, setUnreadCount]);
 
   useEffect(() => {
-    const fetchProviderReservationsCount = async () => {
-      if (!user?.uid) {
-        setProviderReservationsCount(0);
-        return;
-      }
-
-      try {
-        const authHeader = await getAuthHeader();
-        const response = await axios.get(
-          `${API}/api/reservations/by-provider/${user.uid}`,
-          { headers: authHeader }
-        );
-
-        const reservations = Array.isArray(response.data) ? response.data : [];
-        const count = reservations.filter((reservation) => {
-          const status = String(reservation.status || "").toLowerCase();
-          const isRelevant =
-            status === "oczekująca" || status === "zaakceptowana";
-
-          return isRelevant && reservation.providerSeen === false;
-        }).length;
-
-        setProviderReservationsCount(count);
-      } catch (error) {
-        console.error(
-          "❌ Błąd pobierania liczby rezerwacji usługodawcy:",
-          error
-        );
-        setProviderReservationsCount(0);
-      }
-    };
-
-    fetchProviderReservationsCount();
-  }, [user?.uid, refreshTrigger, location.pathname]);
-
-  useEffect(() => {
     const handleClickOutside = (event) => {
       if (
         dropdownRef.current &&
@@ -372,8 +340,7 @@ const UserDropdown = ({
 
   const avatarSrc = photoURL || "/images/other/no-image.png";
   const reservationBadgeCount =
-    Number(pendingReservationsCount || 0) +
-    Number(providerReservationsCount || 0);
+    Number(pendingReservationsCount || 0);
   const hasAnyBadge =
     Number(unreadCount || 0) > 0 || reservationBadgeCount > 0;
 
@@ -557,7 +524,7 @@ const UserDropdown = ({
 
             <span className={styles.itemRight}>
               {reservationBadgeCount > 0 && (
-                <span className={styles.countBadge}>
+                <span className={styles.countBadge} title="Nieprzeczytane zmiany rezerwacji">
                   {reservationBadgeCount}
                 </span>
               )}

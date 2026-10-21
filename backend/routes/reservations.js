@@ -6,8 +6,15 @@ const User = require("../models/User");
 const Profile = require("../models/Profile");
 const Staff = require("../models/Staff");
 const { sendPushToUserUid } = require("../utils/sendPushNotification");
-
+const { markReservationUpdate, unreadReservationQuery } = require('../utils/reservationUpdates');
 const requireAuth = require("../middleware/requireAuth");
+
+router.get('/unread-count', requireAuth, async (req, res) => {
+  try {
+    await closeExpiredPending();
+    return res.json({ count: await Reservation.countDocuments(unreadReservationQuery(req.auth.uid)) });
+  } catch { return res.status(500).json({ message: 'Nie udało się pobrać liczby zmian rezerwacji.' }); }
+});
 
 const {
   hasFeature,
@@ -321,19 +328,18 @@ async function pickAvailableStaffForProfile({
 // zamykanie przeterminowanych pendingów
 async function closeExpiredPending() {
   const now = new Date();
-  await Reservation.updateMany(
-    { status: "oczekująca", pendingExpiresAt: { $lte: now } },
-    {
-      $set: {
-        status: "anulowana",
-        closedAt: now,
-        closedBy: "system",
-        closedReason: "expired",
-        clientSeen: false,
-        providerSeen: false,
-      },
+  const expired = await Reservation.find({ status: 'oczekująca', pendingExpiresAt: { $lte: now } }).select('_id').limit(100).lean();
+  for (const candidate of expired) {
+    const reservation = await Reservation.findOneAndUpdate({ _id: candidate._id, status: 'oczekująca', pendingExpiresAt: { $lte: now } }, { $set: {
+      status: 'anulowana', closedAt: now, closedBy: 'system', closedReason: 'expired', pendingExpiresAt: null,
+      clientSeen: false, clientUpdateType: 'expired', clientUpdateAt: now,
+      providerSeen: false, providerUpdateType: 'expired', providerUpdateAt: now,
+    } }, { new: true });
+    if (!reservation) continue;
+    for (const uid of new Set([reservation.userId, reservation.providerUserId].filter(Boolean))) {
+      await sendPushToUserUid(uid, { category: 'reservationUpdates', title: 'Rezerwacja wygasła', body: `Rezerwacja ${reservation.date} wygasła bez potwierdzenia.`, url: `${FRONTEND_URL}/rezerwacje` });
     }
-  );
+  }
 }
 
 /**
@@ -574,8 +580,12 @@ router.post("/", requireAuth, async (req, res) => {
       closedAt: null,
       closedBy: null,
       closedReason: null,
-      clientSeen: false,
+      clientSeen: !shouldAutoAccept,
+      clientUpdateType: shouldAutoAccept ? "accepted" : "",
+      clientUpdateAt: shouldAutoAccept ? new Date() : null,
       providerSeen: false,
+      providerUpdateType: "created",
+      providerUpdateAt: new Date(),
     });
 
     if (shouldAutoAccept && Array.isArray(profile.availableDates)) {
@@ -592,6 +602,7 @@ router.post("/", requireAuth, async (req, res) => {
     }
 
     await sendPushToUserUid(providerUserId, {
+      category: "reservationRequests",
       title: shouldAutoAccept ? "Nowa potwierdzona rezerwacja" : "Nowa rezerwacja",
       body: shouldAutoAccept
         ? `${user?.name || "Klient"} zarezerwował termin ${date} o ${fromTime}. Rezerwacja została automatycznie zaakceptowana.`
@@ -599,6 +610,7 @@ router.post("/", requireAuth, async (req, res) => {
       url: `${FRONTEND_URL}/rezerwacje`,
     });
 
+    if (shouldAutoAccept) await sendPushToUserUid(userId, { category: 'reservationUpdates', title: 'Rezerwacja potwierdzona', body: 'Twoja rezerwacja została automatycznie potwierdzona.', url: `${FRONTEND_URL}/rezerwacje` });
     return res.status(201).json({ message: "Rezerwacja utworzona", reservation: newReservation });
   } catch (err) {
     console.error("❌ POST /reservations error:", err);
@@ -973,11 +985,16 @@ router.post("/day", requireAuth, async (req, res) => {
       closedAt: null,
       closedBy: null,
       closedReason: null,
-      clientSeen: false,
+      clientSeen: !shouldAutoAccept,
+      clientUpdateType: shouldAutoAccept ? "accepted" : "",
+      clientUpdateAt: shouldAutoAccept ? new Date() : null,
       providerSeen: false,
+      providerUpdateType: "created",
+      providerUpdateAt: new Date(),
     });
 
     await sendPushToUserUid(providerUserId, {
+      category: "reservationRequests",
       title: shouldAutoAccept ? "Nowa potwierdzona rezerwacja" : "Nowa rezerwacja",
       body: shouldAutoAccept
         ? `${userName || "Klient"} zarezerwował dzień ${date}. Rezerwacja została automatycznie zaakceptowana.`
@@ -985,6 +1002,7 @@ router.post("/day", requireAuth, async (req, res) => {
       url: `${FRONTEND_URL}/rezerwacje`,
     });
 
+    if (shouldAutoAccept) await sendPushToUserUid(userId, { category: 'reservationUpdates', title: 'Rezerwacja potwierdzona', body: 'Twoja rezerwacja całodniowa została automatycznie potwierdzona.', url: `${FRONTEND_URL}/rezerwacje` });
     return res.json(created);
   } catch (e) {
     console.error("POST /reservations/day error", e);
@@ -1345,6 +1363,22 @@ router.get("/unavailable-days/:providerUid", async (req, res) => {
  * Klient może dodać jedną wiadomość do swojej rezerwacji
  * =====================
  */
+router.patch('/:id/provider-note', requireAuth, async (req, res) => {
+  try {
+    const message = String(req.body?.message || '').trim();
+    if (message.length < 5 || message.length > 500) return res.status(400).json({ message: 'Informacja musi mieć od 5 do 500 znaków.' });
+    const reservation = await Reservation.findById(req.params.id);
+    if (!reservation) return res.status(404).json({ message: 'Rezerwacja nie istnieje.' });
+    if (reservation.providerUserId !== req.auth.uid) return res.status(403).json({ message: 'Brak uprawnień.' });
+    if (reservation.offline || ['anulowana', 'odrzucona'].includes(reservation.status) || reservation.providerNote?.message) return res.status(409).json({ message: 'Nie można dopisać informacji do tej rezerwacji.' });
+    reservation.providerNote = { message, createdAt: new Date() };
+    markReservationUpdate(reservation, 'client', 'note');
+    await reservation.save();
+    await sendPushToUserUid(reservation.userId, { category: 'reservationUpdates', title: 'Informacja od usługodawcy', body: 'Usługodawca dopisał informację do Twojej rezerwacji.', url: `${FRONTEND_URL}/rezerwacje` });
+    return res.json({ reservation });
+  } catch { return res.status(500).json({ message: 'Nie udało się dodać informacji.' }); }
+});
+
 router.patch("/:id/client-note", requireAuth, async (req, res) => {
   try {
     const authUid = req.auth.uid;
@@ -1402,11 +1436,12 @@ router.patch("/:id/client-note", requireAuth, async (req, res) => {
       createdAt: new Date(),
     };
 
-    reservation.providerSeen = false;
+    markReservationUpdate(reservation, "provider", "note");
 
     await reservation.save();
 
     await sendPushToUserUid(reservation.providerUserId, {
+      category: "reservationUpdates",
       title: "Nowa informacja do rezerwacji",
       body: `${reservation.userName || "Klient"} dopisał/a informację do rezerwacji.`,
       url: `${FRONTEND_URL}/rezerwacje`,
@@ -1475,11 +1510,12 @@ router.patch("/:id/cancel-by-client", requireAuth, async (req, res) => {
     reservation.holdExpiresAt = null;
 
     reservation.clientSeen = true;
-    reservation.providerSeen = false;
+    markReservationUpdate(reservation, "provider", "cancelled");
 
     await reservation.save();
 
     await sendPushToUserUid(reservation.providerUserId, {
+      category: "reservationUpdates",
       title: "Rezerwacja anulowana",
       body: `${reservation.userName || "Klient"} anulował/a rezerwację. Powód: ${text}`,
       url: `${FRONTEND_URL}/rezerwacje`,
@@ -1569,6 +1605,22 @@ router.patch("/:id/cancel-offline-by-provider", requireAuth, async (req, res) =>
  *  - odrzucona/zaakceptowana -> provider (authUid === reservation.providerUserId)
  * =====================
  */
+router.patch('/:id/cancel-by-provider', requireAuth, async (req, res) => {
+  try {
+    const reason = String(req.body?.reason || '').trim();
+    if (!reason || reason.length > 500) return res.status(400).json({ message: 'Podaj powód anulowania (do 500 znaków).' });
+    const reservation = await Reservation.findById(req.params.id);
+    if (!reservation) return res.status(404).json({ message: 'Rezerwacja nie istnieje.' });
+    if (reservation.providerUserId !== req.auth.uid) return res.status(403).json({ message: 'Brak uprawnień.' });
+    if (reservation.offline || reservation.status !== 'zaakceptowana') return res.status(409).json({ message: 'Możesz anulować tylko potwierdzoną rezerwację online.' });
+    Object.assign(reservation, { status: 'anulowana', closedAt: new Date(), closedBy: 'provider', closedReason: 'cancelled', cancelledBy: 'provider', cancellationReason: reason, pendingExpiresAt: null, holdExpiresAt: null, providerSeen: true });
+    markReservationUpdate(reservation, 'client', 'cancelled');
+    await reservation.save();
+    await sendPushToUserUid(reservation.userId, { category: 'reservationUpdates', title: 'Usługodawca anulował rezerwację', body: `Rezerwacja ${reservation.date} została anulowana. Powód: ${reason}`, url: `${FRONTEND_URL}/rezerwacje` });
+    return res.json({ reservation });
+  } catch { return res.status(500).json({ message: 'Nie udało się anulować rezerwacji.' }); }
+});
+
 router.patch("/:id/status", requireAuth, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -1578,6 +1630,14 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
 
     const reservation = await Reservation.findById(id);
     if (!reservation) return res.status(404).send("Reservation not found");
+
+    if (!['zaakceptowana', 'odrzucona', 'anulowana'].includes(status)) return res.status(400).json({ message: 'Nieprawidłowa zmiana statusu.' });
+    if (['anulowana', 'odrzucona'].includes(reservation.status)) return res.status(409).json({ message: 'Rezerwacja jest już zamknięta.' });
+    if (status !== 'anulowana' && reservation.status !== 'oczekująca') return res.status(409).json({ message: 'Ta rezerwacja nie oczekuje na decyzję.' });
+    if (reservation.pendingExpiresAt && new Date(reservation.pendingExpiresAt) <= new Date()) {
+      await closeExpiredPending();
+      return res.status(409).json({ message: 'Czas na potwierdzenie rezerwacji minął.' });
+    }
 
     const now = new Date();
 
@@ -1592,11 +1652,12 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
       reservation.closedReason = "cancelled";
       reservation.pendingExpiresAt = null;
       reservation.clientSeen = true;
-      reservation.providerSeen = false;
+      markReservationUpdate(reservation, "provider", "cancelled");
 
       await reservation.save();
 
       await sendPushToUserUid(reservation.providerUserId, {
+      category: "reservationUpdates",
         title: "Rezerwacja anulowana",
         body: `${reservation.userName || "Klient"} anulował/a rezerwację ${reservation.date}${reservation.dateOnly ? "" : ` o ${reservation.fromTime}`}`,
         url: `${FRONTEND_URL}/rezerwacje`,
@@ -1615,13 +1676,14 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
       reservation.closedBy = "provider";
       reservation.closedReason = "rejected";
       reservation.pendingExpiresAt = null;
-      reservation.clientSeen = false;
+      markReservationUpdate(reservation, "client", "rejected");
       reservation.providerSeen = true;
 
       await reservation.save();
 
       if (reservation.userId) {
         await sendPushToUserUid(reservation.userId, {
+      category: "reservationUpdates",
           title: "Rezerwacja odrzucona",
           body: `Twoja rezerwacja z dnia ${reservation.date}${reservation.dateOnly ? "" : ` o ${reservation.fromTime}`} została odrzucona`,
           url: `${FRONTEND_URL}/rezerwacje`,
@@ -1673,6 +1735,8 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
       }
 
       reservation.status = "zaakceptowana";
+      markReservationUpdate(reservation, "client", "accepted");
+      reservation.providerSeen = true;
       reservation.pendingExpiresAt = null;
       reservation.closedAt = null;
       reservation.closedBy = null;
@@ -1697,6 +1761,7 @@ router.patch("/:id/status", requireAuth, async (req, res) => {
 
       if (reservation.userId) {
         await sendPushToUserUid(reservation.userId, {
+      category: "reservationUpdates",
           title: "Rezerwacja zaakceptowana",
           body: `Twoja rezerwacja z dnia ${reservation.date}${reservation.dateOnly ? "" : ` o ${reservation.fromTime}`} została zaakceptowana`,
           url: `${FRONTEND_URL}/rezerwacje`,
@@ -1834,6 +1899,7 @@ router.get("/meta/:providerUid", async (req, res) => {
 router.patch("/:id/seen", requireAuth, async (req, res) => {
   const { id } = req.params;
   const { who } = req.body;
+  if (!['client', 'provider'].includes(who)) return res.status(400).json({ message: 'Nieprawidłowy odbiorca.' });
 
   try {
     const authUid = req.auth.uid;
@@ -1845,17 +1911,22 @@ router.patch("/:id/seen", requireAuth, async (req, res) => {
       if (!reservation.userId || String(reservation.userId) !== String(authUid)) {
         return res.status(403).json({ message: "Brak uprawnień" });
       }
-      reservation.clientSeen = true;
     }
 
     if (who === "provider") {
       if (String(reservation.providerUserId) !== String(authUid)) {
         return res.status(403).json({ message: "Brak uprawnień" });
       }
-      reservation.providerSeen = true;
     }
 
-    await reservation.save();
+    const filter = { _id: id };
+    if (req.body.viewedUpdatedAt) {
+      const date = new Date(req.body.viewedUpdatedAt);
+      if (Number.isNaN(date.getTime())) return res.status(400).json({ message: 'Nieprawidłowa wersja rezerwacji.' });
+      filter.updatedAt = date;
+    } else if (reservation.updatedAt) filter.updatedAt = reservation.updatedAt;
+    const updated = await Reservation.findOneAndUpdate(filter, { $set: { [`${who}Seen`]: true } }, { timestamps: false });
+    if (!updated) return res.status(409).json({ message: 'Pojawiła się nowa zmiana. Odśwież rezerwację przed oznaczeniem jej jako przeczytanej.' });
     return res.send("Seen updated");
   } catch (e) {
     console.error("PATCH /reservations/:id/seen error:", e);

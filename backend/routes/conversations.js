@@ -101,6 +101,7 @@ router.post("/send", requireAuth, async (req, res) => {
         senderUser?.displayName || senderUser?.name || senderUser?.email || "Użytkownik";
 
       await sendPushToUserUid(other.uid, {
+      category: "messages",
         title: "Nowa wiadomość",
         body: `${senderName} napisał do Ciebie wiadomość`,
         url: `${FRONTEND_URL}/powiadomienia`,
@@ -163,6 +164,7 @@ router.post("/send", requireAuth, async (req, res) => {
       senderUser?.displayName || senderUser?.name || senderUser?.email || "Użytkownik";
 
     await sendPushToUserUid(toUid, {
+      category: "messages",
       title: "Nowa wiadomość",
       body: `${senderName} napisał do Ciebie wiadomość`,
       url: `${FRONTEND_URL}/powiadomienia`,

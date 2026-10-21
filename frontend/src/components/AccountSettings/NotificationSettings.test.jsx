@@ -1,0 +1,46 @@
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import NotificationSettings from './NotificationSettings';
+import { api } from '../../api/api';
+import { getPushDeviceState, enablePushNotifications } from '../../services/pushNotifications';
+jest.mock('../../api/api', () => ({ api: { get: jest.fn(), patch: jest.fn() } }));
+jest.mock('../../services/pushNotifications', () => ({ getPushDeviceState: jest.fn(), enablePushNotifications: jest.fn(), disablePushNotifications: jest.fn() }));
+const defaults = { reservationRequests: true, reservationUpdates: true, messages: true, announcements: true };
+beforeEach(() => { jest.resetAllMocks(); api.get.mockResolvedValue({ data: defaults }); getPushDeviceState.mockResolvedValue({ state: 'default', enabled: false }); });
+test('asks permission only after clicking enable and confirms server device state', async () => {
+  render(<NotificationSettings user={{ uid: 'client' }} />);
+  const enable = await screen.findByRole('button', { name: 'Włącz powiadomienia' });
+  await waitFor(() => expect(enable).toBeEnabled());
+  expect(enablePushNotifications).not.toHaveBeenCalled();
+  enablePushNotifications.mockResolvedValue({ success: true });
+  getPushDeviceState.mockResolvedValue({ state: 'granted', enabled: true });
+  fireEvent.click(enable);
+  expect(await screen.findByRole('button', { name: 'Wyłącz na tym urządzeniu' })).toBeInTheDocument();
+  expect(enablePushNotifications).toHaveBeenCalledWith('client');
+  expect(screen.getByRole('alert')).toHaveTextContent('Włączono powiadomienia na tym urządzeniu.');
+  expect(screen.getByRole('alert')).toHaveTextContent('Gotowe!');
+  fireEvent.click(screen.getByRole('button', { name: 'Zamknij komunikat' }));
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+test('iOS install instructions do not block saving account-wide categories', async () => {
+  getPushDeviceState.mockResolvedValue({ state: 'ios-install', enabled: false });
+  api.patch.mockResolvedValue({ data: { ...defaults, reservationUpdates: false } });
+  render(<NotificationSettings user={{ uid: 'client' }} />);
+  expect(await screen.findByText(/Na iPhonie i iPadzie/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Włącz powiadomienia' })).toBeDisabled();
+  const category = screen.getByRole('checkbox', { name: /Zmiany rezerwacji/ });
+  fireEvent.click(category);
+  await waitFor(() => expect(category).not.toBeChecked());
+  expect(api.patch).toHaveBeenCalledWith('/api/users/notification-preferences', { reservationUpdates: false });
+});
+test('blocked browser permission explains recovery and failed category save preserves existing choice', async () => {
+  getPushDeviceState.mockResolvedValue({ state: 'denied', enabled: false });
+  api.patch.mockRejectedValue(new Error('Offline'));
+  render(<NotificationSettings user={{ uid: 'client' }} />);
+  expect(await screen.findByText(/Powiadomienia są zablokowane/)).toBeInTheDocument();
+  const category = screen.getByRole('checkbox', { name: /Wiadomości Nowe/ });
+  fireEvent.click(category);
+  expect(await screen.findByText(/Nie udało się zapisać zmiany/)).toBeInTheDocument();
+  expect(screen.getByRole('alert')).toHaveTextContent('Coś poszło nie tak');
+  expect(category).toBeChecked();
+});
