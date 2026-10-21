@@ -500,6 +500,9 @@
 }
 
 .previewBar img {
+  padding: 1px;
+  border-radius: 5px;
+  background: #fffdf7;
   width: 23px;
   height: 23px;
   object-fit: contain;

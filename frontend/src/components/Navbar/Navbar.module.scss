@@ -148,7 +148,7 @@
 
   border: 1px solid var(--nav-shadow);
   border-radius: 12px;
-  background: var(--nav-card);
+  background: #fffdf7;
   box-shadow: 3px 3px 0 var(--nav-lime);
 
   transition:
@@ -162,8 +162,8 @@
 
 .logoImage {
   display: block;
-  width: 72%;
-  height: 72%;
+  width: 92%;
+  height: 92%;
   object-fit: contain;
   object-position: center;
   user-select: none;

@@ -19,7 +19,7 @@ messaging.onBackgroundMessage(function (payload) {
   const title = payload?.data?.title || "Nowe powiadomienie";
   const body = payload?.data?.body || "Masz nowe zdarzenie w aplikacji";
   const url = payload?.data?.url || "/";
-  const icon = payload?.data?.icon || "/logo192.png";
+  const icon = payload?.data?.icon || "/logo192.png?v=showly-20261021";
 
   self.registration.showNotification(title, {
     body,

@@ -356,12 +356,14 @@
   display: grid;
   place-items: center;
   border-radius: 9px;
-  background: var(--hero-ink);
+  background: #fffdf7;
   color: var(--hero-card);
   font-family: $font-heading;
   font-size: 1rem;
   font-weight: 850;
   line-height: 1;
+
+  img { display: block; width: 26px; height: 26px; object-fit: contain; }
 }
 
 .cardUrl {

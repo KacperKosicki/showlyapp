@@ -189,7 +189,7 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
             aria-label="Przykładowa zawartość profilu Showly"
           >
             <div className={styles.linkCardTop}>
-              <span className={styles.brandMark}>s.</span>
+              <span className={styles.brandMark} aria-hidden="true"><img src="/images/other/showly-mark.png" alt="" width="24" height="24" /></span>
               <span>showly.me/twoja-nazwa</span>
               <FiArrowUpRight aria-hidden="true" />
             </div>

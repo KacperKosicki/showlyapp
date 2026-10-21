@@ -285,13 +285,15 @@
   place-items: center;
   border: 1px solid #171917;
   border-radius: 9px;
-  background: var(--about-lime);
+  background: #fffdf7;
   color: #171917;
   box-shadow: 2px 2px 0 #171917;
   font-family: $font-heading;
   font-size: 1rem;
   font-weight: 850;
   line-height: 1;
+
+  img { display: block; width: 26px; height: 26px; object-fit: contain; }
 }
 
 .workCover {

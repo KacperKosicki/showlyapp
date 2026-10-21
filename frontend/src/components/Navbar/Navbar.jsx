@@ -207,7 +207,7 @@ const Navbar = ({
         >
           <span className={styles.logoMark} aria-hidden="true">
             <img
-              src="/images/other/logo-showly.png"
+              src="/images/other/showly-mark.png"
               alt=""
               className={styles.logoImage}
             />

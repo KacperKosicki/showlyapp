@@ -244,7 +244,7 @@ export async function initForegroundPushListener() {
       if (Notification.permission === "granted") {
         const n = new Notification(title, {
           body,
-          icon: "/logo192.png",
+          icon: "/logo192.png?v=showly-20261021",
         });
 
         n.onclick = () => {

@@ -185,7 +185,7 @@ const Footer = ({
       <div className={styles.inner}>
         <div className={styles.topBar}>
           <div className={styles.wordmark} aria-label="Showly.me Beta">
-            <img src="/images/other/logo-showly.png" alt="" />
+            <img src="/images/other/showly-mark.png" alt="" />
             <strong>Showly.me</strong><small>Beta</small>
           </div>
           <p>Miejsce dla ofert, pomysłów i współpracy.</p>

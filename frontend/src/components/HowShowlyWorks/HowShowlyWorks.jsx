@@ -192,7 +192,7 @@ export default function HowShowlyWorks({ user, hasProfile = false }) {
               <p className={styles.note}>{step.note}</p>
               <div className={styles.actions}><Link className={styles.primary} to={actionTo} state={step.anchor ? { scrollToId: step.anchor } : undefined}>{actionLabel}<FiArrowUpRight aria-hidden="true" /></Link>{activeStep < 3 && <button type="button" className={styles.next} onClick={() => { setActiveStep(activeStep + 1); stepRefs.current[activeStep + 1]?.focus(); }}>Dalej <FiArrowRight aria-hidden="true" /></button>}</div>
             </div>
-            <div className={styles.preview}><div className={styles.windowBar}><span><img src="/images/other/logo-showly.png" alt="" /> Showly.me</span><span>Przykładowy widok</span></div><div className={styles.previewBody} key={journey + activeStep + '-scene'}><GuideScene scene={step.scene} /></div><span className={styles.disclaimer}>Ilustracja funkcji · dane przykładowe</span></div>
+            <div className={styles.preview}><div className={styles.windowBar}><span><img src="/images/other/showly-mark.png" alt="" /> Showly.me</span><span>Przykładowy widok</span></div><div className={styles.previewBody} key={journey + activeStep + '-scene'}><GuideScene scene={step.scene} /></div><span className={styles.disclaimer}>Ilustracja funkcji · dane przykładowe</span></div>
           </div>
         </div>
       </div>

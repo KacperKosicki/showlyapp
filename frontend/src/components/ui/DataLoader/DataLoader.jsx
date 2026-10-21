@@ -5,7 +5,7 @@ export default function DataLoader({ label = 'Ładujemy dane…', detail = 'Przy
   const Root = compact ? 'span' : 'div';
   return <Root className={[styles.loader, compact ? styles.compact : '', hideLabelOnMobile ? styles.collapse : '', className].filter(Boolean).join(' ')} role="status" aria-live="polite" aria-atomic="true" aria-busy="true" data-layout={layout}>
     <span className={styles.status}>
-      <span className={styles.mark} aria-hidden="true"><img src="/images/other/logo-showly.png" alt="" width="32" height="32" /></span>
+      <span className={styles.mark} aria-hidden="true"><img src="/images/other/showly-mark.png" alt="" width="32" height="32" /></span>
       <span className={styles.copy}><strong>{label}</strong>{!compact && <span>{detail}</span>}</span>
       <span className={styles.progress} aria-hidden="true"><span /></span>
     </span>

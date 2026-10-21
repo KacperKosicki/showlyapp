@@ -63,7 +63,7 @@
 .preview { min-width: 0; overflow: hidden; border: 1px solid var(--yp-frame); border-radius: 18px; background: var(--app-bg); box-shadow: 5px 6px 0 color-mix(in srgb, var(--app-primary) 25%, var(--app-bg)); transform: rotate(1deg); }
 .windowBar { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--app-border); background: var(--app-surface); color: var(--app-muted); font-size: .58rem; }
 .windowBar > span:first-child { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--app-text); }
-.windowBar img { width: 18px; height: 18px; object-fit: contain; }
+.windowBar img { width: 18px; height: 18px; padding: 1px; border-radius: 4px; background: #fffdf7; object-fit: contain; }
 .previewBody { padding: 22px; animation: guideEnter .25s ease both; }
 .disclaimer { display: block; padding: 0 15px 14px; color: var(--app-muted); font-size: .55rem; text-align: center; }
 .scene { min-width: 0; padding: 20px; border: 1px solid var(--app-border); border-radius: 12px; background: var(--app-surface); }

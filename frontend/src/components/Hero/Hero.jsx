@@ -186,7 +186,7 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
 
             <article className={styles.profileCard}>
               <header className={styles.cardTop}>
-                <span className={styles.brandMark}>s.</span>
+                <span className={styles.brandMark} aria-hidden="true"><img src="/images/other/showly-mark.png" alt="" width="24" height="24" /></span>
                 <span className={styles.cardUrl}>showly.me/anna-studio</span>
                 <span className={styles.cardStatus}>online</span>
               </header>
