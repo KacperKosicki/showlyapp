@@ -65,3 +65,15 @@ test('calendar keeps time selection disabled while availability is still being f
     await waitFor(() => expect(slots[0]).toBeEnabled());
     expect(screen.queryByText('Sprawdzamy dostępne terminy…')).not.toBeInTheDocument();
 });
+
+test('automatically accepted calendar booking shows the confirmed server status', async () => {
+    api.post.mockResolvedValue({ data: { reservation: { status: 'zaakceptowana' } } });
+    render(<Calendar {...props} provider={{ ...provider, autoAcceptReservations: true }} preselectedServiceId="service-1" />);
+    await waitFor(() => expect(screen.getByRole('combobox')).toHaveValue('service-1'));
+    await pickTomorrow();
+    const free = await screen.findAllByRole('button', { name: /Godzina .*wolna/ });
+    fireEvent.click(free[0]);
+    expect(screen.getByText(/Ten profil automatycznie potwierdza/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Rezerwuj termin' }));
+    await waitFor(() => expect(JSON.parse(sessionStorage.getItem('flash')).message).toContain('Termin potwierdzony.'));
+});

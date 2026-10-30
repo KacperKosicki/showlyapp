@@ -1,6 +1,6 @@
 import DataLoader from '../ui/DataLoader/DataLoader';
 // MessageForm.jsx
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import styles from "./MessageForm.module.scss";
 import axios from "axios";
@@ -22,6 +22,12 @@ import { auth } from "../../firebase";
 
 const CHANNEL = "account_to_profile";
 const API = process.env.REACT_APP_API_URL;
+const messageStarters = [
+  { label: "Dostępny termin", text: "Cześć! Chciałbym zapytać o dostępny termin na " },
+  { label: "Wycena usługi", text: "Cześć! Proszę o wycenę usługi: " },
+  { label: "Szczegóły oferty", text: "Cześć! Interesuje mnie Wasza oferta. Chciałbym dowiedzieć się więcej o " },
+];
+
 const DEFAULT_AVATAR = "/images/other/no-image.png";
 
 const pickUrl = (val) => {
@@ -63,6 +69,11 @@ const MessageForm = ({ user }) => {
   const [metaPending, setMetaPending] = useState(true);
 
   const maxChars = 800;
+  const messageInputRef = useRef(null);
+  const addStarter = text => {
+    setMessage(current => (current.trim() ? current + "\n\n" + text : text).slice(0, maxChars));
+    messageInputRef.current?.focus();
+  };
 
   const authHeaders = useCallback(async () => {
     const firebaseUser = auth.currentUser;
@@ -267,7 +278,7 @@ const MessageForm = ({ user }) => {
       if (err.response?.status === 401) {
         setAlert({
           type: "error",
-          message: "Brak autoryzacji (401). Token nie został zaakceptowany przez backend.",
+          message: "Twoja sesja wygasła. Zaloguj się ponownie, aby wysłać wiadomość.",
         });
       } else if (err.response?.status === 403) {
         setAlert({
@@ -334,7 +345,7 @@ const MessageForm = ({ user }) => {
               {isLoading ? (
                 <>Przygotowuję <span>rozmowę.</span></>
               ) : (
-                <>Napisz do <span>{renderNameNode(receiverName)}</span></>
+                <>Dobry kontakt.<span>Zacznij rozmowę.</span></>
               )}
             </h1>
 
@@ -409,13 +420,13 @@ const MessageForm = ({ user }) => {
             <div className={styles.chapterHead}>
               <div>
                 <span className={styles.chapterLabel}>
-                  {isLoading ? "Ładowanie formularza" : "Miejsce na Twój pierwszy krok"}
+                  {isLoading ? "Ładowanie formularza" : "Wiadomość do usługodawcy"}
                 </span>
 
                 <h2>
                   {isLoading
                     ? "Przygotowuję formularz wiadomości."
-                    : "Jedna wiadomość. Nowe możliwości."}
+                    : "O co chcesz zapytać?"}
                 </h2>
               </div>
 
@@ -450,7 +461,7 @@ const MessageForm = ({ user }) => {
                   <form onSubmit={handleSend} className={styles.form}>
                     <div className={styles.formHeader}>
                       <div>
-                        <h3 className={styles.formTitle}><label htmlFor="newProfileMessage">Co chcesz zaproponować?</label></h3>
+                        <h3 className={styles.formTitle}><label htmlFor="newProfileMessage">Twoja wiadomość</label></h3>
 
                         <p className={styles.formSub}>
                           Krótko opisz, o co chcesz zapytać. Odbiorca zobaczy
@@ -460,12 +471,21 @@ const MessageForm = ({ user }) => {
                     </div>
 
                     <div className={styles.senderHint}>
-                      Wyślesz wiadomość jako: <strong>Twoje konto</strong>
+                      Nadawca: <strong>{user?.displayName || "Twoje konto"}</strong>
                     </div>
 
+                    <div className={styles.starters} role="group" aria-label="Podpowiedzi do wiadomości">
+                      <span>Możesz zacząć od:</span>
+                      {messageStarters.map(starter => (
+                        <button key={starter.label} type="button" disabled={isSending || message.length >= maxChars} onClick={() => addStarter(starter.text)}>
+                          {starter.label}<FiArrowUpRight aria-hidden="true" />
+                        </button>
+                      ))}
+                    </div>
                     <textarea
                       className={styles.textarea}
                       id="newProfileMessage"
+                      ref={messageInputRef}
                       maxLength={maxChars}
                       aria-describedby="profileMessageCounter"
                       value={message}

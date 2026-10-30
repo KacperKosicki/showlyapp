@@ -1,5 +1,5 @@
 import DataLoader from '../ui/DataLoader/DataLoader';
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import styles from "./BookingForm.module.scss";
@@ -42,31 +42,6 @@ const normalizeAvatar = (val) => {
   }
 
   return v;
-};
-
-const THEME_PRESETS = {
-  violet: { primary: "#6f4ef2", secondary: "#ff4081" },
-  blue: { primary: "#2563eb", secondary: "#06b6d4" },
-  green: { primary: "#22c55e", secondary: "#a3e635" },
-  orange: { primary: "#f97316", secondary: "#facc15" },
-  red: { primary: "#ef4444", secondary: "#fb7185" },
-  dark: { primary: "#111827", secondary: "#4b5563" },
-};
-
-const resolveTheme = (theme) => {
-  const variant = theme?.variant || "violet";
-  const preset = THEME_PRESETS[variant] || THEME_PRESETS.violet;
-
-  const primary =
-    (theme?.primary || theme?.accent || "").trim() || preset.primary;
-
-  const secondary =
-    (theme?.secondary || theme?.accent2 || "").trim() || preset.secondary;
-
-  return {
-    primary,
-    secondary,
-  };
 };
 
 const modeLabel = (mode) => {
@@ -199,15 +174,6 @@ export default function BookingForm({ user }) {
   const mode = String(provider?.bookingMode || "off").toLowerCase();
   const avatarSrc = normalizeAvatar(provider?.avatar) || DEFAULT_AVATAR;
 
-  const t = useMemo(() => resolveTheme(provider?.theme), [provider?.theme]);
-
-  const cssVars = {
-    "--bf-primary": t.primary,
-    "--bf-secondary": t.secondary,
-    "--bf-primary-soft": `color-mix(in srgb, ${t.primary} 8%, transparent)`,
-    "--bf-primary-line": `color-mix(in srgb, ${t.primary} 34%, transparent)`,
-  };
-
   if (!provider) {
     return (
       <section className={styles.pageWrap} id="booking-form">
@@ -236,8 +202,9 @@ export default function BookingForm({ user }) {
       )}
 
       <section className={styles.pageWrap} id="booking-form">
+        <div className={styles.backdrop} aria-hidden="true">TWÓJ TERMIN.</div>
         <div className={styles.inner}>
-          <article className={styles.layout} style={cssVars}>
+          <article className={styles.layout}>
             <aside className={styles.side}>
               <button
                 type="button"
@@ -251,13 +218,12 @@ export default function BookingForm({ user }) {
               <span className={styles.overline}><FaRegCalendarAlt aria-hidden="true" /> Showly / Rezerwacje</span>
 
               <h1 className={styles.heading}>
-                Dobry wybór.{" "}
-                <span>Prosty kontakt.</span>
+                {mode === "request-open" ? "Masz pomysł?" : "Twój kolejny"}{" "}
+                <span>{mode === "request-open" ? "Ustalmy szczegóły." : "dobry termin."}</span>
               </h1>
 
               <p className={styles.description}>
-                Wybierz usługę, termin albo wyślij zapytanie. Formularz został
-                dopasowany do sposobu pracy tego profilu.
+                {mode === "request-open" ? "Napisz, czego potrzebujesz. Szczegóły ustalisz bezpośrednio z usługodawcą." : "Wybierz usługę i wolny termin. Przed wysłaniem sprawdzisz wszystkie szczegóły."}
               </p>
 
               <div className={styles.providerBox}>
@@ -318,8 +284,8 @@ export default function BookingForm({ user }) {
                   </span>
 
                   <div>
-                    <strong>Jak zacząć?</strong>
-                    <p>{mode === "request-open" ? "Opisz, czego potrzebujesz" : "Wybierz usługę i termin"}</p>
+                    <strong>{mode === "request-open" ? "Odpowiedź w Showly" : "Potwierdzenie terminu"}</strong>
+                    <p>{mode === "request-open" ? "Dalszą rozmowę znajdziesz w wiadomościach." : provider.autoAcceptReservations ? "Ten profil automatycznie potwierdza rezerwacje." : "Usługodawca sprawdzi i potwierdzi Twoją rezerwację."}</p>
                   </div>
                 </div>
               </div>

@@ -1,3 +1,5 @@
+import { FiCheck } from "react-icons/fi";
+
 export default function BookingSteps({ steps, className }) {
   const current = steps.findIndex(step => !step.done);
   return (
@@ -8,7 +10,7 @@ export default function BookingSteps({ steps, className }) {
           data-state={step.done ? "complete" : current === index ? "current" : "upcoming"}
           aria-current={current === index ? "step" : undefined}
         >
-          <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+          <span aria-hidden="true">{step.done ? <FiCheck /> : String(index + 1).padStart(2, "0")}</span>
           <strong>{step.label}</strong>
         </li>
       ))}

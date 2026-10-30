@@ -32,7 +32,7 @@
     gap: .6rem;
     flex: 1;
     min-width: 0;
-    padding: .7rem;
+    padding: .8rem .6rem;
     border: 1px solid var(--booking-line);
     border-radius: 10px;
     background: var(--booking-bg);
@@ -40,6 +40,8 @@
   }
 
   .progress li>span {
+    display: grid; place-items: center; width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; background: var(--booking-paper); color: var(--booking-ink);
+    svg { width: 16px; height: 16px; }
     font-family: $font-heading;
     font-size: .85rem;
     font-weight: 800;
@@ -53,7 +55,8 @@
   .progress li[data-state=current] {
     border-color: var(--booking-frame);
     color: var(--booking-ink);
-    box-shadow: 2px 3px 0 var(--booking-frame);
+    background: var(--booking-paper);
+    border-bottom: 3px solid var(--booking-purple);
   }
 
   .progress li[data-state=complete] {
@@ -78,10 +81,10 @@
     display: block;
     min-width: 0;
     padding: 1.15rem;
-    border: 1px solid var(--booking-frame);
-    border-radius: 15px;
-    background: var(--booking-bg);
-    box-shadow: 3px 4px 0 var(--booking-frame);
+    border: 1px solid var(--booking-line);
+    border-radius: 12px;
+    background: var(--booking-paper);
+    box-shadow: none;
   }
 
   .fieldWide,
@@ -185,7 +188,7 @@
 
   .mainGrid {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
     gap: 1.2rem;
     margin: 1.5rem 0;
     align-items: start;
@@ -197,14 +200,25 @@
   .slotsOnlyCard {
     min-width: 0;
     padding: 1.2rem;
-    border: 1px solid var(--booking-frame);
-    border-radius: 18px;
+    border: 1px solid var(--booking-line);
+    border-radius: 14px;
     background: var(--booking-bg);
-    box-shadow: 3px 4px 0 var(--booking-frame);
   }
 
-  .slotsOnlyCard {
+  .slotsOnlyCard { margin-top: 1.5rem; }
+
+  .review {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.2rem;
     margin-top: 1.5rem;
+    > .fieldWide { grid-column: auto; }
+    > .submitBar { grid-column: 1 / -1; margin-top: 0; flex-direction: row; align-items: center; }
+    .bookingSummary { align-self: start; }
+  }
+
+  @container (max-width: 640px) {
+    .mainGrid { grid-template-columns: 1fr; }
   }
 
   .cardHead,
@@ -281,7 +295,7 @@
   .calendarGrid {
     display: grid;
     grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: .4rem;
+    gap: .25rem;
     padding: .2rem .15rem .5rem;
   }
 
@@ -298,7 +312,7 @@
     padding: .4rem 0;
     border: 1px solid var(--booking-line);
     border-radius: 8px;
-    background: var(--booking-paper);
+    background: var(--booking-bg);
     color: var(--booking-ink);
     font-family: $font-accent;
     font-size: .85rem;
@@ -316,9 +330,10 @@
   .disabledDay,
   .dayPast,
   .dayLocked {
-    opacity: .4;
+    opacity: .35;
     cursor: default;
-    background: var(--booking-bg);
+    border-color: transparent;
+    background: transparent;
   }
 
   .dayUnavailable,
@@ -517,9 +532,9 @@
 
   .slotsGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
     gap: .6rem;
-    max-height: 280px;
+    max-height: 240px;
     overflow-y: auto;
     padding: .3rem .4rem .6rem .2rem;
     scrollbar-width: thin;
@@ -579,15 +594,15 @@
     bottom: auto;
     z-index: auto;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: .9rem;
     padding: 1.1rem;
     margin-top: 1.2rem;
     border: 1px solid var(--booking-frame);
     border-radius: 14px;
     background: var(--booking-paper);
-    box-shadow: 4px 5px 0 var(--booking-frame);
+    box-shadow: 3px 4px 0 var(--booking-line);
   }
 
   .submit {
@@ -613,8 +628,8 @@
 
   @media(hover: hover) {
 
-    .day:not(:disabled):hover,
-    .slot:not(:disabled):hover,
+    .day:not(:disabled):not(.selectedDay):hover,
+    .slot:not(:disabled):not(.slotSelected):hover,
     .monthNav button:not(:disabled):hover {
       border-color: var(--booking-purple);
       background: color-mix(in srgb, var(--booking-lime) 25%, var(--booking-paper));
@@ -648,7 +663,7 @@
     border: 1px solid var(--booking-frame);
     border-radius: 12px;
     background: var(--booking-paper);
-    border-top: 4px solid var(--booking-lime);
+    border-left: 4px solid var(--booking-lime);
     font-size: .85rem;
     line-height: 1.7;
   }
@@ -711,13 +726,14 @@
     line-height: 1.7;
   }
 
-  @media(max-width: 1250px) {
+  @media(max-width: 760px) {
     .mainGrid {
       grid-template-columns: 1fr;
     }
   }
 
   @media(max-width: 600px) {
+    .review { grid-template-columns: 1fr; > .submitBar { flex-direction: column; align-items: stretch; } }
     .topGrid {
       grid-template-columns: 1fr;
     }
@@ -728,8 +744,12 @@
     .slotsInfoCard,
     .infoCard,
     .slotsOnlyCard {
-      padding: 1rem;
+      padding: .85rem;
     }
+
+    .calendarCard { padding-inline: .5rem; }
+    .mainGrid { gap: 1rem; }
+    .submitBar { margin-top: .5rem; }
 
     .fieldHeader {
       flex-wrap: wrap;

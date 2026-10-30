@@ -1670,6 +1670,7 @@ const ReservationList = ({ user }) => {
 
             <div className={styles.content}>
               {renderInfo(res)}
+              {isPending && !isOffline && <div className={styles.nextStep}><FiClock aria-hidden="true" /><p>{variant === "received" ? "Czeka na Twoją decyzję. Sprawdź termin i potwierdź lub odrzuć rezerwację poniżej." : "Czekasz na potwierdzenie usługodawcy. O zmianie statusu poinformujemy Cię w Showly."}</p></div>}
               {renderDescription(res, variant)}
               {renderClientNote(res)}
               {renderClientNote(res, "provider")}
@@ -1695,7 +1696,7 @@ const ReservationList = ({ user }) => {
                     {!res.clientNote?.message && (
                       <button
                         onClick={() => handleClientNote(res)}
-                        className={`${styles.actionBtn} ${styles.acceptBtn}`}
+                        className={styles.actionBtn}
                         disabled={disabledIds.has(`note-${res._id}`)}
                       >
                         <FiMessageSquare aria-hidden="true" /> Dodaj informację
@@ -2035,6 +2036,18 @@ const ReservationList = ({ user }) => {
     </li>
   );
 
+  const [statusFilter, setStatusFilter] = useState('all');
+  const matchesFilter = (reservation, variant, filter = statusFilter) => {
+    if (filter === 'unread') return isReservationUnread(reservation, variant);
+    if (filter === 'pending') return reservation.status === 'oczekująca';
+    if (filter === 'accepted') return reservation.status === 'zaakceptowana';
+    if (filter === 'closed') return ['anulowana', 'odrzucona'].includes(reservation.status);
+    return true;
+  };
+  const filters = [['all', 'Wszystkie'], ['unread', 'Nowe zmiany'], ['pending', 'Oczekujące'], ['accepted', 'Potwierdzone'], ['closed', 'Zamknięte']];
+  const filterCount = filter => clientReservations.filter(reservation => matchesFilter(reservation, 'sent', filter)).length + serviceReservations.filter(reservation => matchesFilter(reservation, 'received', filter)).length;
+  const visibleSent = clientReservations.filter(reservation => matchesFilter(reservation, 'sent'));
+  const visibleReceived = serviceReservations.filter(reservation => matchesFilter(reservation, 'received'));
   const totalReservations = clientReservations.length + serviceReservations.length;
   const totalPending = pendingSent + (hasProviderProfile ? pendingReceived : 0);
 
@@ -2110,7 +2123,7 @@ const ReservationList = ({ user }) => {
             <span className={styles.kicker}>Showly.me / Centrum rezerwacji</span>
             <FiCalendar className={styles.headerIcon} aria-hidden="true" />
             <h1 className={styles.heading}>
-              Twoje rezerwacje i terminy
+              Twoje wizyty.<span className={styles.headingHighlight}>Wszystko na miejscu.</span>
             </h1>
 
             <p className={styles.description}>
@@ -2197,6 +2210,8 @@ const ReservationList = ({ user }) => {
           </aside>
 
           <div className={styles.contentPanel}>
+            {isLogged && !loading && (viewMode === "list" || !canUseCalendar) && <nav className={styles.filters} aria-label="Filtruj rezerwacje">{filters.map(([key, label]) => <button key={key} type="button" aria-pressed={statusFilter === key} onClick={() => setStatusFilter(key)}>{label}<span>{filterCount(key)}</span></button>)}</nav>}
+            {isLogged && !loading && (viewMode === "list" || !canUseCalendar) && <p className={styles.resultHint} role="status">{statusFilter === "all" ? "Sprawdź szczegóły na karcie. Nowe zmiany możesz oznaczyć jako przeczytane." : "Wyniki filtra: " + (visibleSent.length + visibleReceived.length) + ". Wybierz „Wszystkie”, aby wrócić do pełnej listy."}</p>}
             {!isLogged ? (
               <div className={styles.reservationsStack}>
                 {renderReservationGroup({
@@ -2270,13 +2285,13 @@ const ReservationList = ({ user }) => {
                     title: "Otrzymane rezerwacje",
                     badge: receivedBadge,
                     icon: <FiInbox className={styles.emptyIcon} />,
-                    emptyTitle: "Brak otrzymanych rezerwacji",
+                    emptyTitle: statusFilter === "all" ? "Brak otrzymanych rezerwacji" : "Brak rezerwacji w tym filtrze",
                     emptyText:
-                      "Gdy ktoś zarezerwuje termin w Twoim profilu, pojawi się on właśnie tutaj.",
+                      statusFilter === "all" ? "Gdy ktoś zarezerwuje termin w Twoim profilu, pojawi się on właśnie tutaj." : "Wybierz inny filtr lub wróć do wszystkich rezerwacji.",
                     children:
-                      serviceReservations.length > 0 ? (
+                      visibleReceived.length > 0 ? (
                         <ul className={styles.list}>
-                          {serviceReservations.map((reservation) =>
+                          {visibleReceived.map((reservation) =>
                             renderItem(reservation, "received")
                           )}
                         </ul>
@@ -2289,13 +2304,13 @@ const ReservationList = ({ user }) => {
                   title: "Wysłane rezerwacje",
                   badge: sentBadge,
                   icon: <FiSend className={styles.emptyIcon} />,
-                  emptyTitle: "Brak wysłanych rezerwacji",
+                  emptyTitle: statusFilter === "all" ? "Brak wysłanych rezerwacji" : "Brak rezerwacji w tym filtrze",
                   emptyText:
-                    "Gdy zarezerwujesz termin u innego usługodawcy, rezerwacja pojawi się w tej sekcji.",
+                    statusFilter === "all" ? "Gdy zarezerwujesz termin u innego usługodawcy, rezerwacja pojawi się w tej sekcji." : "Wybierz inny filtr lub wróć do wszystkich rezerwacji.",
                   children:
-                    clientReservations.length > 0 ? (
+                    visibleSent.length > 0 ? (
                       <ul className={styles.list}>
-                        {clientReservations.map((reservation) =>
+                        {visibleSent.map((reservation) =>
                           renderItem(reservation, "sent")
                         )}
                       </ul>

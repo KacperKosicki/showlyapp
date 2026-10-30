@@ -531,14 +531,14 @@ export default function BookingModeCalendar({
         ...(isUserPick && selectedStaffId ? { staffId: selectedStaffId } : {}),
       };
 
-      await api.post(`/api/reservations`, payload);
+      const { data: savedReservation } = await api.post(`/api/reservations`, payload);
       await fetchReservations();
 
       sessionStorage.setItem(
         "flash",
         JSON.stringify({
           type: "success",
-          message: "Rezerwacja wysłana – oczekuje na potwierdzenie.",
+          message: savedReservation?.reservation?.status === "zaakceptowana" ? "Termin potwierdzony. Szczegóły znajdziesz poniżej." : "Rezerwacja wysłana – oczekuje na potwierdzenie.",
           ttl: 6000,
           ts: Date.now(),
         })
@@ -685,6 +685,7 @@ export default function BookingModeCalendar({
       )}
 
       {selectedService ? (
+        <>
         <div className={styles.mainGrid}>
           <section className={styles.calendarCard}>
             {reservationsLoading && <DataLoader label="Sprawdzamy dostępne terminy…" compact />}
@@ -792,7 +793,7 @@ export default function BookingModeCalendar({
               <>
                 <div className={styles.slotsHeader}>
                   <div>
-                    <span className={styles.cardLabel}>Wolne terminy</span>
+                    <span className={styles.cardLabel}>Wybierz godzinę</span>
 
                     <h3 className={styles.slotsTitle}>
                       {format(selectedDate, "dd.MM.yyyy")}
@@ -850,10 +851,75 @@ export default function BookingModeCalendar({
                     Czas usługi: <b>{durationToMinutes(selectedService)} min</b> · Przerwa między wizytami: <b>{effectiveBufferMin} min</b>
                   </div>
                 </div>
+                <div className={styles.slotsForm}>
+                  <label className={styles.slotFilter}><input type="checkbox" checked={showUnavailableSlots} onChange={(event) => setShowUnavailableSlots(event.target.checked)} />Pokaż także zajęte i niedostępne godziny</label>
+                  {!reservationsLoading && !timeSlots.some((slot) => slot.status === "free") && <div className={styles.infoBox}><strong>Brak wolnych godzin w tym dniu</strong><p>Wybierz inny dzień w kalendarzu lub inną usługę.</p></div>}
+                  <div className={styles.slotsGrid} role="group" aria-label="Dostępne godziny">
+                    {timeSlots.filter((slot) => showUnavailableSlots || slot.status === "free").map((s) => (
+                      <button
+                        key={s.label}
+                        type="button"
+                        className={`
+                          ${styles.slot}
+                          ${s.status === "disabled" ? styles.slotDisabled : ""}
+                          ${s.status === "reserved" ? styles.slotReserved : ""}
+                          ${s.status === "pending" ? styles.slotPending : ""}
+                          ${selectedSlot === s.label ? styles.slotSelected : ""}
+                        `}
+                        aria-pressed={selectedSlot === s.label}
+                        aria-label={`Godzina ${s.label}, ${s.status === "free" ? "wolna" : s.status === "reserved" ? "zajęta" : s.status === "pending" ? "oczekująca" : "niedostępna"}`}
+                        disabled={s.status !== "free" || isSubmitting || reservationsLoading}
+                        onClick={() =>
+                          !isSubmitting && s.status === "free" && setSlot(s.label)
+                        }
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+
+                </div>
               </>
             )}
           </section>
         </div>
+        {selectedDate && <form onSubmit={handleSubmit} className={styles.review}>
+        <label className={`${styles.field} ${styles.fieldWide}`}>
+          <div className={styles.fieldHeader}>
+            <div>
+              <span className={styles.fieldEyebrow}>03 / Dodatkowe informacje</span>
+              <h3 className={styles.fieldTitle}>Opis lub uwagi do rezerwacji</h3>
+            </div>
+
+            <span className={styles.fieldHint}>opcjonalnie</span>
+          </div>
+
+          <textarea
+            className={styles.textarea}
+            rows="3"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Np. strzyżenie + mycie, wrażliwa skóra, preferowana godzina…"
+          />
+        </label>
+
+        {selectedSlot && <div className={styles.bookingSummary} aria-live="polite"><strong>Twoja rezerwacja</strong>{selectedService.name}<br />{format(selectedDate, "d MMMM yyyy", { locale: pl })} · godz. {selectedSlot}<br />Czas usługi: {durationToMinutes(selectedService)} min{selectedStaffId && <><br />{staffList.find((staff) => String(staff._id) === String(selectedStaffId))?.name}</>}</div>}
+        <div className={styles.submitBar}>
+          <LoadingButton
+            type="submit"
+            isLoading={isSubmitting}
+            disabled={!selectedSlot || isSubmitting || reservationsLoading}
+            className={styles.submit}
+          >
+            Rezerwuj termin
+          </LoadingButton>
+
+          <div className={styles.submitHint}>
+            {provider.autoAcceptReservations ? "Ten profil automatycznie potwierdza rezerwacje. Status zobaczysz w panelu rezerwacji." : "Wyślemy prośbę do usługodawcy. Potwierdzenie zobaczysz w swoich rezerwacjach."}
+          </div>
+        </div>
+        </form>}
+        </>
       ) : (
         <div className={styles.preSelect}>
           <span className={styles.emptyNumber}>02</span>
@@ -862,82 +928,6 @@ export default function BookingModeCalendar({
             {activeServices.length ? "Wybierz usługę, a pokażemy dni i godziny, w których możesz umówić wizytę." : "Ten profil nie ma obecnie aktywnych usług. Wróć do profilu i skontaktuj się bezpośrednio z usługodawcą."}
           </p>
         </div>
-      )}
-
-      {selectedService && selectedDate && (
-        <section className={styles.slotsOnlyCard}>
-          <div className={styles.cardHead}>
-            <div>
-              <span className={styles.cardLabel}>Godziny</span>
-              <h3>Wybierz godzinę</h3>
-            </div>
-
-            <span className={styles.cardNumber}>04</span>
-          </div>
-
-          <form onSubmit={handleSubmit} className={styles.slotsForm}>
-            <label className={styles.slotFilter}><input type="checkbox" checked={showUnavailableSlots} onChange={(event) => setShowUnavailableSlots(event.target.checked)} />Pokaż także zajęte i niedostępne godziny</label>
-            {!timeSlots.some((slot) => slot.status === "free") && <div className={styles.infoBox}><strong>Brak wolnych godzin w tym dniu</strong><p>Wybierz inny dzień w kalendarzu lub inną usługę.</p></div>}
-            <div className={styles.slotsGrid}>
-              {timeSlots.filter((slot) => showUnavailableSlots || slot.status === "free").map((s) => (
-                <button
-                  key={s.label}
-                  type="button"
-                  className={`
-                    ${styles.slot}
-                    ${s.status === "disabled" ? styles.slotDisabled : ""}
-                    ${s.status === "reserved" ? styles.slotReserved : ""}
-                    ${s.status === "pending" ? styles.slotPending : ""}
-                    ${selectedSlot === s.label ? styles.slotSelected : ""}
-                  `}
-                  aria-pressed={selectedSlot === s.label}
-                  aria-label={`Godzina ${s.label}, ${s.status === "free" ? "wolna" : s.status === "reserved" ? "zajęta" : s.status === "pending" ? "oczekująca" : "niedostępna"}`}
-                  disabled={s.status !== "free" || isSubmitting || reservationsLoading}
-                  onClick={() =>
-                    !isSubmitting && s.status === "free" && setSlot(s.label)
-                  }
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-
-            <label className={`${styles.field} ${styles.fieldWide}`}>
-              <div className={styles.fieldHeader}>
-                <div>
-                  <span className={styles.fieldEyebrow}>03 / Dodatkowe informacje</span>
-                  <h3 className={styles.fieldTitle}>Opis lub uwagi do rezerwacji</h3>
-                </div>
-
-                <span className={styles.fieldHint}>opcjonalnie</span>
-              </div>
-
-              <textarea
-                className={styles.textarea}
-                rows="3"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Np. strzyżenie + mycie, wrażliwa skóra, preferowana godzina…"
-              />
-            </label>
-
-            {selectedSlot && <div className={styles.bookingSummary} aria-live="polite"><strong>Twoja rezerwacja</strong>{selectedService.name}<br />{format(selectedDate, "d MMMM yyyy", { locale: pl })} · godz. {selectedSlot}<br />Czas usługi: {durationToMinutes(selectedService)} min{selectedStaffId && <><br />{staffList.find((staff) => String(staff._id) === String(selectedStaffId))?.name}</>}</div>}
-            <div className={styles.submitBar}>
-              <LoadingButton
-                type="submit"
-                isLoading={isSubmitting}
-                disabled={!selectedSlot || isSubmitting || reservationsLoading}
-                className={styles.submit}
-              >
-                Rezerwuj termin
-              </LoadingButton>
-
-              <div className={styles.submitHint}>
-                Po wysłaniu rezerwacja będzie oczekiwać na potwierdzenie.
-              </div>
-            </div>
-          </form>
-        </section>
       )}
     </>
   );

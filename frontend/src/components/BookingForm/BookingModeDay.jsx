@@ -307,14 +307,14 @@ export default function BookingModeDay({
           : {}),
       };
 
-      await api.post(`/api/reservations/day`, payload);
+      const { data: savedReservation } = await api.post(`/api/reservations/day`, payload);
 
       sessionStorage.setItem(
         "flash",
         JSON.stringify({
           type: "success",
           message:
-            "Wysłano prośbę o rezerwację dnia – oczekuje na potwierdzenie.",
+            savedReservation?.status === "zaakceptowana" ? "Rezerwacja dnia potwierdzona. Szczegóły znajdziesz poniżej." : "Wysłano prośbę o rezerwację dnia – oczekuje na potwierdzenie.",
           ttl: 6000,
           ts: Date.now(),
         })
@@ -663,6 +663,7 @@ export default function BookingModeDay({
         />
       </label>
 
+      {selectedDate && <div className={styles.bookingSummary} aria-live="polite"><strong>Sprawdź przed wysłaniem</strong>{selectedService?.name || "Rezerwacja dnia"}<br />{format(selectedDate, "d MMMM yyyy", { locale: pl })}<br />{onlyInquiry ? "Zapytanie nie blokuje terminu." : "Rezerwujesz cały dzień."}</div>}
       <form onSubmit={handleSubmit} className={styles.submitBar}>
         <LoadingButton
           type="submit"
@@ -680,7 +681,7 @@ export default function BookingModeDay({
         <div className={styles.submitHint}>
           {onlyInquiry
             ? "Wyślemy wiadomość do usługodawcy — odpowiedź pojawi się w rozmowie."
-            : "Po wysłaniu prośba będzie oczekiwać na potwierdzenie."}
+            : provider.autoAcceptReservations ? "Ten profil automatycznie potwierdza rezerwacje. Status sprawdzisz w panelu." : "Usługodawca otrzyma prośbę. Potwierdzenie zobaczysz w swoich rezerwacjach."}
         </div>
       </form>
     </>

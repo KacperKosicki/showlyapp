@@ -4,6 +4,7 @@ import { api } from '../../api/api';
 import AlertBox from '../AlertBox/AlertBox';
 import { enablePushNotifications, disablePushNotifications, getPushDeviceState } from '../../services/pushNotifications';
 import styles from './NotificationSettings.module.scss';
+import accountStyles from './AccountSettings.module.scss';
 
 const categories = [
   ['reservationRequests', 'Nowe rezerwacje', 'Nowe zapytania i rezerwacje przesłane do Twojej oferty.'],
@@ -59,8 +60,10 @@ export default function NotificationSettings({ user }) {
     finally { setBusy(''); }
   };
 
-  return <section className={styles.panel} id="notification-settings" aria-labelledby="notification-settings-title">
-    <header><span className={styles.icon}><FiBell aria-hidden="true" /></span><div><h2 id="notification-settings-title">Powiadomienia</h2><p>Nowe informacje w Showly i alerty na Twoim urządzeniu.</p></div></header>
+  return <fieldset className={`${accountStyles.setting} ${styles.panel}`} id="notification-settings" aria-labelledby="notification-settings-title">
+    <legend>04 / Powiadomienia</legend>
+    <header className={accountStyles.settingHeader}><div className={accountStyles.settingTitle}><span className={accountStyles.settingIcon}><FiBell aria-hidden="true" /></span><div><h2 id="notification-settings-title">Powiadomienia</h2></div></div></header>
+    <p className={styles.intro}>Nowe informacje w Showly i alerty na Twoim urządzeniu.</p>
     <div className={styles.inApp}><FiCheckCircle aria-hidden="true" /><p><strong>Zmiany w Showly są zawsze widoczne.</strong><br />Nowe rezerwacje i aktualizacje pojawiają się przy pozycji „Rezerwacje” w menu konta. Oznaczysz je jako przeczytane na liście rezerwacji. Ustawienia poniżej dotyczą dodatkowych powiadomień push.</p></div>
     <div className={styles.device}><div><h3><FiSmartphone aria-hidden="true" />To urządzenie</h3><strong>{device.state === 'loading' ? 'Sprawdzamy stan urządzenia' : device.state === 'error' ? 'Stan urządzenia nieznany' : device.enabled ? 'Powiadomienia włączone' : 'Powiadomienia niewłączone'}</strong><p>{descriptions[device.state]}</p><small>Android i komputer: dostępność zależy od przeglądarki oraz jej uprawnień. Alerty mogą być wyciszone przez ustawienia systemu lub tryb skupienia.</small></div><div className={styles.actions}>
       <button type="button" disabled={!!busy || !user?.uid || !['default', 'granted'].includes(device.state)} onClick={toggleDevice}>{busy === 'device' ? 'Zmieniamy ustawienie…' : device.enabled ? 'Wyłącz na tym urządzeniu' : 'Włącz powiadomienia'}</button>
@@ -69,5 +72,5 @@ export default function NotificationSettings({ user }) {
     <fieldset disabled={!!busy || !preferences}><legend>Jakie powiadomienia push chcesz otrzymywać?</legend><p className={styles.hint}>Wybór zapisuje się dla konta i obowiązuje na wszystkich włączonych urządzeniach.</p>{categories.map(([key, title, description]) => <label className={styles.choice} key={key}><span><strong>{title}</strong><small>{description}</small></span><input type="checkbox" checked={preferences?.[key] !== false} onChange={event => toggleCategory(key, event.target.checked)} /><span className={styles.switch} aria-hidden="true" /></label>)}</fieldset>
     {preferencesError && <p role="alert">Nie udało się pobrać ustawień. <button type="button" className={styles.retry} onClick={loadPreferences}>Spróbuj ponownie</button></p>}
     {feedback && <AlertBox type={feedback.type} message={feedback.message} onClose={() => setFeedback(null)} />}
-  </section>;
+  </fieldset>;
 }
