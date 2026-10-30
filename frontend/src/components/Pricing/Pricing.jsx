@@ -91,7 +91,7 @@ export default function Pricing({ user, hasProfile = false }) {
             </div>
             <a className={styles.previewLink} href="#porownanie-planow">Porównaj wszystkie funkcje <FiArrowUpRight aria-hidden="true" /></a>
           </div>
-          <span className={styles.previewCaption}>Jedna wizytówka. Miejsce na kolejne kroki.<span aria-hidden="true">↗</span></span>
+          <span className={styles.previewCaption}>Jedna wizytówka. Miejsce na kolejne kroki.<FiArrowUpRight aria-hidden="true" /></span>
         </div>
       </header>
 
@@ -128,7 +128,7 @@ export default function Pricing({ user, hasProfile = false }) {
         <details><summary>Co dają rezerwacje w Premium?<FiChevronDown aria-hidden="true" /></summary><p>Możesz udostępnić kalendarz godzinowy, przyjmować zapytania lub rezerwacje całodniowe. Ustawiasz dostępność, wyjątki, przerwy między rezerwacjami i sposób akceptacji. Plan obejmuje również zespół do 3 pracowników.</p></details>
         <details><summary>Gdzie mogę wybrać lub zmienić plan?<FiChevronDown aria-hidden="true" /></summary><p>W swoim profilu, w sekcji planu i widoczności. Tam sprawdzisz aktualny dostęp i dostępność zakupu. Ta strona służy porównaniu oferty; nie uruchamia płatności.</p></details>
       </div></section>
-      <div className={styles.bottomCta} data-reveal><span className={styles.ctaArrow} aria-hidden="true">↗</span><div><span className={styles.eyebrow}>Teraz Twój ruch</span><h2>{status.beta ? 'Sprawdź, co potrafi Twój profil.' : 'Daj swojej ofercie dobry adres.'}</h2><p>{status.beta ? 'Pełne możliwości Premium na czas testów. Bez karty.' : 'Zbierz ofertę, realizacje i kontakt w jednej wizytówce.'}</p></div><Link className={styles.action} to={actionPath}>{actionLabel}<FiArrowUpRight aria-hidden="true" /></Link></div>
+      <div className={styles.bottomCta} data-reveal><FiArrowUpRight className={styles.ctaArrow} aria-hidden="true" /><div><span className={styles.eyebrow}>Teraz Twój ruch</span><h2>{status.beta ? 'Sprawdź, co potrafi Twój profil.' : 'Daj swojej ofercie dobry adres.'}</h2><p>{status.beta ? 'Pełne możliwości Premium na czas testów. Bez karty.' : 'Zbierz ofertę, realizacje i kontakt w jednej wizytówce.'}</p></div><Link className={styles.action} to={actionPath}>{actionLabel}<FiArrowUpRight aria-hidden="true" /></Link></div>
     </div>
   </section>;
 }
