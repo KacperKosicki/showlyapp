@@ -18,6 +18,7 @@ import {
   FiGrid,
   FiMessageSquare,
   FiTrash2,
+  FiSearch,
 } from "react-icons/fi";
 
 import { isReservationUnread, reservationUpdateLabel } from './reservationUpdates';
@@ -265,6 +266,31 @@ const getDayAvailabilityInfo = (meta, dateStr = "") => {
   return null;
 };
 
+const reservationAvatarUrl = (value) => {
+  const rawUrl = typeof value === 'string' ? value : value?.url;
+  const url = typeof rawUrl === 'string' ? rawUrl.trim() : '';
+  if (!url) return '';
+  if (/^\/?uploads\//.test(url)) {
+    const apiBase = (process.env.REACT_APP_API_URL || '').replace(/\/$/, '');
+    return apiBase + '/' + url.replace(/^\//, '');
+  }
+  return url;
+};
+
+function ReservationAvatar({ variant, isOffline, src }) {
+  const [failedSource, setFailedSource] = useState('');
+  const showImage = !isOffline && src && src !== failedSource;
+  const className = [styles.avatar, variant === 'sent' ? styles.avatarSent : styles.avatarRecv, isOffline ? styles.avatarOffline : ''].filter(Boolean).join(' ');
+
+  return (
+    <div className={className} aria-hidden="true">
+      {showImage ? (
+        <img src={src} alt="" className={styles.accountAvatar} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailedSource(src)} />
+      ) : variant === 'sent' && !isOffline ? <FiSend /> : <FiUser />}
+    </div>
+  );
+}
+
 const ReservationList = ({ user }) => {
   const location = useLocation();
   const isLogged = !!user?.uid;
@@ -301,7 +327,8 @@ const ReservationList = ({ user }) => {
   });
 
   const [disabledIds, setDisabledIds] = useState(new Set());
-  const [accountNameMap, setAccountNameMap] = useState({});
+  const [accountMap, setAccountMap] = useState({});
+  const [profileMap, setProfileMap] = useState({});
   const [actionDialog, setActionDialog] = useState(null);
   const actionResolver = useRef(null);
   const completeActionDialog = useCallback((value) => {
@@ -1047,27 +1074,54 @@ const ReservationList = ({ user }) => {
     );
   }, [providerMeta, offlineForm.serviceId]);
 
+  const providerUids = useMemo(() => {
+    return Array.from(new Set(clientReservations.filter(reservation => !reservation.offline).map(reservation => reservation.providerUserId).filter(Boolean)));
+  }, [clientReservations]);
+
+  useEffect(() => {
+    if (!isLogged || providerUids.length === 0) return;
+    let active = true;
+
+    const loadProfile = async uid => {
+      try {
+        const { data } = await api.get(`/api/profiles/by-user/${uid}`);
+        return data?._id ? { id: data._id, avatar: reservationAvatarUrl(data.avatar) } : null;
+      } catch {
+        return null;
+      }
+    };
+
+    (async () => {
+      const entries = await Promise.all(providerUids.map(async uid => [uid, await loadProfile(uid)]));
+      if (active) setProfileMap(Object.fromEntries(entries));
+    })();
+
+    return () => { active = false; };
+  }, [isLogged, providerUids]);
+
   const senderUids = useMemo(() => {
-    const arr = serviceReservations.map((r) => r.userId).filter(Boolean);
+    const arr = serviceReservations.filter((r) => !r.offline).map((r) => r.userId).filter(Boolean);
     return Array.from(new Set(arr));
   }, [serviceReservations]);
 
   const getAccountName = useCallback(
     (uid, fallbackName) => {
       if (!uid) return fallbackName?.trim() || "Użytkownik";
-      const name = accountNameMap[uid];
-      if (name === undefined) return "";
+      const account = accountMap[uid];
+      if (account === undefined) return "";
+      const name = account?.name;
       if (typeof name === "string" && name.trim()) return name.trim();
       return fallbackName?.trim() || "Użytkownik";
     },
-    [accountNameMap]
+    [accountMap]
   );
 
   useEffect(() => {
     if (!isLogged) return;
     if (senderUids.length === 0) return;
+    let active = true;
 
-    setAccountNameMap((prev) => {
+    setAccountMap((prev) => {
       const next = { ...prev };
       senderUids.forEach((uid) => {
         if (!Object.prototype.hasOwnProperty.call(next, uid)) next[uid] = undefined;
@@ -1085,7 +1139,7 @@ const ReservationList = ({ user }) => {
           (data?.name && String(data.name).trim()) ||
           null;
 
-        return dn;
+        return { name: dn, avatar: reservationAvatarUrl(data?.avatar) };
       } catch {
         return null;
       }
@@ -1096,14 +1150,16 @@ const ReservationList = ({ user }) => {
         senderUids.map(async (uid) => [uid, await fetchOne(uid)])
       );
 
-      setAccountNameMap((prev) => {
+      if (!active) return;
+      setAccountMap((prev) => {
         const next = { ...prev };
-        entries.forEach(([uid, name]) => {
-          next[uid] = name;
+        entries.forEach(([uid, account]) => {
+          next[uid] = account;
         });
         return next;
       });
     })();
+    return () => { active = false; };
   }, [isLogged, senderUids]);
 
   const conflicts = useMemo(() => {
@@ -1175,23 +1231,6 @@ const ReservationList = ({ user }) => {
       <span className={`${styles.name} ${styles.nameSkeleton} ${styles.shimmer}`} />
     );
 
-  const getAvatarVariant = (variant) => {
-    if (variant === "sent") return "sent";
-    return "recv";
-  };
-
-  const AvatarNode = ({ variant, isOffline }) => {
-    const v = getAvatarVariant(variant);
-    const cls = `${styles.avatar} ${v === "sent" ? styles.avatarSent : styles.avatarRecv
-      } ${isOffline ? styles.avatarOffline : ""}`;
-
-    return (
-      <div className={cls} aria-hidden="true">
-        {v === "sent" ? <FiSend /> : <FiInbox />}
-      </div>
-    );
-  };
-
   const renderHeader = (res, variant) => {
     if (variant === "sent") {
       return (
@@ -1205,7 +1244,7 @@ const ReservationList = ({ user }) => {
       );
     }
 
-    const rawAccountName = getAccountName(res.userId, res.userName);
+    const rawAccountName = res.offline ? res.offlineClientName || "Klient offline" : getAccountName(res.userId, res.userName);
 
     return (
       <>
@@ -1646,6 +1685,8 @@ const ReservationList = ({ user }) => {
     const isUnread = isReservationUnread(res, variant);
     const created = res.createdAt || res.updatedAt || Date.now();
     const isOffline = !!res.offline;
+    const providerProfile = profileMap[res.providerUserId];
+    const profileAvatar = providerProfile && (!res.providerProfileId || String(res.providerProfileId) === String(providerProfile.id)) ? providerProfile.avatar : '';
     const isClosed = ["anulowana", "odrzucona"].includes(res.status);
 
     const canClientManage = variant === "sent" && !isClosed;
@@ -1659,13 +1700,13 @@ const ReservationList = ({ user }) => {
         <div className={`${styles.link} ${getReservationLinkClass(res.status)}`}>
           <div className={styles.row}>
             <div className={styles.avatarWrap}>
-              <AvatarNode variant={variant} isOffline={isOffline} />
+              <ReservationAvatar variant={variant} isOffline={isOffline} src={variant === "sent" ? profileAvatar : accountMap[res.userId]?.avatar} />
               {isUnread && <span className={styles.badgeDot} aria-hidden="true" />}
             </div>
 
             <div className={styles.head}>
               <div className={styles.meta}>{renderHeader(res, variant)}</div>
-              <div className={styles.date}>{new Date(created).toLocaleString()}</div>
+              <div className={styles.date}>{new Date(created).toLocaleString("pl-PL", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</div>
             </div>
 
             <div className={styles.content}>
@@ -2037,6 +2078,7 @@ const ReservationList = ({ user }) => {
   );
 
   const [statusFilter, setStatusFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const matchesFilter = (reservation, variant, filter = statusFilter) => {
     if (filter === 'unread') return isReservationUnread(reservation, variant);
     if (filter === 'pending') return reservation.status === 'oczekująca';
@@ -2044,10 +2086,11 @@ const ReservationList = ({ user }) => {
     if (filter === 'closed') return ['anulowana', 'odrzucona'].includes(reservation.status);
     return true;
   };
-  const filters = [['all', 'Wszystkie'], ['unread', 'Nowe zmiany'], ['pending', 'Oczekujące'], ['accepted', 'Potwierdzone'], ['closed', 'Zamknięte']];
+  const filters = [['all', 'Wszystkie', FiCalendar], ['unread', 'Nowe zmiany', FiAlertCircle], ['pending', 'Oczekujące', FiClock], ['accepted', 'Potwierdzone', FiCheckCircle], ['closed', 'Zamknięte', FiXCircle]];
   const filterCount = filter => clientReservations.filter(reservation => matchesFilter(reservation, 'sent', filter)).length + serviceReservations.filter(reservation => matchesFilter(reservation, 'received', filter)).length;
-  const visibleSent = clientReservations.filter(reservation => matchesFilter(reservation, 'sent'));
-  const visibleReceived = serviceReservations.filter(reservation => matchesFilter(reservation, 'received'));
+  const matchesSearch = reservation => [reservation.userName, accountMap[reservation.userId]?.name, reservation.providerProfileName, reservation.providerName, reservation.serviceName, reservation.staffName, reservation.date, formatDatePL(reservation.date), reservation.fromTime, reservation.description].filter(Boolean).join(' ').toLocaleLowerCase('pl').includes(search.trim().toLocaleLowerCase('pl'));
+  const visibleSent = clientReservations.filter(reservation => matchesFilter(reservation, 'sent') && matchesSearch(reservation));
+  const visibleReceived = serviceReservations.filter(reservation => matchesFilter(reservation, 'received') && matchesSearch(reservation));
   const totalReservations = clientReservations.length + serviceReservations.length;
   const totalPending = pendingSent + (hasProviderProfile ? pendingReceived : 0);
 
@@ -2072,6 +2115,7 @@ const ReservationList = ({ user }) => {
     label,
     title,
     badge,
+    count = 0,
     icon,
     emptyTitle,
     emptyText,
@@ -2079,8 +2123,10 @@ const ReservationList = ({ user }) => {
   }) => (
     <EditorGroup title={`${number} / ${title}`} className={styles.reservationGroup}>
       <div className={styles.groupHeader}>
-        <div>
+        <span className={styles.groupIcon} aria-hidden="true">{icon}</span>
+        <div className={styles.groupHeading}>
           <span className={styles.groupLabel}>{label}</span>
+          <p>Liczba rezerwacji: {count}</p>
         </div>
 
         <span className={styles.groupBadge}>{badge}</span>
@@ -2088,11 +2134,8 @@ const ReservationList = ({ user }) => {
 
       {children || (
         <div className={styles.emptyState}>
-          <div className={styles.emptyIconWrap}>{icon}</div>
-
-          <strong>{emptyTitle}</strong>
-
-          <p>{emptyText}</p>
+          <span className={styles.emptyIconWrap} aria-hidden="true">{icon}</span>
+          <div><strong>{emptyTitle}</strong><p>{emptyText}</p></div>
         </div>
       )}
     </EditorGroup>
@@ -2118,14 +2161,10 @@ const ReservationList = ({ user }) => {
 
       <div className={styles.shell}>
         <div className={styles.layout}>
-          <aside className={styles.side}>
-
-            <span className={styles.kicker}>Showly.me / Centrum rezerwacji</span>
-            <FiCalendar className={styles.headerIcon} aria-hidden="true" />
-            <h1 className={styles.heading}>
-              Twoje wizyty.<span className={styles.headingHighlight}>Wszystko na miejscu.</span>
-            </h1>
-
+          <header className={styles.panelHeader}>
+            <div className={styles.titleBlock}>
+              <span className={styles.kicker}>Showly / Rezerwacje</span>
+              <h1 className={styles.heading}>Twoje wizyty.<span className={styles.headingHighlight}>Wszystko na miejscu.</span></h1>
             <p className={styles.description}>
               {!isLogged ? (
                 <>
@@ -2148,42 +2187,20 @@ const ReservationList = ({ user }) => {
                 </>
               )}
             </p>
-
-            <EditorGroup title="01 / Twoje rezerwacje w liczbach" className={styles.summaryGroup}><div className={styles.metaRow}>
-              <div className={styles.metaCard}>
-                <strong>{loading ? "—" : totalPending}</strong>
-                <span>oczekujących rezerwacji</span>
-              </div>
-
-              <div className={styles.metaCard}>
-                <strong>{loading ? "—" : totalReservations}</strong>
-                <span>wszystkich rezerwacji</span>
-              </div>
-
-              <div className={styles.metaCard}>
-                <strong>
-                  {!isLogged ? "Gość" : hasProviderProfile ? bookingModeLabel : "Konto"}
-                </strong>
-                <span>
-                  {!isLogged
-                    ? "zaloguj się, aby zarządzać terminami"
-                    : hasProviderProfile
-                      ? "aktywny tryb rezerwacji"
-                      : "brak profilu usługodawcy"}
-                </span>
-              </div>
-            </div></EditorGroup>
-
-            <div className={styles.infoBox}>
-              <span>Lista • Kalendarz • Offline</span>
-
-              <p>
-                Rezerwacje możesz przeglądać jako listę, a przy aktywnym profilu
-                usługodawcy także w kalendarzu z możliwością dodawania terminów
-                offline.
-              </p>
+              {hasProviderProfile && <p>Profil: <strong>{providerMeta?.providerProfileName || 'Twoja wizytówka'}</strong> · {bookingModeLabel}</p>}
             </div>
-
+            <FiCalendar className={styles.headerIcon} aria-hidden="true" />
+          </header>
+          <EditorGroup title="01 / Twoje rezerwacje w liczbach" className={styles.summaryGroup}>
+            <div className={styles.metaRow} aria-live="polite">
+              <div className={styles.metaCard}><span>Oczekujące</span><strong>{loading ? '-' : totalPending}</strong></div>
+              <div className={styles.metaCard}><span>Wszystkie rezerwacje</span><strong>{loading ? '-' : totalReservations}</strong></div>
+            </div>
+          </EditorGroup>
+          <div className={styles.toolbar}>
+            {isLogged && !loading && (viewMode === "list" || !canUseCalendar) && <nav className={styles.filters} aria-label="Filtruj rezerwacje">{filters.map(([key, label, Icon]) => <button key={key} type="button" aria-pressed={statusFilter === key} onClick={() => setStatusFilter(key)}><Icon aria-hidden="true" />{label}<span>{filterCount(key)}</span></button>)}</nav>}
+            <div className={styles.filterRow}>
+              {isLogged && !loading && (viewMode === 'list' || !canUseCalendar) && <label className={styles.searchField}><FiSearch aria-hidden="true" /><span className={styles.srOnly}>Szukaj rezerwacji</span><input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Szukaj osoby, usługi lub terminu" /></label>}
             {canUseCalendar && (
               <div className={styles.viewToggle}>
                 <button
@@ -2207,11 +2224,11 @@ const ReservationList = ({ user }) => {
                 </button>
               </div>
             )}
-          </aside>
+            </div>
+            {isLogged && !loading && (viewMode === 'list' || !canUseCalendar) && <p className={styles.resultHint} role="status">{statusFilter === 'all' && !search.trim() ? 'Sprawdź szczegóły na karcie. Nowe zmiany możesz oznaczyć jako przeczytane.' : 'Widoczne rezerwacje: ' + (visibleSent.length + visibleReceived.length) + '. Zmień filtry, aby zobaczyć pozostałe terminy.'}</p>}
+          </div>
 
           <div className={styles.contentPanel}>
-            {isLogged && !loading && (viewMode === "list" || !canUseCalendar) && <nav className={styles.filters} aria-label="Filtruj rezerwacje">{filters.map(([key, label]) => <button key={key} type="button" aria-pressed={statusFilter === key} onClick={() => setStatusFilter(key)}>{label}<span>{filterCount(key)}</span></button>)}</nav>}
-            {isLogged && !loading && (viewMode === "list" || !canUseCalendar) && <p className={styles.resultHint} role="status">{statusFilter === "all" ? "Sprawdź szczegóły na karcie. Nowe zmiany możesz oznaczyć jako przeczytane." : "Wyniki filtra: " + (visibleSent.length + visibleReceived.length) + ". Wybierz „Wszystkie”, aby wrócić do pełnej listy."}</p>}
             {!isLogged ? (
               <div className={styles.reservationsStack}>
                 {renderReservationGroup({
@@ -2277,17 +2294,18 @@ const ReservationList = ({ user }) => {
                 />
               </div>
             ) : (
-              <div className={styles.reservationsStack}>
+              <div className={styles.reservationsStack} data-single={statusFilter !== "all" || Boolean(search.trim()) || !hasProviderProfile}>
                 {hasProviderProfile &&
                   renderReservationGroup({
                     number: "02",
                     label: "Do Twojego profilu",
                     title: "Otrzymane rezerwacje",
                     badge: receivedBadge,
+                    count: visibleReceived.length,
                     icon: <FiInbox className={styles.emptyIcon} />,
-                    emptyTitle: statusFilter === "all" ? "Brak otrzymanych rezerwacji" : "Brak rezerwacji w tym filtrze",
+                    emptyTitle: statusFilter === "all" && !search.trim() ? "Brak otrzymanych rezerwacji" : "Brak rezerwacji w tym filtrze",
                     emptyText:
-                      statusFilter === "all" ? "Gdy ktoś zarezerwuje termin w Twoim profilu, pojawi się on właśnie tutaj." : "Wybierz inny filtr lub wróć do wszystkich rezerwacji.",
+                      statusFilter === "all" && !search.trim() ? "Gdy ktoś zarezerwuje termin w Twoim profilu, pojawi się on właśnie tutaj." : "Wybierz inny filtr lub wróć do wszystkich rezerwacji.",
                     children:
                       visibleReceived.length > 0 ? (
                         <ul className={styles.list}>
@@ -2303,10 +2321,11 @@ const ReservationList = ({ user }) => {
                   label: "Twoje konto → profile",
                   title: "Wysłane rezerwacje",
                   badge: sentBadge,
+                  count: visibleSent.length,
                   icon: <FiSend className={styles.emptyIcon} />,
-                  emptyTitle: statusFilter === "all" ? "Brak wysłanych rezerwacji" : "Brak rezerwacji w tym filtrze",
+                  emptyTitle: statusFilter === "all" && !search.trim() ? "Brak wysłanych rezerwacji" : "Brak rezerwacji w tym filtrze",
                   emptyText:
-                    statusFilter === "all" ? "Gdy zarezerwujesz termin u innego usługodawcy, rezerwacja pojawi się w tej sekcji." : "Wybierz inny filtr lub wróć do wszystkich rezerwacji.",
+                    statusFilter === "all" && !search.trim() ? "Gdy zarezerwujesz termin u innego usługodawcy, rezerwacja pojawi się w tej sekcji." : "Wybierz inny filtr lub wróć do wszystkich rezerwacji.",
                   children:
                     visibleSent.length > 0 ? (
                       <ul className={styles.list}>

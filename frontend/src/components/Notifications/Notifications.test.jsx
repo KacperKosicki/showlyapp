@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import axios from 'axios';
 import { auth } from '../../firebase';
@@ -68,4 +68,62 @@ test('profile enquiries remain separate and the announcements section has its ow
   expect(within(announcements).getByText('Brak rozmów z ogłoszeń')).toBeInTheDocument();
   expect(within(announcements).queryByRole('link')).not.toBeInTheDocument();
   expect(within(screen.getByRole('group', { name: '03 / Rozmowy z innymi profilami' })).getByRole('link')).toHaveAttribute('href', '/konwersacja/profile-thread');
+});
+
+test('avatars follow account/profile roles in direct and announcement conversations and recover from broken images', async () => {
+  auth.currentUser.uid = 'owner';
+  const base = { ...announcementThread, withDisplayName: 'Konto usługodawcy', withAvatar: 'https://images.example.com/account.jpg', announcement: null };
+  const threads = [
+    { ...base, _id: 'incoming', channel: 'account_to_profile', firstFromUid: 'provider' },
+    { ...base, _id: 'outgoing', channel: 'account_to_profile', firstFromUid: 'owner' },
+    { ...base, _id: 'application-incoming', channel: 'profile_to_account', announcement: announcementThread.announcement },
+    { ...base, _id: 'application-sent', channel: 'profile_to_account', firstFromUid: 'owner', withUid: 'listing-owner', withAvatar: 'https://images.example.com/listing-owner.jpg', announcement: announcementThread.announcement },
+  ];
+  axios.get.mockImplementation(async url => ({ data:
+    url.includes('/conversations/by-uid/') ? threads :
+    url.endsWith('/owner') ? { _id: 'mine', name: 'Moje studio' } :
+    url.endsWith('/provider') ? { _id: 'profile', name: 'DJ Studio', avatar: { url: 'https://images.example.com/profile.jpg' } } : null,
+  }));
+  render(<Notifications user={{ uid: 'owner' }} />);
+  const inbox = await screen.findByRole('group', { name: /02 \/ Wiadomości do profilu/ });
+  expect(within(inbox).getByAltText('')).toHaveAttribute('src', 'https://images.example.com/account.jpg');
+  expect(within(inbox).getByText('Konto usługodawcy')).toBeInTheDocument();
+  const outbox = screen.getByRole('group', { name: '03 / Rozmowy z innymi profilami' });
+  await waitFor(() => expect(within(outbox).getByAltText('')).toHaveAttribute('src', 'https://images.example.com/profile.jpg'));
+  const announcements = screen.getByRole('group', { name: '04 / Rozmowy z ogłoszeń' });
+  expect(within(announcements).getAllByAltText('').map(img => img.getAttribute('src'))).toEqual(['https://images.example.com/profile.jpg', 'https://images.example.com/listing-owner.jpg']);
+  expect(axios.get.mock.calls.filter(([url]) => url.endsWith('/profiles/by-user/provider'))).toHaveLength(1);
+  expect(axios.get).not.toHaveBeenCalledWith(expect.stringContaining('/profiles/by-user/listing-owner'));
+  const image = within(outbox).getByAltText('');
+  fireEvent.error(image);
+  expect(image).toHaveAttribute('src', '/images/other/no-image.png');
+  fireEvent.error(image);
+  expect(image).toHaveAttribute('src', '/images/other/no-image.png');
+});
+
+test.each([null, { _id: 'profile', name: 'DJ Studio', avatar: { url: '' } }])('missing profile photos use no-image instead of the account avatar or an endless skeleton: %p', async profile => {
+  auth.currentUser.uid = 'owner';
+  axios.get.mockImplementation(async url => ({ data: url.includes('/conversations/by-uid/') ? [{ ...announcementThread, _id: 'outgoing', channel: 'account_to_profile', firstFromUid: 'owner', withAvatar: 'https://images.example.com/account.jpg', announcement: null }] : url.endsWith('/provider') ? profile : null }));
+  render(<Notifications user={{ uid: 'owner' }} />);
+  const outbox = await screen.findByRole('group', { name: '03 / Rozmowy z innymi profilami' });
+  expect(within(outbox).getByAltText('')).toHaveAttribute('src', '/images/other/no-image.png');
+  expect(within(outbox).getByRole('link')).toHaveAttribute('href', '/konwersacja/outgoing');
+});
+
+test('category, unread and search filters compose without marking messages read and can be cleared', async () => {
+  const setUnreadCount = setup('owner', [announcementThread, { ...announcementThread, _id: 'profile-thread', channel: 'account_to_profile', firstFromUid: 'owner', unreadCount: 0, announcement: null }]);
+  const nav = await screen.findByRole('navigation', { name: 'Rodzaj rozmów' });
+  await screen.findAllByText('DJ Studio');
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Tylko nieprzeczytane' }));
+  expect(screen.queryByRole('group', { name: '03 / Rozmowy z innymi profilami' })).not.toBeInTheDocument();
+  fireEvent.click(within(nav).getByRole('button', { name: /Z profilami/ }));
+  expect(screen.getByText('Nie znaleźliśmy rozmów')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Tylko nieprzeczytane' }));
+  expect(screen.getByRole('link')).toHaveAttribute('href', '/konwersacja/profile-thread');
+  fireEvent.change(screen.getByRole('searchbox', { name: 'Szukaj rozmowy' }), { target: { value: 'nieistniejąca rozmowa' } });
+  expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Pokaż wszystkie rozmowy' }));
+  expect(screen.getAllByRole('link')).toHaveLength(2);
+  expect(screen.getByRole('searchbox')).toHaveValue('');
+  expect(setUnreadCount).toHaveBeenLastCalledWith(2);
 });

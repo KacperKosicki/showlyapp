@@ -225,13 +225,13 @@ router.post("/remove-push-token", requireAuth, async (req, res) => {
 });
 
 /** GET /api/users/public/:uid
- * Publiczny (dla zalogowanych) "basic view" – tylko nazwa do UI (bez wrażliwych danych)
+ * Publiczny (dla zalogowanych) "basic view" – nazwa i awatar konta do UI (bez wrażliwych danych)
  * ✅ używane w ReservationList do mapowania uid -> displayName
  */
 router.get('/public/:uid', requireAuth, async (req, res) => {
   try {
     const u = await User.findOne({ firebaseUid: req.params.uid })
-      .select('displayName name firebaseUid') // bez email, bez provider itp.
+      .select('displayName name avatar firebaseUid') // bez email, bez provider itp.
       .lean();
 
     if (!u) return res.status(404).json({ message: 'Nie znaleziono użytkownika' });
@@ -240,6 +240,7 @@ router.get('/public/:uid', requireAuth, async (req, res) => {
       uid: u.firebaseUid,
       displayName: u.displayName || '',
       name: u.name || '',
+      avatar: u.avatar || '',
     });
   } catch (e) {
     return res.status(500).json({ message: 'Błąd serwera', error: e.message });
