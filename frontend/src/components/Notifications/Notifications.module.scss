@@ -24,7 +24,6 @@
   p { max-width: 620px; margin: 20px 0 0; color: var(--app-muted); font-size: 14px; line-height: 1.8; }
   strong { color: var(--app-text); }
 }
-.kicker { color: var(--app-primary); font: 700 10px $font-accent; letter-spacing: .08em; text-transform: uppercase; }
 .headerIcon { width: 44px; height: 44px; flex-shrink: 0; margin-top: 4px; padding: 10px; border: 1px solid #171917; border-radius: 12px; background: var(--yp-lime); color: #171917; box-shadow: 3px 3px 0 var(--yp-shadow); transform: rotate(6deg); }
 .summaryGroup { min-width: 0; margin: 0; padding: 16px; align-self: start; border-radius: 14px; }
 .headerStats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
@@ -142,7 +141,6 @@
 .titleBlock { @extend %workspace-title; }
 .titleBlock h1 { @extend %workspace-heading; }
 .titleBlock p { @extend %workspace-description; }
-.kicker { @extend %workspace-kicker; }
 .headerIcon { @extend %workspace-header-icon; }
 .section .summaryGroup { @extend %workspace-summary; }
 .headerStats { @extend %workspace-stats; }

@@ -1,9 +1,11 @@
 import DataLoader from '../ui/DataLoader/DataLoader';
 import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 // YourProfile.jsx
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import ProfileWorkspace from './sections/ProfileWorkspace';
+import AchievementShowcase from '../ProfileAchievements/AchievementShowcase';
+import ProfileTour from './sections/ProfileTour';
 import styles from './YourProfile.module.scss';
 import AlertBox from "../AlertBox/AlertBox";
 import EmptyProfileState from './sections/EmptyProfileState';
@@ -44,14 +46,28 @@ import {
   CONTACT_POSTCODE_MAX_LENGTH,
 } from "../constants/validationLimits";
 
+const SIDE_PREVIEW_QUERY = '(min-width: 1100px)';
+
 const YourProfile = ({ user, setRefreshTrigger }) => {
   // =========================
   // Lokalne stany
   // =========================
 
   const [isEditing, setIsEditing] = useState(false);
+  const [isWide, setIsWide] = useState(() => window.matchMedia?.(SIDE_PREVIEW_QUERY).matches ?? false);
+  const showSidePreview = isEditing && isWide;
+
+  useEffect(() => {
+    const query = window.matchMedia?.(SIDE_PREVIEW_QUERY);
+    if (!query) return undefined;
+    const update = () => setIsWide(query.matches);
+    update();
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
   const [formErrors, setFormErrors] = useState({});
 
+  const previewRef = useRef(null);
   const fileInputRef = useRef(null);
   const bannerInputRef = useRef(null);
   const location = useLocation();
@@ -298,12 +314,17 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
       <div className={styles.inner} id="profileWrapper">
         <ProfileHeader
           profile={profile}
-          editData={editData}
           isEditing={isEditing}
           onEdit={() => setIsEditing(true)}
         />
 
-        <ProfileWorkspace profile={profile} editData={editData} isEditing={isEditing} />
+        <ProfileTour key={user.uid} userId={user.uid} />
+        <ProfileWorkspace
+          profile={profile}
+          editData={editData}
+          isEditing={isEditing}
+          onShowPreview={() => { if (previewRef.current) previewRef.current.open = true; }}
+        />
 
         {/* Pasek zapisu edycji */}
         {isEditing && (
@@ -314,25 +335,8 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
           />
         )}
 
-        <div className={styles.editorLayout}>
+        <div className={styles.editorLayout} data-live-preview={showSidePreview}>
           <div className={styles.editorSections}>
-            <BillingSection
-              betaPremiumEnabled={billingStatus?.billing?.betaPremiumEnabled === true}
-              paymentsEnabled={billingStatus?.payments?.enabled === true}
-              canManageSubscription={billingStatus?.canManageSubscription === true}
-              billingError={billingError}
-              onReconcile={async () => { const result = await handleReconcileBilling(); if (result) await fetchProfile(); }}
-              billingLoading={billingLoading}
-              billingLabel={billingLabel}
-              billingCurrentStatus={billingCurrentStatus}
-              billingLimits={billingLimits}
-              billingPlan={billingPlan}
-              billingActionLoading={billingActionLoading}
-              isPaidActive={isPaidActive}
-              onStartSubscription={handleStartSubscription}
-              onOpenBillingPortal={handleOpenBillingPortal}
-            />
-
             {shouldShowVisibilityNotice && (
               <VisibilityNotice
                 isAdminHidden={isAdminHidden}
@@ -385,6 +389,13 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
               canUsePremiumThemes={canUsePremiumThemes}
               onEditDataChange={setEditData}
             />
+
+            {!showSidePreview && (
+              <details id="profileDesignPreview" className={styles.preview} ref={previewRef}>
+                <summary>Podgląd na żywo</summary>
+                <ProfileDesignPreview profile={profile} editData={editData} isEditing={isEditing} />
+              </details>
+            )}
 
             <OfferSection
               profile={profile}
@@ -480,8 +491,28 @@ const YourProfile = ({ user, setRefreshTrigger }) => {
               maxQuickAnswers={MAX_QUICK_ANSWERS}
             />
 
+            <AchievementShowcase key={user.uid} profileVersion={profile.updatedAt} isEditing={isEditing} />
+
+            <BillingSection
+              betaPremiumEnabled={billingStatus?.billing?.betaPremiumEnabled === true}
+              paymentsEnabled={billingStatus?.payments?.enabled === true}
+              canManageSubscription={billingStatus?.canManageSubscription === true}
+              billingError={billingError}
+              onReconcile={async () => { const result = await handleReconcileBilling(); if (result) await fetchProfile(); }}
+              billingLoading={billingLoading}
+              billingLabel={billingLabel}
+              billingCurrentStatus={billingCurrentStatus}
+              billingLimits={billingLimits}
+              billingPlan={billingPlan}
+              billingActionLoading={billingActionLoading}
+              isPaidActive={isPaidActive}
+              onStartSubscription={handleStartSubscription}
+              onOpenBillingPortal={handleOpenBillingPortal}
+            />
           </div>
-          <ProfileDesignPreview profile={profile} editData={editData} isEditing={isEditing} />
+          {showSidePreview && (
+            <ProfileDesignPreview id="profileDesignPreview" profile={profile} editData={editData} isEditing />
+          )}
         </div>
 
         <Lightbox

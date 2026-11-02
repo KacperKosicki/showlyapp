@@ -6,6 +6,7 @@ import { normalizeProfileDesign, getProfileDesignVars, getProfileDesignAttribute
 import { useEffect, useRef, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import styles from "./PublicProfile.module.scss";
+import { PublicAchievementList, ProfileAchievementHighlights } from '../ProfileAchievements/ProfileAchievements';
 import { auth } from "../../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { createPortal } from "react-dom";
@@ -169,7 +170,8 @@ const unlockBodyScroll = () => {
 
 const ProfileSections = ({ children, theme, className }) => {
   const visible = Children.toArray(children).filter(child => child.props.id === 'overview' ? Object.values(theme.sections).slice(0, 4).some(Boolean) : theme.sections[child.props.id] !== false);
-  visible.sort((a, b) => theme.sectionOrder.indexOf(a.props.id) - theme.sectionOrder.indexOf(b.props.id));
+  const sectionOrder = [...theme.sectionOrder, 'achievements'];
+  visible.sort((a, b) => sectionOrder.indexOf(a.props.id) - sectionOrder.indexOf(b.props.id));
   return <main className={className}>{visible}</main>;
 };
 
@@ -1105,6 +1107,7 @@ export default function PublicProfile() {
                     {reviewsCount} opinii
                   </span>
                 </div>
+                <ProfileAchievementHighlights badges={profile.achievements} decorations={design.decorations} />
               </div>
             </div>
           </div>
@@ -1227,13 +1230,10 @@ export default function PublicProfile() {
           </aside>
         </header>
 
-        {design.showSectionNav && <nav className={styles.sectionNav} aria-label="Sekcje profilu">{design.sectionOrder.filter(key => key === 'overview' ? ['description', 'contact', 'price', 'links'].some(section => design.sections[section]) : design.sections[key] && (key !== 'gallery' || hasGallery) && (key !== 'services' || visibleServices.length > 0)).map(key => <a key={key} href={`#${key}`}>{({ overview: 'Poznaj mnie', services: 'Oferta', gallery: 'Realizacje', reviews: 'Opinie' })[key]}<FiArrowUpRight aria-hidden="true" /></a>)}</nav>}
+        {design.showSectionNav && <nav className={styles.sectionNav} aria-label="Sekcje profilu">{design.sectionOrder.filter(key => key === 'overview' ? ['description', 'contact', 'price', 'links'].some(section => design.sections[section]) : design.sections[key] && (key !== 'gallery' || hasGallery) && (key !== 'services' || visibleServices.length > 0)).map(key => <a key={key} href={`#${key}`}>{({ overview: 'Poznaj mnie', services: 'Oferta', gallery: 'Realizacje', reviews: 'Opinie' })[key]}<FiArrowUpRight aria-hidden="true" /></a>)}{!!profile.achievements?.length && <a href="#achievements">Odznaki <FiArrowUpRight aria-hidden="true" /></a>}</nav>}
         <ProfileSections className={styles.profileContent} theme={design}>
           <section
-            className={cn(
-              styles.overviewBand,
-              (!hasProfileContact || !design.sections.contact) && styles.overviewWithoutContact
-            )}
+            className={styles.overviewBand}
             id="overview"
           >
             <article
@@ -1843,6 +1843,25 @@ export default function PublicProfile() {
               )}
             </div>
           </section>
+          {!!profile.achievements?.length && (
+            <section
+              id="achievements"
+              className={cn(styles.contentSection, styles.reveal, styles.fromBottom)}
+              aria-labelledby="public-achievements-title"
+            >
+              <header className={styles.sectionHeader}>
+                <div className={styles.sectionHeaderCopy}>
+                  <h2 id="public-achievements-title">Odznaki Showly</h2>
+                  <p>Wybrane osiągnięcia zdobyte na platformie Showly.</p>
+                </div>
+              </header>
+              <PublicAchievementList
+                badges={profile.achievements}
+                decorations={design.decorations}
+                motion={design.motion}
+              />
+            </section>
+          )}
         </ProfileSections>
       </div>
 

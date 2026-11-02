@@ -2163,7 +2163,6 @@ const ReservationList = ({ user }) => {
         <div className={styles.layout}>
           <header className={styles.panelHeader}>
             <div className={styles.titleBlock}>
-              <span className={styles.kicker}>Showly / Rezerwacje</span>
               <h1 className={styles.heading}>Twoje wizyty.<span className={styles.headingHighlight}>Wszystko na miejscu.</span></h1>
             <p className={styles.description}>
               {!isLogged ? (

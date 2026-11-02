@@ -11,6 +11,7 @@ const resolveAvailability = createAvailabilityResolver({ User, Profile, Applicat
 const { sendPushToUserUid } = require("../utils/sendPushNotification");
 
 const requireAuth = require("../middleware/requireAuth");
+const { reconcileAchievements } = require("../utils/achievements");
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
@@ -201,6 +202,11 @@ router.get("/by-uid/:uid", requireAuth, async (req, res) => {
         return res.status(400).json({ message: "Nieprawidłowy channel" });
       }
       findQuery.channel = channel;
+    }
+
+    if (!channel || channel === "system") {
+      try { await reconcileAchievements(authUid); }
+      catch (error) { console.error("Błąd sprawdzania odznak:", error); }
     }
 
     const conversations = await Conversation.find(findQuery).sort({ updatedAt: -1 }).lean();

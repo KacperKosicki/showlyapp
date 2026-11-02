@@ -1,0 +1,295 @@
+@import '../../styles/profileEditor';
+@import '../../styles/accountWorkspace';
+
+.showcase {
+  @extend %workspace-group;
+
+  .badge {
+    padding: 12px;
+    border: 1px solid var(--app-border);
+    border-radius: 12px;
+    background: var(--app-bg);
+  }
+}
+
+.grid.publicShowcase {
+  --app-text: var(--pp-ink);
+  --app-muted: var(--pp-muted);
+  margin: 0;
+  gap: var(--pd-gap);
+
+  @media (max-width: 600px) {
+    gap: var(--pd-mobile-gap);
+  }
+  font-family: var(--pd-body);
+  .badge {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    align-content: start;
+    gap: 10px;
+    padding: 0;
+    text-align: center;
+
+  }
+
+  .medal {
+    width: clamp(116px, 15vw, 168px);
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .copy p {
+    color: var(--pp-muted);
+    font-size: .83rem;
+    line-height: 1.55;
+  }
+
+  .copy strong {
+    font-family: var(--pd-heading, #{$font-heading});
+    font-weight: var(--pd-title-weight, 750);
+    font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+    margin-top: 4px;
+  }
+
+  .tier {
+    display: inline-block;
+    font-family: inherit;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+  }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .publicShowcase[data-decorations='true']:not([data-motion='none']) .medal {
+    transition: transform .24s ease;
+  }
+
+  .publicShowcase[data-decorations='true']:not([data-motion='none']) .badge:hover .medal {
+    transform: translateY(-4px) rotate(-4deg);
+  }
+}
+
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  span {
+    @extend %workspace-group-badge;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(245px, 100%), 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.badge {
+  --medal-fill: #d8ff72;
+  --medal-accent: #8da54d;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 8px 0;
+
+  &[data-tier='rare'] {
+    --medal-fill: #c3b8ff;
+    --medal-accent: #7464d5;
+  }
+
+  &[data-tier='exclusive'] {
+    --medal-fill: #ffd78a;
+    --medal-accent: #bf7e2d;
+  }
+
+  &[data-locked='true'] {
+    --medal-fill: #e3e1db;
+    --medal-accent: #9b9993;
+  }
+
+}
+
+.medal {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+}
+
+.crest {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 5px 4px color-mix(in srgb, var(--medal-accent) 38%, transparent));
+}
+
+.metalShade { stop-color: color-mix(in srgb, var(--medal-accent) 50%, #101014); }
+.metalMid { stop-color: var(--medal-accent); }
+.metalLight { stop-color: color-mix(in srgb, var(--medal-accent) 32%, white); }
+.enamelLight { stop-color: color-mix(in srgb, var(--medal-fill) 88%, var(--medal-ink, #171917)); }
+.enamelBase { stop-color: var(--medal-fill); }
+.enamelShade { stop-color: color-mix(in srgb, var(--medal-fill) 82%, var(--medal-ink, #171917)); }
+
+.ribbon { opacity: .75; }
+
+.rim,
+.innerRim {
+  stroke: color-mix(in srgb, var(--medal-accent) 65%, var(--app-text));
+  stroke-width: 1.5;
+}
+
+.innerRim { fill: color-mix(in srgb, var(--medal-fill) 45%, var(--app-bg)); }
+
+.laurel {
+  stroke: color-mix(in srgb, var(--medal-accent) 65%, var(--app-text));
+  stroke-width: .7;
+}
+
+.engraving {
+  fill: none;
+  stroke: color-mix(in srgb, var(--medal-accent) 50%, #101014);
+  stroke-width: 1.8;
+  stroke-dasharray: .7 2.5;
+}
+
+.enamel {
+  stroke: color-mix(in srgb, var(--medal-accent) 55%, white);
+  stroke-width: 1.5;
+}
+
+.glint {
+  fill: none;
+  stroke: color-mix(in srgb, var(--medal-fill) 65%, white);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.jewel {
+  stroke: color-mix(in srgb, var(--medal-accent) 45%, white);
+  stroke-width: .85;
+
+  path:nth-child(2) { fill: var(--medal-fill); }
+  path:nth-child(3) { fill: color-mix(in srgb, var(--medal-accent) 48%, white); }
+}
+
+.glyph {
+  position: absolute;
+  top: 35.5%;
+  left: 37%;
+  width: 26%;
+  height: 26%;
+  color: var(--medal-ink, #171917);
+  stroke-width: 1.65;
+}
+
+:is(.publicShowcase, .highlights)[data-decorations='false'] .sparkles {
+  display: none;
+}
+.marker {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 18px;
+  height: 18px;
+  padding: 2px;
+  border: 1px solid #171917;
+  border-radius: 50%;
+  background: var(--medal-fill);
+  color: #171917;
+}
+.copy {
+  min-width: 0;
+
+  strong {
+    display: block;
+    font: 700 .94rem/1.35 $font-heading;
+  }
+
+  p {
+    margin-top: 4px;
+  }
+}
+
+.tier {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--app-muted);
+  font: 600 .66rem $font-accent;
+}
+
+.badge .action,
+.error button {
+  grid-column: 1 / -1;
+  justify-self: start;
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid var(--app-border);
+  border-radius: 8px;
+  color: var(--app-text);
+  font: 600 .74rem $font-accent;
+  cursor: pointer;
+
+  svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+.error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.publicShowcase .badge,
+.highlight {
+  --medal-fill: var(--pp-primary, #6557ef);
+  --medal-accent: var(--pp-secondary, #d8ff72);
+  --medal-ink: var(--pd-primary-ink, #fff);
+
+  &[data-tier='rare'] {
+    --medal-fill: var(--pp-secondary, #d8ff72);
+    --medal-accent: var(--pp-primary, #6557ef);
+    --medal-ink: var(--pd-secondary-ink, #171917);
+  }
+
+}
+
+.highlights {
+  --app-text: var(--pp-ink);
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 8px;
+
+  &:focus-visible {
+    outline: 3px solid var(--pp-primary);
+    outline-offset: 3px;
+  }
+}
+.highlightList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.highlight .medal {
+  width: clamp(58px, 7vw, 80px);
+  height: auto;
+  aspect-ratio: 1;
+}

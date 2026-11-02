@@ -5,7 +5,7 @@ import { FiArrowUpRight, FiEye, FiImage, FiList, FiMapPin } from 'react-icons/fi
 import { SECTION_LABELS, normalizeProfileDesign, getProfileDesignVars, getProfileDesignAttributes, profileImageUrl, getProfileBookingPresentation } from '../../../utils/profileDesign';
 import styles from './AppearanceSection.module.scss';
 
-const ProfileDesignPreview = ({ profile, editData, isEditing }) => {
+const ProfileDesignPreview = ({ id, profile, editData, isEditing }) => {
   const [device, setDevice] = useState('wide');
   const data = isEditing ? editData : profile;
   const theme = normalizeProfileDesign(data?.theme);
@@ -22,7 +22,7 @@ const ProfileDesignPreview = ({ profile, editData, isEditing }) => {
     { key: 'gallery', icon: FiImage, value: photos.length, label: 'zdjęć' },
   ].filter(stat => theme.sections[stat.key] !== false);
   return (
-    <aside id="profileDesignPreview" className={styles.previewColumn} aria-label="Podgląd wyglądu wizytówki">
+    <aside id={id} className={styles.previewColumn} aria-label="Podgląd wyglądu wizytówki">
       <span className={styles.previewLabel}><FiEye aria-hidden="true" /> Podgląd na żywo</span>
       <div className={styles.previewModes} role="group" aria-label="Szerokość podglądu">
         <button type="button" aria-pressed={device === 'wide'} onClick={() => setDevice('wide')}>Szeroki</button>

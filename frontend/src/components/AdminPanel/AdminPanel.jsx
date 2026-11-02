@@ -8,6 +8,7 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   FiActivity,
+  FiAward,
   FiCalendar,
   FiFlag,
   FiGrid,
@@ -20,12 +21,14 @@ import AlertBox from "../AlertBox/AlertBox";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
 import { adminApi } from "../../api/adminApi";
 import BetaPremiumControl from './BetaPremiumControl';
+import AdminAchievements from './AdminAchievements';
 
 const TABS = [
   { key: "dashboard", label: "Dashboard", Icon: FiGrid },
   { key: "users", label: "Użytkownicy", Icon: FiUsers },
   { key: "profiles", label: "Profile", Icon: FiUserCheck },
   { key: "reports", label: "Zgłoszenia", Icon: FiFlag },
+  { key: "achievements", label: "Odznaki", Icon: FiAward },
 ];
 
 const REPORT_TABS = [
@@ -886,81 +889,43 @@ export default function AdminPanel() {
         <div className={styles.panel}>
           <header className={styles.adminHeader}>
             <div className={styles.headerCopy}>
-              <span className={styles.eyebrow}>
-                <FiShield aria-hidden="true" />
-                Administracja Showly
-              </span>
-
-              <h1>Panel administratora</h1>
-
-              <p>
-                Dane platformy, konta, profile i moderacja w jednym miejscu.
-              </p>
+              <h1>Panel <span>administratora</span></h1>
+              <p>Sprawdzaj dane platformy, zarządzaj kontami i profilami oraz rozpatruj zgłoszenia.</p>
             </div>
-
-            <div className={styles.quickStats}>
-              <div>
-                <span className={styles.quickStatIcon} aria-hidden="true">
-                  <FiUsers />
-                </span>
-
-                <span className={styles.quickStatCopy}>
-                  <small>Użytkownicy</small>
-                  <strong>{stats?.users ?? "—"}</strong>
-                </span>
-              </div>
-
-              <div>
-                <span className={styles.quickStatIcon} aria-hidden="true">
-                  <FiUserCheck />
-                </span>
-
-                <span className={styles.quickStatCopy}>
-                  <small>Profile</small>
-                  <strong>{stats?.profiles ?? "—"}</strong>
-                </span>
-              </div>
-
-              <div>
-                <span className={styles.quickStatIcon} aria-hidden="true">
-                  <FiCalendar />
-                </span>
-
-                <span className={styles.quickStatCopy}>
-                  <small>Rezerwacje</small>
-                  <strong>{stats?.reservations ?? "—"}</strong>
-                </span>
-              </div>
-            </div>
+            <FiShield className={styles.headerIcon} aria-hidden="true" />
           </header>
 
-          {loading && <DataLoader label="Ładujemy dane panelu admina…" layout="none" />}
+          <fieldset className={styles.summary}>
+            <legend>Platforma w liczbach</legend>
+            <div className={styles.quickStats} aria-live="polite">
+              <div className={styles.quickStat}><span>Użytkownicy</span><strong>{stats?.users ?? "—"}</strong></div>
+              <div className={styles.quickStat}><span>Profile</span><strong>{stats?.profiles ?? "—"}</strong></div>
+              <div className={styles.quickStat}><span>Rezerwacje</span><strong>{stats?.reservations ?? "—"}</strong></div>
+            </div>
+          </fieldset>
+
           <nav className={styles.tabs} aria-label="Nawigacja panelu admina">
-            {TABS.map((t, index) => {
+            {TABS.map((t) => {
               const TabIcon = t.Icon;
 
               return (
                 <button
                   key={t.key}
-                  className={`${styles.tabBtn} ${tab === t.key ? styles.active : ""
-                    }`}
+                  aria-pressed={tab === t.key}
                   onClick={() => setTab(t.key)}
                   type="button"
                 >
-                  <span className={styles.tabIcon} aria-hidden="true">
-                    <TabIcon />
-                  </span>
-
-                  <span className={styles.tabCopy}>
-                    <small>{String(index + 1).padStart(2, "0")}</small>
-                    <strong>{t.label}</strong>
-                  </span>
+                  <TabIcon aria-hidden="true" />
+                  {t.label}
                 </button>
               );
             })}
           </nav>
 
           <div className={styles.content}>
+            {loading && <DataLoader label="Ładujemy dane panelu admina…" layout="none" />}
+            {tab === "achievements" && <AdminAchievements />}
+
             {tab === "dashboard" && (
               <article className={styles.chapter}>
                 <div className={styles.chapterNumber}>01</div>

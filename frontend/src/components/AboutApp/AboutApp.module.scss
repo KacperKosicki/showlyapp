@@ -498,7 +498,10 @@
 }
 
 .benefit {
-  min-height: 250px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 265px;
   padding: clamp(1.25rem, 2.4vw, 1.8rem);
   display: flex;
   flex-direction: column;
@@ -512,6 +515,17 @@
   transition:
     transform 0.22s ease,
     box-shadow 0.22s ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: radial-gradient(circle, currentColor 1px, transparent 1.5px) 0 0 / 13px 13px;
+    mask-image: radial-gradient(ellipse at 100% 0, #000 0, transparent 56%);
+    opacity: .13;
+    pointer-events: none;
+  }
 
   &:nth-child(2) {
     background: var(--about-lime);
@@ -539,7 +553,7 @@
 
   h4 {
     max-width: 380px;
-    margin: auto 0 0;
+    margin: 1.2rem 0 0;
     font-family: $font-heading;
     font-size: clamp(1.65rem, 2.4vw, 2.35rem);
     font-weight: 790;
@@ -557,6 +571,27 @@
   }
 }
 
+.benefitWatermark {
+  position: absolute;
+  z-index: -1;
+  inset: auto -1.1rem -2.2rem auto;
+  width: clamp(7rem, 11vw, 10rem);
+  height: auto;
+  stroke-width: 1;
+  opacity: .11;
+  transform: rotate(-18deg);
+  pointer-events: none;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .benefitWatermark {
+    transition: transform .28s ease;
+  }
+
+  .benefit:hover .benefitWatermark {
+    transform: translate(-.45rem, -.45rem) rotate(-9deg);
+  }
+}
 .benefitTop {
   display: flex;
   align-items: center;
@@ -565,7 +600,10 @@
 
   >span:first-child {
     font-family: $font-heading;
-    font-size: 1.6rem;
+    padding: .35rem .55rem;
+    border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+    border-radius: 6px;
+    font-size: 1.15rem;
     font-weight: 850;
     line-height: 1;
     letter-spacing: -0.05em;
@@ -573,13 +611,15 @@
 }
 
 .benefitIcon {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
   border: 1px solid currentColor;
   border-radius: 12px;
+  background: color-mix(in srgb, currentColor 6%, transparent);
   box-shadow: 3px 3px 0 currentColor;
+  transform: rotate(7deg);
 
   svg {
     width: 1rem;

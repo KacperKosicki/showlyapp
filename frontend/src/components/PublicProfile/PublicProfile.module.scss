@@ -688,8 +688,8 @@ $ease-showly: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .overviewBand {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   align-items: start;
   gap: 18px;
 }
@@ -707,7 +707,7 @@ $ease-showly: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .aboutCard {
-  grid-column: 1 / span 6;
+  flex: 6 1 350px;
   min-height: 360px;
   display: flex;
   flex-direction: column;
@@ -716,7 +716,7 @@ $ease-showly: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .priceCard {
-  grid-column: 11 / span 2;
+  flex: 2 1 180px;
   height: fit-content;
   display: flex;
   flex-direction: column;
@@ -725,7 +725,7 @@ $ease-showly: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .contactCard {
-  grid-column: 7 / span 4;
+  flex: 4 1 260px;
   height: fit-content;
   display: flex;
   flex-direction: column;
@@ -734,23 +734,13 @@ $ease-showly: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .resourcesCard {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: minmax(240px, 0.7fr) minmax(0, 1.3fr);
+  flex: 1 0 100%;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: clamp(1rem, 3vw, 2rem);
   padding: clamp(1.15rem, 2.5vw, 1.7rem);
   background: var(--pp-theme-soft);
-}
-
-.overviewWithoutContact {
-  .aboutCard {
-    grid-column: 1 / span 9;
-  }
-
-  .priceCard {
-    grid-column: 10 / span 3;
-  }
 }
 
 .compactHeading,
@@ -989,13 +979,16 @@ $ease-showly: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .resourcesHeading {
+  flex: 0 1 220px;
+  min-width: 0;
   align-items: center;
 }
 
 .linkList {
+  flex: 1 1 360px;
   min-width: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
   gap: 9px;
 }
 
@@ -2092,29 +2085,6 @@ $ease-showly: cubic-bezier(0.16, 1, 0.3, 1);
     grid-template-columns: minmax(0, 1fr) minmax(330px, 0.62fr);
   }
 
-  .aboutCard {
-    grid-column: 1 / -1;
-    min-height: 0;
-  }
-
-  .contactCard {
-    grid-column: 1 / span 8;
-  }
-
-  .priceCard {
-    grid-column: 9 / span 4;
-  }
-
-  .overviewWithoutContact {
-    .aboutCard {
-      grid-column: 1 / span 8;
-    }
-
-    .priceCard {
-      grid-column: 9 / span 4;
-    }
-  }
-
   .servicesGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2160,10 +2130,6 @@ $ease-showly: cubic-bezier(0.16, 1, 0.3, 1);
 
   .heroActionRow {
     grid-column: 1 / -1;
-  }
-
-  .resourcesCard {
-    grid-template-columns: 1fr;
   }
 
   .galleryItem {
@@ -2326,13 +2292,8 @@ $ease-showly: cubic-bezier(0.16, 1, 0.3, 1);
     gap: 14px;
   }
 
-  .aboutCard,
-  .priceCard,
-  .contactCard,
-  .resourcesCard,
-  .overviewWithoutContact .aboutCard,
-  .overviewWithoutContact .priceCard {
-    grid-column: 1 / -1;
+  .overviewBand > * {
+    flex-basis: 100%;
   }
 
   .aboutCard,
@@ -2988,7 +2949,8 @@ $ease-showly: cubic-bezier(0.16, 1, 0.3, 1);
     .heroVisual { min-height: 320px; border-right: 0; border-bottom: var(--pd-border-width) var(--pd-border-style) var(--pd-frame); }
     .heroCenter { padding: 2rem 1.25rem; }
     .heroTitle { font-size: calc(2.4rem * var(--pd-title-scale)); }
-    .heroPanel { gap: 1rem; }
+    .heroPanel { display: flex; flex-direction: column; align-items: stretch; gap: 1rem; }
+    .heroPanelHead { flex-direction: row; align-items: center; padding: 0 0 .8rem; border-right: 0; border-bottom: 1px solid var(--pp-line); }
     .alertWrap { grid-column: 1 / -1; grid-row: 1; }
     .shell:has(> .alertWrap) { grid-template-rows: auto auto 1fr; }
     .shell:has(> .alertWrap) .profileHero { grid-row: 2 / span 2; }
@@ -3000,9 +2962,12 @@ $ease-showly: cubic-bezier(0.16, 1, 0.3, 1);
     .shell:has(> .alertWrap):not(:has(> .sectionNav)) .profileContent { grid-row: 2 / span 2; }
     .profileContent, .sectionNav { grid-column: 2; min-width: 0; }
     .profileContent { margin-top: 0; }
-    .overviewBand { grid-template-columns: minmax(0, 1fr); }
-    .servicesGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .servicesGrid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); }
   }
+  &[data-layout=sidebar][data-services=list] .servicesGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   @media (max-width: 1000px) {
     &[data-layout=sidebar] {
       .shell { display: block; }

@@ -413,56 +413,21 @@
   position: relative;
   overflow: hidden;
   border-radius: 15px;
+  background: var(--hero-card);
+
+  img {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
 
 .galleryMain {
   grid-row: 1 / 3;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 0.45rem;
-
-  background:
-    radial-gradient(circle at 70% 20%, rgba(255, 255, 255, 0.82) 0 8%, transparent 8.5%),
-    linear-gradient(145deg, #c9c3ff 0 42%, #7669ed 42% 67%, #28273f 67%);
-  color: #ffffff;
-
-  &::after {
-    content: "";
-    position: absolute;
-    right: -12%;
-    bottom: -17%;
-    width: 72%;
-    aspect-ratio: 1;
-    border: 2px solid rgba(255, 255, 255, 0.54);
-    border-radius: 50%;
-  }
-
-  svg {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
-
-  span {
-    font-size: 0.58rem;
-    font-weight: 850;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
 }
-
-.gallerySmallOne {
-  background:
-    linear-gradient(35deg, transparent 45%, rgba(255, 255, 255, 0.5) 46% 49%, transparent 50%),
-    var(--hero-orange);
-}
-
-.gallerySmallTwo {
-  background:
-    radial-gradient(circle at 50% 120%, transparent 0 42%, var(--hero-ink) 43% 45%, transparent 46%),
-    var(--hero-lime);
-}
-
 .location {
   position: absolute;
   left: 1.2rem;

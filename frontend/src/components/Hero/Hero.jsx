@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   FiArrowRight,
   FiArrowUpRight,
-  FiCamera,
   FiMapPin,
   FiSearch,
   FiStar,
@@ -193,11 +192,14 @@ const Hero = ({ user, hasProfile, loadingProfileStatus }) => {
 
               <div className={styles.gallery} aria-label="Przykładowa galeria">
                 <div className={styles.galleryMain}>
-                  <FiCamera aria-hidden="true" />
-                  <span>Twoje zdjęcie</span>
+                  <img src="/images/hero/wedding.jpg" alt="Para młoda w plenerze" width="1021" height="1024" />
                 </div>
-                <div className={styles.gallerySmallOne} />
-                <div className={styles.gallerySmallTwo} />
+                <div className={styles.gallerySmallOne}>
+                  <img src="/images/hero/portrait.jpg" alt="Portret w świetle dziennym" width="514" height="509" />
+                </div>
+                <div className={styles.gallerySmallTwo}>
+                  <img src="/images/hero/event.jpg" alt="Goście na przyjęciu w ogrodzie" width="514" height="514" />
+                </div>
 
                 <span className={styles.location}>
                   <FiMapPin aria-hidden="true" />

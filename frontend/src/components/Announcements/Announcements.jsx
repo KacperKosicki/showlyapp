@@ -1,8 +1,8 @@
 import DataLoader from '../ui/DataLoader/DataLoader';
-import AnnouncementBackdrop from './AnnouncementBackdrop';
+import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiArrowLeft, FiArrowRight, FiArrowUpRight, FiSearch, FiMessageCircle, FiZap, FiAperture, FiPlus } from 'react-icons/fi';
+import { FiArrowLeft, FiArrowRight, FiArrowUpRight, FiSearch, FiMessageCircle } from 'react-icons/fi';
 import { announcementApi } from './announcementApi';
 import { categories, countLabel, workModes } from './announcementData';
 import AnnouncementCard from './AnnouncementCard';
@@ -32,24 +32,24 @@ export default function Announcements({ user }) {
     return () => { clearTimeout(timer); controller.abort(); };
   }, [filters, page, retry]);
   const change = event => { setFilters(current => ({ ...current, [event.target.name]: event.target.value })); setPage(1); };
-  return <section ref={sectionRef} id="announcements" className={`${styles.section} ${styles.browsePage}`}><AnnouncementBackdrop word="WSPÓŁPRACA" /><div className={styles.inner}>
-    <header className={styles.browseHero}>
-      <div className={styles.heroCopy} data-reveal>
-        <h1>Masz pomysł.<br /><span>Znajdź człowieka.</span></h1>
-        <p>Małe plany. Wielkie możliwości. Opowiedz, czego szukasz — ktoś z Showly ma talent, którego właśnie potrzebujesz.</p>
-        <div className={styles.heroLinks}>
-          <Link className={styles.primary} to={user ? '/twoje-ogloszenia?nowe=1' : '/login'} state={{ scrollToId: user ? 'announcements' : 'loginBox' }}>Dodaj ogłoszenie<FiArrowUpRight aria-hidden="true" /></Link>
-          <Link to={user ? '/twoje-ogloszenia' : '/login'}>Twoje ogłoszenia <FiArrowRight aria-hidden="true" /></Link>
+  return <section ref={sectionRef} id="announcements" className={`${styles.section} ${styles.browsePage}`}><PanelBackdrop word="OGŁOSZENIA" /><div className={styles.inner}>
+    <div className={styles.browseHero}>
+      <header className={styles.browseHeader}>
+        <div className={styles.heroCopy}>
+          <h1>Masz pomysł.<span>Znajdź człowieka.</span></h1>
+          <p>Przeglądaj ogłoszenia i zgłaszaj się do projektów. Jeśli szukasz kogoś do współpracy, opublikuj własne ogłoszenie.</p>
         </div>
-      </div>
-      <div className={styles.connectionArt} data-reveal style={{ '--reveal-delay': '120ms' }} aria-hidden="true">
-        <svg className={styles.connectionLine} viewBox="0 0 460 330" fill="none"><path d="M75 95C180-10 400 20 357 152S109 294 167 197 360 166 395 270" /><path d="m376 264 19 6-1-20" /></svg>
-        <span className={styles.ideaNote}><FiZap /><small>PUNKT WYJŚCIA</small><strong>Twój<br />pomysł.</strong><span>To tutaj się zaczyna <FiArrowUpRight /></span></span>
-        <span className={styles.talentNote}><span className={styles.talentMarks}><b><FiAperture /></b><b><FiArrowUpRight /></b><b><FiPlus /></b></span><small>DRUGA STRONA</small><strong>Czyjś talent.</strong><span>Razem można więcej.</span></span>
-        <span className={styles.matchSeal}>DOBRE<br />POŁĄCZENIE<FiMessageCircle /></span>
-      </div>
-    </header>
-    <div className={styles.processBand} aria-label="Jak działają ogłoszenia"><span><b>01 /</b> Opisz swój pomysł</span><FiArrowRight aria-hidden="true" /><span><b>02 /</b> Poznaj propozycje</span><FiArrowRight aria-hidden="true" /><span><b>03 /</b> Zacznij rozmowę</span><small>30 dni na dobre połączenie.</small></div>
+        <FiMessageCircle className={styles.headerIcon} aria-hidden="true" />
+      </header>
+      <fieldset className={styles.browseSummary}>
+        <legend>Twoje ogłoszenia</legend>
+        <p>Opisz, kogo szukasz, i zbieraj propozycje przez 30 dni.</p>
+        <div className={styles.heroLinks}>
+          <Link className={styles.primary} to={user ? '/twoje-ogloszenia?nowe=1' : '/login'} state={{ scrollToId: user ? 'announcements' : 'loginBox' }}>Dodaj ogłoszenie <FiArrowUpRight aria-hidden="true" /></Link>
+          <Link to={user ? '/twoje-ogloszenia' : '/login'}>Zarządzaj <FiArrowRight aria-hidden="true" /></Link>
+        </div>
+      </fieldset>
+    </div>
     <div className={styles.browseLayout}>
       <aside className={`${styles.panel} ${styles.searchPanel}`} data-reveal aria-label="Wyszukiwarka ogłoszeń">
         <div className={styles.searchHeading}><FiSearch /><div><h2>Znajdź coś dla siebie.</h2><p>Szukaj po pomyśle, branży lub miejscu współpracy.</p></div></div>

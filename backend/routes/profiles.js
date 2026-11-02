@@ -8,6 +8,7 @@ const User = require("../models/User");
 const Conversation = require("../models/Conversation");
 const Favorite = require("../models/Favorite");
 const VisitLock = require("../models/VisitLock");
+const { reconcileAchievements, achievementState, publicBadges, MAX_FEATURED } = require("../utils/achievements");
 
 const upload = require("../middleware/upload");
 const cloudinary = require("../utils/cloudinary");
@@ -1299,6 +1300,38 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/achievements/me", requireAuth, async (req, res) => {
+  try {
+    const profile = await reconcileAchievements(req.auth.uid);
+    if (!profile) return res.status(404).json({ message: "Nie znaleziono wizytówki." });
+    return res.json(achievementState(profile));
+  } catch (error) {
+    console.error("Błąd pobierania odznak:", error);
+    return res.status(500).json({ message: "Nie udało się pobrać odznak." });
+  }
+});
+
+router.patch("/achievements/me", requireAuth, async (req, res) => {
+  const { featured } = req.body || {};
+  if (!Array.isArray(featured) || featured.length > MAX_FEATURED
+    || featured.some(id => typeof id !== "string") || new Set(featured).size !== featured.length) {
+    return res.status(400).json({ message: "Wybierz maksymalnie trzy różne odznaki." });
+  }
+
+  try {
+    const profile = await Profile.findOneAndUpdate(
+      { userId: req.auth.uid, ...(featured.length ? { earnedAchievements: { $all: featured } } : {}) },
+      { $set: { featuredAchievements: featured } },
+      { new: true, timestamps: false }
+    ).select("earnedAchievements featuredAchievements").lean();
+    if (!profile) return res.status(400).json({ message: "Możesz pokazać tylko zdobyte odznaki." });
+    return res.json(achievementState(profile));
+  } catch (error) {
+    console.error("Błąd zapisu gabloty:", error);
+    return res.status(500).json({ message: "Nie udało się zapisać gabloty." });
+  }
+});
+
 // -------------------------------------------------
 // GET /api/profiles/by-user/:uid – profil po userId
 // -------------------------------------------------
@@ -1335,7 +1368,7 @@ router.get("/by-user/:uid", async (req, res) => {
 // -----------------------------------------------------------
 router.get("/slug/:slug", async (req, res) => {
   try {
-    const profile = await Profile.findOne({ slug: req.params.slug }).lean();
+    const profile = await Profile.findOne({ slug: req.params.slug }).select("+earnedAchievements +featuredAchievements").lean();
     if (!profile) return res.status(404).json({ message: "Nie znaleziono profilu." });
 
     const now = new Date();
@@ -1385,8 +1418,10 @@ router.get("/slug/:slug", async (req, res) => {
       isFavorite = !!favExists;
     }
 
+    const { earnedAchievements, featuredAchievements, ...publicProfile } = profile;
     return res.json({
-      ...profile,
+      ...publicProfile,
+      achievements: publicBadges({ earnedAchievements, featuredAchievements }),
       ratedBy,
       avatar,
       banner,

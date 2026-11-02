@@ -19,6 +19,7 @@ import { useLocation } from "react-router-dom";
 import { auth } from "../../firebase";
 import AlertBox from "../AlertBox/AlertBox";
 import NotificationSettings from './NotificationSettings';
+import ActionButton, { ButtonContent } from './ActionButton';
 import styles from "./AccountSettings.module.scss";
 
 const API = process.env.REACT_APP_API_URL;
@@ -64,56 +65,6 @@ const normalizeAvatar = (value = "") => {
 
   return value;
 };
-
-const LoadingDots = ({ active }) => (
-  <span
-    className={`${styles.loadingDots} ${active ? styles.loadingDotsActive : ""
-      }`}
-    aria-hidden="true"
-  >
-    <span />
-    <span />
-    <span />
-  </span>
-);
-
-const ButtonContent = ({ icon, children, isLoading }) => (
-  <span
-    className={styles.btnContent}
-    data-loading={isLoading ? "true" : "false"}
-  >
-    <span className={styles.btnNormalContent}>
-      <span className={styles.btnIcon}>{icon}</span>
-      <span className={styles.btnLabel}>{children}</span>
-    </span>
-
-    {typeof isLoading === "boolean" && (
-      <LoadingDots active={isLoading} />
-    )}
-  </span>
-);
-
-const ActionButton = ({
-  isLoading = false,
-  disabled = false,
-  onClick,
-  className = "",
-  icon,
-  children,
-}) => (
-  <button
-    type="button"
-    className={`${styles.button} ${className}`}
-    disabled={disabled || isLoading}
-    onClick={onClick}
-    aria-busy={isLoading ? "true" : "false"}
-    data-loading={isLoading ? "true" : "false"}
-  >
-    <ButtonContent icon={icon} isLoading={isLoading}>
-      {children}
-    </ButtonContent>
-  </button>
-);
 
 const AccountSettings = () => {
   const location = useLocation();
@@ -453,25 +404,20 @@ export const AccountSettingsView = ({
         <main className={styles.panel}>
           <header className={styles.panelHeader}>
             <div className={styles.titleBlock}>
-              <span className={styles.kicker}>Konto Showly</span>
-              <h1>Ustawienia konta</h1>
-              <p>Zadbaj o zdjęcie, nazwę i bezpieczeństwo swojego konta.</p>
+              <h1>Ustawienia <span>Twojego konta</span></h1>
+              <p>Zmień zdjęcie i nazwę, ustaw powiadomienia lub zadbaj o bezpieczeństwo konta.</p>
             </div>
 
-            <div className={styles.accountIdentity}>
-              <span className={styles.identityIcon} aria-hidden="true">
-                <FiUser />
-              </span>
-
-              <span className={styles.identityCopy}>
-                <small>Twoje konto</small>
-                <strong>
-                  {user?.displayName || displayName.trim() || "Użytkownik Showly"}
-                </strong>
-                <span>{user?.email || "Brak adresu e-mail"}</span>
-              </span>
-            </div>
+            <FiUser className={styles.headerIcon} aria-hidden="true" />
           </header>
+
+          <fieldset className={styles.accountIdentity}>
+            <legend>Twoje konto</legend>
+            <div className={styles.identityCopy}>
+              <strong>{user?.displayName || displayName.trim() || "Użytkownik Showly"}</strong>
+              <span>{user?.email || "Brak adresu e-mail"}</span>
+            </div>
+          </fieldset>
 
           <div className={styles.settingsBody}>
             <fieldset className={styles.setting}>
@@ -646,9 +592,10 @@ export const AccountSettingsView = ({
                 </div>
               </fieldset>
             </div>
+            <div className={styles.setting}>
+              <NotificationSettings user={user} />
+            </div>
           </div>
-
-          <NotificationSettings user={user} />
           <footer className={styles.panelFooter}>
             <FiShield aria-hidden="true" />
             <span>Zmiany zapisujesz osobno w każdej sekcji.</span>

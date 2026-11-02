@@ -10,9 +10,9 @@ test('navigation and progress update from the draft only while editing', () => {
   const profile = { role: 'Fotograf', location: 'Poznań' };
   const editData = { ...profile, description: 'Moja historia', services: [{ name: 'Sesja' }], contact: { email: 'kontakt@example.com' } };
   const { rerender } = render(<ProfileWorkspace profile={profile} editData={editData} isEditing={false} />);
-  expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '1');
-  expect(screen.getByRole('link', { name: /02 Historia/ })).toHaveAttribute('href', '#descriptionSection');
+  expect(screen.getByRole('progressbar')).toHaveAttribute('value', '1');
+  expect(screen.getByRole('link', { name: 'Opis' })).toHaveAttribute('href', '#descriptionSection');
   rerender(<ProfileWorkspace profile={profile} editData={editData} isEditing />);
-  expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '4');
+  expect(screen.getByRole('progressbar')).toHaveAttribute('value', '4');
   expect(screen.getByRole('link', { name: 'Wygląd', exact: true })).toHaveAttribute('href', '#appearanceSection');
 });

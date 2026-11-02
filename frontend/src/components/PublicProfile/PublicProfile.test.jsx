@@ -1,3 +1,4 @@
+import '@testing-library/jest-dom';
 import { render, screen } from '@testing-library/react';
 import PublicProfile from './PublicProfile';
 import { normalizeProfileDesign } from '../../utils/profileDesign';
@@ -9,12 +10,12 @@ jest.mock('react-router-dom', () => ({ useParams: () => ({ slug: 'test-profile' 
 jest.mock('../../api/reportApi', () => ({ reportApi: { create: jest.fn() } }));
 const originalFetch = global.fetch;
 afterEach(() => { global.fetch = originalFetch; });
-const load = async (theme, projects = [], availabilityStatus) => {
+const load = async (theme, projects = [], availabilityStatus, achievements = []) => {
   global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ name: 'Testowa marka', role: 'Fotografia', userId: 'owner', slug: 'test-profile', theme, banner: { url: 'https://example.com/banner.jpg' }, billingPublic: { effectivePlan: 'premium' }, photos: [], services: [{ _id: 'service1', name: 'Sesja', isActive: true, price: { type: 'fixed', amount: 100 }, booking: { enabled: false } }], ratedBy: [], tags: [], links: [], description: 'Opis marki' }) });
   const originalResponse = global.fetch;
   global.fetch = jest.fn(async (...args) => {
     const response = await originalResponse(...args);
-    return { ...response, json: async () => ({ ...(await response.json()), projects, availabilityStatus }) };
+    return { ...response, json: async () => ({ ...(await response.json()), projects, availabilityStatus, achievements }) };
   });
   const result = render(<PublicProfile />);
   await screen.findByRole('heading', { name: 'Testowa marka' });
@@ -72,4 +73,20 @@ test('public page applies the saved full layout and typography controls', async 
   expect(page.style.getPropertyValue('--pd-heading')).toBe('"Playfair Display", Georgia, serif');
   expect(page.style.getPropertyValue('--pd-title-weight')).toBe('800');
   expect(screen.getByRole('navigation', { name: 'Sekcje profilu' })).toBeTruthy();
+});
+
+test('selected achievements use the native themed profile section and navigation', async () => {
+  const badge = { id: 'first-profile', tier: 'common', title: 'Pierwszy krok', description: 'Utwórz wizytówkę.' };
+  const container = await load({ showSectionNav: true, style: 'minimal', decorations: false, motion: 'none' }, [], undefined, [badge]);
+
+  const section = screen.getByRole('region', { name: 'Odznaki Showly' });
+  expect(section).toBe(container.querySelector('main').lastElementChild);
+  expect(section).toHaveClass(styles.contentSection);
+  expect(section.querySelector('header')).toHaveClass(styles.sectionHeader);
+  expect(screen.getByRole('link', { name: 'Odznaki' })).toHaveAttribute('href', '#achievements');
+  expect(section.querySelector('ul')).toHaveAttribute('data-motion', 'none');
+  const highlights = screen.getByRole('link', { name: /Odznaki Showly: Pierwszy krok/ });
+  expect(highlights).toHaveAttribute('href', '#achievements');
+  expect(highlights.closest(`.${styles.identityCopy}`)).toBeInTheDocument();
+  expect(section).toHaveTextContent('Pierwszy krok');
 });

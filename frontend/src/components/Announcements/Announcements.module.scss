@@ -1,6 +1,7 @@
 @import '../../styles/profileEditor';
 @import '../../styles/markerHeadline';
 @import '../../styles/sectionBackdrop';
+@import '../../styles/accountWorkspace';
 
 .section,
 .strip {
@@ -1541,28 +1542,13 @@
   }
 }
 
-// The directory follows AboutApp's warm paper and editorial typography.
-.browsePage {
+.section.browsePage {
   @include scrollReveal;
-  --app-bg: #fffdf7;
-  --app-surface: #f1eee4;
-  padding: calc(140px + var(--safe-top, 0px)) max(clamp(20px, 4vw, 56px), var(--safe-right, 0px)) 64px max(clamp(20px, 4vw, 56px), var(--safe-left, 0px));
+  @extend %workspace-page;
 
-  :global(html[data-theme="dark"]) & {
-    --app-bg: #1c1f1b;
-    --app-surface: #111310;
+  .inner {
+    @extend %workspace-shell;
   }
-
-  .primary {
-    background: var(--app-text);
-    color: var(--app-bg);
-    border-color: var(--app-text);
-    box-shadow: 5px 5px 0 var(--app-primary);
-    min-height: 54px;
-    padding: 14px 20px;
-    border-radius: 14px;
-  }
-
   .cardGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
@@ -1632,219 +1618,116 @@
   }
 }
 
-.browseHero {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(340px, 1fr);
-  gap: 30px;
+.section.managePage {
+  @extend %workspace-page;
+
+  .inner {
+    @extend %workspace-shell;
+  }
+
+  .tabs {
+    @extend %workspace-toolbar;
+    @extend %workspace-filters;
+    display: flex;
+    margin-bottom: 24px;
+  }
+
+  .manageCard,
+  .applicationCard {
+    @extend %workspace-group;
+  }
+}
+
+.manageStats {
+  @extend %workspace-stats;
+}
+
+.manageStat {
+  @extend %workspace-stat;
+}
+
+.manageBrowseLink {
+  display: inline-flex;
   align-items: center;
-  padding: 25px 0 65px;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 8px;
+  color: var(--app-text);
+  font: 600 .75rem $font-accent;
+
+  svg {
+    color: var(--app-primary);
+  }
+}
+
+.browseHero {
+  @extend %workspace-layout;
+  align-items: start;
+  margin-bottom: 28px;
+}
+
+.browseHeader {
+  @extend %workspace-header;
+}
+
+.headerIcon {
+  @extend %workspace-header-icon;
 }
 
 .heroCopy {
-  min-width: 0;
+  @extend %workspace-title;
 
   h1 {
-    margin: 28px 0 26px;
-    font-size: clamp(3rem, 5.5vw, 6rem);
-    font-weight: 790;
-    line-height: 1;
-    letter-spacing: -.065em;
+    @extend %workspace-heading;
 
     span {
       @include marker-highlight(var(--yp-lime));
     }
   }
 
-  >p {
-    max-width: 590px;
-    font-size: 1rem;
-    line-height: 1.8;
+  p {
+    @extend %workspace-description;
+  }
+}
+
+.browseSummary {
+  @extend %workspace-group;
+  @extend %workspace-summary;
+
+  legend {
+    padding: 7px 12px;
+    border: 1px solid #171917;
+    border-radius: 7px;
+    background: var(--yp-lime);
+    color: #171917;
+    font: 600 .75rem $font-accent;
+  }
+
+  p {
+    margin: 0 0 12px;
     color: var(--app-muted);
+    font-size: .8rem;
   }
 }
 
 .heroLinks {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
-  gap: 28px;
-  margin-top: 30px;
+  align-items: center;
+  gap: 8px;
 
-  >a {
+  > a {
     display: inline-flex;
-    gap: 10px;
     align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid var(--app-border);
+    border-radius: 9px;
+    font: 600 .75rem $font-accent;
     text-decoration: none;
-    font: 650 .75rem $font-accent;
   }
 }
-
-.connectionArt {
-  position: relative;
-  min-height: 355px;
-  width: min(460px, 100%);
-  justify-self: end;
-}
-
-.connectionLine {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  stroke: var(--app-primary);
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-
-.ideaNote,
-.talentNote {
-  position: absolute;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #171917;
-  box-shadow: 7px 9px 0 color-mix(in srgb, var(--app-text) 10%, transparent);
-  border-radius: 18px;
-  color: #171917;
-
-  small {
-    font: 600 .55rem $font-accent;
-    letter-spacing: .1em;
-  }
-
-  strong {
-    font: 750 2.5rem/1 $font-heading;
-    letter-spacing: -.055em;
-    margin: 14px 0;
-  }
-
-  >span:last-child {
-    font-size: .68rem;
-  }
-}
-
-.ideaNote {
-  top: 35px;
-  left: 6%;
-  width: 185px;
-  padding: 22px;
-  background: var(--yp-lime);
-  transform: rotate(-8deg);
-
-  >svg {
-    width: 27px;
-    height: 27px;
-    margin-bottom: 16px;
-  }
-
-  animation:noteFloat 7s ease-in-out infinite;
-}
-
-.talentNote {
-  right: 0;
-  top: 138px;
-  width: 225px;
-  padding: 24px;
-  background: #e4ddff;
-  transform: rotate(7deg);
-}
-
-.talentMarks {
-  display: flex;
-  margin: -46px 0 22px;
-
-  b {
-    display: grid;
-    place-items: center;
-    width: 48px;
-    height: 48px;
-    border: 1px solid #171917;
-    border-radius: 50%;
-    font: 600 26px $font-heading;
-    background: #ffe3c9;
-
-    &:nth-child(2) {
-      background: #fffdf7;
-      margin-left: -10px;
-      transform: translateY(-7px);
-    }
-
-    &:nth-child(3) {
-      background: #d8ff72;
-      margin-left: -10px;
-    }
-  }
-}
-
-.talentMarks b>svg {
-  width: 24px;
-  height: 24px;
-  stroke-width: 1.8;
-}
-
-.ideaNote>span:last-child {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-
-  >svg {
-    width: 14px;
-    height: 14px;
-    flex-shrink: 0;
-  }
-}
-
-.matchSeal {
-  position: absolute;
-  bottom: 7px;
-  left: 17%;
-  display: grid;
-  justify-items: center;
-  gap: 7px;
-  padding: 17px 22px;
-  border: 1px dashed var(--app-primary);
-  border-radius: 50%;
-  color: var(--app-primary);
-  transform: rotate(-12deg);
-  font: 650 .6rem/1.4 $font-accent;
-  text-align: center;
-
-  >svg {
-    width: 20px;
-    height: 20px;
-  }
-}
-
-.processBand {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 22px;
-  border-top: 1px solid var(--app-border);
-  border-bottom: 1px solid var(--app-border);
-  padding: 23px 0;
-  margin-bottom: 64px;
-  font-size: .76rem;
-
-  b {
-    margin-right: 8px;
-    color: var(--app-primary);
-    font-family: $font-accent;
-    font-size: .65rem;
-  }
-
-  >svg {
-    color: var(--app-muted);
-    width: 16px;
-  }
-
-  small {
-    margin-left: auto;
-    color: var(--app-muted);
-    font-size: .7rem;
-  }
-}
-
 .browseLayout {
   display: grid;
   grid-template-columns: 290px minmax(0, 1fr);
@@ -1893,7 +1776,7 @@
 
     button {
       justify-content: flex-start;
-      min-height: 34px;
+      min-height: 44px;
       padding: 7px 10px;
       font-size: .65rem;
       border-radius: 7px;
@@ -1901,9 +1784,9 @@
     }
 
     button[aria-pressed=true] {
-      background: var(--app-text);
-      color: var(--app-bg);
-      box-shadow: 2px 3px 0 var(--app-primary);
+      background: var(--yp-lime);
+      color: #171917;
+      box-shadow: 2px 3px 0 var(--yp-shadow);
     }
   }
 
@@ -1954,104 +1837,20 @@
   }
 }
 
-@keyframes noteFloat {
-  50% {
-    transform: translateY(-8px) rotate(-5deg);
-  }
-}
-
-@media(max-width:1150px) {
+@media (max-width: 1150px) {
   .browseLayout {
     grid-template-columns: 250px minmax(0, 1fr);
     gap: 24px;
   }
+}
 
-  .browseHero {
-    grid-template-columns: minmax(0, 1.3fr) minmax(300px, 1fr);
-  }
-
-  .connectionArt {
-    transform: scale(.9);
-    transform-origin: right center;
+@media (max-width: 900px) {
+  .section.browsePage .cardGrid {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
-@media(max-width:900px) {
-  .browsePage .cardGrid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .browseHero {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
-    padding-bottom: 40px;
-  }
-
-  .connectionArt {
-    justify-self: center;
-    transform: none;
-  }
-
-  .heroCopy h1 {
-    font-size: clamp(3rem, 7.5vw, 5rem);
-  }
-
-  .processBand {
-    gap: 15px;
-    margin-bottom: 40px;
-
-    small {
-      flex-basis: 100%;
-      margin-left: 0;
-    }
-  }
-}
-
-@media(max-width:650px) {
-  .browsePage {
-    padding: calc(105px + var(--safe-top, 0px)) 20px 40px;
-  }
-
-  .heroCopy h1 {
-    font-size: clamp(2.3rem, 8.2vw, 3.8rem);
-  }
-
-  .heroCopy>p {
-    font-size: .9rem;
-  }
-
-  .connectionArt {
-    width: 100%;
-    max-width: 390px;
-    min-height: 320px;
-  }
-
-  .ideaNote {
-    left: 0;
-    width: 160px;
-    padding: 18px;
-
-    strong {
-      font-size: 2.2rem;
-    }
-  }
-
-  .talentNote {
-    width: 185px;
-    padding: 20px;
-
-    strong {
-      font-size: 2rem;
-    }
-  }
-
-  .matchSeal {
-    bottom: 0;
-    left: 6%;
-    font-size: .5rem;
-    padding: 12px 18px;
-  }
-
+@media (max-width: 650px) {
   .browseLayout {
     grid-template-columns: minmax(0, 1fr);
     gap: 36px;
@@ -2067,7 +1866,7 @@
     }
   }
 
-  .browsePage .resultsHeader {
+  .section.browsePage .resultsHeader {
     align-items: start;
     gap: 12px;
 
@@ -2078,20 +1877,6 @@
     >span {
       margin-top: 24px;
       font-size: .6rem;
-    }
-  }
-
-  .processBand {
-    gap: 14px 12px;
-    font-size: .65rem;
-
-    b {
-      margin-right: 3px;
-      font-size: .55rem;
-    }
-
-    >svg {
-      width: 12px;
     }
   }
 
@@ -2109,25 +1894,13 @@
   }
 }
 
-@media(max-width:360px) {
+@media (max-width: 360px) {
   .browsePage .searchPanel .twoColumns {
     grid-template-columns: minmax(0, 1fr);
   }
-
-  .talentNote {
-    width: 165px;
-  }
-
-  .processBand>svg {
-    display: none;
-  }
 }
 
-@media(prefers-reduced-motion:reduce) {
-  .ideaNote {
-    animation: none;
-  }
-
+@media (prefers-reduced-motion: reduce) {
   .cardIllustration>svg,
   .cardIllustration::before,
   .cardStamp,

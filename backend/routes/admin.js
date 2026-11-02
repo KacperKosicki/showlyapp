@@ -4,6 +4,7 @@ const router = express.Router();
 
 const requireAuth = require("../middleware/requireAuth");
 const requireRole = require("../middleware/requireRole");
+const { achievementCatalog } = require("../utils/achievements");
 
 const User = require("../models/User");
 const Profile = require("../models/Profile");
@@ -81,6 +82,10 @@ async function addFirebaseOwnersToMap(ownersByUid, ownerUids) {
 }
 
 // ✅ Statystyki (admin only)
+router.get("/achievements", requireAuth, requireRole(["admin", "mod"]), (req, res) => {
+  res.json(achievementCatalog());
+});
+
 router.get("/stats", requireAuth, requireRole(["admin"]), async (req, res) => {
   const usersSync = await syncAuthUsersSafely();
 

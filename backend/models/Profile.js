@@ -417,6 +417,9 @@ const profileSchema = new mongoose.Schema(
       index: true,
     },
 
+    earnedAchievements: { type: [String], default: [], select: false },
+    featuredAchievements: { type: [String], default: [], select: false },
+
     name: { type: String, default: "", trim: true },
 
     avatar: {

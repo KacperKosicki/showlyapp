@@ -259,6 +259,7 @@ const AboutApp = ({ user, hasProfile, loadingProfileStatus }) => {
                   style={{ "--reveal-delay": `${index * 80}ms` }}
                   key={item.number}
                 >
+                  <Icon className={styles.benefitWatermark} aria-hidden="true" />
                   <div className={styles.benefitTop}>
                     <span>{item.number}</span>
                     <span className={styles.benefitIcon}>

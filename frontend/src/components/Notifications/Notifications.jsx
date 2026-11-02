@@ -666,7 +666,6 @@ const Notifications = ({ user, setUnreadCount }) => {
         <div className={styles.panel}>
           <header className={styles.panelHeader}>
             <div className={styles.titleBlock}>
-              <span className={styles.kicker}>Showly / Wiadomości</span>
               <h1>Twoje rozmowy.<span>Wszystko na miejscu.</span></h1>
               <p>Rozmowy z klientami, kontakt z profilami, zgłoszenia do ogłoszeń i komunikaty Showly w jednym miejscu.</p>
 
