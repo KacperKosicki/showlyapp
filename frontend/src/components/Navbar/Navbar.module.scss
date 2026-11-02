@@ -448,6 +448,12 @@
   }
 }
 
+@media (max-width: 760px) {
+  .right {
+    position: static;
+  }
+}
+
 @media (max-width: 720px) {
   .navbarShell {
     padding:
