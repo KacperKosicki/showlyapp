@@ -592,9 +592,7 @@ export const AccountSettingsView = ({
                 </div>
               </fieldset>
             </div>
-            <div className={styles.setting}>
-              <NotificationSettings user={user} />
-            </div>
+            <NotificationSettings user={user} />
           </div>
           <footer className={styles.panelFooter}>
             <FiShield aria-hidden="true" />
