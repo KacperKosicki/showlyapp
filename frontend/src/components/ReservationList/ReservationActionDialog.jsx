@@ -47,11 +47,10 @@ const ReservationActionDialog = ({ title, description, label, confirmText, requi
       <form ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="reservation-action-title" aria-describedby="reservation-action-description" onSubmit={submit} noValidate>
         <header className={styles.header}>
           <FiCalendar className={styles.icon} aria-hidden="true" />
-          <div><h2 id="reservation-action-title">{title}</h2></div>
+          <div><h2 id="reservation-action-title">{title}</h2><p id="reservation-action-description">{description}</p></div>
           <button type="button" className={styles.close} aria-label="Zamknij okno" onClick={() => onComplete(null)}><FiX /></button>
         </header>
         <div className={styles.body}>
-          <p id="reservation-action-description">{description}</p>
           <label className={styles.field} htmlFor="reservation-action-text">{label}</label>
           <textarea ref={inputRef} id="reservation-action-text" value={value} onChange={(event) => { setValue(event.target.value); setError(''); }} maxLength={maxLength} aria-required={required} aria-invalid={!!error} aria-describedby={error ? 'reservation-action-error' : 'reservation-action-count'} placeholder={required ? 'Wpisz tutaj…' : 'Możesz zostawić to pole puste.'} />
           <div className={styles.counter} id="reservation-action-count">{value.length} / {maxLength}</div>
