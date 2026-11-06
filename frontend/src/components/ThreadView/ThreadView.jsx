@@ -4,12 +4,13 @@ import axios from "axios";
 import styles from "./ThreadView.module.scss";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import AlertBox from "../AlertBox/AlertBox";
+import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import { conversationStatus as unavailableStatus } from '../Notifications/conversationStatus';
 
 import {
   FaArrowLeft,
   FaRegCommentDots,
-  FaRegEye,
+  FaChevronDown,
   FaPaperPlane,
   FaInfoCircle,
   FaLock,
@@ -539,15 +540,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
     return profA || accA || "";
   }, [receiverId, profileMetaMap, accountAvatarMap, channel, firstFromUid, user?.uid]);
 
-  const statusLabel = useMemo(() => {
-    if (!showFaq) return "";
-    if (profileStatus === "loading") return "Ładowanie profilu…";
-    if (profileStatus === "missing") return "Brak wizytówki";
-    if (profileStatus === "expired") return "Wizytówka wygasła";
-    if (profileStatus === "error") return "Błąd profilu";
-    return "Wizytówka aktywna";
-  }, [profileStatus, showFaq]);
-
   const ThreadSkeleton = () => (
     <div className={styles.loadingBox}>
       <DataLoader label="Ładujemy rozmowę…" layout="none" />
@@ -626,21 +618,17 @@ const ThreadView = ({ user, setUnreadCount }) => {
   const myUid = auth.currentUser?.uid || user?.uid;
   if (unavailableReason) {
     const status = unavailableStatus(unavailableReason);
-    return <div id="threadPageLayout" className={styles.page}><div className={styles.shell}><div className={styles.threadWrapper}>
+    return <div id="threadPageLayout" className={styles.page}>
+      <PanelBackdrop word="WIADOMOŚCI" /><div className={styles.shell}><div className={styles.threadWrapper}>
       <div className={styles.unavailableBox} role="status"><FaLock aria-hidden="true" /><h2>{status[0]}</h2><p>{status[1]}</p>
         <button type="button" onClick={() => navigate('/powiadomienia')}><FaArrowLeft aria-hidden="true" />Wróć do powiadomień</button>
       </div>
     </div></div></div>;
   }
-  const messageCount = messages.length;
-  const conversationStatus = loading
-    ? "Ładowanie rozmowy"
-    : receiverId === "SYSTEM" || messages[messages.length - 1]?.isSystem
-      ? "Wiadomości od Showly"
-      : canReply ? "Możesz odpowiedzieć" : "Czekasz na odpowiedź";
 
   return (
     <div id="threadPageLayout" className={styles.page}>
+      <PanelBackdrop word="WIADOMOŚCI" />
       <div className={styles.shell}>
         {flash && (
           <AlertBox
@@ -667,66 +655,19 @@ const ThreadView = ({ user, setUnreadCount }) => {
               </button>
             </div>
 
-            <header className={styles.hero}>
-              <div className={styles.heroTopBar}>
-                <div className={styles.heroBadge} title={statusLabel || ""}>
-                  <FaRegCommentDots />
-                  <span>
-                    <strong>{messageCount}</strong>{" "}
-                    {messageCount === 1 ? "wiadomość" : "wiadomości"}
-                  </span>
-                </div>
-
-                {showFaq && (
-                  <div className={styles.heroBadgeSoft}>
-                    <FaRegEye />
-                    <span>{statusLabel || "Profil"}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className={styles.heroInner}>
-                <div className={styles.heroLeft}>
-                  <span className={styles.kicker}>
-                    <FaComments />
-                    Konwersacja
-                  </span>
-
-                  <div className={styles.titleRow}>
-                    <h1 className={styles.heroTitle}>
-                      Rozmowa z {renderNameNode(receiverName)}
-                    </h1>
-                  </div>
-
-                  <div className={styles.metaRow}>
-                    <span className={styles.conversationStatus}>{conversationStatus}</span>
-                    <span className={styles.dot} aria-hidden="true" />
-                    <span>
-                      {receiverId === "SYSTEM" ? "Komunikaty dla Twojego konta" : amProfileSide ? "Piszesz jako wizytówka" : "Piszesz jako konto"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className={styles.heroRight}>
-                  <div className={styles.avatarWrap}>
-                    <img
-                      src={receiverHeroAvatar || DEFAULT_AVATAR}
-                      alt=""
-                      className={styles.avatar}
-                      decoding="async"
-                      referrerPolicy="no-referrer"
-                      onError={event => { if (event.currentTarget.getAttribute('src') !== DEFAULT_AVATAR) event.currentTarget.src = DEFAULT_AVATAR; }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </header>
-
             <section className={styles.threadCard} aria-label="Historia rozmowy">
-              <div className={styles.threadHeading}>
-                <span className={styles.sectionKicker}>01 / Historia rozmowy</span>
-                <FaRegCommentDots aria-hidden="true" />
-              </div>
+              <header className={styles.chatHeader}>
+                <img
+                  src={receiverHeroAvatar || DEFAULT_AVATAR}
+                  alt=""
+                  className={styles.avatar}
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                  onError={event => { if (event.currentTarget.getAttribute('src') !== DEFAULT_AVATAR) event.currentTarget.src = DEFAULT_AVATAR; }}
+                />
+                <h1 className={styles.heroTitle}>{renderNameNode(receiverName)}</h1>
+                <FaComments className={styles.headerIcon} aria-hidden="true" />
+              </header>
               {loading ? (
                 <ThreadSkeleton />
               ) : (
@@ -792,9 +733,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
                                   />
                                 )}
 
-                                <span className={styles.senderTag}>
-                                  {kind === "profile" ? "PROFIL" : "KONTO"}
-                                </span>
                               </p>
                             )}
 
@@ -818,10 +756,6 @@ const ThreadView = ({ user, setUnreadCount }) => {
                   </div>
 
                   <div className={styles.replyArea}>
-                    <div className={styles.replyHeading}>
-                      <span className={styles.sectionKicker}>02 / Twoja odpowiedź</span>
-                      <p>Każda dobra współpraca zaczyna się od rozmowy.</p>
-                    </div>
                     {(() => {
                       const last = messages[messages.length - 1];
                       if (!last) return (
@@ -849,8 +783,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
                               <FaHourglassHalf />
                             </span>
                             <p>
-                              Wysłałeś/aś wiadomość. Czekasz teraz na odpowiedź
-                              drugiej osoby.
+                              Wiadomość wysłana. Kolejną możesz napisać po odpowiedzi drugiej osoby.
                             </p>
                           </div>
                         );
@@ -859,7 +792,7 @@ const ThreadView = ({ user, setUnreadCount }) => {
                       if (canReply) {
                         return (
                           <form onSubmit={handleReply} className={styles.form}>
-                            <div className={styles.senderHint}>{mySenderLabel}</div>
+                            {amProfileSide && <div className={styles.senderHint}>{mySenderLabel}</div>}
                             <label className={styles.inputLabel} htmlFor="thread-reply">Treść wiadomości</label>
                             <textarea
                               id="thread-reply"
@@ -876,16 +809,14 @@ const ThreadView = ({ user, setUnreadCount }) => {
                             />
 
                             <div className={styles.textareaMeta}>
-                              <span>Odpowiadasz w aktualnej konwersacji.</span>
                               <strong id="thread-reply-counter">
                                 {newMessage.length} / {maxChars}
                               </strong>
+                              <button className={styles.primaryBtn} type="submit" disabled={!newMessage.trim()}>
+                                <FaPaperPlane aria-hidden="true" />
+                                Wyślij
+                              </button>
                             </div>
-
-                            <button className={styles.primaryBtn} type="submit">
-                              <FaPaperPlane />
-                              Wyślij wiadomość
-                            </button>
                           </form>
                         );
                       }
@@ -912,17 +843,9 @@ const ThreadView = ({ user, setUnreadCount }) => {
               <div className={styles.faqBox}>
                 <div className={styles.quickAnswers}>
                   <div className={styles.faqHeader}>
-                    <span className={styles.sectionKicker}>
-                      <FaInfoCircle />
-                      Warto wiedzieć
-                    </span>
-
-                    <h3>
-                      Zanim zapytasz{" "}
-                      <span className={styles.faqReceiverName}>
-                        {receiverName || ""}
-                      </span>
-                    </h3>
+                    <span className={styles.faqTag}><FaRegCommentDots aria-hidden="true" /> Pytania i odpowiedzi</span>
+                    <h2>Zanim napiszesz</h2>
+                    <p>Sprawdź odpowiedzi od {receiverName || "usługodawcy"}.</p>
                   </div>
 
                   {profileStatus === "loading" && (
@@ -963,8 +886,10 @@ const ThreadView = ({ user, setUnreadCount }) => {
                             )
                             .map((qa, i) => (
                               <li key={i}>
-                                <strong>{qa.title}</strong>
-                                <span>{qa.answer}</span>
+                                <details className={styles.faqItem}>
+                                  <summary>{qa.title?.trim() || "Dodatkowe informacje"}<FaChevronDown aria-hidden="true" /></summary>
+                                  <p>{qa.answer?.trim() || "Zapytaj o szczegóły w wiadomości."}</p>
+                                </details>
                               </li>
                             ))}
                         </ul>

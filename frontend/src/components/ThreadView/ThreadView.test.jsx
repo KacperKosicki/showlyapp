@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import axios from 'axios';
 import ThreadView from './ThreadView';
@@ -16,6 +16,48 @@ let consoleError;
 beforeEach(() => {
   jest.clearAllMocks();
   consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+});
+
+const mockChat = ({ outgoing = false, withFaq = false } = {}) => {
+  axios.get.mockImplementation(async url => {
+    if (url.includes('/api/conversations/')) return { data: {
+      channel: withFaq ? 'account_to_profile' : 'account_to_account',
+      firstFromUid: withFaq ? 'owner' : 'anna',
+      participants: [{ uid: 'owner', displayName: 'Ja' }, { uid: 'anna', displayName: 'Anna' }],
+      messages: [{ _id: 'm1', fromUid: outgoing ? 'owner' : 'anna', toUid: outgoing ? 'anna' : 'owner', content: 'Dzień dobry!', read: true, createdAt: '2026-11-06T09:00:00Z' }],
+    } };
+    return { data: { name: 'Anna', quickAnswers: [{ title: 'Jak się przygotować?', answer: 'Przyjdź 5 minut wcześniej.' }] } };
+  });
+};
+
+test('FAQ answers are collapsed until opened and a reply sends the entered content', async () => {
+  mockChat({ withFaq: true });
+  axios.post.mockResolvedValue({ data: {} });
+  render(<ThreadView user={{ uid: 'owner' }} />);
+  const question = await screen.findByText('Jak się przygotować?');
+  const details = question.closest('details');
+  expect(details).not.toHaveAttribute('open');
+  fireEvent.click(question);
+  expect(details).toHaveAttribute('open');
+  expect(screen.getByText('Przyjdź 5 minut wcześniej.')).toBeVisible();
+  const send = screen.getByRole('button', { name: 'Wyślij' });
+  expect(send).toBeDisabled();
+  fireEvent.change(screen.getByRole('textbox', { name: 'Treść wiadomości' }), { target: { value: 'Dziękuję, do zobaczenia!' } });
+  fireEvent.click(send);
+  await waitFor(() => expect(axios.post).toHaveBeenCalledWith(
+    expect.stringContaining('/api/conversations/send'),
+    expect.objectContaining({ content: 'Dziękuję, do zobaczenia!', to: 'anna', conversationId: 'removed' }),
+    expect.any(Object),
+  ));
+  expect(screen.queryByText('01 / Historia rozmowy')).not.toBeInTheDocument();
+  expect(screen.queryByText('Piszesz jako konto')).not.toBeInTheDocument();
+});
+
+test('a sent message keeps the reply restriction visible without displaying a composer', async () => {
+  mockChat({ outgoing: true });
+  render(<ThreadView user={{ uid: 'owner' }} />);
+  expect(await screen.findByText(/Kolejną możesz napisać po odpowiedzi drugiej osoby/)).toBeInTheDocument();
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
 });
 afterEach(() => consoleError.mockRestore());
 
