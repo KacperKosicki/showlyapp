@@ -77,6 +77,7 @@
 .date { flex-shrink: 0; color: var(--app-muted); font-size: 10px; line-height: 1.7; white-space: nowrap; }
 .message { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 9px 0 0; font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
 .unread .message { font-weight: 600; }
+.messageSender { font-weight: 700; color: var(--app-text); }
 .bottomRow { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding-top: 12px; border-top: 1px solid var(--app-border); }
 .unreadLabel, .readLabel { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; }
 .unreadLabel { color: var(--app-primary); font-weight: 600; &::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; } }

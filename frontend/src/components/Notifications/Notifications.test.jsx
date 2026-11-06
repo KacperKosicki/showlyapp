@@ -17,17 +17,33 @@ const announcementThread = {
   announcement: { id: 'listing', title: 'Szukam DJ-a na wesele', deleted: false },
   lastMessage: { content: 'Chętnie poprowadzę Wasze wydarzenie.', createdAt: '2026-10-08T12:00:00Z' },
 };
-const setup = (uid, threads) => {
+const setup = (uid, threads, hasProfile = false) => {
   auth.currentUser.uid = uid;
   axios.get.mockImplementation(async url => {
     if (url.includes('/conversations/by-uid/')) return { data: threads };
-    return { data: url.endsWith('/provider') ? { _id: 'profile', name: 'DJ Studio' } : null };
+    return { data: url.endsWith('/provider') ? { _id: 'profile', name: 'DJ Studio' } : hasProfile ? { _id: 'mine', name: 'Mój profil' } : null };
   });
   const setUnreadCount = jest.fn();
   render(<Notifications user={{ uid }} setUnreadCount={setUnreadCount} />);
   return setUnreadCount;
 };
 beforeEach(() => axios.get.mockReset());
+
+test.each([
+  ['account_to_profile', 'owner', 'owner', 'Ty:'],
+  ['account_to_profile', 'owner', 'provider', 'DJ Studio:'],
+  ['account_to_profile', 'provider', 'provider', 'Konto DJ:'],
+  ['profile_to_account', 'provider', 'provider', 'DJ Studio:'],
+  ['profile_to_account', 'owner', 'provider', 'Konto DJ:'],
+  ['system', 'SYSTEM', 'SYSTEM', 'Showly.me:'],
+])('last message identifies its sender for %s, started by %s and sent by %s', async (channel, firstFromUid, fromUid, label) => {
+  setup('owner', [{ ...announcementThread, channel, firstFromUid,
+    lastMessage: { ...announcementThread.lastMessage, fromUid },
+  }], true);
+  expect(await screen.findByText(label)).toBeInTheDocument();
+  const preview = screen.getByText('Chętnie poprowadzę Wasze wydarzenie.');
+  expect(preview).toHaveTextContent(`${label} Chętnie poprowadzę Wasze wydarzenie.`);
+});
 
 test('an author without a provider profile sees announcement conversations and their unread count', async () => {
   const setUnreadCount = setup('owner', [announcementThread]);

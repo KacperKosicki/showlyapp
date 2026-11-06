@@ -446,6 +446,17 @@ const Notifications = ({ user, setUnreadCount }) => {
 
     const isUnread = (conversation.unreadCount || 0) > 0;
     const otherUid = conversation.withUid;
+    const myUid = user?.uid || auth.currentUser?.uid;
+    const otherIsProfile =
+      (conversation.channel === 'account_to_profile' && conversation.firstFromUid === myUid) ||
+      (conversation.channel === 'profile_to_account' && conversation.firstFromUid !== myUid);
+    const lastSender = variant === 'system' || lastMessage.isSystem || lastMessage.fromUid === 'SYSTEM'
+      ? 'Showly.me'
+      : lastMessage.fromUid && myUid && lastMessage.fromUid === myUid
+        ? 'Ty'
+        : lastMessage.fromUid === otherUid && otherUid
+          ? getName(otherUid, conversation.withDisplayName, otherIsProfile ? 'profile' : 'account') || conversation.withDisplayName || 'Użytkownik'
+          : '';
     const avatarSrc = getAvatarSrc(conversation, variant);
     const unavailable = conversation.availability?.canOpen === false || conversation.announcement?.deleted;
     const status = conversationStatus(conversation.announcement?.deleted ? 'announcement_deleted' : conversation.availability?.reason);
@@ -464,7 +475,7 @@ const Notifications = ({ user, setUnreadCount }) => {
         <>
           <FiInbox className={styles.icon} />
           <span className={styles.metaText}>
-            Wiadomość od {renderNameNode(rawName)}
+            Rozmowa z {renderNameNode(rawName)}
           </span>
         </>
       );
@@ -542,7 +553,10 @@ const Notifications = ({ user, setUnreadCount }) => {
                   {formatMessageDate(lastMessage.createdAt)}
                 </time>
               </div>
-              <p className={styles.message}>{lastMessage.content}</p>
+              <p className={styles.message}>
+                {lastSender && <strong className={styles.messageSender}>{lastSender}: </strong>}
+                {lastMessage.content}
+              </p>
             </div>
 
               {variant === "announcement" && (
