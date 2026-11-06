@@ -9,7 +9,6 @@ import { conversationStatus as unavailableStatus } from '../Notifications/conver
 import {
   FaArrowLeft,
   FaRegCommentDots,
-  FaUserCircle,
   FaRegEye,
   FaPaperPlane,
   FaInfoCircle,
@@ -710,25 +709,14 @@ const ThreadView = ({ user, setUnreadCount }) => {
 
                 <div className={styles.heroRight}>
                   <div className={styles.avatarWrap}>
-                    {receiverHeroAvatar ? (
-                      <img
-                        src={receiverHeroAvatar}
-                        alt=""
-                        className={styles.avatar}
-                        decoding="async"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          e.currentTarget.src = DEFAULT_AVATAR;
-                        }}
-                      />
-                    ) : (
-                      <div
-                        className={`${styles.avatar} ${styles.avatarSkeleton} ${styles.shimmer}`}
-                      >
-                        <FaUserCircle />
-                      </div>
-                    )}
-
+                    <img
+                      src={receiverHeroAvatar || DEFAULT_AVATAR}
+                      alt=""
+                      className={styles.avatar}
+                      decoding="async"
+                      referrerPolicy="no-referrer"
+                      onError={event => { if (event.currentTarget.getAttribute('src') !== DEFAULT_AVATAR) event.currentTarget.src = DEFAULT_AVATAR; }}
+                    />
                   </div>
                 </div>
               </div>
@@ -779,22 +767,14 @@ const ThreadView = ({ user, setUnreadCount }) => {
                         >
                           {!msg.isSystem && (
                             <div className={styles.msgAvatarWrap}>
-                              {avatarSrc ? (
-                                <img
-                                  src={avatarSrc}
-                                  alt=""
-                                  className={styles.msgAvatar}
-                                  referrerPolicy="no-referrer"
-                                  decoding="async"
-                                  onError={(e) => {
-                                    e.currentTarget.src = DEFAULT_AVATAR;
-                                  }}
-                                />
-                              ) : (
-                                <div
-                                  className={`${styles.msgAvatar} ${styles.avatarSkeleton} ${styles.shimmer}`}
-                                />
-                              )}
+                              <img
+                                src={avatarSrc || DEFAULT_AVATAR}
+                                alt=""
+                                className={styles.msgAvatar}
+                                referrerPolicy="no-referrer"
+                                decoding="async"
+                                onError={event => { if (event.currentTarget.getAttribute('src') !== DEFAULT_AVATAR) event.currentTarget.src = DEFAULT_AVATAR; }}
+                              />
                             </div>
                           )}
 

@@ -1,9 +1,9 @@
 // BookingModeOpen.jsx — czyste zapytanie bez kalendarza
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styles from "./BookingModeOpen.module.scss";
-import { FiChevronDown } from "react-icons/fi";
-import BookingSteps from "./BookingSteps";
+import styles from "./BookingControls.module.scss";
+import BookingServicePicker from "./BookingServicePicker";
+import { FiSend } from "react-icons/fi";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
 import { api } from "../../api/api";
 
@@ -50,12 +50,8 @@ export default function BookingModeOpen({
     selectedService?._id,
   ]);
 
-  const handleServiceChange = (e) => {
-    const svc = activeServices.find(
-      (s) => String(s._id) === String(e.target.value)
-    );
-
-    setSelectedService(svc || null);
+  const handleServiceChange = (svc) => {
+    setSelectedService(svc);
 
     if (svc) {
       setSubject(`Zapytanie o usługę: ${svc.name}`);
@@ -209,155 +205,17 @@ export default function BookingModeOpen({
     }
   };
 
-  const messagePreview = buildContent();
-
-  return (
-    <form className={styles.form} onSubmit={handleSubmit}>
-      <BookingSteps className={styles.progress} steps={[{ label: "Opisz swój pomysł", done: Boolean(message.trim()) }, { label: "Sprawdź i wyślij", done: false }]} />
-      <div className={styles.introBox}>
-        <span className={styles.introNumber}>01</span>
-
-        <div>
-          <strong>Wyślij zapytanie bez wybierania terminu</strong>
-
-          <p>
-            Ten profil działa w trybie otwartym — opisz, czego potrzebujesz, a
-            usługodawca odpowie Ci w konwersacji.
-          </p>
-        </div>
-      </div>
-
-      <label className={`${styles.field} ${styles.messageField}`}>
-        <div className={styles.fieldHeader}>
-          <div>
-            <span className={styles.fieldEyebrow}>01 / Twój pomysł</span>
-            <h3 className={styles.fieldTitle}>Wiadomość</h3>
-          </div>
-
-          <span className={styles.fieldHint}>wymagane</span>
-        </div>
-
-        <textarea
-          className={styles.textarea}
-          rows="5"
-          required
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Opisz krótko czego potrzebujesz, budżet, termin orientacyjny itp."
-          disabled={sending}
-        />
-      </label>
-
+  return <form className={styles.form} onSubmit={handleSubmit}>
+    {activeServices.length > 0 && <BookingServicePicker services={activeServices} value={selectedService} onChange={handleServiceChange} disabled={sending} optional />}
+    <label className={styles.field}>Wiadomość<textarea rows="5" required value={message} onChange={event => setMessage(event.target.value)} placeholder="Czego potrzebujesz i jaki termin Ci odpowiada?" disabled={sending} /></label>
+    <details className={styles.details}><summary>Dodatkowe dane (opcjonalnie)</summary>
       <div className={styles.topGrid}>
-        <label className={styles.field}>
-          <div className={styles.fieldHeader}>
-            <div>
-              <span className={styles.fieldEyebrow}>02 / Szczegóły</span>
-              <h3 className={styles.fieldTitle}>Temat wiadomości</h3>
-            </div>
-
-            <span className={styles.fieldHint}>opcjonalnie</span>
-          </div>
-
-          <input
-            className={styles.input}
-            type="text"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            placeholder="Np. Wycena strony internetowej"
-            disabled={sending}
-          />
-        </label>
-
-        <label className={styles.field}>
-          <div className={styles.fieldHeader}>
-            <div>
-              <span className={styles.fieldEyebrow}>02 / Kontakt</span>
-              <h3 className={styles.fieldTitle}>Telefon</h3>
-            </div>
-
-            <span className={styles.fieldHint}>opcjonalnie</span>
-          </div>
-
-          <input
-            className={styles.input}
-            type="tel"
-            autoComplete="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Np. 500 600 700"
-            disabled={sending}
-          />
-        </label>
-
-        {activeServices.length > 0 && (
-          <label className={styles.field}>
-            <div className={styles.fieldHeader}>
-              <div>
-                <span className={styles.fieldEyebrow}>02 / Usługa</span>
-                <h3 className={styles.fieldTitle}>Wybierz usługę</h3>
-              </div>
-
-              <span className={styles.fieldHint}>opcjonalnie</span>
-            </div>
-
-            <div className={styles.selectWrap}>
-              <select
-                className={styles.select}
-                value={selectedService?._id || ""}
-                onChange={handleServiceChange}
-                disabled={sending}
-              >
-                <option value="">– bez wyboru –</option>
-
-                {activeServices.map((s) => (
-                  <option key={s._id} value={s._id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-
-              <span className={styles.selectChevron} aria-hidden="true">
-                <FiChevronDown />
-              </span>
-            </div>
-          </label>
-        )}
+        <label className={styles.field}>Temat wiadomości<input type="text" value={subject} onChange={event => setSubject(event.target.value)} disabled={sending} /></label>
+        <label className={styles.field}>Telefon<input type="tel" autoComplete="tel" value={phone} onChange={event => setPhone(event.target.value)} placeholder="500 600 700" disabled={sending} /></label>
       </div>
-
-      <details className={styles.previewBox}>
-        <summary className={styles.previewHead}>
-          <div>
-            <span className={styles.previewLabel}>Podgląd</span>
-            <strong>Co zostanie wysłane?</strong>
-          </div>
-
-          <FiChevronDown aria-hidden="true" />
-        </summary>
-
-        {messagePreview ? (
-          <pre className={styles.previewContent}>{messagePreview}</pre>
-        ) : (
-          <p className={styles.previewEmpty}>
-            Uzupełnij wiadomość, aby zobaczyć podgląd zapytania.
-          </p>
-        )}
-      </details>
-
-      <div className={styles.submitBar}>
-        <LoadingButton
-          type="submit"
-          isLoading={sending}
-          disabled={sending || !(message || "").trim()}
-          className={styles.submit}
-        >
-          Wyślij zapytanie
-        </LoadingButton>
-
-        <div className={styles.submitHint}>
-          Po wysłaniu zostaniesz przeniesiony do konwersacji z usługodawcą.
-        </div>
-      </div>
-    </form>
-  );
+    </details>
+    <details className={styles.details}><summary>Co zostanie wysłane?</summary><pre className={styles.preview}>{buildContent()}</pre></details>
+    <LoadingButton type="submit" isLoading={sending} disabled={sending || !message.trim()} className={styles.submit}><FiSend aria-hidden="true" />Wyślij zapytanie</LoadingButton>
+    <p className={styles.hint}>Po wysłaniu przejdziesz do rozmowy z usługodawcą.</p>
+  </form>;
 }

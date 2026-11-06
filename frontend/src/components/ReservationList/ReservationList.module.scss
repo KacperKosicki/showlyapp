@@ -1027,3 +1027,12 @@
 .searchField { @extend %workspace-search; }
 
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+.groupActions { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+.readAll { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; padding: 9px 12px; border: 1px solid var(--yp-frame); border-radius: 9px; background: var(--app-surface); color: var(--app-text); font: 600 11px/1.5 $font-accent; cursor: pointer; transition: background .18s; svg { width: 16px; height: 16px; flex-shrink: 0; } span { padding: 2px 6px; border-radius: 5px; background: var(--app-bg); font-size: 10px; } &:hover:not(:disabled) { background: var(--yp-lime); color: #171917; } &:disabled { opacity: .5; cursor: default; } }
+@media (max-width: 600px) {
+  .groupActions { display: contents; }
+  .groupHeader > .groupActions > .groupBadge { grid-column: 3; grid-row: 1; justify-self: end; }
+  .groupHeader > .groupActions > .readAll { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .readAll { transition: none; } }

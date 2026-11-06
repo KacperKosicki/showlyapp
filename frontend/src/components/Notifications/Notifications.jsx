@@ -1,3 +1,4 @@
+import WorkspaceEmptyState from "../ui/WorkspaceEmptyState/WorkspaceEmptyState";
 import DataLoader from '../ui/DataLoader/DataLoader';
 import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import {
@@ -601,19 +602,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     </li>
   );
 
-  const EmptyState = ({ icon, title, text }) => (
-    <div className={styles.emptyState}>
-      <span className={styles.emptyIcon}>{icon}</span>
-
-      <div>
-        <strong>{title}</strong>
-        <p>{text}</p>
-      </div>
-    </div>
-  );
-
   const renderGroup = ({
-    number,
     title,
     label,
     badge,
@@ -628,7 +617,7 @@ const Notifications = ({ user, setUnreadCount }) => {
     const visibleItems = items.filter(matchesConversation);
     if (hasFilter && (disabled || visibleItems.length === 0)) return null;
     return (
-    <EditorGroup title={`${number} / ${title}`} className={styles.messageGroup}>
+    <EditorGroup title={title} className={styles.messageGroup}>
       <header className={styles.groupHeader}>
         <span className={styles.groupIcon}>
           <Icon aria-hidden="true" />
@@ -643,10 +632,11 @@ const Notifications = ({ user, setUnreadCount }) => {
       </header>
 
       {disabled || visibleItems.length === 0 ? (
-        <EmptyState
+        <WorkspaceEmptyState
           icon={<Icon aria-hidden="true" />}
           title={emptyTitle}
           text={emptyText}
+          action={disabled ? { label: "Utwórz wizytówkę", to: "/stworz-profil" } : undefined}
         />
       ) : (
         <ul className={styles.list}>
@@ -679,7 +669,7 @@ const Notifications = ({ user, setUnreadCount }) => {
             <FiBell className={styles.headerIcon} aria-hidden="true" />
           </header>
 
-          <EditorGroup title="01 / Twoja skrzynka w liczbach" className={styles.summaryGroup}>
+          <EditorGroup title="Twoja skrzynka w liczbach" className={styles.summaryGroup}>
             <div className={styles.headerStats} aria-live="polite">
               <div className={styles.headerStat}>
                 <span>Nieprzeczytane</span>
@@ -707,7 +697,7 @@ const Notifications = ({ user, setUnreadCount }) => {
 
           <div className={styles.content}>
             {loading ? (
-              <EditorGroup title="02 / Twoje wiadomości" className={styles.messageGroup}>
+              <EditorGroup title="Twoje wiadomości" className={styles.messageGroup}>
                 <DataLoader label="Ładujemy Twoje wiadomości…" layout="none" />
 
                 <ul className={styles.list} aria-hidden="true">
@@ -718,9 +708,8 @@ const Notifications = ({ user, setUnreadCount }) => {
               </EditorGroup>
             ) : (
               <div className={styles.messages} data-single={category !== "all" || hasFilter}>
-                {hasFilter && visibleCount === 0 && <div className={styles.noResults}><FiSearch aria-hidden="true" /><h2>Nie znaleźliśmy rozmów</h2><p>Zmień wyszukiwaną frazę lub wyłącz filtr nieprzeczytanych.</p><button type="button" onClick={clearFilters}>Pokaż wszystkie rozmowy</button></div>}
+                {hasFilter && visibleCount === 0 && <WorkspaceEmptyState className={styles.emptyResults} icon={<FiSearch />} title="Nie znaleźliśmy rozmów" text="Zmień wyszukiwaną frazę lub wyłącz filtr nieprzeczytanych." action={{ label: "Pokaż wszystkie rozmowy", onClick: clearFilters }} />}
                 {renderGroup({
-                  number: "02",
                   title: `Wiadomości do profilu${myProfile?.name ? ` „${myProfile.name}”` : ""
                     }`,
                   label: "Odebrane przez profil",
@@ -742,7 +731,6 @@ const Notifications = ({ user, setUnreadCount }) => {
                 })}
 
                 {renderGroup({
-                  number: "03",
                   title: "Rozmowy z innymi profilami",
                   label: "Wysłane z Twojego konta",
                   badge:
@@ -758,7 +746,6 @@ const Notifications = ({ user, setUnreadCount }) => {
                 })}
 
                 {(category === "all" || category === "announcement") && (!hasFilter || announcementConversations.some(matchesConversation)) && <div id="announcementConversations" className={styles.announcementGroup}>{renderGroup({
-                  number: "04",
                   title: "Rozmowy z ogłoszeń",
                   label: "Twoje ogłoszenia i wysłane zgłoszenia",
                   badge: announcementUnread > 0
@@ -772,7 +759,6 @@ const Notifications = ({ user, setUnreadCount }) => {
                 })}</div>}
 
                 {renderGroup({
-                  number: "05",
                   title: "Wiadomości systemowe",
                   label: "Komunikaty Showly",
                   badge:

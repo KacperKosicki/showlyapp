@@ -519,6 +519,12 @@ const profileSchema = new mongoose.Schema(
       default: "request-open",
     },
 
+    dayBookingMode: {
+      type: String,
+      enum: ['exclusive-day', 'order', 'hours', 'stay'],
+      default: 'exclusive-day',
+    },
+
     autoAcceptReservations: {
       type: Boolean,
       default: false,

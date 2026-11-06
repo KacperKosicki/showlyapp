@@ -47,7 +47,7 @@ const ReservationActionDialog = ({ title, description, label, confirmText, requi
       <form ref={dialogRef} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="reservation-action-title" aria-describedby="reservation-action-description" onSubmit={submit} noValidate>
         <header className={styles.header}>
           <FiCalendar className={styles.icon} aria-hidden="true" />
-          <div><span>Showly / Twoja rezerwacja</span><h2 id="reservation-action-title">{title}</h2></div>
+          <div><h2 id="reservation-action-title">{title}</h2></div>
           <button type="button" className={styles.close} aria-label="Zamknij okno" onClick={() => onComplete(null)}><FiX /></button>
         </header>
         <div className={styles.body}>

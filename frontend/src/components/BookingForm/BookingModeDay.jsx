@@ -1,689 +1,120 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
-  format,
-  getDay,
-  addMonths,
-  subMonths,
-  isSameDay,
-  startOfDay,
-  isBefore,
-} from "date-fns";
-import { pl } from "date-fns/locale";
-import { useNavigate } from "react-router-dom";
-import styles from "./BookingModeDay.module.scss";
-import { FiChevronLeft, FiChevronRight, FiChevronDown } from "react-icons/fi";
-import BookingSteps from "./BookingSteps";
-import LoadingButton from "../ui/LoadingButton/LoadingButton";
-import { api } from "../../api/api";
+import { useEffect, useMemo, useState } from 'react';
+import { addDays, differenceInCalendarDays, format, getDay, isBefore, startOfDay } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
+import { FiCheckCircle, FiSend } from 'react-icons/fi';
+import styles from './BookingControls.module.scss';
+import BookingServicePicker from './BookingServicePicker';
+import BookingDatePicker from './BookingDatePicker';
+import BookingSummary from './BookingSummary';
+import LoadingButton from '../ui/LoadingButton/LoadingButton';
+import { api } from '../../api/api';
+import { dayBookingMode, dayBookingCopy, occursOn } from '../../utils/dayBooking';
 
-const CHANNEL = "account_to_profile";
-
-export default function BookingModeDay({
-  user,
-  provider,
-  pushAlert,
-  preselectedServiceId,
-}) {
-  const [unavailableDays, setUnavailableDays] = useState([]);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDate, setDate] = useState(null);
-  const [selectedService, setService] = useState(null);
-  const [onlyInquiry, setOnlyInquiry] = useState(false);
-  const [description, setDescription] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+export default function BookingModeDay({ user, provider, pushAlert, preselectedServiceId }) {
   const navigate = useNavigate();
-
-  const activeServices = useMemo(() => {
-    return (provider?.services || []).filter((s) => s?.isActive !== false);
-  }, [provider?.services]);
-
+  const kind = dayBookingMode(provider), copy = dayBookingCopy(provider);
+  const [currentMonth, setMonth] = useState(new Date());
+  const [date, setDate] = useState(null), [endDate, setEndDate] = useState(null);
+  const [service, setService] = useState(null), [inquiry, setInquiry] = useState(false);
+  const [fromTime, setFromTime] = useState(''), [toTime, setToTime] = useState('');
+  const [description, setDescription] = useState(''), [sending, setSending] = useState(false);
+  const [availability, setAvailability] = useState({ loading: true, error: false, unavailable: [], busy: [] });
+  const [reload, setReload] = useState(0);
+  const services = useMemo(() => (provider?.services || []).filter(item => item.isActive !== false), [provider?.services]);
   useEffect(() => {
-    if (!preselectedServiceId) return;
-    if (!activeServices.length) return;
-    if (selectedService?._id) return;
-
-    const svc = activeServices.find(
-      (s) => String(s._id) === String(preselectedServiceId)
-    );
-
-    if (svc) {
-      setService(svc);
-      setDate(null);
-    }
-  }, [preselectedServiceId, activeServices, selectedService?._id]);
-
-  const hasServices = activeServices.length > 0;
-  const serviceRequiredForBooking = hasServices && !onlyInquiry;
-
+    if (preselectedServiceId) setService(services.find(item => String(item._id) === String(preselectedServiceId)) || null);
+  }, [preselectedServiceId, services]);
   useEffect(() => {
-    if (!selectedService?._id) return;
-
-    const stillExists = activeServices.some(
-      (s) => String(s._id) === String(selectedService._id)
-    );
-
-    if (!stillExists) {
-      setService(null);
-      setDate(null);
-    }
-  }, [activeServices, selectedService]);
-
+    setDate(null); setEndDate(null); setFromTime(''); setToTime('');
+  }, [kind, service?._id]);
   useEffect(() => {
-    const loadUnavailable = async () => {
-      try {
-        if (!provider?.userId) return;
-
-        const { data } = await api.get(
-          `/api/reservations/unavailable-days/${provider.userId}`
-        );
-
-        setUnavailableDays(Array.isArray(data) ? data : []);
-      } catch {
-        setUnavailableDays([]);
-      }
-    };
-
-    loadUnavailable();
-  }, [provider?.userId]);
-
-  const isUnavailable = (yyyyMmDd) => unavailableDays.includes(yyyyMmDd);
-
-  const daysInMonth = useMemo(
-    () =>
-      eachDayOfInterval({
-        start: startOfMonth(currentMonth),
-        end: endOfMonth(currentMonth),
-      }),
-    [currentMonth]
-  );
-
-  const startDayIndex = useMemo(
-    () => (getDay(startOfMonth(currentMonth)) + 6) % 7,
-    [currentMonth]
-  );
-
-  const respectsWorkingDays = (day) => {
-    return Array.isArray(provider?.workingDays) && provider.workingDays.length
-      ? provider.workingDays.includes(getDay(day))
-      : true;
+    let alive = true;
+    setAvailability(prev => ({ ...prev, loading: true, error: false }));
+    Promise.all([api.get(`/api/reservations/unavailable-days/${provider.userId}`), api.get(`/api/reservations/day-busy/${provider.userId}`)])
+      .then(([days, busy]) => { if (alive) setAvailability({ loading: false, error: false, unavailable: Array.isArray(days.data) ? days.data : [], busy: Array.isArray(busy.data) ? busy.data : [] }); })
+      .catch(() => { if (alive) setAvailability(prev => ({ ...prev, loading: false, error: true })); });
+    return () => { alive = false; };
+  }, [provider.userId, reload]);
+  const iso = value => value ? format(value, 'yyyy-MM-dd') : '';
+  const manuallyBlocked = day => (provider.blockedDays || []).includes(day) || (provider.availabilityOverrides || []).some(item => item.type === 'day' && item.date === day);
+  const blocked = day => manuallyBlocked(day) || (kind !== 'order' && availability.unavailable.includes(day)) || (['stay', 'exclusive-day'].includes(kind) && (availability.busy.some(item => occursOn(item, day)) || (provider.availabilityOverrides || []).some(item => item.type === 'slot' && item.date === day)));
+  const rangeBlocked = (start, end) => {
+    const nights = differenceInCalendarDays(end, start);
+    if (nights < 1 || nights > 366) return true;
+    for (let offset = 0; offset < nights; offset++) if (blocked(iso(addDays(start, offset)))) return true;
+    return false;
   };
-
-  const getDayState = (day) => {
-    const past = isBefore(startOfDay(day), startOfDay(new Date()));
-    const dateStr = format(day, "yyyy-MM-dd");
-    const blocked = isUnavailable(dateStr);
-    const workingOk = respectsWorkingDays(day);
-
-    if (serviceRequiredForBooking && !selectedService) return "locked";
-    if (past) return "past";
-    if (!workingOk) return "locked";
-    if (blocked) return "unavailable";
-
-    return "free";
+  const disabledDay = day => {
+    if (isBefore(startOfDay(day), startOfDay(new Date()))) return true;
+    if (inquiry) return false;
+    if (kind === 'stay' && date && !endDate && day > date) return rangeBlocked(date, day);
+    if (kind !== 'stay' && provider.workingDays?.length && !provider.workingDays.includes(getDay(day))) return true;
+    return blocked(iso(day));
   };
-
-  const canPickDay = (day) => getDayState(day) === "free";
-
-  const handleSubmit = async (e) => {
-    e?.preventDefault?.();
-
-    if (isSubmitting) return;
-
-    setIsSubmitting(true);
-
+  const pickDay = day => {
+    if (kind === 'stay' && date && !endDate && day > date) setEndDate(day);
+    else { setDate(day); setEndDate(null); }
+  };
+  let problem = '';
+  if (!date) problem = 'Wybierz datę.';
+  else if (kind === 'stay' && (!endDate || differenceInCalendarDays(endDate, date) < 1 || differenceInCalendarDays(endDate, date) > 366 || (!inquiry && rangeBlocked(date, endDate)))) problem = 'Wybierz dostępny pobyt od przyjazdu do wyjazdu (1–366 nocy).';
+  else if (kind === 'hours' && (!fromTime || !toTime || toTime <= fromTime)) problem = 'Podaj poprawne godziny od–do w tym samym dniu.';
+  else if (kind === 'hours' && (fromTime < (provider.workingHours?.from || '08:00') || toTime > (provider.workingHours?.to || '20:00'))) problem = 'Wybierz godziny w harmonogramie usługodawcy.';
+  else if (!inquiry && (availability.loading || availability.error)) problem = 'Poczekaj na sprawdzenie dostępności.';
+  else if (!inquiry && services.length && !service) problem = 'Wybierz usługę.';
+  else if (!inquiry && blocked(iso(date))) problem = 'Ten termin jest niedostępny.';
+  else if (!inquiry && kind === 'hours' && (availability.busy.some(item => item.date === iso(date) && !item.dateOnly && item.bookingKind !== 'stay' && fromTime < item.toTime && toTime > item.fromTime) || (provider.availabilityOverrides || []).some(item => item.type === 'slot' && item.date === iso(date) && fromTime < item.toTime && toTime > item.fromTime))) problem = 'Wybrane godziny są niedostępne. Zmień przedział.';
+  const timing = kind === 'stay' ? `${iso(date)} – ${iso(endDate)} (przyjazd / wyjazd)` : kind === 'hours' ? `${iso(date)}, ${fromTime}–${toTime}` : iso(date);
+  async function submit(event) {
+    event.preventDefault();
+    if (sending) return;
+    if (!user?.uid) { pushAlert?.({ show: true, type: 'error', message: 'Zaloguj się, aby wysłać zgłoszenie.' }); return; }
+    if (problem) { pushAlert?.({ show: true, type: 'error', message: problem }); return; }
+    setSending(true);
     try {
-      if (!user?.uid) {
-        pushAlert?.({
-          show: true,
-          type: "error",
-          message: "Musisz być zalogowany.",
-        });
-        return;
-      }
-
-      if (!selectedDate) {
-        pushAlert?.({
-          show: true,
-          type: "error",
-          message: "Wybierz dzień.",
-        });
-        return;
-      }
-
-      const dateStr = format(selectedDate, "yyyy-MM-dd");
-
-      if (selectedService?._id) {
-        const isServiceStillActive = activeServices.some(
-          (s) => String(s._id) === String(selectedService._id)
-        );
-
-        if (!isServiceStillActive) {
-          pushAlert?.({
-            show: true,
-            type: "error",
-            message: "Ta usługa jest obecnie wyłączona.",
-          });
-          return;
-        }
-      }
-
-      if (onlyInquiry) {
-        const content = [
-          `Zapytanie o dostępność dnia ${dateStr}`,
-          selectedService ? `Usługa: ${selectedService.name}` : null,
-          description?.trim() ? `Opis:\n${description.trim()}` : null,
-        ]
-          .filter(Boolean)
-          .join("\n\n");
-
+      if (inquiry) {
+        const content = [`Zapytanie: ${copy.title}`, `Termin: ${timing}`, service ? `Usługa: ${service.name}` : null, description.trim()].filter(Boolean).join('\n\n');
         try {
-          const { data } = await api.post(`/api/conversations/send`, {
-            from: user.uid,
-            to: provider.userId,
-            channel: CHANNEL,
-            content,
-          });
-
-          if (data?.id) {
-            sessionStorage.setItem(
-              "flash",
-              JSON.stringify({
-                type: "success",
-                message: "Twoje zapytanie zostało wysłane.",
-                ttl: 6000,
-                ts: Date.now(),
-              })
-            );
-
-            sessionStorage.setItem(
-              "optimisticMessage",
-              JSON.stringify({
-                _id: `temp-${Date.now()}`,
-                from: user.uid,
-                to: provider.userId,
-                channel: CHANNEL,
-                content,
-                createdAt: new Date().toISOString(),
-                pending: true,
-              })
-            );
-
-            navigate(`/konwersacja/${data.id}`, {
-              state: { scrollToId: "threadPageLayout" },
-            });
-          }
-        } catch (err) {
-          if (err?.response?.status === 403) {
-            const existingId = err?.response?.data?.conversationId || null;
-
-            sessionStorage.setItem(
-              "flash",
-              JSON.stringify({
-                type: "info",
-                message:
-                  "Masz już otwartą rozmowę z tym użytkownikiem. Kontynuuj w istniejącym wątku.",
-                ttl: 6000,
-                ts: Date.now(),
-              })
-            );
-
-            sessionStorage.setItem(
-              "draft",
-              [
-                `Zapytanie o dostępność dnia ${dateStr}`,
-                selectedService ? `Usługa: ${selectedService.name}` : null,
-                description?.trim() ? `Opis:\n${description.trim()}` : null,
-              ]
-                .filter(Boolean)
-                .join("\n\n")
-            );
-
-            navigate(
-              existingId
-                ? `/konwersacja/${existingId}`
-                : `/wiadomosc/${provider.userId}`,
-              {
-                state: { scrollToId: "threadPageLayout" },
-              }
-            );
-
-            return;
-          }
-
-          const msg =
-            err?.response?.data?.message ||
-            (err?.response?.status === 401
-              ? "Brak autoryzacji (401). Zaloguj się ponownie."
-              : null) ||
-            "Nie udało się wysłać zapytania.";
-
-          pushAlert?.({
-            show: true,
-            type: "error",
-            message: msg,
-          });
+          const { data } = await api.post('/api/conversations/send', { from: user.uid, to: provider.userId, channel: 'account_to_profile', content });
+          if (data?.id) navigate(`/konwersacja/${data.id}`);
+          else pushAlert?.({ show: true, type: 'success', message: 'Zapytanie wysłane.' });
+        } catch (error) {
+          if (error.response?.status !== 403) throw error;
+          sessionStorage.setItem('draft', content);
+          const id = error.response.data?.conversationId;
+          navigate(id ? `/konwersacja/${id}` : `/wiadomosc/${provider.userId}`);
         }
-
-        return;
+      } else {
+        const { data } = await api.post('/api/reservations/day', { userId: user.uid, userName: user.displayName || user.email || 'Klient', providerUserId: provider.userId, providerProfileId: provider._id, date: iso(date), ...(kind === 'stay' ? { endDate: iso(endDate) } : {}), ...(kind === 'hours' ? { fromTime, toTime } : {}), description: description.trim(), ...(service ? { serviceId: service._id, serviceName: service.name } : {}) });
+        sessionStorage.setItem('flash', JSON.stringify({ type: 'success', message: data?.status === 'zaakceptowana' ? 'Termin potwierdzony. Szczegóły znajdziesz poniżej.' : 'Zgłoszenie wysłane. Czeka na potwierdzenie usługodawcy.', ttl: 6000, ts: Date.now() }));
+        navigate('/rezerwacje');
       }
-
-      if (serviceRequiredForBooking && !selectedService) {
-        pushAlert?.({
-          show: true,
-          type: "error",
-          message: "Wybierz usługę, aby zarezerwować dzień.",
-        });
-        return;
-      }
-
-      if (isUnavailable(dateStr)) {
-        pushAlert?.({
-          show: true,
-          type: "error",
-          message: 'Ten dzień jest niedostępny. Użyj "Tylko zapytanie".',
-        });
-        return;
-      }
-
-      const payload = {
-        userId: user.uid,
-        userName: user.displayName || user.email || "Użytkownik",
-        providerUserId: provider.userId,
-        providerName: provider.name || "Usługodawca",
-        providerProfileId: provider._id,
-        providerProfileName: provider.name || "",
-        providerProfileRole: provider.role || "",
-        date: dateStr,
-        description: (description || "").trim(),
-        ...(selectedService?._id
-          ? {
-            serviceId: selectedService._id,
-            serviceName: selectedService.name,
-          }
-          : {}),
-      };
-
-      const { data: savedReservation } = await api.post(`/api/reservations/day`, payload);
-
-      sessionStorage.setItem(
-        "flash",
-        JSON.stringify({
-          type: "success",
-          message:
-            savedReservation?.status === "zaakceptowana" ? "Rezerwacja dnia potwierdzona. Szczegóły znajdziesz poniżej." : "Wysłano prośbę o rezerwację dnia – oczekuje na potwierdzenie.",
-          ttl: 6000,
-          ts: Date.now(),
-        })
-      );
-
-      navigate("/rezerwacje");
-    } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        (err?.response?.status === 401
-          ? "Brak autoryzacji (401). Zaloguj się ponownie."
-          : null) ||
-        "Nie udało się utworzyć rezerwacji dnia.";
-
-      pushAlert?.({
-        show: true,
-        type: "error",
-        message: msg,
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const selectedDateStr = selectedDate
-    ? format(selectedDate, "dd.MM.yyyy")
-    : null;
-
-  return (
-    <>
-      <BookingSteps className={styles.progress} steps={[{ label: "Usługa i sposób", done: !serviceRequiredForBooking || Boolean(selectedService) }, { label: "Wybierz dzień", done: Boolean(selectedDate) }, { label: "Sprawdź i wyślij", done: false }]} />
-      <div className={styles.topGrid}>
-
-
-        {hasServices && (
-          <label className={styles.field}>
-            <div className={styles.fieldHeader}>
-              <div>
-                <span className={styles.fieldEyebrow}>01 / Usługa</span>
-                <h3 className={styles.fieldTitle}>Wybierz usługę</h3>
-              </div>
-
-              <span className={styles.fieldHint}>
-                {onlyInquiry ? "opcjonalnie" : "wymagane"}
-              </span>
-            </div>
-
-            <div className={styles.selectWrap}>
-              <select
-                className={styles.select}
-                value={selectedService?._id || ""}
-                onChange={(e) => {
-                  const svc = activeServices.find(
-                    (s) => String(s._id) === String(e.target.value)
-                  );
-
-                  setService(svc || null);
-                  setDate(null);
-                }}
-              >
-                <option value="">
-                  {onlyInquiry ? "– bez wyboru –" : "— wybierz usługę —"}
-                </option>
-
-                {activeServices.map((s) => (
-                  <option key={s._id} value={s._id}>
-                    {s.name}
-                    {s.duration?.value
-                      ? ` • ${s.duration.value} ${s.duration.unit === "minutes"
-                        ? "min"
-                        : s.duration.unit === "hours"
-                          ? "godz."
-                          : s.duration.unit === "days"
-                            ? "dni"
-                            : s.duration.unit
-                      }`
-                      : ""}
-                  </option>
-                ))}
-              </select>
-
-              <span className={styles.selectChevron} aria-hidden="true">
-                <FiChevronDown />
-              </span>
-            </div>
-          </label>
-        )}
-
-        <div className={styles.toggleField}>
-          <div className={styles.fieldHeader}>
-            <div>
-              <span className={styles.fieldEyebrow}>01 / Sposób rezerwacji</span>
-              <h3 className={styles.fieldTitle}>Sposób kontaktu</h3>
-            </div>
-
-            <span className={styles.fieldHint}>wybór</span>
-          </div>
-
-          <div className={styles.toggleRow}>
-            <label className={styles.toggleLabel}>
-              <input
-                type="checkbox"
-                checked={onlyInquiry}
-                onChange={() => {
-                  setOnlyInquiry((v) => !v);
-                  setDate(null);
-                }}
-              />
-
-              <span>Tylko zapytanie bez blokowania dnia</span>
-            </label>
-
-            <p className={styles.toggleHint}>
-              {onlyInquiry
-                ? "Wyślesz wiadomość do usługodawcy z prośbą o potwierdzenie dostępności."
-                : "Wyślesz prośbę o rezerwację całego dnia do akceptacji."}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {serviceRequiredForBooking && !selectedService && (
-        <div className={styles.warnBox}>
-          <strong>Najpierw wybierz usługę</strong>
-          <p>
-            Dopiero po wyborze usługi możesz wskazać dzień do rezerwacji.
-          </p>
-        </div>
-      )}
-
-      <div className={styles.mainGrid}>
-        <section className={styles.calendarCard}>
-          <div className={styles.cardHead}>
-            <div>
-              <span className={styles.cardLabel}>Kalendarz</span>
-              <h3>Wybierz dzień</h3>
-            </div>
-          </div>
-
-          <div className={styles.monthNav}>
-            <button
-              type="button"
-              disabled={isSubmitting || isBefore(startOfMonth(currentMonth), addMonths(startOfMonth(new Date()), 1))}
-              onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-              aria-label="Poprzedni miesiąc"
-            >
-              <FiChevronLeft aria-hidden="true" />
-            </button>
-
-            <span className={styles.monthLabel}>
-              {format(currentMonth, "LLLL yyyy", { locale: pl })}
-            </span>
-
-            <button
-              type="button"
-              disabled={isSubmitting}
-              onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-              aria-label="Następny miesiąc"
-            >
-              <FiChevronRight aria-hidden="true" />
-            </button>
-          </div>
-
-          <div className={styles.calendarGrid}>
-            {["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"].map((d) => (
-              <div key={d} className={styles.weekday}>
-                {d}
-              </div>
-            ))}
-
-            {Array(startDayIndex)
-              .fill(null)
-              .map((_, i) => (
-                <div key={i} className={styles.blankDay} />
-              ))}
-
-            {daysInMonth.map((day) => {
-              const state = getDayState(day);
-              const sel = selectedDate && isSameDay(day, selectedDate);
-              const dateStr = format(day, "yyyy-MM-dd");
-
-              const disabled = state !== "free" || isSubmitting;
-
-              const title =
-                state === "unavailable"
-                  ? "Dzień niedostępny"
-                  : state === "past"
-                    ? "Dzień w przeszłości"
-                    : state === "locked"
-                      ? serviceRequiredForBooking && !selectedService
-                        ? "Najpierw wybierz usługę"
-                        : "Dzień poza harmonogramem"
-                      : dateStr;
-
-              return (
-                <button
-                  key={day.toISOString()}
-                  type="button"
-                  className={[
-                    styles.day,
-                    state === "unavailable" ? styles.dayUnavailable : "",
-                    state === "past" ? styles.dayPast : "",
-                    state === "locked" ? styles.dayLocked : "",
-                    sel ? styles.selectedDay : "",
-                  ].join(" ")}
-                  aria-label={format(day, "d MMMM yyyy", { locale: pl })}
-                  aria-pressed={Boolean(sel)}
-                  disabled={disabled}
-                  onClick={() =>
-                    !isSubmitting && canPickDay(day) && setDate(day)
-                  }
-                  title={title}
-                >
-                  {format(day, "d")}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className={styles.infoCard}>
-          {!selectedDate ? (
-            <div className={styles.emptyState}>
-              <span className={styles.emptyNumber}>04</span>
-
-              <strong>Wybierz dzień</strong>
-
-              <p>
-                Kliknij wolny dzień w kalendarzu, a następnie wyślij prośbę o
-                rezerwację albo samo zapytanie.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className={styles.infoHeader}>
-                <div>
-                  <span className={styles.cardLabel}>
-                    {onlyInquiry ? "Zapytanie" : "Rezerwacja"}
-                  </span>
-
-                  <h3 className={styles.infoTitle}>
-                    {onlyInquiry ? "Zapytanie o dzień" : "Rezerwacja dnia"}
-                  </h3>
-
-                  <p className={styles.infoSub}>
-                    Dzień: <b>{selectedDateStr}</b>
-                  </p>
-                </div>
-
-                <div className={styles.modePill} title="Wybrany tryb">
-                  <span className={styles.modeDot} />
-                  <span>{onlyInquiry ? "Tylko zapytanie" : "Blokada dnia"}</span>
-                </div>
-              </div>
-
-              {hasServices && (
-                <div className={styles.summaryRow}>
-                  <span className={styles.summaryLabel}>Usługa</span>
-
-                  <span className={styles.summaryValue}>
-                    {selectedService ? (
-                      <b>{selectedService.name}</b>
-                    ) : (
-                      <span className={styles.muted}>Nie wybrano</span>
-                    )}
-                  </span>
-                </div>
-              )}
-
-              {!!description?.trim() && (
-                <div className={styles.summaryRow}>
-                  <span className={styles.summaryLabel}>Opis</span>
-
-                  <span className={styles.summaryValue}>
-                    {description.trim()}
-                  </span>
-                </div>
-              )}
-
-              {selectedDate &&
-                isUnavailable(format(selectedDate, "yyyy-MM-dd")) &&
-                !onlyInquiry && (
-                  <div className={styles.warnBox}>
-                    <strong>Dzień niedostępny</strong>
-                    <p>
-                      Ten dzień jest już oznaczony jako niedostępny. Możesz
-                      przełączyć się na tryb „Tylko zapytanie”.
-                    </p>
-                  </div>
-                )}
-            </>
-          )}
-        </section>
-      </div>
-
-      <div className={styles.fullLegendBar}>
-        <div className={styles.legendBadges}>
-          <span className={styles.legendItem}>
-            <span className={`${styles.legendBox} ${styles.legendFree}`} />
-            wolne
-          </span>
-
-          <span className={styles.legendItem}>
-            <span className={`${styles.legendBox} ${styles.legendSelected}`} />
-            wybrane
-          </span>
-
-          <span className={styles.legendItem}>
-            <span
-              className={`${styles.legendBox} ${styles.legendUnavailable}`}
-            />
-            niedostępne
-          </span>
-
-          <span className={styles.legendItem}>
-            <span className={`${styles.legendBox} ${styles.legendLocked}`} />
-            nieaktywne
-          </span>
-        </div>
-
-        <div className={styles.legendMetaFull}>
-          {hasServices
-            ? onlyInquiry
-              ? "Usługa opcjonalna / zapytanie bez blokady"
-              : "Usługa wymagana do rezerwacji dnia"
-            : "Brak usług / wybierasz tylko dzień"}
-        </div>
-      </div>
-
-      <label className={`${styles.field} ${styles.fieldWide}`}>
-        <div className={styles.fieldHeader}>
-          <div>
-            <span className={styles.fieldEyebrow}>03 / Dodatkowe informacje</span>
-            <h3 className={styles.fieldTitle}>Opis lub uwagi</h3>
-          </div>
-
-          <span className={styles.fieldHint}>opcjonalnie</span>
-        </div>
-
-        <textarea
-          className={styles.textarea}
-          rows="3"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Opisz, czego potrzebujesz w danym dniu…"
-        />
-      </label>
-
-      {selectedDate && <div className={styles.bookingSummary} aria-live="polite"><strong>Sprawdź przed wysłaniem</strong>{selectedService?.name || "Rezerwacja dnia"}<br />{format(selectedDate, "d MMMM yyyy", { locale: pl })}<br />{onlyInquiry ? "Zapytanie nie blokuje terminu." : "Rezerwujesz cały dzień."}</div>}
-      <form onSubmit={handleSubmit} className={styles.submitBar}>
-        <LoadingButton
-          type="submit"
-          isLoading={isSubmitting}
-          disabled={
-            !selectedDate ||
-            isSubmitting ||
-            (serviceRequiredForBooking && !selectedService)
-          }
-          className={styles.submit}
-        >
-          {onlyInquiry ? "Wyślij zapytanie" : "Rezerwuj dzień"}
-        </LoadingButton>
-
-        <div className={styles.submitHint}>
-          {onlyInquiry
-            ? "Wyślemy wiadomość do usługodawcy — odpowiedź pojawi się w rozmowie."
-            : provider.autoAcceptReservations ? "Ten profil automatycznie potwierdza rezerwacje. Status sprawdzisz w panelu." : "Usługodawca otrzyma prośbę. Potwierdzenie zobaczysz w swoich rezerwacjach."}
-        </div>
-      </form>
-    </>
-  );
+    } catch (error) {
+      pushAlert?.({ show: true, type: 'error', message: error.response?.data?.message || 'Nie udało się wysłać zgłoszenia.' });
+      if (error.response?.status === 409) setReload(value => value + 1);
+    } finally { setSending(false); }
+  }
+  return <div className={styles.form}>
+    <BookingServicePicker label={kind === "order" ? "Wybierz ofertę" : kind === "stay" ? "Wybierz ofertę pobytu" : "Wybierz usługę"} services={services} value={service} onChange={setService} disabled={sending} optional={inquiry} />
+    <p className={styles.notice}>{copy.text}</p>
+    <label className={styles.toggle}><input type="checkbox" checked={inquiry} disabled={sending} onChange={event => { setInquiry(event.target.checked); setDate(null); setEndDate(null); }} />Tylko zapytanie o termin</label>
+    {availability.loading && !inquiry && <p className={styles.hint} role="status">Sprawdzamy dostępność…</p>}
+    {availability.error && !inquiry && <p className={styles.notice} role="alert">Nie udało się sprawdzić dostępności. <button type="button" onClick={() => setReload(value => value + 1)}>Spróbuj ponownie</button></p>}
+    {services.length && !service && !inquiry ? <p className={styles.notice}>Wybierz usługę, aby sprawdzić dostępne terminy.</p> : <>
+      {kind === 'stay' && <p className={styles.hint}>{date && !endDate ? 'Teraz wybierz dzień wyjazdu.' : 'Wybierz dzień przyjazdu, a potem wyjazdu.'}</p>}
+      <BookingDatePicker month={currentMonth} onMonthChange={setMonth} value={date} endValue={kind === 'stay' ? endDate : null} onChange={pickDay} disabled={sending || (!inquiry && (availability.loading || availability.error))} isDisabled={disabledDay} />
+    </>}
+      {kind === 'stay' && date && <label className={styles.field}>Data wyjazdu<input type="date" value={iso(endDate)} min={iso(addDays(date, 1))} disabled={sending} onChange={event => setEndDate(event.target.value ? new Date(event.target.value + 'T12:00:00') : null)} /></label>}
+      {kind === 'hours' && date && <div className={styles.timeRange}>
+        <label className={styles.field}>Godzina od<input type="time" value={fromTime} min={provider.workingHours?.from || '08:00'} max={provider.workingHours?.to || '20:00'} required disabled={sending} onChange={event => setFromTime(event.target.value)} /></label>
+        <label className={styles.field}>Godzina do<input type="time" value={toTime} min={fromTime || provider.workingHours?.from || '08:00'} max={provider.workingHours?.to || '20:00'} required disabled={sending} onChange={event => setToTime(event.target.value)} /></label>
+      </div>}
+    <form className={styles.review} onSubmit={submit}>
+      <label className={styles.field}>Uwagi (opcjonalnie)<textarea rows="3" value={description} disabled={sending} onChange={event => setDescription(event.target.value)} placeholder="Dodatkowe szczegóły, np. smak tortu lub miejsce realizacji" /></label>
+      {date && <BookingSummary service={service} date={date} endDate={endDate} kind={kind} time={kind === 'hours' && fromTime && toTime ? `${fromTime}–${toTime}` : null} inquiry={inquiry} />}
+      {date && problem && <p className={styles.hint} role="status">{problem}</p>}
+      <LoadingButton type="submit" isLoading={sending} disabled={sending || Boolean(problem)} className={styles.submit}>{inquiry ? <FiSend aria-hidden="true" /> : <FiCheckCircle aria-hidden="true" />}{inquiry ? 'Wyślij zapytanie' : copy.action}</LoadingButton>
+      <p className={styles.hint}>{inquiry ? 'Zapytanie nie blokuje terminu. Odpowiedź znajdziesz w wiadomościach.' : provider.autoAcceptReservations ? 'Ten profil automatycznie potwierdza zgłoszenia.' : 'Usługodawca potwierdzi zgłoszenie. Status zobaczysz w swoich rezerwacjach.'}</p>
+    </form>
+  </div>;
 }

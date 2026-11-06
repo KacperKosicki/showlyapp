@@ -171,3 +171,5 @@
 .searchField { @extend %workspace-search; }
 
 .avatar.avatarSystem { background: var(--yp-lime); color: #171917; border-color: #171917; }
+
+.emptyResults { grid-column: 1 / -1; }

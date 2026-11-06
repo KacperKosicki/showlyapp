@@ -1,3 +1,5 @@
+import WorkspaceEmptyState from "../ui/WorkspaceEmptyState/WorkspaceEmptyState";
+import { dayBookingCopy, reservationDates, occursOn, reservationTimeLabel } from "../../utils/dayBooking";
 import DataLoader from '../ui/DataLoader/DataLoader';
 import PanelBackdrop from '../PanelBackdrop/PanelBackdrop';
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
@@ -165,7 +167,7 @@ const minToTime = (mins) => {
 };
 
 /** czy cało-dniowa rezerwacja */
-const isWholeDay = (r) => r?.dateOnly || (r?.fromTime === "00:00" && r?.toTime === "23:59");
+const isWholeDay = (r) => r?.bookingKind ? r.bookingKind !== "hours" : r?.dateOnly || (r?.fromTime === "00:00" && r?.toTime === "23:59");
 
 const getAvailabilityOverrides = (meta) => {
   return Array.isArray(meta?.availabilityOverrides)
@@ -224,6 +226,7 @@ const isPastDate = (dateStr = "") => {
 };
 
 const isWorkingDay = (meta, dateStr = "") => {
+  if (meta?.bookingMode === "request-blocking" && meta?.dayBookingMode === "stay") return true;
   const dayNumber = getDateDayNumber(dateStr);
   if (dayNumber === null) return true;
 
@@ -327,6 +330,8 @@ const ReservationList = ({ user }) => {
   });
 
   const [disabledIds, setDisabledIds] = useState(new Set());
+  const [readingGroup, setReadingGroup] = useState(null);
+  const bulkReadInFlight = useRef(false);
   const [accountMap, setAccountMap] = useState({});
   const [profileMap, setProfileMap] = useState({});
   const [actionDialog, setActionDialog] = useState(null);
@@ -632,7 +637,7 @@ const ReservationList = ({ user }) => {
     const isToday = dateStr === todayIso;
 
     const active = (serviceReservations || [])
-      .filter((r) => r.date === dateStr)
+      .filter((r) => r.date === dateStr && r.bookingKind !== "order")
       .filter((r) => !r.dateOnly)
       .filter((r) => ["zaakceptowana", "oczekująca", "tymczasowa"].includes(r.status));
 
@@ -819,7 +824,7 @@ const ReservationList = ({ user }) => {
 
     const iso = offlineForm.date;
     const active = serviceReservations
-      .filter((r) => r.date === iso)
+      .filter((r) => occursOn(r, iso) && r.bookingKind !== "order")
       .filter((r) => !["anulowana", "odrzucona"].includes(r.status));
 
     if (active.length === 0) return { ok: true, reason: null };
@@ -881,8 +886,9 @@ const ReservationList = ({ user }) => {
       date: isoDate,
       slotStart: "",
       dateOnly: isDayBlockingMode ? true : p.dateOnly,
-      fromTime: isDayBlockingMode ? "00:00" : p.fromTime,
-      toTime: isDayBlockingMode ? "23:59" : p.toTime,
+      endDate: "",
+      fromTime: isDayBlockingMode ? providerMeta?.workingHours?.from || "08:00" : p.fromTime,
+      toTime: isDayBlockingMode ? providerMeta?.workingHours?.to || "20:00" : p.toTime,
     }));
     setOfflineOpen(true);
 
@@ -983,7 +989,7 @@ const ReservationList = ({ user }) => {
       };
 
       if (effectiveDateOnly) {
-        await api.post(`/api/reservations/offline/day`, payloadBase);
+        await api.post(`/api/reservations/offline/day`, { ...payloadBase, fromTime: offlineForm.fromTime, toTime: offlineForm.toTime, endDate: offlineForm.endDate });
       } else {
         const from = offlineForm.fromTime;
         const to = offlineForm.toTime;
@@ -1163,10 +1169,10 @@ const ReservationList = ({ user }) => {
   }, [isLogged, senderUids]);
 
   const conflicts = useMemo(() => {
-    if (!offlineOpen) return [];
+    if (!offlineOpen || isDayBlockingMode) return [];
     const iso = offlineForm.date;
 
-    const sameDay = serviceReservations.filter((r) => r.date === iso);
+    const sameDay = serviceReservations.filter((r) => occursOn(r, iso) && r.bookingKind !== "order");
     const active = sameDay.filter((r) => !["anulowana", "odrzucona"].includes(r.status));
 
     if (active.length === 0) return [];
@@ -1268,6 +1274,42 @@ const ReservationList = ({ user }) => {
     }
   };
 
+  const markAllSeen = async variant => {
+    if (bulkReadInFlight.current) return;
+    const who = variant === 'sent' ? 'client' : 'provider';
+    const snapshot = (variant === 'sent' ? clientReservations : serviceReservations).filter(item => isReservationUnread(item, variant));
+    if (!snapshot.length) return;
+    bulkReadInFlight.current = true;
+    setReadingGroup(variant);
+    const acknowledged = new Map();
+    try {
+      // Use the existing owner-checked endpoint and the exact version shown in this category.
+      for (let offset = 0; offset < snapshot.length; offset += 6) {
+        const batch = snapshot.slice(offset, offset + 6);
+        const results = await Promise.allSettled(batch.map(item => api.patch('/api/reservations/' + item._id + '/seen', { who, viewedUpdatedAt: item.updatedAt })));
+        results.forEach((result, index) => { if (result.status === 'fulfilled') acknowledged.set(batch[index]._id, batch[index].updatedAt); });
+      }
+      const apply = previous => previous.flatMap(item => {
+        if (!acknowledged.has(item._id) || acknowledged.get(item._id) !== item.updatedAt) return [item];
+        return ['anulowana', 'odrzucona'].includes(item.status) ? [] : [{ ...item, [who + 'Seen']: true }];
+      });
+      if (who === 'client') setClientReservations(apply); else setServiceReservations(apply);
+      if (acknowledged.size) window.dispatchEvent(new Event('showly:reservations-changed'));
+      if (acknowledged.size !== snapshot.length) {
+        setAlert({ show: true, type: 'warning', message: 'Część zmian pozostała nieprzeczytana. Mogła pojawić się nowsza aktualizacja. Spróbuj ponownie.' });
+        await refetch().catch(() => {});
+      }
+    } finally { bulkReadInFlight.current = false; setReadingGroup(null); }
+  };
+
+  const renderReadAll = variant => {
+    const count = (variant === 'sent' ? clientReservations : serviceReservations).filter(item => isReservationUnread(item, variant)).length;
+    if (!count) return null;
+    return <button type="button" className={styles.readAll} disabled={Boolean(readingGroup)} onClick={() => markAllSeen(variant)}>
+      <FiCheckCircle aria-hidden="true" />{readingGroup === variant ? 'Odczytuję…' : 'Odczytaj wszystkie'}<span>{count}</span>
+    </button>;
+  };
+
   const renderClosedInfo = (reservation, variant) => {
     if (!isReservationUnread(reservation, variant)) return null;
     return <div className={styles.closedInfo}><span><strong>Nowa aktualizacja</strong><br />{reservationUpdateLabel(reservation, variant)}</span><button type="button" className={styles.seenBtn} onClick={() => markSeen(reservation, variant === 'sent' ? 'client' : 'provider')}>Oznacz jako przeczytane</button></div>;
@@ -1284,8 +1326,7 @@ const ReservationList = ({ user }) => {
   };
 
   const timeLabel = (res) => {
-    const whole = isWholeDay(res);
-    return whole ? "cały dzień" : `${res.fromTime} – ${res.toTime}`;
+    return reservationTimeLabel(res);
   };
 
   const getReservationLinkClass = (status) => {
@@ -1316,7 +1357,7 @@ const ReservationList = ({ user }) => {
     <div className={styles.info}>
       <span className={styles.chip}>
         <FiCalendar className={styles.chipIcon} aria-hidden="true" />
-        {formatDatePL(res.date)}
+        {formatDatePL(res.date)}{res.bookingKind === "stay" && <> – {formatDatePL(res.endDate)} (wyjazd)</>}
       </span>
 
       <span className={styles.chip}>
@@ -1814,9 +1855,9 @@ const ReservationList = ({ user }) => {
       map.set(date, cur);
     };
 
-    clientReservations.forEach((r) => push(r.date, "sent", r.status));
+    clientReservations.forEach((r) => reservationDates(r).forEach(date => push(date, "sent", r.status)));
     if (hasProviderProfile) {
-      serviceReservations.forEach((r) => push(r.date, "recv", r.status));
+      serviceReservations.forEach((r) => reservationDates(r).forEach(date => push(date, "recv", r.status)));
     }
 
     if (hasProviderProfile) {
@@ -1851,9 +1892,9 @@ const ReservationList = ({ user }) => {
   }, [providerMeta, selectedIso]);
 
   const selectedReservations = useMemo(() => {
-    const sent = clientReservations.filter((r) => r.date === selectedIso);
+    const sent = clientReservations.filter((r) => occursOn(r, selectedIso));
     const recv = hasProviderProfile
-      ? serviceReservations.filter((r) => r.date === selectedIso)
+      ? serviceReservations.filter((r) => occursOn(r, selectedIso))
       : [];
 
     const sortFn = (a, b) => {
@@ -2098,7 +2139,7 @@ const ReservationList = ({ user }) => {
     bookingMode === "calendar"
       ? "Kalendarz"
       : bookingMode === "request-blocking"
-        ? "Blokowanie dni"
+        ? dayBookingCopy(providerMeta).title
         : "Zapytania";
 
   const receivedBadge = hasProviderProfile
@@ -2111,7 +2152,7 @@ const ReservationList = ({ user }) => {
     pendingSent > 0 ? `${pendingSent} oczek.` : `${clientReservations.length}`;
 
   const renderReservationGroup = ({
-    number = "01",
+    variant,
     label,
     title,
     badge,
@@ -2121,7 +2162,7 @@ const ReservationList = ({ user }) => {
     emptyText,
     children,
   }) => (
-    <EditorGroup title={`${number} / ${title}`} className={styles.reservationGroup}>
+    <EditorGroup title={title} className={styles.reservationGroup}>
       <div className={styles.groupHeader}>
         <span className={styles.groupIcon} aria-hidden="true">{icon}</span>
         <div className={styles.groupHeading}>
@@ -2129,15 +2170,15 @@ const ReservationList = ({ user }) => {
           <p>Liczba rezerwacji: {count}</p>
         </div>
 
-        <span className={styles.groupBadge}>{badge}</span>
+        <div className={styles.groupActions}>
+          {variant && renderReadAll(variant)}
+          <span className={styles.groupBadge}>{badge}</span>
+        </div>
       </div>
 
-      {children || (
-        <div className={styles.emptyState}>
-          <span className={styles.emptyIconWrap} aria-hidden="true">{icon}</span>
-          <div><strong>{emptyTitle}</strong><p>{emptyText}</p></div>
-        </div>
-      )}
+      {children || <WorkspaceEmptyState icon={icon} title={emptyTitle} text={emptyText}
+        action={!isLogged ? { label: 'Zaloguj się', to: '/login' } : !variant && !hasProviderProfile ? { label: 'Utwórz wizytówkę', to: '/stworz-profil' } : (statusFilter !== 'all' || search.trim()) ? { label: 'Pokaż wszystkie rezerwacje', onClick: () => { setStatusFilter('all'); setSearch(''); } } : undefined}
+      />}
     </EditorGroup>
   );
 
@@ -2190,7 +2231,7 @@ const ReservationList = ({ user }) => {
             </div>
             <FiCalendar className={styles.headerIcon} aria-hidden="true" />
           </header>
-          <EditorGroup title="01 / Twoje rezerwacje w liczbach" className={styles.summaryGroup}>
+          <EditorGroup title="Twoje rezerwacje w liczbach" className={styles.summaryGroup}>
             <div className={styles.metaRow} aria-live="polite">
               <div className={styles.metaCard}><span>Oczekujące</span><strong>{loading ? '-' : totalPending}</strong></div>
               <div className={styles.metaCard}><span>Wszystkie rezerwacje</span><strong>{loading ? '-' : totalReservations}</strong></div>
@@ -2242,7 +2283,7 @@ const ReservationList = ({ user }) => {
               </div>
             ) : loading ? (
               <div className={styles.reservationsStack}>
-                <EditorGroup title="02 / Ładowanie rezerwacji" className={styles.reservationGroup}>
+                <EditorGroup title="Ładowanie rezerwacji" className={styles.reservationGroup}>
                   <DataLoader label="Ładujemy Twoje rezerwacje…" layout="none" />
 
                   <ul className={styles.list}>
@@ -2255,6 +2296,8 @@ const ReservationList = ({ user }) => {
             ) : canUseCalendar && viewMode === "calendar" ? (
               <div className={styles.calendarPanelWrap}>
                 <ReservationCalendar
+                  readAllReceived={renderReadAll("received")}
+                  readAllSent={renderReadAll("sent")}
                   selectedDay={selectedDay}
                   onSelectedDayChange={setSelectedDay}
                   selectedIso={selectedIso}
@@ -2296,7 +2339,7 @@ const ReservationList = ({ user }) => {
               <div className={styles.reservationsStack} data-single={statusFilter !== "all" || Boolean(search.trim()) || !hasProviderProfile}>
                 {hasProviderProfile &&
                   renderReservationGroup({
-                    number: "02",
+                    variant: "received",
                     label: "Do Twojego profilu",
                     title: "Otrzymane rezerwacje",
                     badge: receivedBadge,
@@ -2316,7 +2359,7 @@ const ReservationList = ({ user }) => {
                   })}
 
                 {renderReservationGroup({
-                  number: hasProviderProfile ? "03" : "02",
+                  variant: "sent",
                   label: "Twoje konto → profile",
                   title: "Wysłane rezerwacje",
                   badge: sentBadge,
@@ -2337,7 +2380,6 @@ const ReservationList = ({ user }) => {
 
                 {!hasProviderProfile &&
                   renderReservationGroup({
-                    number: "03",
                     label: "Profil usługodawcy",
                     title: "Rezerwacje do Twojego profilu",
                     badge: "—",

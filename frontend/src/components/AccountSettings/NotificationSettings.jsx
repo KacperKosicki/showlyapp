@@ -81,7 +81,7 @@ export default function NotificationSettings({ user }) {
   };
 
   return <fieldset className={`${accountStyles.setting} ${styles.panel}`} id="notification-settings" aria-labelledby="notification-settings-title">
-    <legend>04 / Powiadomienia</legend>
+    <legend>Powiadomienia</legend>
     <header className={accountStyles.settingHeader}><div className={accountStyles.settingTitle}><span className={accountStyles.settingIcon}><FiBell aria-hidden="true" /></span><div><h2 id="notification-settings-title">Powiadomienia</h2></div></div></header>
     <p className={styles.intro}>Nowe informacje w Showly i alerty na Twoim urządzeniu.</p>
     <div className={styles.inApp}><FiCheckCircle aria-hidden="true" /><p><strong>Zmiany w Showly są zawsze widoczne.</strong><br />Nowe rezerwacje i aktualizacje pojawiają się przy pozycji „Rezerwacje” w menu konta. Oznaczysz je jako przeczytane na liście rezerwacji. Ustawienia poniżej dotyczą dodatkowych powiadomień push.</p></div>

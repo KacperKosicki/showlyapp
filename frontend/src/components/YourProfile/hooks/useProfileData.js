@@ -79,6 +79,7 @@ const normalizeProfileForEdit = (profile = {}) => {
     contact: normalizedContact,
     socials: normalizedSocials,
     bookingMode: profile.bookingMode || "request-open",
+    dayBookingMode: profile.dayBookingMode || "exclusive-day",
     workingHours: profile.workingHours || { from: "08:00", to: "20:00" },
     workingDays: profile.workingDays || [1, 2, 3, 4, 5],
     availabilityOverrides: Array.isArray(profile.availabilityOverrides)

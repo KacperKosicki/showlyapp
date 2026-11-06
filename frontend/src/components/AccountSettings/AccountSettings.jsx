@@ -421,7 +421,7 @@ export const AccountSettingsView = ({
 
           <div className={styles.settingsBody}>
             <fieldset className={styles.setting}>
-              <legend>01 / Zdjęcie konta</legend>
+              <legend>Zdjęcie konta</legend>
               <header className={styles.settingHeader}>
                 <div className={styles.settingTitle}>
                   <span className={styles.settingIcon} aria-hidden="true">
@@ -506,7 +506,7 @@ export const AccountSettingsView = ({
 
             <div className={styles.secondaryGrid}>
               <fieldset className={styles.setting}>
-                <legend>02 / Nazwa wyświetlana</legend>
+                <legend>Nazwa wyświetlana</legend>
                 <header className={styles.settingHeader}>
                   <div className={styles.settingTitle}>
                     <span className={styles.settingIcon} aria-hidden="true">
@@ -554,7 +554,7 @@ export const AccountSettingsView = ({
               </fieldset>
 
               <fieldset className={`${styles.setting} ${styles.securitySetting}`}>
-                <legend>03 / Bezpieczeństwo</legend>
+                <legend>Bezpieczeństwo</legend>
                 <header className={styles.settingHeader}>
                   <div className={styles.settingTitle}>
                     <span className={styles.settingIcon} aria-hidden="true">

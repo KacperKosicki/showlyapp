@@ -2,24 +2,26 @@ import DataLoader from '../ui/DataLoader/DataLoader';
 // BookingModeCalendar.jsx
 import { useEffect, useMemo, useState, useCallback } from "react";
 import {
-  startOfMonth,
-  endOfMonth,
-  eachDayOfInterval,
   format,
   getDay,
-  addMonths,
-  subMonths,
   isSameDay,
   addMinutes,
   startOfMinute,
   startOfDay,
   isBefore,
+  addDays,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
 } from "date-fns";
 import { pl } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import styles from "./BookingModeCalendar.module.scss";
-import { FiChevronLeft, FiChevronRight, FiChevronDown } from "react-icons/fi";
-import BookingSteps from "./BookingSteps";
+import styles from "./BookingControls.module.scss";
+import BookingServicePicker, { ServiceImage } from "./BookingServicePicker";
+import BookingDatePicker from "./BookingDatePicker";
+
+import BookingSummary from "./BookingSummary";
+import { FiCalendar, FiArrowRight, FiClock, FiCheckCircle } from "react-icons/fi";
 import LoadingButton from "../ui/LoadingButton/LoadingButton";
 import { api } from "../../api/api";
 
@@ -101,7 +103,8 @@ export default function BookingModeCalendar({
   const [selectedDate, setDate] = useState(null);
   const [selectedService, setService] = useState(null);
 
-  const [timeSlots, setTimeSlots] = useState([]);
+  const [period, setPeriod] = useState("all");
+  const [availabilityError, setAvailabilityError] = useState(false);
   const [showUnavailableSlots, setShowUnavailableSlots] = useState(false);
   const [selectedSlot, setSlot] = useState(""); // "HH:mm"
 
@@ -114,16 +117,6 @@ export default function BookingModeCalendar({
 
   const navigate = useNavigate();
 
-  const daysInMonth = useMemo(
-    () =>
-      eachDayOfInterval({
-        start: startOfMonth(currentMonth),
-        end: endOfMonth(currentMonth),
-      }),
-    [currentMonth]
-  );
-
-  const startDayIndex = useMemo(() => (getDay(startOfMonth(currentMonth)) + 6) % 7, [currentMonth]);
   const isDayActive = (day) =>
     Array.isArray(provider?.workingDays) && provider.workingDays.includes(getDay(day));
 
@@ -205,6 +198,7 @@ export default function BookingModeCalendar({
   const fetchReservations = useCallback(async () => {
     if (!provider?.userId) return;
 
+    setAvailabilityError(false);
     setReservationsPending(count => count + 1);
     try {
     const { data } = await api.get(`/api/reservations/busy/${provider.userId}`);
@@ -229,6 +223,9 @@ export default function BookingModeCalendar({
 
     setReserved(booked);
     setPending(pending);
+    } catch (error) {
+      setAvailabilityError(true);
+      throw error;
     } finally { setReservationsPending(count => Math.max(0, count - 1)); }
   }, [provider?.userId, isUserPick, selectedStaffId]);
 
@@ -237,19 +234,8 @@ export default function BookingModeCalendar({
     fetchReservations().catch(() => { });
   }, [fetchReservations]);
 
-  // ✅ Przeładuj przy zmianie pracownika w trybie user-pick
-  useEffect(() => {
-    if (!isUserPick) return;
-    fetchReservations().catch(() => { });
-  }, [isUserPick, selectedStaffId, fetchReservations]);
-
-  // Generowanie slotów (capacity-aware dla auto-assign)
-  useEffect(() => {
-    if (!selectedDate || !selectedService) {
-      setTimeSlots([]);
-      return;
-    }
-
+  const getTimeSlots = useCallback((date) => {
+    if (!date || !selectedService) return [];
     const whFrom = provider?.workingHours?.from || "08:00";
     const whTo = provider?.workingHours?.to || "20:00";
 
@@ -259,17 +245,17 @@ export default function BookingModeCalendar({
     const step = GRID_STEP_MIN; // ✅ zawsze 5
     const buffer = effectiveBufferMin; // ✅ 5 + bookingBufferMin
     const durMin = durationToMinutes(selectedService);
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const dateStr = format(date, "yyyy-MM-dd");
 
     // godziny dnia
-    let cursor = startOfMinute(new Date(selectedDate));
+    let cursor = startOfMinute(new Date(date));
     cursor.setHours(h0, m0, 0, 0);
     cursor = ceilToStep(cursor, step);
 
-    const dayEnd = new Date(selectedDate);
+    const dayEnd = new Date(date);
     dayEnd.setHours(h1, m1, 0, 0);
 
-    const isToday = isSameDay(selectedDate, new Date());
+    const isToday = isSameDay(date, new Date());
     let nowRoundedUp = null;
     if (isToday) nowRoundedUp = ceilToStep(new Date(), step);
 
@@ -426,35 +412,48 @@ export default function BookingModeCalendar({
         }
       }
 
-      if (blockedByOverride) status = "disabled";
+      const globallyBusy = reservationsAll.some(item => item.status === 'zaakceptowana' && (item.dateOnly || (item.bookingKind && item.bookingKind !== 'order')) && item.date === dateStr && fromTime < item.toTime && toTime > item.fromTime);
+      if (globallyBusy || blockedByOverride) status = "disabled";
       if (isToday && nowRoundedUp && start < nowRoundedUp) status = "disabled";
 
       slots.push({
         label: format(start, "HH:mm"),
         status,
         blockedByOverride,
+        isCandidate: endWithBuffer <= dayEnd && !(isToday && nowRoundedUp && start < nowRoundedUp),
       });
       cursor = addMinutes(cursor, step);
     }
 
-    setTimeSlots(slots);
-  }, [
-    selectedDate,
-    selectedService,
-    provider,
-    provider?.workingHours,
-    provider?.bookingBufferMin,
-    reservedSlots,
-    pendingSlots,
-    isAutoAssign,
-    isTeamEnabled,
-    isUserPick,
-    staffList,
-    reservationsAll,
-    bookingBufferMin,
-    effectiveBufferMin,
-    selectedStaffId,
-  ]);
+    return slots;
+  }, [selectedService, provider, reservedSlots, pendingSlots, isAutoAssign, isTeamEnabled, staffList, reservationsAll, effectiveBufferMin]);
+
+  const timeSlots = useMemo(() => getTimeSlots(selectedDate), [getTimeSlots, selectedDate]);
+  const canChooseTime = Boolean(selectedService && (!isUserPick || selectedStaffId));
+  const dayAvailability = useMemo(() => {
+    if (!canChooseTime || reservationsLoading || availabilityError) return null;
+    const result = {};
+    for (const day of eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) })) {
+      const key = format(day, "yyyy-MM-dd");
+      if (isBefore(startOfDay(day), startOfDay(new Date())) || !provider?.workingDays?.includes(getDay(day)) || isDateBlockedByOverride(provider, key)) continue;
+      const slots = getTimeSlots(day).filter(slot => slot.isCandidate);
+      const free = slots.filter(slot => slot.status === "free").length;
+      const ratio = slots.length ? free / slots.length : 0;
+      result[key] = { free, ratio, level: ratio > .5 ? "high" : ratio >= .2 ? "medium" : "low" };
+    }
+    return result;
+  }, [canChooseTime, reservationsLoading, availabilityError, currentMonth, provider, getTimeSlots]);
+  const nearest = useMemo(() => {
+    if (!selectedService || reservationsLoading || availabilityError || (isUserPick && !selectedStaffId)) return null;
+    for (let offset = 0; offset < 60; offset += 1) {
+      const day = addDays(startOfDay(new Date()), offset);
+      if (!provider?.workingDays?.includes(getDay(day)) || isDateBlockedByOverride(provider, format(day, "yyyy-MM-dd"))) continue;
+      const slot = getTimeSlots(day).find(item => item.status === "free");
+      if (slot) return { day, time: slot.label };
+    }
+    return null;
+  }, [selectedService, reservationsLoading, availabilityError, isUserPick, selectedStaffId, provider, getTimeSlots]);
+  const visibleSlots = timeSlots.filter(slot => (showUnavailableSlots || slot.status === "free") && (period === "all" || (period === "morning" ? slot.label < "12:00" : slot.label >= (period === "evening" ? "17:00" : "12:00"))));
 
   const handleSubmit = async (e) => {
     e.preventDefault?.();
@@ -464,6 +463,11 @@ export default function BookingModeCalendar({
     try {
       if (!user?.uid) {
         pushAlert?.({ show: true, type: "error", message: "Musisz być zalogowany." });
+        return;
+      }
+
+      if (reservationsLoading || availabilityError || !timeSlots.some(slot => slot.label === selectedSlot && slot.status === "free")) {
+        pushAlert?.({ show: true, type: "error", message: "Sprawdź dostępność i wybierz wolną godzinę." });
         return;
       }
 
@@ -575,360 +579,54 @@ export default function BookingModeCalendar({
     }
   };
 
-  return (
-    <>
-      <BookingSteps className={styles.progress} steps={[{ label: "Usługa", done: Boolean(selectedService) && (!isUserPick || Boolean(selectedStaffId)) }, { label: "Dzień i godzina", done: Boolean(selectedDate && selectedSlot) }, { label: "Sprawdź i wyślij", done: false }]} />
-      <div className={styles.topGrid}>
-
-
-        <label className={styles.field}>
-          <div className={styles.fieldHeader}>
-            <div>
-              <span className={styles.fieldEyebrow}>01 / Usługa</span>
-              <h3 className={styles.fieldTitle}>Wybierz usługę</h3>
+  return <div className={styles.form}>
+    <div className={styles.serviceSection}>
+      <BookingServicePicker services={activeServices} value={selectedService} disabled={isSubmitting} onChange={service => {
+        setService(service); setDate(null); setSlot(""); setSelectedStaffId(""); setPeriod("all");
+      }} />
+      {isUserPick && selectedService && <label className={styles.field}>Pracownik
+        <select value={selectedStaffId} disabled={isSubmitting} onChange={event => { setSelectedStaffId(event.target.value); setDate(null); setSlot(""); }}>
+          <option value="">Wybierz pracownika</option>
+          {staffList.filter(staff => staff.active && (staff.serviceIds || []).some(id => String(id) === String(selectedService._id))).map(staff => <option key={staff._id} value={staff._id}>{staff.name}</option>)}
+        </select>
+      </label>}
+    </div>
+    {isAutoAssign && selectedService && <p className={styles.hint}>Pracownika dobierzemy do wybranego terminu.</p>}
+    {reservationsLoading && <DataLoader label="Sprawdzamy dostępne terminy…" compact />}
+    {availabilityError && <p role="alert" className={styles.notice}>Nie udało się sprawdzić dostępności. <button type="button" onClick={() => fetchReservations().catch(() => {})}>Spróbuj ponownie</button></p>}
+    {canChooseTime ? <>
+      {!reservationsLoading && !availabilityError && (nearest ? <button type="button" className={styles.nearest} disabled={isSubmitting} onClick={() => { setDate(nearest.day); setCurrentMonth(nearest.day); setSlot(nearest.time); setPeriod("all"); }}>
+        <span className={styles.nearestIcon} aria-hidden="true"><FiCalendar /></span><span className={styles.nearestText}>Najbliższy wolny termin<strong>{format(nearest.day, "d MMMM", { locale: pl })}<span>godz. {nearest.time}</span></strong></span><span className={styles.nearestAction} aria-hidden="true">Wybierz <FiArrowRight /></span>
+      </button> : <p className={styles.notice}>Brak wolnych terminów w najbliższych 60 dniach. Sprawdź dalsze daty w kalendarzu.</p>)}
+      <div className={styles.mainGrid}>
+        <BookingDatePicker availability={dayAvailability} month={currentMonth} onMonthChange={setCurrentMonth} value={selectedDate} onChange={day => { setDate(day); setSlot(""); }} disabled={isSubmitting} isDisabled={day => !isDayActive(day) || isBefore(startOfDay(day), startOfDay(new Date())) || isDateBlockedByOverride(provider, format(day, "yyyy-MM-dd"))} />
+        <section className={`${styles.times} ${!selectedDate ? styles.awaitingDate : ""}`}>
+          {selectedDate && <span className={styles.sectionPin}>Wybierz godzinę</span>}
+          {selectedDate ? <h3>{format(selectedDate, "EEEE, d MMMM", { locale: pl })}</h3> : <div className={styles.dateInvitation}>
+            <span className={styles.invitationIcon} aria-hidden="true"><FiCalendar /></span>
+            <h3>Jaki dzień Ci odpowiada?</h3>
+            <p>Wybierz dzień w kalendarzu, a pokażemy wolne godziny. Kolorowe kropki pomogą znaleźć dogodny termin.</p>
+            <div className={styles.invitationService}><ServiceImage service={selectedService} /><div><span>Wybrana usługa</span><strong>{selectedService.name}</strong><small><FiClock aria-hidden="true" />{durationToMinutes(selectedService)} min</small></div></div>
+            <span className={styles.invitationHint}><FiArrowRight aria-hidden="true" />Zacznij od wyboru dnia</span>
+          </div>}
+          {selectedDate && <>
+            <div className={styles.periods} role="group" aria-label="Pora dnia">
+              {[["all", "Wszystkie"], ["morning", "Przed 12:00"], ["afternoon", "Od 12:00"], ["evening", "Od 17:00"]].map(([value, label]) => <button type="button" key={value} aria-pressed={period === value} onClick={() => setPeriod(value)}>{label}</button>)}
             </div>
-
-            <span className={styles.fieldHint}>wymagane</span>
-          </div>
-
-          <div className={styles.selectWrap}>
-            <select
-              className={styles.select}
-              value={selectedService?._id || ""}
-              onChange={(e) => {
-                const svc = activeServices.find(
-                  (s) => String(s._id) === String(e.target.value)
-                );
-
-                setService(svc || null);
-                setSlot("");
-                setDate(null);
-                setSelectedStaffId("");
-              }}
-            >
-              <option value="">– wybierz –</option>
-
-              {activeServices.map((s) => (
-                <option key={s._id} value={s._id}>
-                  {s.name} {s.duration?.value}{" "}
-                  {s.duration?.unit === "minutes"
-                    ? "min"
-                    : s.duration?.unit === "hours"
-                      ? "godzin"
-                      : s.duration?.unit === "days"
-                        ? "dni"
-                        : s.duration?.unit}
-                </option>
-              ))}
-            </select>
-
-            <span className={styles.selectChevron} aria-hidden="true">
-              <FiChevronDown />
-            </span>
-          </div>
-        </label>
-
-        {isUserPick && selectedService && (
-          <label className={styles.field}>
-            <div className={styles.fieldHeader}>
-              <div>
-                <span className={styles.fieldEyebrow}>01 / Zespół</span>
-                <h3 className={styles.fieldTitle}>Wybierz pracownika</h3>
-              </div>
-
-              <span className={styles.fieldHint}>wymagane</span>
+            <div className={styles.slotsGrid} role="group" aria-label="Dostępne godziny">
+              {visibleSlots.map(slot => <button type="button" key={slot.label} aria-pressed={selectedSlot === slot.label} aria-label={`Godzina ${slot.label}, ${slot.status === "free" ? "wolna" : slot.status === "reserved" ? "zajęta" : slot.status === "pending" ? "oczekująca" : "niedostępna"}`} disabled={slot.status !== "free" || isSubmitting || reservationsLoading || availabilityError} onClick={() => setSlot(slot.label)}>{slot.label}</button>)}
             </div>
-
-            <div className={styles.selectWrap}>
-              <select
-                className={styles.select}
-                value={selectedStaffId}
-                onChange={(e) => {
-                  setSelectedStaffId(e.target.value);
-                  setSlot("");
-                  setDate(null);
-                }}
-              >
-                <option value="">– wybierz –</option>
-
-                {staffList
-                  .filter(
-                    (s) =>
-                      s.active &&
-                      (s.serviceIds || []).some(
-                        (id) => String(id) === String(selectedService?._id)
-                      )
-                  )
-                  .map((s) => (
-                    <option key={s._id} value={s._id}>
-                      {s.name}
-                      {s.role ? ` — ${s.role}` : ""}
-                    </option>
-                  ))}
-              </select>
-
-              <span className={styles.selectChevron} aria-hidden="true">
-                <FiChevronDown />
-              </span>
-            </div>
-          </label>
-        )}
+            {!reservationsLoading && !availabilityError && !visibleSlots.length && <p className={styles.notice}>{timeSlots.some(slot => slot.status === "free") ? "Brak godzin w tej porze dnia. Wybierz inną porę." : "Brak wolnych godzin. Wybierz inny dzień."}</p>}
+            <label className={styles.toggle}><input type="checkbox" checked={showUnavailableSlots} onChange={event => setShowUnavailableSlots(event.target.checked)} />Pokaż także zajęte godziny</label>
+          </>}
+        </section>
       </div>
-
-      {isAutoAssign && selectedService && (
-        <div className={styles.infoBox}>
-          <strong>Auto-przydział</strong>
-          <p>
-            Pracownik zostanie dobrany automatycznie do wybranego terminu.
-          </p>
-        </div>
-      )}
-
-      {selectedService ? (
-        <>
-        <div className={styles.mainGrid}>
-          <section className={styles.calendarCard}>
-            {reservationsLoading && <DataLoader label="Sprawdzamy dostępne terminy…" compact />}
-            <div className={styles.cardHead}>
-              <div>
-                <span className={styles.cardLabel}>Kalendarz</span>
-                <h3>Wybierz dzień</h3>
-              </div>
-            </div>
-
-            <div className={styles.monthNav}>
-              <button
-                type="button"
-                disabled={isBefore(startOfMonth(currentMonth), addMonths(startOfMonth(new Date()), 1))}
-                onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                aria-label="Poprzedni miesiąc"
-              >
-                <FiChevronLeft aria-hidden="true" />
-              </button>
-
-              <span className={styles.monthLabel}>
-                {format(currentMonth, "LLLL yyyy", { locale: pl })}
-              </span>
-
-              <button
-                type="button"
-                onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                aria-label="Następny miesiąc"
-              >
-                <FiChevronRight aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className={styles.calendarGrid}>
-              {["Pn", "Wt", "Śr", "Cz", "Pt", "Sb", "Nd"].map((d) => (
-                <div key={d} className={styles.weekday}>
-                  {d}
-                </div>
-              ))}
-
-              {Array(startDayIndex)
-                .fill(null)
-                .map((_, i) => (
-                  <div key={i} className={styles.blankDay} />
-                ))}
-
-              {daysInMonth.map((day) => {
-                const active = isDayActive(day);
-                const sel = selectedDate && isSameDay(day, selectedDate);
-                const isPast = isBefore(
-                  startOfDay(day),
-                  startOfDay(new Date())
-                );
-
-                const dateStr = format(day, "yyyy-MM-dd");
-                const blockedByOverride = isDateBlockedByOverride(
-                  provider,
-                  dateStr
-                );
-
-                const disabled = !active || isPast || blockedByOverride;
-
-                return (
-                  <button
-                    key={day.toISOString()}
-                    type="button"
-                    className={`
-                      ${styles.day}
-                      ${disabled ? styles.disabledDay : ""}
-                      ${blockedByOverride ? styles.overrideBlockedDay : ""}
-                      ${sel ? styles.selectedDay : ""}
-                    `}
-                    aria-label={format(day, "d MMMM yyyy", { locale: pl })}
-                    aria-pressed={Boolean(sel)}
-                    disabled={disabled}
-                    title={
-                      blockedByOverride
-                        ? "Ten dzień został oznaczony jako niedostępny przez usługodawcę."
-                        : undefined
-                    }
-                    onClick={() => {
-                      if (disabled) return;
-                      setDate(day);
-                      setSlot("");
-                    }}
-                  >
-                    {format(day, "d")}
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
-          <section className={styles.slotsInfoCard}>
-            {!selectedDate ? (
-              <div className={styles.emptyState}>
-                <span className={styles.emptyNumber}>03</span>
-                <strong>Wybierz dzień w kalendarzu</strong>
-                <p>
-                  Po kliknięciu daty pokażemy dostępne godziny dla wybranej
-                  usługi.
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className={styles.slotsHeader}>
-                  <div>
-                    <span className={styles.cardLabel}>Wybierz godzinę</span>
-
-                    <h3 className={styles.slotsTitle}>
-                      {format(selectedDate, "dd.MM.yyyy")}
-                    </h3>
-                  </div>
-
-                  <div className={styles.pickedPill} title="Wybrany slot">
-                    {selectedSlot ? (
-                      <>
-                        <span className={styles.pickedDot} />
-                        <span>
-                          Wybrano: <b>{selectedSlot}</b>
-                        </span>
-                      </>
-                    ) : (
-                      <span className={styles.pickedMuted}>
-                        Nie wybrano godziny
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className={styles.fullLegendBar}>
-                  <div className={styles.legendBadges}>
-                    <span className={styles.legendItem}>
-                      <span
-                        className={`${styles.legendBox} ${styles.legendReserved}`}
-                      />
-                      zajęte
-                    </span>
-
-                    <span className={styles.legendItem}>
-                      <span
-                        className={`${styles.legendBox} ${styles.legendPending}`}
-                      />
-                      oczekujące
-                    </span>
-
-                    <span className={styles.legendItem}>
-                      <span
-                        className={`${styles.legendBox} ${styles.legendDisabled}`}
-                      />
-                      niedostępne
-                    </span>
-
-                    <span className={styles.legendItem}>
-                      <span
-                        className={`${styles.legendBox} ${styles.legendFree}`}
-                      />
-                      wolne
-                    </span>
-                  </div>
-
-                  <div className={styles.legendMetaFull}>
-                    Czas usługi: <b>{durationToMinutes(selectedService)} min</b> · Przerwa między wizytami: <b>{effectiveBufferMin} min</b>
-                  </div>
-                </div>
-                <div className={styles.slotsForm}>
-                  <label className={styles.slotFilter}><input type="checkbox" checked={showUnavailableSlots} onChange={(event) => setShowUnavailableSlots(event.target.checked)} />Pokaż także zajęte i niedostępne godziny</label>
-                  {!reservationsLoading && !timeSlots.some((slot) => slot.status === "free") && <div className={styles.infoBox}><strong>Brak wolnych godzin w tym dniu</strong><p>Wybierz inny dzień w kalendarzu lub inną usługę.</p></div>}
-                  <div className={styles.slotsGrid} role="group" aria-label="Dostępne godziny">
-                    {timeSlots.filter((slot) => showUnavailableSlots || slot.status === "free").map((s) => (
-                      <button
-                        key={s.label}
-                        type="button"
-                        className={`
-                          ${styles.slot}
-                          ${s.status === "disabled" ? styles.slotDisabled : ""}
-                          ${s.status === "reserved" ? styles.slotReserved : ""}
-                          ${s.status === "pending" ? styles.slotPending : ""}
-                          ${selectedSlot === s.label ? styles.slotSelected : ""}
-                        `}
-                        aria-pressed={selectedSlot === s.label}
-                        aria-label={`Godzina ${s.label}, ${s.status === "free" ? "wolna" : s.status === "reserved" ? "zajęta" : s.status === "pending" ? "oczekująca" : "niedostępna"}`}
-                        disabled={s.status !== "free" || isSubmitting || reservationsLoading}
-                        onClick={() =>
-                          !isSubmitting && s.status === "free" && setSlot(s.label)
-                        }
-                      >
-                        {s.label}
-                      </button>
-                    ))}
-                  </div>
-
-                </div>
-              </>
-            )}
-          </section>
-        </div>
-        {selectedDate && <form onSubmit={handleSubmit} className={styles.review}>
-        <label className={`${styles.field} ${styles.fieldWide}`}>
-          <div className={styles.fieldHeader}>
-            <div>
-              <span className={styles.fieldEyebrow}>03 / Dodatkowe informacje</span>
-              <h3 className={styles.fieldTitle}>Opis lub uwagi do rezerwacji</h3>
-            </div>
-
-            <span className={styles.fieldHint}>opcjonalnie</span>
-          </div>
-
-          <textarea
-            className={styles.textarea}
-            rows="3"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Np. strzyżenie + mycie, wrażliwa skóra, preferowana godzina…"
-          />
-        </label>
-
-        {selectedSlot && <div className={styles.bookingSummary} aria-live="polite"><strong>Twoja rezerwacja</strong>{selectedService.name}<br />{format(selectedDate, "d MMMM yyyy", { locale: pl })} · godz. {selectedSlot}<br />Czas usługi: {durationToMinutes(selectedService)} min{selectedStaffId && <><br />{staffList.find((staff) => String(staff._id) === String(selectedStaffId))?.name}</>}</div>}
-        <div className={styles.submitBar}>
-          <LoadingButton
-            type="submit"
-            isLoading={isSubmitting}
-            disabled={!selectedSlot || isSubmitting || reservationsLoading}
-            className={styles.submit}
-          >
-            Rezerwuj termin
-          </LoadingButton>
-
-          <div className={styles.submitHint}>
-            {provider.autoAcceptReservations ? "Ten profil automatycznie potwierdza rezerwacje. Status zobaczysz w panelu rezerwacji." : "Wyślemy prośbę do usługodawcy. Potwierdzenie zobaczysz w swoich rezerwacjach."}
-          </div>
-        </div>
-        </form>}
-        </>
-      ) : (
-        <div className={styles.preSelect}>
-          <span className={styles.emptyNumber}>02</span>
-          <strong>{activeServices.length ? "Najpierw wybierz usługę" : "Brak usług do rezerwacji"}</strong>
-          <p>
-            {activeServices.length ? "Wybierz usługę, a pokażemy dni i godziny, w których możesz umówić wizytę." : "Ten profil nie ma obecnie aktywnych usług. Wróć do profilu i skontaktuj się bezpośrednio z usługodawcą."}
-          </p>
-        </div>
-      )}
-    </>
-  );
+      {selectedDate && <form onSubmit={handleSubmit} className={styles.review}>
+        <label className={styles.field}>Uwagi (opcjonalnie)<textarea rows="2" value={description} onChange={event => setDescription(event.target.value)} disabled={isSubmitting} placeholder="Co powinniśmy wiedzieć przed wizytą?" /></label>
+        {selectedSlot && <BookingSummary service={selectedService} date={selectedDate} time={selectedSlot} duration={durationToMinutes(selectedService)} staff={staffList.find(staff => String(staff._id) === String(selectedStaffId))?.name} />}
+        <LoadingButton type="submit" isLoading={isSubmitting} disabled={!selectedSlot || isSubmitting || reservationsLoading || availabilityError || !timeSlots.some(slot => slot.label === selectedSlot && slot.status === "free")} className={styles.submit}><FiCheckCircle aria-hidden="true" />Rezerwuj termin</LoadingButton>
+        <p className={styles.hint}>{provider.autoAcceptReservations ? "Ten profil automatycznie potwierdza rezerwacje. Status zobaczysz w swoich rezerwacjach." : "Usługodawca potwierdzi termin. Status zobaczysz w swoich rezerwacjach."}</p>
+      </form>}
+    </> : <div className={styles.selectionPrompt}><span className={styles.promptIcon} aria-hidden="true"><FiCalendar /></span><p>{!activeServices.length ? "Brak usług do rezerwacji. Skontaktuj się z usługodawcą." : !selectedService ? "Wybierz usługę, aby sprawdzić wolne terminy." : "Wybierz pracownika, aby sprawdzić wolne terminy."}</p><FiArrowRight className={styles.promptArrow} aria-hidden="true" /></div>}
+  </div>;
 }

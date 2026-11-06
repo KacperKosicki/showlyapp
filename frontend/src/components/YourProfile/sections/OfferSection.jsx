@@ -10,6 +10,8 @@ import {
   SERVICE_DURATION_LIMITS,
 } from '../../constants/validationLimits';
 
+import { DAY_BOOKING_OPTIONS, dayBookingCopy } from "../../../utils/dayBooking";
+
 const STAFF_NAME_MAX_LENGTH = 60;
 
 const formatDateLabel = (date = "") => {
@@ -261,8 +263,8 @@ const OfferSection = ({
                   },
                   {
                     value: "request-blocking",
-                    title: "Zapytania + blokowanie dni",
-                    text: "Dobre dla DJ-ów, cukierników i usług realizowanych w wybrane dni.",
+                    title: "Rezerwacje i zamówienia na datę",
+                    text: "Data realizacji, godziny od–do lub pobyt przez kilka dni — wybierz poniżej.",
                     premium: true,
                   },
                   {
@@ -310,7 +312,7 @@ const OfferSection = ({
                   {profile.bookingMode === "calendar"
                     ? "Kalendarz godzinowy"
                     : profile.bookingMode === "request-blocking"
-                      ? "Zapytania + blokowanie dni"
+                      ? "Rezerwacje i zamówienia na datę"
                       : "Zapytania"}
                 </strong>
 
@@ -318,12 +320,19 @@ const OfferSection = ({
                   {profile.bookingMode === "calendar"
                     ? "Klienci mogą wybierać konkretne godziny."
                     : profile.bookingMode === "request-blocking"
-                      ? "Możesz blokować dni i obsługiwać zapytania."
+                      ? "Formularz dopasowany do sposobu realizacji Twojej oferty."
                       : "Klienci kontaktują się przez formularz wiadomości."}
                 </span>
               </div>
             )}
           </EditorGroup>
+
+          {(isEditing ? editData.bookingMode : profile.bookingMode) === "request-blocking" && <EditorGroup title="Sposób realizacji" description="Wybierz według swojej oferty. Klient zobaczy dopasowane pola i nazwy, bez zgadywania na podstawie branży.">
+            {isEditing ? <div className={styles.bookingModeGrid}>
+              {DAY_BOOKING_OPTIONS.map(option => <button type="button" key={option.value} aria-pressed={(editData.dayBookingMode || 'exclusive-day') === option.value} disabled={!canUseBooking} className={styles.bookingModeCard + ' ' + ((editData.dayBookingMode || 'exclusive-day') === option.value ? styles.bookingModeActive : '')} onClick={() => setEditData(prev => ({ ...prev, dayBookingMode: option.value }))}><strong>{option.title}</strong><span>{option.text}</span></button>)}
+            </div> : <div className={styles.modeView}><strong>{dayBookingCopy(profile).title}</strong><span>{dayBookingCopy(profile).text}</span></div>}
+            <p className={styles.dayBookingHint}>Zmiana ustawienia dotyczy nowych zgłoszeń. Istniejące zachowują wybrane daty i zasady. Pobyt traktuje datę wyjazdu jako koniec rezerwacji.</p>
+          </EditorGroup>}
 
           {/* USTAWIENIA REZERWACJI */}
           <EditorGroup title={<>03 / Ustawienia rezerwacji</>} description={<>

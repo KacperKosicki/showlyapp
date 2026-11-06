@@ -1723,6 +1723,7 @@ const allowedFields = [
   "showAvailableDates",
   "services",
   "bookingMode",
+  "dayBookingMode",
   "autoAcceptReservations",
   "workingHours",
   "bookingBufferMin",
@@ -1915,6 +1916,10 @@ router.patch("/update/:uid", requireAuth, requireOwnerOrAdmin, async (req, res) 
           }))
           .filter((item) => item.date && item.fromTime && item.toTime)
         : [];
+    }
+
+    if (updates.dayBookingMode !== undefined && !['exclusive-day', 'order', 'hours', 'stay'].includes(updates.dayBookingMode)) {
+      return res.status(400).json({ message: 'Nieprawidłowy sposób rezerwacji na datę.' });
     }
 
     if (updates.workingHours) {

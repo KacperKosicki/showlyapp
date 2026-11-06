@@ -7,13 +7,16 @@ import AlertBox from "../AlertBox/AlertBox";
 import BookingModeCalendar from "./BookingModeCalendar";
 import BookingModeDay from "./BookingModeDay";
 import BookingModeOpen from "./BookingModeOpen";
+import PanelBackdrop from "../PanelBackdrop/PanelBackdrop";
 
 import {
   FaMapMarkerAlt,
-  FaRegCalendarAlt,
-  FaUserCheck,
   FaArrowLeft,
+  FaRegCalendarAlt,
+  FaRegCommentDots,
 } from "react-icons/fa";
+
+import { dayBookingCopy } from "../../utils/dayBooking";
 
 const API = process.env.REACT_APP_API_URL;
 const DEFAULT_AVATAR = "/images/other/no-image.png";
@@ -48,20 +51,10 @@ const modeLabel = (mode) => {
   const m = String(mode || "off").toLowerCase();
 
   if (m === "calendar") return "Wybierz termin wizyty";
-  if (m === "request-blocking") return "Zarezerwuj wybrany dzień";
-  if (m === "request-open") return "Porozmawiajmy o Twoim pomyśle";
+  if (m === "request-blocking") return "Wybierz termin realizacji";
+  if (m === "request-open") return "Zapytaj o usługę";
 
   return "Rezerwacje niedostępne";
-};
-
-const modeShortLabel = (mode) => {
-  const m = String(mode || "off").toLowerCase();
-
-  if (m === "calendar") return "KALENDARZ";
-  if (m === "request-blocking") return "REZERWACJA DNIA";
-  if (m === "request-open") return "ZAPYTANIE";
-
-  return "WYŁĄCZONE";
 };
 
 export default function BookingForm({ user }) {
@@ -113,6 +106,7 @@ export default function BookingForm({ user }) {
                 role: finalProvider.role || meta.providerProfileRole,
 
                 bookingMode: meta.bookingMode || finalProvider.bookingMode,
+                dayBookingMode: meta.dayBookingMode || finalProvider.dayBookingMode || "exclusive-day",
                 team: meta.team || finalProvider.team,
 
                 services: Array.isArray(meta.services)
@@ -177,10 +171,10 @@ export default function BookingForm({ user }) {
   if (!provider) {
     return (
       <section className={styles.pageWrap} id="booking-form">
+        <PanelBackdrop word="REZERWACJE" />
         <div className={styles.inner}>
           <>
           {!loadError ? <DataLoader label="Ładujemy formularz rezerwacji…" detail="Sprawdzamy usługi i dostępność tego profilu." layout="form" /> : <div className={styles.loadingCard}>
-            <span>SHOWLY / REZERWACJE</span>
             <strong>Nie udało się wczytać formularza</strong>
             <p>Spróbuj ponownie. Twój wybór usługi został zachowany.</p>
             {loadError && <button type="button" className={styles.backButton} onClick={() => setReloadKey(value => value + 1)}>Spróbuj ponownie</button>}
@@ -202,108 +196,62 @@ export default function BookingForm({ user }) {
       )}
 
       <section className={styles.pageWrap} id="booking-form">
-        <div className={styles.backdrop} aria-hidden="true">TWÓJ TERMIN.</div>
+        <PanelBackdrop word="REZERWACJE" />
         <div className={styles.inner}>
           <article className={styles.layout}>
-            <aside className={styles.side}>
-              <button
-                type="button"
-                className={styles.backButton}
-                onClick={() => navigate(`/${provider.slug || slug}`, { state: { scrollToId: "profileWrapper" } })}
-              >
-                <FaArrowLeft />
-                <span>Wróć do profilu</span>
-              </button>
-
-              <span className={styles.overline}><FaRegCalendarAlt aria-hidden="true" /> Showly / Rezerwacje</span>
-
-              <h1 className={styles.heading}>
-                {mode === "request-open" ? "Masz pomysł?" : "Twój kolejny"}{" "}
-                <span>{mode === "request-open" ? "Ustalmy szczegóły." : "dobry termin."}</span>
-              </h1>
-
-              <p className={styles.description}>
-                {mode === "request-open" ? "Napisz, czego potrzebujesz. Szczegóły ustalisz bezpośrednio z usługodawcą." : "Wybierz usługę i wolny termin. Przed wysłaniem sprawdzisz wszystkie szczegóły."}
-              </p>
-
-              <div className={styles.providerBox}>
-                <div className={styles.avatarBox}>
-                  <img
-                    src={avatarSrc}
-                    alt={provider.name || "Profil Showly"}
-                    className={styles.avatar}
-                    decoding="async"
-                    onError={(e) => {
-                      if (!e.currentTarget.dataset.fallback) {
-                        e.currentTarget.dataset.fallback = "1";
-                        e.currentTarget.src = DEFAULT_AVATAR;
-                      }
-                    }}
-                  />
-                </div>
-
-                <div className={styles.providerInfo}>
-                  <span className={styles.providerLabel}>Rezerwujesz u</span>
-
-                  <strong className={styles.providerName}>
-                    {provider.name || "Profil Showly"}
-                  </strong>
-
-                  {!!provider.role && (
-                    <p className={styles.providerRole}>{provider.role}</p>
-                  )}
-                </div>
+            <header className={styles.pageHeader}>
+              <div className={styles.titleBlock}>
+                <button
+                  type="button"
+                  className={styles.backButton}
+                  onClick={() => navigate(`/${provider.slug || slug}`, { state: { scrollToId: "profileWrapper" } })}
+                >
+                  <FaArrowLeft />
+                  <span>Wróć do profilu</span>
+                </button>
+                <h1 className={styles.heading}>{mode === "request-open" ? <>Zapytaj o <span>usługę.</span></> : <>Zrób miejsce na <span>coś dobrego.</span></>}</h1>
+                <p>{mode === "request-open" ? "Ustal szczegóły z usługodawcą." : mode === "request-blocking" && provider.dayBookingMode === "order" ? "Wybierz ofertę i datę realizacji. Usługodawca potwierdzi Twoje zamówienie." : "Wybierz usługę, termin i potwierdź rezerwację."}</p>
               </div>
+              {mode === "request-open" ? <FaRegCommentDots className={styles.headerIcon} aria-hidden="true" /> : <FaRegCalendarAlt className={styles.headerIcon} aria-hidden="true" />}
+            </header>
+            <aside className={styles.side}>
+              <div className={styles.providerCard}>
+                <span className={styles.providerPin}>{mode === "request-blocking" && provider.dayBookingMode === "order" ? "Zamawiasz u" : "Rezerwujesz u"}</span>
+                <div className={styles.providerBox}>
+                  <div className={styles.avatarBox}>
+                    <img
+                      src={avatarSrc}
+                      alt={provider.name || "Profil Showly"}
+                      className={styles.avatar}
+                      decoding="async"
+                      onError={(e) => {
+                        if (!e.currentTarget.dataset.fallback) {
+                          e.currentTarget.dataset.fallback = "1";
+                          e.currentTarget.src = DEFAULT_AVATAR;
+                        }
+                      }}
+                    />
+                  </div>
 
-              <div className={styles.metaList}>
-                <div className={styles.metaItem}>
-                  <span className={styles.metaIcon}>
-                    <FaMapMarkerAlt />
-                  </span>
+                  <div className={styles.providerInfo}>
 
-                  <div>
-                    <strong>Lokalizacja</strong>
-                    <p>{provider.location || "Brak lokalizacji"}</p>
+                    <strong className={styles.providerName}>
+                      {provider.name || "Profil Showly"}
+                    </strong>
+
+                    {!!provider.role && (
+                      <p className={styles.providerRole}>{provider.role}</p>
+                    )}
                   </div>
                 </div>
 
-                <div className={styles.metaItem}>
-                  <span className={styles.metaIcon}>
-                    <FaRegCalendarAlt />
-                  </span>
-
-                  <div>
-                    <strong>Tryb rezerwacji</strong>
-                    <p>{modeLabel(mode)}</p>
-                  </div>
-                </div>
-
-                <div className={styles.metaItem}>
-                  <span className={styles.metaIcon}>
-                    <FaUserCheck />
-                  </span>
-
-                  <div>
-                    <strong>{mode === "request-open" ? "Odpowiedź w Showly" : "Potwierdzenie terminu"}</strong>
-                    <p>{mode === "request-open" ? "Dalszą rozmowę znajdziesz w wiadomościach." : provider.autoAcceptReservations ? "Ten profil automatycznie potwierdza rezerwacje." : "Usługodawca sprawdzi i potwierdzi Twoją rezerwację."}</p>
-                  </div>
-                </div>
+                {provider.location && <p className={styles.location}><FaMapMarkerAlt aria-hidden="true" />{provider.location}</p>}
+                <p className={styles.confirmation}>{mode === "request-open" ? "Odpowiedź znajdziesz w wiadomościach." : provider.autoAcceptReservations ? "Automatyczne potwierdzenie terminu" : "Termin potwierdza usługodawca"}</p>
               </div>
             </aside>
 
             <main className={styles.content}>
-              <div className={styles.chapterHead}>
-                <div>
-                  <span className={styles.chapterLabel}>
-                    {modeShortLabel(mode)}
-                  </span>
-
-                  <h2>{modeLabel(mode)}</h2>
-                </div>
-
-                <span className={styles.chapterNumber}><FaRegCalendarAlt aria-hidden="true" /></span>
-              </div>
-
+              <h2 className={styles.formHeading}>{mode === "request-blocking" ? dayBookingCopy(provider).title : modeLabel(mode)}</h2>
               <section className={styles.body}>
                 {mode === "calendar" && (
                   <BookingModeCalendar

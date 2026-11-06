@@ -31,3 +31,18 @@ test.each([
   fireEvent.click(screen.getByRole('button', { name: 'Wróć do powiadomień' }));
   expect(mockNavigate).toHaveBeenCalledWith('/powiadomienia');
 });
+
+test.each(['', 'https://images.example.com/avatar.png'])('thread header and message avatars use Notifications fallback: %s', async avatar => {
+  axios.get.mockImplementation(async url => {
+    if (url.includes('/api/conversations/')) return { data: { channel: 'account_to_account', firstFromUid: 'anna', participants: [{ uid: 'owner', displayName: 'Ja' }, { uid: 'anna', displayName: 'Anna', avatar }], messages: [{ _id: 'm1', fromUid: 'anna', toUid: 'owner', content: 'Cześć, sprawdzam termin.', read: true, createdAt: '2026-11-06T09:00:00Z' }] } };
+    return { data: null };
+  });
+  render(<ThreadView user={{ uid: 'owner' }} />);
+  await screen.findByText('Cześć, sprawdzam termin.');
+  const avatars = screen.getAllByAltText('');
+  expect(avatars.length).toBeGreaterThanOrEqual(2);
+  avatars.forEach(image => {
+    if (avatar) fireEvent.error(image);
+    expect(image).toHaveAttribute('src', '/images/other/no-image.png');
+  });
+});

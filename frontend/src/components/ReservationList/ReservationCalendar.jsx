@@ -1,3 +1,5 @@
+import WorkspaceEmptyState from "../ui/WorkspaceEmptyState/WorkspaceEmptyState";
+import { dayBookingMode, dayBookingCopy } from "../../utils/dayBooking";
 import DataLoader from '../ui/DataLoader/DataLoader';
 import { createPortal } from "react-dom";
 import Calendar from "react-calendar";
@@ -43,6 +45,8 @@ const minToTime = (minutes) => {
 };
 
 const ReservationCalendar = ({
+  readAllReceived,
+  readAllSent,
   selectedDay,
   onSelectedDayChange,
 
@@ -387,7 +391,7 @@ const ReservationCalendar = ({
                 </div>
               )}
 
-              <EditorGroup title="01 / Dane rezerwacji"><div className={styles.modalGrid}>
+              <EditorGroup title="Dane rezerwacji"><div className={styles.modalGrid}>
                 <label className={styles.field}>
                   <span>Data</span>
                   <input
@@ -400,6 +404,11 @@ const ReservationCalendar = ({
                   />
                 </label>
 
+                {isDayBlockingMode && dayBookingMode(providerMeta) === 'stay' && <label className={styles.field}><span>Data wyjazdu</span><input className={styles.formInput} type="date" min={offlineForm.date} value={offlineForm.endDate || ''} onChange={event => setOfflineForm(prev => ({ ...prev, endDate: event.target.value }))} /></label>}
+                {isDayBlockingMode && dayBookingMode(providerMeta) === 'hours' && <>
+                  <label className={styles.field}><span>Godzina od</span><input className={styles.formInput} type="time" value={offlineForm.fromTime} onChange={event => setOfflineForm(prev => ({ ...prev, fromTime: event.target.value }))} /></label>
+                  <label className={styles.field}><span>Godzina do</span><input className={styles.formInput} type="time" value={offlineForm.toTime} onChange={event => setOfflineForm(prev => ({ ...prev, toTime: event.target.value }))} /></label>
+                </>}
                 {!isDayBlockingMode && (
                   <label className={styles.fieldToggle}>
                     <input
@@ -630,7 +639,7 @@ const ReservationCalendar = ({
           </div>
         </div>
 
-        <EditorGroup title="01 / Wybrany dzień w liczbach"><div className={styles.summaryGrid}>
+        <EditorGroup title="Wybrany dzień w liczbach"><div className={styles.summaryGrid}>
           <div className={styles.summaryCard}>
             <strong>{dayMeta?.total ?? 0}</strong>
             <span>Wszystkie rezerwacje</span>
@@ -653,7 +662,7 @@ const ReservationCalendar = ({
         </div></EditorGroup>
 
         <div className={styles.calendarLayout}>
-          <EditorGroup title="02 / Wybierz termin" className={styles.calendarColumn}>
+          <EditorGroup title="Wybierz termin" className={styles.calendarColumn}>
             <div className={styles.calendarBox}>
               <Calendar
                 value={selectedDay}
@@ -718,7 +727,7 @@ const ReservationCalendar = ({
             )}
 
             {isSlotMode && (
-              <EditorGroup title="03 / Harmonogram dnia" className={styles.daySection}>
+              <EditorGroup title="Harmonogram dnia" className={styles.daySection}>
                 <div className={styles.sectionHeader}>
                   <div>
                     <span className={styles.sectionLabel}>
@@ -734,16 +743,7 @@ const ReservationCalendar = ({
                 </div>
 
                 {visibleTimelineBlocks.length === 0 ? (
-                  <div className={styles.emptyState}>
-                    <FiCalendar aria-hidden="true" />
-
-                    <strong>Brak danych dla tego dnia</strong>
-
-                    <p>
-                      Nie znaleziono rezerwacji ani dostępnych
-                      przedziałów godzinowych.
-                    </p>
-                  </div>
+                  <WorkspaceEmptyState icon={<FiCalendar />} title="Brak danych dla tego dnia" text="Nie znaleziono rezerwacji ani dostępnych przedziałów godzinowych. Sprawdź inny dzień w kalendarzu." />
                 ) : (
                   <div className={styles.timeline}>
                     {visibleTimelineBlocks.map(renderTimelineBlock)}
@@ -753,26 +753,25 @@ const ReservationCalendar = ({
             )}
 
             {isDayBlockingMode && (
-              <EditorGroup title="03 / Dostępność dnia" className={styles.daySection}>
+              <EditorGroup title="Dostępność dnia" className={styles.daySection}>
                 <div className={styles.sectionHeader}>
                   <div>
                     <span className={styles.sectionLabel}>
                       Dostępność
                     </span>
 
-                    <h5>Blokowanie dnia</h5>
+                    <h5>{dayBookingCopy(providerMeta).title}</h5>
                   </div>
                 </div>
 
                 <div className={styles.infoState}>
-                  W tym trybie możesz dodać rezerwację offline
-                  obejmującą cały wybrany dzień.
+                  {dayBookingCopy(providerMeta).text}
                 </div>
               </EditorGroup>
             )}
 
             {hasProviderProfile && (
-              <EditorGroup title="04 / Otrzymane rezerwacje" className={styles.daySection}>
+              <EditorGroup title="Otrzymane rezerwacje" className={styles.daySection}>
                 <div className={styles.sectionHeader}>
                   <div>
                     <span className={styles.sectionLabel}>
@@ -782,15 +781,13 @@ const ReservationCalendar = ({
                     <h5>Otrzymane</h5>
                   </div>
 
-                  <span className={styles.sectionCount}>
+                  <div className={styles.sectionHeaderActions}>{readAllReceived}<span className={styles.sectionCount}>
                     {selectedReservations.recv.length}
-                  </span>
+                  </span></div>
                 </div>
 
                 {selectedReservations.recv.length === 0 ? (
-                  <div className={styles.smallEmptyState}>
-                    Brak otrzymanych rezerwacji w tym dniu.
-                  </div>
+                  <WorkspaceEmptyState icon={<FiInbox />} title="Brak otrzymanych rezerwacji w tym dniu" text="Gdy ktoś zarezerwuje termin w Twoim profilu, zobaczysz go tutaj. Możesz też sprawdzić inny dzień w kalendarzu." />
                 ) : (
                   <ul className={styles.reservationList}>
                     {selectedReservations.recv.map((reservation) =>
@@ -804,7 +801,7 @@ const ReservationCalendar = ({
               </EditorGroup>
             )}
 
-            <EditorGroup title={`${hasProviderProfile ? "05" : "04"} / Wysłane rezerwacje`} className={styles.daySection}>
+            <EditorGroup title="Wysłane rezerwacje" className={styles.daySection}>
               <div className={styles.sectionHeader}>
                 <div>
                   <span className={styles.sectionLabel}>
@@ -814,15 +811,13 @@ const ReservationCalendar = ({
                   <h5>Wysłane</h5>
                 </div>
 
-                <span className={styles.sectionCount}>
+                <div className={styles.sectionHeaderActions}>{readAllSent}<span className={styles.sectionCount}>
                   {selectedReservations.sent.length}
-                </span>
+                </span></div>
               </div>
 
               {selectedReservations.sent.length === 0 ? (
-                <div className={styles.smallEmptyState}>
-                  Brak wysłanych rezerwacji w tym dniu.
-                </div>
+                <WorkspaceEmptyState icon={<FiSend />} title="Brak wysłanych rezerwacji w tym dniu" text="Poznaj profile na Showly i znajdź usługę dla siebie. Wybrany termin pojawi się w Twoim kalendarzu." />
               ) : (
                 <ul className={styles.reservationList}>
                   {selectedReservations.sent.map((reservation) =>
@@ -853,7 +848,7 @@ const ReservationCalendar = ({
                     {selectedDayAvailabilityInfo
                       ? "Termin niedostępny"
                       : isDayBlockingMode
-                        ? "Zablokuj dzień offline"
+                        ? "Dodaj zgłoszenie offline"
                         : "Dodaj rezerwację offline"}
                   </button>
                 </div>

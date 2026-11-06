@@ -41,6 +41,8 @@ const reservationSchema = new mongoose.Schema(
     // DATA / CZAS
     date: { type: String, required: true }, // YYYY-MM-DD
     dateOnly: { type: Boolean, default: false },
+    bookingKind: { type: String, enum: ['exclusive-day', 'order', 'hours', 'stay'], default: undefined },
+    endDate: { type: String, default: null },
 
     fromTime: {
       type: String,

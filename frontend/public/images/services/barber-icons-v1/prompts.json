@@ -1,0 +1,45 @@
+{
+  "generator": "Built-in image_gen",
+  "assets": [
+    {
+      "name": "01-strzyzenie-klasyczne",
+      "prompt": "Use case: stylized-concept. Create ONE square premium barbershop service avatar illustration for a booking application. Cohesive collectible icon family. Matte charcoal background #171917 fills the whole square, warm ivory #fffdf7 sculpted objects, restrained lime green #d8ff72 accent details. Modern sophisticated 3D editorial clay/ceramic illustration with subtle paper grain, soft studio shadows, frontal three-quarter view, thick clean silhouettes, no photorealistic people, no busy details. Main composition centered inside generous 15% safe margins, works cropped to a circle and at 64px. No text, letters, numerals, watermark, brand logo, border or outer badge ring. Consistent lighting from upper left. Subject: classic men's haircut. Elegant barber scissors with two clear blades and a short comb arranged diagonally, with one sculpted classic swept men's hair tuft. Ivory scissors and comb, dark hair with a small lime accent. Readable simple emblem.",
+      "file": "01-strzyzenie-klasyczne.png"
+    },
+    {
+      "name": "02-strzyzenie-fade",
+      "prompt": "Use case: stylized-concept. Create ONE square premium barbershop service avatar illustration for a booking application. Cohesive collectible icon family. Matte charcoal background #171917 fills the whole square, warm ivory #fffdf7 sculpted objects, restrained lime green #d8ff72 accent details. Modern sophisticated 3D editorial clay/ceramic illustration with subtle paper grain, soft studio shadows, frontal three-quarter view, thick clean silhouettes, no photorealistic people, no busy details. Main composition centered inside generous 15% safe margins, works cropped to a circle and at 64px. No text, letters, numerals, watermark, brand logo, border or outer badge ring. Consistent lighting from upper left. Subject: men's skin fade haircut. A stylized anonymous male head in side profile with a clean graduated skin fade from short dark hair to ivory skin, plus one compact professional hair clipper with a lime handle accent. Focus on smooth fade and bold silhouette.",
+      "file": "02-strzyzenie-fade.png"
+    },
+    {
+      "name": "03-modelowanie-brody",
+      "prompt": "Use case: stylized-concept. Create ONE square premium barbershop service avatar illustration for a booking application. Cohesive collectible icon family. Matte charcoal background #171917 fills the whole square, warm ivory #fffdf7 sculpted objects, restrained lime green #d8ff72 accent details. Modern sophisticated 3D editorial clay/ceramic illustration with subtle paper grain, soft studio shadows, frontal three-quarter view, thick clean silhouettes, no photorealistic people, no busy details. Main composition centered inside generous 15% safe margins, works cropped to a circle and at 64px. No text, letters, numerals, watermark, brand logo, border or outer badge ring. Consistent lighting from upper left. Subject: beard shaping and contouring. Sculpted well-groomed full beard and moustache silhouette, an elegant small beard comb and precise detail trimmer with a restrained lime accent. No full face or body, clean barber icon.",
+      "file": "03-modelowanie-brody.png"
+    },
+    {
+      "name": "04-strzyzenie-i-broda",
+      "prompt": "Use case: stylized-concept. Create ONE square premium barbershop service avatar illustration for a booking application. Cohesive collectible icon family. Matte charcoal background #171917 fills the whole square, warm ivory #fffdf7 sculpted objects, restrained lime green #d8ff72 accent details. Modern sophisticated 3D editorial clay/ceramic illustration with subtle paper grain, soft studio shadows, frontal three-quarter view, thick clean silhouettes, no photorealistic people, no busy details. Main composition centered inside generous 15% safe margins, works cropped to a circle and at 64px. No text, letters, numerals, watermark, brand logo, border or outer badge ring. Consistent lighting from upper left. Subject: premium haircut and beard bundle. One stylish sculpted male head with a classic swept hairstyle and neatly contoured beard, complemented by a small ivory barber scissors and lime four-point sparkle. Elegant premium service emblem, no crown, no text.",
+      "file": "04-strzyzenie-i-broda.png"
+    },
+    {
+      "name": "05-strzyzenie-dzieciece",
+      "prompt": "Use case: stylized-concept. Create ONE square premium barbershop service avatar illustration for a booking application. Cohesive collectible icon family. Matte charcoal background #171917 fills the whole square, warm ivory #fffdf7 sculpted objects, restrained lime green #d8ff72 accent details. Modern sophisticated 3D editorial clay/ceramic illustration with subtle paper grain, soft studio shadows, frontal three-quarter view, thick clean silhouettes, no photorealistic people, no busy details. Main composition centered inside generous 15% safe margins, works cropped to a circle and at 64px. No text, letters, numerals, watermark, brand logo, border or outer badge ring. Consistent lighting from upper left. Subject: children's haircut. Friendly stylized child's head with a playful short hair tuft, a small rounded-tip safety scissors, and one small lime star. Child fully clothed only head visible. Warm, welcoming, refined rather than cartoonish or babyish.",
+      "file": "05-strzyzenie-dzieciece.png"
+    },
+    {
+      "name": "06-hot-towel-shave",
+      "prompt": "Use case: stylized-concept. Create ONE square premium barbershop service avatar illustration for a booking application. Cohesive collectible icon family. Matte charcoal background #171917 fills the whole square, warm ivory #fffdf7 sculpted objects, restrained lime green #d8ff72 accent details. Modern sophisticated 3D editorial clay/ceramic illustration with subtle paper grain, soft studio shadows, frontal three-quarter view, thick clean silhouettes, no photorealistic people, no busy details. Main composition centered inside generous 15% safe margins, works cropped to a circle and at 64px. No text, letters, numerals, watermark, brand logo, border or outer badge ring. Consistent lighting from upper left. Subject: hot towel straight razor shave. A neatly rolled ivory hot towel with two simple curved steam wisps, paired with an open classic straight razor with lime green handle, elegant polished ivory blade. Balanced clean still life.",
+      "file": "06-hot-towel-shave.png"
+    },
+    {
+      "name": "07-koloryzacja-brody",
+      "prompt": "Use case: stylized-concept. Create ONE square premium barbershop service avatar illustration for a booking application. Cohesive collectible icon family. Matte charcoal background #171917 fills the whole square, warm ivory #fffdf7 sculpted objects, restrained lime green #d8ff72 accent details. Modern sophisticated 3D editorial clay/ceramic illustration with subtle paper grain, soft studio shadows, frontal three-quarter view, thick clean silhouettes, no photorealistic people, no busy details. Main composition centered inside generous 15% safe margins, works cropped to a circle and at 64px. No text, letters, numerals, watermark, brand logo, border or outer badge ring. Consistent lighting from upper left. Subject: grey coverage and beard coloring. Stylized sculpted beard split subtly between ivory-grey strands and rich charcoal colored strands, beside a small barber tint brush and mixing bowl with a lime accent. No face needed, bold simple shapes.",
+      "file": "07-koloryzacja-brody.png"
+    },
+    {
+      "name": "08-ekspresowe-odswiezenie",
+      "prompt": "Use case: stylized-concept. Create ONE square premium barbershop service avatar illustration for a booking application. Cohesive collectible icon family. Matte charcoal background #171917 fills the whole square, warm ivory #fffdf7 sculpted objects, restrained lime green #d8ff72 accent details. Modern sophisticated 3D editorial clay/ceramic illustration with subtle paper grain, soft studio shadows, frontal three-quarter view, thick clean silhouettes, no photorealistic people, no busy details. Main composition centered inside generous 15% safe margins, works cropped to a circle and at 64px. No text, letters, numerals, watermark, brand logo, border or outer badge ring. Consistent lighting from upper left. Subject: express haircut refresh, side trim and hairline contour. A compact professional hair clipper next to one sculpted clean hairline corner and a single simple lime lightning bolt symbol communicating speed. Ivory clipper with restrained charcoal details, clean minimal emblem.",
+      "file": "08-ekspresowe-odswiezenie.png"
+    }
+  ]
+}

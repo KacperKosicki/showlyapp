@@ -12,6 +12,7 @@ const stubs = {
     findOneAndUpdate: async (where, changes) => { filter = where; update = changes; return saved ? reservation : null; },
     countDocuments: async where => { filter = where; return 2; },
   },
+  '../utils/dayBookingAvailability': { acquireDayLock: async () => async () => {}, ensureDayAvailable: async () => {} },
   '../models/Profile': { findById: async () => ({ availableDates: [] }) },
   '../models/User': {}, '../models/Staff': {},
   '../utils/sendPushNotification': { sendPushToUserUid: async (uid, data) => { push = { uid, ...data }; } },

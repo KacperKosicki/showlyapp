@@ -1,9 +1,9 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ReservationList from './ReservationList';
 import { api } from '../../api/api';
 jest.mock('../../api/api', () => ({ api: { get: jest.fn(), patch: jest.fn() } }));
-jest.mock('react-router-dom', () => ({ useLocation: () => ({ pathname: '/rezerwacje', state: null }) }), { virtual: true });
+jest.mock('react-router-dom', () => ({ useLocation: () => ({ pathname: '/rezerwacje', state: null }), Link: ({ to, state, children, ...props }) => <a href={to} {...props}>{children}</a> }), { virtual: true });
 jest.mock('./ReservationCalendar', () => () => null);
 test('confirmation stays unread on entry and acknowledging it preserves the active booking', async () => {
   const reservation = { _id: 'r1', userId: 'client', providerUserId: 'provider', providerName: 'Salon', status: 'zaakceptowana', date: '2027-01-01', fromTime: '10:00', toTime: '11:00', clientSeen: false, clientUpdateType: 'accepted', updatedAt: '2026-10-21T10:00:00Z' };
@@ -132,4 +132,63 @@ test('reservation search composes with status filters and clearing the field res
   fireEvent.change(search, { target: { value: '' } });
   expect(screen.getByText('Salon Marta')).toBeInTheDocument();
   expect(screen.queryByText('Studio Anna')).not.toBeInTheDocument();
+});
+test('bulk read acknowledges only unread sent updates and keeps active reservations', async () => {
+  const base = { userId: 'client', providerUserId: 'owner', date: '2027-01-01', fromTime: '10:00', toTime: '11:00', updatedAt: '2026-10-21T10:00:00Z' };
+  const bookings = [
+    { ...base, _id: 'new', providerProfileName: 'Salon A', status: 'zaakceptowana', clientSeen: false },
+    { ...base, _id: 'closed', providerProfileName: 'Salon B', status: 'anulowana', clientSeen: false },
+    { ...base, _id: 'read', providerProfileName: 'Salon C', status: 'zaakceptowana', clientSeen: true },
+  ];
+  api.get.mockImplementation(async url => ({ data: url.includes('by-user/') ? bookings : url.includes('by-provider/') ? [] : null }));
+  api.patch.mockClear(); api.patch.mockResolvedValue({ data: {} });
+  render(<ReservationList user={{ uid: 'client' }} />);
+  fireEvent.click(await screen.findByRole('button', { name: /Odczytaj wszystkie/ }));
+  await waitFor(() => expect(screen.queryByRole('button', { name: /Odczytaj wszystkie/ })).not.toBeInTheDocument());
+  expect(api.patch).toHaveBeenCalledTimes(2);
+  expect(api.patch).toHaveBeenCalledWith('/api/reservations/new/seen', { who: 'client', viewedUpdatedAt: base.updatedAt });
+  expect(api.patch).toHaveBeenCalledWith('/api/reservations/closed/seen', { who: 'client', viewedUpdatedAt: base.updatedAt });
+  expect(screen.getByText('Salon A')).toBeInTheDocument();
+  expect(screen.queryByText('Salon B')).not.toBeInTheDocument();
+});
+
+test('bulk read in received reservations does not acknowledge sent updates', async () => {
+  const base = { date: '2027-01-01', fromTime: '10:00', toTime: '11:00', status: 'oczekująca', updatedAt: '2026-10-21T10:00:00Z' };
+  const received = { ...base, _id: 'received', userId: 'anna', userName: 'Anna', providerUserId: 'owner', providerSeen: false };
+  const sent = { ...base, _id: 'sent', userId: 'owner', providerUserId: 'other', providerProfileName: 'Inny profil', clientSeen: false };
+  api.get.mockImplementation(async url => ({ data: url.includes('/meta/') ? { providerProfileId: 'profile', bookingMode: 'request-open' } : url.includes('by-user/') ? [sent] : url.includes('by-provider/') ? [received] : [] }));
+  api.patch.mockClear(); api.patch.mockResolvedValue({ data: {} });
+  render(<ReservationList user={{ uid: 'owner' }} />);
+  const group = await screen.findByRole('group', { name: 'Otrzymane rezerwacje' });
+  fireEvent.click(within(group).getByRole('button', { name: /Odczytaj wszystkie/ }));
+  await waitFor(() => expect(within(group).queryByRole('button', { name: /Odczytaj wszystkie/ })).not.toBeInTheDocument());
+  expect(api.patch).toHaveBeenCalledTimes(1);
+  expect(api.patch).toHaveBeenCalledWith('/api/reservations/received/seen', { who: 'provider', viewedUpdatedAt: base.updatedAt });
+  expect(screen.getByRole('button', { name: /Odczytaj wszystkie/ })).toBeInTheDocument();
+});
+
+test('bulk read keeps a failed or newer update unread and reports partial completion', async () => {
+  let bookings = ['one', 'newer'].map(id => ({ _id: id, userId: 'client', providerUserId: 'owner', providerProfileName: 'Salon ' + id, date: '2027-01-01', fromTime: '10:00', toTime: '11:00', status: 'zaakceptowana', clientSeen: false, updatedAt: '2026-10-21T10:00:00Z' }));
+  api.get.mockImplementation(async url => ({ data: url.includes('by-user/') ? bookings : url.includes('by-provider/') ? [] : null }));
+  api.patch.mockClear();
+  api.patch.mockImplementation(async url => {
+    if (url.includes('/newer/')) throw Object.assign(new Error('Newer update'), { response: { status: 409 } });
+    bookings = bookings.map(item => item._id === 'one' ? { ...item, clientSeen: true } : item);
+    return { data: {} };
+  });
+  render(<ReservationList user={{ uid: 'client' }} />);
+  fireEvent.click(await screen.findByRole('button', { name: /Odczytaj wszystkie/ }));
+  await screen.findByText(/Część zmian pozostała nieprzeczytana/);
+  await waitFor(() => expect(screen.getAllByRole('button', { name: 'Oznacz jako przeczytane' })).toHaveLength(1));
+  expect(screen.getByRole('button', { name: /Odczytaj wszystkie/ })).toHaveTextContent('1');
+});
+
+test('empty received and sent reservations invite discovery through the profile search', async () => {
+  api.get.mockImplementation(async url => ({ data: url.includes('/meta/') ? { providerProfileId: 'profile', bookingMode: 'request-open' } : [] }));
+  render(<ReservationList user={{ uid: 'owner' }} />);
+  const received = await screen.findByRole('group', { name: 'Otrzymane rezerwacje' });
+  const sent = screen.getByRole('group', { name: 'Wysłane rezerwacje' });
+  expect(within(received).getByRole('heading', { name: 'Brak otrzymanych rezerwacji' })).toBeInTheDocument();
+  expect(within(sent).getByRole('heading', { name: 'Brak wysłanych rezerwacji' })).toBeInTheDocument();
+  [received, sent].forEach(group => expect(within(group).getByRole('link', { name: 'Poznaj profile Showly' })).toHaveAttribute('href', '/profile'));
 });

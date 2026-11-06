@@ -1,0 +1,254 @@
+@import '../../styles/accountWorkspace';
+
+.form {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+  color: var(--app-text);
+  font: 400 14px/1.6 $font-body;
+  *, *::before, *::after { box-sizing: border-box; }
+  :is(button, select, input, textarea, summary):focus-visible { outline: 3px solid var(--app-primary); outline-offset: 3px; }
+}
+.field {
+  display: grid; gap: 8px; min-width: 0; font-weight: 600;
+  select, input, textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid var(--app-border); border-radius: 10px; background: var(--app-surface); color: var(--app-text); font: 400 16px/1.5 $font-body; }
+  textarea { resize: vertical; }
+}
+.hint { margin: 0; color: var(--app-muted); font-size: 12px; line-height: 1.7; }
+.topGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 18px; padding: 18px; border: 1px solid var(--app-border); border-radius: 12px; background: var(--app-bg); }
+.serviceSection { display: grid; gap: 20px; > .field { max-width: 420px; } }
+.servicePicker {
+  min-width: 0; margin: 0; padding: 0; border: 0;
+  > legend { margin-bottom: 14px; padding: 0; font: 650 15px/1.5 $font-heading; }
+}
+.serviceSearch { @extend %workspace-search; margin-bottom: 18px; }
+.serviceGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); gap: 16px; }
+.serviceOption {
+  position: relative; min-width: 0; cursor: pointer;
+  input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  input:checked + .serviceTile {
+    border-color: var(--app-primary);
+    background: color-mix(in srgb, var(--app-primary) 6%, var(--app-surface));
+    box-shadow: inset 0 -3px 0 var(--app-primary);
+    .serviceCheck { background: var(--app-primary); border-color: var(--app-primary); color: var(--app-surface); }
+  }
+  input:focus-visible + .serviceTile { outline: 3px solid var(--app-primary); outline-offset: 3px; }
+  input:disabled + .serviceTile { opacity: .5; cursor: default; }
+}
+.serviceTile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22px;
+  grid-template-rows: auto minmax(46px, auto) 1fr;
+  gap: 16px;
+  align-content: start;
+  height: 100%;
+  padding: 0 18px 18px;
+  overflow: hidden;
+  border: 1px solid var(--app-border);
+  border-radius: 13px;
+  background: var(--app-surface);
+  transition: border-color .18s, background .18s, box-shadow .18s;
+}
+.serviceImage {
+  display: block; grid-column: 1 / -1; margin-inline: -18px; aspect-ratio: 16 / 10;
+  overflow: hidden; border-bottom: 1px solid var(--app-border); background: var(--app-bg);
+  img { display: block; width: 100%; height: 100%; object-fit: cover; }
+}
+.serviceImagePlaceholder {
+  display: grid; place-items: center; width: 100%; height: 100%;
+  background: color-mix(in srgb, var(--app-bg) 70%, var(--app-surface)); color: var(--app-muted);
+  svg { width: 30px; height: 30px; stroke-width: 1.3; opacity: .65; }
+}
+.serviceName { align-self: center; font: 650 16px/1.45 $font-heading; overflow-wrap: anywhere; }
+.serviceCheck { display: grid; place-items: center; align-self: center; width: 22px; height: 22px; border: 1px solid var(--app-border); border-radius: 50%; svg { width: 14px; height: 14px; stroke-width: 3; } }
+.serviceMeta {
+  grid-column: 1 / -1; align-self: end; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; color: var(--app-muted); font-size: 12px;
+  > span { display: inline-flex; align-items: center; gap: 6px; }
+  b { color: var(--app-text); font-size: 14px; font-weight: 650; }
+}
+.nearest {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; padding: 18px 20px;
+  border: 1px solid var(--yp-frame); border-left: 5px solid var(--yp-lime); border-radius: 14px;
+  background: color-mix(in srgb, var(--yp-lime) 22%, var(--app-surface)); color: var(--app-text); text-align: left; font: 500 12px/1.6 $font-body; cursor: pointer;
+  strong { display: block; font: 750 21px/1.5 $font-heading; letter-spacing: -.03em; }
+  > span:last-child { flex-shrink: 0; padding: 8px 12px; border: 1px solid var(--yp-frame); border-radius: 8px; background: var(--yp-lime); color: #171917; font-weight: 650; }
+}
+.mainGrid { display: grid; grid-template-columns: minmax(300px, .85fr) minmax(0, 1.15fr); gap: 22px; align-items: stretch; }
+.calendarCard, .times {
+  min-width: 0; padding: 22px; border: 1px solid var(--app-border); border-radius: 14px; background: var(--app-surface);
+  h3 { margin: 0 0 18px; padding-bottom: 14px; border-bottom: 1px solid var(--app-border); font: 650 17px/1.5 $font-heading; }
+}
+.calendarCard { background: color-mix(in srgb, var(--app-bg) 35%, var(--app-surface)); }
+.form > .calendarCard { width: min(540px, 100%); }
+.monthNav { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 18px; font-size: 13px; button { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--app-border); border-radius: 9px; background: var(--app-surface); color: var(--app-text); cursor: pointer; &:disabled { opacity: .35; cursor: default; } } }
+.calendarGrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; text-align: center; button { position: relative; min-width: 0; min-height: 46px; padding: 5px 0; border: 1px solid transparent; border-radius: 9px; background: transparent; color: var(--app-text); font: 550 13px $font-body; cursor: pointer; } [aria-current='date']::after { content: ''; position: absolute; bottom: 4px; left: calc(50% - 2px); width: 4px; height: 4px; border-radius: 50%; background: currentColor; } }
+.weekday { padding: 8px 0; color: var(--app-muted); font-size: 11px; }
+.periods { @extend %workspace-filters; gap: 8px; margin-bottom: 20px; button { flex: 1 1 auto; padding: 9px 10px; font-size: 12px; } }
+.slotsGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 10px; max-height: 340px; overflow-y: auto; padding: 4px; margin: -4px -4px 18px; button { min-height: 48px; padding: 8px 4px; border: 1px solid var(--app-border); border-radius: 10px; background: var(--app-surface); color: var(--app-text); font: 600 14px $font-body; cursor: pointer; } }
+.calendarGrid, .slotsGrid {
+  [aria-pressed='true'] { border-color: var(--yp-frame); background: var(--yp-lime); color: #171917; box-shadow: 2px 2px 0 color-mix(in srgb, var(--yp-shadow) 20%, transparent); }
+  button:disabled { opacity: .35; cursor: default; }
+  button:not(:disabled):hover { border-color: var(--app-primary); }
+}
+.toggle { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 12px; color: var(--app-muted); cursor: pointer; input { flex: 0 0 18px; width: 18px; height: 18px; margin: 0; accent-color: var(--app-primary); } }
+.notice { margin: 0; padding: 16px; border: 1px solid var(--app-border); border-radius: 10px; color: var(--app-muted); font-size: 13px; line-height: 1.7; button { min-height: 44px; background: transparent; border: 0; color: var(--app-primary); font: inherit; text-decoration: underline; cursor: pointer; } }
+.review {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, .85fr); gap: 16px 28px; padding: 24px;
+  border: 1px solid var(--app-border); border-radius: 14px; background: color-mix(in srgb, var(--app-bg) 45%, var(--app-surface));
+  > .field { grid-column: 1; grid-row: 1 / 4; align-content: start; textarea { min-height: 130px; } }
+  > .bookingSummary, > .submit, > .hint { grid-column: 2; }
+  > .submit { width: 100%; }
+}
+.bookingSummary { display: grid; gap: 5px; padding: 18px 20px; border-left: 3px solid var(--app-primary); border-radius: 0 10px 10px 0; background: var(--app-surface); strong { margin-bottom: 5px; } span { color: var(--app-muted); font-size: 13px; } b { font: 700 19px/1.5 $font-heading; letter-spacing: -.025em; } }
+.submit { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: fit-content; min-width: 200px; min-height: 50px; padding: 13px 24px; border: 1px solid var(--yp-frame); border-radius: 10px; background: var(--yp-lime); color: #171917; font: 650 14px $font-body; cursor: pointer; box-shadow: 3px 3px 0 color-mix(in srgb, var(--yp-shadow) 25%, transparent); &:disabled { opacity: .45; cursor: default; box-shadow: none; } }
+.details { border-top: 1px solid var(--app-border); padding-top: 16px; summary { min-height: 44px; color: var(--app-muted); cursor: pointer; } }
+.preview { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--app-muted); font: 400 13px/1.8 $font-body; }
+@media (hover: hover) { .serviceOption:hover input:not(:disabled) + .serviceTile { border-color: var(--app-primary); } .submit:not(:disabled):hover, .nearest:not(:disabled):hover { background: var(--yp-lime); color: #171917; } }
+@media (max-width: 850px) {
+  .mainGrid, .review { grid-template-columns: minmax(0, 1fr); }
+  .review { > .field { grid-column: auto; grid-row: auto; } > .bookingSummary, > .submit, > .hint { grid-column: auto; } }
+}
+@media (max-width: 600px) {
+  .form { gap: 20px; }
+  .calendarCard, .times, .review { padding: 16px; }
+  .serviceGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .serviceTile { padding: 0 12px 14px; gap: 12px 8px; }
+  .serviceImage { margin-inline: -12px; aspect-ratio: 4 / 3; }
+  .serviceName { font-size: 14px; }
+  .serviceMeta { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .calendarGrid { gap: 4px; button { min-height: 44px; } }
+  .nearest { padding: 14px; gap: 10px; strong { font-size: 18px; } > span:last-child { padding: 8px; font-size: 11px; } }
+  .slotsGrid { grid-template-columns: repeat(auto-fill, minmax(65px, 1fr)); gap: 8px; }
+  .submit { width: 100%; }
+}
+@media (max-width: 360px) { .serviceGrid { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .serviceTile { transition: none; } }
+
+// A horizontally browsable offer, with quiet card edges and prominent photographs.
+.servicePicker > legend { font-size: 18px; margin-bottom: 8px; }
+.serviceToolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 44px; margin-bottom: 12px; > span { color: var(--app-muted); font-size: 12px; b { color: var(--app-text); } } }
+.carouselNav { display: flex; gap: 8px; button { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--app-border); border-radius: 50%; background: var(--app-surface); color: var(--app-text); cursor: pointer; &:disabled { opacity: .3; cursor: default; } &:not(:disabled):hover { border-color: var(--app-primary); } } }
+.serviceGrid { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 4px; padding: 5px 4px 18px; margin-inline: -4px; scrollbar-width: thin; scrollbar-color: var(--app-border) transparent; }
+.serviceOption { flex: 0 0 clamp(250px, 28vw, 320px); scroll-snap-align: start; }
+.serviceTile { position: relative; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(46px, auto) 1fr; gap: 14px; padding: 0 16px 20px; border-color: transparent; border-radius: 18px; background: color-mix(in srgb, var(--app-bg) 50%, var(--app-surface)); }
+.serviceImage { margin-inline: -16px; border: 0; aspect-ratio: 16 / 10; }
+.serviceName { font-size: 18px; letter-spacing: -.025em; }
+.serviceCheck { position: absolute; top: 14px; right: 14px; width: 28px; height: 28px; background: var(--app-surface); box-shadow: 0 2px 8px #00000014; }
+.serviceMeta { padding-top: 12px; border-top: 1px solid var(--app-border); b { font-size: 16px; } }
+.serviceOption input:checked + .serviceTile { border-color: var(--app-primary); box-shadow: 0 4px 15px color-mix(in srgb, var(--app-primary) 12%, transparent); }
+.serviceSearch { margin-block: 8px 12px; }
+.selectionPrompt { display: flex; align-items: center; gap: 18px; padding: 24px; border: 1px solid color-mix(in srgb, var(--app-primary) 35%, var(--app-border)); border-radius: 14px; background: color-mix(in srgb, var(--app-primary) 7%, var(--app-surface)); p { margin: 0; flex: 1; font: 650 18px/1.5 $font-heading; letter-spacing: -.02em; } }
+.promptIcon { display: grid; place-items: center; flex: 0 0 46px; height: 46px; border: 1px solid var(--yp-frame); border-radius: 12px; background: var(--yp-lime); color: #171917; transform: rotate(-5deg); svg { width: 23px; height: 23px; } }
+.promptArrow { flex: 0 0 22px; color: var(--app-primary); transform: rotate(-90deg); }
+.nearest { display: flex; justify-content: flex-start; gap: 18px; padding: 20px; border: 1px solid var(--app-border); border-radius: 14px; background: color-mix(in srgb, var(--yp-lime) 13%, var(--app-surface)); }
+.nearest .nearestIcon { display: grid; place-items: center; flex: 0 0 48px; height: 48px; border: 1px solid var(--app-border); border-radius: 12px; background: var(--app-surface); color: var(--app-primary); svg { width: 22px; height: 22px; } }
+.nearestText { flex: 1; min-width: 0; color: var(--app-muted); strong { display: flex; flex-wrap: wrap; align-items: baseline; gap: 3px 12px; margin-top: 4px; color: var(--app-text); font-size: 23px; span { font: 550 15px/1.5 $font-body; } } }
+.nearest > .nearestAction:last-child { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; border: 0; border-radius: 9px; background: var(--yp-lime); color: #171917; svg { width: 17px; height: 17px; } }
+.availabilityDot { position: absolute; bottom: 5px; left: calc(50% - 3px); width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 0 2px var(--app-surface); }
+.availabilityDot[data-level='high'], .availabilityLegend i[data-level='high'] { background: #16845a; }
+.availabilityDot[data-level='medium'], .availabilityLegend i[data-level='medium'] { background: #c08b12; }
+.availabilityDot[data-level='low'], .availabilityLegend i[data-level='low'] { background: #d14655; }
+.calendarGrid button:has(.availabilityDot)[aria-current='date']::after { display: none; }
+.availabilityLegend { display: flex; flex-wrap: wrap; gap: 10px 16px; padding-top: 18px; margin-top: 12px; border-top: 1px solid var(--app-border); color: var(--app-muted); font-size: 11px; > span { display: inline-flex; align-items: center; gap: 6px; } i { width: 6px; height: 6px; border-radius: 50%; } p { flex-basis: 100%; margin: 0; font-size: 10px; line-height: 1.6; } }
+.reservationDetails { display: block; min-width: 0; padding: 20px; border: 1px solid var(--app-border); border-radius: 14px; background: var(--app-surface); h3 { margin: 0 0 18px; font: 700 18px/1.5 $font-heading; letter-spacing: -.02em; } }
+.summaryService { display: flex; align-items: center; gap: 14px; padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid var(--app-border); .serviceImage { flex: 0 0 72px; width: 72px; height: 72px; margin: 0; aspect-ratio: 1; border-radius: 12px; } > div { min-width: 0; display: grid; gap: 3px; } span:not(.serviceImage):not(.serviceImagePlaceholder) { color: var(--app-muted); font-size: 11px; } strong { font: 650 16px/1.5 $font-heading; overflow-wrap: anywhere; } small { color: var(--app-muted); font-size: 12px; } }
+.summaryFacts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0; > div { min-width: 0; } dt { display: flex; align-items: center; gap: 6px; color: var(--app-muted); font-size: 11px; svg { color: var(--app-primary); } } dd { margin: 6px 0 0; font: 650 15px/1.6 $font-body; overflow-wrap: anywhere; small { display: block; color: var(--app-muted); font-size: 11px; font-weight: 400; } } }
+@media (max-width: 600px) {
+  .serviceOption { flex-basis: min(82vw, 300px); }
+  .serviceGrid { gap: 14px; }
+  .serviceTile { padding-inline: 16px; }
+  .serviceImage { margin-inline: -16px; aspect-ratio: 16 / 10; }
+  .serviceMeta { flex-direction: row; align-items: center; }
+  .selectionPrompt { gap: 12px; padding: 18px 14px; p { font-size: 15px; } }
+  .promptArrow { display: none; }
+  .nearest { gap: 12px; padding: 16px 14px; flex-wrap: wrap; }
+  .nearestText strong { font-size: 20px; }
+  .nearest > .nearestAction:last-child { margin-left: auto; }
+  .summaryFacts { gap: 14px 10px; dd { font-size: 14px; } }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .serviceTile { animation: serviceAppear .3s ease-out; }
+  @keyframes serviceAppear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+}
+
+.serviceFilters { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; padding-block: 12px 18px; margin-bottom: 6px; border-bottom: 1px solid var(--app-border); .serviceSearch { flex: 1 1 220px; max-width: 320px; margin: 0; } }
+.serviceSort { @extend %workspace-filters; gap: 7px; button { padding: 10px 11px; font-size: 11px; gap: 6px; } svg { width: 14px; height: 14px; } }
+.serviceTile .serviceMeta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 10px; }
+.serviceMeta .durationBadge, .serviceMeta .priceBadge { display: flex; align-items: flex-start; gap: 8px; min-width: 0; padding: 10px 8px; border-radius: 9px; background: color-mix(in srgb, var(--app-surface) 70%, transparent); > svg { flex: 0 0 17px; height: 17px; margin-top: 3px; color: var(--app-primary); } > span { display: grid; gap: 4px; min-width: 0; } small { color: var(--app-muted); font-size: 10px; font-weight: 400; } strong { color: var(--app-text); font: 700 15px/1.4 $font-heading; overflow-wrap: anywhere; } }
+.nearest { transition: background-color .25s ease, border-color .25s ease, box-shadow .25s ease, transform .25s ease; }
+.nearestIcon, .nearest > .nearestAction:last-child { transition: background-color .25s ease, transform .25s ease; }
+.nearestAction svg { transition: transform .25s ease; }
+@media (hover: hover) { .nearest:not(:disabled):hover { background: color-mix(in srgb, var(--yp-lime) 24%, var(--app-surface)); border-color: color-mix(in srgb, var(--app-primary) 40%, var(--app-border)); box-shadow: 0 6px 18px color-mix(in srgb, var(--yp-shadow) 7%, transparent); transform: translateY(-1px); .nearestAction svg { transform: translateX(3px); } } }
+.times.awaitingDate { align-self: center; border: 0; background: transparent; padding: 28px; }
+.dateInvitation { max-width: 420px; margin-inline: auto; > h3 { margin: 18px 0 10px; padding: 0; border: 0; font: 750 clamp(22px, 2.4vw, 30px)/1.2 $font-heading; letter-spacing: -.04em; } > p { margin: 0; max-width: 360px; color: var(--app-muted); font-size: 13px; line-height: 1.8; } }
+.invitationIcon { display: grid; place-items: center; width: 50px; height: 50px; border: 1px solid var(--yp-frame); border-radius: 13px; background: var(--yp-lime); color: #171917; box-shadow: 3px 3px 0 color-mix(in srgb, var(--yp-shadow) 20%, transparent); transform: rotate(-5deg); svg { width: 24px; height: 24px; } }
+.invitationService { display: flex; align-items: center; gap: 14px; margin-block: 22px; padding: 14px; border: 1px solid var(--app-border); border-radius: 13px; background: var(--app-surface); .serviceImage { width: 72px; height: 72px; flex: 0 0 72px; margin: 0; border-radius: 10px; aspect-ratio: 1; } > div { display: grid; gap: 5px; min-width: 0; } strong { font: 650 16px/1.4 $font-heading; overflow-wrap: anywhere; } span:not(.serviceImage):not(.serviceImagePlaceholder) { color: var(--app-muted); font-size: 11px; } small { display: flex; align-items: center; gap: 5px; color: var(--app-primary); font-size: 12px; } }
+.invitationHint { display: flex; align-items: center; gap: 8px; color: var(--app-primary); font-size: 12px; font-weight: 600; svg { transform: rotate(180deg); } }
+@media (max-width: 850px) { .times.awaitingDate { padding: 18px 6px 6px; } .dateInvitation { max-width: none; } .invitationHint svg { transform: rotate(-90deg); } }
+@media (max-width: 600px) { .serviceFilters .serviceSearch { max-width: none; flex-basis: 100%; } .serviceSort { width: 100%; button { flex-grow: 1; } } }
+@media (prefers-reduced-motion: reduce) { .nearest, .nearestIcon, .nearest > .nearestAction:last-child, .nearestAction svg { transition: none; } .nearest:not(:disabled):hover, .nearest:not(:disabled):hover .nearestAction svg { transform: none; } }
+
+@mixin booking-section-pin {
+  max-width: calc(100% - 32px);
+  padding: 7px 12px;
+  border: 1px solid var(--yp-frame);
+  border-radius: 7px;
+  background: var(--yp-lime);
+  color: #171917;
+  font: 600 12px/1.5 $font-accent;
+  letter-spacing: 0;
+}
+.form { gap: 28px; padding-top: 8px; }
+.servicePicker {
+  padding: 12px 20px 20px;
+  border: 1px solid var(--yp-frame);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--app-bg) 55%, var(--app-surface));
+  box-shadow: 3px 4px 0 color-mix(in srgb, var(--yp-shadow) 12%, transparent);
+  > legend { @include booking-section-pin; margin: 0; }
+}
+.calendarCard, .times:not(.awaitingDate), .review {
+  position: relative;
+  margin-top: 12px;
+  padding-top: 30px;
+  border-color: var(--yp-frame);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--app-bg) 40%, var(--app-surface));
+  box-shadow: 3px 4px 0 color-mix(in srgb, var(--yp-shadow) 12%, transparent);
+}
+.calendarCard > h3, .sectionPin {
+  @include booking-section-pin;
+  display: inline-flex;
+  position: absolute;
+  top: -16px;
+  left: 18px;
+  margin: 0;
+}
+.times:not(.awaitingDate) > h3 { font-size: 16px; }
+.reservationDetails { position: relative; margin-top: 12px; padding-top: 30px; border: 1px solid var(--yp-frame); border-radius: 14px; background: var(--app-surface); box-shadow: 2px 3px 0 color-mix(in srgb, var(--yp-shadow) 8%, transparent); > h3 { @include booking-section-pin; position: absolute; top: -16px; left: 16px; margin: 0; } }
+.serviceOption input:checked + .serviceTile {
+  border-color: var(--yp-frame);
+  background: color-mix(in srgb, var(--yp-lime) 13%, var(--app-surface));
+  box-shadow: 2px 3px 0 color-mix(in srgb, var(--yp-shadow) 12%, transparent);
+  .serviceCheck { background: var(--yp-lime); border-color: var(--yp-frame); color: #171917; }
+}
+.serviceMeta .durationBadge > svg, .serviceMeta .priceBadge > svg { color: var(--app-text); }
+.serviceMeta .durationBadge, .serviceMeta .priceBadge { background: var(--app-surface); border: 1px solid var(--app-border); }
+.summaryFacts dt svg, .nearest .nearestIcon, .promptArrow, .invitationService small, .invitationHint { color: var(--app-text); }
+.selectionPrompt { border-color: var(--yp-frame); background: color-mix(in srgb, var(--yp-lime) 12%, var(--app-surface)); box-shadow: 3px 4px 0 color-mix(in srgb, var(--yp-shadow) 10%, transparent); }
+.submit > svg { flex: 0 0 19px; width: 19px; height: 19px; stroke-width: 2; }
+@media (hover: hover) {
+  .serviceOption:hover input:not(:disabled) + .serviceTile, .carouselNav button:not(:disabled):hover { border-color: var(--yp-frame); }
+  .nearest:not(:disabled):hover { border-color: var(--yp-frame); }
+}
+@media (max-width: 600px) {
+  .servicePicker { padding: 10px 14px 14px; }
+  .calendarCard, .times:not(.awaitingDate), .review { padding-top: 28px; }
+  .calendarCard > h3, .sectionPin { left: 14px; }
+  .reservationDetails { padding-top: 28px; }
+}
+
+.serviceTile { border-color: var(--yp-frame); }
+@media (hover: hover) { .serviceOption:hover input:not(:disabled) + .serviceTile { border-color: var(--yp-frame); } }
+.calendarGrid button[data-in-range='true'] { background: color-mix(in srgb, var(--yp-lime) 30%, var(--app-surface)); border-color: var(--app-border); }
+.timeRange { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 540px; padding: 18px; border: 1px solid var(--yp-frame); border-radius: 14px; background: var(--app-surface); }
